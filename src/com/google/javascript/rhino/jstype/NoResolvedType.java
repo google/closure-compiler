@@ -55,7 +55,6 @@ import javax.annotation.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class NoResolvedType extends NoType {
-  private static final long serialVersionUID = 1L;
   /** The name originally used to reference this type, or {@code null} if none. */
   @Nullable private String referenceName;
   /**

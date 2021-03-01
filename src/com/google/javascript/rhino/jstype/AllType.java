@@ -47,8 +47,6 @@ import com.google.javascript.rhino.ErrorReporter;
  * All type, representing all values.
  */
 public final class AllType extends JSType {
-  private static final long serialVersionUID = 1L;
-
   AllType(JSTypeRegistry registry) {
     super(registry);
     this.eagerlyResolveToSelf();

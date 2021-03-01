@@ -48,8 +48,6 @@ import com.google.javascript.rhino.Node;
  * The {@code Unknown} type.
  */
 public class UnknownType extends ObjectType {
-  private static final long serialVersionUID = 1L;
-
   // See the explanation of checked unknown types in JSTypeNative.
   private final boolean isChecked;
 

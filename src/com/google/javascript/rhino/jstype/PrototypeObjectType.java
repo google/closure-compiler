@@ -67,8 +67,6 @@ import java.util.TreeSet;
  * {@link JSTypeRegistry}.<p>
  */
 public class PrototypeObjectType extends ObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.PROTOTYPE_OBJECT;
 
   private final String className;

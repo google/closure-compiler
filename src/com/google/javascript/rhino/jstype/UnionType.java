@@ -74,8 +74,6 @@ import javax.annotation.Nullable;
  * <p>The implementation of this class prevents the creation of nested unions.
  */
 public class UnionType extends JSType {
-  private static final long serialVersionUID = 2L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.UNION;
 
   /**

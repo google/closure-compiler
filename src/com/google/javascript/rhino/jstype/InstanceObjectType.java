@@ -45,8 +45,6 @@ import com.google.javascript.rhino.Node;
 
 /** An object type that is an instance of some function constructor. */
 final class InstanceObjectType extends PrototypeObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.INSTANCE_OBJECT;
 
   private final FunctionType constructor;

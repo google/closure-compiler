@@ -44,7 +44,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -52,7 +51,7 @@ import java.util.Objects;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class Property implements Serializable, StaticTypedSlot, StaticTypedRef {
+public final class Property implements StaticTypedSlot, StaticTypedRef {
 
   /** A property instance associated with particular owner type. */
   public static final class OwnedProperty {

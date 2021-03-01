@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -51,7 +50,7 @@ import java.util.Set;
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for
  * cloning/extending the map.
  */
-public class TemplateTypeMap implements Serializable {
+public class TemplateTypeMap {
 
   // The TemplateType keys of the map.
   private final ImmutableList<TemplateType> templateKeys;

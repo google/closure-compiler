@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -55,11 +54,8 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /** Representation for a collection of properties on an object. */
-final class PropertyMap implements Serializable {
-  private static final long serialVersionUID = 1L;
-
-  private static final PropertyMap EMPTY_MAP = new PropertyMap(
-      ImmutableMap.<String, Property>of());
+final class PropertyMap {
+  private static final PropertyMap EMPTY_MAP = new PropertyMap(ImmutableMap.<String, Property>of());
 
   // A place to get the inheritance structure.
   // Because the extended interfaces are resolved dynamically, this gets

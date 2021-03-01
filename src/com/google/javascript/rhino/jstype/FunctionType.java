@@ -52,7 +52,6 @@ import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -72,8 +71,7 @@ import java.util.Set;
  * containing the parsed argument list (annotated with JSDOC_TYPE_PROP's for the compile-time type
  * of each argument.
  */
-public class FunctionType extends PrototypeObjectType implements Serializable {
-  private static final long serialVersionUID = 1L;
+public class FunctionType extends PrototypeObjectType {
 
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.FUNCTION;
 
@@ -1605,9 +1603,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * <p>This parameter has a type; optionality; and may be var_args (variadic).
    */
   @AutoValue
-  public abstract static class Parameter implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+  public abstract static class Parameter {
     public static Parameter create(JSType type, boolean isOptional, boolean isVariadic) {
       return new AutoValue_FunctionType_Parameter(type, isOptional, isVariadic);
     }

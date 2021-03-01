@@ -53,11 +53,8 @@ import java.util.Collections;
  *
  * @see NamedType
  * @see TemplatizedType
- *
  */
 public class ProxyObjectType extends ObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.PROXY_OBJECT;
 
   private JSType referencedType;

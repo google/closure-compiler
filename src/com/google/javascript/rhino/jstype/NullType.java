@@ -45,10 +45,9 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /**
  * Null type.
+ *
  */
 public final class NullType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   NullType(JSTypeRegistry registry) {
     super(registry);
   }

@@ -59,8 +59,6 @@ import com.google.javascript.rhino.Node;
  * @see <a href="http://en.wikipedia.org/wiki/Bottom_type">Bottom types</a>
  */
 public class NoObjectType extends FunctionType {
-  private static final long serialVersionUID = 1L;
-
   NoObjectType(JSTypeRegistry registry) {
     super(
         FunctionType.builder(registry)

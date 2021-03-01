@@ -57,8 +57,6 @@ import java.util.Map;
  *
  */
 public class RecordType extends PrototypeObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.RECORD;
 
   private final boolean declared;

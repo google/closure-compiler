@@ -50,8 +50,6 @@ import com.google.javascript.rhino.Node;
 
 /** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
 public final class TemplateType extends ProxyObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.TEMPLATE;
 
   private final String name;

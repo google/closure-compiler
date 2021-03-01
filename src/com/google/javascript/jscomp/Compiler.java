@@ -3493,8 +3493,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final List<CompilerInput> externs;
     private final Map<String, Node> scriptNodeByFilename;
     private final Map<InputId, CompilerInput> inputsById;
-    private final JSTypeRegistry typeRegistry;
-    private final TypeValidator typeValidator;
+    private final ColorRegistry colorRegistry;
     private final boolean typeCheckingHasRun;
     private final CompilerInput synthesizedExternsInput;
     private final CompilerInput synthesizedExternsInputAtEnd;
@@ -3503,8 +3502,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
-    private final ImmutableList<JSError> errors;
-    private final ImmutableList<JSError> warnings;
     private final JSModuleGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
@@ -3526,7 +3523,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.jsRoot = checkNotNull(compiler.jsRoot);
       this.externAndJsRoot = checkNotNull(compiler.externAndJsRoot);
       this.featureSet = checkNotNull(compiler.featureSet);
-      this.typeRegistry = compiler.typeRegistry;
+      this.colorRegistry = compiler.colorRegistry;
       this.externs = compiler.externs;
       this.scriptNodeByFilename = checkNotNull(compiler.scriptNodeByFilename);
       this.inputsById = checkNotNull(compiler.inputsById);
@@ -3536,11 +3533,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.injectedLibraries = compiler.injectedLibraries;
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
-      this.typeValidator = compiler.typeValidator;
       this.lifeCycleStage = compiler.getLifeCycleStage();
       this.externProperties = compiler.externProperties;
-      this.errors = compiler.errorManager.getErrors();
-      this.warnings = compiler.errorManager.getWarnings();
       this.moduleGraph = compiler.moduleGraph;
       this.uniqueNameId = compiler.uniqueNameId;
       this.uniqueIdSupplier = compiler.uniqueIdSupplier;
@@ -3567,9 +3561,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
           objectOutputStream.writeObject(new CompilerState(Compiler.this));
-          if (typeRegistry != null) {
-            typeRegistry.saveContents(objectOutputStream);
-          }
           stopTracer(tracer, "serializeCompilerState");
           return null;
         });
@@ -3609,11 +3600,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 logger.fine("Deserializing the CompilerState");
                 CompilerState compilerState = (CompilerState) objectInputStream.readObject();
                 logger.fine("Finished deserializing CompilerState");
-                if (compilerState.typeRegistry != null) {
-                  logger.fine("Deserializing the TypeRegistry");
-                  compilerState.typeRegistry.restoreContents(objectInputStream);
-                  logger.fine("Finished deserializing TypeRegistry");
-                }
                 stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
                 return compilerState;
               }
@@ -3625,7 +3611,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     scriptNodeByFilename.putAll(compilerState.scriptNodeByFilename);
     inputsById.clear();
     inputsById.putAll(compilerState.inputsById);
-    typeRegistry = compilerState.typeRegistry;
+    colorRegistry = compilerState.colorRegistry;
     externAndJsRoot = compilerState.externAndJsRoot;
     externsRoot = compilerState.externsRoot;
     jsRoot = compilerState.jsRoot;
@@ -3636,7 +3622,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.putAll(compilerState.injectedLibraries);
     lastInjectedLibrary = compilerState.lastInjectedLibrary;
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
-    typeValidator = compilerState.typeValidator;
     setLifeCycleStage(compilerState.lifeCycleStage);
     externProperties = compilerState.externProperties;
     moduleGraph = compilerState.moduleGraph;
@@ -3659,17 +3644,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Reapply module names to deserialized modules
     renameModules(newModules, ImmutableList.copyOf(getModules()));
 
-    // restore errors.
-    if (compilerState.errors != null) {
-      for (JSError error : compilerState.errors) {
-        report(CheckLevel.ERROR, error);
-      }
-    }
-    if (compilerState.warnings != null) {
-      for (JSError warning : compilerState.warnings) {
-        report(CheckLevel.WARNING, warning);
-      }
-    }
     if (tracker != null) {
       tracker.updateAfterDeserialize(jsRoot);
     }

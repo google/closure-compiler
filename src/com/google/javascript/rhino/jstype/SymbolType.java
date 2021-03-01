@@ -46,11 +46,10 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /**
  * Symbol type.
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 public final class SymbolType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   SymbolType(JSTypeRegistry registry) {
     super(registry);
   }

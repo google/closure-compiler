@@ -41,13 +41,9 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -59,12 +55,9 @@ import javax.annotation.Nullable;
  * by {@link FunctionType}.
  */
 final class ArrowType extends JSType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ARROW;
 
-  // non-final for custom deserialization.
-  private transient ImmutableList<Parameter> parameterList;
+  private final ImmutableList<Parameter> parameterList;
   private JSType returnType;
 
   // Whether the return type is inferred.
@@ -177,21 +170,5 @@ final class ArrowType extends JSType {
       }
     }
     return false;
-  }
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(ObjectOutputStream stream) throws IOException {
-    stream.defaultWriteObject();
-    // we ran into ClassCastExceptions trying to serialize ImmutableList, probably related to
-    // https://github.com/google/guava/issues/1554..
-    Parameter[] parameters = this.parameterList.toArray(new Parameter[0]);
-    stream.writeObject(parameters);
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
-    stream.defaultReadObject();
-    Parameter[] parameters = (Parameter[]) stream.readObject();
-    this.parameterList = ImmutableList.copyOf(parameters);
   }
 }

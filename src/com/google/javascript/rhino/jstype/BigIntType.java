@@ -44,8 +44,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /** BigInt type. */
 public class BigIntType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   BigIntType(JSTypeRegistry registry) {
     super(registry);
   }

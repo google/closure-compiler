@@ -47,8 +47,6 @@ import com.google.javascript.rhino.Node;
  * (see {@link EnumType}).
  */
 public class EnumElementType extends ObjectType {
-  private static final long serialVersionUID = 1L;
-
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM_ELEMENT;
 
   /**

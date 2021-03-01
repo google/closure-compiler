@@ -52,7 +52,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
@@ -75,10 +74,6 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,7 +90,7 @@ import javax.annotation.Nullable;
  * <p>This class is not thread-safe.
  *
  */
-public class JSTypeRegistry implements Serializable {
+public class JSTypeRegistry {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   /**
@@ -2289,13 +2284,12 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Synthetic scope that includes template names. This is necessary for resolving
-   * template names outside the body of templated functions (e.g. when evaluating
-   * JSDoc on things assigned to a prototype, or the parameter or return types of
-   * an annotated function), since there is not yet (and may never be) any real
-   * scope to attach the types to.
+   * Synthetic scope that includes template names. This is necessary for resolving template names
+   * outside the body of templated functions (e.g. when evaluating JSDoc on things assigned to a
+   * prototype, or the parameter or return types of an annotated function), since there is not yet
+   * (and may never be) any real scope to attach the types to.
    */
-  private static class SyntheticTemplateScope implements StaticTypedScope, Serializable {
+  private static class SyntheticTemplateScope implements StaticTypedScope {
     final StaticTypedScope delegate;
     final PMap<String, TemplateType> types;
 
@@ -2348,31 +2342,6 @@ public class JSTypeRegistry implements Serializable {
       }
       return delegate.getTopmostScopeOfEventualDeclaration(name);
     }
-  }
-
-  /**
-   * Saves the derived state.
-   *
-   * <p>Note: This should be only used when serializing the compiler state and needs to be done at
-   * the end, after serializing CompilerState.
-   */
-  @GwtIncompatible("ObjectOutputStream")
-  public void saveContents(ObjectOutputStream out) throws IOException {
-    out.writeObject(eachRefTypeIndexedByProperty);
-    out.writeObject(typesIndexedByProperty);
-  }
-
-  /**
-   * Restores the derived state.
-   *
-   * Note: This should be only used when deserializing the compiler state and needs to be done at
-   * the end, after deserializing CompilerState.
-   */
-  @SuppressWarnings("unchecked")
-  @GwtIncompatible("ObjectInputStream")
-  public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
-    typesIndexedByProperty = (Multimap<String, JSType>) in.readObject();
   }
 
   private FunctionType.Builder nativeConstructorBuilder(String name) {

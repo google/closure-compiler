@@ -44,10 +44,9 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /**
  * Boolean type.
+ *
  */
 public class BooleanType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   BooleanType(JSTypeRegistry registry) {
     super(registry);
   }

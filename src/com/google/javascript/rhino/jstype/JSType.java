@@ -49,7 +49,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
-import java.io.Serializable;
 import javax.annotation.Nullable;
 
 /**
@@ -68,7 +67,7 @@ import javax.annotation.Nullable;
  * <p>
  *
  */
-public abstract class JSType implements Serializable {
+public abstract class JSType {
   private static final long serialVersionUID = 1L;
 
   @SuppressWarnings("ReferenceEquality")

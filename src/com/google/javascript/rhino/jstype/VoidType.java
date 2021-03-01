@@ -47,8 +47,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
  * Void type whose only element is the {@code undefined} value.
  */
 public class VoidType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   VoidType(JSTypeRegistry registry) {
     super(registry);
   }

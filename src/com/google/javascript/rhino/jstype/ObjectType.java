@@ -52,7 +52,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -61,32 +60,26 @@ import javax.annotation.Nullable;
 /**
  * Object type.
  *
- * In JavaScript, all object types have properties, and each of those
- * properties has a type. Property types may be DECLARED, INFERRED, or
- * UNKNOWN.
+ * <p>In JavaScript, all object types have properties, and each of those properties has a type.
+ * Property types may be DECLARED, INFERRED, or UNKNOWN.
  *
- * DECLARED properties have an explicit type annotation, as in:
- * <code>
+ * <p>DECLARED properties have an explicit type annotation, as in: <code>
  * /xx @type {number} x/
  * Foo.prototype.bar = 1;
- * </code>
- * This property may only hold number values, and an assignment to any
- * other type of value is an error.
+ * </code> This property may only hold number values, and an assignment to any other type of value
+ * is an error.
  *
- * INFERRED properties do not have an explicit type annotation. Rather,
- * we try to find all the possible types that this property can hold.
- * <code>
+ * <p>INFERRED properties do not have an explicit type annotation. Rather, we try to find all the
+ * possible types that this property can hold. <code>
  * Foo.prototype.bar = 1;
- * </code>
- * If the programmer assigns other types of values to this property,
- * the property will take on the union of all these types.
+ * </code> If the programmer assigns other types of values to this property, the property will take
+ * on the union of all these types.
  *
- * UNKNOWN properties are properties on the UNKNOWN type. The UNKNOWN
- * type has all properties, but we do not know whether they are
- * declared or inferred.
+ * <p>UNKNOWN properties are properties on the UNKNOWN type. The UNKNOWN type has all properties,
+ * but we do not know whether they are declared or inferred.
  *
  */
-public abstract class ObjectType extends JSType implements Serializable {
+public abstract class ObjectType extends JSType {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;

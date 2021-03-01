@@ -44,10 +44,9 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 /**
  * String type.
+ *
  */
 public final class StringType extends ValueType {
-  private static final long serialVersionUID = 1L;
-
   StringType(JSTypeRegistry registry) {
     super(registry);
   }

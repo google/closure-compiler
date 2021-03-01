@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSType.areIdentical;
 
 import com.google.errorprone.annotations.MustBeClosed;
-import java.io.Serializable;
 import java.util.ArrayDeque;
 
 /**
@@ -56,7 +55,7 @@ import java.util.ArrayDeque;
  * added to this resolver. Depending on the state of the resolver at the time of addition, the type
  * will either be eagerly resolved, or stored for later resolution.
  */
-public final class JSTypeResolver implements Serializable {
+public final class JSTypeResolver {
 
   /**
    * A signal to resolve all types known to and close the owning resolver.
