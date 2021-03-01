@@ -315,10 +315,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkSideEffects);
 
-    if (options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
-      checks.add(checkProvides);
-    }
-
     if (options.angularPass) {
       checks.add(angularPass);
     }
@@ -1162,14 +1158,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> new CheckMissingRequires(compiler, compiler.getModuleMetadataMap()))
           .setFeatureSetForChecks()
-          .build();
-
-  /** Makes sure @constructor is paired with goog.provides(). */
-  private final PassFactory checkProvides =
-      PassFactory.builderForHotSwap()
-          .setName("checkProvides")
-          .setFeatureSetForChecks()
-          .setInternalFactory(CheckProvides::new)
           .build();
 
   private static final DiagnosticType GENERATE_EXPORTS_ERROR =

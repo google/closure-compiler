@@ -415,7 +415,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(
           "missingProvide",
-          CheckProvides.MISSING_PROVIDE_WARNING,
           // TODO(b/143887932): Move this into a better DiagnosticGroup
           ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE);
 

@@ -590,16 +590,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testCheckProvidesOn() {
-    CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
-    test(
-        options,
-        new String[] {"goog.require('x'); /** @constructor */ function Foo() {}", "new Foo();"},
-        DiagnosticGroups.MISSING_PROVIDE);
-  }
-
-  @Test
   public void testGoogDefine1() {
     String code =
         CLOSURE_BOILERPLATE + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', true);";
@@ -755,29 +745,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "goog.provide('Placer.Alignment');",
             "/** @param {*} image */ var Placer = function(image) {};",
             "Placer.Alignment = {LEFT: 'left'};"));
-  }
-
-  @Test
-  public void testCheckProvidesWarning() {
-    CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
-    test(
-        options,
-        "goog.require('x'); /** @constructor */ function f() { var arguments; }",
-        DiagnosticGroups.MISSING_SOURCES_WARNINGS);
-  }
-
-  @Test
-  public void testSuppressCheckProvidesWarning() {
-    CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
-        CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
-    testSame(options,
-        "/** @constructor\n" +
-        " *  @suppress{missingProvide} */\n" +
-        "function f() {}");
   }
 
   @Test

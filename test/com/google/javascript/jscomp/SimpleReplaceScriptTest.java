@@ -309,20 +309,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     checkProvideRequireErrors(options);
   }
 
-  @Test
-  public void testCheckProvides() {
-    CompilerOptions options = getOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);
-    checkProvideRequireErrors(options);
-    String source0 = "goog.provide('ns.Foo'); /** @constructor */ ns.Foo = function() {};"
-        + "/** @constructor */ ns.Bar = function() {};";
-    Result result = runReplaceScript(options,
-        ImmutableList.of(source0), 1, 0, source0, 0, true).getResult();
-    assertThat(result.success).isFalse();
 
-    assertThat(result.errors).hasSize(1);
-    assertErrorType(result.errors.get(0), CheckProvides.MISSING_PROVIDE_WARNING, 1);
-  }
 
   /** Test related to DefaultPassConfig.inferTypes */
   @Test
