@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.ijs;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -36,7 +35,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override
@@ -72,7 +70,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testSimpleConstJsdocPropagation() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = 5n;", "/** @const {bigint} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");

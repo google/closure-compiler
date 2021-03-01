@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.GoogleCodingConvention;
@@ -58,7 +57,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     codingConvention = new GoogleCodingConvention();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override

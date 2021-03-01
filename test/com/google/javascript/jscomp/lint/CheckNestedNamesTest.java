@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.lint.CheckNestedNames.NESTED_NAME_IN_
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -39,7 +38,6 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override

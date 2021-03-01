@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.ijs;
 
 import com.google.javascript.jscomp.Compiler;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import org.junit.Before;
@@ -36,7 +35,6 @@ public final class SuggestConstTypesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableTypeCheck();
   }
 

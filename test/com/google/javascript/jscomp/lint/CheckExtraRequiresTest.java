@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -43,7 +42,6 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
