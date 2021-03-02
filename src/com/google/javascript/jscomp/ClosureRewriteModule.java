@@ -1859,14 +1859,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       name = sourceName.getString();
     }
 
+    // The source range of this NAME includes its declared value, which we don't want.
+    sourceName = sourceName.cloneNode();
+    sourceName.setLength(name.length());
+
     // Receiver and prop string should both use the position of the source name.
-    getProp.getFirstChild().useSourceInfoFrom(sourceName);
-    getProp.getFirstChild().setLength(name.length());
-    getProp.setLength(name.length());
-    if (!Node.isStringGetprop(getProp)) {
-      getProp.getSecondChild().useSourceInfoFrom(sourceName);
-      getProp.getSecondChild().setLength(name.length());
-    }
+    getProp.useSourceInfoFromForTree(sourceName);
   }
 
   private boolean isTopLevel(NodeTraversal t, Node n, ScopeType scopeType) {

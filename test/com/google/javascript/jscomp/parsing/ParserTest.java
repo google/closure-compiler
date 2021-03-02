@@ -605,7 +605,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(getprop).hasType(Token.GETPROP);
     assertNode(getprop).hasLineno(2);
-    assertNode(getprop).hasCharno(1);
+    assertNode(getprop).hasCharno(5);
 
     Node name = getprop.getSecondChild();
     assertNode(name).hasType(Token.STRING);
@@ -618,8 +618,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node getprop = parse("\n foo.\nbar").getFirstFirstChild();
 
     assertNode(getprop).hasType(Token.GETPROP);
-    assertNode(getprop).hasLineno(2);
-    assertNode(getprop).hasCharno(1);
+    assertNode(getprop).hasLineno(3);
+    assertNode(getprop).hasCharno(0);
 
     Node name = getprop.getSecondChild();
     assertNode(name).hasType(Token.STRING);
@@ -5217,8 +5217,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(0);
-    assertNode(n).hasLength(4);
+    assertNode(n).hasCharno(3);
+    assertNode(n).hasLength(1);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("b"));
   }
@@ -5230,8 +5230,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(0);
-    assertNode(n).hasLength(10);
+    assertNode(n).hasCharno(3);
+    assertNode(n).hasLength(7);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("finally"));
   }
@@ -5288,15 +5288,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(outerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(outerGet).isNotOptionalChainStart();
     assertNode(outerGet).hasLineno(1);
-    assertNode(outerGet).hasCharno(0);
-    assertNode(outerGet).hasLength(6);
+    assertNode(outerGet).hasCharno(5);
+    assertNode(outerGet).hasLength(1);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(0);
-    assertNode(innerGet).hasLength(4);
+    assertNode(innerGet).hasCharno(3);
+    assertNode(innerGet).hasLength(1);
 
     assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
@@ -5353,15 +5353,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // `(a?.b).c`
     assertNode(outerGet).hasType(Token.GETPROP);
     assertNode(outerGet).hasLineno(1);
-    assertNode(outerGet).hasCharno(0);
-    assertNode(outerGet).hasLength(8);
+    assertNode(outerGet).hasCharno(7);
+    assertNode(outerGet).hasLength(1);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(1);
-    assertNode(innerGet).hasLength(4);
+    assertNode(innerGet).hasCharno(4);
+    assertNode(innerGet).hasLength(1);
 
     assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
@@ -5374,8 +5374,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(get).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(get).hasLineno(1);
-    assertNode(get).hasCharno(0);
-    assertNode(get).hasLength(6);
+    assertNode(get).hasCharno(5);
+    assertNode(get).hasLength(1);
 
     assertNode(call).hasType(Token.CALL);
     assertNode(call).hasLineno(1);

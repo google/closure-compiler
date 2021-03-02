@@ -717,8 +717,8 @@ public final class SymbolTableTest {
     assertThat(refs).hasSize(5);
 
     assertThat(refs.get(0).getNode().getLineno()).isEqualTo(2);
-    assertThat(refs.get(0).getNode().getCharno()).isEqualTo(20);
-    assertThat(refs.get(0).getNode().getLength()).isEqualTo(8);
+    assertThat(refs.get(0).getNode().getCharno()).isEqualTo(25);
+    assertThat(refs.get(0).getNode().getLength()).isEqualTo(3);
 
     assertThat(refs.get(1).getNode().getLineno()).isEqualTo(3);
     assertThat(refs.get(1).getNode().getCharno()).isEqualTo(16);

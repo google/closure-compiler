@@ -307,28 +307,23 @@ public final class SuggestedFix {
 
     /**
      * Renames a given node to the provided name.
+     *
      * @param n The node to rename.
      * @param name The new name for the node.
-     * @param replaceEntireName True to replace the entire name of the node. The
-     *     default is to replace just the last property in the node with the new
-     *     name. For instance, if {@code replaceEntireName} is false, then
-     *     {@code this.foo()} will be renamed to {@code this.bar()}. However, if
-     *     it is true, it will be renamed to {@code bar()}.
+     * @param replaceNameSubtree True to replace the entire name subtree below the node. The default
+     *     is to replace just the last property in the node with the new name. For instance, if
+     *     {@code replaceNameSubtree} is false, then {@code this.foo()} will be renamed to {@code
+     *     this.bar()}. However, if it is true, it will be renamed to {@code bar()}.
      */
-    public Builder rename(Node n, String name, boolean replaceEntireName) {
-      final Node nodeToRename;
+    public Builder rename(Node n, String name, boolean replaceNameSubtree) {
+      final Node range;
       switch (n.getToken()) {
         case CALL:
         case TAGGED_TEMPLATELIT:
-          return this.rename(n.getFirstChild(), name, replaceEntireName);
+          return this.rename(n.getFirstChild(), name, replaceNameSubtree);
 
         case GETPROP:
-          if (replaceEntireName) {
-            while (n.getParent().isGetProp()) {
-              n = n.getParent();
-            }
-          }
-          nodeToRename = n;
+          range = replaceNameSubtree ? subtreeRangeOfIdentifier(n) : n;
           break;
 
         case STRING:
@@ -336,7 +331,7 @@ public final class SuggestedFix {
           // Fall through
         case STRING_KEY:
         case NAME:
-          nodeToRename = n;
+          range = n;
           break;
 
         default:
@@ -344,18 +339,9 @@ public final class SuggestedFix {
               "Rename is not implemented for this node type: " + n);
       }
 
-      int offset = nodeToRename.getSourceOffset();
-      int length = nodeToRename.getLength();
-
-      if (!replaceEntireName && nodeToRename.isGetProp()) {
-        int propOffset = nodeToRename.getPropnameSourceOffset();
-        checkState(propOffset >= 0, nodeToRename);
-        length = offset + length - propOffset;
-        offset = propOffset;
-      }
-
       replacements.put(
-          nodeToRename.getSourceFileName(), CodeReplacement.create(offset, length, name));
+          range.getSourceFileName(),
+          CodeReplacement.create(range.getSourceOffset(), range.getLength(), name));
       return this;
     }
 
@@ -394,6 +380,7 @@ public final class SuggestedFix {
       if (newCode.endsWith("\n")) {
         newCode = newCode.substring(0, newCode.length() - 1);
       }
+
       // Most replacements don't need the semicolon in the new generated code - however, some
       // statements that are blocks or expressions will need the semicolon.
       boolean needsSemicolon =
@@ -426,9 +413,14 @@ public final class SuggestedFix {
         }
       }
 
+      Node range = original;
+      if (original.isGetProp()) {
+        range = subtreeRangeOfIdentifier(original);
+      }
+
       replacements.put(
-          original.getSourceFileName(),
-          CodeReplacement.create(original.getSourceOffset(), original.getLength(), newCode));
+          range.getSourceFileName(),
+          CodeReplacement.create(range.getSourceOffset(), range.getLength(), newCode));
       return this;
     }
 
@@ -468,15 +460,20 @@ public final class SuggestedFix {
      * Adds or replaces the JS Doc for the given node.
      */
     public Builder addOrReplaceJsDoc(Node n, String newJsDoc) {
-      int startPosition = n.getSourceOffset();
+      int offset = n.getSourceOffset();
       int length = 0;
+
+      if (n.isGetProp()) {
+        offset = subtreeRangeOfIdentifier(n).getSourceOffset();
+      }
+
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null) {
-        startPosition = jsDoc.getOriginalCommentPosition();
+        offset = jsDoc.getOriginalCommentPosition();
         length = jsDoc.getOriginalCommentString().length();
       }
-      replacements.put(
-          n.getSourceFileName(), CodeReplacement.create(startPosition, length, newJsDoc));
+
+      replacements.put(n.getSourceFileName(), CodeReplacement.create(offset, length, newJsDoc));
       return this;
     }
 
@@ -822,6 +819,22 @@ public final class SuggestedFix {
         }
       }
       return null;
+    }
+
+    private static Node subtreeRangeOfIdentifier(Node n) {
+      checkState(n.isGetProp(), "Support other identifier nodes");
+
+      Node leftmost = n;
+      while (leftmost.hasChildren()) {
+        leftmost = leftmost.getFirstChild();
+      }
+
+      Node result = IR.empty();
+      result.setStaticSourceFile(n.getStaticSourceFile());
+      result.setLineno(leftmost.getLineno());
+      result.setCharno(leftmost.getCharno());
+      result.setLength(n.getLength() + (n.getSourceOffset() - leftmost.getSourceOffset()));
+      return result;
     }
 
     public String generateCode(AbstractCompiler compiler, Node node) {

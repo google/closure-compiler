@@ -802,7 +802,7 @@ public class CodeGenerator {
         {
           addExpr(first, NodeUtil.precedence(type), context);
           add(node.isOptionalChainStart() ? "?." : ".");
-          addIdentifier(Node.getGetpropString(node));
+          addGetpropIdentifier(node);
           break;
         }
 
@@ -820,7 +820,7 @@ public class CodeGenerator {
                 && node.getParent().isAssign()) {
               add("var ");
             }
-            addIdentifier(node.getOriginalName());
+            addGetpropIdentifier(node);
             break;
           }
           // We need parentheses to distinguish
@@ -844,7 +844,7 @@ public class CodeGenerator {
             add("[\"" + Node.getGetpropString(node) + "\"]");
           } else {
             add(".");
-            addIdentifier(Node.getGetpropStringNode(node));
+            addGetpropIdentifier(node);
           }
           break;
         }
@@ -1436,10 +1436,10 @@ public class CodeGenerator {
     cc.addIdentifier(identifierEscape(identifier));
   }
 
-  private void addIdentifier(Node identifier) {
-    cc.startSourceMapping(identifier);
-    addIdentifier(identifier.getString());
-    cc.endSourceMapping(identifier);
+  private void addGetpropIdentifier(Node getprop) {
+    cc.startSourceMapping(getprop);
+    addIdentifier(Node.getGetpropString(getprop));
+    cc.endSourceMapping(getprop);
   }
 
   private int precedence(Node n) {

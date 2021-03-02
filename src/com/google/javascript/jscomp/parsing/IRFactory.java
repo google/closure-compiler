@@ -2137,7 +2137,13 @@ class IRFactory {
       if (!rightChild.isQuotedString() && !currentFileIsExterns) {
         maybeWarnKeywordProperty(rightChild);
       }
-      return newNode(Token.GETPROP, leftChild, rightChild);
+      Node getProp = newNode(Token.GETPROP);
+      getProp.addChildToBack(leftChild);
+      getProp.addChildToBack(rightChild);
+      if (nodeProp != null) {
+        setSourceInfo(getProp, nodeProp);
+      }
+      return getProp;
     }
 
     Node processOptChainPropertyGet(OptionalMemberExpressionTree getNode) {
@@ -2148,8 +2154,13 @@ class IRFactory {
       if (!rightChild.isQuotedString() && !currentFileIsExterns) {
         maybeWarnKeywordProperty(rightChild);
       }
-      Node getProp = newNode(Token.OPTCHAIN_GETPROP, leftChild, rightChild);
+      Node getProp = newNode(Token.OPTCHAIN_GETPROP);
+      getProp.addChildToBack(leftChild);
+      getProp.addChildToBack(rightChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
+      if (nodeProp != null) {
+        setSourceInfo(getProp, nodeProp);
+      }
       return getProp;
     }
 

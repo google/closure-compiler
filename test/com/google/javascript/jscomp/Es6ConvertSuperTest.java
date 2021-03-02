@@ -144,8 +144,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(8)
-        .hasLength(7);
+        .hasCharno(14)
+        .hasLength(1);
     assertType(callee.getJSType()).isEqualTo(aDotGDotCallType);
 
     // A.prototype.g
@@ -153,8 +153,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(8)
-        .hasLength(7);
+        .hasCharno(14)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -172,8 +172,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(thisNode)
         .hasToken(Token.THIS)
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(8)
-        .hasLength(7)
+        .hasCharno(14)
+        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }
@@ -325,8 +325,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(16)
-        .hasLength(7);
+        .hasCharno(22)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -516,8 +516,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(15)
-        .hasLength(7);
+        .hasCharno(21)
+        .hasLength(1);
     assertType(callee.getJSType()).isEqualTo(aDotGDotCallType);
 
     // A.g
@@ -525,8 +525,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(15)
-        .hasLength(7);
+        .hasCharno(21)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A
@@ -690,8 +690,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(23)
-        .hasLength(7);
+        .hasCharno(29)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -836,8 +836,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(12)
-        .hasLength(7);
+        .hasCharno(18)
+        .hasLength(1);
     assertType(callee.getJSType()).isEqualTo(aDotGDotCallType);
 
     // A.prototype.g
@@ -845,8 +845,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(12)
-        .hasLength(7);
+        .hasCharno(18)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -864,8 +864,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(thisNode)
         .hasToken(Token.THIS)
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(12)
-        .hasLength(7)
+        .hasCharno(18)
+        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }
@@ -933,8 +933,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(5) // position and length of `super.g`
-        .hasCharno(13)
-        .hasLength(7);
+        .hasCharno(19)
+        .hasLength(1);
     assertType(callee.getJSType()).isEqualTo(aDotGDotCallType);
 
     // A.prototype.g
@@ -942,8 +942,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(5) // position and length of `super.g`
-        .hasCharno(13)
-        .hasLength(7);
+        .hasCharno(19)
+        .hasLength(1);
     assertType(superDotGReplacement.getJSType()).isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -961,8 +961,8 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(thisNode)
         .hasToken(Token.THIS)
         .hasLineno(5) // position and length of `super.g`
-        .hasCharno(13)
-        .hasLength(7)
+        .hasCharno(19)
+        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }

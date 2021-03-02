@@ -24221,7 +24221,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "};",
             "var a = new x.y.A();"),
         new String[] {
-          "Property A never defined on x.y", "Property y never defined on x",
+          "Property y never defined on x", "Property A never defined on x.y",
         });
   }
 

@@ -45,8 +45,12 @@ message AstNode {
   // Relative column compared to previous AST node in pre-order traversal
   // Relative to column 0 for the first AST node
   sint32 relative_column = 6;
-  OptimizationJsdoc jsdoc = 7;
+  // For a GETPROP, relative line number of the propname versus this node.
+  sint32 relative_propname_line = 16;
+  // For a GETPROP, relative column number of the propname versus this node.
+  sint32 relative_propname_column = 17;
 
+  OptimizationJsdoc jsdoc = 7;
   repeated NodeProperty boolean_property = 14;
   TypePointer type = 15;
 }

@@ -59,9 +59,11 @@ public final class PolyfillUsageFinderTest {
                 "Array.from es6 es3 es6/array/from",
                 "Map es6 es3 es6/map")
             .forSourceLines(
-                "use(new Map());", //
-                "globalThis.Array.from ? globalThis.Array.from([]) : [];",
-                "[1, 2, 3].fill(0);",
+                "use(new Map());", // 1
+                "globalThis.Array.from", // 2
+                "  ? globalThis.Array.from([])", // 3
+                "  : [];",
+                "[1, 2, 3].fill(0);", // 5
                 "notAPolyfill();")
             .build();
 
@@ -74,7 +76,7 @@ public final class PolyfillUsageFinderTest {
     // Source line 1: `use(new Map())`
     final PolyfillUsageSubject mapUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(0));
-    mapUsageSubject.hasNodeThat().isName("Map").hasLineno(1).hasCharno(8).hasLength(3);
+    mapUsageSubject.hasNodeThat().isName("Map").hasLineno(1);
     mapUsageSubject.hasName("Map").isNotExplicitGlobal();
     mapUsageSubject
         .hasPolyfillThat()
@@ -87,7 +89,7 @@ public final class PolyfillUsageFinderTest {
     // Source line 3: `[1, 2, 3].fill(0);`
     final PolyfillUsageSubject arrayFillUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(1));
-    arrayFillUsageSubject.hasNodeThat().isGetProp().hasLineno(3).hasCharno(0).hasLength(14);
+    arrayFillUsageSubject.hasNodeThat().isGetProp().hasLineno(5);
     arrayFillUsageSubject.hasName("fill").isNotExplicitGlobal();
     arrayFillUsageSubject
         .hasPolyfillThat()
@@ -106,11 +108,11 @@ public final class PolyfillUsageFinderTest {
 
     final PolyfillUsageSubject hookConditionUseSubject =
         PolyfillUsageSubject.assertPolyfillUsage(guardedPolyfillUsages.get(0));
-    hookConditionUseSubject.hasNodeThat().isGetProp().hasLineno(2).hasCharno(0).hasLength(21);
+    hookConditionUseSubject.hasNodeThat().isGetProp().hasLineno(2);
 
     final PolyfillUsageSubject arrayDotFromUseSubject =
         PolyfillUsageSubject.assertPolyfillUsage(guardedPolyfillUsages.get(1));
-    arrayDotFromUseSubject.hasNodeThat().isGetProp().hasLineno(2).hasCharno(24).hasLength(21);
+    arrayDotFromUseSubject.hasNodeThat().isGetProp().hasLineno(3);
 
     // Other than the node they reference, both usage objects are the same
     for (PolyfillUsageSubject arrayDotFromUsageSubject :
@@ -154,9 +156,7 @@ public final class PolyfillUsageFinderTest {
     promiseUsageSubject //
         .hasNodeThat()
         .isName("Promise")
-        .hasLineno(1)
-        .hasCharno(0)
-        .hasLength(7);
+        .hasLineno(1);
     promiseUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise")
@@ -171,9 +171,7 @@ public final class PolyfillUsageFinderTest {
     allSettledUsageSubject //
         .hasNodeThat()
         .matchesQualifiedName("Promise.allSettled")
-        .hasLineno(1)
-        .hasCharno(0)
-        .hasLength(18);
+        .hasLineno(1);
     allSettledUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise.allSettled")
@@ -201,12 +199,7 @@ public final class PolyfillUsageFinderTest {
     assertThat(unguardedPolyfillUsages).hasSize(1);
     final PolyfillUsageSubject unguardedUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(0));
-    unguardedUsageSubject
-        .hasNodeThat()
-        .hasToken(Token.OPTCHAIN_GETPROP)
-        .hasLineno(1)
-        .hasCharno(0)
-        .hasLength(11);
+    unguardedUsageSubject.hasNodeThat().hasToken(Token.OPTCHAIN_GETPROP).hasLineno(1);
 
     // Second usage is guarded
     final ImmutableList<PolyfillUsage> guardedPolyfillUsages =
@@ -214,12 +207,7 @@ public final class PolyfillUsageFinderTest {
     assertThat(guardedPolyfillUsages).hasSize(1);
     final PolyfillUsageSubject guardedUsageSubject =
         PolyfillUsageSubject.assertPolyfillUsage(guardedPolyfillUsages.get(0));
-    guardedUsageSubject
-        .hasNodeThat()
-        .hasToken(Token.GETPROP)
-        .hasLineno(2)
-        .hasCharno(0)
-        .hasLength(10);
+    guardedUsageSubject.hasNodeThat().hasToken(Token.GETPROP).hasLineno(2);
 
     // Other than the node they reference, both usage objects are the same
     for (PolyfillUsageSubject arrayDotFromUsageSubject :
