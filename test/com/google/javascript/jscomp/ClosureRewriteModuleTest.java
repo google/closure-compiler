@@ -55,11 +55,11 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     return (externs, main) -> {
       ReverseAbstractInterpreter rai =
           new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-      compiler.setTypeCheckingHasRun(true);
       TypedScope globalTypedScope =
           checkNotNull(
               new TypeCheck(compiler, rai, compiler.getTypeRegistry())
                   .processForTesting(externs, main));
+      compiler.setTypeCheckingHasRun(true);
 
       new ClosureRewriteModule(compiler, null, null, globalTypedScope).process(externs, main);
     };

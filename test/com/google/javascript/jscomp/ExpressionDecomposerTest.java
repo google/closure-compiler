@@ -1982,10 +1982,10 @@ public final class ExpressionDecomposerTest {
 
   private void processForTypecheck(AbstractCompiler compiler, Node jsRoot) {
     Node root = IR.root(IR.root(), IR.root(jsRoot));
-    compiler.setTypeCheckingHasRun(true);
     JSTypeRegistry registry = compiler.getTypeRegistry();
     (new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry))
         .processForTesting(root.getFirstChild(), root.getSecondChild());
+    compiler.setTypeCheckingHasRun(true);
   }
 
   @Nullable

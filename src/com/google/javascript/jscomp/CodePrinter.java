@@ -31,6 +31,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * CodePrinter prints out JS code in either pretty format or compact format.
@@ -669,7 +670,7 @@ public final class CodePrinter {
     private SourceMap sourceMap = null;
     private boolean tagAsTypeSummary;
     private boolean tagAsStrict;
-    private JSTypeRegistry registry;
+    @Nullable private JSTypeRegistry registry; // may be null unless using Format.TYPED
     private CodeGeneratorFactory codeGeneratorFactory = new CodeGeneratorFactory() {
       @Override
       public CodeGenerator getCodeGenerator(Format outputFormat, CodeConsumer cc) {

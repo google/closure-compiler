@@ -145,13 +145,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // End of intermediate state needed by passes.
   //
 
-  /**
-   * Sets the type-checking pass that ran most recently.
-   */
+  /** Sets whether the typechecking passes have run. */
   abstract void setTypeCheckingHasRun(boolean hasRun);
 
-  /** Gets the type-checking pass that ran most recently. */
+  /** Returns whether the typechecking passes have run */
   public abstract boolean hasTypeCheckingRun();
+
+  /** Whether the AST has been annotated with optimization colors. */
+  public abstract boolean hasOptimizationColors();
 
   /**
    * Gets a central registry of type information from the compiled JS.
@@ -653,10 +654,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /**
    * Returns a new AstFactory that will add type information to the nodes it creates if and only if
-   * type checking has already happened.
+   * type checking has already happened and types have not been converted into colors.
+   *
+   * <p>Note that the AstFactory will /not/ add colors to the AST if types have been converted into
+   * colors. The AstFactory does not understand colors, although color support could certainly be
+   * added if it proves useful.
    */
-  public AstFactory createAstFactory() {
-    return hasTypeCheckingRun()
+  public final AstFactory createAstFactory() {
+    return hasTypeCheckingRun() && !hasOptimizationColors()
         ? AstFactory.createFactoryWithTypes(getTypeRegistry())
         : AstFactory.createFactoryWithoutTypes();
   }
@@ -665,7 +670,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * Returns a new AstFactory that will not add type information, regardless of whether type
    * checking has already happened.
    */
-  public AstFactory createAstFactoryWithoutTypes() {
+  public final AstFactory createAstFactoryWithoutTypes() {
     return AstFactory.createFactoryWithoutTypes();
   }
 

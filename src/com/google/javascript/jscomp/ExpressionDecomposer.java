@@ -65,8 +65,8 @@ class ExpressionDecomposer {
   private final Supplier<String> safeNameIdSupplier;
   private final ImmutableSet<String> knownConstantFunctions;
   private final Scope scope;
-  private final JSType unknownType;
-  private final JSType stringType;
+  @Nullable private final JSType unknownType;
+  @Nullable private final JSType stringType;
 
   /**
    * @param constFunctionNames set of names known to be constant functions. Used by InlineFunctions
@@ -86,8 +86,14 @@ class ExpressionDecomposer {
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstantFunctions = constFunctionNames;
     this.scope = scope;
-    this.unknownType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    this.stringType = compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
+    this.unknownType =
+        compiler.hasTypeCheckingRun() && !compiler.hasOptimizationColors()
+            ? compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE)
+            : null;
+    this.stringType =
+        compiler.hasTypeCheckingRun() && !compiler.hasOptimizationColors()
+            ? compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE)
+            : null;
   }
 
   // An arbitrary limit to prevent catch infinite recursion.

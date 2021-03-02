@@ -124,11 +124,11 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
       if (runTypeChecker) {
         ReverseAbstractInterpreter rai =
             new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-        compiler.setTypeCheckingHasRun(true);
         globalTypedScope =
             checkNotNull(
                 new TypeCheck(compiler, rai, compiler.getTypeRegistry())
                     .processForTesting(externs, root));
+        compiler.setTypeCheckingHasRun(true);
       } else {
         globalTypedScope = null;
       }

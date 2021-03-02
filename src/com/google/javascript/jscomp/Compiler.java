@@ -1489,6 +1489,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
+      checkState(
+          !this.hasTypeCheckingRun(),
+          // This could throw when calling "getTypeRegistry()" during the optimizations phase when
+          // JSTypes have been converted to optimization colors
+          "Attempted to re-initialize JSTypeRegistry after it had been cleared");
       typeRegistry = new JSTypeRegistry(oldErrorReporter, forwardDeclaredTypes);
     }
     return typeRegistry;
@@ -1517,6 +1522,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public boolean hasTypeCheckingRun() {
     return this.typeCheckingHasRun;
+  }
+
+  @Override
+  public boolean hasOptimizationColors() {
+    return this.colorRegistry != null;
   }
 
   @Override
@@ -1605,6 +1615,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   TypeValidator getTypeValidator() {
     if (typeValidator == null) {
+      checkState(
+          !this.hasTypeCheckingRun(),
+          // This could throw when calling "getTypeValidator()" during the optimizations phase when
+          // JSTypes have been converted to optimization colors
+          "Attempted to re-initialize TypeValidator after it had been cleared");
       typeValidator = new TypeValidator(this);
     }
     return typeValidator;
@@ -2292,7 +2307,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Generates JavaScript source code for an AST. */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setTypeRegistry(getTypeRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsTypeSummary(!n.isFromExterns() && options.shouldGenerateTypedExterns());

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
@@ -52,9 +54,14 @@ public abstract class PassConfig {
     return this.typedScopeCreator;
   }
 
-  TypedScopeCreator getTypedScopeCreator(AbstractCompiler copmiler) {
+  TypedScopeCreator getTypedScopeCreator(AbstractCompiler compiler) {
     if (this.typedScopeCreator == null) {
-      this.typedScopeCreator = new TypedScopeCreator(copmiler);
+      checkState(
+          !compiler.hasTypeCheckingRun(),
+          // This could throw when calling "getTypedScopeCreator()" during the optimizations phase
+          // when JSTypes have been converted to optimization colors
+          "Attempted to re-initialize TypedScopeCreator after it had been cleared");
+      this.typedScopeCreator = new TypedScopeCreator(compiler);
     }
     return this.typedScopeCreator;
   }

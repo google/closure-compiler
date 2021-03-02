@@ -61,11 +61,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-    compiler.setTypeCheckingHasRun(true);
     TypedScope globalTypedScope =
         checkNotNull(
             new TypeCheck(compiler, rai, compiler.getTypeRegistry())
                 .processForTesting(externs, main));
+    compiler.setTypeCheckingHasRun(true);
     return new ProcessClosureProvidesAndRequires(
         compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires, globalTypedScope);
   }

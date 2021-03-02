@@ -1014,8 +1014,9 @@ public abstract class CompilerTestCase {
   private static TypeCheck createTypeCheck(Compiler compiler) {
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+    TypeCheck typeChecker = new TypeCheck(compiler, rai, compiler.getTypeRegistry());
     compiler.setTypeCheckingHasRun(true);
-    return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
+    return typeChecker;
   }
 
   /** Ensures the given library is injected before typechecking */
@@ -1546,7 +1547,7 @@ public abstract class CompilerTestCase {
           changeVerifier.snapshot(mainRoot);
         }
 
-        if (replaceTypesWithColors) {
+        if (replaceTypesWithColors && i == 0) {
           if (typeCheckEnabled) {
             new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
                 .process(externsRoot, mainRoot);

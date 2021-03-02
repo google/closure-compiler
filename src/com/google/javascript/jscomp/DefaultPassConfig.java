@@ -1699,10 +1699,10 @@ public final class DefaultPassConfig extends PassConfig {
                     @Override
                     public void process(Node unused, Node srcRoot) {
                       Node globalRoot = srcRoot.getParent();
-                      compiler.setTypeCheckingHasRun(true);
 
-                      DefaultPassConfig.this.topScope =
-                          this.createInference().inferAllScopes(globalRoot);
+                      TypeInferencePass inferencePass = this.createInference();
+                      compiler.setTypeCheckingHasRun(true);
+                      DefaultPassConfig.this.topScope = inferencePass.inferAllScopes(globalRoot);
                     }
 
                     @Override

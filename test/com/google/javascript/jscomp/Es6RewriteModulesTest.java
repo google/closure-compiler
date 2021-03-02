@@ -99,11 +99,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     return (externs, root) -> {
       ReverseAbstractInterpreter rai =
           new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-      compiler.setTypeCheckingHasRun(true);
       TypedScope globalTypedScope =
           checkNotNull(
               new TypeCheck(compiler, rai, compiler.getTypeRegistry())
                   .processForTesting(externs, root));
+      compiler.setTypeCheckingHasRun(true);
       new Es6RewriteModules(
               compiler,
               compiler.getModuleMetadataMap(),
