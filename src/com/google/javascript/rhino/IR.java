@@ -410,7 +410,8 @@ public class IR {
   public static Node startOptChainGetprop(Node target, Node prop) {
     checkState(mayBeExpression(target), target);
     checkState(prop.isString(), prop);
-    Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
+    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop.getString());
+    optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(true);
     return optChainGetProp;
   }
@@ -418,7 +419,8 @@ public class IR {
   public static Node continueOptChainGetprop(Node target, Node prop) {
     checkState(mayBeExpression(target), target);
     checkState(prop.isString(), prop);
-    Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
+    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop.getString());
+    optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(false);
     return optChainGetProp;
   }
@@ -426,25 +428,32 @@ public class IR {
   public static Node getprop(Node target, Node prop) {
     checkState(mayBeExpression(target));
     checkState(prop.isString());
-    return new Node(Token.GETPROP, target, prop);
+    return IR.getprop(target, prop.getString());
   }
 
   public static Node getprop(Node target, Node prop, Node... moreProps) {
     checkState(mayBeExpression(target));
     checkState(prop.isString());
-    Node result = new Node(Token.GETPROP, target, prop);
+    Node result = IR.getprop(target, prop);
     for (Node moreProp : moreProps) {
       checkState(moreProp.isString());
-      result = new Node(Token.GETPROP, result, moreProp);
+      result = IR.getprop(result, moreProp);
     }
     return result;
   }
 
+  public static Node getprop(Node target, String prop) {
+    checkState(mayBeExpression(target));
+    Node getprop = Node.newString(Token.GETPROP, prop);
+    getprop.addChildToBack(target);
+    return getprop;
+  }
+
   public static Node getprop(Node target, String prop, String... moreProps) {
     checkState(mayBeExpression(target));
-    Node result = new Node(Token.GETPROP, target, IR.string(prop));
+    Node result = IR.getprop(target, prop);
     for (String moreProp : moreProps) {
-      result = new Node(Token.GETPROP, result, IR.string(moreProp));
+      result = IR.getprop(result, moreProp);
     }
     return result;
   }

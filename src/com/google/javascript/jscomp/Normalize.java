@@ -172,11 +172,16 @@ class Normalize implements CompilerPass {
         if (exposedProperties.contains(propName)) {
           Node string =
               Node.isStringGetprop(n)
-                  ? IR.string(propName).clonePropsFrom(n).useSourceInfoFrom(n)
+                  ? IR.string(propName).useSourceInfoFrom(n)
                   : n.getSecondChild().detach();
-          Node obj = n.removeFirstChild();
+          Node getelem =
+              IR.getelem(n.removeFirstChild(), string)
+                  .clonePropsFrom(n)
+                  .useSourceInfoFrom(n)
+                  .setJSType(n.getJSType());
+
           compiler.reportChangeToEnclosingScope(n);
-          n.replaceWith(IR.getelem(obj, string));
+          n.replaceWith(getelem);
         }
       } else if (n.isStringKey()) {
         String propName = n.getString();

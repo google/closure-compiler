@@ -629,11 +629,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(getprop).hasType(Token.GETPROP);
     assertNode(getprop).hasLineno(2);
     assertNode(getprop).hasCharno(5);
-
-    Node name = getprop.getSecondChild();
-    assertNode(name).hasType(Token.STRING);
-    assertNode(name).hasLineno(2);
-    assertNode(name).hasCharno(5);
+    assertNode(getprop).hasStringThat().isEqualTo("bar");
   }
 
   @Test
@@ -643,11 +639,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(getprop).hasType(Token.GETPROP);
     assertNode(getprop).hasLineno(3);
     assertNode(getprop).hasCharno(0);
-
-    Node name = getprop.getSecondChild();
-    assertNode(name).hasType(Token.STRING);
-    assertNode(name).hasLineno(3);
-    assertNode(name).hasCharno(0);
+    assertNode(getprop).hasStringThat().isEqualTo("bar");
   }
 
   @Test
@@ -5243,7 +5235,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasCharno(3);
     assertNode(n).hasLength(1);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
-    assertNode(n.getSecondChild()).isEqualTo(IR.string("b"));
+    assertNode(n).hasStringThat().isEqualTo("b");
   }
 
   @Test
@@ -5256,7 +5248,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasCharno(3);
     assertNode(n).hasLength(7);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
-    assertNode(n.getSecondChild()).isEqualTo(IR.string("finally"));
+    assertNode(n).hasStringThat().isEqualTo("finally");
   }
 
   @Test
@@ -5321,7 +5313,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(innerGet).hasCharno(3);
     assertNode(innerGet).hasLength(1);
 
-    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet).hasStringThat().isEqualTo("c");
   }
 
   @Test
@@ -5386,7 +5378,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(innerGet).hasCharno(4);
     assertNode(innerGet).hasLength(1);
 
-    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet).hasStringThat().isEqualTo("c");
   }
 
   @Test

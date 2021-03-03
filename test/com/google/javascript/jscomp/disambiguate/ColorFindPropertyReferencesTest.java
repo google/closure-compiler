@@ -23,8 +23,10 @@ import static com.google.common.collect.Multimaps.toMultimap;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
+import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.Token.STRING_KEY;
@@ -149,7 +151,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     // Then
     assertThat(this.propIndex.keySet()).containsExactly("a");
 
-    this.assertThatUsesOf("a").containsExactly("FOO", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO", GETPROP);
   }
 
   @Test
@@ -168,7 +170,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     // Then
     assertThat(this.propIndex.keySet()).containsExactly("a");
 
-    this.assertThatUsesOf("a").containsExactly("FOO", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO", OPTCHAIN_GETPROP);
   }
 
   @Test
@@ -267,7 +269,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     // Then
     assertThat(this.propIndex.keySet()).containsExactly("a", "constructor");
 
-    this.assertThatUsesOf("a").containsExactly("FOO", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO", GETPROP);
   }
 
   @Test
@@ -413,7 +415,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
                 "TUM: new Tum();"));
 
     // Then
-    this.assertThatUsesOf("a").containsExactly("FOO", STRING, "BAR", STRING, "QUX", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO", GETPROP, "BAR", GETPROP, "QUX", GETPROP);
 
     // "Original name" type clusters are checked during teardown.
   }
@@ -443,7 +445,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
                 "QUX: new Qux();"));
 
     // Then
-    this.assertThatUsesOf("a").containsExactly("FOO", STRING, "BAR", STRING_KEY, "QUX", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO", GETPROP, "BAR", STRING_KEY, "QUX", GETPROP);
 
     // "Original name" type clusters are checked during teardown.
   }

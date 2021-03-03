@@ -2137,9 +2137,8 @@ class IRFactory {
       if (!rightChild.isQuotedString() && !currentFileIsExterns) {
         maybeWarnKeywordProperty(rightChild);
       }
-      Node getProp = newNode(Token.GETPROP);
+      Node getProp = newStringNode(Token.GETPROP, rightChild.getString());
       getProp.addChildToBack(leftChild);
-      getProp.addChildToBack(rightChild);
       if (nodeProp != null) {
         setSourceInfo(getProp, nodeProp);
       }
@@ -2154,9 +2153,8 @@ class IRFactory {
       if (!rightChild.isQuotedString() && !currentFileIsExterns) {
         maybeWarnKeywordProperty(rightChild);
       }
-      Node getProp = newNode(Token.OPTCHAIN_GETPROP);
+      Node getProp = newStringNode(Token.OPTCHAIN_GETPROP, rightChild.getString());
       getProp.addChildToBack(leftChild);
-      getProp.addChildToBack(rightChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
       if (nodeProp != null) {
         setSourceInfo(getProp, nodeProp);
