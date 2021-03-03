@@ -295,6 +295,29 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testArrayWithElisions() {
+    Node arrayLit =
+        parse("[  , 1,   ,]") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // ARRAYLIT
+
+    assertNode(arrayLit).hasType(Token.ARRAYLIT);
+    assertNode(arrayLit).hasXChildren(3);
+
+    assertNode(arrayLit.getFirstChild()).hasType(Token.EMPTY);
+    assertNode(arrayLit.getFirstChild()).hasCharno(3);
+    assertNode(arrayLit.getFirstChild()).hasLength(0);
+
+    assertNode(arrayLit.getSecondChild()).hasToken(Token.NUMBER);
+
+    assertNode(arrayLit.getChildAtIndex(2)).hasType(Token.EMPTY);
+    assertNode(arrayLit.getChildAtIndex(2)).hasLength(0);
+    assertNode(arrayLit.getChildAtIndex(2)).hasCharno(10);
+
+    assertNode(arrayLit).hasTrailingComma();
+  }
+
+  @Test
   public void testWhile() {
     parse("while(1) { break; }");
   }

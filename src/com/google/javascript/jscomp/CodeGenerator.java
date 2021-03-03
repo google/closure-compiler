@@ -1864,9 +1864,7 @@ public class CodeGenerator {
   }
 
   /**
-   * This function adds a comma-separated list as is specified by an ARRAYLIT node with the
-   * associated skipIndexes array. This is a space optimization since we avoid creating a whole Node
-   * object for each empty array literal slot.
+   * Adds a comma-separated list as is specified by an ARRAYLIT node.
    *
    * @param firstInList The first in the node list (chained through the next property).
    */

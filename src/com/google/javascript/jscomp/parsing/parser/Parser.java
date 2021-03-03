@@ -1861,7 +1861,11 @@ public class Parser {
     while (peek(TokenType.COMMA) || peek(TokenType.ELLIPSIS) || peekAssignmentExpression()) {
       trailingCommaToken = null;
       if (peek(TokenType.COMMA)) {
-        elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
+        SourcePosition commaStart = getTreeStartLocation();
+        trailingCommaToken = eat(TokenType.COMMA);
+        // Consider the empty element to start & end immediately before the comma token.
+        elements.add(new NullTree(new SourceRange(commaStart, commaStart)));
+
       } else {
         if (peek(TokenType.ELLIPSIS)) {
           recordFeatureUsed(Feature.SPREAD_EXPRESSIONS);
@@ -1869,9 +1873,9 @@ public class Parser {
         } else {
           elements.add(parseAssignmentExpression());
         }
-      }
-      if (!peek(TokenType.CLOSE_SQUARE)) {
-        trailingCommaToken = eat(TokenType.COMMA);
+        if (!peek(TokenType.CLOSE_SQUARE)) {
+          trailingCommaToken = eat(TokenType.COMMA);
+        }
       }
     }
     eat(TokenType.CLOSE_SQUARE);
