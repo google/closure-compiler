@@ -5259,6 +5259,19 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParsePureOrBreakMyCode() {
+    JSDocInfo jsDocInfo = parse("@pureOrBreakMyCode */");
+    assertThat(jsDocInfo.isPureOrBreakMyCode()).isTrue();
+  }
+
+  @Test
+  public void testParseDuplicatePureOrBreakMyCode() {
+    parse(
+        "@pureOrBreakMyCode \n * @pureOrBreakMyCode \n * @type {Object}*/",
+        "extra @pureOrBreakMyCode tag");
+  }
+
+  @Test
   public void testPreserveWhitespace1() {
     JSDocInfo jsdoc = preserveWhitespaceParse(
         "this is a nice comment\n"

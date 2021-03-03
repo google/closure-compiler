@@ -281,6 +281,7 @@ public class JSDocInfo implements Serializable {
     NOCOLLAPSE,
     RECORD,
     ABSTRACT,
+    PURE_OR_BREAK_MY_CODE,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -795,6 +796,13 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoInline() {
     return checkBit(Bit.NOINLINE);
+  }
+
+  /**
+   * Returns whether the {@code @pureOrBreakMyCode} annotation is present on this {@link JSDocInfo}.
+   */
+  public boolean isPureOrBreakMyCode() {
+    return checkBit(Bit.PURE_OR_BREAK_MY_CODE);
   }
 
   /**
@@ -2106,6 +2114,17 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isPureOrBreakMyCode()} flag set to {@code true}.
+     *
+     * @return {@code true} if the no pureOrBreakMyCode flag was recorded and {@code false} if it
+     *     was already recorded
+     */
+    public boolean recordPureOrBreakMyCode() {
+      return populateBit(Bit.PURE_OR_BREAK_MY_CODE, true);
     }
 
     /**

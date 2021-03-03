@@ -69,6 +69,7 @@ enum Annotation {
   PRIVATE,
   PROTECTED,
   PUBLIC,
+  PURE_OR_BREAK_MY_CODE,
   RETURN,
   SEE,
   STRUCT,
@@ -134,6 +135,7 @@ enum Annotation {
           .put("private", Annotation.PRIVATE)
           .put("protected", Annotation.PROTECTED)
           .put("public", Annotation.PUBLIC)
+          .put("pureOrBreakMyCode", Annotation.PURE_OR_BREAK_MY_CODE)
           .put("return", Annotation.RETURN)
           .put("returns", Annotation.RETURN)
           .put("see", Annotation.SEE)

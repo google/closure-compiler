@@ -704,6 +704,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case PURE_OR_BREAK_MY_CODE:
+          if (!jsdocBuilder.recordPureOrBreakMyCode()) {
+            addParserWarning("msg.jsdoc.pureorbreakmycode");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NOT_IMPLEMENTED:
           return eatUntilEOLIfNotAnnotation();
 

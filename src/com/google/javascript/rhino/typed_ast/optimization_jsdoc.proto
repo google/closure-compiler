@@ -57,4 +57,7 @@ enum JsdocTag {
 
   // Used by CollapseProperties
   JSDOC_SUPPRESS_PARTIAL_ALIAS = 23;
+
+  // Used by CrossChunkCodeMotion
+  JSDOC_PURE_OR_BREAK_MY_CODE = 24;
 }
