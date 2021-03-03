@@ -26,7 +26,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
-import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,19 +52,24 @@ import java.util.zip.ZipInputStream;
 
 /**
  * An abstract representation of a source file that provides access to language-neutral features.
- * The source file can be loaded from various locations, such as from disk or from a preloaded
- * string.
+ *
+ * <p>The source file can be loaded from various locations, such as from disk or from a preloaded
+ * string. Loading is done as lazily as possible to minimize IO delays and memory cost of source
+ * text.
  */
-public abstract class SourceFile implements StaticSourceFile, Serializable {
+public final class SourceFile implements StaticSourceFile, Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final String UTF8_BOM = "\uFEFF";
 
-  /** A JavaScript source code provider.  The value should
-   * be cached so that the source text stays consistent throughout a single
-   * compile. */
+  /**
+   * A JavaScript source code provider.
+   *
+   * <p>The value should be cached so that the source text stays consistent throughout a single
+   * compile.
+   */
   public interface Generator {
-    String getCode();
+    String getCode() throws IOException;
   }
 
   /**
@@ -93,12 +97,14 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
    */
   private final String originalPath;
 
+  private final CodeLoader loader;
+
   // Source Line Information
   private transient int[] lineOffsets = null;
 
   private transient String code = null;
 
-  private SourceFile(String fileName, String originalPath, SourceKind kind) {
+  private SourceFile(CodeLoader loader, String fileName, String originalPath, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
       throw new IllegalArgumentException("a source must have a name");
     }
@@ -107,6 +113,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       fileName = fileName.replace(Platform.getFileSeperator(), "/");
     }
 
+    this.loader = loader;
     this.fileName = fileName;
     this.originalPath = originalPath;
     this.kind = kind;
@@ -161,7 +168,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       synchronized (this) {
         // Make sure another thread hasn't loaded the code while we waited.
         if (this.code == null) {
-          this.setCodeAndDoBookkeeping(this.loadUncachedCode());
+          this.setCodeAndDoBookkeeping(this.loader.loadUncachedCode());
         }
       }
     }
@@ -175,20 +182,24 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   }
 
   /**
-   * Return the source text of this file from its original storage.
-   *
-   * <p>The implementation may be a slow operation such as reading from a file. SourceFile
-   * guarantees that this method is only called under synchronization.
-   */
-  @ForOverride
-  abstract String loadUncachedCode() throws IOException;
-
-  /**
    * Gets a reader for the code in this source file.
    */
   @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
-    return new StringReader(getCode());
+    // Only synchronize if we need to
+    if (this.code == null) {
+      synchronized (this) {
+        // Make sure another thread hasn't loaded the code while we waited.
+        if (this.code == null) {
+          Reader uncachedReader = this.loader.openUncachedReader();
+          if (uncachedReader != null) {
+            return uncachedReader;
+          }
+        }
+      }
+    }
+
+    return new StringReader(this.getCode());
   }
 
   private void setCodeAndDoBookkeeping(String sourceCode) {
@@ -586,18 +597,20 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       if (isZipEntry(path.toString())) {
         return fromZipEntry(path.toString(), charset, kind);
       }
-      return new OnDisk(path, originalPath, charset, kind);
+      return new SourceFile(
+          new CodeLoader.OnDisk(path, charset), path.toString(), originalPath, kind);
     }
 
     @GwtIncompatible("java.io.File")
     public SourceFile buildFromZipEntry(ZipEntryReader zipEntryReader) {
       checkNotNull(zipEntryReader);
       checkNotNull(charset);
-      return new SourceFile.AtZip(zipEntryReader, originalPath, charset, kind);
+      return new SourceFile(
+          new CodeLoader.AtZip(zipEntryReader, charset), originalPath, originalPath, kind);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
-      return new Preloaded(fileName, originalPath, code, kind);
+      return new SourceFile(new CodeLoader.Preloaded(code), fileName, originalPath, kind);
     }
 
     @GwtIncompatible("java.io.InputStream")
@@ -611,161 +624,149 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     }
 
     public SourceFile buildFromGenerator(String fileName, Generator generator) {
-      return new Generated(fileName, originalPath, generator, kind);
+      return new SourceFile(new CodeLoader.Generated(generator), fileName, originalPath, kind);
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // Implementations
 
-  /** A source file where the code has been preloaded. */
-  private static final class Preloaded extends SourceFile {
-    private static final long serialVersionUID = 2L;
-    private final String preloadedCode;
-
-    Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
-      super(fileName, originalPath, kind);
-      this.preloadedCode = nullToEmpty(code);
-    }
-
-    @Override
-    String loadUncachedCode() {
-      return this.preloadedCode;
-    }
-  }
-
-  /** A source file where the code will be dynamically generated from the injected interface. */
-  private static final class Generated extends SourceFile {
-    // Avoid serializing generator and remove the burden to make classes that implement
-    // Generator serializable. There should be no need to obtain generated source in the
-    // second stage of compilation. Making the generator transient relies on not clearing the
-    // code cache for these classes up serialization which might be quite wasteful.
-    private transient Generator generator;
-
-    // Not private, so that LazyInput can extend it.
-    Generated(String fileName, String originalPath, Generator generator, SourceKind kind) {
-      super(fileName, originalPath, kind);
-      this.generator = generator;
-    }
-
-    @Override
-    String loadUncachedCode() {
-      return generator.getCode();
-    }
-
-    @Override
-    public void restoreFrom(SourceFile sourceFile) {
-      super.restoreFrom(sourceFile);
-      this.generator = ((Generated) sourceFile).generator;
-    }
-  }
-
-  /**
-   * A source file where the code is only read into memory if absolutely necessary. We will try to
-   * delay loading the code into memory as long as possible.
-   */
-  @GwtIncompatible("com.google.common.io.CharStreams")
-  private static final class OnDisk extends SourceFile {
-    private static final long serialVersionUID = 1L;
-    // TODO(b/180553215): We shouldn't store this Path. We already have to reconstruct it from a
-    // string during deserialization.
-    private transient Path relativePath;
-    private transient Charset inputCharset;
-
-    OnDisk(Path relativePath, String originalPath, Charset c, SourceKind kind) {
-      super(relativePath.toString(), originalPath, kind);
-      this.inputCharset = c;
-      this.relativePath = relativePath;
-    }
-
-    @Override
-    String loadUncachedCode() throws IOException {
-      try (Reader r = getCodeReader()) {
-        return CharStreams.toString(r);
-      } catch (MalformedInputException e) {
-        throw new IOException(
-            "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
-      }
-    }
+  private abstract static class CodeLoader implements Serializable {
+    /**
+     * Return the source text of this file from its original storage.
+     *
+     * <p>The implementation may be a slow operation such as reading from a file. SourceFile
+     * guarantees that this method is only called under synchronization.
+     */
+    abstract String loadUncachedCode() throws IOException;
 
     /**
-     * Gets a reader for the code in this source file.
+     * Return a Reader for the source text of this file from its original storage.
+     *
+     * <p>The implementation may be a slow operation such as reading from a file. SourceFile
+     * guarantees that this method is only called under synchronization.
      */
-    @Override
-    public Reader getCodeReader() throws IOException {
-      if (hasSourceInMemory()) {
-        return super.getCodeReader();
-      } else {
-        // If we haven't pulled the code into memory yet, don't.
-        return Files.newBufferedReader(this.relativePath, inputCharset);
+    Reader openUncachedReader() throws IOException {
+      return null;
+    }
+
+    void restoreFrom(CodeLoader other) {}
+
+    static final class Preloaded extends CodeLoader {
+      private static final long serialVersionUID = 2L;
+      private final String preloadedCode;
+
+      Preloaded(String preloadedCode) {
+        super();
+        this.preloadedCode = nullToEmpty(preloadedCode);
+      }
+
+      @Override
+      String loadUncachedCode() {
+        return this.preloadedCode;
       }
     }
 
-    @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(ObjectOutputStream out) throws Exception {
-      out.defaultWriteObject();
-      out.writeObject(inputCharset.name());
-      out.writeObject(this.relativePath.toString());
-    }
+    static final class Generated extends CodeLoader {
+      // Avoid serializing generator and remove the burden to make classes that implement
+      // Generator serializable. There should be no need to obtain generated source in the
+      // second stage of compilation. Making the generator transient relies on not clearing the
+      // code cache for these classes up serialization which might be quite wasteful.
+      private transient Generator generator;
 
-    @GwtIncompatible("ObjectInputStream")
-    private void readObject(ObjectInputStream in) throws Exception {
-      in.defaultReadObject();
-      inputCharset = Charset.forName((String) in.readObject());
-      this.relativePath = Paths.get((String) in.readObject());
-    }
-  }
+      Generated(Generator generator) {
+        super();
+        this.generator = generator;
+      }
 
-  /**
-   * A source file at a zip where the code is only read into memory if absolutely necessary. We will
-   * try to delay loading the code into memory as long as possible.
-   */
-  @GwtIncompatible("java.io.File")
-  private static final class AtZip extends SourceFile {
-    private static final long serialVersionUID = 1L;
-    private final ZipEntryReader zipEntryReader;
-    private transient Charset inputCharset;
+      @Override
+      String loadUncachedCode() throws IOException {
+        return generator.getCode();
+      }
 
-    AtZip(ZipEntryReader zipEntryReader, String originalPath, Charset c, SourceKind kind) {
-      super(originalPath, originalPath, kind);
-      this.inputCharset = c;
-      this.zipEntryReader = zipEntryReader;
-    }
-
-    @Override
-    String loadUncachedCode() throws IOException {
-      return zipEntryReader.read(inputCharset);
-    }
-
-    /**
-     * Gets a reader for the code at this URL.
-     */
-    @Override
-    public Reader getCodeReader() throws IOException {
-      if (hasSourceInMemory()) {
-        return super.getCodeReader();
-      } else {
-        // If we haven't pulled the code into memory yet, don't.
-        return zipEntryReader.getReader(inputCharset);
+      @Override
+      void restoreFrom(CodeLoader other) {
+        this.generator = ((Generated) other).generator;
       }
     }
 
-    @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(ObjectOutputStream os) throws Exception {
-      os.defaultWriteObject();
-      os.writeObject(inputCharset.name());
+    @GwtIncompatible("com.google.common.io.CharStreams")
+    static final class OnDisk extends CodeLoader {
+      private static final long serialVersionUID = 1L;
+
+      private final String serializableCharset;
+      // TODO(b/180553215): We shouldn't store this Path. We already have to reconstruct it from a
+      // string during deserialization.
+      private transient Path relativePath;
+
+      OnDisk(Path relativePath, Charset c) {
+        super();
+        this.serializableCharset = c.name();
+        this.relativePath = relativePath;
+      }
+
+      @Override
+      String loadUncachedCode() throws IOException {
+        try (Reader r = this.openUncachedReader()) {
+          return CharStreams.toString(r);
+        } catch (MalformedInputException e) {
+          throw new IOException(
+              "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
+        }
+      }
+
+      @Override
+      Reader openUncachedReader() throws IOException {
+        return Files.newBufferedReader(this.relativePath, this.getCharset());
+      }
+
+      private void writeObject(ObjectOutputStream out) throws Exception {
+        out.defaultWriteObject();
+        out.writeObject(this.relativePath.toString());
+      }
+
+      private void readObject(ObjectInputStream in) throws Exception {
+        in.defaultReadObject();
+        this.relativePath = Paths.get((String) in.readObject());
+      }
+
+      private Charset getCharset() {
+        return Charset.forName(this.serializableCharset);
+      }
     }
 
-    @GwtIncompatible("ObjectInputStream")
-    private void readObject(ObjectInputStream in) throws Exception {
-      in.defaultReadObject();
-      inputCharset = Charset.forName((String) in.readObject());
+    @GwtIncompatible("java.io.File")
+    static final class AtZip extends CodeLoader {
+      private static final long serialVersionUID = 1L;
+      private final ZipEntryReader zipEntryReader;
+      private final String serializableCharset;
+
+      AtZip(ZipEntryReader zipEntryReader, Charset c) {
+        super();
+        this.serializableCharset = c.name();
+        this.zipEntryReader = zipEntryReader;
+      }
+
+      @Override
+      String loadUncachedCode() throws IOException {
+        return zipEntryReader.read(this.getCharset());
+      }
+
+      @Override
+      Reader openUncachedReader() throws IOException {
+        return zipEntryReader.getReader(this.getCharset());
+      }
+
+      private Charset getCharset() {
+        return Charset.forName(this.serializableCharset);
+      }
     }
   }
 
-  public void restoreFrom(SourceFile sourceFile) {
-    this.code = sourceFile.code;
-    this.lineOffsets = sourceFile.lineOffsets;
+  public void restoreFrom(SourceFile other) {
+    this.code = other.code;
+    this.lineOffsets = other.lineOffsets;
+    this.loader.restoreFrom(other.loader);
   }
 
   @GwtIncompatible("ObjectOutputStream")
