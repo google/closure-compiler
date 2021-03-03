@@ -1938,6 +1938,39 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCrossChunkCodeMotionWithPureOrBreakMyCode() {
+    CompilerOptions options = createCompilerOptions();
+    String[] code =
+        new String[] {
+          lines(
+              "class LowerCasePipe {}",
+              "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
+                  + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure: true"
+                  + " });"),
+          "new LowerCasePipe();",
+        };
+
+    test(
+        options,
+        code,
+        new String[] {
+          "var LowerCasePipe=function(){};LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({name:\"lowercase\",type:LowerCasePipe,pure:true});",
+          "new LowerCasePipe"
+        });
+
+    options.setCrossChunkCodeMotion(true);
+
+    test(
+        options,
+        code,
+        new String[] {
+          "",
+          "var LowerCasePipe=function(){};LowerCasePipe.\\u0275pipe=i0.\\u0275\\u0275definePipe({name:\"lowercase\",type:LowerCasePipe,pure:true});new"
+              + " LowerCasePipe"
+        });
+  }
+
+  @Test
   public void testCrossChunkMethodMotion() {
     CompilerOptions options = createCompilerOptions();
     String[] code = new String[] {

@@ -476,6 +476,36 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertStatementIsImmovable("var t = `${unknownValue}`");
   }
 
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedStringConcatIsMovable() {
+    testSame(lines("/** @pureOrBreakMyCode */", "var t = 'a' + 'b';"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+  }
+
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedFunctionCallIsMovable() {
+    testSame(lines("/** @pureOrBreakMyCode */", "var t = someFn();"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+  }
+
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedStaticClassPropertyInitializerIsMovable() {
+    testSame(
+        lines("class SomeClass {}", "SomeClass.staticProp = /** @pureOrBreakMyCode */ someFn();"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+    assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
+  }
+
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedStaticClassPropertyInitializerIsMovable2() {
+    testSame(
+        lines(
+            "class SomeClass {}",
+            "SomeClass.staticProp = /** @pureOrBreakMyCode */ { prop: someFn() ? 'a' : 'b' };"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+    assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
+  }
+
   //  try to find cases to copy from CrossChunkCodeMotion
   private ReferenceCollection getReferencesForName(
       String name, CrossChunkReferenceCollector collector) {

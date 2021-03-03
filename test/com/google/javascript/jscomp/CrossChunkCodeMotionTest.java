@@ -1837,4 +1837,67 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             .build(),
         new String[] {"", "let a = 1; let b = { [a + 1]: 2 };", "a;"});
  }
+
+  @Test
+  public void testPureOrBreakMyCode() {
+    // should move a function if its top level invocation was annotated with @pureOrBreakMyCode
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "function wrapIt(val) { return [val]; }",
+                    "const value = /** @pureOrBreakMyCode */ wrapIt(123);"))
+            .addChunk("const unwrappedValue = value[0];")
+            .build(),
+        new String[] {
+          "",
+          lines(
+              "function wrapIt(val) { return [val]; }",
+              "const value = /** @pureOrBreakMyCode */ wrapIt(123);",
+              "const unwrappedValue = value[0];")
+        });
+
+    // should move a class if its static initializer containing a function call was annotated with
+    // @pureOrBreakMyCode
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "function wrapIt(val) { return [val]; }",
+                    "class ImmovableClass {}",
+                    "ImmovableClass.prop = wrapIt(123);",
+                    "class MovableClass {}",
+                    "MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);"))
+            .addChunk("new ImmovableClass(); new MovableClass();")
+            .build(),
+        new String[] {
+          lines(
+              "function wrapIt(val) { return [val] }",
+              "class ImmovableClass {}",
+              "ImmovableClass.prop = wrapIt(123);"),
+          lines(
+              "class MovableClass {}",
+              "MovableClass.prop = /** @pureOrBreakMyCode */ wrapIt(123);",
+              "new ImmovableClass(); new MovableClass();")
+        });
+
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "class LowerCasePipe {}",
+                    "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
+                        + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure: true"
+                        + " });"))
+            .addChunk("new LowerCasePipe();")
+            .build(),
+        new String[] {
+          "",
+          lines(
+              "class LowerCasePipe {}",
+              "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/ i0.ɵɵdefinePipe({"
+                  + " name: \"lowercase\", type: LowerCasePipe, pure: true });",
+              "new LowerCasePipe();")
+        });
+  }
 }
