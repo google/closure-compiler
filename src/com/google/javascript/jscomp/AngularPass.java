@@ -212,7 +212,7 @@ class AngularPass extends AbstractPostOrderCallback
    * @param n node to add.
    */
   private void addNode(Node n) {
-    Node target = null;
+    Node injectAfter = null;
     Node fn = null;
     String name = null;
 
@@ -231,7 +231,7 @@ class AngularPass extends AbstractPostOrderCallback
         while (fn.isAssign()) {
           fn = fn.getLastChild();
         }
-        target = n.getParent();
+        injectAfter = n.getParent();
         break;
 
       // handles function case:
@@ -239,7 +239,7 @@ class AngularPass extends AbstractPostOrderCallback
       case FUNCTION:
         name = NodeUtil.getName(n);
         fn = n;
-        target = n;
+        injectAfter = n;
         if (n.getParent().isAssign()
             && n.getParent().getJSDocInfo().isNgInject()) {
           // This is a function assigned into a symbol, e.g. a regular function
@@ -258,7 +258,7 @@ class AngularPass extends AbstractPostOrderCallback
         name = n.getFirstChild().getString();
         // looks for a function node.
         fn = getDeclarationRValue(n);
-        target = n;
+        injectAfter = n;
         break;
 
       // handles class method case:
@@ -277,9 +277,9 @@ class AngularPass extends AbstractPostOrderCallback
           }
           fn = n.getFirstChild();
           if (classNode.getParent().isAssign() || classNode.getParent().isName()) {
-            target = classNode.getGrandparent();
+            injectAfter = classNode.getGrandparent();
           } else {
-            target = classNode;
+            injectAfter = classNode;
           }
         }
         break;
@@ -291,10 +291,13 @@ class AngularPass extends AbstractPostOrderCallback
       compiler.report(JSError.make(n, INJECT_NON_FUNCTION_ERROR));
       return;
     }
-    // report an error if the function declaration did not take place in a block or global scope
-    if (!target.getParent().isScript()
-        && !target.getParent().isBlock()
-        && !target.getParent().isModuleBody()) {
+    if (injectAfter.getParent().isExport()) {
+      // handle `export class Foo {` or `export function(`
+      injectAfter = injectAfter.getParent();
+    }
+    // report an error if the function declaration did not take place in the root of a statement
+    // for example, `fn(/** @inject */ function(x) {});` is forbidden
+    if (!NodeUtil.isStatementBlock(injectAfter.getParent())) {
       compiler.report(JSError.make(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
       return;
     }
@@ -303,7 +306,7 @@ class AngularPass extends AbstractPostOrderCallback
     // expression.
     checkNotNull(name);
     // registers the node.
-    injectables.add(new NodeContext(name, n, fn, target));
+    injectables.add(new NodeContext(name, n, fn, injectAfter));
   }
 
   /**

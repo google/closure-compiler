@@ -538,6 +538,16 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInExportInEsModule() {
+    String js =
+        lines(
+            "import {Foo} from './foo';",
+            "",
+            "export class Bar extends Foo { /** @ngInject */ constructor(x, y) {} }");
+    test(js, lines(js, "/** @public */", "Bar['$inject'] = ['x', 'y'];"));
+  }
+
+  @Test
   public void testInGoogScope() {
     enableRewriteClosureCode();
     test(
