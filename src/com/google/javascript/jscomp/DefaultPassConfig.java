@@ -564,10 +564,8 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
     if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
-      if (options.needsTranspilationFrom(ES6)) {
-        // This helps AggressiveInlineAliases / CollapseProperties with static inheritance
-        passes.add(convertStaticInheritance);
-      }
+      // This helps AggressiveInlineAliases / CollapseProperties with static inheritance
+      passes.add(convertStaticInheritance);
       passes.add(aggressiveInlineAliases);
     } else {
       // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.

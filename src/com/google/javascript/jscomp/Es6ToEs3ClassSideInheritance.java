@@ -20,8 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -126,8 +124,6 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
   }
 
   private final AbstractCompiler compiler;
-  private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   private final LinkedHashMap<String, JavascriptClass> classByAlias = new LinkedHashMap<>();
 
@@ -138,8 +134,8 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, findStaticMembers);
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, findStaticMembers);
+    // Since this is an optimization pass, running on externs would be unnecessary
+    NodeTraversal.traverse(compiler, root, findStaticMembers);
     processInherits(findStaticMembers);
   }
 
