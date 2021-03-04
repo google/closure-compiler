@@ -1264,7 +1264,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         getWarnings(),
         this.variableMap,
         this.propertyMap,
-        this.anonymousFunctionNameMap,
+        null,
         this.stringMap,
         this.instrumentationMapping,
         this.sourceMap,
@@ -3000,9 +3000,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** The property renaming map */
   private VariableMap propertyMap = null;
 
-  /** The naming map for anonymous functions */
-  private VariableMap anonymousFunctionNameMap = null;
-
   /** String replacement map */
   private VariableMap stringMap = null;
 
@@ -3055,7 +3052,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void setAnonymousFunctionNameMap(VariableMap functionMap) {
-    this.anonymousFunctionNameMap = functionMap;
+    // NOTE: remove this method
   }
 
   VariableMap getStringMap() {
@@ -3521,10 +3518,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final UniqueIdSupplier uniqueIdSupplier;
     private final Set<String> exportedNames;
     private final Map<String, Integer> cssNames;
-    private final VariableMap variableMap;
-    private final VariableMap propertyMap;
-    private final VariableMap anonymousFunctionaMap;
-    private final VariableMap stringMap;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final ImmutableMap<String, Node> defaultDefineValues;
@@ -3554,10 +3547,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.uniqueIdSupplier = compiler.uniqueIdSupplier;
       this.exportedNames = compiler.exportedNames;
       this.cssNames = compiler.cssNames;
-      this.variableMap = compiler.variableMap;
-      this.propertyMap = compiler.propertyMap;
-      this.anonymousFunctionaMap = compiler.anonymousFunctionNameMap;
-      this.stringMap = compiler.stringMap;
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.defaultDefineValues = checkNotNull(compiler.defaultDefineValues);
@@ -3644,10 +3633,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     exportedNames.clear();
     exportedNames.addAll(compilerState.exportedNames);
     cssNames = compilerState.cssNames;
-    variableMap = compilerState.variableMap;
-    propertyMap = compilerState.propertyMap;
-    stringMap = compilerState.stringMap;
-    anonymousFunctionNameMap = compilerState.anonymousFunctionaMap;
+    variableMap = null;
+    propertyMap = null;
+    stringMap = null;
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     defaultDefineValues = checkNotNull(compilerState.defaultDefineValues);
