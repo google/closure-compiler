@@ -102,7 +102,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   // Source Line Information
   private transient int[] lineOffsets = null;
 
-  private transient String code = null;
+  private transient volatile String code = null;
 
   private SourceFile(CodeLoader loader, String fileName, String originalPath, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
