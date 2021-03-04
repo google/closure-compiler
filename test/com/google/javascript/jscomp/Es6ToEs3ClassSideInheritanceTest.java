@@ -644,4 +644,18 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "  // There should be a declaration for Bar.bar.",
             "}"));
   }
+
+  @Test
+  public void testPrototypeAssignments() {
+    testSame(
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function Example() {}",
+            "Example.prototype = {}",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);"));
+  }
 }

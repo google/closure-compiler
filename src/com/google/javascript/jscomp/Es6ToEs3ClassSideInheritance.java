@@ -355,7 +355,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
         Node classNode = getProp.getFirstChild();
-        if (isReferenceToClass(t, classNode)) {
+        if (isReferenceToClass(t, classNode) && !"prototype".equals(getProp.getString())) {
           classByAlias.get(classNode.getQualifiedName()).addStaticMember(n);
           nodeOrder.put(n, nodeOrder.size());
         }
