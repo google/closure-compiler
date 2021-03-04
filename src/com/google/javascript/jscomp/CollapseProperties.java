@@ -113,12 +113,9 @@ class CollapseProperties implements CompilerPass {
     Set<Name> escaped = checkNamespaces();
     for (Name name : globalNames) {
       flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
-    }
-
-    // We collapse property definitions after collapsing property references
-    // because this step can alter the parse tree above property references,
-    // invalidating the node ancestry stored with each reference.
-    for (Name name : globalNames) {
+      // We collapse property definitions after collapsing property references
+      // because this step can alter the parse tree above property references,
+      // invalidating the node ancestry stored with each reference.
       collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
     }
 
@@ -251,24 +248,25 @@ class CollapseProperties implements CompilerPass {
    */
   private void flattenReferencesToCollapsibleDescendantNames(
       Name n, String alias, Set<Name> escaped) {
+    if (!n.isSimpleName()) {
+      boolean isAllowedToCollapse =
+          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || n.isModuleExport();
+
+      if (isAllowedToCollapse && n.canCollapse()) {
+        flattenReferencesTo(n, alias);
+      } else if (isAllowedToCollapse
+          && n.isSimpleStubDeclaration()
+          && !n.isCollapsingExplicitlyDenied()) {
+        flattenSimpleStubDeclaration(n, alias);
+      }
+    }
+
     if (n.props == null || n.isCollapsingExplicitlyDenied() || escaped.contains(n)) {
       return;
     }
 
     for (Name p : n.props) {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
-
-      boolean isAllowedToCollapse =
-          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
-
-      if (isAllowedToCollapse && p.canCollapse()) {
-        flattenReferencesTo(p, propAlias);
-      } else if (isAllowedToCollapse
-          && p.isSimpleStubDeclaration()
-          && !p.isCollapsingExplicitlyDenied()) {
-        flattenSimpleStubDeclaration(p, propAlias);
-      }
-
       flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
     }
   }
