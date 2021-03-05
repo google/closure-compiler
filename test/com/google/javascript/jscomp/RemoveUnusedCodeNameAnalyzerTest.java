@@ -764,11 +764,13 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentToUnknownPrototype() {
+    disableCompareJsDoc(); // multistage compilation simplifies suppressions
     testSame("/** @suppress {duplicate} */ var window;" + "window['a'].prototype = {};");
   }
 
   @Test
   public void testBug2099540() {
+    disableCompareJsDoc(); // multistage compilation simplifies suppressions
     testSame(
         lines(
             "/** @suppress {duplicate} */ var document;",
@@ -1086,10 +1088,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   public void testSetterInForStruct3() {
     test(
         externs("function f(){} function g() {} function h() {}"),
-        srcs(
-            "var j = 0;                      for (var i = 1 + f() + g() + h(); i = 0; j++);"),
-        expected(
-            "var j = 0; 1 + f() + g() + h(); for (                           ;     0; j++);"));
+        srcs("var j = 0;                      for (var i = 1 + f() + g() + h(); i = 0; j++);"),
+        expected("var j = 0; 1 + f() + g() + h(); for (                           ;     0; j++);"));
   }
 
   @Test

@@ -1062,6 +1062,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   private void testRewrite_definedUsingAssignment_staticMethod_onFunction(String annotation) {
+    disableCompareJsDoc(); // multistage compilation simplifies jsdoc
     test(
         srcs(
             lines(
@@ -1073,7 +1074,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "x.bar();")),
         expected(
             lines(
-                annotation,
                 "function Foo() { }", //
                 "",
                 "var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {",

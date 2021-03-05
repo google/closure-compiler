@@ -62,6 +62,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    disableCompareJsDoc();
   }
 
   @Test

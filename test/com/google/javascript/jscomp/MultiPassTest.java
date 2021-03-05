@@ -46,7 +46,6 @@ public final class MultiPassTest extends CompilerTestCase {
     enableNormalize();
     enableGatherExternProperties();
     enableTypeCheck();
-    enableTypeInfoValidation();
   }
 
   @Override
@@ -73,10 +72,6 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Test
   public void testInlineVarsAndPeephole() {
-    // TODO(lharker): try to preserve type info in the optimizations
-    // right now no optimization passes attempt to preserve type information, so type info
-    // validation fails.
-    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
@@ -89,9 +84,10 @@ public final class MultiPassTest extends CompilerTestCase {
     passes = new ArrayList<>();
     addInlineFunctions();
     addPeephole();
-    test("function f() { return 1; }" +
-        "function g() { return f(); }" +
-        "function h() { return g(); } var n = h();",
+    test(
+        "function f() { return 1; }"
+            + "function g() { return f(); }"
+            + "function h() { return g(); } var n = h();",
         "var n = 1");
   }
 
@@ -100,14 +96,11 @@ public final class MultiPassTest extends CompilerTestCase {
     passes = new ArrayList<>();
     addDeadCodeElimination();
     addInlineVariables();
-    test("function f() { var x = 1; return x; x = 3; }",
-        "function f() { return 1; }");
+    test("function f() { var x = 1; return x; x = 3; }", "function f() { return 1; }");
   }
 
   @Test
   public void testCollapseObjectLiteralsScopeChange() {
-    // TODO(lharker): remove this and try to preserve type info in the optimizations
-    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addCollapseObjectLiterals();
     test("function f() {" +
@@ -145,8 +138,6 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Test
   public void testTopScopeChange() {
-    // TODO(lharker): remove this and try to preserve type info in the optimizations
-    disableTypeInfoValidation();
     passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
@@ -372,6 +363,8 @@ public final class MultiPassTest extends CompilerTestCase {
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     disableNormalize();
     allowExternsChanges();
+    enableTypeInfoValidation();
+    disableMultistageCompilation();
 
     passes = new ArrayList<>();
     addRenameVariablesInParamListsPass();

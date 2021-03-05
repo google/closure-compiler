@@ -625,7 +625,7 @@ public abstract class CompilerTestCase {
     this.gatherExternPropertiesEnabled = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.NO_TRANSPILE;
-    this.multistageCompilation = true;
+    this.multistageCompilation = false;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
@@ -894,11 +894,16 @@ public abstract class CompilerTestCase {
   /**
    * Perform AST normalization before running the test pass
    *
+   * <p>This option also enables multistage compilation to increase coverage for multistage builds
+   * (Normalize is stage 2, so normalized tests must cover stage 2 passes). Disable via
+   * disableMultistageCompilation().
+   *
    * @see Normalize
    */
   protected final void enableNormalize() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.normalizeEnabled = true;
+    this.multistageCompilation = true;
   }
 
   /** Perform AST transpilation before running the test pass. */
@@ -1498,15 +1503,29 @@ public abstract class CompilerTestCase {
           check.processForTesting(externsRoot, mainRoot);
         }
 
-        boolean runNormalization = normalizeEnabled && i == 0;
+        if (inferConsts && i == 0) {
+          new InferConsts(compiler).process(externsRoot, mainRoot);
+        }
 
-        if (multistageCompilation && runNormalization) {
-          // Only run multistage compilation when normalizing.
+        if (gatherExternPropertiesEnabled && i == 0) {
+          new GatherExternProperties(compiler).process(externsRoot, mainRoot);
+        }
 
-          // TODO(rluble): enable multistage compilation when invoking with modules.
-          if (inputs != null
-              && compiler.getModuleGraph() == null
-              && compiler.getModuleGraph().getModuleCount() > 1) {
+        // Only run multistage compilation once, if asked.
+        boolean runMultistageCompilation = multistageCompilation && i == 0;
+
+        // Run type -> color replacement whenever multistage compilation is requested as that pass
+        // always runs at the end of stage 1.
+        if ((replaceTypesWithColors && i == 0) || runMultistageCompilation) {
+          if (typeCheckEnabled) {
+            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+                .process(externsRoot, mainRoot);
+          }
+          new RemoveTypes(compiler).process(externsRoot, mainRoot);
+        }
+
+        if (runMultistageCompilation) {
+          if (inputs != null) {
             compiler =
                 CompilerTestCaseUtils.multistageSerializeAndDeserialize(
                     this, compiler, inputs, recentChange);
@@ -1518,12 +1537,8 @@ public abstract class CompilerTestCase {
         }
 
         // Only run the normalize pass once, if asked.
-        if (runNormalization) {
+        if (normalizeEnabled && i == 0) {
           normalizeActualCode(compiler, externsRoot, mainRoot);
-        }
-
-        if (inferConsts && i == 0) {
-          new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
         updateAccessorSummary(compiler, mainRoot);
@@ -1535,10 +1550,6 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        if (gatherExternPropertiesEnabled && i == 0) {
-          (new GatherExternProperties(compiler)).process(externsRoot, mainRoot);
-        }
-
         recentChange.reset();
 
         ChangeVerifier changeVerifier = null;
@@ -1547,14 +1558,9 @@ public abstract class CompilerTestCase {
           changeVerifier.snapshot(mainRoot);
         }
 
-        if (replaceTypesWithColors && i == 0) {
-          if (typeCheckEnabled) {
-            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
-                .process(externsRoot, mainRoot);
-          }
-          new RemoveTypes(compiler).process(externsRoot, mainRoot);
-        }
-
+        // Call "beforePass" as some passes ask for the index of the current pass being run and
+        // expect it to be >= 0.
+        compiler.beforePass(this.getName());
         getProcessor(compiler).process(externsRoot, mainRoot);
 
         if (checkAstChangeMarking) {
@@ -1904,6 +1910,9 @@ public abstract class CompilerTestCase {
     Node expected = compiler.parseTestCode(expectedExtern);
     assertThat(compiler.getErrors()).isEmpty();
 
+    // Call "beforePass" as some passes ask for the index of the current pass being run and expect
+    // it to be >= 0.
+    compiler.beforePass(this.getName());
     (getProcessor(compiler)).process(externs, root);
 
     if (compareAsTree) {

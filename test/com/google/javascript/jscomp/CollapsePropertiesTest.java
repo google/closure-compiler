@@ -63,6 +63,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    disableCompareJsDoc();
     disableScriptFeatureValidation();
   }
 

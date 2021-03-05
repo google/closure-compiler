@@ -70,6 +70,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     useTypes = true;
     disableTypeCheck();
     enableNormalize();
+    disableMultistageCompilation(); // this test runs under J2CL
   }
 
   @Override
@@ -429,13 +430,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctionsBug() {
-    enableNormalize();
     foldSame("Math[0]()");
   }
 
   @Test
   public void testFoldMathFunctions_abs() {
-    enableNormalize();
     foldSame("Math.abs(Math.random())");
 
     fold("Math.abs('-1')", "1");
@@ -451,7 +450,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_ceil() {
-    enableNormalize();
     foldSame("Math.ceil(Math.random())");
 
     fold("Math.ceil(1)", "1");
@@ -462,7 +460,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_floor() {
-    enableNormalize();
     foldSame("Math.floor(Math.random())");
 
     fold("Math.floor(1)", "1");
@@ -473,7 +470,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_fround() {
-    enableNormalize();
     foldSame("Math.fround(Math.random())");
 
     fold("Math.fround(NaN)", "NaN");
@@ -490,7 +486,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_round() {
-    enableNormalize();
     foldSame("Math.round(Math.random())");
     fold("Math.round(NaN)", "NaN");
     fold("Math.round(3.5)", "4");
@@ -499,7 +494,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_sign() {
-    enableNormalize();
     foldSame("Math.sign(Math.random())");
     fold("Math.sign(NaN)", "NaN");
     fold("Math.sign(3.5)", "1");
@@ -508,7 +502,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_trunc() {
-    enableNormalize();
     foldSame("Math.trunc(Math.random())");
     fold("Math.sign(NaN)", "NaN");
     fold("Math.trunc(3.5)", "3");
@@ -517,7 +510,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_clz32() {
-    enableNormalize();
     fold("Math.clz32(0)", "32");
     int x = 1;
     for (int i = 31; i >= 0; i--) {
@@ -541,7 +533,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_max() {
-    enableNormalize();
     foldSame("Math.max(Math.random(), 1)");
 
     fold("Math.max()", "-Infinity");
@@ -552,7 +543,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldMathFunctions_min() {
-    enableNormalize();
     foldSame("Math.min(Math.random(), 1)");
 
     fold("Math.min()", "Infinity");
@@ -563,8 +553,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldParseNumbers() {
-    enableNormalize();
-
     // Template Strings
     foldSame("x = parseInt(`123`)");
     foldSame("x = parseInt(` 123`)");
@@ -622,7 +610,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldParseOctalNumbers() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    enableNormalize();
     setExpectParseWarningsThisTest();
 
     fold("x = parseInt(021, 8)", "x = 15");
@@ -694,7 +681,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldConcatChaining() {
-    enableNormalize();
     enableTypeCheck();
 
     fold("[1,2].concat(1).concat(2,['abc']).concat('abc')", "[1,2].concat(1,2,['abc'],'abc')");
@@ -715,7 +701,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRemoveArrayLiteralFromFrontOfConcat() {
-    enableNormalize();
     enableTypeCheck();
 
     fold("[].concat([1,2,3],1)", "[1,2,3].concat(1)");

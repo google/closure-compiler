@@ -714,7 +714,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @MustBeClosed
   public final LogFile createOrReopenIndexedLog(
       Class<?> owner, String firstNamePart, String... restNameParts) {
-    checkState(this.currentPassIndex >= 0);
+    checkState(this.currentPassIndex >= 0, this.currentPassIndex);
 
     String index = Strings.padStart(Integer.toString(this.currentPassIndex), 3, '0');
     int length = restNameParts.length;

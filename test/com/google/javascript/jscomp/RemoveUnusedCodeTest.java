@@ -524,13 +524,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testDestructuringParams() {
     // Default value not used
     test(
-        "function f({a:{b:b}} = {a:{}}) { /** b is unused */ }; f();",
-        "function f({a:{   }} = {a:{}}) { /** b is unused */ }; f();");
+        "function f({a:{b:b}} = {a:{}}) { /* b is unused */ }; f();",
+        "function f({a:{   }} = {a:{}}) { /* b is unused */ }; f();");
 
     // Default value with nested value used in default value assignment
     test(
-        "function f({a:{b:b}} = {a:{b:1}}) { /** b is unused */ }; f();",
-        "function f({a:{   }} = {a:{b:1}}) { /** b is unused */ }; f();");
+        "function f({a:{b:b}} = {a:{b:1}}) { /* b is unused */ }; f();",
+        "function f({a:{   }} = {a:{b:1}}) { /* b is unused */ }; f();");
 
     // Default value with nested value used in function body
     testSame("function f({a:{b:b}} = {a:{b:1}}) { b; }; f();");
@@ -545,8 +545,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     // Destructuring pattern not default and parameter not used
     test(
-        "function f({a:{b:b}}) { /** b is unused */ }; f({c:{d:1}});",
-        "function f({a:{   }}) { /** b is unused */ }; f({c:{d:1}});");
+        "function f({a:{b:b}}) { /* b is unused */ }; f({c:{d:1}});",
+        "function f({a:{   }}) { /* b is unused */ }; f({c:{d:1}});");
 
     // Destructuring pattern not default and parameter used
     testSame("function f({a:{b:b}}) { b; }; f({c:{d:1}});");
@@ -712,8 +712,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testRestParams() {
     test(
-        "function foo(...args) {/**rest param unused*/}; foo();",
-        "function foo(       ) {/**rest param unused*/}; foo();");
+        "function foo(...args) {/* rest param unused*/}; foo();",
+        "function foo(       ) {/* rest param unused*/}; foo();");
 
     testSame("function foo(a, ...args) { args[0]; }; foo();");
 
@@ -725,7 +725,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "}",
           "alert(countArgs(1, 1, 1, 1, 1));"));
 
-    testSame("function foo([...rest]) {/**rest unused*/}; foo();");
+    testSame("function foo([...rest]) {/* rest unused*/}; foo();");
 
     testSame("function foo([x, ...rest]) { x; }; foo();");
   }

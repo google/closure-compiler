@@ -159,6 +159,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
     // Allow testing of features that are not yet fully supported.
     enableNormalize();
+    disableCompareJsDoc();
     enableGatherExternProperties();
     enableTypeCheck();
   }

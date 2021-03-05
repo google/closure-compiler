@@ -22,9 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CrossChunkMethodMotion}.
- */
+/** Tests for {@link CrossChunkMethodMotion}. */
 @RunWith(JUnit4.class)
 public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
@@ -485,7 +483,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void movePrototypeMethodImplementingInterfaceWithoutStub() {
-    //
+    disableCompareJsDoc(); // multistage compilation erases the @implements
     testSame(
         externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
         srcs(
@@ -522,7 +520,6 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             lines(
                 "/**", //
                 " * @constructor",
-                " * @implements {IFoo}",
                 " */",
                 "function Foo() {}"),
             // Chunk 2
@@ -560,6 +557,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodImplementingExternsInterfaceWithoutStub() {
+    disableCompareJsDoc(); // multistage compilation deletes the @implements
     testSame(
         externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
         srcs(
@@ -584,7 +582,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk("(new Foo).ifooMethod()")
                 .build()),
         expected(
-            lines("/** @implements {IFoo} */", "class Foo {}"),
+            lines("class Foo {}"),
             // Chunk 2
             lines(
                 "Foo.prototype.ifooMethod = function() {};", //

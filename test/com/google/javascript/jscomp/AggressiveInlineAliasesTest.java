@@ -54,6 +54,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    // disableCompareJsDoc();
   }
 
   @Test
@@ -741,7 +742,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  tmp.doSomething(5);",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  var tmp;",
@@ -758,7 +759,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  tmp?.doSomething(5);",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  var tmp;",
@@ -782,7 +783,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var tmp;",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  tmp = null;",
@@ -807,7 +808,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var tmp;",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  if (tmp = Main) {", // Don't set "tmp = null" because that would change control flow.
@@ -830,7 +831,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var tmp;",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  var a = tmp = Main;", // Don't set "tmp = null" because that would mess up a's value.
@@ -904,7 +905,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  return g();",
             "}"),
         lines(
-            "/** @constructor @struct */ var Main = function() {};",
+            "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
             "function f() {",
             "  function g() {",
@@ -1011,7 +1012,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "/** @constructor */ var namespace = function() {};",
             "goog.inherits(namespace,Object);",
             "namespace.includeExtraParam = true;",
-            "/** @enum { number } */",
+            "/** @enum {JsdocSerializer_placeholder_type} */",
             "namespace.Param = { param1: 1,param2: 2 };",
             "if(namespace.includeExtraParam) namespace.Param.optParam = 3;",
             "/** @constructor */",
@@ -1085,7 +1086,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "var Bar = null;",
-            "/** @const @enum */",
+            "/** @const @enum {JsdocSerializer_placeholder_type} */",
             "ns.Foo.prop = { A: 1 }"));
   }
 
@@ -1274,7 +1275,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
             "var x = function() { use(ns.Foo.EventType.A) };",
             "use(x);"));
@@ -1288,15 +1289,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns.Foo = function() {};",
             "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = ns.Foo;",
-            "/** @enum { number } */ ns.Bar.EventType = ns.Foo.EventType;",
+            "/** @const */ ns.Bar.EventType = ns.Foo.EventType;",
             "var x = function() { use(ns.Bar.EventType.A) };",
             "use(x)"),
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
-            "/** @enum { number } */ ns.Foo.EventType = ns.Foo.EventType;",
+            "/** @const */ ns.Foo.EventType = ns.Foo.EventType;",
             "var x = function() { use(ns.Foo.EventType.A) };",
             "use(x)"));
   }
@@ -1309,15 +1310,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns.Foo = function() {};",
             "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = ns.Foo;",
-            "/** @enum { number } */ ns.Bar.Other = { X: 1, Y: 2 };",
+            "/** @const */ ns.Bar.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Bar.Other.X) };",
             "use(x)"),
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
-            "/** @enum { number } */ ns.Foo.Other = { X: 1, Y: 2 };",
+            "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Foo.Other.X) };",
             "use(x)"));
   }
@@ -1330,15 +1331,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns.Foo = function() {};",
             "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = ns.Foo;",
-            "/** @enum { number } */ ns.Bar.Other = { X: 1, Y: 2 };",
+            "/** @const */ ns.Bar.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Bar?.Other.X) };",
             "use(x)"),
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
-            "/** @enum { number } */ ns.Foo.Other = { X: 1, Y: 2 };",
+            "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Foo?.Other.X) };",
             "use(x)"));
   }
@@ -1359,7 +1360,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
                 "var ns = {}", //
                 "ns.Foo = function() {};",
                 "ns.Bar = null;",
-                "/** @enum { number } */ ns.Foo.Other = { X: {Y: 1}};",
+                "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};",
                 "var x = function() { use(ns.Foo.Other.X.Y) };",
                 "use(x)")));
   }
@@ -1551,7 +1552,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "if (f == Fruit.BANANA) alert('banana'); }"),
         lines(
             "/** @constructor */ var Enums = function() {};",
-            "/** @enum { number } */",
+            "/** @enum {JsdocSerializer_placeholder_type} */",
             "Enums.Fruit = { APPLE: 1,BANANA: 2 };",
             "/** @constructor */ function foo(f) {",
             "if (f instanceof Enums) { alert('what?'); return; }",
@@ -1930,9 +1931,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var D = function() {}", //
             "D.L = function() {};",
-            "/** @type { D.L } */ D.L.A = new D.L;",
+            " D.L.A = new D.L;",
             "/** @const */ var M = {};",
-            "/** @typedef { D.L } */ M.L = null;",
+            "M.L = null;",
             "use(D.L.A);"));
   }
 
@@ -2563,11 +2564,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testTranspiledEs6StaticMethods_withNoCollapse() {
     // This is what transpiled ES6 class statics look like.
     // We don't replace "Child.f = Parent.f" with "Child.f = null" because of the @nocollapse
+    disableCompareJsDoc(); // multistage compilation erases the @extends
     testSame(
         lines(
-            "/** @struct @constructor */ var Parent = function() {};",
+            "/** @constructor */ var Parent = function() {};",
             "/** @nocollapse */ Parent.f = function() {};",
-            "/** @struct @constructor @extends {Parent} @param {...?} var_args  */",
+            "/** @constructor @extends {Parent} @param {...?} var_args  */",
             "var Child = function(var_args) {",
             "  Parent.apply(this, arguments);",
             "}",
@@ -2581,6 +2583,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testLoopInAliasChainWithTypedefConstructorProperty() {
     // This kind of code can get produced by module exports rewriting and was causing a crash in
     // AggressiveInlineAliases.
+    disableCompareJsDoc(); // multistage compilation erases the @typedef
     testSame(
         lines(
             "/** @constructor */ var Item = function() {};",
@@ -2630,7 +2633,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
                 "function Foo() {}",
                 "/** @constructor */",
                 "Foo.Bar = function() {};",
-                "/** @enum {number} */",
+                "/** @enum {JsdocSerializer_placeholder_type} */",
                 "Foo.Bar.baz = {A: 1, B: 2};",
                 "",
                 "var $jscomp$destructuring$var1 = null;",
@@ -2646,6 +2649,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testDontInlinePropertiesOnNamespace_withNoCollapse() {
+    disableCompareJsDoc(); // multistage compilation removes the @enum type
     testSame(
         externs("function use(obj) {}"),
         srcs(
@@ -2693,7 +2697,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "use(exports.B);"),
         lines(
             "/** @const */ var exports = {};",
-            "/** @const @enum {string} */ var Letters = {",
+            "/** @const @enum {JsdocSerializer_placeholder_type} */ var Letters = {",
             "  A: 'a', ",
             "  B: 'b'};",
             // this used to become
@@ -2817,7 +2821,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "const a = {}; ",
             "/** @const */ a.b = {};",
-            "/** @enum {string} */ a.b.Enum = {c: 'c'};",
+            "/** @enum {JsdocSerializer_placeholder_type} */ a.b.Enum = {c: 'c'};",
             "",
             "const alias = null;",
             "function f() { const c = null; use(a.b.Enum.c); }"));

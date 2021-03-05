@@ -18,7 +18,9 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -159,10 +161,21 @@ public final class JsdocSerializer {
   }
 
   // Optimizations shouldn't care about the contents of JSTypeExpressions but some JSDoc APIs
-  // expect their presense, so just create a dummy '?' type.
-  private static JSTypeExpression createUnknown() {
-    return new JSTypeExpression(new Node(Token.QMARK), "<synthetic serialized type>");
+  // expect their presence, so create a placeholder type.
+  private static final SourceFile SYNTHETIC_SOURCE =
+      SourceFile.fromCode("JsdocSerializer_placeholder_source", "");
+
+  private static JSTypeExpression createPlaceholderType() {
+    // the BANG (!) token makes unit testing easier, as the JSDoc parser implicitly adds "!"
+    // to some JSTypeExpressions
+    Node name = IR.string("JsdocSerializer_placeholder_type");
+    Node bang = new Node(Token.BANG, name);
+    name.setStaticSourceFile(SYNTHETIC_SOURCE);
+    bang.setStaticSourceFile(SYNTHETIC_SOURCE);
+    return new JSTypeExpression(bang, SYNTHETIC_SOURCE.getName());
   }
+
+  private static final JSTypeExpression placeholderType = createPlaceholderType();
 
   static JSDocInfo deserializeJsdoc(OptimizationJsdoc serializedJsdoc) {
     if (serializedJsdoc == null) {
@@ -191,10 +204,10 @@ public final class JsdocSerializer {
           builder.recordConstancy();
           continue;
         case JSDOC_ENUM:
-          builder.recordEnumParameterType(createUnknown());
+          builder.recordEnumParameterType(placeholderType);
           continue;
         case JSDOC_THIS:
-          builder.recordThisType(createUnknown());
+          builder.recordThisType(placeholderType);
           continue;
         case JSDOC_NO_COLLAPSE:
           builder.recordNoCollapse();
@@ -206,7 +219,7 @@ public final class JsdocSerializer {
           builder.recordPureOrBreakMyCode();
           continue;
         case JSDOC_DEFINE:
-          builder.recordDefineType(createUnknown());
+          builder.recordDefineType(placeholderType);
           continue;
         case JSDOC_NO_SIDE_EFFECTS:
           builder.recordNoSideEffects();
@@ -218,7 +231,7 @@ public final class JsdocSerializer {
           modifies.add("arguments");
           continue;
         case JSDOC_THROWS:
-          builder.recordThrowType(createUnknown());
+          builder.recordThrowType(placeholderType);
           continue;
         case JSDOC_CONSTRUCTOR:
           builder.recordConstructor();

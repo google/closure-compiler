@@ -140,11 +140,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testCollapsePropertiesJsdoc() {
     testSame("const ns = {}; /** @const */ ns.f = (x) => x;");
     testSame("const ns = {}; /** @nocollapse */ ns.f = (x) => x;");
-    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
-    disableLineNumberCheck();
     test(
         "/** @enum {string} */ const Enum = { A: 'string' };",
-        "/** @enum {?} */ const Enum = { A: 'string' };");
+        "/** @enum {!JsdocSerializer_placeholder_type} */ const Enum = { A: 'string' };");
   }
 
   @Test

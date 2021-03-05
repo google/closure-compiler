@@ -98,6 +98,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     super.setUp();
     // Allow testing of features that aren't fully supported for output yet.
     enableNormalize();
+    disableCompareJsDoc();
     enableGatherExternProperties();
     disableTypeCheck();
   }
