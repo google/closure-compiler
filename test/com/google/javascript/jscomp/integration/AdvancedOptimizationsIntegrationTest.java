@@ -1205,7 +1205,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         options,
         lines(
             "", //
-            // Previously Es6ToEs3ClassSideInheritance failed to take scope into account,
+            // Previously ConcretizeStaticInheritanceForInlining failed to take scope into account,
             // so it produced DUPLICATE_CLASS errors for code like this.
             "function f1() {",
             "  class Base {}",

@@ -100,7 +100,7 @@ import java.util.Set;
  * <p>NOTE: currently this pass only exists to prevent property collapsing from breaking some simple
  * class-side inheritance cases when transpiling.
  */
-public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
+public final class ConcretizeStaticInheritanceForInlining implements CompilerPass {
 
   static final DiagnosticType DUPLICATE_CLASS =
       DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
@@ -127,7 +127,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
 
   private final LinkedHashMap<String, JavascriptClass> classByAlias = new LinkedHashMap<>();
 
-  public Es6ToEs3ClassSideInheritance(AbstractCompiler compiler) {
+  public ConcretizeStaticInheritanceForInlining(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

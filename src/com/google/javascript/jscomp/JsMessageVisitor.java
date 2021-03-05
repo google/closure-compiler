@@ -366,7 +366,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       // Case: `foo.Thing.MSG_EXAMPLE_ALIAS = bar.OtherThing.MSG_EXAMPLE;`
       //
       // This kind of construct is created by TypeScript code generation and
-      // Es6ToEs3ClassSideInheritance. Just ignore it; the message will have already been extracted
+      // ConcretizeStaticInheritanceForInlining. Just ignore it; the message will have already been
+      // extracted
       // from the base class.
       return true;
     }

@@ -1376,8 +1376,8 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final PassFactory convertStaticInheritance =
       PassFactory.builder()
-          .setName("Es6StaticInheritance")
-          .setInternalFactory(Es6ToEs3ClassSideInheritance::new)
+          .setName("concretizeStaticInheritance")
+          .setInternalFactory(ConcretizeStaticInheritanceForInlining::new)
           .setFeatureSetForOptimizations()
           .build();
 

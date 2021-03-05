@@ -19,15 +19,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link Es6ToEs3ClassSideInheritance}.
- *
- */
+/** Test case for {@link ConcretizeStaticInheritanceForInlining}. */
 @RunWith(JUnit4.class)
-public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
+public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6ToEs3ClassSideInheritance(compiler);
+    return new ConcretizeStaticInheritanceForInlining(compiler);
   }
 
   @Test

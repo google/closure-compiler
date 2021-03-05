@@ -361,7 +361,8 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (n.isGetProp()) {
           if (parent.isExprResult()) {
-            // This is a stub declaration for the type checker. See: Es6ToEs3ClassSideInheritance
+            // This is a stub declaration for the type checker. See:
+            // ConcretizeStaticInheritanceForInlining
             return;
           }
           if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
