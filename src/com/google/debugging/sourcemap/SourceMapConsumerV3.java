@@ -33,12 +33,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Class for parsing version 3 of the SourceMap format, as produced by the
- * Closure Compiler, etc.
- * http://code.google.com/p/closure-compiler/wiki/SourceMaps
+ * Class for parsing version 3 of the SourceMap format, as produced by the Closure Compiler, etc.
+ * https://github.com/google/closure-compiler/wiki/Source-Maps
  */
-public final class SourceMapConsumerV3 implements SourceMapConsumer,
-    SourceMappingReversable {
+public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappingReversable {
   static final int UNMAPPED = -1;
 
   private String[] sources;
