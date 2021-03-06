@@ -1209,6 +1209,22 @@ public class CompilerOptions implements Serializable {
 
   ChunkOutputType chunkOutputType;
 
+  private String dynamicImportAlias = null;
+
+  /** Set the alias name for dynamic import expressions */
+  public String getDynamicImportAlias() {
+    return this.dynamicImportAlias;
+  }
+
+  /** Set the alias name for dynamic import expressions */
+  public void setDynamicImportAlias(String value) {
+    this.dynamicImportAlias = value;
+  }
+
+  boolean shouldAliasDynamicImport() {
+    return this.dynamicImportAlias != null;
+  }
+
   /**
    * Initializes compiler options. All options are disabled by default.
    *

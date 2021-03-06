@@ -2618,10 +2618,12 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       if (targetModule != null) {
         // TypedScopeCreator ensures that the MODULE_BODY type is the export namespace type
         Node scriptNode = targetModule.metadata().rootNode();
-        JSType exportNamespaceType =
-            scriptNode != null ? scriptNode.getOnlyChild().getJSType() : null;
-        if (exportNamespaceType != null) {
-          templateType = exportNamespaceType;
+        if (scriptNode.hasOneChild() && scriptNode.getFirstChild().isModuleBody()) {
+          JSType exportNamespaceType =
+              scriptNode != null ? scriptNode.getOnlyChild().getJSType() : null;
+          if (exportNamespaceType != null) {
+            templateType = exportNamespaceType;
+          }
         }
       }
     }

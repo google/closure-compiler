@@ -947,6 +947,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "expressions are not yet fully supported and may lead to broken output code.")
     private boolean allowDynamicImport = false;
 
+    @Option(
+        name = "--dynamic_import_alias",
+        usage =
+            "Instructs the compiler to replace dynamic imports expressions with a function call "
+                + "using the specified name. Allows dynamic import expressions to be externally "
+                + "polyfilled when the output language level does not natively support them.")
+    private String dynamicImportAlias = null;
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1033,6 +1041,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             .putAll(
                 "JS Modules",
                 ImmutableList.of(
+                    "allow_dynamic_import",
+                    "dynamic_import_alias",
                     "js_module_root",
                     "module_resolution",
                     "process_common_js_modules",
@@ -2002,6 +2012,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
     options.setAllowDynamicImport(flags.allowDynamicImport);
+    options.setDynamicImportAlias(flags.dynamicImportAlias);
 
     if (flags.chunkOutputType == ChunkOutputType.ES_MODULES
         && flags.renamePrefixNamespace != null) {
