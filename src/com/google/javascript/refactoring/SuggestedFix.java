@@ -628,8 +628,7 @@ public final class SuggestedFix {
           throw new AssertionError();
       }
 
-      Node callNode =
-          IR.call(IR.getprop(IR.name("goog"), IR.string(requireFlavor)), IR.string(namespace));
+      Node callNode = IR.call(IR.getprop(IR.name("goog"), requireFlavor), IR.string(namespace));
 
       if (alias != null) {
         return IR.constNode(IR.name(alias), callNode);

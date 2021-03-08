@@ -47,18 +47,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class QualifiedNameTest {
 
-  // All of these qualified names are "foo.bar.baz"
-  private static final QualifiedName FROM_STRING = QualifiedName.of("foo.bar.baz");
-  private static final QualifiedName FROM_NODE =
-      IR.getprop(IR.getprop(IR.name("foo"), IR.string("bar")), IR.string("baz"))
-          .getQualifiedNameObject();
-  private static final QualifiedName FROM_GETPROP =
-      QualifiedName.of("foo").getprop("bar").getprop("baz");
-
   private static Node qname(Node root, String... props) {
     Node n = root;
     for (String p : props) {
-      n = IR.getprop(n, IR.string(p));
+      n = IR.getprop(n, p);
     }
     return n;
   }

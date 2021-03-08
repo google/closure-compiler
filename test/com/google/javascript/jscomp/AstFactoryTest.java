@@ -1287,7 +1287,7 @@ public class AstFactoryTest {
   public void testCreateDelProp() {
     AstFactory astFactory = createTestAstFactory();
 
-    Node getprop = IR.getprop(IR.name("obj"), IR.string("prop"));
+    Node getprop = IR.getprop(IR.name("obj"), "prop");
 
     Node delprop = astFactory.createDelProp(getprop);
     assertNode(delprop).hasToken(Token.DELPROP);

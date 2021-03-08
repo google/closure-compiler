@@ -261,25 +261,25 @@ public class NodeTest {
     assertThat(IR.name("a").isQualifiedName()).isTrue();
     assertThat(IR.name("$").isQualifiedName()).isTrue();
     assertThat(IR.name("_").isQualifiedName()).isTrue();
-    assertThat(IR.getprop(IR.name("a"), IR.string("b")).isQualifiedName()).isTrue();
-    assertThat(IR.getprop(IR.thisNode(), IR.string("b")).isQualifiedName()).isTrue();
+    assertThat(IR.getprop(IR.name("a"), "b").isQualifiedName()).isTrue();
+    assertThat(IR.getprop(IR.thisNode(), "b").isQualifiedName()).isTrue();
     assertThat(IR.number(0).isQualifiedName()).isFalse();
     assertThat(IR.arraylit().isQualifiedName()).isFalse();
     assertThat(IR.objectlit().isQualifiedName()).isFalse();
     assertThat(IR.string("").isQualifiedName()).isFalse();
     assertThat(IR.getelem(IR.name("a"), IR.string("b")).isQualifiedName()).isFalse();
     assertThat( // a[b].c
-            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), IR.string("c")).isQualifiedName())
+            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), "c").isQualifiedName())
         .isFalse();
     assertThat( // a.b[c]
-            IR.getelem(IR.getprop(IR.name("a"), IR.string("b")), IR.string("c")).isQualifiedName())
+            IR.getelem(IR.getprop(IR.name("a"), "b"), IR.string("c")).isQualifiedName())
         .isFalse();
     assertThat(IR.call(IR.name("a")).isQualifiedName()).isFalse();
     assertThat( // a().b
-            IR.getprop(IR.call(IR.name("a")), IR.string("b")).isQualifiedName())
+            IR.getprop(IR.call(IR.name("a")), "b").isQualifiedName())
         .isFalse();
     assertThat( // (a.b)()
-            IR.call(IR.getprop(IR.name("a"), IR.string("b"))).isQualifiedName())
+            IR.call(IR.getprop(IR.name("a"), "b")).isQualifiedName())
         .isFalse();
     assertThat(IR.string("a").isQualifiedName()).isFalse();
     assertThat(IR.regexp(IR.string("x")).isQualifiedName()).isFalse();
@@ -332,19 +332,17 @@ public class NodeTest {
     assertThat(IR.string("").matchesQualifiedName("a.b")).isFalse();
     assertThat(IR.getelem(IR.name("a"), IR.string("b")).matchesQualifiedName("a.b")).isFalse();
     assertThat( // a[b].c
-            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), IR.string("c"))
-                .matchesQualifiedName("a.b.c"))
+            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), "c").matchesQualifiedName("a.b.c"))
         .isFalse();
     assertThat( // a.b[c]
-            IR.getelem(IR.getprop(IR.name("a"), IR.string("b")), IR.string("c"))
-                .matchesQualifiedName("a.b.c"))
+            IR.getelem(IR.getprop(IR.name("a"), "b"), IR.string("c")).matchesQualifiedName("a.b.c"))
         .isFalse();
     assertThat(IR.call(IR.name("a")).matchesQualifiedName("a")).isFalse();
     assertThat( // a().b
-            IR.getprop(IR.call(IR.name("a")), IR.string("b")).matchesQualifiedName("a.b"))
+            IR.getprop(IR.call(IR.name("a")), "b").matchesQualifiedName("a.b"))
         .isFalse();
     assertThat( // (a.b)()
-            IR.call(IR.getprop(IR.name("a"), IR.string("b"))).matchesQualifiedName("a.b"))
+            IR.call(IR.getprop(IR.name("a"), "b")).matchesQualifiedName("a.b"))
         .isFalse();
     assertThat(IR.string("a").matchesQualifiedName("a")).isFalse();
     assertThat(IR.regexp(IR.string("x")).matchesQualifiedName("x")).isFalse();
@@ -381,19 +379,18 @@ public class NodeTest {
     assertThat(IR.getelem(IR.name("a"), IR.string("b")).matchesQualifiedName(qname("a.b")))
         .isFalse();
     assertThat( // a[b].c
-            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), IR.string("c"))
+            IR.getprop(IR.getelem(IR.name("a"), IR.string("b")), "c")
                 .matchesQualifiedName(qname("a.b.c")))
         .isFalse();
     assertThat( // a.b[c]
-            IR.getelem(IR.getprop(IR.name("a"), IR.string("b")), IR.string("c"))
-                .matchesQualifiedName("a.b.c"))
+            IR.getelem(IR.getprop(IR.name("a"), "b"), IR.string("c")).matchesQualifiedName("a.b.c"))
         .isFalse();
     assertThat(IR.call(IR.name("a")).matchesQualifiedName(qname("a"))).isFalse();
     assertThat( // a().b
-            IR.getprop(IR.call(IR.name("a")), IR.string("b")).matchesQualifiedName(qname("a.b")))
+            IR.getprop(IR.call(IR.name("a")), "b").matchesQualifiedName(qname("a.b")))
         .isFalse();
     assertThat( // (a.b)()
-            IR.call(IR.getprop(IR.name("a"), IR.string("b"))).matchesQualifiedName(qname("a.b")))
+            IR.call(IR.getprop(IR.name("a"), "b")).matchesQualifiedName(qname("a.b")))
         .isFalse();
     assertThat(IR.string("a").matchesQualifiedName(qname("a"))).isFalse();
     assertThat(IR.regexp(IR.string("x")).matchesQualifiedName(qname("x"))).isFalse();
@@ -443,8 +440,7 @@ public class NodeTest {
       String part = (endPos == -1
                      ? name.substring(startPos)
                      : name.substring(startPos, endPos));
-      Node propNode = IR.string(part);
-      node = IR.getprop(node, propNode);
+      node = IR.getprop(node, part);
     } while (endPos != -1);
 
     return node;
@@ -606,10 +602,10 @@ public class NodeTest {
     assertThat(IR.name("a").getQualifiedName()).isEqualTo("a");
     assertThat(IR.thisNode().getQualifiedName()).isEqualTo("this");
     assertThat(IR.superNode().getQualifiedName()).isEqualTo("super");
-    assertThat(IR.getprop(IR.name("a"), IR.string("b")).getQualifiedName()).isEqualTo("a.b");
-    assertThat(IR.getprop(IR.thisNode(), IR.string("b")).getQualifiedName()).isEqualTo("this.b");
-    assertThat(IR.getprop(IR.superNode(), IR.string("b")).getQualifiedName()).isEqualTo("super.b");
-    assertThat(IR.getprop(IR.call(IR.name("a")), IR.string("b")).getQualifiedName()).isNull();
+    assertThat(IR.getprop(IR.name("a"), "b").getQualifiedName()).isEqualTo("a.b");
+    assertThat(IR.getprop(IR.thisNode(), "b").getQualifiedName()).isEqualTo("this.b");
+    assertThat(IR.getprop(IR.superNode(), "b").getQualifiedName()).isEqualTo("super.b");
+    assertThat(IR.getprop(IR.call(IR.name("a")), "b").getQualifiedName()).isNull();
   }
 
   @Test

@@ -242,7 +242,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     String encodedParam =
         parameterMapping.getEncodedParam(fileName, fnName, type, lineNo, columnNo);
 
-    Node prop = IR.getprop(IR.name(instrumentationArrayName), IR.string("push"));
+    Node prop = IR.getprop(IR.name(instrumentationArrayName), "push");
     Node functionCall = IR.call(prop, IR.string(encodedParam));
     Node exprNode = IR.exprResult(functionCall);
 

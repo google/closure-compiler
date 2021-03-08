@@ -126,7 +126,7 @@ public class TypeDeclarationsIR {
     Iterator<String> segmentsIt = segments.iterator();
     Node node = IR.name(segmentsIt.next());
     while (segmentsIt.hasNext()) {
-      node = IR.getprop(node, IR.string(segmentsIt.next()));
+      node = IR.getprop(node, segmentsIt.next());
     }
     return new TypeDeclarationNode(Token.NAMED_TYPE, node);
   }

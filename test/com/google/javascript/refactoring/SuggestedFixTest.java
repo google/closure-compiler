@@ -48,9 +48,8 @@ public class SuggestedFixTest {
     String after = "/** some comment */\ngoog.foo();";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    Node newNode = IR.exprResult(IR.call(
-        IR.getprop(IR.name("goog2"), IR.string("get")),
-        IR.string("service")));
+    Node newNode =
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertBefore(root.getLastChild().getFirstChild(), newNode, compiler)
         .build();
@@ -66,8 +65,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     Node newNode =
-        IR.exprResult(
-            IR.call(IR.getprop(IR.name("goog2"), IR.string("get")), IR.string("service")));
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
     SuggestedFix fix =
         new SuggestedFix.Builder().insertBefore(root.getLastChild(), newNode, compiler).build();
     CodeReplacement replacement =
@@ -82,8 +80,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     Node newNode =
-        IR.exprResult(
-            IR.call(IR.getprop(IR.name("goog2"), IR.string("get")), IR.string("service")));
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
     SuggestedFix fix =
         new SuggestedFix.Builder().insertBefore(root.getLastChild(), newNode, compiler).build();
     CodeReplacement replacement =
@@ -424,9 +421,8 @@ public class SuggestedFixTest {
     String after = "goog.foo();";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    Node newNode = IR.exprResult(IR.call(
-        IR.getprop(IR.name("goog2"), IR.string("get")),
-        IR.string("service")));
+    Node newNode =
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog2"), "get"), IR.string("service")));
     SuggestedFix fix = new SuggestedFix.Builder()
         .replace(root.getLastChild().getFirstChild(), newNode, compiler)
         .build();
@@ -445,10 +441,11 @@ public class SuggestedFixTest {
     String after = "alert(clazz.foo());";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    Node newNode = IR.call(IR.getprop(IR.name("clazz"), IR.string("bar")));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(root.getLastChild().getFirstChild().getLastChild(), newNode, compiler)
-        .build();
+    Node newNode = IR.call(IR.getprop(IR.name("clazz"), "bar"));
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .replace(root.getLastChild().getFirstChild().getLastChild(), newNode, compiler)
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(
             before.length() + "alert(".length(), "clazz.foo()".length(), "clazz.bar()");
@@ -461,12 +458,11 @@ public class SuggestedFixTest {
     String after = "MyClass.prototype.foo = function() {};\n";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
-    Node newNode = IR.getprop(
-        IR.getprop(IR.name("MyClass"), IR.string("prototype")),
-        IR.string("bar"));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .replace(root.getLastChild().getFirstFirstChild(), newNode, compiler)
-        .build();
+    Node newNode = IR.getprop(IR.name("MyClass"), "prototype", "bar");
+    SuggestedFix fix =
+        new SuggestedFix.Builder()
+            .replace(root.getLastChild().getFirstFirstChild(), newNode, compiler)
+            .build();
     CodeReplacement replacement =
         CodeReplacement.create(
             before.length(), "MyClass.prototype.foo".length(), "MyClass.prototype.bar");

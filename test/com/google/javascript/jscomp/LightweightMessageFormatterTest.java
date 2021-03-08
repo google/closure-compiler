@@ -189,12 +189,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testMultiline_longTruncatedErrorMessage() {
-    Node qname =
-        IR.getprop(
-            IR.getprop(
-                IR.getprop(IR.getprop(IR.name("a"), IR.string("b")), IR.string("c")),
-                IR.string("d")),
-            IR.string("e"));
+    Node qname = IR.getprop(IR.name("a"), "b", "c", "d", "e");
     qname.setLineno(8);
     qname.setCharno(0);
     qname.setLength("a\n .b\n .c\n .d\n .e".length());
