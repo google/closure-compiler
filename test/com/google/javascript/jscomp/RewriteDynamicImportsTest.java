@@ -15,11 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.RewriteDynamicImports.DYNAMIC_IMPORT_ALIAS_MISSING;
 import static com.google.javascript.jscomp.RewriteDynamicImports.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import org.junit.Before;
@@ -36,17 +38,15 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setLanguage(LanguageMode.ECMASCRIPT_2020, LanguageMode.ECMASCRIPT_2020);
     enableCreateModuleMap();
     enableTypeInfoValidation();
     disableScriptFeatureValidation();
-    enableTranspile();
   }
 
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2020);
     options.setPrettyPrint(true);
 
     return options;
@@ -55,11 +55,25 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
+      // NOTE: we cannot just use enableTypeCheck(), because we need to be able
+      // to retrieve globalTypedScope for use by Es6RewriteModules.
       ReverseAbstractInterpreter rai =
           new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
       compiler.setTypeCheckingHasRun(true);
-      new TypeCheck(compiler, rai, compiler.getTypeRegistry())
-          .processForTesting(externs, root);
+      TypedScope globalTypedScope =
+          checkNotNull(
+              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                  .processForTesting(externs, root));
+      // We need to make sure modules are rewritten, because RewriteDynamicImports
+      // expects to be able to see the module variables.
+      new Es6RewriteModules(
+          compiler,
+          compiler.getModuleMetadataMap(),
+          compiler.getModuleMap(),
+          /* preprocessorSymbolTable= */ null,
+          globalTypedScope)
+          .process(externs, root);
+
       new RewriteDynamicImports(compiler, dynamicImportAlias).process(externs, root);
     };
   }
@@ -81,57 +95,57 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void internalImportSameChuckWithoutAlias_unused() {
+  public void internalImportSameChunkWithoutAlias_unused() {
     this.dynamicImportAlias = null;
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
     actualChunk0.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js", "Promise.resolve();")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode("i1.js", "Promise.resolve();")));
 
-    test(
-        srcs(new JSModule[] { actualChunk0 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0}), expectedSrcs);
   }
 
   @Test
-  public void internalImportSameChuckWithoutAlias_used() {
+  public void internalImportSameChunkWithoutAlias_used() {
     this.dynamicImportAlias = null;
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
     actualChunk0.add(SourceFile.fromCode("i1.js", "const ns = import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")));
 
-    test(
-        srcs(new JSModule[] { actualChunk0 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0}), expectedSrcs);
   }
 
   @Test
-  public void internalImportSameChuckWithAlias() {
+  public void internalImportSameChunkWithAlias() {
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
     actualChunk0.add(SourceFile.fromCode("i1.js", "const ns = import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode("i1.js", "const ns = Promise.resolve(module$i0);")));
 
     test(
-        srcs(new JSModule[] { actualChunk0 }),
+        externs(new TestExternsBuilder().addObject().addFunction().addPromise().build()),
+        srcs(new JSModule[] {actualChunk0}),
         expectedSrcs);
   }
 
   @Test
-  public void internalImportDifferentChucksWithoutAlias_unused() {
+  public void internalImportDifferentChunksWithoutAlias_unused() {
     this.dynamicImportAlias = null;
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
@@ -139,18 +153,17 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     JSModule actualChunk1 = new JSModule("chunk1");
     actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js", "import('./chunk0.js');")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode("i1.js", "import('./chunk0.js');")));
 
-    test(
-        srcs(new JSModule[] { actualChunk0, actualChunk1 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0, actualChunk1}), expectedSrcs);
   }
 
   @Test
-  public void internalImportDifferentChucksWithAlias_unused() {
+  public void internalImportDifferentChunksWithAlias_unused() {
     allowExternsChanges();
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
@@ -158,18 +171,17 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     JSModule actualChunk1 = new JSModule("chunk1");
     actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js", "imprt_('./chunk0.js');")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode("i1.js", "imprt_('./chunk0.js');")));
 
-    test(
-        srcs(new JSModule[] { actualChunk0, actualChunk1 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0, actualChunk1}), expectedSrcs);
   }
 
   @Test
-  public void internalImportDifferentChucksWithoutAlias_used() {
+  public void internalImportDifferentChunksWithoutAlias_used() {
     this.dynamicImportAlias = null;
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
@@ -177,19 +189,21 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     JSModule actualChunk1 = new JSModule("chunk1");
     actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js",
-            "const nsPromise = import('./chunk0.js').then(function() { return module$i0; });")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode(
+                    "i1.js",
+                    lines(
+                        "const nsPromise =", //
+                        "    import('./chunk0.js').then(function() { return module$i0; });"))));
 
-    test(
-        srcs(new JSModule[] { actualChunk0, actualChunk1 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0, actualChunk1}), expectedSrcs);
   }
 
   @Test
-  public void internalImportDifferentChucksWithAlias_used() {
+  public void internalImportDifferentChunksWithAlias_used() {
     allowExternsChanges();
     JSModule actualChunk0 = new JSModule("chunk0");
     actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
@@ -197,23 +211,32 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     JSModule actualChunk1 = new JSModule("chunk1");
     actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
 
-    Expected expectedSrcs = new Expected(ImmutableList.of(
-        SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
-        SourceFile.fromCode("i1.js",
-            "const nsPromise = imprt_('./chunk0.js').then(function() { return module$i0; });")
-    ));
+    Expected expectedSrcs =
+        new Expected(
+            ImmutableList.of(
+                SourceFile.fromCode("i0.js", "const a = 1; export default a;"),
+                SourceFile.fromCode(
+                    "i1.js", "const nsPromise = imprt_('./chunk0.js').then(() => module$i0);")));
 
-    test(
-        srcs(new JSModule[] { actualChunk0, actualChunk1 }),
-        expectedSrcs);
+    test(srcs(new JSModule[] {actualChunk0, actualChunk1}), expectedSrcs);
   }
 
   @Test
   public void qualifiedNameAlias() {
     this.dynamicImportAlias = "ns.imprt_";
     test(
-        "/** @const */ const ns = {}; /**@const */ ns.imprt_ = function(path) {}; import('./other.js');",
-        "const ns = {};  /** @const */ ns.imprt_ = function(path) {}; ns.imprt_('./other.js');");
+        lines(
+            "/** @const */", //
+            "const ns = {};",
+            "/**@const */",
+            "ns.imprt_ = function(path) {};",
+            "import('./other.js');"),
+        lines(
+            "/** @const */", //
+            "const ns = {};",
+            "/** @const */",
+            "ns.imprt_ = function(path) {};",
+            "ns.imprt_('./other.js');"));
   }
 
   @Test
@@ -228,9 +251,7 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Test
   public void qualifiedNameAliasError() {
     this.dynamicImportAlias = "ns.imprt_";
-    testWarning(
-        "const ns = {}; import('./other.js');",
-        DYNAMIC_IMPORT_ALIAS_MISSING);
+    testWarning("const ns = {}; import('./other.js');", DYNAMIC_IMPORT_ALIAS_MISSING);
   }
 
   @Test
@@ -242,8 +263,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     JSModule actualChunk1 = new JSModule("../folder2/chunk1");
     actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
 
-    testError(
-        srcs(new JSModule[] { actualChunk0, actualChunk1 }),
-        UNABLE_TO_COMPUTE_RELATIVE_PATH);
+    testError(srcs(new JSModule[] {actualChunk0, actualChunk1}), UNABLE_TO_COMPUTE_RELATIVE_PATH);
   }
 }

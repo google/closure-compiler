@@ -394,8 +394,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Dynamic import rewriting must always occur after type checking
-    if (options.shouldAllowDynamicImport() &&
-        options.getLanguageIn().toFeatureSet().has(Feature.DYNAMIC_IMPORT)) {
+    if (options.shouldAllowDynamicImport()
+        && options.getLanguageIn().toFeatureSet().has(Feature.DYNAMIC_IMPORT)) {
       checks.add(rewriteDynamicImports);
     }
 
@@ -2919,7 +2919,9 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("REWRITE_DYNAMIC_IMPORT")
           .setFeatureSet(FeatureSet.all())
-          .setInternalFactory((compiler) ->
-              new RewriteDynamicImports(compiler, compiler.getOptions().getDynamicImportAlias()))
+          .setInternalFactory(
+              (compiler) ->
+                  new RewriteDynamicImports(
+                      compiler, compiler.getOptions().getDynamicImportAlias()))
           .build();
 }

@@ -1207,8 +1207,6 @@ public class CompilerOptions implements Serializable {
     return this.allowDynamicImport;
   }
 
-  ChunkOutputType chunkOutputType;
-
   private String dynamicImportAlias = null;
 
   /** Set the alias name for dynamic import expressions */
@@ -1224,6 +1222,8 @@ public class CompilerOptions implements Serializable {
   boolean shouldAliasDynamicImport() {
     return this.dynamicImportAlias != null;
   }
+
+  ChunkOutputType chunkOutputType;
 
   /**
    * Initializes compiler options. All options are disabled by default.
