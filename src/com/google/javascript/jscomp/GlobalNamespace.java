@@ -1007,8 +1007,7 @@ class GlobalNamespace
         return false;
       }
       Node receiver = callee.getFirstChild();
-      return "hasOwnProperty".equals(Node.getGetpropString(callee))
-          && receiver.isQualifiedName();
+      return "hasOwnProperty".equals(callee.getString()) && receiver.isQualifiedName();
     }
 
     /**

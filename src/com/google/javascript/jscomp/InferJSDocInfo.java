@@ -223,7 +223,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
           }
 
           // Put the JSDoc in the property slot, if there is one.
-          String propName = Node.getGetpropString(n);
+          String propName = n.getString();
           if (lhsType.hasOwnProperty(propName)) {
             lhsType.setPropertyJSDocInfo(propName, typeDoc);
           }

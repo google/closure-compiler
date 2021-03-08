@@ -238,13 +238,12 @@ public class GenerateExports implements CompilerPass {
       Node node = context.getFirstChild(); // e.g. get `a.prototype.b`
       Node ownerNode = node.getFirstChild(); // e.g. get `a.prototype`
       methodOwnerName = ownerNode.getQualifiedName(); // e.g. get the string "a.prototype"
-      if (ownerNode.isGetProp()
-          && Node.getGetpropString(ownerNode).equals(PROTOTYPE_PROPERTY)) {
+      if (ownerNode.isGetProp() && ownerNode.getString().equals(PROTOTYPE_PROPERTY)) {
         // e.g. true if ownerNode is `a.prototype`
         // false if this export were `/** @export */ a.b = obj;` instead
         isEs5StylePrototypeAssignment = true;
       }
-      propertyName = Node.getGetpropString(node);
+      propertyName = node.getString();
     }
 
     boolean useExportSymbol = true;

@@ -680,7 +680,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
             ? NodeUtil.getEnclosingClass(constructorNode)
             : constructorNode;
     String className = NodeUtil.getName(classNode);
-    String propertyName = Node.getGetpropString(thisDotPropName);
+    String propertyName = thisDotPropName.getString();
     String prototypeName = className + ".prototype";
     Node propertyNameNode = NodeUtil.newQName(compiler, "this." + propertyName);
 

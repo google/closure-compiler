@@ -182,7 +182,7 @@ class InlineObjectLiterals implements CompilerPass {
           // We short-circuit this problem by bailing out if we see a reference
           // to a property that isn't defined on the object literal. This
           // isn't a perfect algorithm, but it should catch most cases.
-          String propName = Node.getGetpropString(parent);
+          String propName = parent.getString();
           if (!validProperties.contains(propName)) {
             if (NodeUtil.isNameDeclOrSimpleAssignLhs(parent, grandparent)) {
               validProperties.add(propName);
@@ -317,7 +317,7 @@ class InlineObjectLiterals implements CompilerPass {
           checkState(getprop.isGetProp(), getprop);
 
           // The key being looked up in the original map.
-          String varname = Node.getGetpropString(getprop);
+          String varname = getprop.getString();
           if (varmap.containsKey(varname)) {
             continue;
           }
@@ -482,7 +482,7 @@ class InlineObjectLiterals implements CompilerPass {
           checkState(getprop.isGetProp(), getprop);
 
           // The key being looked up in the original map.
-          String var = Node.getGetpropString(getprop);
+          String var = getprop.getString();
 
           // If the variable hasn't already been declared, add an empty
           // declaration near all the other declarations.

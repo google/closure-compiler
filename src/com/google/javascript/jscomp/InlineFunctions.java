@@ -473,7 +473,7 @@ class InlineFunctions implements CompilerPass {
             && name == parent.getFirstChild()
             && parent.getSecondChild().isString()
             && parent.getSecondChild().getString().equals("call"))
-        || (parent.isGetProp() && Node.getGetpropString(parent).equals("call"))) {
+        || (parent.isGetProp() && parent.getString().equals("call"))) {
       Node grandparent = name.getAncestor(2);
       if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
         // Yep, a ".call".
