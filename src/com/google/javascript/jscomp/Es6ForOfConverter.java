@@ -139,9 +139,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       // typing $jscomp as unknown since the $jscomp polyfill may not be injected before
       // typechecking. (See https://github.com/google/closure-compiler/issues/2908)
       getProp.getFirstChild().setJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
-      if (!Node.isStringGetprop(getProp)) {
-        getProp.getSecondChild().setJSType(registry.getNativeType(JSTypeNative.STRING_TYPE));
-      }
 
       call.setJSType(iteratorType);
     }

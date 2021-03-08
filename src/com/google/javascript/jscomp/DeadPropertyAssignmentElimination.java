@@ -247,8 +247,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         return null;
       }
 
-      String propName =
-          propNode.isGetProp() ? Node.getGetpropString(propNode) : propNode.getQualifiedName();
+      String propName = propNode.isGetProp() ? propNode.getString() : propNode.getQualifiedName();
 
       Property property = propertyMap.computeIfAbsent(propName, Property::new);
 
@@ -364,7 +363,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       switch (n.getToken()) {
         case GETPROP:
           // Handle potential getters/setters.
-          if (n.isGetProp() && skiplistedPropNames.contains(Node.getGetpropString(n))) {
+          if (n.isGetProp() && skiplistedPropNames.contains(n.getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
             markAllPropsRead();
             return true;

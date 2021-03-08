@@ -300,10 +300,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           }
         } else {
           checkImproperReferenceToImport(
-              t,
-              n,
-              n.getQualifiedName(),
-              parent.isGetProp() ? Node.getGetpropString(parent) : null);
+              t, n, n.getQualifiedName(), parent.isGetProp() ? parent.getString() : null);
         }
         break;
       default:

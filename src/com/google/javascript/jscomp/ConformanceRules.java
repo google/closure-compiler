@@ -810,7 +810,7 @@ public final class ConformanceRules {
           break;
 
         case GETPROP:
-          name = Node.getGetpropString(n);
+          name = n.getString();
           break;
 
         case GETELEM:
@@ -1005,7 +1005,7 @@ public final class ConformanceRules {
               return ConformanceResult.VIOLATION;
             }
           } else if (n.isGetProp()
-              && Node.getGetpropString(n).equals("call")
+              && n.getString().equals("call")
               && n.getFirstChild().matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
                 compiler, n.getParent(), r.restrictedCallType, true)) {
@@ -1085,7 +1085,7 @@ public final class ConformanceRules {
 
         if (matchesProp(n, r)) {
           result = checkConformance(t, n, r, false);
-        } else if (Node.getGetpropString(n).equals("call") && matchesProp(n.getFirstChild(), r)) {
+        } else if (n.getString().equals("call") && matchesProp(n.getFirstChild(), r)) {
           // handle .call invocation
           result = checkConformance(t, n, r, true);
         }
@@ -1124,7 +1124,7 @@ public final class ConformanceRules {
     }
 
     private boolean matchesProp(Node n, Restriction r) {
-      return n.isGetProp() && Node.getGetpropString(n).equals(r.property);
+      return n.isGetProp() && n.getString().equals(r.property);
     }
   }
 
@@ -1179,7 +1179,7 @@ public final class ConformanceRules {
         if (rhsType != null && targetType != null) {
           JSType targetNotNullType = null;
           for (Restriction r : restrictions) {
-            if (Node.getGetpropString(n) == r.property) { // Both strings are interned.
+            if (n.getString() == r.property) { // Both strings are interned.
               if (!rhsType.isSubtypeOf(r.restrictedType)) {
                 if (ConformanceUtil.isLooseType(targetType)) {
                   if (reportLooseTypeViolations) {
@@ -1509,7 +1509,7 @@ public final class ConformanceRules {
 
     private static boolean isExplicitlyUnknown(Node n) {
       ObjectType owner = ObjectType.cast(n.getFirstChild().getJSType());
-      Property prop = owner != null ? owner.getSlot(Node.getGetpropString(n)) : null;
+      Property prop = owner != null ? owner.getSlot(n.getString()) : null;
       return prop != null && !prop.isTypeInferred();
     }
   }
@@ -1543,7 +1543,7 @@ public final class ConformanceRules {
           && isCheckablePropertySource(getprop.getFirstChild()) // not a cascading unknown
           && !isTemplateType(getprop)
           && !isDeclaredUnknown(getprop)) {
-        String propName = Node.getGetpropString(getprop);
+        String propName = getprop.getString();
         String typeName = getprop.getFirstChild().getJSType().toString();
         return new ConformanceResult(
             ConformanceLevel.VIOLATION,
@@ -1585,7 +1585,7 @@ public final class ConformanceRules {
         return false;
       }
 
-      JSDocInfo info = targetType.getPropertyJSDocInfo(Node.getGetpropString(n));
+      JSDocInfo info = targetType.getPropertyJSDocInfo(n.getString());
       if (info == null || !info.hasType()) {
         return false;
       }
@@ -1795,7 +1795,7 @@ public final class ConformanceRules {
       if (!target.isGetProp()) {
         return ConformanceResult.CONFORMANCE;
       }
-      String functionName = Node.getGetpropString(target);
+      String functionName = target.getString();
       if (!"createElement".equals(functionName) && !"createDom".equals(functionName)) {
         return ConformanceResult.CONFORMANCE;
       }
@@ -1938,7 +1938,7 @@ public final class ConformanceRules {
       if (tag.isString()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-        return ImmutableSet.of(Node.getGetpropString(tag).toLowerCase(Locale.ROOT));
+        return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
       JSType type = tag.getJSType();
@@ -2042,7 +2042,7 @@ public final class ConformanceRules {
       if (!target.isGetProp()) {
         return false;
       }
-      if (!"createDom".equals(Node.getGetpropString(target))) {
+      if (!"createDom".equals(target.getString())) {
         return false;
       }
 

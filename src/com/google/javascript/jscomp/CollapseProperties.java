@@ -415,7 +415,7 @@ class CollapseProperties implements CompilerPass {
     // AFTER:
     //   name a$b$c
     Node ref = NodeUtil.newName(compiler, alias, n, originalName).copyTypeFrom(n);
-    NodeUtil.copyNameAnnotations(Node.isStringGetprop(n) ? n : n.getSecondChild(), ref);
+    NodeUtil.copyNameAnnotations(n, ref);
     if (NodeUtil.isNormalOrOptChainCall(parent) && n.isFirstChildOf(parent)) {
       // The node was a call target. We are deliberately flattening these as
       // the "this" isn't provided by the namespace. Mark it as such:
@@ -478,7 +478,7 @@ class CollapseProperties implements CompilerPass {
     // Create the new alias node.
     Node nameNode =
         NodeUtil.newName(compiler, alias, grandparent.getFirstChild(), refName.getFullName());
-    NodeUtil.copyNameAnnotations(Node.getGetpropStringNode(ref.getNode()), nameNode);
+    NodeUtil.copyNameAnnotations(ref.getNode(), nameNode);
 
     // BEFORE:
     // ... (x.y = 3);
@@ -602,9 +602,6 @@ class CollapseProperties implements CompilerPass {
           NodeUtil.newName(compiler, alias, ref.getNode().getAncestor(2), n.getFullName());
 
       Node constPropNode = ref.getNode();
-      if (!Node.isStringGetprop(constPropNode)) {
-        constPropNode = constPropNode.getSecondChild();
-      }
       JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
       nameNode.putBooleanProp(
           Node.IS_CONSTANT_NAME,
@@ -916,9 +913,6 @@ class CollapseProperties implements CompilerPass {
       // Determine if this is a constant var by checking the first
       // reference to it. Don't check the declaration, as it might be null.
       Node constPropNode = p.getFirstRef().getNode();
-      if (!Node.isStringGetprop(constPropNode)) {
-        constPropNode = constPropNode.getSecondChild();
-      }
       nameNode.putBooleanProp(
           Node.IS_CONSTANT_NAME, constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME));
 

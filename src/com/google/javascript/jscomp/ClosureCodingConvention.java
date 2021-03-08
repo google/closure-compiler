@@ -155,7 +155,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     // Check if the method name matches one of the class-defining methods.
     String methodName = null;
     if (callName.isGetProp()) {
-      methodName = Node.getGetpropString(callName);
+      methodName = callName.getString();
     } else if (callName.isName()) {
       String name = callName.getString();
       int dollarIndex = name.lastIndexOf('$');
@@ -187,8 +187,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
    * a.b.c.prototype => true
    */
   private static boolean endsWithPrototype(Node qualifiedName) {
-    return qualifiedName.isGetProp()
-        && Node.getGetpropString(qualifiedName).equals("prototype");
+    return qualifiedName.isGetProp() && qualifiedName.getString().equals("prototype");
   }
 
   /**
@@ -305,7 +304,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     Node target = call.getFirstChild();
     if (target.isGetProp()) {
       Node src = target.getFirstChild();
-      String prop = Node.getGetpropString(target);
+      String prop = target.getString();
       // AST Name and String node strings are interned to allow for identity checks.
       if (src.isName()
           && src.getString() == "goog"

@@ -257,7 +257,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       if (!maybeGoog.isName() || !maybeGoog.getString().equals("goog")) {
         return true;
       }
-      String name = Node.getGetpropString(method);
+      String name = method.getString();
       return !name.equals("require") && !name.equals("forwardDeclare") && !name.equals("getMsg");
     }
 
@@ -1088,7 +1088,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // If it's a goog.module() with a legacy namespace.
     if (currentScript.declareLegacyNamespace) {
       // Rewrite "goog.module('Foo');" as "goog.provide('Foo');".
-      Node.setGetpropString(call.getFirstChild(), "provide");
+      call.getFirstChild().setString("provide");
       compiler.reportChangeToEnclosingScope(call);
     }
 
@@ -1279,7 +1279,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     checkState(exportsNameNode.getString().equals("exports"), exportsNameNode);
 
     if (t.inModuleScope()) {
-      String exportName = Node.getGetpropString(getpropNode);
+      String exportName = getpropNode.getString();
       currentScript.namedExports.add(exportName);
       Node exportRhs = getpropNode.getNext();
       ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, exportRhs);

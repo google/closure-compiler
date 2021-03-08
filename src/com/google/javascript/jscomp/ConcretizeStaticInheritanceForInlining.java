@@ -119,7 +119,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
 
     void addStaticMember(Node node) {
       staticMembers.add(node);
-      staticMemberNames.add(Node.getGetpropString(node.getFirstChild()));
+      staticMemberNames.add(node.getFirstChild().getString());
     }
   }
 
@@ -169,7 +169,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
     for (Node staticGetProp : superClass.staticFieldAccess) {
       checkState(staticGetProp.isGetProp());
-      String memberName = Node.getGetpropString(staticGetProp);
+      String memberName = staticGetProp.getString();
       // We only copy declarations that have corresponding Object.defineProperties
       if (!superClass.definedProperties.contains(memberName)) {
         continue;
@@ -201,7 +201,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       FindStaticMembers findStaticMembers) {
     for (Node staticMember : superClass.staticMembers) {
       checkState(staticMember.isAssign(), staticMember);
-      String memberName = Node.getGetpropString(staticMember.getFirstChild());
+      String memberName = staticMember.getFirstChild().getString();
       if (superClass.definedProperties.contains(memberName)) {
         continue;
       }

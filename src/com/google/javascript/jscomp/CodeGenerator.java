@@ -835,13 +835,13 @@ public class CodeGenerator {
           if (needsParens) {
             add(")");
           }
-          if (quoteKeywordProperties && TokenStream.isKeyword(Node.getGetpropString(node))) {
+          if (quoteKeywordProperties && TokenStream.isKeyword(node.getString())) {
             // NOTE: We don't have to worry about quoting keyword properties in the
             // OPTCHAIN_GETPROP case above, because we only need to quote keywords for
             // ES3-compatible output.
             //
             // Must be a single call to `add` otherwise the generator will add a trailing space.
-            add("[\"" + Node.getGetpropString(node) + "\"]");
+            add("[\"" + node.getString() + "\"]");
           } else {
             add(".");
             addGetpropIdentifier(node);
@@ -1438,7 +1438,7 @@ public class CodeGenerator {
 
   private void addGetpropIdentifier(Node getprop) {
     cc.startSourceMapping(getprop);
-    addIdentifier(Node.getGetpropString(getprop));
+    addIdentifier(getprop.getString());
     cc.endSourceMapping(getprop);
   }
 

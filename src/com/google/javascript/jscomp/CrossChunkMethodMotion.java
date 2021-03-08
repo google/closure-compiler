@@ -225,7 +225,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node ownerDotPrototypeNode = assignNode.getFirstChild();
     checkState(
         ownerDotPrototypeNode.isQualifiedName()
-            && Node.getGetpropString(ownerDotPrototypeNode).equals("prototype"),
+            && ownerDotPrototypeNode.getString().equals("prototype"),
         ownerDotPrototypeNode);
 
     if (noStubFunctions) {
@@ -337,7 +337,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node ownerDotPrototypeNode = assignNode.getFirstChild();
     checkState(
         ownerDotPrototypeNode.isQualifiedName()
-            && Node.getGetpropString(ownerDotPrototypeNode).equals("prototype"),
+            && ownerDotPrototypeNode.getString().equals("prototype"),
         ownerDotPrototypeNode);
 
     if (noStubFunctions) {
