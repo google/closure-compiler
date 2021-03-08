@@ -60,7 +60,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
         if (right.isString() && NodeUtil.isValidPropertyName(FeatureSet.ES3, right.getString())) {
           n.removeChild(left);
           n.removeChild(right);
-          Node newGetProp = IR.getprop(left, right);
+          Node newGetProp = IR.getprop(left, right.getString());
           parent.replaceChild(n, newGetProp);
           compiler.reportChangeToEnclosingScope(newGetProp);
         }

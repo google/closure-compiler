@@ -176,13 +176,10 @@ final class CheckClosureImports implements HotSwapCompilerPass {
           "JSC_LHS_OF_CLOUSRE_IMPORT_MUST_BE_CONST_IN_ES_MODULE",
           "The left side of a {0} must use ''const'' (not ''let'' or ''var'') in an ES module.");
 
-  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
-  private static final Node GOOG_MODULE_GET =
-      IR.getprop(IR.getprop(IR.name("goog"), IR.string("module")), IR.string("get"));
-  private static final Node GOOG_FORWARD_DECLARE =
-      IR.getprop(IR.name("goog"), IR.string("forwardDeclare"));
-  private static final Node GOOG_REQUIRE_TYPE =
-      IR.getprop(IR.name("goog"), IR.string("requireType"));
+  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
+  private static final Node GOOG_MODULE_GET = IR.getprop(IR.name("goog"), "module", "get");
+  private static final Node GOOG_FORWARD_DECLARE = IR.getprop(IR.name("goog"), "forwardDeclare");
+  private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
 
   private final AbstractCompiler compiler;
   private final Checker checker;

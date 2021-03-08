@@ -442,8 +442,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return super.describeCachingCall(node);
   }
 
-  static final Node googCacheReflect = IR.getprop(
-      IR.name("goog"), IR.string("reflect"), IR.string("cache"));
+  static final Node googCacheReflect = IR.getprop(IR.name("goog"), "reflect", "cache");
 
   private boolean matchesCacheMethodName(Node target) {
     if (target.isGetProp()) {

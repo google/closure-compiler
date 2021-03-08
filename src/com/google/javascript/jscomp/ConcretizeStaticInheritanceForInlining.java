@@ -179,7 +179,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
         continue;
       }
       Node subclassNameNode = inheritsCall.getSecondChild();
-      Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
+      Node getprop = IR.getprop(subclassNameNode.cloneTree(), memberName);
 
       getprop.setJSDocInfo(null);
       Node declaration = IR.exprResult(getprop);
@@ -226,8 +226,8 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       Node superclassNameNode = subclassNameNode.getNext();
       Node assign =
           IR.assign(
-              IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
-              IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
+              IR.getprop(subclassNameNode.cloneTree(), memberName),
+              IR.getprop(superclassNameNode.cloneTree(), memberName));
       assign.setJSDocInfo(info.build());
       Node exprResult = IR.exprResult(assign);
       exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);

@@ -175,7 +175,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                 IR.var(cursorName.cloneTree(), IR.number(restIndex).setJSType(numberType)),
                 IR.lt(
                         cursorName.cloneTree(),
-                        IR.getprop(IR.name("arguments"), IR.string("length")).setJSType(numberType))
+                        IR.getprop(IR.name("arguments"), "length").setJSType(numberType))
                     .setJSType(boolType),
                 IR.inc(cursorName.cloneTree(), false).setJSType(numberType),
                 IR.block(
@@ -322,7 +322,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     if (groups.isEmpty()) {
       joinedGroups = baseArrayLit;
     } else {
-      Node concat = IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType);
+      Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
       joinedGroups = IR.call(concat, groups.toArray(new Node[0]));
     }
 
@@ -382,7 +382,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         // TODO(nickreid): Stop distringuishing between array literals and variables when this pass
         // is moved after type-checking.
         Node baseArrayLit = groups.get(0).isArrayLit() ? groups.remove(0) : arrayLitWithJSType();
-        Node concat = IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType);
+        Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
         joinedGroups = IR.call(concat, groups.toArray(new Node[0])).setJSType(arrayType);
       }
       joinedGroups.setJSType(arrayType);
@@ -466,7 +466,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         groups.isEmpty()
             ? baseArrayLit
             : IR.call(
-                    IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType),
+                    IR.getprop(baseArrayLit, "concat").setJSType(concatFnType),
                     groups.toArray(new Node[0]))
                 .setJSType(arrayType);
 

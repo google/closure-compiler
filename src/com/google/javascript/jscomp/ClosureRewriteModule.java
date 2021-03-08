@@ -148,17 +148,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
 
   // Prebuilt Nodes to speed up Node.matchesQualifiedName() calls
-  private static final Node GOOG_FORWARDDECLARE =
-      IR.getprop(IR.name("goog"), IR.string("forwardDeclare"));
-  private static final Node GOOG_LOADMODULE = IR.getprop(IR.name("goog"), IR.string("loadModule"));
-  private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
+  private static final Node GOOG_FORWARDDECLARE = IR.getprop(IR.name("goog"), "forwardDeclare");
+  private static final Node GOOG_LOADMODULE = IR.getprop(IR.name("goog"), "loadModule");
+  private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
-      IR.getprop(GOOG_MODULE, IR.string("declareLegacyNamespace"));
-  private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), IR.string("get"));
-  private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
-  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
-  private static final Node GOOG_REQUIRETYPE =
-      IR.getprop(IR.name("goog"), IR.string("requireType"));
+      IR.getprop(GOOG_MODULE, "declareLegacyNamespace");
+  private static final Node GOOG_MODULE_GET = IR.getprop(GOOG_MODULE.cloneTree(), "get");
+  private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
+  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
+  private static final Node GOOG_REQUIRETYPE = IR.getprop(IR.name("goog"), "requireType");
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;

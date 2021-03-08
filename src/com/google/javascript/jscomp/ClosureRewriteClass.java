@@ -455,12 +455,14 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
       // example: ctr.prop = value
       block.addChildToBack(
-          fixupSrcref(IR.exprResult(
-          fixupSrcref(IR.assign(
-              IR.getprop(cls.name.cloneTree(),
-                  IR.string(def.name.getString()).srcref(def.name))
-                  .srcref(def.name),
-              def.value)).setJSDocInfo(def.info))));
+          fixupSrcref(
+              IR.exprResult(
+                  fixupSrcref(
+                          IR.assign(
+                              IR.getprop(cls.name.cloneTree(), def.name.getString())
+                                  .srcref(def.name),
+                              def.value))
+                      .setJSDocInfo(def.info))));
       // Handle inner class definitions.
       maybeRewriteClassDefinition(t, block.getLastChild());
     }

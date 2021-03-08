@@ -349,7 +349,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Node exprResult =
           IR.exprResult(
               IR.call(
-                  IR.getprop(IR.name("$jscomp"), IR.string("registerAndLoadModule")),
+                  IR.getprop(IR.name("$jscomp"), "registerAndLoadModule"),
                   moduleFunction,
                   // Resolving this path enables removing module roots from this path.
                   IR.string(
@@ -522,9 +522,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       String moduleName = getVarNameOfImport(moduleIdentifier.getString());
       export.replaceWith(
           IR.exprResult(
-                  IR.call(
-                      IR.getprop(IR.name("$$module"), IR.string("exportAllFrom")),
-                      IR.name(moduleName)))
+                  IR.call(IR.getprop(IR.name("$$module"), "exportAllFrom"), IR.name(moduleName)))
               .useSourceInfoFromForTree(export));
 
       t.reportCodeChange();

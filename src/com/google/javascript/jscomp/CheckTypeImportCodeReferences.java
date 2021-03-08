@@ -28,8 +28,7 @@ public final class CheckTypeImportCodeReferences extends AbstractPostOrderCallba
           "JSC_TYPE_IMPORT_CODE_REFERENCE",
           "Cannot reference goog.requireType()''d name {0} outside of a type annotation.");
 
-  private static final Node GOOG_REQUIRE_TYPE =
-      IR.getprop(IR.name("goog"), IR.string("requireType"));
+  private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
 
   private final AbstractCompiler compiler;
 

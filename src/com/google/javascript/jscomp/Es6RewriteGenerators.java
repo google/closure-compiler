@@ -898,9 +898,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       // "$for$in.getNext()"
       JSType t = shouldAddTypes ? propertyIteratorType.getPropertyType("getNext") : null;
       Node forInGetNext =
-          IR.getprop(forIn.cloneNode(), IR.string("getNext").useSourceInfoFrom(detachedExpr))
-              .setJSType(t)
-              .useSourceInfoFrom(detachedExpr);
+          IR.getprop(forIn.cloneNode(), "getNext").setJSType(t).useSourceInfoFrom(detachedExpr);
 
       // "(i = $for$in.getNext()) != null"
       Node forCond =
@@ -1498,9 +1496,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       /** Creates node that access a specified field of the current context. */
       Node getContextField(Node sourceNode, String fieldName) {
-        return IR.getprop(
-                getJsContextNameNode(sourceNode),
-                IR.string(fieldName).useSourceInfoFrom(sourceNode))
+        return IR.getprop(getJsContextNameNode(sourceNode), fieldName)
             .setJSType(shouldAddTypes ? contextType.getPropertyType(fieldName) : null)
             .useSourceInfoFrom(sourceNode);
       }

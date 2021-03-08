@@ -62,8 +62,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
     JSDocInfo oldJSDocInfo = NodeUtil.getBestJSDocInfo(node);
 
     Node globalRef = defineOnWindow ? IR.name(WINDOW_NAME) : IR.thisNode();
-    Node string = IR.string(name);
-    Node getprop = IR.getprop(globalRef, string);
+    Node getprop = IR.getprop(globalRef, name);
     Node newNode = getprop;
 
     if (oldJSDocInfo != null) {

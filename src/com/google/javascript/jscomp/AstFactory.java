@@ -493,7 +493,7 @@ final class AstFactory {
   }
 
   Node createGetProp(Node receiver, String propertyName) {
-    Node result = IR.getprop(receiver, createString(propertyName));
+    Node result = IR.getprop(receiver, propertyName);
     if (isAddingTypes()) {
       result.setJSType(getJsTypeForProperty(receiver, propertyName));
     }
