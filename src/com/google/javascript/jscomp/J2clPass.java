@@ -151,7 +151,7 @@ public class J2clPass implements CompilerPass {
             }
 
             qualifiedFnName = qualifiedNameNode.getQualifiedName();
-            fnName = Node.getGetpropString(qualifiedNameNode);
+            fnName = qualifiedNameNode.getString();
             break;
 
           case MEMBER_FUNCTION_DEF:
@@ -186,7 +186,7 @@ public class J2clPass implements CompilerPass {
 
         // ... and that reference a function definition we want to inline
         String qualifiedFnName = qualifiedNameNode.getQualifiedName();
-        String fnName = Node.getGetpropString(qualifiedNameNode);
+        String fnName = qualifiedNameNode.getString();
         Node fnImpl = fnsToInlineByQualifiedName.get(qualifiedFnName);
         if (fnImpl == null) {
           return;

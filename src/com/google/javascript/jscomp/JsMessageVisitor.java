@@ -197,7 +197,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           return;
         }
 
-        messageKey = Node.getGetpropString(getProp);
+        messageKey = getProp.getString();
         originalMessageKey = getProp.getOriginalName();
         msgNode = node.getLastChild();
         isVar = false;
@@ -362,7 +362,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private static boolean isLegalMessageVarAlias(Node msgNode) {
     if (msgNode.isGetProp()
         && msgNode.isQualifiedName()
-        && Node.getGetpropString(msgNode).startsWith(MSG_PREFIX)) {
+        && msgNode.getString().startsWith(MSG_PREFIX)) {
       // Case: `foo.Thing.MSG_EXAMPLE_ALIAS = bar.OtherThing.MSG_EXAMPLE;`
       //
       // This kind of construct is created by TypeScript code generation and

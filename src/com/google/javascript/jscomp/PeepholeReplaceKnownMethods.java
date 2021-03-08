@@ -100,7 +100,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     // Method node might not be a string if callTarget is a GETELEM.
     // e.g. Array[something]()
-    if (!Node.getGetpropString(callTarget).equals("of")) {
+    if (!callTarget.getString().equals("of")) {
       return subtree;
     }
 
@@ -132,7 +132,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       }
     }
     Double replacement = null;
-    String methodName = Node.getGetpropString(callTarget);
+    String methodName = callTarget.getString();
     // NOTE: the standard does not define precision for these methods, but we are conservative, so
     // for now we only implement the methods that are guaranteed to not increase the size of the
     // numeric constants.
@@ -232,7 +232,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node stringNode = callTarget.getFirstChild();
 
     boolean isStringLiteral = stringNode.isString();
-    String functionNameString = Node.getGetpropString(callTarget);
+    String functionNameString = callTarget.getString();
     Node firstArg = callTarget.getNext();
     if (isStringLiteral) {
       if (functionNameString.equals("split")) {
@@ -593,7 +593,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arrayNode = callTarget.getFirstChild();
 
-    if (!arrayNode.isArrayLit() || !Node.getGetpropString(callTarget).equals("join")) {
+    if (!arrayNode.isArrayLit() || !callTarget.getString().equals("join")) {
       return n;
     }
 
@@ -807,7 +807,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   private Node replaceWithCharAt(Node n, Node callTarget, Node firstArg) {
     // TODO(moz): Maybe correct the arity of the function type here.
-    Node.setGetpropString(callTarget, "charAt");
+    callTarget.setString("charAt");
     firstArg.getNext().detach();
     reportChangeToEnclosingScope(firstArg);
     return n;
@@ -1100,7 +1100,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   private static ConcatFunctionCall createConcatFunctionCallForNode(Node n) {
     checkArgument(n.isCall(), n);
     Node callTarget = checkNotNull(n.getFirstChild());
-    if (!callTarget.isGetProp() || !Node.getGetpropString(callTarget).equals("concat")) {
+    if (!callTarget.isGetProp() || !callTarget.getString().equals("concat")) {
       return null;
     }
     Node calleeNode = callTarget.getFirstChild();
@@ -1127,7 +1127,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
     Node callee = n.getFirstChild();
     return callee.isGetProp()
-        && Node.getGetpropString(callee).equals("concat")
+        && callee.getString().equals("concat")
         && containsExactlyArray(callee.getFirstChild());
   }
 }

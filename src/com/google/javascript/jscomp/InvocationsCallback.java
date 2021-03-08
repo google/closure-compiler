@@ -45,7 +45,7 @@ abstract class InvocationsCallback extends AbstractPostOrderCallback {
       return;
     }
 
-    visit(t, n, parent, Node.getGetpropString(callee));
+    visit(t, n, parent, callee.getString());
   }
 
   /**

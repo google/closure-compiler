@@ -81,7 +81,7 @@ final class ModuleImportResolver {
     Node owner = callee.getFirstChild();
     return (owner.isName()
             && owner.getString().equals(GOOG)
-            && GOOG_DEPENDENCY_CALLS.contains(Node.getGetpropString(callee)))
+            && GOOG_DEPENDENCY_CALLS.contains(callee.getString()))
         || GOOG_MODULE_GET.matches(callee);
   }
 

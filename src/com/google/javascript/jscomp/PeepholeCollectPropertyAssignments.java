@@ -238,7 +238,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         return false;
       }
     } else if (lhs.isGetProp()) {
-      propertyName = Node.getGetpropString(lhs);
+      propertyName = lhs.getString();
     } else {
       return false;
     }

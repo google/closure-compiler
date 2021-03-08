@@ -138,13 +138,13 @@ class Normalize implements CompilerPass {
         Node assign = n.getFirstChild();
         Node lhs = assign.getFirstChild();
         if (lhs.isGetProp() && isMarkedExpose(assign)) {
-          exposedProperties.add(Node.getGetpropString(lhs));
+          exposedProperties.add(lhs.getString());
         }
       } else if (n.isStringKey() && isMarkedExpose(n)) {
         exposedProperties.add(n.getString());
       } else if (n.isGetProp() && n.getParent().isExprResult()
                   && isMarkedExpose(n)) {
-        exposedProperties.add(Node.getGetpropString(n));
+        exposedProperties.add(n.getString());
       }
     }
 
@@ -168,12 +168,9 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        String propName = Node.getGetpropString(n);
+        String propName = n.getString();
         if (exposedProperties.contains(propName)) {
-          Node string =
-              Node.isStringGetprop(n)
-                  ? IR.string(propName).useSourceInfoFrom(n)
-                  : n.getSecondChild().detach();
+          Node string = IR.string(propName).useSourceInfoFrom(n);
           Node getelem =
               IR.getelem(n.removeFirstChild(), string)
                   .clonePropsFrom(n)
@@ -426,12 +423,10 @@ class Normalize implements CompilerPass {
         return;
       }
 
-      Node annotatedNode = (isGetprop && !Node.isStringGetprop(n)) ? n.getSecondChild() : n;
-      boolean isMarkedConstant = annotatedNode.getBooleanProp(Node.IS_CONSTANT_NAME);
-
-      if (!isMarkedConstant && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
-        checkState(!assertOnChange, "Unexpected const change: %s", annotatedNode);
-        annotatedNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      if (!n.getBooleanProp(Node.IS_CONSTANT_NAME)
+          && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
+        checkState(!assertOnChange, "Unexpected const change: %s", n);
+        n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }
 

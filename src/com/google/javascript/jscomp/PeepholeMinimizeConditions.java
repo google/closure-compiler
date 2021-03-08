@@ -823,7 +823,7 @@ class PeepholeMinimizeConditions
             if (calledFn.isGetElem() || calledFn.isOptChainGetElem()) {
               return false;
             } else if ((calledFn.isGetProp() || calledFn.isOptChainGetProp())
-                && Node.getGetpropString(calledFn).startsWith("on")) {
+                && calledFn.getString().startsWith("on")) {
               return false;
             }
           }

@@ -1537,7 +1537,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldGetProp(Node n) {
     checkArgument(n.isGetProp() || n.isOptChainGetProp());
     Node left = n.getFirstChild();
-    String name = Node.getGetpropString(n);
+    String name = n.getString();
 
     if (left.isObjectLit()) {
       return tryFoldObjectPropAccess(n, left, name);

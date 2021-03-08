@@ -344,7 +344,7 @@ class OptimizeCalls implements CompilerPass {
       return parent.isGetProp()
           && grandParent.isCall()
           && parent.isFirstChildOf(grandParent)
-          && Node.getGetpropString(parent).equals("call");
+          && parent.getString().equals("call");
     }
 
     /**
@@ -361,7 +361,7 @@ class OptimizeCalls implements CompilerPass {
       return parent.isOptChainGetProp()
           && grandParent.isOptChainCall()
           && parent.isFirstChildOf(grandParent)
-          && Node.getGetpropString(parent).equals("call");
+          && parent.getString().equals("call");
     }
 
     /** Whether the provided node acts as the target function in a new expression. */
@@ -450,7 +450,7 @@ class OptimizeCalls implements CompilerPass {
 
         case OPTCHAIN_GETPROP:
         case GETPROP:
-          maybeAddPropReference(Node.getGetpropString(n), n);
+          maybeAddPropReference(n.getString(), n);
           break;
 
         case STRING_KEY:
@@ -495,7 +495,7 @@ class OptimizeCalls implements CompilerPass {
           // NOTE: Theoretically we could also include an optional chain getprop here, but
           // A) it's a runtime error if the value ends up being undefined, so that's bad code
           // B) the author is indicating uncertainty, so we should be cautious.
-          maybeAddPropReference(Node.getGetpropString(extendsNode), superNode);
+          maybeAddPropReference(extendsNode.getString(), superNode);
         } // else we cannot tell what super() is referencing (e.g. `class extends getMixin() {`)
       }
     }
