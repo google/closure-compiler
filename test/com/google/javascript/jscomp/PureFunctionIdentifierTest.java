@@ -1804,6 +1804,41 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNameAliasPurity() {
+    assertAliasPurity(true, "const alias = pure;", false);
+    assertAliasPurity(true, "let alias = pure;", false);
+    assertAliasPurity(false, "let alias; alias = pure;", false);
+    assertAliasPurity(true, "var alias = pure;", false);
+    assertAliasPurity(false, "var alias; alias = pure;", false);
+  }
+
+  @Test
+  public void testPropertyAliasPurity() {
+    assertAliasPurity(true, "({alias: pure});", true);
+    assertAliasPurity(true, "obj.alias = pure;", true);
+  }
+
+  private void assertAliasPurity(boolean isPure, String aliasDefinition, boolean isProperty) {
+    String aliasExpression = isProperty ? "obj.alias" : "alias";
+
+    ArrayList<String> expected = new ArrayList<>();
+    expected.add("pure");
+    if (isPure) {
+      expected.add(aliasExpression);
+    }
+
+    assertPureCallsMarked(
+        lines(
+            "const /** ? */ obj = {};",
+            "function pure() { }", //
+            aliasDefinition,
+            "",
+            "pure();",
+            aliasExpression + "();"),
+        expected);
+  }
+
+  @Test
   public void testCallBeforeDefinition() {
     assertPureCallsMarked("f(); function f(){}", ImmutableList.of("f"));
     assertPureCallsMarked("var a = {}; a.f(); a.f = function (){}", ImmutableList.of("a.f"));

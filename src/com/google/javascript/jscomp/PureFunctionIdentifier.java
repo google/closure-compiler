@@ -263,7 +263,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>It's very important that this never returns {@code true} for an L-value, including when new
    * syntax is added to the language. That would cause some impure functions to be considered pure.
-   * Therefore, this method is a very explict allowed. Anything that's unrecognized is considered
+   * Therefore, this method is a very explict allowlist. Anything that's unrecognized is considered
    * not an R-value. This is insurance against new syntax.
    *
    * <p>New cases can be added as needed to increase the accuracy of the analysis. They just have to
@@ -274,40 +274,33 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     switch (parent.getToken()) {
       case AND:
-      case COMMA:
-      case HOOK:
-      case OR:
-      case COALESCE:
-        // Function values pass through conditionals.
-      case EQ:
-      case NOT:
-      case SHEQ:
-        // Functions can be usefully compared for equality / existence.
       case ARRAYLIT:
       case CALL:
-      case OPTCHAIN_CALL:
-      case NEW:
-      case TAGGED_TEMPLATELIT:
-        // Functions are the callees and parameters of an invocation.
-      case INSTANCEOF:
-      case TYPEOF:
-        // Often used to determine if a ctor/method exists/matches.
+      case COALESCE:
+      case COMMA:
+      case EQ:
       case GETELEM:
-      case OPTCHAIN_GETELEM:
       case GETPROP:
+      case HOOK:
+      case INSTANCEOF:
+      case NEW:
+      case NOT:
+      case NAME:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
       case OPTCHAIN_GETPROP:
-        // Many functions, especially ctors, have properties.
+      case OR:
       case RETURN:
+      case SHEQ:
+      case TAGGED_TEMPLATELIT:
+      case TYPEOF:
       case YIELD:
-        // Higher order functions return functions.
         return true;
 
-      case SWITCH:
       case CASE:
-        // Delegating on the identity of a function.
       case IF:
+      case SWITCH:
       case WHILE:
-        // Checking the existence of an optional function.
         return rvalue.isFirstChildOf(parent);
 
       case EXPR_RESULT:
@@ -315,8 +308,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         // associated R-values.
         return !rvalue.isFromExterns();
 
-      case CLASS: // `extends` clause.
       case ASSIGN:
+      case CLASS: // `extends` clause.
         return rvalue.isSecondChildOf(parent);
 
       case STRING_KEY: // Assignment to an object literal property. Excludes object destructuring.
