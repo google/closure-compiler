@@ -115,7 +115,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       Node superNode = superDotPropertyNode.getFirstChild();
       checkArgument(superNode.isSuper(), superNode);
 
-      String propertyName = Node.getGetpropString(superDotPropertyNode);
+      String propertyName = superDotPropertyNode.getString();
       JSType propertyType = superDotPropertyNode.getJSType();
       final SuperPropertyWrapperInfo superPropertyWrapperInfo;
       if (propertyNameToTypeMap.containsKey(propertyName)) {
@@ -137,7 +137,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
     private SuperPropertyWrapperInfo createNewInfo(Node firstSuperDotPropertyNode) {
       checkArgument(firstSuperDotPropertyNode.isGetProp(), firstSuperDotPropertyNode);
-      String propertyName = Node.getGetpropString(firstSuperDotPropertyNode);
+      String propertyName = firstSuperDotPropertyNode.getString();
       JSType propertyType = firstSuperDotPropertyNode.getJSType();
       final String wrapperFunctionName = ASYNC_SUPER_PROP_GETTER_PREFIX + propertyName;
       final JSType wrapperFunctionType;

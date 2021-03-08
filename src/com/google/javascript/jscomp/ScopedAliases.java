@@ -327,7 +327,7 @@ class ScopedAliases implements HotSwapCompilerPass {
   private static String getAliasedNamespace(Node rhs) {
     switch (rhs.getToken()) {
       case GETPROP:
-        return getAliasedNamespace(rhs.getFirstChild()) + '.' + Node.getGetpropString(rhs);
+        return getAliasedNamespace(rhs.getFirstChild()) + '.' + rhs.getString();
       case NAME:
         return rhs.getString();
       case CALL:

@@ -52,7 +52,7 @@ final class PolymerPassStaticUtils {
     // `module$polymer$polymer_legacy.Polymer`.
     return name.matchesName("Polymer")
         || "Polymer".equals(name.getOriginalQualifiedName())
-        || (name.isGetProp() && Node.getGetpropString(name).equals("Polymer"));
+        || (name.isGetProp() && name.getString().equals("Polymer"));
   }
 
   /** @return Whether the class extends PolymerElement. */
@@ -75,7 +75,7 @@ final class PolymerPassStaticUtils {
         && (heritage.matchesQualifiedName("Polymer.Element")
             || heritage.matchesName("PolymerElement")
             || "PolymerElement".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp() && Node.getGetpropString(heritage).equals("PolymerElement")));
+            || (heritage.isGetProp() && heritage.getString().equals("PolymerElement")));
   }
 
   /**
@@ -99,7 +99,7 @@ final class PolymerPassStaticUtils {
                 }
 
                 Node dollarSign = n.getFirstChild();
-                if (!dollarSign.isGetProp() || !Node.getGetpropString(dollarSign).equals("$")) {
+                if (!dollarSign.isGetProp() || !dollarSign.getString().equals("$")) {
                   return;
                 }
 
@@ -109,8 +109,7 @@ final class PolymerPassStaticUtils {
                   return;
                 }
 
-                Node key =
-                    IR.string(Node.getGetpropString(n)).clonePropsFrom(n).useSourceInfoFrom(n);
+                Node key = IR.string(n.getString()).clonePropsFrom(n).useSourceInfoFrom(n);
                 Node getelem =
                     IR.getelem(dollarSign.detach(), key).clonePropsFrom(n).useSourceInfoFrom(n);
                 n.replaceWith(getelem);
@@ -206,7 +205,7 @@ final class PolymerPassStaticUtils {
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isGetProp() && child.getFirstChild().isThis()) {
         // We found a "this.foo" expression. Map "foo" to its JSDoc.
-        map.put(Node.getGetpropString(child), NodeUtil.getBestJSDocInfo(child));
+        map.put(child.getString(), NodeUtil.getBestJSDocInfo(child));
       } else {
         // Recurse through every other kind of node, because properties are not necessarily declared
         // at the top level of the constructor body; e.g. they could be declared as part of an

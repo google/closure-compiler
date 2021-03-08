@@ -58,10 +58,6 @@ class SourceInformationAnnotator extends
 
     // Annotate the original name.
     switch (n.getToken()) {
-      case GETPROP:
-        setOriginalName(n, Node.getGetpropString(n));
-        break;
-
       case FUNCTION:
         String functionName = NodeUtil.getNearestFunctionName(n);
         if (functionName != null) {
@@ -69,6 +65,7 @@ class SourceInformationAnnotator extends
         }
         break;
 
+      case GETPROP:
       case NAME:
         setOriginalName(n, n.getString());
         break;

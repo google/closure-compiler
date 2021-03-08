@@ -225,7 +225,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     /** Checks that the arguments.callee is not used. */
     private void checkGetProp(Node n) {
       Node target = n.getFirstChild();
-      String name = Node.getGetpropString(n);
+      String name = n.getString();
       if (name.equals("callee")) {
         if (target.isName() && target.getString().equals("arguments")) {
           report(n, ARGUMENTS_CALLEE_FORBIDDEN);

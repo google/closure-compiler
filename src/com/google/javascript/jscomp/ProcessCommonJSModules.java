@@ -327,7 +327,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     Node callParentTarget = callParent.getFirstFirstChild().getFirstChild();
 
     if (callParentTarget.matchesQualifiedName(WEBPACK_REQUIRE + ".e")
-        && Node.getGetpropString(callParent.getFirstChild()).equals("then")) {
+        && callParent.getFirstChild().getString().equals("then")) {
       return true;
     } else if (callParentTarget.matchesQualifiedName("Promise.all")
         && callParentTarget.getNext() != null
@@ -427,7 +427,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       fnc = n.getFirstFirstChild();
     } else if (call.getFirstChild().isGetProp()
         && call.getFirstFirstChild().isFunction()
-        && Node.getGetpropString(call.getFirstChild()).equals("call")) {
+        && call.getFirstChild().getString().equals("call")) {
       fnc = call.getFirstFirstChild();
 
       // We only support explicitly binding "this" to the parent "this" or "exports"
@@ -2072,7 +2072,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             getBasePropertyImport(
                 getImportedModuleName(t, rValue.getFirstChild()), rValue.getFirstChild());
 
-        String suffix = Node.getGetpropString(rValue);
+        String suffix = rValue.getString();
 
         return importName + "." + suffix + propSuffix;
       }

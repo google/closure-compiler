@@ -171,7 +171,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
               // For the sake of simplicity, we report code changes
               // when we see a provides/requires, and don't worry about
               // reporting the change when we actually do the replacement.
-              switch (Node.getGetpropString(left)) {
+              switch (left.getString()) {
                 case "require":
                 case "requireType":
                   if (isValidPrimitiveCall(t, n)) {
@@ -246,7 +246,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private void processRequireCall(NodeTraversal t, Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    String method = Node.getGetpropString(left);
+    String method = left.getString();
     if (verifyLastArgumentIsString(left, arg)) {
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);

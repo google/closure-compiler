@@ -176,8 +176,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
         return;
       }
 
-      if (globalizeAllReferences
-          || googModule.namespace().containsKey(Node.getGetpropString(parent))) {
+      if (globalizeAllReferences || googModule.namespace().containsKey(parent.getString())) {
         return;
       }
 
