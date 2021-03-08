@@ -66,7 +66,6 @@ class ExpressionDecomposer {
   private final ImmutableSet<String> knownConstantFunctions;
   private final Scope scope;
   @Nullable private final JSType unknownType;
-  @Nullable private final JSType stringType;
 
   /**
    * @param constFunctionNames set of names known to be constant functions. Used by InlineFunctions
@@ -89,10 +88,6 @@ class ExpressionDecomposer {
     this.unknownType =
         compiler.hasTypeCheckingRun() && !compiler.hasOptimizationColors()
             ? compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE)
-            : null;
-    this.stringType =
-        compiler.hasTypeCheckingRun() && !compiler.hasOptimizationColors()
-            ? compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE)
             : null;
   }
 
@@ -769,7 +764,7 @@ class ExpressionDecomposer {
     call.removeFirstChild();
     call.addChildToFront(thisNameNode.cloneNode());
     call.addChildToFront(
-        IR.getprop(functionNameNode.cloneNode(), IR.string("call").setJSType(stringType))
+        IR.getprop(functionNameNode.cloneNode(), "call")
             .setJSType(fnCallType)
             .useSourceInfoIfMissingFromForTree(call));
     call.removeProp(Node.FREE_CALL);

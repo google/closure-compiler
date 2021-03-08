@@ -40,8 +40,8 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
   }
 
   private static Node getChromeI18nGetMessageNode(String messageId) {
-    Node chromeI18n = IR.getprop(IR.name("chrome"), IR.string("i18n"));
-    Node getMessage =  IR.getprop(chromeI18n, IR.string("getMessage"));
+    Node chromeI18n = IR.getprop(IR.name("chrome"), "i18n");
+    Node getMessage = IR.getprop(chromeI18n, "getMessage");
     return IR.call(getMessage, IR.string(messageId));
   }
 

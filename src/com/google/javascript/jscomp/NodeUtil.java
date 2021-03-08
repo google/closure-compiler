@@ -3721,16 +3721,11 @@ public final class NodeUtil {
       }
 
       String part = name.substring(startPos, endPos);
-
-      Node propNode = IR.string(part);
-      propNode.setLength(part.length());
+      qname = IR.getprop(qname, part);
       if (compiler.getCodingConvention().isConstantKey(part)) {
-        propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        qname.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-
-      int length = qname.getLength() + part.length() + 1; // For the '.'
-      qname = IR.getprop(qname, propNode);
-      qname.setLength(length);
+      qname.setLength(part.length());
     }
 
     return qname;
@@ -3782,7 +3777,7 @@ public final class NodeUtil {
 
   /** Creates a property access on the {@code context} tree. */
   public static Node newPropertyAccess(AbstractCompiler compiler, Node context, String name) {
-    Node propNode = IR.getprop(context, IR.string(name));
+    Node propNode = IR.getprop(context, name);
     if (compiler.getCodingConvention().isConstantKey(name)) {
       propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
@@ -5273,7 +5268,7 @@ public final class NodeUtil {
         || n.matchesQualifiedName(NUMBER_NAN);
   }
 
-  private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), IR.string("NaN"));
+  private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), "NaN");
 
   /**
    * A change scope does not directly correspond to a language scope but is an internal grouping of

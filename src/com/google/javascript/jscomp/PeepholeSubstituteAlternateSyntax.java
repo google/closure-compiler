@@ -274,9 +274,7 @@ class PeepholeSubstituteAlternateSyntax
       // add the this value before the parameters if necessary
       if (bind.thisValue != null && !NodeUtil.isUndefined(bind.thisValue)) {
         // rewrite from "fn(a, b)" to "fn.call(thisValue, a, b)"
-        Node newCallTarget = IR.getprop(
-            callTarget.cloneTree(),
-            IR.string("call").srcref(callTarget));
+        Node newCallTarget = IR.getprop(callTarget.cloneTree(), "call");
         markNewScopesChanged(newCallTarget);
         n.replaceChild(callTarget, newCallTarget);
         markFunctionsDeleted(callTarget);
@@ -650,11 +648,7 @@ class PeepholeSubstituteAlternateSyntax
     String delimiter = pickDelimiter(strings);
     if (delimiter != null) {
       String template = Joiner.on(delimiter).join(strings);
-      Node call = IR.call(
-          IR.getprop(
-              IR.string(template),
-              IR.string("split")),
-          IR.string("" + delimiter));
+      Node call = IR.call(IR.getprop(IR.string(template), "split"), IR.string("" + delimiter));
       call.useSourceInfoIfMissingFromForTree(n);
       n.replaceWith(call);
       reportChangeToEnclosingScope(call);

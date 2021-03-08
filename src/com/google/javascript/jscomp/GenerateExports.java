@@ -192,7 +192,7 @@ public class GenerateExports implements CompilerPass {
     Node objectPrototype = NodeUtil.newQName(compiler, "Object.prototype");
     JSType objCtor = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE);
     objectPrototype.getFirstChild().setJSType(objCtor);
-    Node propstmt = IR.exprResult(IR.getprop(objectPrototype, IR.string(export)));
+    Node propstmt = IR.exprResult(IR.getprop(objectPrototype, export));
     propstmt.useSourceInfoFromForTree(getSynthesizedExternsRoot());
     propstmt.setOriginalName(export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);

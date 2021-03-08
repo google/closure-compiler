@@ -855,7 +855,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           Node grandparent = parent.getParent();
           Node prop = export.node.getNext();
           parent.replaceWith(
-              IR.getprop(export.node.detach(), prop.detach()).useSourceInfoFrom(parent));
+              IR.getprop(export.node.detach(), prop.detach().getString())
+                  .useSourceInfoFrom(parent));
 
           compiler.reportChangeToEnclosingScope(grandparent);
         }
@@ -870,7 +871,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         } else if (export.node.isGetElem()) {
           Node prop = export.node.getSecondChild().detach();
           ExportInfo newExport =
-              new ExportInfo(IR.getprop(export.node.removeFirstChild(), prop), export.scope);
+              new ExportInfo(
+                  IR.getprop(export.node.removeFirstChild(), prop.getString()), export.scope);
           export.node.replaceWith(newExport.node);
           compiler.reportChangeToEnclosingScope(newExport.node);
           exportsToReplace.put(export, newExport);
@@ -1596,7 +1598,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           continue;
         }
 
-        lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
+        lhs = IR.getprop(export.cloneTree(), key.getString());
         Node value = null;
         if (key.isStringKey()) {
           value = key.removeFirstChild();

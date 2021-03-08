@@ -457,7 +457,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     /** Replaces a global cross-module name with an access on the global namespace symbol */
     private void replaceSymbol(Node node, String name) {
       Node parent = node.getParent();
-      Node replacement = IR.getprop(IR.name(globalSymbolNamespace), IR.string(name));
+      Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
       replacement.useSourceInfoFromForTree(node);
 
       parent.replaceChild(node, replacement);

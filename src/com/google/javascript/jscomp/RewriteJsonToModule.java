@@ -139,8 +139,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
             .useSourceInfoFrom(jsonObject));
 
     n.addChildToFront(
-        IR.exprResult(
-                IR.call(IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog"), "provide"), IR.string(moduleName)))
             .useSourceInfoIfMissingFromForTree(n));
 
     String inputPath = t.getInput().getSourceFile().getOriginalPath();

@@ -209,7 +209,7 @@ class RuntimeTypeCheck implements CompilerPass {
       Node assign =
           IR.exprResult(
               IR.assign(
-                  IR.getelem(IR.getprop(classNode, IR.string("prototype")), IR.string(markerName)),
+                  IR.getelem(IR.getprop(classNode, "prototype"), IR.string(markerName)),
                   IR.trueNode()));
 
       nodeToInsertAfter.getParent().addChildAfter(assign, nodeToInsertAfter);

@@ -276,7 +276,7 @@ class IsolatePolyfills implements CompilerPass {
 
     // Fix the `this` type by using .call:
     //   lookupMethod(receiver, 'includes').call(receiver, arg)
-    Node receiverDotCall = IR.getprop(polyfilledMethod, IR.string("call")).srcrefTree(callee);
+    Node receiverDotCall = IR.getprop(polyfilledMethod, "call").srcrefTree(callee);
     callee.replaceWith(receiverDotCall);
     callNode.addChildAfter(thisNode, receiverDotCall);
   }

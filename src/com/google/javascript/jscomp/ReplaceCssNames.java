@@ -78,7 +78,7 @@ import javax.annotation.Nullable;
  */
 class ReplaceCssNames implements CompilerPass {
 
-  static final Node GET_CSS_NAME_FUNCTION = IR.getprop(IR.name("goog"), IR.string("getCssName"));
+  static final Node GET_CSS_NAME_FUNCTION = IR.getprop(IR.name("goog"), "getCssName");
 
   static final DiagnosticType INVALID_NUM_ARGUMENTS_ERROR =
       DiagnosticType.error("JSC_GETCSSNAME_NUM_ARGS",

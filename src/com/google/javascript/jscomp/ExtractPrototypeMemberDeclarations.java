@@ -177,12 +177,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       Node classNameNode = NodeUtil.newQName(compiler, className);
       classNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, first.constant);
       Node stmt =
-          IR.exprResult(
-              IR.assign(
-                  IR.name(PROTOTYPE_ALIAS),
-                  IR.getprop(
-                      classNameNode, IR.string("prototype"))))
-          .useSourceInfoIfMissingFromForTree(first.node);
+          IR.exprResult(IR.assign(IR.name(PROTOTYPE_ALIAS), IR.getprop(classNameNode, "prototype")))
+              .useSourceInfoIfMissingFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
       compiler.reportChangeToEnclosingScope(stmt);

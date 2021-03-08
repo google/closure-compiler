@@ -41,7 +41,6 @@ public final class Es7RewriteExponentialOperator
   private final Node mathPowCall; // This node should only ever be cloned, not directly inserted.
 
   private final JSType numberType;
-  private final JSType stringType;
   private final JSType mathType;
   private final JSType mathPowType;
 
@@ -51,13 +50,11 @@ public final class Es7RewriteExponentialOperator
     if (compiler.hasTypeCheckingRun()) {
       JSTypeRegistry registry = compiler.getTypeRegistry();
       this.numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
-      this.stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
       // TODO(nickreid): Get the actual type of the `Math` object here in case optimizations care.
       this.mathType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
       this.mathPowType = registry.createFunctionType(numberType, numberType, numberType);
     } else {
       this.numberType = null;
-      this.stringType = null;
       this.mathType = null;
       this.mathPowType = null;
     }
@@ -127,11 +124,7 @@ public final class Es7RewriteExponentialOperator
   }
 
   private Node createMathPowCall() {
-    return IR.call(
-            IR.getprop(
-                    IR.name("Math").setJSType(mathType), // Force wrapping.
-                    IR.string("pow").setJSType(stringType))
-                .setJSType(mathPowType))
+    return IR.call(IR.getprop(IR.name("Math").setJSType(mathType), "pow").setJSType(mathPowType))
         .setJSType(numberType);
   }
 

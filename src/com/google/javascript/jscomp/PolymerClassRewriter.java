@@ -1291,7 +1291,7 @@ final class PolymerClassRewriter {
 
     Node reflectedMethodName =
         IR.call(
-            IR.getprop(IR.name("$jscomp"), IR.string("reflectProperty")),
+            IR.getprop(IR.name("$jscomp"), "reflectProperty"),
             IR.string(methodName),
             classTypeExpression.cloneTree());
 
@@ -1341,15 +1341,12 @@ final class PolymerClassRewriter {
                 // The root of the parameter will be a property reference on the class
                 // Create both a property sink and a reflection call
                 propertySinkStatements.add(
-                    IR.getprop(
-                            className.cloneTree(),
-                            IR.string("prototype"),
-                            IR.string(paramParts.get(i)))
+                    IR.getprop(className.cloneTree(), "prototype", paramParts.get(i))
                         .useSourceInfoFromForTree(methodSignature));
               }
               Node reflectedParamPart =
                   IR.call(
-                      IR.getprop(IR.name("$jscomp"), IR.string("reflectProperty")),
+                      IR.getprop(IR.name("$jscomp"), "reflectProperty"),
                       IR.string(paramParts.get(i)),
                       reflectedTypeReference.cloneTree());
               reflectedSignature =

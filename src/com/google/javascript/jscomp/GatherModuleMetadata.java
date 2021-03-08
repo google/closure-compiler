@@ -76,21 +76,18 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
   static final DiagnosticType INVALID_NESTED_LOAD_MODULE =
       DiagnosticType.error("JSC_INVALID_NESTED_LOAD_MODULE", "goog.loadModule cannot be nested.");
 
-  private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
-  private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
-  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), IR.string("require"));
-  private static final Node GOOG_REQUIRE_TYPE =
-      IR.getprop(IR.name("goog"), IR.string("requireType"));
-  private static final Node GOOG_SET_TEST_ONLY =
-      IR.getprop(IR.name("goog"), IR.string("setTestOnly"));
+  private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), "provide");
+  private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), "module");
+  private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
+  private static final Node GOOG_REQUIRE_TYPE = IR.getprop(IR.name("goog"), "requireType");
+  private static final Node GOOG_SET_TEST_ONLY = IR.getprop(IR.name("goog"), "setTestOnly");
   private static final Node GOOG_MODULE_DECLARELEGACYNAMESPACE =
-      IR.getprop(GOOG_MODULE.cloneTree(), IR.string("declareLegacyNamespace"));
-  private static final Node GOOG_DECLARE_MODULE_ID =
-      IR.getprop(IR.name("goog"), IR.string("declareModuleId"));
+      IR.getprop(GOOG_MODULE.cloneTree(), "declareLegacyNamespace");
+  private static final Node GOOG_DECLARE_MODULE_ID = IR.getprop(IR.name("goog"), "declareModuleId");
 
   // TODO(johnplaisted): Remove once clients have migrated to declareModuleId
   private static final Node GOOG_MODULE_DECLARNAMESPACE =
-      IR.getprop(GOOG_MODULE.cloneTree(), IR.string("declareNamespace"));
+      IR.getprop(GOOG_MODULE.cloneTree(), "declareNamespace");
 
   /**
    * Map from module path to module. These modules represent files and thus will contain all goog
