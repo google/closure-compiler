@@ -159,11 +159,11 @@ final class CheckGlobalThis implements Callback {
         // Only traverse the right side if it's not an assignment to a prototype
         // property or subproperty.
         if (NodeUtil.isNormalGet(lhs)) {
-          if (lhs.isGetProp() && Node.getGetpropString(lhs).equals("prototype")) {
+          if (lhs.isGetProp() && lhs.getString().equals("prototype")) {
             return false;
           }
           Node llhs = lhs.getFirstChild();
-          if (llhs.isGetProp() && Node.getGetpropString(llhs).equals("prototype")) {
+          if (llhs.isGetProp() && llhs.getString().equals("prototype")) {
             return false;
           }
         }

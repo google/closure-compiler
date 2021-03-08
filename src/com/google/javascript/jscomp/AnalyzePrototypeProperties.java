@@ -268,11 +268,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
 
         case OPTCHAIN_GETPROP:
-          addSymbolUse(Node.getGetpropString(n), t.getModule(), PROPERTY);
+          addSymbolUse(n.getString(), t.getModule(), PROPERTY);
           break;
 
         case GETPROP:
-          String propName = Node.getGetpropString(n);
+          String propName = n.getString();
 
           if (n.isQualifiedName()) {
             if (propName.equals("prototype")) {
@@ -523,7 +523,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               && NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
             PrototypeProperty prop =
                 new AssignmentPrototypeProperty(grandParent, maybeGetVar(t, root), t.getModule());
-            getNameInfoForName(Node.getGetpropString(n), PROPERTY).getDeclarations().add(prop);
+            getNameInfoForName(n.getString(), PROPERTY).getDeclarations().add(prop);
             return true;
           }
           break;
@@ -584,8 +584,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        symbolGraph.connect(
-            externNode, firstModule, getNameInfoForName(Node.getGetpropString(n), PROPERTY));
+        symbolGraph.connect(externNode, firstModule, getNameInfoForName(n.getString(), PROPERTY));
       } else if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
         // As of 2019-08-29 the only user of this class is CrossChunkMethodMotion, which never
         // moves static methods, but that could change. So, we're intentionally including static

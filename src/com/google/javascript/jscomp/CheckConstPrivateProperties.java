@@ -79,7 +79,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
       case GETPROP:
         final Node propNode;
         if (n.isGetProp()) {
-          propNode = Node.getGetpropStringNode(n);
+          propNode = n;
         } else if (n.getLastChild().isString()) {
           propNode = n.getLastChild();
         } else {

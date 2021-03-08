@@ -1283,7 +1283,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
           boolean isLValue = NodeUtil.isLValue(sourceNode);
 
           builder
-              .setName(Node.getGetpropString(sourceNode))
+              .setName(sourceNode.getString())
               .setReceiverType(boxedOrUnknown(sourceNode.getFirstChild().getJSType()))
               // Props are always mutated as L-values, even when assigned `undefined`.
               .setMutation(isLValue || sourceNode.getParent().isDelProp())

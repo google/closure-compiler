@@ -566,7 +566,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (nameNode.isName() || nameNode.isStringKey()) {
       return nameNode.getString().startsWith("MSG_");
     } else if (nameNode.isQualifiedName()) {
-      return Node.getGetpropString(nameNode).startsWith("MSG_");
+      return nameNode.getString().startsWith("MSG_");
     } else {
       return false;
     }

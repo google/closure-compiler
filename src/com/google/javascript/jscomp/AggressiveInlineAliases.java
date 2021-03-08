@@ -649,7 +649,7 @@ class AggressiveInlineAliases implements CompilerPass {
       }
       if (NodeUtil.isNormalOrOptChainGetProp(ref.getParent())) {
         // e.g. if the reference is "alias.b.someProp", this will be "b".
-        String propertyName = Node.getGetpropString(ref.getParent());
+        String propertyName = ref.getParent().getString();
         // e.g. if the aliased name is "originalName", this will be "originalName.b".
         String originalPropertyName = aliasedName.getName() + "." + propertyName;
         Name originalProperty = namespace.getOwnSlot(originalPropertyName);

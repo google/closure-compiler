@@ -73,7 +73,6 @@ class CheckUnusedPrivateProperties
   private String getPropName(Node n) {
     switch (n.getToken()) {
       case GETPROP:
-        return Node.getGetpropString(n);
       case MEMBER_FUNCTION_DEF:
         return n.getString();
       default:
@@ -104,10 +103,10 @@ class CheckUnusedPrivateProperties
        }
 
        case GETPROP: {
-          String propName = Node.getGetpropString(n);
-         if (compiler.getCodingConvention().isExported(propName)
-             || isPinningPropertyUse(n)
-             || !isCandidatePropertyDefinition(n)) {
+          String propName = n.getString();
+          if (compiler.getCodingConvention().isExported(propName)
+              || isPinningPropertyUse(n)
+              || !isCandidatePropertyDefinition(n)) {
            used.add(propName);
          } else {
            // Only consider "private" properties.
@@ -176,7 +175,7 @@ class CheckUnusedPrivateProperties
     Node target = n.getFirstChild();
     return target.isThis()
         || (isConstructor(target))
-        || (target.isGetProp() && Node.getGetpropString(target).equals("prototype"));
+        || (target.isGetProp() && target.getString().equals("prototype"));
   }
 
   private boolean isConstructor(Node n) {

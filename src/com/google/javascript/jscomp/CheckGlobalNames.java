@@ -112,7 +112,7 @@ class CheckGlobalNames implements CompilerPass {
         if (ref.type == Ref.Type.PROTOTYPE_GET) {
           Node fullName = ref.getNode().getGrandparent();
           if (fullName.isGetProp()) {
-            props.add(Node.getGetpropString(fullName));
+            props.add(fullName.getString());
           }
         }
       }
