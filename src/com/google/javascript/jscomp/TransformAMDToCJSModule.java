@@ -261,10 +261,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
       if (n.isReturn() && n.hasChildren()) {
         Node retVal = n.getFirstChild();
         n.removeChild(retVal);
-        parent.replaceChild(n, IR.exprResult(
-            IR.assign(
-                IR.getprop(IR.name("module"), IR.string("exports")), retVal))
-                    .useSourceInfoFromForTree(n));
+        parent.replaceChild(
+            n,
+            IR.exprResult(IR.assign(IR.getprop(IR.name("module"), "exports"), retVal))
+                .useSourceInfoFromForTree(n));
       }
     }
   }
