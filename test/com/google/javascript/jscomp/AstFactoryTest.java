@@ -428,7 +428,7 @@ public class AstFactoryTest {
     Node jscompDotGlobal = astFactory.createGetProp(jscompNode, "global");
 
     assertNode(jscompDotGlobal).hasType(Token.GETPROP);
-    assertThat(Node.getGetpropString(jscompDotGlobal)).isEqualTo("global");
+    assertThat(jscompDotGlobal.getString()).isEqualTo("global");
     Node firstChild = jscompDotGlobal.getFirstChild();
     assertThat(firstChild).isEqualTo(jscompNode);
 
@@ -447,7 +447,7 @@ public class AstFactoryTest {
 
     assertNode(objDotToString).hasType(Token.GETPROP);
     Node firstChild = objDotToString.getFirstChild();
-    assertThat(Node.getGetpropString(objDotToString)).isEqualTo("toString");
+    assertThat(objDotToString.getString()).isEqualTo("toString");
     assertThat(firstChild).isEqualTo(obj);
 
     assertType(objDotToString.getJSType()).isEqualTo(nativeObjectType.getPropertyType("toString"));

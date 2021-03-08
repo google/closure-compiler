@@ -63,9 +63,9 @@ public final class JsMessageVisitorTest {
         n.setOriginalName(originalName);
         n.setString("some_prefix_" + originalName);
       } else if (n.isGetProp() && parent.isAssign() && n.getQualifiedName().contains(".MSG_")) {
-        String originalName = Node.getGetpropString(n);
+        String originalName = n.getString();
         n.setOriginalName(originalName);
-        Node.setGetpropString(n, "some_prefix_" + originalName);
+        n.setString("some_prefix_" + originalName);
       }
     }
   }

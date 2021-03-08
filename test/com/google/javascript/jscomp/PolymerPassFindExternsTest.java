@@ -143,8 +143,6 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
       node = node.getFirstChild();
     }
 
-    return Node.isGetpropButNotStringGetprop(node)
-        ? node.getSecondChild().getString()
-        : node.getString();
+    return node.getString();
   }
 }

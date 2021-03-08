@@ -181,7 +181,7 @@ public abstract class QualifiedName {
       int pos = size - 1;
       while (pos > 0 && n.isGetProp()) {
         // NOTE: these strings are all interned, so we can do identity comparison.
-        if (Node.getGetpropString(n) != terms.get(pos)) {
+        if (n.getString() != terms.get(pos)) {
           return false;
         }
         pos--;
@@ -239,7 +239,7 @@ public abstract class QualifiedName {
     public boolean matches(Node n) {
       return n.isGetProp()
           // Node strings are interned.
-          && Node.getGetpropString(n) == prop
+          && n.getString() == prop
           && owner.matches(n.getFirstChild());
     }
   }
@@ -264,7 +264,7 @@ public abstract class QualifiedName {
     public String getComponent() {
       switch (node.getToken()) {
         case GETPROP:
-          return Node.getGetpropString(node);
+          return node.getString();
         case THIS:
           return THIS;
         case SUPER:

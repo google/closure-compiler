@@ -2151,8 +2151,8 @@ public class Node implements Serializable {
    */
   @Nullable
   private StringBuilder getQualifiedNameForGetProp(int reserve) {
-    String propName = getGetpropString(this);
-    reserve += 1 + propName.length();  // +1 for the '.'
+    String propName = this.getString();
+    reserve += 1 + propName.length(); // +1 for the '.'
     StringBuilder builder;
     if (first.isGetProp()) {
       builder = first.getQualifiedNameForGetProp(reserve);
@@ -2194,7 +2194,7 @@ public class Node implements Serializable {
         return null;
       }
 
-      Node stringNode = getGetpropStringNode(this);
+      Node stringNode = this;
       String right = stringNode.getOriginalName();
       if (right == null) {
         right = stringNode.getString();
@@ -2286,7 +2286,7 @@ public class Node implements Serializable {
       case SUPER:
         return start == 0 && 5 == endIndex && qname.startsWith("super");
       case GETPROP:
-        String prop = getGetpropString(this);
+        String prop = this.getString();
         return start > 1
             && prop.length() == endIndex - start
             && prop.regionMatches(0, qname, start, endIndex - start)
@@ -2318,7 +2318,7 @@ public class Node implements Serializable {
         return true;
       case GETPROP:
         // ==, rather than equal as it is intern'd in setString
-        return getGetpropString(this) == getGetpropString(n)
+        return this.getString() == n.getString()
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
 
       case MEMBER_FUNCTION_DEF:

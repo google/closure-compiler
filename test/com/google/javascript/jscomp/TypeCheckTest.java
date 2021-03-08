@@ -15420,11 +15420,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testGetTypedPercent3() {
     String js = "var f = function(x) { x.a = x.b; }";
-    if (Node.isStringGetprop(IR.getprop(IR.nullNode(), "test"))) {
-      assertThat(getTypedPercent(js)).isWithin(0.1).of(25.0);
-    } else {
-      assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
-    }
+    assertThat(getTypedPercent(js)).isWithin(0.1).of(25.0);
   }
 
   @Test

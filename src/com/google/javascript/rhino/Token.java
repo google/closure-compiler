@@ -316,6 +316,7 @@ public enum Token {
       case DEFAULT_CASE:
       case DELPROP:
       case EXPR_RESULT:
+      case GETPROP:
       case GETTER_DEF:
       case INC:
       case INDEX_SIGNATURE:
@@ -327,6 +328,7 @@ public enum Token {
       case NOT:
       case OBJECT_REST:
       case OBJECT_SPREAD:
+      case OPTCHAIN_GETPROP:
       case POS:
       case SETTER_DEF:
       case TEMPLATELIT_SUB:
@@ -366,9 +368,7 @@ public enum Token {
       case EXPONENT:
       case GE:
       case GETELEM:
-      case GETPROP:
       case OPTCHAIN_GETELEM:
-      case OPTCHAIN_GETPROP:
       case GT:
       case IN:
       case INSTANCEOF:

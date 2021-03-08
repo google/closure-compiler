@@ -60,8 +60,8 @@ public final class GuardedCallbackTest extends CompilerTestCase {
         traversal.reportCodeChange();
       } else if (n.isGetProp() || n.isOptChainGetProp()) {
         // prefix guarded resource name with "." to keep properties distinct from names
-        if (isGuarded("." + Node.getGetpropString(n))) {
-          Node.setGetpropString(n, "GUARDED_PROP");
+        if (isGuarded("." + n.getString())) {
+          n.setString("GUARDED_PROP");
           traversal.reportCodeChange();
         }
       }

@@ -104,16 +104,10 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   private static class Renamer extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName()) {
+      if (n.isName() || n.isGetProp()) {
         String originalName = n.getString();
         n.setOriginalName(originalName);
         n.setString("renamed_" + originalName);
-        t.reportCodeChange();
-      } else if (n.isGetProp()) {
-        Node nameNode = Node.isStringGetprop(n) ? n : n.getLastChild();
-        String originalName = nameNode.getString();
-        nameNode.setOriginalName(originalName);
-        nameNode.setString("renamed_" + originalName);
         t.reportCodeChange();
       }
     }

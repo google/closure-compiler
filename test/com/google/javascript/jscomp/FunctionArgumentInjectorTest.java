@@ -737,7 +737,7 @@ public final class FunctionArgumentInjectorTest {
       if (NodeUtil.isNormalOrOptChainGetProp(n.getFirstChild())) {
         callee = n.getFirstFirstChild();
         // Only "call" is supported at this point.
-        checkArgument(Node.getGetpropString(callee.getParent()).equals("call"));
+        checkArgument(callee.getParent().getString().equals("call"));
       } else {
         callee = n.getFirstChild();
       }

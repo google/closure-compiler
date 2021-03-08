@@ -2798,7 +2798,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     switch (root.getToken()) {
       case GETPROP:
       case OPTCHAIN_GETPROP:
-        if (Node.getGetpropString(root).equals(name)) {
+        if (root.getString().equals(name)) {
           return root;
         }
         break;
