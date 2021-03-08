@@ -599,8 +599,7 @@ class StripCode implements CompilerPass {
      */
     boolean nameIncludesFieldNameToStrip(@Nullable Node n) {
       if (n != null && n.isGetProp()) {
-        return isStripName(Node.getGetpropString(n))
-            || nameIncludesFieldNameToStrip(n.getFirstChild());
+        return isStripName(n.getString()) || nameIncludesFieldNameToStrip(n.getFirstChild());
       }
       return false;
     }

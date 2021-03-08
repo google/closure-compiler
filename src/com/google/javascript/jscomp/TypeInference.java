@@ -1251,7 +1251,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
           if (rawObjType != null) {
             ObjectType objType = ObjectType.cast(rawObjType.restrictByNotNullOrUndefined());
             if (objType != null) {
-              String propName = Node.getGetpropString(target);
+              String propName = target.getString();
               declaredSlotType = objType.isPropertyTypeDeclared(propName);
             }
           }
@@ -1274,7 +1274,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
   /** Defines a property if the property has not been defined yet. */
   private void ensurePropertyDefined(Node getprop, JSType rightType, FlowScope scope) {
-    String propName = Node.getGetpropString(getprop);
+    String propName = getprop.getString();
     Node obj = getprop.getFirstChild();
     JSType nodeType = getJSType(obj);
     ObjectType objectType = ObjectType.cast(nodeType.restrictByNotNullOrUndefined());
@@ -1348,7 +1348,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private boolean ensurePropertyDeclaredHelper(
       Node getprop, ObjectType objectType, FlowScope scope) {
     if (getprop.isQualifiedName()) {
-      String propName = Node.getGetpropString(getprop);
+      String propName = getprop.getString();
       String qName = getprop.getQualifiedName();
       TypedVar var = getDeclaredVar(scope, qName);
       if (var != null && !var.isTypeInferred()) {
@@ -2305,8 +2305,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private FlowScope setGetPropNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
     checkArgument(n.isGetProp() || n.isOptChainGetProp());
     Node objNode = n.getFirstChild();
-    n.setJSType(
-        getPropertyType(objNode.getJSType(), Node.getGetpropString(n), n, scopeAfterChildren));
+    n.setJSType(getPropertyType(objNode.getJSType(), n.getString(), n, scopeAfterChildren));
     return tightenTypeAfterDereference(n.getFirstChild(), scopeAfterChildren);
   }
 
