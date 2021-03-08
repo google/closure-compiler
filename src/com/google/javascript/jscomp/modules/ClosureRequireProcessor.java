@@ -108,7 +108,7 @@ final class ClosureRequireProcessor {
     if (!owner.isName() || !owner.getString().equals("goog")) {
       return null;
     }
-    return GOOG_DEPENDENCY_CALLS.get(Node.getGetpropString(callee));
+    return GOOG_DEPENDENCY_CALLS.get(callee.getString());
   }
 
   /** Returns a new list of all required names in {@link #nameDeclaration} */

@@ -98,8 +98,7 @@ public final class ClosureReverseAbstractInterpreter extends ChainableReverseAbs
         JSType paramType = getTypeIfRefinable(param, blindScope);
         Node receiver = callee.getFirstChild();
         if (receiver.isName() && "goog".equals(receiver.getString())) {
-          Function<TypeRestriction, JSType> restricter =
-              restricters.get(Node.getGetpropString(callee));
+          Function<TypeRestriction, JSType> restricter = restricters.get(callee.getString());
           if (restricter != null) {
             return restrictParameter(param, paramType, blindScope, restricter, outcome.isTruthy());
           }

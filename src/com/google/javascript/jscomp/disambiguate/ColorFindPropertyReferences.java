@@ -77,7 +77,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     switch (n.getToken()) {
       case GETPROP:
       case OPTCHAIN_GETPROP:
-        this.registerPropertyUse(Node.getGetpropStringNode(n), n.getFirstChild().getColor());
+        this.registerPropertyUse(n, n.getFirstChild().getColor());
         break;
       case OBJECTLIT:
         this.handleObjectLit(n);

@@ -1529,7 +1529,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
       NodeSubject.assertNode(expr.getFirstChild()).hasType(Token.ASSIGN);
       NodeSubject.assertNode(expr.getFirstFirstChild()).hasType(Token.GETPROP);
       Node getProp = expr.getFirstFirstChild();
-      String propName = Node.getGetpropString(getProp);
+      String propName = getProp.getString();
       assertThat(restrictedChars).doesNotContain(propName.charAt(0));
     }
   }

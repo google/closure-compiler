@@ -457,7 +457,7 @@ public final class Matchers {
         && jsType.isSubtypeOf(providedJsType)) {
       if (node.isName() && propertyName.equals(node.getString())) {
         return true;
-      } else if (node.isGetProp() && propertyName.equals(Node.getGetpropString(node))) {
+      } else if (node.isGetProp() && propertyName.equals(node.getString())) {
         return true;
       }
     }
@@ -478,7 +478,7 @@ public final class Matchers {
         Node firstChild = node.getFirstChild();
         if (node.isGetProp()
             && firstChild.isGetProp()
-            && "prototype".equals(Node.getGetpropString(firstChild))) {
+            && "prototype".equals(firstChild.getString())) {
           JSType fnJsType = getJsType(metadata, JSTypeNative.FUNCTION_FUNCTION_TYPE);
           JSType jsType = node.getJSType();
           if (jsType == null) {

@@ -545,9 +545,6 @@ public class AmbiguateProperties implements CompilerPass {
      * @param n The STRING node for a property
      */
     private void maybeMarkCandidate(Node n, Color type) {
-      if (Node.isGetpropButNotStringGetprop(n)) {
-        n = n.getSecondChild();
-      }
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);

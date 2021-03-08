@@ -1390,7 +1390,7 @@ public class JSTypeRegistry {
     if (n.isGetProp()) {
       ObjectType objectType = getJSTypeOrUnknown(n.getFirstChild()).dereference();
       if (objectType != null) {
-        String propName = Node.getGetpropString(n);
+        String propName = n.getString();
         objectType = objectType.getClosestDefiningType(propName);
 
         // Don't show complex function names or anonymous types.

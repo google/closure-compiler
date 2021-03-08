@@ -360,7 +360,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       } else if (lhs.isGetProp()
           && lhs.getFirstChild().isName()
           && lhs.getFirstChild().getString().equals("exports")) {
-        String exportedId = Node.getGetpropString(lhs);
+        String exportedId = lhs.getString();
         addPropertyExport(exportedId, lhs);
       }
     }
@@ -369,7 +369,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     private void maybeInitializeExportsStub(Node qname) {
       Node owner = qname.getFirstChild();
       if (owner.isName() && owner.getString().equals("exports")) {
-        addPropertyExport(Node.getGetpropString(qname), qname);
+        addPropertyExport(qname.getString(), qname);
       }
     }
 
