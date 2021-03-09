@@ -407,19 +407,17 @@ public class IR {
     return Node.newString(Token.NAME, name);
   }
 
-  public static Node startOptChainGetprop(Node target, Node prop) {
+  public static Node startOptChainGetprop(Node target, String prop) {
     checkState(mayBeExpression(target), target);
-    checkState(prop.isString(), prop);
-    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop.getString());
+    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop);
     optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(true);
     return optChainGetProp;
   }
 
-  public static Node continueOptChainGetprop(Node target, Node prop) {
+  public static Node continueOptChainGetprop(Node target, String prop) {
     checkState(mayBeExpression(target), target);
-    checkState(prop.isString(), prop);
-    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop.getString());
+    Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop);
     optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(false);
     return optChainGetProp;

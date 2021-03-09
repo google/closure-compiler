@@ -796,8 +796,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void superInvalidWithOptionalGetProp() {
     Node superNode = IR.superNode();
-    Node propNode = IR.string("prop");
-    Node optChainGetPropNode = IR.startOptChainGetprop(superNode, propNode);
+    Node optChainGetPropNode = IR.startOptChainGetprop(superNode, "prop");
 
     expectInvalid(optChainGetPropNode, Check.STATEMENT);
   }
@@ -813,8 +812,8 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void optChainGetPropInvalidWithNoStartOfChain() {
-    Node innerGetProp = IR.continueOptChainGetprop(IR.name("expr"), IR.string("prop1"));
-    Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+    Node innerGetProp = IR.continueOptChainGetprop(IR.name("expr"), "prop1");
+    Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, "prop2");
 
     expectInvalid(outterGetProp, Check.STATEMENT);
   }

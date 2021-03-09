@@ -78,8 +78,8 @@ public class NodeTest {
   @Test
   public void isEquivalentToConsidersStartOfOptionalChainProperty() {
     // `a?.b.c`
-    Node singleSegmentOptChain = IR.continueOptChainGetprop(
-        IR.startOptChainGetprop(IR.name("a"), IR.string("b")), IR.string("c"));
+    Node singleSegmentOptChain =
+        IR.continueOptChainGetprop(IR.startOptChainGetprop(IR.name("a"), "b"), "c");
     assertNode(singleSegmentOptChain).isEquivalentTo(singleSegmentOptChain.cloneTree());
 
     Node twoSegmentOptChain = singleSegmentOptChain.cloneTree();

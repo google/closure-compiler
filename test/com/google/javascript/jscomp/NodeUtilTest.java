@@ -3965,7 +3965,7 @@ public final class NodeUtilTest {
     @Test
     public void simpleChain() {
       // `expr?.prop`
-      Node origChain = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+      Node origChain = IR.startOptChainGetprop(IR.name("expr"), "prop");
       NodeUtil.convertToNonOptionalChainSegment(origChain);
       assertThat(isChainConverted(origChain)).isTrue();
     }
@@ -3973,8 +3973,8 @@ public final class NodeUtilTest {
     @Test
     public void continuedChain() {
       // `expr?.prop1.prop2`
-      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
-      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), "pro1");
+      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, "prop2");
       NodeUtil.convertToNonOptionalChainSegment(outterGetProp);
       assertThat(isChainConverted(outterGetProp)).isTrue();
     }
@@ -3982,9 +3982,9 @@ public final class NodeUtilTest {
     @Test
     public void nestedChain() {
       // `expr2[expr1 ?.prop1]?.prop2`
-      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr1"), IR.string("pro1"));
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr1"), "pro1");
       Node getElem = IR.getelem(IR.name("expr2"), innerGetProp);
-      Node outterGetProp = IR.startOptChainGetprop(getElem, IR.string("prop2"));
+      Node outterGetProp = IR.startOptChainGetprop(getElem, "prop2");
 
       NodeUtil.convertToNonOptionalChainSegment(outterGetProp);
       assertThat(isChainConverted(outterGetProp)).isTrue();
@@ -4008,7 +4008,7 @@ public final class NodeUtilTest {
     @Test
     public void isStartOfChain() {
       // `expr?.prop`
-      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), "prop");
 
       assertThat(NodeUtil.getStartOfOptChainSegment(optChainGet)).isEqualTo(optChainGet);
     }
@@ -4016,8 +4016,8 @@ public final class NodeUtilTest {
     @Test
     public void shortChain() {
       // `expr?.prop1.prop2`
-      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
-      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), "pro1");
+      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, "prop2");
 
       assertThat(NodeUtil.getStartOfOptChainSegment(outterGetProp)).isEqualTo(innerGetProp);
     }
@@ -4027,7 +4027,7 @@ public final class NodeUtilTest {
       // `expr().prop1?.prop2()[prop3]`
       Node call = IR.call(IR.name("expr"));
       Node getProp = IR.getprop(call, "prop1");
-      Node optChainGetProp = IR.startOptChainGetprop(getProp, IR.string("prop2"));
+      Node optChainGetProp = IR.startOptChainGetprop(getProp, "prop2");
       Node optChainCall = IR.continueOptChainCall(optChainGetProp);
       Node optChainGetElem = IR.continueOptChainGetelem(optChainCall, IR.name("prop3"));
 
@@ -4042,7 +4042,7 @@ public final class NodeUtilTest {
     @Test
     public void isEndOfChain() {
       // `expr?.prop`
-      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), "prop");
 
       assertThat(NodeUtil.getEndOfOptChainSegment(optChainGet)).isEqualTo(optChainGet);
     }
@@ -4143,8 +4143,8 @@ public final class NodeUtilTest {
     @Test
     public void shortChain() {
       // `expr?.prop1.prop2`
-      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
-      Node outerGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), "pro1");
+      Node outerGetProp = IR.continueOptChainGetprop(innerGetProp, "prop2");
 
       assertThat(NodeUtil.getEndOfOptChainSegment(innerGetProp)).isEqualTo(outerGetProp);
     }
@@ -4153,8 +4153,8 @@ public final class NodeUtilTest {
     public void twoChains() {
       // `expr()?.prop1.prop2()?.[prop3]`
       Node call = IR.call(IR.name("expr"));
-      Node startOptGetProp = IR.startOptChainGetprop(call, IR.string("prop1"));
-      Node optChainGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
+      Node startOptGetProp = IR.startOptChainGetprop(call, "prop1");
+      Node optChainGetProp = IR.continueOptChainGetprop(startOptGetProp, "prop2");
       Node optChainCall = IR.continueOptChainCall(optChainGetProp);
       IR.startOptChainGetelem(optChainCall, IR.name("prop3"));
 
@@ -4164,8 +4164,8 @@ public final class NodeUtilTest {
     @Test
     public void breakingOutOfOptChain() {
       // `(expr?.prop1.prop2).prop3`
-      Node startOptGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop1"));
-      Node optChainGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
+      Node startOptGetProp = IR.startOptChainGetprop(IR.name("expr"), "prop1");
+      Node optChainGetProp = IR.continueOptChainGetprop(startOptGetProp, "prop2");
       IR.getprop(optChainGetProp, "prop3");
 
       assertThat(NodeUtil.getEndOfOptChainSegment(startOptGetProp)).isEqualTo(optChainGetProp);
