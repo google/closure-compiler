@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -626,24 +624,5 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "goog.addSingletonGetter(Subclass);"));
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-  }
-
-  @Override
-  public void testSame(String s) {
-    String withLet = "let x;" + s;
-    super.testSame(withLet);
-  }
-
-  @Override
-  public void test(String before, String after) {
-    String letPrefix = "let x = 1;";
-    super.test(letPrefix + before, letPrefix + after);
   }
 }

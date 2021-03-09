@@ -140,8 +140,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
   public void process(Node externs, Node root) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
     // Since this is an optimization pass, running on externs would be unnecessary
-    // TODO(b/182154150): Switch this back to NodeTraversal.traverse
-    TranspilationPasses.processTranspile(compiler, root, null, findStaticMembers);
+    NodeTraversal.traverse(compiler, root, findStaticMembers);
     processInherits(findStaticMembers);
   }
 
