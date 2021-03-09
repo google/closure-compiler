@@ -69,6 +69,9 @@ class RhinoErrorReporter {
   static final DiagnosticType DUPLICATE_PARAM =
       DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
 
+  static final DiagnosticType DUPLICATE_VISIBILITY =
+      DiagnosticType.warning("JSC_DUPLICATE_VISIBILITY", "{0}");
+
   static final DiagnosticType UNNECESSARY_ESCAPE =
       DiagnosticType.disabled("JSC_UNNECESSARY_ESCAPE", "Parse error. {0}");
 
@@ -122,6 +125,10 @@ class RhinoErrorReporter {
               TRAILING_COMMA)
           // Duplicate parameter
           .put(replacePlaceHolders("Duplicate parameter name \"{0}\""), DUPLICATE_PARAM)
+          // Duplicate visiblity
+          .put(
+              replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.jsdoc.extra.visibility")),
+              DUPLICATE_VISIBILITY)
           .put(Pattern.compile("Unnecessary escape:.*"), UNNECESSARY_ESCAPE)
           .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
           // Unknown @annotations.
