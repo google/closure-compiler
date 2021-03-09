@@ -425,23 +425,6 @@ public class IR {
     return optChainGetProp;
   }
 
-  public static Node getprop(Node target, Node prop) {
-    checkState(mayBeExpression(target));
-    checkState(prop.isString());
-    return IR.getprop(target, prop.getString());
-  }
-
-  public static Node getprop(Node target, Node prop, Node... moreProps) {
-    checkState(mayBeExpression(target));
-    checkState(prop.isString());
-    Node result = IR.getprop(target, prop);
-    for (Node moreProp : moreProps) {
-      checkState(moreProp.isString());
-      result = IR.getprop(result, moreProp);
-    }
-    return result;
-  }
-
   public static Node getprop(Node target, String prop) {
     checkState(mayBeExpression(target));
     Node getprop = Node.newString(Token.GETPROP, prop);

@@ -3382,7 +3382,7 @@ public final class NodeUtilTest {
       options.setCodingConvention(new GoogleCodingConvention());
       compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
       Node actual = NodeUtil.newQName(compiler, "ns.prop");
-      Node expected = IR.getprop(IR.name("ns"), IR.string("prop"));
+      Node expected = IR.getprop(IR.name("ns"), "prop");
       assertNode(actual).isEqualTo(expected);
     }
 
@@ -3393,15 +3393,14 @@ public final class NodeUtilTest {
       options.setCodingConvention(new GoogleCodingConvention());
       compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
       Node actual = NodeUtil.newQName(compiler, "this.prop");
-      Node expected = IR.getprop(IR.thisNode(), IR.string("prop"));
+      Node expected = IR.getprop(IR.thisNode(), "prop");
       assertNode(actual).isEqualTo(expected);
     }
 
     @Test
     public void testNewQNameDeclarationWithQualifiedName() {
       assertNode(createNewQNameDeclaration("ns.prop", IR.number(0), Token.VAR))
-          .isEqualTo(
-              IR.exprResult(IR.assign(IR.getprop(IR.name("ns"), IR.string("prop")), IR.number(0))));
+          .isEqualTo(IR.exprResult(IR.assign(IR.getprop(IR.name("ns"), "prop"), IR.number(0))));
     }
 
     @Test
@@ -3912,8 +3911,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), "foo.bar")).isTrue();
 
       assertThat(NodeUtil.isCallTo(IR.name("foo"), "foo")).isFalse();
-      assertThat(NodeUtil.isCallTo(IR.getprop(IR.name("foo"), IR.string("bar")), "foo.bar"))
-          .isFalse();
+      assertThat(NodeUtil.isCallTo(IR.getprop(IR.name("foo"), "bar"), "foo.bar")).isFalse();
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), "foo")).isFalse();
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo[0]()"), "foo")).isFalse();
     }
@@ -3922,15 +3920,13 @@ public final class NodeUtilTest {
     public void testIsCallToNode() {
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo()"), IR.name("foo"))).isTrue();
       assertThat(
-              NodeUtil.isCallTo(
-                  parseFirst(CALL, "foo.bar()"), IR.getprop(IR.name("foo"), IR.string("bar"))))
+              NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), IR.getprop(IR.name("foo"), "bar")))
           .isTrue();
 
       assertThat(NodeUtil.isCallTo(IR.name("foo"), IR.name("foo"))).isFalse();
       assertThat(
               NodeUtil.isCallTo(
-                  IR.getprop(IR.name("foo"), IR.string("bar")),
-                  IR.getprop(IR.name("foo"), IR.string("bar"))))
+                  IR.getprop(IR.name("foo"), "bar"), IR.getprop(IR.name("foo"), "bar")))
           .isFalse();
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo.bar()"), IR.name("foo"))).isFalse();
       assertThat(NodeUtil.isCallTo(parseFirst(CALL, "foo[0]()"), IR.name("foo"))).isFalse();
@@ -3952,8 +3948,7 @@ public final class NodeUtilTest {
     public void testIsBundledGoogModule_onlyIfInScript() {
       Node callNode =
           IR.call(
-              IR.getprop(IR.name("goog"), IR.string("loadModule")),
-              IR.string("imaginary module text here"));
+              IR.getprop(IR.name("goog"), "loadModule"), IR.string("imaginary module text here"));
 
       assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isFalse();
 
@@ -4031,7 +4026,7 @@ public final class NodeUtilTest {
     public void mixedChain() {
       // `expr().prop1?.prop2()[prop3]`
       Node call = IR.call(IR.name("expr"));
-      Node getProp = IR.getprop(call, IR.string("prop1"));
+      Node getProp = IR.getprop(call, "prop1");
       Node optChainGetProp = IR.startOptChainGetprop(getProp, IR.string("prop2"));
       Node optChainCall = IR.continueOptChainCall(optChainGetProp);
       Node optChainGetElem = IR.continueOptChainGetelem(optChainCall, IR.name("prop3"));
@@ -4171,7 +4166,7 @@ public final class NodeUtilTest {
       // `(expr?.prop1.prop2).prop3`
       Node startOptGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop1"));
       Node optChainGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
-      IR.getprop(optChainGetProp, IR.string("prop3"));
+      IR.getprop(optChainGetProp, "prop3");
 
       assertThat(NodeUtil.getEndOfOptChainSegment(startOptGetProp)).isEqualTo(optChainGetProp);
     }
