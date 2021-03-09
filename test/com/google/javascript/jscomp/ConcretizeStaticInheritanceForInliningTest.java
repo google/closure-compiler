@@ -610,6 +610,24 @@ public class ConcretizeStaticInheritanceForInliningTest extends CompilerTestCase
             "$jscomp.inherits(Subclass, Example);"));
   }
 
+  @Test
+  public void testAddSingletonGetter() {
+    // Even though concretizing in this case would stil technically be correct, as the call to
+    // `addSingletonGetter` would overwrite the concretized property, doing so can cause bad
+    // interactions with the inliner to inline the wrong defintion, so backing off is safer.
+    // See b/182154150 for details
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function Example() {}",
+            "Example.getInstance = function() {}",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
+            "goog.addSingletonGetter(Subclass);"));
+  }
+
   @Override
   @Before
   public void setUp() throws Exception {

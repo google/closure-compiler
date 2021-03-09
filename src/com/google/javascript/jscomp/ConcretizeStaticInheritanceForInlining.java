@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -106,6 +107,10 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
 
   private final Set<String> duplicateClassNames = new HashSet<>();
+
+  // Property names that may cause issues if they are concretized.
+  private static final ImmutableSet<String> BANNED_PROP_NAMES =
+      ImmutableSet.of("prototype", "getInstance");
 
   private static class JavascriptClass {
     // All static members to the class including get set properties.
@@ -352,7 +357,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
         Node classNode = getProp.getFirstChild();
-        if (isReferenceToClass(t, classNode) && !"prototype".equals(getProp.getString())) {
+        if (isReferenceToClass(t, classNode) && !BANNED_PROP_NAMES.contains(getProp.getString())) {
           classByAlias.get(classNode.getQualifiedName()).addStaticMember(n);
           nodeOrder.put(n, nodeOrder.size());
         }
