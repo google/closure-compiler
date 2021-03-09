@@ -1916,12 +1916,17 @@ class IRFactory {
     }
 
     private void maybeWarnKeywordProperty(Node node) {
-      if (TokenStream.isKeyword(node.getString())) {
-        features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
-        if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
-          errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
-              node.getLineno(), node.getCharno());
-        }
+      if (currentFileIsExterns) {
+        return;
+      }
+      if (!TokenStream.isKeyword(node.getString())) {
+        return;
+      }
+
+      features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
+      if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
+        errorReporter.warning(
+            INVALID_ES3_PROP_NAME, sourceName, node.getLineno(), node.getCharno());
       }
     }
 
@@ -2132,33 +2137,32 @@ class IRFactory {
 
     Node processPropertyGet(MemberExpressionTree getNode) {
       Node leftChild = transform(getNode.operand);
-      IdentifierToken nodeProp = getNode.memberName;
-      Node rightChild = processObjectLitKeyAsString(nodeProp);
-      if (!rightChild.isQuotedString() && !currentFileIsExterns) {
-        maybeWarnKeywordProperty(rightChild);
+      IdentifierToken propName = getNode.memberName;
+      if (propName == null) {
+        return leftChild;
       }
-      Node getProp = newStringNode(Token.GETPROP, rightChild.getString());
+
+      Node getProp = newStringNode(Token.GETPROP, propName.value);
       getProp.addChildToBack(leftChild);
-      if (nodeProp != null) {
-        setSourceInfo(getProp, nodeProp);
-      }
+      setSourceInfo(getProp, propName);
+      maybeWarnKeywordProperty(getProp);
       return getProp;
     }
 
     Node processOptChainPropertyGet(OptionalMemberExpressionTree getNode) {
       maybeWarnForFeature(getNode, Feature.OPTIONAL_CHAINING);
+
       Node leftChild = transform(getNode.operand);
-      IdentifierToken nodeProp = getNode.memberName;
-      Node rightChild = processObjectLitKeyAsString(nodeProp);
-      if (!rightChild.isQuotedString() && !currentFileIsExterns) {
-        maybeWarnKeywordProperty(rightChild);
+      IdentifierToken propName = getNode.memberName;
+      if (propName == null) {
+        return leftChild;
       }
-      Node getProp = newStringNode(Token.OPTCHAIN_GETPROP, rightChild.getString());
+
+      Node getProp = newStringNode(Token.OPTCHAIN_GETPROP, propName.value);
       getProp.addChildToBack(leftChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
-      if (nodeProp != null) {
-        setSourceInfo(getProp, nodeProp);
-      }
+      setSourceInfo(getProp, propName);
+      maybeWarnKeywordProperty(getProp);
       return getProp;
     }
 
