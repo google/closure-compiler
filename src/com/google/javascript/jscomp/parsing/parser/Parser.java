@@ -936,6 +936,9 @@ public class Parser {
         Token comma = eat(TokenType.COMMA);
         if (comma != null) {
           commaPositions.add(comma.getStart());
+        } else {
+          // semi-arbitrary comma position in case the code is syntactially invalid & missing one
+          commaPositions.add(getTreeEndLocation());
         }
         if (peek(TokenType.CLOSE_PAREN)) {
           recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);

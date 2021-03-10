@@ -187,6 +187,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testFunction() {
     parse("var f = function(x,y,z) { return 0; }");
     parse("function f(x,y,z) { return 0; }");
+
+    isIdeMode = true;
+    parseError("function f(x y z) {}", "',' expected");
   }
 
   @Test
