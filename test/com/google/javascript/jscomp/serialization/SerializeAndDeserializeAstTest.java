@@ -16,52 +16,35 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.serialization.SerializationOptions;
-import org.junit.Before;
+import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.function.Consumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/**
+ * Tests that both serialize and then deserialize a compiler AST.
+ *
+ * <p>Do to the difference from a normal compiler pass, this is not actually able to reuse much of
+ * the infrastructure inherited from CompilerTestCase, and thus it may make sense to separate these
+ * tests more fully.
+ */
 @RunWith(JUnit4.class)
 public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
-  @Before
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    disableValidateAstChangeMarking();
-  }
-
-  private void replaceScriptRoot(Node oldRoot, Node newRoot) {
-    checkArgument(oldRoot.isRoot());
-    checkArgument(newRoot.isRoot());
-    oldRoot.removeChildren();
-    for (Node script = newRoot.getFirstChild(); script != null; script = script.getNext()) {
-      checkState(script.isScript());
-      oldRoot.addChildToBack(script.detach());
-    }
-  }
+  private Consumer<TypedAst> consumer = null;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new SerializeTypedAstPass(
-        compiler,
-        SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS,
-        (typedAst) -> {
-          Node oldExternsAndJsRoot = compiler.getRoot();
-          Node newRoot = TypedAstDeserializer.deserialize(typedAst);
-          NodeUtil.markFunctionsDeleted(oldExternsAndJsRoot, compiler);
-          replaceScriptRoot(oldExternsAndJsRoot.getFirstChild(), newRoot.getFirstChild());
-          replaceScriptRoot(oldExternsAndJsRoot.getLastChild(), newRoot.getLastChild());
-        });
+        compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS, consumer);
   }
 
   @Test
@@ -188,5 +171,31 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testIdGenerator() {
     testSame("/** @idGenerator {xid} */ function xid(id) {}");
+  }
+
+  @Override
+  public void testSame(String code) {
+    this.test(code, code);
+  }
+
+  @Override
+  public void test(String code, String expected) {
+    TypedAst ast = compile(code);
+    Node expectedRoot = getLastCompiler().parseSyntheticCode(expected);
+    Node newRoot = TypedAstDeserializer.deserialize(ast).getLastChild().getFirstChild();
+    assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
+    consumer = null;
+  }
+
+  TypedAst compile(String code) {
+    TypedAst[] result = new TypedAst[1];
+    consumer = ast -> result[0] = ast;
+    super.testSame(code);
+    byte[] serialized = result[0].toByteArray();
+    try {
+      return TypedAst.parseFrom(serialized);
+    } catch (InvalidProtocolBufferException e) {
+      throw new AssertionError(e);
+    }
   }
 }
