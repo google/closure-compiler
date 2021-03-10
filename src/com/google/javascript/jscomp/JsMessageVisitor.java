@@ -273,9 +273,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         compiler.getSourceMapping(
             traversal.getSourceName(), traversal.getLineNumber(), traversal.getCharno());
     if (mapping != null) {
-      builder.setSourceName(mapping.getOriginalFile());
+      builder.setSourceName(mapping.getOriginalFile() + ":" + mapping.getLineNumber());
     } else {
-      builder.setSourceName(traversal.getSourceName());
+      builder.setSourceName(traversal.getSourceName() + ":" + traversal.getLineNumber());
     }
 
     try {

@@ -94,7 +94,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
   }
 
   @Test
@@ -108,7 +108,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
   }
 
   @Test
@@ -122,7 +122,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
   }
 
   @Test
@@ -149,12 +149,12 @@ public final class JsMessageVisitorTest {
     JsMessage msg1 = messages.get(0);
     assertThat(msg1.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg1.getDesc()).isEqualTo("Hello");
-    assertThat(msg1.getSourceName()).isEqualTo("source1.html");
+    assertThat(msg1.getSourceName()).isEqualTo("source1.html:11");
 
     JsMessage msg2 = messages.get(1);
     assertThat(msg2.getKey()).isEqualTo("MSG_HI");
     assertThat(msg2.getDesc()).isEqualTo("Hi");
-    assertThat(msg2.getSourceName()).isEqualTo("source2.html");
+    assertThat(msg2.getSourceName()).isEqualTo("source2.html:11");
   }
 
   @Test
@@ -977,7 +977,7 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]");
+    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
   }
 
   @Test
