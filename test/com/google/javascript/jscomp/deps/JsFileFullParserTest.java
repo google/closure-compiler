@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.deps.JsFileFullParser.FileInfo;
+import com.google.javascript.jscomp.deps.JsFileFullParser.Reporter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -86,6 +87,36 @@ public final class JsFileFullParserTest {
     assertThat(info.provides).containsExactly("providedSymbol");
     assertThat(info.requires).containsExactly("stronglyRequiredSymbol");
     assertThat(info.typeRequires).containsExactly("weaklyRequiredSymbol");
+  }
+
+  @Test
+  public void testProvidesRequires_syntaxError() {
+    String src =
+        Joiner.on('\n')
+            .join(
+                "goog.provide('providedSymbol');",
+                "goog.require('stronglyRequiredSymbol');",
+                "goog.requireType('weaklyRequiredSymbol');",
+                "",
+                "syntax error;");
+
+    class ErrorCollector implements Reporter {
+      private String lastErrorMessage;
+
+      @Override
+      public void report(
+          boolean fatal, String message, String sourceName, int line, int lineOffset) {
+        this.lastErrorMessage = message;
+      }
+    }
+
+    ErrorCollector errorCollector = new ErrorCollector();
+    FileInfo info = JsFileFullParser.parse(src, "file.js", errorCollector);
+
+    assertThat(info.provides).isEmpty();
+    assertThat(info.requires).isEmpty();
+    assertThat(info.typeRequires).isEmpty();
+    assertThat(errorCollector.lastErrorMessage).isEqualTo("Semi-colon expected");
   }
 
   @Test

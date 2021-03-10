@@ -139,7 +139,11 @@ public class JsFileFullParser {
     // no instantiation
   }
 
-  /** Parses a JavaScript file for dependencies and annotations. */
+  /**
+   * Parses a JavaScript file for dependencies and annotations
+   *
+   * @return empty info if a syntax error was encountered
+   */
   public static FileInfo parse(String code, String filename, Reporter reporter) {
     DelegatingReporter errorReporter = new DelegatingReporter(reporter);
     Compiler compiler =
@@ -176,12 +180,16 @@ public class JsFileFullParser {
             // TODO(sdh): ES8 STRICT, with a non-strict fallback - then give warnings.
             Config.LanguageMode.ECMASCRIPT8,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-            Config.RunMode.KEEP_GOING,
+            Config.RunMode.STOP_AFTER_ERROR,
             /* extraAnnotationNames */ ImmutableSet.<String>of(),
             /* parseInlineSourceMaps */ true,
             Config.StrictMode.SLOPPY);
     FileInfo info = new FileInfo();
     ParserRunner.ParseResult parsed = ParserRunner.parse(source, code, config, errorReporter);
+    if (errorReporter.seenError) {
+      return info;
+    }
+
     parsed.ast.setInputId(new InputId(filename));
     String version = parsed.features.version();
     if (!version.equals("es3")) {
@@ -323,6 +331,7 @@ public class JsFileFullParser {
 
   private static final class DelegatingReporter implements ErrorReporter {
     final Reporter delegate;
+    private boolean seenError = false;
 
     DelegatingReporter(Reporter delegate) {
       this.delegate = checkNotNull(delegate);
@@ -335,6 +344,7 @@ public class JsFileFullParser {
 
     @Override
     public void error(String message, String sourceName, int line, int lineOffset) {
+      this.seenError = true;
       delegate.report(true, message, sourceName, line, lineOffset);
     }
   }
