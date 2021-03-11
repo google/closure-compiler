@@ -207,18 +207,9 @@ angular.ResourceInstanceOrCollection;
  * var Pony = $resource('/ponies');
  * var pony = new Pony({name: 'Duke'});
  *
- * @typedef {function(new:angular.ResourceInstance, Object=)}
+ * @typedef {typeof angular.ResourceInstance}
  */
 angular.Resource;
-
-/**
- * Re-open the Resource type definition via an artificial target -- Resource_.
- * This lets us define functions on function objects, which is what Resource is.
- *
- * @type {angular.Resource}
- */
-angular.Resource_;
-
 
 /**
  * Usage: resourceClass.get([parameters], [success], [error])
@@ -228,9 +219,23 @@ angular.Resource_;
  * @param {angular.resource.Errback=} opt_errback
  * @return {!angular.ResourceInstance} Empty resource instance.
  */
-angular.Resource_.prototype.get = function(
+angular.ResourceInstance.get = function(
     opt_paramsOrCallback, opt_callbackOrErrback, opt_errback) {};
 
+/**
+ * @extends {Array<!angular.ResourceInstance>}
+ */
+class QueryResultArray {}
+
+/**
+ * @type {!angular.$q.Promise}
+ */
+QueryResultArray.prototype.$promise;
+
+/**
+ * @type {boolean}
+ */
+QueryResultArray.prototype.$resolved;
 
 /**
  * Usage: resourceClass.query([parameters], [success], [error])
@@ -238,9 +243,9 @@ angular.Resource_.prototype.get = function(
  * @param {angular.resource.ParamsOrCallback=} opt_paramsOrCallback
  * @param {angular.resource.CallbackOrErrback=} opt_callbackOrErrback
  * @param {angular.resource.Errback=} opt_errback
- * @return {!Array.<!angular.ResourceInstance>} Empty array of instances.
+ * @return {!QueryResultArray} Empty array of instances.
  */
-angular.Resource_.prototype.query = function(
+angular.ResourceInstance.query = function(
     opt_paramsOrCallback, opt_callbackOrErrback, opt_errback) {};
 
 
@@ -251,8 +256,9 @@ angular.Resource_.prototype.query = function(
  * @param {angular.resource.DataCallbackOrErrback=} opt_dataOrCallbackOrErrback
  * @param {angular.resource.CallbackOrErrback=} opt_callbackOrErrback
  * @param {angular.resource.Errback=} opt_errback
+ * @return {!angular.ResourceInstance}
  */
-angular.Resource_.prototype.save = function(
+angular.ResourceInstance.save = function(
     paramsOrCallbackOrData, opt_dataOrCallbackOrErrback, opt_callbackOrErrback,
     opt_errback) {};
 
@@ -265,26 +271,29 @@ angular.Resource_.prototype.save = function(
  * @param {angular.resource.CallbackOrErrback=} opt_callbackOrErrback
  * @param {angular.resource.Errback=} opt_errback
  */
-angular.Resource_.prototype.remove = function(
+angular.ResourceInstance.remove = function(
     paramsOrCallbackOrData, opt_dataOrCallbackOrErrback, opt_callbackOrErrback,
     opt_errback) {};
 
 
 /**
- * Usage: resourceClass['delete']([parameters], postData, [success], [error])
+ * Usage: resourceClass.delete([parameters], postData, [success], [error])
  *
  * @param {!angular.resource.ParamsDataOrCallback} paramsOrCallbackOrData
  * @param {angular.resource.DataCallbackOrErrback=} opt_dataOrCallbackOrErrback
  * @param {angular.resource.CallbackOrErrback=} opt_callbackOrErrback
  * @param {angular.resource.Errback=} opt_errback
  */
-angular.Resource_.prototype['delete'] = function(
+angular.ResourceInstance.delete = function(
     paramsOrCallbackOrData, opt_dataOrCallbackOrErrback, opt_callbackOrErrback,
     opt_errback) {};
 
 
-/** @constructor */
-angular.ResourceInstance = function() {};
+/**
+ * @constructor
+ * @param {Object=} obj
+ */
+angular.ResourceInstance = function(obj) {};
 
 
 /**
