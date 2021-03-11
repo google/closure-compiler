@@ -273,6 +273,20 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String saveAfterChecksFile = null;
 
     @Option(
+        name = "--variable_renaming_input",
+        usage =
+            "File containing the serialized version of the variable "
+                + "renaming map produced by a previous compilation")
+    private String variableMapInputFile = "";
+
+    @Option(
+        name = "--property_renaming_input",
+        usage =
+            "File containing the serialized version of the property "
+                + "renaming map produced by a previous compilation")
+    private String propertyMapInputFile = "";
+
+    @Option(
         name = "--variable_renaming_report",
         usage =
             "File where the serialized version of the variable "
@@ -1759,6 +1773,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
           .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
           .setModule(flags.chunk)
+          .setVariableMapInputFile(flags.variableMapInputFile)
+          .setPropertyMapInputFile(flags.propertyMapInputFile)        
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
