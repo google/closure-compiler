@@ -2194,10 +2194,9 @@ public class Node implements Serializable {
         return null;
       }
 
-      Node stringNode = this;
-      String right = stringNode.getOriginalName();
+      String right = this.getOriginalName();
       if (right == null) {
-        right = stringNode.getString();
+        right = this.getString();
       }
 
       return left + "." + right;
@@ -3720,26 +3719,5 @@ public class Node implements Serializable {
     }
     value |= current << shift;
     return value;
-  }
-
-  public static boolean isStringGetprop(Node getprop) {
-    checkState(getprop.isGetProp() || getprop.isOptChainGetProp(), getprop);
-    return getprop.hasOneChild();
-  }
-
-  public static boolean isGetpropButNotStringGetprop(Node getprop) {
-    return (getprop.isGetProp() || getprop.isOptChainGetProp()) && !isStringGetprop(getprop);
-  }
-
-  public static String getGetpropString(Node getprop) {
-    return getGetpropStringNode(getprop).getString();
-  }
-
-  public static Node getGetpropStringNode(Node getprop) {
-    return isStringGetprop(getprop) ? getprop : getprop.getSecondChild();
-  }
-
-  public static void setGetpropString(Node getprop, String value) {
-    getGetpropStringNode(getprop).setString(value);
   }
 }
