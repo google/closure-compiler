@@ -863,6 +863,12 @@ BaseRenderingContext2D.prototype.shadowOffsetY;
 BaseRenderingContext2D.prototype.imageSmoothingEnabled;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/imageSmoothingQuality
+ */
+BaseRenderingContext2D.prototype.imageSmoothingQuality;
+
+/**
  * @type {string|!CanvasGradient|!CanvasPattern}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-strokestyle
  * @implicitCast
