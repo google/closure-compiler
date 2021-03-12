@@ -933,6 +933,16 @@ public abstract class CompilerTestCase {
   }
 
   /**
+   * Disables runng the PureFunctionIdentifier pass before running the test pass.
+   *
+   * @see PureFunctionIdentifier
+   */
+  protected final void disableComputeSideEffects() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    computeSideEffects = false;
+  }
+
+  /**
    * Declare an accessor as being present "somewhere" in a the test program.
    *
    * <p>Calling this method also disabled automatic getter / setter collection.

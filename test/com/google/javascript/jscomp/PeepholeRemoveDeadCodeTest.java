@@ -113,7 +113,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFoldBlockWithDeclaration() {
+  public void testFoldBlockWithDeclaration_notNormalized() {
+    disableNormalize();
+    disableComputeSideEffects();
+
     foldSame("{let x}");
     foldSame("function f() {let x}");
     foldSame("{const x = 1}");
@@ -126,6 +129,20 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("{label: var x; let y;}");
   }
 
+  @Test
+  public void testFoldBlockWithDeclaration_normalized() {
+    fold("{let x}", "let x");
+    foldSame("function f() {let x}");
+    fold("{const x = 1}", "const x = 1;");
+    fold("{x = 2; y = 4; let z;}", "x = 2; y = 4; let z;");
+    fold("{'hi'; let x;}", "let x;");
+    fold("{x = 4; {let y}}", "x = 4; let y;");
+    fold("{class C {}} {class C {}}", "class C {} class C$jscomp$1 {}");
+    fold("{label: var x}", "label: var x");
+    // `{label: let x}` is a syntax error
+    fold("{label: var x; let y;}", "label: var x; let y;");
+  }
+
   /** Try to remove spurious blocks with multiple children */
   @Test
   public void testFoldBlocksWithManyChildren() {
@@ -133,7 +150,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("function f() { { if (false) {} if (true) {} {} } }", "function f(){}");
     fold(
         "{var x; var y; var z; class Foo { constructor() { var a; { var b; } } } }",
-        "{var x;var y;var z;class Foo { constructor() { var a;var b} } }");
+        "var x;var y;var z;class Foo { constructor() { var a;var b} }");
     fold("{var x; var y; var z; { { var a; { var b; } } } }",
         "var x;var y;var z; var a;var b");
   }
@@ -215,9 +232,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Test
   public void testLetConstLifting() {
-    fold("if(true) {const x = 1}", "{const x = 1}");
+    fold("if(true) {const x = 1}", "const x = 1;");
     fold("if(false) {const x = 1}", "");
-    fold("if(true) {let x}", "{let x}");
+    fold("if(true) {let x}", "let x;");
     fold("if(false) {let x}", "");
   }
 
@@ -259,8 +276,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("l1: { do { x = 1; break l1; } while (0); x = 2; }", "l1: { x = 1; break l1; x = 2;}");
 
     fold("do { x = 1; } while (x = 0);", "x = 1; x = 0;");
-    fold("let x = 1; (function() { do { let x = 2; } while (x = 10, false); })();",
-        "let x = 1; (function() { { let x = 2 } x = 10 })();");
+    fold(
+        "let x = 1; (function() { do { let x = 2; } while (x = 10, false); })();",
+        "let x = 1; (function() { let x$jscomp$1 = 2; x = 10 })();");
   }
 
   @Test
@@ -564,7 +582,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"),
         lines(
             "let x;", //
-            "use(x);", "{let y}"));
+            "use(x);", "let y;"));
 
     fold(
         lines(
@@ -575,7 +593,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         lines(
             "let x;", //
             "use?.(x);",
-            "{let y}"));
+            "let y;"));
 
     fold(
         lines(
@@ -586,7 +604,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         lines(
             "let x;", //
             "use(x);", //
-            "{let y}"));
+            "let y;"));
   }
 
   @Test
@@ -686,8 +704,14 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"));
 
     fold(
-        lines("let x = 1;", "switch('x') {", "  case 'x': let x = 2; break;", "}"),
-        lines("let x = 1;", "{let x = 2}"));
+        lines(
+            "let x = 1;", //
+            "switch('x') {",
+            "  case 'x': let x = 2; break;",
+            "}"),
+        lines(
+            "let x = 1;", //
+            "let x$jscomp$1 = 2"));
   }
 
   @Test
@@ -736,7 +760,12 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "    case 'y': return 4;",
             "  }",
             "}"),
-        lines("function f() {", "  let x = 1;", "  { let x = 2; } return 3; ", "}"));
+        lines(
+            "function f() {", //
+            "  let x = 1;",
+            "  let x$jscomp$1 = 2;",
+            "  return 3; ",
+            "}"));
   }
 
   @Test

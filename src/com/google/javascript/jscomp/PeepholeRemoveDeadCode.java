@@ -792,7 +792,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // Try to remove the block.
     Node parent = n.getParent();
-    if (NodeUtil.tryMergeBlock(n, false)) {
+    if (NodeUtil.tryMergeBlock(n, isASTNormalized())) {
       reportChangeToEnclosingScope(parent);
       return null;
     }

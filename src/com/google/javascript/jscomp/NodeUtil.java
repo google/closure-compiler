@@ -2671,12 +2671,14 @@ public final class NodeUtil {
   /**
    * Merge a block with its parent block.
    *
+   * @param ignoreBlockScopedDeclarations merge the block regardless of any inner block-scoped
+   *     declarations that may cause name collisions. use if e.g. the AST is normalized
    * @return Whether the block was removed.
    */
-  public static boolean tryMergeBlock(Node block, boolean alwaysMerge) {
+  public static boolean tryMergeBlock(Node block, boolean ignoreBlockScopedDeclarations) {
     checkState(block.isBlock());
     Node parent = block.getParent();
-    boolean canMerge = alwaysMerge || canMergeBlock(block);
+    boolean canMerge = ignoreBlockScopedDeclarations || canMergeBlock(block);
     // Try to remove the block if its parent is a block/script or if its
     // parent is label and it has exactly one child.
     if (isStatementBlock(parent) && canMerge) {

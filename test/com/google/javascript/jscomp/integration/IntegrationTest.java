@@ -3850,7 +3850,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "main();");
 
-    String expected = "'use strict';Math.random()&&alert(\"\")";
+    String expected = "'use strict'; let a; Math.random() && (a={a: ''}, alert(a.a));";
 
     test(options, src, expected);
   }
