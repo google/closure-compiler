@@ -35,14 +35,16 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
   // Placeholder class name for error reporting on anonymous classes.
   private static final String ANONYMOUS_CLASSNAME = "<anonymous>";
 
-  public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_RECORD =
+  public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_INTERFACE =
       DiagnosticType.disabled(
           "JSC_NON_DECLARATION_STATEMENT_IN_RECORD",
-          "@record functions should not contain statements other than field declarations");
+          "@interface or @record functions should not contain statements other than field"
+              + " declarations");
 
-  public static final DiagnosticType INTERFACE_CONSTRUCTOR_NOT_EMPTY =
+  public static final DiagnosticType MISSING_JSDOC_IN_DECLARATION_STATEMENT =
       DiagnosticType.disabled(
-          "JSC_INTERFACE_CONSTRUCTOR_NOT_EMPTY", "interface constructor must have an empty body");
+          "JSC_MISSING_JSDOC_IN_DECLARATION_STATEMENT",
+          "@interface or @record functions must contain JSDoc for each field declaration.");
 
   public static final DiagnosticType INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY =
       DiagnosticType.disabled(
@@ -89,7 +91,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
           if (isInterface(jsdoc)) {
             checkInterfaceConstructorArgs(t, n);
-            checkConstructorBlock(t, n, jsdoc);
+            checkConstructorBlock(t, n);
           }
           break;
         }
@@ -101,7 +103,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
             if (ctorDef != null) {
               Node ctor = ctorDef.getFirstChild();
               checkInterfaceConstructorArgs(t, ctor);
-              checkConstructorBlock(t, ctor, jsdoc);
+              checkConstructorBlock(t, ctor);
             }
             checkClassMethods(t, n, ctorDef);
           }
@@ -147,27 +149,23 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
   }
 
   // `@record` constructors can be non-empty, check that only field declarations exist in them.
-  private static void checkConstructorBlock(NodeTraversal t, Node funcNode, JSDocInfo jsDoc) {
+  private static void checkConstructorBlock(NodeTraversal t, Node funcNode) {
     Node block = funcNode.getLastChild();
     if (!block.hasChildren()) {
       return;
     }
 
     for (Node stmt = block.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
-      if (jsDoc.usesImplicitMatch()) {
-        // @record
-        if (!isThisPropAccess(stmt) && !isCallToSuper(stmt)) {
-          // Field declarations or super() is expected inside @record.
-          t.report(stmt, NON_DECLARATION_STATEMENT_IN_RECORD);
-          break;
-        }
-      } else {
-        // @interface
-        if (!isCallToSuper(stmt)) {
-          // only super stmt allowed inside @interface constructor
-          t.report(block.getFirstChild(), INTERFACE_CONSTRUCTOR_NOT_EMPTY);
-          break;
-        }
+      if (!isThisPropAccess(stmt) && !isCallToSuper(stmt)) {
+        // Only field declarations or super() is expected inside @record and @interface.
+        t.report(stmt, NON_DECLARATION_STATEMENT_IN_INTERFACE);
+        break;
+      }
+
+      if (isThisPropAccess(stmt) && stmt.getFirstChild().getJSDocInfo() == null) {
+        // A field declaration that's missing a JSDoc.
+        t.report(stmt, MISSING_JSDOC_IN_DECLARATION_STATEMENT);
+        break;
       }
     }
   }
@@ -175,8 +173,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
   private static boolean isThisPropAccess(Node stmt) {
     return stmt.isExprResult()
         && stmt.getFirstChild().isGetProp()
-        && stmt.getFirstFirstChild().isThis()
-        && stmt.getFirstChild().getJSDocInfo() != null;
+        && stmt.getFirstFirstChild().isThis();
   }
 
   private static boolean isCallToSuper(Node stmt) {
