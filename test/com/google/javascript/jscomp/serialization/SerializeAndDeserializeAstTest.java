@@ -173,6 +173,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     testSame("/** @idGenerator {xid} */ function xid(id) {}");
   }
 
+  @Test
+  public void testUnpairedSurrogateStrings() {
+    testSame("const s = '\ud800';");
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);

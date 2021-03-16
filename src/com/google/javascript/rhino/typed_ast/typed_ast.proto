@@ -20,7 +20,7 @@ message TypedAst {
 }
 
 message StringPool {
-  repeated string strings = 1;
+  repeated bytes strings = 1;
 }
 
 message JavascriptFile {

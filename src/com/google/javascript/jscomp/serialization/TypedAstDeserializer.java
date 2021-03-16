@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
+import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -92,13 +93,13 @@ final class TypedAstDeserializer {
   }
 
   private String getStringByPointer(int pointer) {
-    List<String> stringPool = typedAst.getStringPool().getStringsList();
+    List<ByteString> stringPool = typedAst.getStringPool().getStringsList();
     checkState(
         stringPool.size() > pointer,
         "Found pointer <%s> that points outside of string pool. Pool contents:\n%s",
         pointer,
         stringPool);
-    return stringPool.get(pointer);
+    return Wtf8Encoder.decodeFromWtf8(stringPool.get(pointer));
   }
 
   private String getString(AstNode n) {

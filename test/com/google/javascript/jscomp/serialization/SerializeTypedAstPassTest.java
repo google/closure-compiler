@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.serialization.TypePointer.DebugInfo;
 import com.google.javascript.rhino.serialization.SerializationOptions;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.util.ArrayList;
 import java.util.List;
@@ -629,7 +630,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
    * Returns the offset of the given string in the given pool, throwing an exception if not present
    */
   private static int findInStringPool(StringPool stringPool, String str) {
-    int offset = stringPool.getStringsList().indexOf(str);
+    int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str));
     checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
     return offset;
   }

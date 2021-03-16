@@ -31,6 +31,10 @@ final class StringPoolBuilder {
   }
 
   StringPool build() {
-    return StringPool.newBuilder().addAllStrings(this.stringPool.keySet()).build();
+    StringPool.Builder builder = StringPool.newBuilder();
+    this.stringPool.keySet().stream()
+        .map(Wtf8Encoder::encodeToWtf8)
+        .forEachOrdered(builder::addStrings);
+    return builder.build();
   }
 }

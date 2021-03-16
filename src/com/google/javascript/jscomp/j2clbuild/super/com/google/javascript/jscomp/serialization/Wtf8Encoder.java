@@ -23,10 +23,10 @@ final class Wtf8Encoder {
   private Wtf8Encoder() {}
 
   static ByteString encodeToWtf8(String s) {
-    throw new AssertionError("wtf-8 not supported in j2cl");
+    return ByteString.copyFromUtf8(s);
   }
 
   static String decodeFromWtf8(ByteString serialized) {
-    throw new AssertionError("wtf-8 not supported in j2cl");
+    return serialized.toStringUtf8();
   }
 }

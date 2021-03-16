@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
+import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -151,7 +152,11 @@ public class ColorDeserializerTest {
                             .addOwnProperty(0)
                             .addOwnProperty(1)))
             .build();
-    StringPool stringPool = StringPool.newBuilder().addStrings("x").addStrings("y").build();
+    StringPool stringPool =
+        StringPool.newBuilder()
+            .addStrings(ByteString.copyFromUtf8("x"))
+            .addStrings(ByteString.copyFromUtf8("y"))
+            .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))

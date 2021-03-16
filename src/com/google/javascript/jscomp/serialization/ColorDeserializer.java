@@ -235,6 +235,7 @@ public final class ColorDeserializer {
               .setOwnProperties(
                   serialized.getOwnPropertyList().stream()
                       .map(stringOffset -> this.stringPool.getStringsList().get(stringOffset))
+                      .map(Wtf8Encoder::decodeFromWtf8)
                       .collect(toImmutableSet()));
       if (serialized.hasPrototype()) {
         builder.setPrototype(this.pointerToColor(serialized.getPrototype()));
