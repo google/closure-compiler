@@ -478,7 +478,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       compiler.report(
           JSError.make(
               methodName,
-              ProcessClosurePrimitives.NULL_ARGUMENT_ERROR,
+              ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR,
               methodName.getQualifiedName()));
       return false;
     }
@@ -491,7 +491,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       compiler.report(
           JSError.make(
               methodName,
-              ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR,
+              ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR,
               methodName.getQualifiedName()));
       return false;
     }
@@ -504,7 +504,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       compiler.report(
           JSError.make(
               methodName,
-              ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR,
+              ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR,
               methodName.getQualifiedName()));
       return false;
     }

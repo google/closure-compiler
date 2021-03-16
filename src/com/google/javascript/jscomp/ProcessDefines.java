@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 import static java.util.stream.Collectors.toCollection;
 
@@ -26,9 +27,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TernaryValue;
@@ -53,17 +56,28 @@ class ProcessDefines implements CompilerPass {
   private static final ImmutableSet<String> KNOWN_DEFINES =
       ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
 
+  static final DiagnosticType INVALID_DEFINE_NAME_ERROR =
+      DiagnosticType.error(
+          "JSC_INVALID_DEFINE_NAME_ERROR", "\"{0}\" is not a valid JS identifier name");
+
+  static final DiagnosticType MISSING_DEFINE_ANNOTATION =
+      DiagnosticType.error("JSC_INVALID_MISSING_DEFINE_ANNOTATION", "Missing @define annotation");
+
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ImmutableMap<String, Node> replacementValues;
   private final Mode mode;
   private final Supplier<GlobalNamespace> namespaceSupplier;
+  private final boolean recognizeClosureDefines;
 
   private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
+  private final LinkedHashSet<Node> knownGoogDefineCalls = new LinkedHashSet<>();
   private final LinkedHashMap<String, Define> defineByDefineName = new LinkedHashMap<>();
   private final LinkedHashSet<Node> validDefineValueExpressions = new LinkedHashSet<>();
 
   private GlobalNamespace namespace;
+
+  private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
 
   // Warnings
   static final DiagnosticType UNKNOWN_DEFINE_WARNING = DiagnosticType.warning(
@@ -86,6 +100,11 @@ class ProcessDefines implements CompilerPass {
   static final DiagnosticType NON_CONST_DEFINE =
       DiagnosticType.error("JSC_NON_CONST_DEFINE", "@define {0} has already been set at {1}.");
 
+  static final DiagnosticType DEFINE_CALL_WITHOUT_ASSIGNMENT =
+      DiagnosticType.error(
+          "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
+          "The result of a goog.define call must be assigned as an isolated statement.");
+
   /** Create a pass that overrides define constants. */
   private ProcessDefines(Builder builder) {
     this.mode = builder.mode;
@@ -93,6 +112,7 @@ class ProcessDefines implements CompilerPass {
     this.registry = this.mode.check ? this.compiler.getTypeRegistry() : null;
     this.replacementValues = ImmutableMap.copyOf(builder.replacementValues);
     this.namespaceSupplier = builder.namespaceSupplier;
+    this.recognizeClosureDefines = builder.recognizeClosureDefines;
   }
 
   enum Mode {
@@ -115,6 +135,7 @@ class ProcessDefines implements CompilerPass {
     private final Map<String, Node> replacementValues = new LinkedHashMap<>();
     private Mode mode;
     private Supplier<GlobalNamespace> namespaceSupplier;
+    private boolean recognizeClosureDefines = true;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -140,6 +161,11 @@ class ProcessDefines implements CompilerPass {
       return this;
     }
 
+    Builder setRecognizeClosureDefines(boolean recognizeClosureDefines) {
+      this.recognizeClosureDefines = recognizeClosureDefines;
+      return this;
+    }
+
     ProcessDefines build() {
       return new ProcessDefines(this);
     }
@@ -149,7 +175,7 @@ class ProcessDefines implements CompilerPass {
   public void process(Node externs, Node root) {
     this.initNamespace(externs, root);
     this.collectDefines();
-    this.reportDefineUnknownDeclarations(root);
+    this.reportInvalidDefineLocations(root);
     this.collectValidDefineValueExpressions();
     this.validateDefineDeclarations();
     this.overrideDefines();
@@ -178,9 +204,7 @@ class ProcessDefines implements CompilerPass {
           continue;
         }
 
-        String defineName = define.defineName;
-
-        Node inputValue = this.replacementValues.get(defineName);
+        Node inputValue = this.getReplacementForDefine(define);
         if (inputValue == null || inputValue == define.value) {
           continue;
         }
@@ -213,6 +237,20 @@ class ProcessDefines implements CompilerPass {
     }
   }
 
+  @Nullable
+  private Node getReplacementForDefine(Define define) {
+    Node replacementFromFlags = this.replacementValues.get(define.defineName);
+    if (replacementFromFlags != null) {
+      return replacementFromFlags;
+    }
+
+    if (isGoogDefineCall(define.value) && define.value.getChildCount() == 3) {
+      // Return the second argument of goog.define('name', false);
+      return define.value.getChildAtIndex(2);
+    }
+    return null;
+  }
+
   /**
    * Only defines of literal number, string, or boolean are supported.
    */
@@ -231,11 +269,19 @@ class ProcessDefines implements CompilerPass {
       }
 
       int totalSets = name.getTotalSets();
+      Node valueParent = getValueParentForDefine(declaration);
+      Node value = valueParent != null ? valueParent.getLastChild() : null;
 
-      String defineName = firstNonNull(declaration.getNode().getDefineName(), name.getFullName());
+      final String defineName;
+      if (this.isGoogDefineCall(value) && this.verifyGoogDefine(value)) {
+        Node nameNode = value.getSecondChild();
+        defineName = nameNode.getString();
+      } else {
+        defineName = name.getFullName();
+      }
       Define existingDefine =
           this.defineByDefineName.putIfAbsent(
-              defineName, createDefine(defineName, name, declaration));
+              defineName, new Define(defineName, name, declaration, valueParent, value));
 
       if (existingDefine != null) {
         declaration = existingDefine.declaration;
@@ -287,9 +333,7 @@ class ProcessDefines implements CompilerPass {
     return null;
   }
 
-  private static Define createDefine(String defineName, Name name, Ref declaration) {
-    checkState(declaration.isSet());
-
+  private static Node getValueParentForDefine(Ref declaration) {
     // Note: this may be a NAME, a GETPROP, or even STRING_KEY or GETTER_DEF. We only care
     // about the first two, in which case the parent should be either VAR/CONST or ASSIGN.
     // We could accept STRING_KEY (i.e. `@define` on a property in an object literal), but
@@ -297,23 +341,18 @@ class ProcessDefines implements CompilerPass {
     Node declarationNode = declaration.getNode();
     Node declarationParent = declarationNode.getParent();
 
-    Node valueParent = null;
-    Node value = null;
     if (declarationParent.isVar() || declarationParent.isConst()) {
       // Simple case of `var` or `const`. There's no reason to support `let` here, and we
       // don't explicitly check that it's not `let` anywhere else.
       checkState(declarationNode.isName(), declarationNode);
-      valueParent = declarationNode;
-      value = declarationNode.getFirstChild();
+      return declarationNode;
     } else if (declarationParent.isAssign() && declarationNode.isFirstChildOf(declarationParent)) {
       // Assignment. Must either assign to a qualified name, or else be a different ref than
       // the declaration to not emit an error (we don't allow assignment before it's
       // declared).
-      valueParent = declarationParent;
-      value = declarationParent.getLastChild();
+      return declarationParent;
     }
-
-    return new Define(defineName, name, declaration, valueParent, value);
+    return null;
   }
 
   private void collectValidDefineValueExpressions() {
@@ -388,7 +427,8 @@ class ProcessDefines implements CompilerPass {
     }
   }
 
-  private void reportDefineUnknownDeclarations(Node root) {
+  /** Checks for misplaced @define and goog.define calls */
+  private void reportInvalidDefineLocations(Node root) {
     if (!this.mode.check) {
       return;
     }
@@ -406,6 +446,10 @@ class ProcessDefines implements CompilerPass {
           JSDocInfo jsdoc = n.getJSDocInfo();
           if (jsdoc != null && jsdoc.isDefine() && this.knownDefineJsdocs.add(jsdoc)) {
             compiler.report(JSError.make(n, INVALID_DEFINE_LOCATION));
+          }
+
+          if (isGoogDefineCall(n) && this.knownGoogDefineCalls.add(n)) {
+            verifyGoogDefine(n);
           }
         });
   }
@@ -489,6 +533,10 @@ class ProcessDefines implements CompilerPass {
               : TernaryValue.UNKNOWN;
         }
         break;
+
+        // Allow goog.define() calls.
+      case CALL:
+        return TernaryValue.forBoolean(isGoogDefineCall(val));
       default:
         break;
     }
@@ -550,5 +598,112 @@ class ProcessDefines implements CompilerPass {
       this.valueParent = valueParent;
       this.value = value;
     }
+  }
+
+  private boolean isGoogDefineCall(Node node) {
+    if (!this.recognizeClosureDefines) {
+      return false;
+    }
+
+    if (node == null || !node.isCall()) {
+      return false;
+    }
+    return node.getFirstChild().matchesQualifiedName(GOOG_DEFINE);
+  }
+
+  /**
+   * Verifies that a goog.define method call has exactly two arguments, with the first a string
+   * literal whose contents is a valid JS qualified name. Reports a compile error if it doesn't.
+   *
+   * @return Whether the argument checked out okay
+   */
+  private boolean verifyGoogDefine(Node callNode) {
+    this.knownGoogDefineCalls.add(callNode);
+
+    Node parent = callNode.getParent();
+    Node methodName = callNode.getFirstChild();
+    Node args = callNode.getSecondChild();
+
+    // Calls to goog.define must be in the global hoist scope after module rewriting
+    if (NodeUtil.getEnclosingFunction(callNode) != null) {
+      compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+      return false;
+    }
+
+    // It is an error for goog.define to show up anywhere except immediately after =.
+    if (parent.isAssign() && parent.getParent().isExprResult()) {
+      parent = parent.getParent();
+    } else if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
+      parent = parent.getParent();
+    } else {
+      compiler.report(JSError.make(methodName.getParent(), DEFINE_CALL_WITHOUT_ASSIGNMENT));
+      return false;
+    }
+
+    // Verify first arg
+    Node arg = args;
+    if (!verifyNotNull(methodName, arg) || !verifyOfType(methodName, arg, Token.STRING)) {
+      return false;
+    }
+
+    // Verify second arg
+    arg = arg.getNext();
+    if (!args.isFromExterns()
+        && (!verifyNotNull(methodName, arg) || !verifyIsLast(methodName, arg))) {
+      return false;
+    }
+
+    String name = args.getString();
+    if (!NodeUtil.isValidQualifiedName(
+        compiler.getOptions().getLanguageIn().toFeatureSet(), name)) {
+      compiler.report(JSError.make(args, INVALID_DEFINE_NAME_ERROR, name));
+      return false;
+    }
+
+    JSDocInfo info = (parent.isExprResult() ? parent.getFirstChild() : parent).getJSDocInfo();
+    if (info == null || !info.isDefine()) {
+      compiler.report(JSError.make(parent, MISSING_DEFINE_ANNOTATION));
+      return false;
+    }
+    return true;
+  }
+
+  /** @return Whether the argument checked out okay */
+  private boolean verifyNotNull(Node methodName, Node arg) {
+    if (arg == null) {
+      compiler.report(
+          JSError.make(
+              methodName,
+              ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR,
+              methodName.getQualifiedName()));
+      return false;
+    }
+    return true;
+  }
+
+  /** @return Whether the argument checked out okay */
+  private boolean verifyIsLast(Node methodName, Node arg) {
+    if (arg.getNext() != null) {
+      compiler.report(
+          JSError.make(
+              methodName,
+              ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR,
+              methodName.getQualifiedName()));
+      return false;
+    }
+    return true;
+  }
+
+  /** @return Whether the argument checked out okay */
+  private boolean verifyOfType(Node methodName, Node arg, Token desiredType) {
+    if (arg.getToken() != desiredType) {
+      compiler.report(
+          JSError.make(
+              methodName,
+              ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR,
+              methodName.getQualifiedName()));
+      return false;
+    }
+    return true;
   }
 }

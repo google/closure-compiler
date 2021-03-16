@@ -54,11 +54,24 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ClosureIntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_BOILERPLATE =
-      "/** @define {boolean} */ var COMPILED = false; var goog = {};"
-      + "goog.exportSymbol = function() {};";
+      lines(
+          "/** @define {boolean} */ var COMPILED = false;",
+          "/** @const */",
+          "var goog = {};",
+          "/**",
+          " * @param {string} name",
+          " * @param {T} defaultValue",
+          " * @return {T}",
+          " * @template T",
+          " */",
+          "goog.define = function(name, defaultValue) {};",
+          "goog.exportSymbol = function() {};");
 
   private static final String CLOSURE_COMPILED =
-      "var COMPILED = true; var goog$exportSymbol = function() {};";
+      lines(
+          "var COMPILED = true;",
+          "var goog$define = function(name,defaultValue){};",
+          "var goog$exportSymbol = function() {};");
 
   @Test
   public void testProcessDefinesInModule() {
@@ -604,6 +617,34 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testGoogDefine_typeMismatch() {
+    String code =
+        CLOSURE_BOILERPLATE + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', 0);";
+
+    CompilerOptions options = createCompilerOptions();
+
+    options.setClosurePass(true);
+    options.setDefineToBooleanLiteral("FLAG_XYZ", false);
+    options.setCheckTypes(true);
+
+    test(options, code, DiagnosticGroups.CHECK_TYPES);
+  }
+
+  @Test
+  public void testGoogDefine_missingDefineAnnotationErrors_checksOnly() {
+    String code = CLOSURE_BOILERPLATE + "var FLAG = goog.define('FLAG_XYZ', false);";
+
+    CompilerOptions options = createCompilerOptions();
+
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+
+    Compiler lastCompiler = compile(options, code);
+    assertThat(lastCompiler.getErrors()).hasSize(1);
+    assertThat(lastCompiler.getErrors().get(0).getDescription()).contains("@define");
+  }
+
+  @Test
   public void testGoogDefine2() {
     String code =
         CLOSURE_BOILERPLATE
@@ -669,12 +710,19 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         lines(
             "var COMPILED=true;",
             "var goog = {};",
+            "goog.define = function(name,defaultValue) {};",
             "goog.exportSymbol=function() {};",
             "var Foo = function() {};",
             "var x = new Foo;"));
-    test(options,
+    test(
+        options,
         CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
+        lines(
+            "var COMPILED=true;",
+            "var goog = {};",
+            "goog.define = function(name,defaultValue) {};",
+            "goog.exportSymbol=function() {};",
+            "var Foo={a:3}"));
   }
 
   @Test

@@ -21,16 +21,11 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_DEFINES_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.DEFINE_CALL_WITHOUT_ASSIGNMENT;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_DEFINE_NAME_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_DEFINE_ANNOTATION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +48,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ProcessClosurePrimitives(compiler, /* preprocessorSymbolTable= */ null);
+    return new ProcessClosurePrimitives(compiler);
   }
 
   @Test
@@ -393,49 +388,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDefineCases() {
-    String jsdoc = "/** @define {number} */\n";
-    test(jsdoc + "var name = goog.define('name', 1);", jsdoc + "var name = 1");
-    test(jsdoc + "const name = goog.define('name', 1);", jsdoc + "const name = 1");
-    test(jsdoc + "ns.name = goog.define('ns.name', 1);", jsdoc + "ns.name = 1");
-  }
-
-  @Test
-  public void testDefineErrorCases() {
-    String jsdoc = "/** @define {number} */\n";
-    testError("const name = goog.define('name', 1);", MISSING_DEFINE_ANNOTATION);
-    testError(jsdoc + "goog.define('name', 1);", DEFINE_CALL_WITHOUT_ASSIGNMENT);
-    testError(jsdoc + "name.two = goog.define('name.2', 1);", INVALID_DEFINE_NAME_ERROR);
-    testError(jsdoc + "const x = goog.define();", NULL_ARGUMENT_ERROR);
-    testError(jsdoc + "const value = goog.define('value');", NULL_ARGUMENT_ERROR);
-    testError(jsdoc + "const five = goog.define(5);", INVALID_ARGUMENT_ERROR);
-
-    testError(jsdoc + "templateName = goog.define(`templateName`, 1);", INVALID_ARGUMENT_ERROR);
-    testError(jsdoc + "templateName = goog.define(`${template}Name`, 1);", INVALID_ARGUMENT_ERROR);
-  }
-
-  @Test
-  public void testInvalidDefine() {
-    testError(
-        "goog.provide('a.b'); var x = x || goog.define('goog.DEBUG', true);",
-        DEFINE_CALL_WITHOUT_ASSIGNMENT);
-    testError(
-        "goog.provide('a.b'); function f() { const debug = goog.define('goog.DEBUG', true); }",
-        INVALID_CLOSURE_CALL_SCOPE_ERROR);
-  }
-
-  @Test
-  public void testValidDefine() {
-    testNoWarning(
-        lines(
-            "goog.module('a');",
-            "/** @define {boolean} */",
-            "const DEBUG = goog.define('goog.DEBUG', true);"));
-    testNoWarning(
-        lines(
-            "goog.provide('b');",
-            "/** @define {boolean} */",
-            "goog.DEBUG = goog.define('goog.DEBUG', true);"));
+  public void testValidPrimitiveCalls() {
     testNoWarning(
         lines(
             "goog.module('c');", //

@@ -16,16 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,18 +32,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Performs some Closure-specific simplifications including rewriting goog.base, goog.addDependency.
  *
- * <p>Adds forwardDeclared and goog.defined names to the compiler.
+ * <p>Records forwardDeclared names in the internal compiler state.
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotSwapCompilerPass {
-
-  static final DiagnosticType NULL_ARGUMENT_ERROR = DiagnosticType.error(
-      "JSC_NULL_ARGUMENT_ERROR",
-      "method \"{0}\" called without an argument");
 
   static final DiagnosticType EXPECTED_OBJECTLIT_ERROR = DiagnosticType.error(
       "JSC_EXPECTED_OBJECTLIT_ERROR",
@@ -54,17 +48,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       DiagnosticType.error(
           "JSC_EXPECTED_STRING_ERROR", "method \"{0}\" expected a string argument");
 
-  static final DiagnosticType INVALID_ARGUMENT_ERROR = DiagnosticType.error(
-      "JSC_INVALID_ARGUMENT_ERROR",
-      "method \"{0}\" called with invalid argument");
-
   static final DiagnosticType INVALID_STYLE_ERROR = DiagnosticType.error(
       "JSC_INVALID_CSS_NAME_MAP_STYLE_ERROR",
       "Invalid CSS name map style {0}");
-
-  static final DiagnosticType TOO_MANY_ARGUMENTS_ERROR = DiagnosticType.error(
-      "JSC_TOO_MANY_ARGUMENTS_ERROR",
-      "method \"{0}\" called with more than one argument");
 
   static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
       "JSC_WEAK_NAMESPACE_TYPE",
@@ -83,14 +69,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   static final DiagnosticType INVALID_PROVIDE_ERROR = DiagnosticType.error(
       "JSC_INVALID_PROVIDE_ERROR",
       "\"{0}\" is not a valid {1} qualified name");
-
-  static final DiagnosticType INVALID_DEFINE_NAME_ERROR = DiagnosticType.error(
-      "JSC_INVALID_DEFINE_NAME_ERROR",
-      "\"{0}\" is not a valid JS identifier name");
-
-  static final DiagnosticType MISSING_DEFINE_ANNOTATION = DiagnosticType.error(
-      "JSC_INVALID_MISSING_DEFINE_ANNOTATION",
-      "Missing @define annotation");
 
   static final DiagnosticType XMODULE_REQUIRE_ERROR =
       DiagnosticType.warning(
@@ -114,11 +92,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   static final DiagnosticType CLOSURE_DEFINES_ERROR = DiagnosticType.error(
       "JSC_CLOSURE_DEFINES_ERROR",
       "Invalid CLOSURE_DEFINES definition");
-
-  static final DiagnosticType DEFINE_CALL_WITHOUT_ASSIGNMENT =
-      DiagnosticType.error(
-          "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
-          "The result of a goog.define call must be assigned as an isolated statement.");
 
   static final DiagnosticType INVALID_FORWARD_DECLARE =
       DiagnosticType.error("JSC_INVALID_FORWARD_DECLARE", "Malformed goog.forwardDeclare");
@@ -145,13 +118,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   private final Set<String> knownClosureSubclasses = new HashSet<>();
 
   private final Set<String> exportedVariables = new HashSet<>();
-  private final PreprocessorSymbolTable preprocessorSymbolTable;
-  private final List<Node> defineCalls = new ArrayList<>();
 
-  ProcessClosurePrimitives(
-      AbstractCompiler compiler, @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+  ProcessClosurePrimitives(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.preprocessorSymbolTable = preprocessorSymbolTable;
   }
 
   Set<String> getExportedVariableNames() {
@@ -162,35 +131,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   public void process(Node externs, Node root) {
     // Replace and validate other Closure primitives
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-
-    for (Node n : defineCalls) {
-      replaceGoogDefines(n);
-    }
-  }
-
-  /**
-   * @param n
-   */
-  private void replaceGoogDefines(Node n) {
-    Node parent = n.getParent();
-    String name = n.getSecondChild().getString();
-    Node value = n.getChildAtIndex(2).detach();
-
-    switch (parent.getToken()) {
-      case NAME:
-        parent.setDefineName(name);
-        n.replaceWith(value);
-        compiler.reportChangeToEnclosingScope(parent);
-        break;
-      case ASSIGN:
-        checkState(n == parent.getLastChild());
-        parent.getFirstChild().setDefineName(name);
-        n.replaceWith(value);
-        compiler.reportChangeToEnclosingScope(parent);
-        break;
-      default:
-        throw new IllegalStateException("goog.define outside of NAME, or ASSIGN");
-    }
   }
 
   @Override
@@ -239,9 +179,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // reporting the change when we actually do the replacement.
     String methodName = callee.getString();
     switch (methodName) {
-      case "define":
-        processDefineCall(t, call, call.getParent());
-        break;
       case "inherits":
         // Note: inherits is allowed in local scope
         processInheritsCall(call);
@@ -304,9 +241,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     if (!t.inGlobalHoistScope() && !t.inModuleScope()) {
       compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
-    } else if (!n.getParent().isExprResult()
-        && !t.inModuleScope()
-        && !"goog.define".equals(methodName)) {
+    } else if (!n.getParent().isExprResult() && !t.inModuleScope()) {
       // If the call is in the global hoist scope, but the result is used
       compiler.report(JSError.make(n, invalidAliasingError, GOOG + "." + methodName));
       return false;
@@ -343,20 +278,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
         return val.getFirstChild().isNumber();
       default:
         return false;
-    }
-  }
-
-  /** Handles a goog.define call. */
-  private void processDefineCall(NodeTraversal t, Node n, Node parent) {
-    Node left = n.getFirstChild();
-    Node args = left.getNext();
-    if (verifyDefine(t, parent, left, args)) {
-      Node nameNode = args;
-
-      maybeAddNameToSymbolTable(left);
-      maybeAddNameToSymbolTable(nameNode);
-
-      this.defineCalls.add(n);
     }
   }
 
@@ -696,64 +617,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
   }
 
-  /**
-   * Verifies that a goog.define method call has exactly two arguments, with the first a string
-   * literal whose contents is a valid JS qualified name. Reports a compile error if it doesn't.
-   *
-   * @return Whether the argument checked out okay
-   */
-  private boolean verifyDefine(NodeTraversal t, Node parent, Node methodName, Node args) {
-    // Calls to goog.define must be in the global hoist scope.  This is copied from
-    // validate(Un)aliasablePrimitiveCall.
-    // TODO(sdh): loosen this restriction if the results are assigned?
-    if (!compiler.getOptions().shouldPreserveGoogModule()
-        && !t.inGlobalHoistScope()
-        && !t.inModuleScope()) {
-      compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
-      return false;
-    }
-
-    // It is an error for goog.define to show up anywhere except immediately after =.
-    if (parent.isAssign() && parent.getParent().isExprResult()) {
-      parent = parent.getParent();
-    } else if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
-      parent = parent.getParent();
-    } else {
-      compiler.report(JSError.make(methodName.getParent(), DEFINE_CALL_WITHOUT_ASSIGNMENT));
-      return false;
-    }
-
-    // Verify first arg
-    Node arg = args;
-    if (!verifyNotNull(methodName, arg) || !verifyOfType(methodName, arg, Token.STRING)) {
-      return false;
-    }
-
-    // Verify second arg
-    arg = arg.getNext();
-    if (!args.isFromExterns()
-        && (!verifyNotNull(methodName, arg) || !verifyIsLast(methodName, arg))) {
-      return false;
-    }
-
-    String name = args.getString();
-    if (!NodeUtil.isValidQualifiedName(
-        compiler.getOptions().getLanguageIn().toFeatureSet(), name)) {
-      compiler.report(JSError.make(args, INVALID_DEFINE_NAME_ERROR, name));
-      return false;
-    }
-
-    JSDocInfo info = (parent.isExprResult() ? parent.getFirstChild() : parent).getJSDocInfo();
-    if (info == null || !info.isDefine()) {
-      compiler.report(JSError.make(parent, MISSING_DEFINE_ANNOTATION));
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Process a goog.addDependency() call and record any forward declarations.
-   */
+  /** Process a goog.addDependency() call and record any forward declarations. */
   private void processAddDependency(Node n, Node parent) {
     CodingConvention convention = compiler.getCodingConvention();
     List<String> typeDecls =
@@ -800,35 +664,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
   }
 
-  /** @return Whether the argument checked out okay */
-  private boolean verifyNotNull(Node methodName, Node arg) {
-    if (arg == null) {
-      compiler.report(JSError.make(methodName, NULL_ARGUMENT_ERROR, methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
-  /** @return Whether the argument checked out okay */
-  private boolean verifyOfType(Node methodName, Node arg, Token desiredType) {
-    if (arg.getToken() != desiredType) {
-      compiler.report(
-          JSError.make(methodName, INVALID_ARGUMENT_ERROR, methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
-  /** @return Whether the argument checked out okay */
-  private boolean verifyIsLast(Node methodName, Node arg) {
-    if (arg.getNext() != null) {
-      compiler.report(
-          JSError.make(methodName, TOO_MANY_ARGUMENTS_ERROR, methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
   /**
    * Verifies that setCssNameMapping is called with the correct methods.
    *
@@ -853,13 +688,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
     return true;
-  }
-
-  /** Add the given qualified name node to the symbol table. */
-  private void maybeAddNameToSymbolTable(Node name) {
-    if (preprocessorSymbolTable != null) {
-      preprocessorSymbolTable.addReference(name);
-    }
   }
 
   private void checkPropertyRenameCall(Node call) {

@@ -36,6 +36,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   private final Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
   private ProcessDefines.Mode mode;
+  private boolean recognizeClosureDefines = true;
 
   @Override
   @Before
@@ -552,6 +553,73 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogDefineAllowedFormats_notOverridden() {
+    String jsdoc = "/** @define {number} */\n";
+    test(jsdoc + "var name = goog.define('name', 1);", jsdoc + "var name = 1");
+    test(jsdoc + "var name = goog.define('otherName', 1);", jsdoc + "var name = 1");
+    test(jsdoc + "const name = goog.define('name', 1);", jsdoc + "const name = 1");
+    test(
+        lines(
+            "const ns = {};", //
+            jsdoc + "ns.name = goog.define('ns.name', 1);"),
+        lines(
+            "const ns = {};", //
+            jsdoc + "ns.name = 1;"));
+  }
+
+  @Test
+  public void testGoogDefine_invalidCallFormats() {
+    mode = ProcessDefines.Mode.CHECK;
+
+    String jsdoc = "/** @define {number} */\n";
+    testError("const name = goog.define('name', 1);", ProcessDefines.MISSING_DEFINE_ANNOTATION);
+    testError(
+        lines("const name = {};", jsdoc + "name.two = goog.define('name.2', 1);"),
+        ProcessDefines.INVALID_DEFINE_NAME_ERROR);
+    testError(jsdoc + "const x = goog.define();", ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR);
+    testError(
+        jsdoc + "const value = goog.define('value');", ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR);
+    testError(
+        jsdoc + "const five = goog.define(5);", ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR);
+    testError(
+        jsdoc + "const five = goog.define('FOO', 5, 6);",
+        ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR);
+
+    testError(
+        jsdoc + "const templateName = goog.define(`templateName`, 1);",
+        ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR);
+    testError(
+        jsdoc + "const templateName = goog.define(`${template}Name`, 1);",
+        ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR);
+  }
+
+  @Test
+  public void testGoogDefine_invalidCallLocation() {
+    mode = ProcessDefines.Mode.CHECK;
+
+    test(srcs("goog.define('name', 1);"), error(ProcessDefines.DEFINE_CALL_WITHOUT_ASSIGNMENT));
+    test(
+        srcs("/** @define {number} */ goog.define('name', 1);"),
+        error(ProcessDefines.DEFINE_CALL_WITHOUT_ASSIGNMENT),
+        error(ProcessDefines.INVALID_DEFINE_LOCATION));
+    testError(
+        "var x = x || goog.define('goog.DEBUG', true);",
+        ProcessDefines.DEFINE_CALL_WITHOUT_ASSIGNMENT);
+    testError(
+        "function f() { const debug = goog.define('goog.DEBUG', true); }",
+        ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR);
+  }
+
+  @Test
+  public void testGoogDefine_enabledByRecognizeClosureDefines() {
+    mode = ProcessDefines.Mode.CHECK;
+    test(srcs("goog.define('name', 1);"), error(ProcessDefines.DEFINE_CALL_WITHOUT_ASSIGNMENT));
+
+    this.recognizeClosureDefines = false;
+    testSame("goog.define('name', 1);");
+  }
+
+  @Test
   public void testOverrideAfterAlias() {
     testError(
         "var x; /** @define {boolean} */var DEF=true; x=DEF; DEF=false;",
@@ -672,12 +740,12 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node js) {
-      new ProcessClosurePrimitives(compiler, null).process(externs, js);
       namespace = new GlobalNamespace(compiler, externs, js);
       new ProcessDefines.Builder(compiler)
           .putReplacements(overrides)
           .setMode(mode)
           .injectNamespace(() -> namespace)
+          .setRecognizeClosureDefines(recognizeClosureDefines)
           .build()
           .process(externs, js);
     }

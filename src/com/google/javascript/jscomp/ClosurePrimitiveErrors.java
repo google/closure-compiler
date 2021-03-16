@@ -80,4 +80,15 @@ final class ClosurePrimitiveErrors {
           "JSC_INVALID_CLOSURE_CALL_ERROR",
           "Closure primitive methods (goog.provide, goog.require, goog.define, etc) must be called "
               + "at file scope.");
+
+  static final DiagnosticType TOO_MANY_ARGUMENTS_ERROR =
+      DiagnosticType.error(
+          "JSC_TOO_MANY_ARGUMENTS_ERROR", "method \"{0}\" called with more than one argument");
+
+  static final DiagnosticType NULL_ARGUMENT_ERROR =
+      DiagnosticType.error("JSC_NULL_ARGUMENT_ERROR", "method \"{0}\" called without an argument");
+
+  static final DiagnosticType INVALID_ARGUMENT_ERROR =
+      DiagnosticType.error(
+          "JSC_INVALID_ARGUMENT_ERROR", "method \"{0}\" called with invalid argument");
 }

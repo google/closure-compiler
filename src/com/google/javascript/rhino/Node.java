@@ -203,8 +203,6 @@ public class Node implements Serializable {
     // Record the type associated with a @typedef to enable looking up typedef in the AST possible
     // without saving the type scope.
     TYPEDEF_TYPE,
-    // Original name of a goog.define call.
-    DEFINE_NAME,
     // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the start of an
     // optional chain.
     START_OF_OPT_CHAIN,
@@ -2879,16 +2877,6 @@ public class Node implements Serializable {
    */
   public final boolean isYieldAll() {
     return getBooleanProp(Prop.YIELD_ALL);
-  }
-
-  /** Returns any goog.define'd name corresponding to this NAME or GETPROP node. */
-  public final String getDefineName() {
-    return (String) getProp(Prop.DEFINE_NAME);
-  }
-
-  /** Sets the goog.define name for a NAME or GETPROP node. */
-  public final void setDefineName(String name) {
-    putProp(Prop.DEFINE_NAME, name);
   }
 
   /** Indicates that there was a trailing comma in this list */

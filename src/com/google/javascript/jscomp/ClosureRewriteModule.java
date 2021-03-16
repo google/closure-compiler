@@ -1751,7 +1751,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
         this.astFactory.createQName(this.globalTypedScope, newString).srcrefTree(nameNode);
-    newQualifiedName.setDefineName(nameNode.getDefineName());
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
     if (replaced) {

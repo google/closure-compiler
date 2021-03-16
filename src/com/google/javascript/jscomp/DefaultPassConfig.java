@@ -1251,9 +1251,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                final ProcessClosurePrimitives pass =
-                    new ProcessClosurePrimitives(
-                        compiler, preprocessorSymbolTableFactory.getInstanceOrNull());
+                final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(compiler);
 
                 return new HotSwapCompilerPass() {
                   @Override
@@ -1960,6 +1958,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .putReplacements(options.getDefineReplacements())
                     .setMode(mode)
                     .injectNamespace(() -> namespaceForChecks)
+                    .setRecognizeClosureDefines(compiler.getOptions().closurePass)
                     .build())
         .setFeatureSetForChecks()
         .build();
