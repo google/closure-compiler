@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_DEFINES_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
@@ -396,6 +397,31 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         lines(
             "goog.module('d');", //
             "goog.addDependency('C.D');"));
+  }
+
+  @Test
+  public void testDefineValues() {
+    testSame("var CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSame("var CLOSURE_DEFINES = {'FOO': true};");
+    testSame("var CLOSURE_DEFINES = {'FOO': false};");
+    testSame("var CLOSURE_DEFINES = {'FOO': 1};");
+    testSame("var CLOSURE_DEFINES = {'FOO': 0xABCD};");
+    testSame("var CLOSURE_DEFINES = {'FOO': -1};");
+    testSame("let CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSame("const CLOSURE_DEFINES = {'FOO': 'string'};");
+  }
+
+  @Test
+  public void testDefineValuesErrors() {
+    testError("var CLOSURE_DEFINES = {'FOO': a};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': 0+1};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': 'value' + 'value'};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': !true};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': -true};", CLOSURE_DEFINES_ERROR);
+
+    testError("var CLOSURE_DEFINES = {SHORTHAND};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'TEMPLATE': `template`};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};", CLOSURE_DEFINES_ERROR);
   }
 
   @Test

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
@@ -64,8 +63,8 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   /**
-   * Helper for tests that expects definitions to remain unchanged, such that {@code definitions+js}
-   * is converted to {@code definitions+expected}.
+   * Helper for tests that expects definitions to remain unchanged, such
+   * that {@code definitions+js} is converted to {@code definitions+expected}.
    */
   private void testWithPrefix(String definitions, String js, String expected) {
     test(definitions + js, definitions + expected);
@@ -737,125 +736,6 @@ public final class ProcessDefinesTest extends CompilerTestCase {
                 "",
                 "var A = false;")),
         error(ProcessDefines.NON_CONST_DEFINE));
-  }
-
-  @Test
-  public void testClosureDefineValues_replacements() {
-    mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const FOO = 'original';"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const FOO = 'closureDefault';"));
-
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': true};", "/** @define {boolean} */ const FOO = false;"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': true};", //
-            "/** @define {boolean} */ const FOO = true;"));
-
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': false};", "/** @define {boolean} */ const FOO = false;"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': false};", //
-            "/** @define {boolean} */ const FOO = false;"));
-
-    test(
-        lines("var CLOSURE_DEFINES = {'FOO': 1};", "/** @define {number} */ const FOO = 2;"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 1};", //
-            "/** @define {number} */ const FOO = 1;"));
-
-    test(
-        lines("var CLOSURE_DEFINES = {'FOO': 0xABCD};", "/** @define {number} */ const FOO = 2;"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 0xABCD};", //
-            "/** @define {number} */ const FOO = 0xABCD;"));
-  }
-
-  @Test
-  public void testClosureDefineValues_namespacedReplacement() {
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'a.b': 'closureDefault'};",
-            "const a = {};",
-            "/** @define {string} */ a.b = 'original';"),
-        lines(
-            "var CLOSURE_DEFINES = {'a.b': 'closureDefault'};",
-            "const a = {};",
-            "/** @define {string} */ a.b = 'closureDefault';"));
-  }
-
-  @Test
-  public void testClosureDefineValues_replacementWithGoogDefine() {
-    mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const f = goog.define('FOO', 'original');"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const f = 'closureDefault';"));
-  }
-
-  @Test
-  public void testClosureDefineValues_replacementWithOverriddenDefine() {
-    mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
-    overrides.put("FOO", IR.string("override"));
-    test(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const f = goog.define('FOO', 'original');"),
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'closureDefault'};",
-            "/** @define {string} */ const f = 'override';"));
-  }
-
-  @Test
-  public void testClosureDefineValues_checkOnlyDoesntModifyAst() {
-    mode = ProcessDefines.Mode.CHECK;
-    testSame(
-        lines(
-            "var CLOSURE_DEFINES = {'FOO': 'string'};",
-            "/** @define {string} */ const f = goog.define('FOO', 'tmp');"));
-  }
-
-  @Test
-  public void testClosureDefines_unknownDefineErrors() {
-    mode = ProcessDefines.Mode.CHECK;
-    test(srcs("var CLOSURE_DEFINES = {'FOO': 0};"), warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
-  }
-
-  @Test
-  public void testClosureDefines_valuesErrors() {
-    mode = ProcessDefines.Mode.CHECK;
-    testError("var CLOSURE_DEFINES = {'FOO': a};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError("var CLOSURE_DEFINES = {'FOO': 0+1};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError(
-        "var CLOSURE_DEFINES = {'FOO': 'value' + 'value'};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError("var CLOSURE_DEFINES = {'FOO': !true};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError("var CLOSURE_DEFINES = {'FOO': -true};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-
-    testError("var CLOSURE_DEFINES = {SHORTHAND};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError(
-        "var CLOSURE_DEFINES = {'TEMPLATE': `template`};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-    testError(
-        "var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};",
-        ProcessDefines.CLOSURE_DEFINES_ERROR);
-  }
-
-  @Test
-  public void testClosureDefinesErrors_enabledByRecognizeClosureDefines() {
-    mode = ProcessDefines.Mode.CHECK;
-
-    testError("var CLOSURE_DEFINES = {'FOO': a};", ProcessDefines.CLOSURE_DEFINES_ERROR);
-
-    this.recognizeClosureDefines = false;
-    testSame("var CLOSURE_DEFINES = {'FOO': a};");
   }
 
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {

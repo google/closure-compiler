@@ -2500,6 +2500,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private CompilerInput synthesizedExternsInputAtEnd = null;
   private CompilerInput synthesizedCodeInput = null;
 
+  private ImmutableMap<String, Node> defaultDefineValues = ImmutableMap.of();
+
   @Override
   void addChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.add(handler);
@@ -3439,6 +3441,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  void setDefaultDefineValues(ImmutableMap<String, Node> values) {
+    this.defaultDefineValues = values;
+  }
+
+  @Override
+  ImmutableMap<String, Node> getDefaultDefineValues() {
+    return this.defaultDefineValues;
+  }
+
+  @Override
   public ModuleLoader getModuleLoader() {
     return moduleLoader;
   }
@@ -3508,6 +3520,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<String, Integer> cssNames;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
+    private final ImmutableMap<String, Node> defaultDefineValues;
     private final Map<String, Object> annotationMap;
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
@@ -3536,6 +3549,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.cssNames = compiler.cssNames;
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
+      this.defaultDefineValues = checkNotNull(compiler.defaultDefineValues);
       this.annotationMap = checkNotNull(compiler.annotationMap);
       this.inputSourceMaps = compiler.inputSourceMaps;
       this.changeStamp = compiler.changeStamp;
@@ -3624,6 +3638,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     stringMap = null;
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
+    defaultDefineValues = checkNotNull(compilerState.defaultDefineValues);
     annotationMap = checkNotNull(compilerState.annotationMap);
     inputSourceMaps = compilerState.inputSourceMaps;
     changeStamp = compilerState.changeStamp;

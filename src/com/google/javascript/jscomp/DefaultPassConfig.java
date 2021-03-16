@@ -1953,6 +1953,7 @@ public final class DefaultPassConfig extends PassConfig {
         .setInternalFactory(
             (compiler) ->
                 new ProcessDefines.Builder(compiler)
+                    .putReplacements(compiler.getDefaultDefineValues())
                     .putReplacements(getAdditionalReplacements(options))
                     .putReplacements(options.getDefineReplacements())
                     .setMode(mode)
