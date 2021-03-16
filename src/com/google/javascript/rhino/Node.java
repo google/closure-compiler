@@ -3607,12 +3607,19 @@ public class Node implements Serializable {
     return this.token == Token.YIELD;
   }
 
+  private static final Token[] TOKEN_VALUES = createTokenValues();
+
+  private static Token[] createTokenValues() {
+    Token[] values = Token.values();
+    checkState(values.length < Byte.MAX_VALUE - Byte.MIN_VALUE);
+    return values;
+  }
+
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(java.io.ObjectOutputStream out) throws Exception {
     // Do not call out.defaultWriteObject() as all the fields are transient and this class does not
     // have a superclass.
 
-    checkState(Token.values().length < Byte.MAX_VALUE - Byte.MIN_VALUE);
     out.writeByte(token.ordinal());
 
     writeEncodedInt(out, sourcePosition);
@@ -3635,7 +3642,7 @@ public class Node implements Serializable {
     // Do not call in.defaultReadObject() as all the fields are transient and this class does not
     // have a superclass.
 
-    token = Token.values()[in.readUnsignedByte()];
+    token = TOKEN_VALUES[in.readUnsignedByte()];
     sourcePosition = readEncodedInt(in);
     length = readEncodedInt(in);
 
