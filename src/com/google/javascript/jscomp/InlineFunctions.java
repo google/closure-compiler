@@ -97,7 +97,7 @@ class InlineFunctions implements CompilerPass {
     // Method call decomposition creates new call nodes after all the analysis
     // is done, which would cause such calls to function to be left behind after
     // the function itself is removed.  The function inliner need to be made
-    // aware of these new calls in order to enble it.
+    // aware of these new calls in order to enable it.
 
     this.functionArgumentInjector = new FunctionArgumentInjector(compiler.getAstAnalyzer());
     this.injector =

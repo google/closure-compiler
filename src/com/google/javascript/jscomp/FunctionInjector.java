@@ -335,7 +335,7 @@ class FunctionInjector {
 
   /**
    * Inline a function into the call site. Note that this unsafe version doesn't verify if the AST
-   * is normalized. You should use {@link inline} instead, unless you are 100% certain that the bit
+   * is normalized. You should use {@link #inline} instead, unless you are 100% certain that the bit
    * of code you're inlining is safe without being normalized first.
    */
   Node unsafeInline(Reference ref, String fnName, Node fnNode) {

@@ -3449,6 +3449,80 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void methodCallOnThisIsDecomposed() {
+    test(
+        lines(
+            "function foo(x) {", //
+            "  qux();", // Something with a side-effect.
+            "  return x;",
+            "}",
+            "",
+            "class C {",
+            "  method() {",
+            "    this.privateMethod(foo(arg));",
+            "  }",
+            "}",
+            ""),
+        lines(
+            "class C {",
+            "  method() {",
+            "    var JSCompiler_temp_const$jscomp$0 = this.privateMethod",
+            "    var JSCompiler_inline_result$jscomp$1;",
+            "    {",
+            "      var x$jscomp$inline_2 = arg;",
+            "      qux();",
+            "      JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2;",
+            "    }",
+            "    JSCompiler_temp_const$jscomp$0.call(",
+            "        this,",
+            "        JSCompiler_inline_result$jscomp$1);",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void methodCallOnSuperIsDecomposed() {
+    test(
+        lines(
+            "function foo(x) {", //
+            "  qux();", // Something with a side-effect.
+            "  return x;",
+            "}",
+            "",
+            "class B {",
+            "  privateMethod(y) {}",
+            "}",
+            "",
+            "class C extends B {",
+            "  method() {",
+            "    super.privateMethod(foo(arg));",
+            "  }",
+            "}",
+            ""),
+        lines(
+            "class B {",
+            "  privateMethod(y) {}",
+            "}",
+            "",
+            "class C extends B {",
+            "  method() {",
+            "    var JSCompiler_temp_const$jscomp$0 = super.privateMethod;",
+            "    var JSCompiler_inline_result$jscomp$1",
+            "    {",
+            "      var x$jscomp$inline_2 = arg;",
+            "      qux();",
+            "      JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2;",
+            "    }",
+            "    JSCompiler_temp_const$jscomp$0.call(",
+            "        this,",
+            "        JSCompiler_inline_result$jscomp$1);",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
   public void methodCallWithNestedCallIsInlined() {
     this.assumeStrictThis = true;
     test(

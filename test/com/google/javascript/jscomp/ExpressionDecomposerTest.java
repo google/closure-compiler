@@ -1727,11 +1727,11 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testCannotDecomposeSuperMethodCall() {
     helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE,
+        DecompositionType.DECOMPOSABLE,
         "class A extends B { fn() { super.method(foo()) } }",
         exprMatchesStr("foo()"));
     helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE,
+        DecompositionType.DECOMPOSABLE,
         "class A extends B { fn() { super['method'](foo()) } }",
         exprMatchesStr("foo()"));
   }

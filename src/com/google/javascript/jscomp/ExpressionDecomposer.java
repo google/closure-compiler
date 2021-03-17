@@ -743,17 +743,27 @@ class ExpressionDecomposer {
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
     checkArgument(NodeUtil.isNormalGet(getExprNode), getExprNode);
-    Node thisVarNode = extractExpression(getExprNode.getFirstChild(), state.extractBeforeStatement);
-    state.extractBeforeStatement = thisVarNode;
+    final Node origThisValue = getExprNode.getFirstChild();
+    final Node functionNameNode = getVarNode.getFirstChild().cloneNode();
+    final Node receiverNode;
 
-    // Rewrite the CALL expression.
-    Node thisNameNode = thisVarNode.getFirstChild();
-    Node functionNameNode = getVarNode.getFirstChild();
+    if (origThisValue.isThis()) {
+      // No need to create a variable for `this`, just clone it.
+      receiverNode = origThisValue.cloneNode();
+    } else if (origThisValue.isSuper()) {
+      // Original callee was like `super.prop(args)`.
+      // The correct way to call the value `super.prop` from a temporary variable is
+      // `tmpVar.call(this, args)`, so just create a `this` here.
+      receiverNode = astFactory.createThis(origThisValue.getJSType()).srcref(origThisValue);
+    } else {
+      final Node thisVarNode = extractExpression(origThisValue, state.extractBeforeStatement);
+      state.extractBeforeStatement = thisVarNode;
+      receiverNode = thisVarNode.getFirstChild().cloneNode();
+    }
 
     // CALL
-    //   GETPROP
+    //   GETPROP "call"
     //     functionName
-    //     "call"
     //   thisName
     //   original-parameter1
     //   original-parameter2
@@ -762,9 +772,9 @@ class ExpressionDecomposer {
     // Reuse the existing CALL node instead of creating a new one to avoid breaking InlineFunction's
     // bookkeeping. See b/124253050.
     call.removeFirstChild();
-    call.addChildToFront(thisNameNode.cloneNode());
+    call.addChildToFront(receiverNode);
     call.addChildToFront(
-        IR.getprop(functionNameNode.cloneNode(), "call")
+        IR.getprop(functionNameNode, "call")
             .setJSType(fnCallType)
             .useSourceInfoIfMissingFromForTree(call));
     call.removeProp(Node.FREE_CALL);
@@ -1036,17 +1046,7 @@ class ExpressionDecomposer {
 
           Node first = parent.getFirstChild();
           if (requiresDecomposition && parent.isCall() && NodeUtil.isNormalGet(first)) {
-            Node receiverOfGet = first.getFirstChild();
-            // Cannot decompose super.method(foo()). This pass will try to store `super` in a
-            // temporary variable which is invalid syntax
-            //   var temp1= super; // doesn't parse
-            //   var temp2 = temp1.method;
-            //   temp2.call(temp1, foo());
-            // A future improvement would be to instead avoid creating a temp for super and allow
-            // decomposing.
-            return receiverOfGet.isSuper()
-                ? DecompositionType.UNDECOMPOSABLE
-                : DecompositionType.DECOMPOSABLE;
+            return DecompositionType.DECOMPOSABLE;
           }
         }
       }
