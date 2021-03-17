@@ -1429,6 +1429,9 @@ public class Node implements Serializable {
       if (lineno != -1) {
         sb.append(' ');
         sb.append(lineno);
+        sb.append(':');
+        sb.append(getCharno());
+        sb.append(' ');
       }
       if (length != 0) {
         sb.append(" [length: ");
