@@ -1137,7 +1137,7 @@ public final class ConformanceRules {
 
       Restriction(JSType type, String property, JSType restrictedType) {
         this.type = type;
-        this.property = property.intern();
+        this.property = property;
         this.restrictedType = restrictedType;
       }
     }
@@ -1171,7 +1171,6 @@ public final class ConformanceRules {
     }
 
     @Override
-    @SuppressWarnings("ReferenceEquality") // take advantage of string interning.
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isGetProp() && NodeUtil.isLhsOfAssign(n)) {
         JSType rhsType = n.getNext().getJSType();
@@ -1179,7 +1178,7 @@ public final class ConformanceRules {
         if (rhsType != null && targetType != null) {
           JSType targetNotNullType = null;
           for (Restriction r : restrictions) {
-            if (n.getString() == r.property) { // Both strings are interned.
+            if (n.getString().equals(r.property)) {
               if (!rhsType.isSubtypeOf(r.restrictedType)) {
                 if (ConformanceUtil.isLooseType(targetType)) {
                   if (reportLooseTypeViolations) {

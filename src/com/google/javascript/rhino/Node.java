@@ -439,17 +439,16 @@ public class Node implements Serializable {
         throw new IllegalArgumentException("StringNode: str is null");
       }
       // Intern the string reference so that serialization won't save repeated strings.
-      this.str = str.intern();
+      this.str = RhinoStringPool.addOrGet(str);
     }
 
     @Override
-    @SuppressWarnings("ReferenceEquality")
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       // NOTE: we take advantage of the string interning done in #setString and use
       // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
       return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
-          && this.str == ((StringNode) node).str;
+          && RhinoStringPool.uncheckedEquals(this.str, ((StringNode) node).str);
     }
 
     /**
@@ -476,7 +475,7 @@ public class Node implements Serializable {
     @Override
     public StringNode cloneNode(boolean cloneTypeExprs) {
       StringNode clone = new StringNode(token);
-      clone.str = str;
+      clone.str = this.str;
       return copyNodeFields(clone, cloneTypeExprs);
     }
 
@@ -484,7 +483,7 @@ public class Node implements Serializable {
     private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
 
-      this.str = this.str.intern();
+      this.str = RhinoStringPool.addOrGet(this.str);
     }
   }
 
@@ -504,14 +503,14 @@ public class Node implements Serializable {
 
     TemplateLiteralSubstringNode(@Nullable String cooked, String raw) {
       super(Token.TEMPLATELIT_STRING);
-      this.cooked = cooked;
+      setCooked(cooked);
       setRaw(raw);
     }
 
     TemplateLiteralSubstringNode(@Nullable String cooked, String raw,
         int lineno, int charno) {
       super(Token.TEMPLATELIT_STRING, lineno, charno);
-      this.cooked = cooked;
+      setCooked(cooked);
       setRaw(raw);
     }
 
@@ -541,18 +540,23 @@ public class Node implements Serializable {
         throw new IllegalArgumentException("TemplateLiteralSubstringNode: raw str is null");
       }
       // Intern the string reference so that serialization won't save repeated strings.
-      this.raw = str.intern();
+      this.raw = RhinoStringPool.addOrGet(str);
+    }
+
+    private void setCooked(String s) {
+      this.cooked = (s == null) ? null : RhinoStringPool.addOrGet(s);
     }
 
     @Override
-    @SuppressWarnings("ReferenceEquality")
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      // NOTE: we take advantage of the string interning done in #setRaw and use
-      // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
-      return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
-          && this.raw == ((TemplateLiteralSubstringNode) node).raw
-          && Objects.equals(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
+      if (!super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)) {
+        return false;
+      }
+
+      TemplateLiteralSubstringNode castNode = (TemplateLiteralSubstringNode) node;
+      return RhinoStringPool.uncheckedEquals(this.raw, castNode.raw)
+          && RhinoStringPool.uncheckedEquals(this.cooked, castNode.cooked);
     }
 
     @Override
@@ -567,7 +571,8 @@ public class Node implements Serializable {
     private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
 
-      this.raw = this.raw.intern();
+      setCooked(this.cooked);
+      setRaw(this.raw);
     }
   }
 
@@ -2250,15 +2255,15 @@ public class Node implements Serializable {
    * valid Name (it is an AST placeholder), empty strings are never
    * considered to be matches.
    */
-  @SuppressWarnings("ReferenceEquality")
   public final boolean matchesName(Node n) {
     if (token != Token.NAME || n.token != Token.NAME) {
       return false;
     }
 
-    // ==, rather than equal as it is intern'd in setString
+    // ==, rather than equal as it is interned in setString
     String internalString = getString();
-    return internalString != "" && internalString == n.getString();
+    return !internalString.isEmpty()
+        && RhinoStringPool.uncheckedEquals(internalString, n.getString());
   }
 
   /**
@@ -2303,22 +2308,19 @@ public class Node implements Serializable {
    * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
    * a.b.c</code> or <code>this.a</code>.
    */
-  @SuppressWarnings("ReferenceEquality")
   public final boolean matchesQualifiedName(Node n) {
     if (n.token != token) {
       return false;
     }
+
     switch (token) {
       case NAME:
-        // ==, rather than equal as it is intern'd in setString
-        String internalString = getString();
-        return internalString != "" && internalString == n.getString();
+        return this.matchesName(n);
       case THIS:
       case SUPER:
         return true;
       case GETPROP:
-        // ==, rather than equal as it is intern'd in setString
-        return this.getString() == n.getString()
+        return RhinoStringPool.uncheckedEquals(this.getString(), n.getString())
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
 
       case MEMBER_FUNCTION_DEF:
@@ -2333,12 +2335,10 @@ public class Node implements Serializable {
    * a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
    * .
    */
-  @SuppressWarnings("ReferenceEquality")
   public final boolean isUnscopedQualifiedName() {
     switch (this.getToken()) {
       case NAME:
-        // Both string are intern'd.
-        return getString() != "";
+        return !getString().isEmpty();
       case GETPROP:
         return getFirstChild().isUnscopedQualifiedName();
       default:

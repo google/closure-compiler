@@ -296,7 +296,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  @SuppressWarnings("ReferenceEquality")
   public boolean isPropertyTestFunction(Node call) {
     checkArgument(call.isCall());
     // Avoid building the qualified name and check for
@@ -305,10 +304,9 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     if (target.isGetProp()) {
       Node src = target.getFirstChild();
       String prop = target.getString();
-      // AST Name and String node strings are interned to allow for identity checks.
       if (src.isName()
-          && src.getString() == "goog"
-          && (prop == "isArrayLike" || prop == "isObject")) {
+          && src.getString().equals("goog")
+          && (prop.equals("isArrayLike") || prop.equals("isObject"))) {
         return true;
       }
     }

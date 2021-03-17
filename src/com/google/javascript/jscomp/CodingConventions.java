@@ -502,7 +502,6 @@ public final class CodingConventions {
     }
 
     @Override
-    @SuppressWarnings("ReferenceEquality")
     public boolean isPropertyTestFunction(Node call) {
       // Avoid building the qualified name and check for
       // "goog.isArray"
@@ -510,7 +509,7 @@ public final class CodingConventions {
       if (target.isGetProp()) {
         Node src = target.getFirstChild();
         String prop = target.getString();
-        if (src.isName() && src.getString() == "Array" && prop == "isArray") {
+        if (src.isName() && src.getString().equals("Array") && prop.equals("isArray")) {
           return true;
         }
       }

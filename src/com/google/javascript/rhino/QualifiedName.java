@@ -61,7 +61,8 @@ public abstract class QualifiedName {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     do {
       index = string.indexOf('.', lastIndex);
-      builder.add(string.substring(lastIndex, index < 0 ? string.length() : index).intern());
+      String term = string.substring(lastIndex, index < 0 ? string.length() : index);
+      builder.add(RhinoStringPool.addOrGet(term));
       lastIndex = index + 1;
     } while (index >= 0);
     ImmutableList<String> terms = builder.build();
@@ -180,8 +181,7 @@ public abstract class QualifiedName {
     public boolean matches(Node n) {
       int pos = size - 1;
       while (pos > 0 && n.isGetProp()) {
-        // NOTE: these strings are all interned, so we can do identity comparison.
-        if (n.getString() != terms.get(pos)) {
+        if (!RhinoStringPool.uncheckedEquals(n.getString(), terms.get(pos))) {
           return false;
         }
         pos--;
@@ -190,14 +190,16 @@ public abstract class QualifiedName {
       if (pos > 0) {
         return false;
       }
+
+      String term = this.terms.get(0);
       switch (n.getToken()) {
         case NAME:
         case MEMBER_FUNCTION_DEF:
-          return terms.get(0) == n.getString();
+          return RhinoStringPool.uncheckedEquals(term, n.getString());
         case THIS:
-          return terms.get(0) == THIS;
+          return RhinoStringPool.uncheckedEquals(term, THIS);
         case SUPER:
-          return terms.get(0) == SUPER;
+          return RhinoStringPool.uncheckedEquals(term, SUPER);
         default:
           return false;
       }
@@ -211,7 +213,7 @@ public abstract class QualifiedName {
 
     GetpropQname(QualifiedName owner, String prop) {
       this.owner = owner;
-      this.prop = prop.intern();
+      this.prop = RhinoStringPool.addOrGet(prop);
     }
 
     @Override
@@ -238,8 +240,7 @@ public abstract class QualifiedName {
     @Override
     public boolean matches(Node n) {
       return n.isGetProp()
-          // Node strings are interned.
-          && n.getString() == prop
+          && RhinoStringPool.uncheckedEquals(n.getString(), prop)
           && owner.matches(n.getFirstChild());
     }
   }
@@ -263,13 +264,12 @@ public abstract class QualifiedName {
     @Override
     public String getComponent() {
       switch (node.getToken()) {
-        case GETPROP:
-          return node.getString();
         case THIS:
           return THIS;
         case SUPER:
           return SUPER;
         case NAME:
+        case GETPROP:
         case MEMBER_FUNCTION_DEF:
           return node.getString();
         default:
@@ -298,6 +298,6 @@ public abstract class QualifiedName {
     }
   }
 
-  private static final String THIS = "this".intern();
-  private static final String SUPER = "super".intern();
+  private static final String THIS = RhinoStringPool.addOrGet("this");
+  private static final String SUPER = RhinoStringPool.addOrGet("super");
 }

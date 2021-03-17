@@ -388,10 +388,10 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     Node arg = superCall.getSecondChild();
     while (param != null) {
       if (param.isRest()) {
-        if (!arg.isSpread() || !isSameName(param.getFirstChild(), arg.getFirstChild())) {
+        if (!arg.isSpread() || !param.getFirstChild().matchesName(arg.getFirstChild())) {
           return false;
         }
-      } else if (!isSameName(param, arg)) {
+      } else if (!param.matchesName(arg)) {
         // not a simple parameter list or matching call args
         return false;
       }
@@ -400,14 +400,6 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     }
 
     return true;
-  }
-
-  @SuppressWarnings("ReferenceEquality")
-  private static boolean isSameName(Node name1, Node name2) {
-    return name1.isName()
-        && name2.isName()
-        // NOTE: Name node string are interned, identity is sufficient and preferred.
-        && name1.getString() == name2.getString();
   }
 
   /** True if the parameter list can't cause side-effects */

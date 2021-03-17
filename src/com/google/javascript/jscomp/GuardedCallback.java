@@ -377,7 +377,6 @@ abstract class GuardedCallback<T> implements Callback {
 
   // Extend the coding convention's idea of property test functions to also
   // include String() and Boolean().
-  @SuppressWarnings("ReferenceEquality")
   private static boolean isPropertyTestFunction(AbstractCompiler compiler, Node n) {
     if (compiler.getCodingConvention().isPropertyTestFunction(n)) {
       return true;
@@ -385,8 +384,7 @@ abstract class GuardedCallback<T> implements Callback {
     Node target = n.getFirstChild();
     if (target.isName()) {
       String name = target.getString();
-      // AST name node string are interned so to allow for identity checks.
-      return name == "String" || name == "Boolean";
+      return name.equals("String") || name.equals("Boolean");
     }
     return false;
   }
