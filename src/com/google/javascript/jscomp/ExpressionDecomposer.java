@@ -1183,5 +1183,4 @@ class ExpressionDecomposer {
       return astAnalyzer.mayHaveSideEffects(tree);
     }
   }
-
 }

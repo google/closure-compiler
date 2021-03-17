@@ -37,9 +37,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A set of utility functions that replaces CALL with a specified
- * FUNCTION body, replacing and aliasing function parameters as
- * necessary.
+ * A set of utility functions that replaces CALL with a specified FUNCTION body, replacing and
+ * aliasing function parameters as necessary.
  */
 class FunctionInjector {
 
@@ -56,12 +55,13 @@ class FunctionInjector {
   private final Supplier<String> safeNameIdSupplier;
   private final Supplier<String> throwawayNameSupplier =
       new Supplier<String>() {
-    private int nextId = 0;
-    @Override
-    public String get() {
-      return String.valueOf(nextId++);
-    }
-  };
+        private int nextId = 0;
+
+        @Override
+        public String get() {
+          return String.valueOf(nextId++);
+        }
+      };
   private final FunctionArgumentInjector functionArgumentInjector;
 
   /** Cache of function node to whether it deeply contains an {@code eval} call. */
@@ -147,14 +147,14 @@ class FunctionInjector {
   /** The type of inlining to perform. */
   enum InliningMode {
     /**
-     * Directly replace the call expression. Only functions of meeting
-     * strict preconditions can be inlined.
+     * Directly replace the call expression. Only functions of meeting strict preconditions can be
+     * inlined.
      */
     DIRECT,
 
     /**
-     * Replaces the call expression with a block of statements. Conditions
-     * on the function are looser in mode, but stricter on the call site.
+     * Replaces the call expression with a block of statements. Conditions on the function are
+     * looser in mode, but stricter on the call site.
      */
     BLOCK
   }
@@ -180,28 +180,23 @@ class FunctionInjector {
   }
 
   /**
-   * In order to estimate the cost of lining, we make the assumption that
-   * Identifiers are reduced 2 characters. For the call arguments, the important
-   * thing is that the cost is assumed to be the same in the call and the
-   * function, so the actual length doesn't matter in most cases.
+   * In order to estimate the cost of lining, we make the assumption that Identifiers are reduced 2
+   * characters. For the call arguments, the important thing is that the cost is assumed to be the
+   * same in the call and the function, so the actual length doesn't matter in most cases.
    */
-  private static final int NAME_COST_ESTIMATE =
-      InlineCostEstimator.ESTIMATED_IDENTIFIER_COST;
+  private static final int NAME_COST_ESTIMATE = InlineCostEstimator.ESTIMATED_IDENTIFIER_COST;
 
   /** The cost of a argument separator (a comma). */
   private static final int COMMA_COST = 1;
 
-  /** The cost of the parentheses needed to make a call.*/
+  /** The cost of the parentheses needed to make a call. */
   private static final int PAREN_COST = 2;
 
-
   /**
-   * @param fnName The name of this function. This either the name of the
-   *  variable to which the function is assigned or the name from the FUNCTION
-   *  node.
+   * @param fnName The name of this function. This either the name of the variable to which the
+   *     function is assigned or the name from the FUNCTION node.
    * @param fnNode The FUNCTION node of the function to inspect.
-   * @return Whether the function node meets the minimum requirements for
-   * inlining.
+   * @return Whether the function node meets the minimum requirements for inlining.
    */
   boolean doesFunctionMeetMinimumRequirements(final String fnName, Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);
@@ -245,16 +240,18 @@ class FunctionInjector {
 
   /**
    * @param fnNode The function to evaluate for inlining.
-   * @param needAliases A set of function parameter names that can not be
-   *     used without aliasing. Returned by getUnsafeParameterNames().
-   * @param referencesThis Whether fnNode contains references to its this
-   *     object.
+   * @param needAliases A set of function parameter names that can not be used without aliasing.
+   *     Returned by getUnsafeParameterNames().
+   * @param referencesThis Whether fnNode contains references to its this object.
    * @param containsFunctions Whether fnNode contains inner functions.
    * @return Whether the inlining can occur.
    */
   CanInlineResult canInlineReferenceToFunction(
-      Reference ref, Node fnNode, ImmutableSet<String> needAliases,
-      boolean referencesThis, boolean containsFunctions) {
+      Reference ref,
+      Node fnNode,
+      ImmutableSet<String> needAliases,
+      boolean referencesThis,
+      boolean containsFunctions) {
     // TODO(johnlenz): This function takes too many parameter, without
     // context.  Modify the API to take a structure describing the function.
 
@@ -299,6 +296,7 @@ class FunctionInjector {
 
   /**
    * Only ".call" calls and direct calls to functions are supported.
+   *
    * @param callNode The call evaluate.
    * @return Whether the call is of a type that is supported.
    */
@@ -329,9 +327,7 @@ class FunctionInjector {
     return false;
   }
 
-  /**
-   * Inline a function into the call site.
-   */
+  /** Inline a function into the call site. */
   Node inline(Reference ref, String fnName, Node fnNode) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     return internalInline(ref, fnName, fnNode);
@@ -358,9 +354,8 @@ class FunctionInjector {
   }
 
   /**
-   * Inline a function that fulfills the requirements of
-   * canInlineReferenceDirectly into the call site, replacing only the CALL
-   * node.
+   * Inline a function that fulfills the requirements of canInlineReferenceDirectly into the call
+   * site, replacing only the CALL node.
    */
   private Node inlineReturnValue(Reference ref, Node fnNode) {
     Node callNode = ref.callNode;
@@ -410,15 +405,10 @@ class FunctionInjector {
     return newExpression;
   }
 
-  /**
-   * Supported call site types.
-   */
+  /** Supported call site types. */
   private static enum CallSiteType {
 
-    /**
-     * Used for a call site for which there does not exist a method
-     * to inline it.
-     */
+    /** Used for a call site for which there does not exist a method to inline it. */
     UNSUPPORTED() {
       @Override
       public void prepare(FunctionInjector injector, Reference ref) {
@@ -426,11 +416,7 @@ class FunctionInjector {
       }
     },
 
-    /**
-     * A call as a statement. For example: "foo();".
-     *   EXPR_RESULT
-     *     CALL
-     */
+    /** A call as a statement. For example: "foo();". EXPR_RESULT CALL */
     SIMPLE_CALL() {
       @Override
       public void prepare(FunctionInjector injector, Reference ref) {
@@ -439,12 +425,8 @@ class FunctionInjector {
     },
 
     /**
-     * An assignment, where the result of the call is assigned to a simple
-     * name. For example: "a = foo();".
-     *   EXPR_RESULT
-     *     NAME A
-     *     CALL
-     *       FOO
+     * An assignment, where the result of the call is assigned to a simple name. For example: "a =
+     * foo();". EXPR_RESULT NAME A CALL FOO
      */
     SIMPLE_ASSIGNMENT() {
       @Override
@@ -454,13 +436,8 @@ class FunctionInjector {
     },
 
     /**
-     * An var declaration and initialization, where the result of the call is
-     * assigned to the declared name
-     * name. For example: "var a = foo();".
-     *   VAR
-     *     NAME A
-     *       CALL
-     *         FOO
+     * An var declaration and initialization, where the result of the call is assigned to the
+     * declared name name. For example: "var a = foo();". VAR NAME A CALL FOO
      */
     VAR_DECL_SIMPLE_ASSIGNMENT() {
       @Override
@@ -470,17 +447,11 @@ class FunctionInjector {
     },
 
     /**
-     * An arbitrary expression, the root of which is a EXPR_RESULT, IF,
-     * RETURN, SWITCH or VAR.  The call must be the first side-effect in
-     * the expression.
+     * An arbitrary expression, the root of which is a EXPR_RESULT, IF, RETURN, SWITCH or VAR. The
+     * call must be the first side-effect in the expression.
      *
-     * Examples include:
-     *   "if (foo()) {..."
-     *   "return foo();"
-     *   "var a = 1 + foo();"
-     *   "a = 1 + foo()"
-     *   "foo() ? 1:0"
-     *   "foo() && x"
+     * <p>Examples include: "if (foo()) {..." "return foo();" "var a = 1 + foo();" "a = 1 + foo()"
+     * "foo() ? 1:0" "foo() && x"
      */
     EXPRESSION() {
       @Override
@@ -496,9 +467,8 @@ class FunctionInjector {
     },
 
     /**
-     * An arbitrary expression, the root of which is a EXPR_RESULT, IF,
-     * RETURN, SWITCH or VAR.  Where the call is not the first side-effect in
-     * the expression.
+     * An arbitrary expression, the root of which is a EXPR_RESULT, IF, RETURN, SWITCH or VAR. Where
+     * the call is not the first side-effect in the expression.
      */
     DECOMPOSABLE_EXPRESSION() {
       @Override
@@ -519,10 +489,9 @@ class FunctionInjector {
   /**
    * Determine which, if any, of the supported types the call site is.
    *
-   * Constant vars are treated differently so that we don't break their
-   * const-ness when we decompose the expression. Once the CONSTANT_VAR
-   * annotation is used everywhere instead of coding conventions, we should just
-   * teach this pass how to remove the annotation.
+   * <p>Constant vars are treated differently so that we don't break their const-ness when we
+   * decompose the expression. Once the CONSTANT_VAR annotation is used everywhere instead of coding
+   * conventions, we should just teach this pass how to remove the annotation.
    */
   private CallSiteType classifyCallSite(Reference ref) {
     Node callNode = ref.callNode;
@@ -572,6 +541,7 @@ class FunctionInjector {
 
   /**
    * If required, rewrite the statement containing the call expression.
+   *
    * @see ExpressionDecomposer#canExposeExpression
    */
   void maybePrepareCall(Reference ref) {
@@ -580,9 +550,8 @@ class FunctionInjector {
   }
 
   /**
-   * Inline a function which fulfills the requirements of
-   * canInlineReferenceAsStatementBlock into the call site, replacing the
-   * parent expression.
+   * Inline a function which fulfills the requirements of canInlineReferenceAsStatementBlock into
+   * the call site, replacing the parent expression.
    */
   private Node inlineFunction(Reference ref, Node fnNode, String fnName) {
     Node callNode = ref.callNode;
@@ -611,13 +580,12 @@ class FunctionInjector {
         break;
 
       case SIMPLE_CALL:
-        resultName = null;  // "foo()" doesn't need a result.
+        resultName = null; // "foo()" doesn't need a result.
         needsDefaultReturnResult = false;
         break;
 
       case EXPRESSION:
-        throw new IllegalStateException(
-            "Movable expressions must be moved before inlining.");
+        throw new IllegalStateException("Movable expressions must be moved before inlining.");
 
       case DECOMPOSABLE_EXPRESSION:
         throw new IllegalStateException(
@@ -630,9 +598,9 @@ class FunctionInjector {
     FunctionToBlockMutator mutator = new FunctionToBlockMutator(compiler, this.safeNameIdSupplier);
 
     boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
-    Node newBlock = mutator.mutate(
-        fnName, fnNode, callNode, resultName,
-        needsDefaultReturnResult, isCallInLoop);
+    Node newBlock =
+        mutator.mutate(
+            fnName, fnNode, callNode, resultName, needsDefaultReturnResult, isCallInLoop);
     NodeUtil.markNewScopesChanged(newBlock, compiler);
 
     // TODO(nicksantos): Create a common mutation function that
@@ -684,8 +652,8 @@ class FunctionInjector {
   }
 
   /**
-   * Checks if the given function matches the criteria for an inlinable
-   * function, and if so, adds it to our set of inlinable functions.
+   * Checks if the given function matches the criteria for an inlinable function, and if so, adds it
+   * to our set of inlinable functions.
    */
   static boolean isDirectCallNodeReplacementPossible(Node fnNode) {
     // Only inline single-statement functions
@@ -698,8 +666,7 @@ class FunctionInjector {
       return true;
     } else if (block.hasOneChild()) {
       // Only inline functions that return something.
-      if (block.getFirstChild().isReturn()
-          && block.getFirstFirstChild() != null) {
+      if (block.getFirstChild().isReturn() && block.getFirstFirstChild() != null) {
         return true;
       }
     }
@@ -714,10 +681,10 @@ class FunctionInjector {
   }
 
   /**
-   * Determines whether a function can be inlined at a particular call site.
-   * There are several criteria that the function and reference must hold in
-   * order for the functions to be inlined:
-   * - It must be a simple call, or assignment, or var initialization.
+   * Determines whether a function can be inlined at a particular call site. There are several
+   * criteria that the function and reference must hold in order for the functions to be inlined: -
+   * It must be a simple call, or assignment, or var initialization.
+   *
    * <pre>
    *    f();
    *    a = foo();
@@ -880,12 +847,11 @@ class FunctionInjector {
   }
 
   /**
-   * Determines whether a function can be inlined at a particular call site.
-   * There are several criteria that the function and reference must hold in
-   * order for the functions to be inlined:
-   * 1) If a call's arguments have side effects,
-   * the corresponding argument in the function must only be referenced once.
-   * For instance, this will not be inlined:
+   * Determines whether a function can be inlined at a particular call site. There are several
+   * criteria that the function and reference must hold in order for the functions to be inlined: 1)
+   * If a call's arguments have side effects, the corresponding argument in the function must only
+   * be referenced once. For instance, this will not be inlined:
+   *
    * <pre>
    *     function foo(a) { return a + a }
    *     x = foo(i++);
@@ -934,12 +900,14 @@ class FunctionInjector {
     return CanInlineResult.YES;
   }
 
-  /**
-   * Determine if inlining the function is likely to reduce the code size.
-   */
+  /** Determine if inlining the function is likely to reduce the code size. */
   boolean inliningLowersCost(
-      JSModule fnModule, Node fnNode, Collection<? extends Reference> refs,
-      Set<String> namesToAlias, boolean isRemovable, boolean referencesThis) {
+      JSModule fnModule,
+      Node fnNode,
+      Collection<? extends Reference> refs,
+      Set<String> namesToAlias,
+      boolean isRemovable,
+      boolean referencesThis) {
     int referenceCount = refs.size();
     if (referenceCount == 0) {
       return true;
@@ -961,7 +929,7 @@ class FunctionInjector {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;
-          checkModules = false;  // no need to check additional modules.
+          checkModules = false; // no need to check additional modules.
         }
       }
     }
@@ -984,19 +952,24 @@ class FunctionInjector {
     int costDeltaDirect = inlineCostDelta(fnNode, namesToAlias, InliningMode.DIRECT);
     int costDeltaBlock = inlineCostDelta(fnNode, namesToAlias, InliningMode.BLOCK);
 
-    return doesLowerCost(fnNode, overallCallCost,
-        referencesUsingDirectInlining, costDeltaDirect,
-        referencesUsingBlockInlining, costDeltaBlock,
+    return doesLowerCost(
+        fnNode,
+        overallCallCost,
+        referencesUsingDirectInlining,
+        costDeltaDirect,
+        referencesUsingBlockInlining,
+        costDeltaBlock,
         isRemovable);
   }
 
-  /**
-   * @return Whether inlining will lower cost.
-   */
+  /** @return Whether inlining will lower cost. */
   private static boolean doesLowerCost(
-      Node fnNode, int callCost,
-      int directInlines, int costDeltaDirect,
-      int blockInlines, int costDeltaBlock,
+      Node fnNode,
+      int callCost,
+      int directInlines,
+      int costDeltaDirect,
+      int blockInlines,
+      int costDeltaBlock,
       boolean removable) {
 
     // Determine the threshold value for this inequality:
@@ -1020,8 +993,9 @@ class FunctionInjector {
   }
 
   /**
-   * Gets an estimate of the cost in characters of making the function call:
-   * the sum of the identifiers and the separators.
+   * Gets an estimate of the cost in characters of making the function call: the sum of the
+   * identifiers and the separators.
+   *
    * @param referencesThis
    */
   private static int estimateCallCost(Node fnNode, boolean referencesThis) {
@@ -1038,18 +1012,14 @@ class FunctionInjector {
       // other functions that reference this.
       // The only functions that reference this that are currently inlined
       // are those that are called via ".call" with an explicit "this".
-      callCost += 5 + 5;  // ".call" + "this,"
+      callCost += 5 + 5; // ".call" + "this,"
     }
 
     return callCost;
   }
 
-  /**
-   * @return The difference between the function definition cost and
-   *     inline cost.
-   */
-  private static int inlineCostDelta(
-      Node fnNode, Set<String> namesToAlias, InliningMode mode) {
+  /** @return The difference between the function definition cost and inline cost. */
+  private static int inlineCostDelta(Node fnNode, Set<String> namesToAlias, InliningMode mode) {
     // The part of the function that is never inlined:
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;
     int paramCount = NodeUtil.getFunctionParameters(fnNode).getChildCount();
@@ -1080,21 +1050,23 @@ class FunctionInjector {
       // as some parameters are aliased because of the parameters used.
       // Perhaps we should just assume all parameters will be aliased?
       final int inlineBlockOverhead = 4; // "X:{}"
-      final int perReturnOverhead = 2;   // "return" --> "break X"
+      final int perReturnOverhead = 2; // "return" --> "break X"
       final int perReturnResultOverhead = 3; // "XX="
       final int perAliasOverhead = 3; // "XX="
 
       // TODO(johnlenz): Counting the number of returns is relatively expensive.
       //   This information should be determined during the traversal and cached.
-      int returnCount = NodeUtil.getNodeTypeReferenceCount(
-          block, Token.RETURN, new NodeUtil.MatchShallowStatement());
+      int returnCount =
+          NodeUtil.getNodeTypeReferenceCount(
+              block, Token.RETURN, new NodeUtil.MatchShallowStatement());
       int resultCount = (returnCount > 0) ? returnCount - 1 : 0;
       int baseOverhead = (returnCount > 0) ? inlineBlockOverhead : 0;
 
-      int overhead = baseOverhead
-          + returnCount * perReturnOverhead
-          + resultCount * perReturnResultOverhead
-          + aliasCount * perAliasOverhead;
+      int overhead =
+          baseOverhead
+              + returnCount * perReturnOverhead
+              + resultCount * perReturnResultOverhead
+              + aliasCount * perAliasOverhead;
 
       return (overhead - costDeltaFunctionOverhead);
     }

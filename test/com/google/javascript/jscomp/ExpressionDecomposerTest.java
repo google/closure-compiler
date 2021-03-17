@@ -41,9 +41,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link ExpressionDecomposer}
- */
+/** Unit tests for {@link ExpressionDecomposer} */
 // Note: functions "foo" and "goo" are external functions in the helper.
 @RunWith(JUnit4.class)
 public final class ExpressionDecomposerTest {
