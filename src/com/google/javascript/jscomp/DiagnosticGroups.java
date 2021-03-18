@@ -585,6 +585,7 @@ public class DiagnosticGroups {
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,
               CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS,
+              CheckInterfaces.INTERFACE_DEFINED_WITH_EXTENDS,
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE,
               CheckInterfaces.MISSING_JSDOC_IN_DECLARATION_STATEMENT,
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,

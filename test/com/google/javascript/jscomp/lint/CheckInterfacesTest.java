@@ -113,11 +113,41 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInterfaceClass_callToSuperInConstructorAllowed() {
-    testSame("class D {} /** @interface */ class C extends D { constructor() { super(); } }");
-    testSame("class D {} /** @interface */ class C extends D { constructor() { super(x); } }");
-    testSame("class D {} /** @record */ class C extends D { constructor() { super(); } }");
-    testSame("class D {} /** @record */ class C extends D { constructor() { super(x); } }");
+  public void testInterfaceClass_callToSuperInConstructorNotAllowed() {
+    disableAstValidation(); // silences ASTValidator for `super()` used without `extends`
+    testWarning(
+        "class D {} /** @interface \n @extends {D} */ class C { constructor() { super(); } }",
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
+    testWarning(
+        "class D {} /** @interface \n @extends {D} */ class C { constructor() { super(x); } }",
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
+    testWarning(
+        "class D {} /** @record \n @extends {D} */ class C { constructor() { super(); } }",
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
+    testWarning(
+        "class D {} /** @record \n @extends {D} */ class C { constructor() { super(x); } }",
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE);
+  }
+
+  @Test
+  public void testInterfaceClass_extendsKeywordNotAllowed() {
+    test(
+        srcs("class D {} /** @interface */ class C extends D { constructor() { super(); } }"),
+        warning(CheckInterfaces.INTERFACE_DEFINED_WITH_EXTENDS),
+        warning(CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE));
+    test(
+        srcs("class D {} /** @interface */ class C extends D { constructor() { super(x); } }"),
+        warning(CheckInterfaces.INTERFACE_DEFINED_WITH_EXTENDS),
+        warning(CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE));
+
+    test(
+        srcs("class D {} /** @record */ class C extends D { constructor() { super(); } }"),
+        warning(CheckInterfaces.INTERFACE_DEFINED_WITH_EXTENDS),
+        warning(CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE));
+    test(
+        srcs("class D {} /** @record */ class C extends D { constructor() { super(x); } }"),
+        warning(CheckInterfaces.INTERFACE_DEFINED_WITH_EXTENDS),
+        warning(CheckInterfaces.NON_DECLARATION_STATEMENT_IN_INTERFACE));
   }
 
   @Test

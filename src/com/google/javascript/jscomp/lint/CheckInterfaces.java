@@ -37,7 +37,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
 
   public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_INTERFACE =
       DiagnosticType.disabled(
-          "JSC_NON_DECLARATION_STATEMENT_IN_RECORD",
+          "JSC_NON_DECLARATION_STATEMENT_IN_INTERFACE",
           "@interface or @record functions should not contain statements other than field"
               + " declarations");
 
@@ -61,6 +61,12 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
           "JSC_STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS",
           "Interface class should not have static member functions. "
               + "Consider pulling out the static method into a flat name as {0}_{1}");
+
+  public static final DiagnosticType INTERFACE_DEFINED_WITH_EXTENDS =
+      DiagnosticType.disabled(
+          "JSC_INTERFACE_DEFINED_WITH_EXTENDS",
+          "Interface/Record class should use the `@extends` annotation instead of extends"
+              + " keyword.");
 
   private final AbstractCompiler compiler;
 
@@ -99,6 +105,9 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
         {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
           if (isInterface(jsdoc)) {
+            if (n.getSecondChild() != null && n.getSecondChild().isName()) {
+              t.report(n, INTERFACE_DEFINED_WITH_EXTENDS);
+            }
             Node ctorDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
             if (ctorDef != null) {
               Node ctor = ctorDef.getFirstChild();
@@ -156,13 +165,11 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
     }
 
     for (Node stmt = block.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
-      if (!isThisPropAccess(stmt) && !isCallToSuper(stmt)) {
-        // Only field declarations or super() is expected inside @record and @interface.
+      if (!isThisPropAccess(stmt)) {
+        // Only field declarations are expected inside @record and @interface.
         t.report(stmt, NON_DECLARATION_STATEMENT_IN_INTERFACE);
         break;
-      }
-
-      if (isThisPropAccess(stmt) && stmt.getFirstChild().getJSDocInfo() == null) {
+      } else if (stmt.getFirstChild().getJSDocInfo() == null) {
         // A field declaration that's missing a JSDoc.
         t.report(stmt, MISSING_JSDOC_IN_DECLARATION_STATEMENT);
         break;
@@ -174,12 +181,6 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
     return stmt.isExprResult()
         && stmt.getFirstChild().isGetProp()
         && stmt.getFirstFirstChild().isThis();
-  }
-
-  private static boolean isCallToSuper(Node stmt) {
-    return stmt.isExprResult()
-        && stmt.getFirstChild().isCall()
-        && stmt.getFirstFirstChild().isSuper();
   }
 }
 
