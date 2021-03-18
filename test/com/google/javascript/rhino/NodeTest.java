@@ -643,11 +643,10 @@ public class NodeTest {
 
     root.addChildToFront(nodeToAdd);
 
-    assertThat(nodeToAdd.parent).isEqualTo(root);
+    assertThat(nodeToAdd.getParent()).isEqualTo(root);
     assertThat(nodeToAdd).isEqualTo(root.getFirstChild());
     assertThat(nodeToAdd).isEqualTo(root.getLastChild());
-    assertThat(nodeToAdd).isEqualTo(nodeToAdd.previous);
-    assertThat(nodeToAdd.next).isNull();
+    assertThat(nodeToAdd.getNext()).isNull();
   }
 
   @Test
@@ -661,12 +660,11 @@ public class NodeTest {
 
     root.addChildToFront(nodeToAdd);
 
-    assertThat(nodeToAdd.parent).isEqualTo(root);
+    assertThat(nodeToAdd.getParent()).isEqualTo(root);
     assertThat(nodeToAdd).isEqualTo(root.getFirstChild());
-    assertThat(right).isEqualTo(root.getLastChild());
-    assertThat(root.getLastChild()).isEqualTo(nodeToAdd.previous);
-    assertThat(nodeToAdd.next).isEqualTo(left);
-    assertThat(left.previous).isEqualTo(nodeToAdd);
+    assertThat(nodeToAdd.getPrevious()).isNull();
+    assertThat(nodeToAdd.getNext()).isEqualTo(left);
+    assertThat(left.getPrevious()).isEqualTo(nodeToAdd);
   }
 
   @Test
@@ -676,15 +674,14 @@ public class NodeTest {
     Node right = Node.newString("right");
     Node root = new Node(Token.SCRIPT, left, mid, right);
 
-    assertThat(mid.parent).isEqualTo(root);
-    assertThat(mid.previous).isEqualTo(left);
-    assertThat(mid.next).isEqualTo(right);
+    assertThat(mid.getParent()).isEqualTo(root);
+    assertThat(mid.getPrevious()).isEqualTo(left);
+    assertThat(mid.getNext()).isEqualTo(right);
 
     mid.detach();
 
-    assertThat(mid.parent).isNull();
-    assertThat(mid.previous).isNull();
-    assertThat(mid.next).isNull();
+    assertThat(mid.getParent()).isNull();
+    assertThat(mid.getNext()).isNull();
 
     assertThat(right.getPrevious()).isEqualTo(left);
     assertThat(left.getNext()).isEqualTo(right);

@@ -317,7 +317,7 @@ public class Node implements Serializable {
 
     @Override
     public TypeDeclarationNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new TypeDeclarationNode(token, str), cloneTypeExprs);
+      return copyNodeFields(new TypeDeclarationNode(this.getToken(), str), cloneTypeExprs);
     }
   }
 
@@ -474,7 +474,7 @@ public class Node implements Serializable {
 
     @Override
     public StringNode cloneNode(boolean cloneTypeExprs) {
-      StringNode clone = new StringNode(token);
+      StringNode clone = new StringNode(this.getToken());
       clone.str = this.str;
       return copyNodeFields(clone, cloneTypeExprs);
     }
@@ -1498,11 +1498,24 @@ public class Node implements Serializable {
     }
   }
 
-  transient Token token;           // Type of the token of the node; NAME for example
-  @Nullable transient Node next; // next sibling, a linked list
-  @Nullable transient Node previous; // previous sibling, a circular linked list
-  @Nullable transient Node first; // first element of a linked list of children
+  private transient Token token; // Type of the token of the node; NAME for example
+  @Nullable private transient Node next; // next sibling, a linked list
+  @Nullable private transient Node previous; // previous sibling, a circular linked list
+  @Nullable private transient Node first; // first element of a linked list of children
+  @Nullable private transient Node parent;
   // We get the last child as first.previous. But last.next is null, not first.
+
+  /**
+   * Source position of this node. The position is encoded with the column number in the low 12 bits
+   * of the integer, and the line number in the rest. Create some handy constants so we can change
+   * this size if we want.
+   */
+  private transient int sourcePosition;
+
+  /** The length of the code represented by the node. */
+  private transient int length;
+
+  @Nullable private transient JSType jstype;
 
   /**
    * Linked list of properties. Since vast majority of nodes would have no more than 2 properties,
@@ -1534,21 +1547,6 @@ public class Node implements Serializable {
    * separating column number from line number.
    */
   public static final int COLUMN_MASK = MAX_COLUMN_NUMBER;
-
-  /**
-   * Source position of this node. The position is encoded with the
-   * column number in the low 12 bits of the integer, and the line
-   * number in the rest.  Create some handy constants so we can change this
-   * size if we want.
-   */
-  private transient int sourcePosition;
-
-  /** The length of the code represented by the node. */
-  private transient int length;
-
-  @Nullable private transient JSType jstype;
-
-  @Nullable protected transient Node parent;
 
   //==========================================================================
   // Source position management
