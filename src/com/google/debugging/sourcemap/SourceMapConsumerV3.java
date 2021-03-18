@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.RetrievalType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -172,7 +173,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
     int index = search(entries, column, 0, entries.size() - 1);
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
-    return getOriginalMappingForEntry(entries.get(index));
+    return getOriginalMappingForEntry(entries.get(index), RetrievalType.EXACT);
   }
 
   @Override
@@ -431,13 +432,13 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       lineNumber--;
     } while (lines.get(lineNumber) == null);
     ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(Iterables.getLast(entries));
+    return getOriginalMappingForEntry(Iterables.getLast(entries), RetrievalType.APPROXIMATED_LINE);
   }
 
   /**
    * Creates an "OriginalMapping" object for the given entry object.
    */
-  private OriginalMapping getOriginalMappingForEntry(Entry entry) {
+  private OriginalMapping getOriginalMappingForEntry(Entry entry, RetrievalType retrievalType) {
     if (entry.getSourceFileId() == UNMAPPED) {
       return null;
     } else {
@@ -445,7 +446,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       Builder x = OriginalMapping.newBuilder()
         .setOriginalFile(sources[entry.getSourceFileId()])
         .setLineNumber(entry.getSourceLine() + 1)
-        .setColumnPosition(entry.getSourceColumn() + 1);
+        .setColumnPosition(entry.getSourceColumn() + 1)
+        .setRetrievalType(retrievalType);
       if (entry.getNameId() != UNMAPPED) {
         x.setIdentifier(names[entry.getNameId()]);
       }
