@@ -21,7 +21,21 @@
  */
 
 /**
- * @return {!Promise<string>}
- * @see https://github.com/WICG/floc
+ * @see https://wicg.github.io/floc/#interest-cohort-section
+ * @record
+ * @struct
+ */
+function InterestCohort() {}
+
+/** @type {string} */
+InterestCohort.prototype.id;
+
+/** @type {string} */
+InterestCohort.prototype.version;
+
+
+/**
+ * @return {!Promise<!InterestCohort>}
+ * @see https://wicg.github.io/floc/#the-api
  */
 Document.prototype.interestCohort = function() {};
