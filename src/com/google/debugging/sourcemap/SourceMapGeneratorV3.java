@@ -137,7 +137,6 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     mappings.clear();
     lastMapping = null;
     sourceFileMap.clear();
-    sourceFileContentMap.clear();
     originalNameMap.clear();
     lastSourceFile = null;
     lastSourceFileIndex = -1;
