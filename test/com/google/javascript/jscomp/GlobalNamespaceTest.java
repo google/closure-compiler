@@ -832,6 +832,52 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testObjectAssignOntoAGetProp() {
+    GlobalNamespace namespace =
+        parse("const obj = {a:3}; const ns = {}; ns.a = Object.assign({}, obj); ");
+
+    Name obj = namespace.getSlot("obj");
+    assertThat(obj.getGlobalSets()).isEqualTo(1);
+    assertThat(obj.getAliasingGets()).isEqualTo(1);
+
+    Name objA = namespace.getSlot("obj.a");
+    assertThat(objA.getGlobalSets()).isEqualTo(1);
+    assertThat(objA.getAliasingGets()).isEqualTo(0);
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(0);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(0);
+    assertThat(nsA.isObjectLiteral()).isFalse(); // `ns.a` is considered an "OTHER" type
+  }
+
+  @Test
+  public void testObjectLitSpreadOntoAGetProp() {
+    GlobalNamespace namespace = parse("const obj = {a:3}; const ns = {}; ns.a = {...obj}");
+
+    Name obj = namespace.getSlot("obj");
+    assertThat(obj.getGlobalSets()).isEqualTo(1);
+    assertThat(obj.getAliasingGets()).isEqualTo(1);
+
+    Name objA = namespace.getSlot("obj.a");
+    assertThat(objA.getGlobalSets()).isEqualTo(1);
+    assertThat(objA.getAliasingGets()).isEqualTo(0);
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getAliasingGets()).isEqualTo(0);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(1);
+    assertThat(nsA.getAliasingGets()).isEqualTo(0);
+    assertThat(nsA.isObjectLiteral())
+        .isTrue(); // `ns.a` is an "OBJECTLIT" type despite containing spread.
+  }
+
+  @Test
   public void testObjectLitSpreadAliasInAssign() {
     GlobalNamespace namespace = parse("const ns = {a: 3}; const x = {}; ({a: x.y} = {...ns});");
 

@@ -2999,6 +2999,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {b: {c: 0}}; var d = {...a.b}; use(a.b.c);", //
         "var a$b = {c: 0}; use(a$b.c);");
+    // test transpiled version of spread.
+    test(
+        "var a = {b: {c: 0}}; var d = Object.assign({}, a.b); use(a.b.c);",
+        "var a$b = {c: 0}; var d = Object.assign({}, a$b); use(a$b.c);");
   }
 
   @Test
@@ -3019,6 +3023,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testCollapsePropertiesWhenDeclaredInObjectLitWithSpread() {
     testSame("var a = {b: 0, ...c}; use(a.b);");
+    // transpiled spread
+    testSame("var a = Object.assign({}, {b: 0}, c); use(a.b);");
     testSame("var a = {b: 0, ...c}; use?.(a?.b);");
 
     testSame("var a = {...c}; use?.(a?.b);");
@@ -3026,6 +3032,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {...c, b: 0}; use(a.b);", //
         "var a$b = 0; use(a$b);");
+    // test transpiled - does not collapse properties after spread.
+    testSame("var a = Object.assign({}, c, {b: 0}); use(a.b);");
+
     testSame(
         lines(
             "var a = {...c, b: 0};", //

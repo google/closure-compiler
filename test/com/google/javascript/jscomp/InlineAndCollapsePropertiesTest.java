@@ -66,6 +66,158 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjLitSpread() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {}",
+            "ns.foo = { ...other };",
+            "use(ns.foo.bar);"),
+        lines("const other = {bar: 'some' };", "var ns$foo = { ...other };", "use(ns$foo.bar);"));
+  }
+
+  // same behavior with transpiled version of above test
+  @Test
+  public void testObjAssign() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {}",
+            "ns.foo = Object.assign({}, other);",
+            "use(ns.foo.bar);"),
+        lines(
+            "const other = {bar: 'some' };",
+            "var ns$foo = Object.assign({}, other);",
+            "use(ns$foo.bar);"));
+  }
+
+  @Test
+  public void testObjLitSpread_twoSpreads() {
+    test(
+        lines(
+            "const other = {bar: 'bar' };",
+            "const another = {baz: 'baz' };",
+            "let ns = {};",
+            "ns.foo = { ...other, ...another };",
+            "use(ns.foo.bar, ns.foo.baz);"),
+        lines(
+            "const other = {bar: 'bar' };",
+            "const another = {baz : 'baz'};",
+            "var ns$foo = { ...other, ...another };",
+            "use(ns$foo.bar, ns$foo.baz);"));
+  }
+
+  // same behavior with transpiled version of above test
+  @Test
+  public void testObjAssign_twoSpreads() {
+    test(
+        lines(
+            "const other = {bar: 'bar'};",
+            "const another = {baz: 'baz'};",
+            "let ns = {};",
+            "ns.foo = Object.assign({}, other, another);",
+            "use(ns.foo.bar, ns.foo.baz);"),
+        lines(
+            "const other = {bar: 'bar'};",
+            "const another = {baz : 'baz'};",
+            "var ns$foo = Object.assign({}, other, another);",
+            "use(ns$foo.bar, ns$foo.baz);"));
+  }
+
+  @Test
+  public void testObjLitSpread_withNormalPropAfter() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {}",
+            "ns.foo = { ...other, prop : 0};",
+            "use(ns.foo.bar, ns.foo.prop);"),
+        lines(
+            "const other = {bar: 'some' };", //
+            "var ns$foo$prop = 0;",
+            "var ns$foo = { ...other};",
+            "use(ns$foo.bar, ns$foo$prop);"));
+  }
+
+  @Test
+  public void testObjAssign_withNormalPropAfter() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {}",
+            "ns.foo = Object.assign({}, other, {prop : 0});",
+            "use(ns.foo.bar, ns.foo.prop);"),
+        lines(
+            "const other = {bar: 'some' };", //
+            "var ns$foo = Object.assign({}, other, {prop:0});",
+            "use(ns$foo.bar, ns$foo.prop);")); // both properties not collapsed.
+  }
+
+  @Test
+  public void testObjLitSpread_chained() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {...other}",
+            "let ns2 = { ...ns };",
+            "use(ns2.bar);"),
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = { ...other };",
+            "let ns2 = { ...ns };",
+            "use(ns2.bar);"));
+  }
+
+  // same behavior with transpiled version of above test
+  @Test
+  public void testObjAssign_chained() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = Object.assign({}, other);",
+            "let ns2 = Object.assign({}, ns);",
+            "use(ns2.bar);"),
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = Object.assign({}, other);",
+            "let ns2 = Object.assign({}, ns);",
+            "use(ns2.bar);"));
+  }
+
+  @Test
+  public void testObjLitSpread_chainedWithGetProp() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = {...other};",
+            "let ns2 = {};",
+            "ns2.foo = { ...ns };",
+            "use(ns2.foo.bar);"),
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = { ...other };",
+            "var ns2$foo = { ...ns };",
+            "use(ns2$foo.bar);"));
+  }
+
+  // same behavior with transpiled version of above test
+  @Test
+  public void testObjAssign_chainedWithGetProp() {
+    test(
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = Object.assign({}, other);",
+            "let ns2 = {};",
+            "ns2.foo = Object.assign({}, ns);",
+            "use(ns2.foo.bar);"),
+        lines(
+            "const other = {bar: 'some' };",
+            "let ns = Object.assign({}, other);",
+            "var ns2$foo = Object.assign({}, ns);",
+            "use(ns2$foo.bar);"));
+  }
+
+  @Test
   public void testGitHubIssue3733() {
     testSame(
         srcs(

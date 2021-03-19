@@ -2081,6 +2081,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testObjectSpread_spreadingInNamespaceDef_preventsInliningItsProps() {
     testSame("var a = {x: 5, y: 6}; var b = {...a}; use(b.z);");
     testSame("var a = {x: 5, y: 6, z: 7}; var b = {z: -7, ...a}; use(b.z);");
+    testSame("var a = {x: 5, y: 6, z: 7}; var b = Object.assign({}, {z: -7}, a); use(b.z);");
+
+    testSame("var a = {x: 5, y: 6, z: 7}; var b = {...a, z: -7}; use(b.z);");
+    testSame("var a = {x: 5, y: 6, z: 7}; var b = Object.assign({}, a, {z: -7}); use(b.z);");
   }
 
   @Test

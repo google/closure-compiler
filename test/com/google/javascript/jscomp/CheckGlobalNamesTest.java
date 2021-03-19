@@ -698,6 +698,87 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectWithSpread() {
+    testSame(
+        lines(
+            "const inner = {MIN:'min'};",
+            "const ns = {};",
+            "ns.a = {...inner};",
+            "let x = ns.a.MIN;" // warns if we don't back-off on spread as `ns.a` is an OBJLIT.
+            ));
+  }
+
+  @Test
+  public void testObjectAssign_noWarnings() {
+    testSame(
+        lines(
+            "const inner = {MIN:'min'};",
+            "const ns = {};",
+            "ns.a = Object.assign({}, inner);",
+            "let x = ns.a.MIN;" // does not warn as `ns.a` is not OBJLIT.
+            ));
+  }
+
+  @Test
+  public void testObjectWithSpreadProperty_simple() {
+    testSame(
+        lines(
+            "const inner = {",
+            "    MIN: 'min',",
+            "};",
+            "const outer = {",
+            "    ...inner,",
+            "};",
+            "var obj = outer.MIN"));
+  }
+
+  @Test
+  public void testObjectWithSpreadProperty_nestedObjLiteral() {
+    testSame(
+        lines(
+            "const inner = {",
+            "    MIN: 'min',",
+            "};",
+            "const ns = {};",
+            "ns.outer = {",
+            "    ...inner,",
+            "};",
+            "var obj = ns.outer.MIN"));
+  }
+
+  @Test
+  public void testObjectWithSpreadProperty_deeplyNestedSpread() {
+    testSame(
+        lines(
+            "let innermost = {",
+            "    MIN: 'min',",
+            "};",
+            "let inner = {",
+            "    ...innermost,",
+            "};",
+            "let outer = {",
+            "   inner",
+            "};",
+            "let obj = outer.inner.MIN;"));
+  }
+
+  @Test
+  public void testObjectWithSpreadProperty_spreadTwice() {
+    testSame(
+        lines(
+            "let innermost = {",
+            "    MIN: 'min',",
+            "};",
+            "let inner = {",
+            "    ...innermost,",
+            "};",
+            "let outer = {",
+            "   ...inner",
+            "};",
+            "let obj = outer.MIN"));
+  }
+
+  @Test
   public void testReassignedName() {
     // regression test for an obscure bug triggered by redefining a name as a class after its
     // original definition, and also adding a property to that name.

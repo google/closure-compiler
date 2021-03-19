@@ -141,6 +141,14 @@ class CheckGlobalNames implements CompilerPass {
                   || prop.getGlobalSets() + prop.getLocalSets() > 0);
         }
 
+        if (prop.getParent() != null
+            && prop.getParent().isObjectLiteral()
+            && hasSpreadProp(prop.getParent())) {
+          // Skip validating props of object literals that contain spread properties as they can
+          // potentially report
+          // spurious UNDEFINED_NAME warnings. See tests {@code testObjectWithSpreadProperty_*}.
+          continue;
+        }
         validateName(prop, propIsDefined);
         checkDescendantNames(prop, propIsDefined);
       }
@@ -189,6 +197,42 @@ class CheckGlobalNames implements CompilerPass {
           }
         }
       }
+    }
+  }
+
+  // Does this object literal have a spread property in it.
+  private boolean hasSpreadProp(Name name) {
+    checkState(name.isObjectLiteral(), name.getName());
+    Node objLitNode = getObjLitNode(name);
+    if (objLitNode != null) {
+      for (Node prop = objLitNode.getFirstChild(); prop != null; prop = prop.getNext()) {
+        if (prop.isSpread()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private Node getObjLitNode(Name name) {
+    checkState(name.isObjectLiteral(), name.getName());
+    Ref decl = name.getDeclaration();
+    Node declNode = decl != null ? decl.getNode() : null;
+    if (declNode == null) {
+      return null;
+    }
+    if (name.isSimpleName()) {
+      // e.g. `let x = {}`
+      return declNode.getFirstChild();
+    } else {
+      // e.g. `a.b.c = {}`
+      while (!declNode.isAssign()) {
+        declNode = declNode.getParent();
+        if (declNode == null) {
+          return null;
+        }
+      }
+      return declNode.getSecondChild();
     }
   }
 
