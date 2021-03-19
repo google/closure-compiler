@@ -285,42 +285,6 @@ public class Node implements Serializable {
     return Ascii.toLowerCase(String.valueOf(propType));
   }
 
-  /**
-   * Represents a node in the type declaration AST.
-   */
-  public static final class TypeDeclarationNode extends Node {
-
-    private static final long serialVersionUID = 1L;
-    private String str; // This is used for specialized signatures.
-
-    public TypeDeclarationNode(Token nodeType, String str) {
-      super(nodeType);
-      this.str = str;
-    }
-
-    public TypeDeclarationNode(Token nodeType) {
-      super(nodeType);
-    }
-
-    public TypeDeclarationNode(Token nodeType, Node child) {
-      super(nodeType, child);
-    }
-
-    /**
-     * returns the string content.
-     * @return non null.
-     */
-    @Override
-    public String getString() {
-      return str;
-    }
-
-    @Override
-    public TypeDeclarationNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new TypeDeclarationNode(this.getToken(), str), cloneTypeExprs);
-    }
-  }
-
   private static final class NumberNode extends Node {
 
     private static final long serialVersionUID = 1L;
@@ -1227,11 +1191,8 @@ public class Node implements Serializable {
     }
   }
 
-  /**
-   * Sets the syntactical type specified on this node.
-   * @param typeExpression
-   */
-  public final void setDeclaredTypeExpression(TypeDeclarationNode typeExpression) {
+  /** Sets the syntactical type specified on this node. */
+  public final void setDeclaredTypeExpression(Node typeExpression) {
     putProp(Prop.DECLARED_TYPE_EXPR, typeExpression);
   }
 
@@ -1240,8 +1201,8 @@ public class Node implements Serializable {
    * #getJSType()} which returns the compiler-inferred type.
    */
   @Nullable
-  public final TypeDeclarationNode getDeclaredTypeExpression() {
-    return (TypeDeclarationNode) getProp(Prop.DECLARED_TYPE_EXPR);
+  public final Node getDeclaredTypeExpression() {
+    return (Node) getProp(Prop.DECLARED_TYPE_EXPR);
   }
 
   final PropListItem createProp(byte propType, Object value, @Nullable PropListItem next) {
@@ -2049,12 +2010,13 @@ public class Node implements Serializable {
       return false;
     }
 
-    TypeDeclarationNode thisTDN = this.getDeclaredTypeExpression();
-    TypeDeclarationNode thatTDN = node.getDeclaredTypeExpression();
-    if ((thisTDN != null || thatTDN != null)
-        && (thisTDN == null
-            || thatTDN == null
-            || !thisTDN.isEquivalentTo(thatTDN, compareType, recurse, jsDoc))) {
+    Node thisDte = this.getDeclaredTypeExpression();
+    Node thatDte = node.getDeclaredTypeExpression();
+    if (thisDte == thatDte) {
+      // Do nothing
+    } else if (thisDte == null || thatDte == null) {
+      return false;
+    } else if (!thisDte.isEquivalentTo(thatDte, compareType, recurse, jsDoc)) {
       return false;
     }
 

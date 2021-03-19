@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +83,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testFunctionParamDeclaration() {
-    TypeDeclarationNode stringType = namedType("string");
+    Node stringType = namedType("string");
     Node xParam = IR.name("x");
     xParam.setDeclaredTypeExpression(stringType);
     Node fnNode = IR.function(IR.name("foo"), IR.paramList(xParam), IR.block());
@@ -93,7 +92,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testFunctionParamDeclaration_defaultValue() {
-    TypeDeclarationNode stringType = namedType("string");
+    Node stringType = namedType("string");
     Node xParam = IR.name("x");
     xParam.setDeclaredTypeExpression(stringType);
     Node fnNode =
@@ -106,7 +105,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testFunctionParamDeclaration_arrow() {
-    TypeDeclarationNode stringType = namedType("string");
+    Node stringType = namedType("string");
     Node param = IR.name("x");
     param.setDeclaredTypeExpression(stringType);
     Node fnNode =
@@ -122,7 +121,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testFunctionReturn() {
-    TypeDeclarationNode returnType = namedType("string");
+    Node returnType = namedType("string");
     Node fnNode =
         IR.function(IR.name("foo"), IR.paramList(), IR.block(IR.returnNode(IR.string("hello"))));
     fnNode.setDeclaredTypeExpression(returnType);
@@ -131,7 +130,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testFunctionReturn_arrow() {
-    TypeDeclarationNode returnType = namedType("string");
+    Node returnType = namedType("string");
     Node fnNode = new Node(Token.FUNCTION, IR.name(""), IR.paramList(), IR.string("hello"));
     fnNode.setDeclaredTypeExpression(returnType);
     fnNode.setIsArrowFunction(true);
@@ -141,7 +140,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testCompositeType() {
-    TypeDeclarationNode type = namedType("mymod.ns.Type");
+    Node type = namedType("mymod.ns.Type");
     Node lhs = IR.name("foo");
     lhs.setDeclaredTypeExpression(type);
     Node var = IR.var(lhs);
@@ -150,7 +149,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testArrayType() {
-    TypeDeclarationNode type = new TypeDeclarationNode(Token.ARRAY_TYPE, namedType("string"));
+    Node type = new Node(Token.ARRAY_TYPE, namedType("string"));
     Node lhs = IR.name("foo");
     lhs.setDeclaredTypeExpression(type);
     Node var = IR.var(lhs);
@@ -159,7 +158,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testArrayType_qualifiedType() {
-    TypeDeclarationNode arrayType = arrayType(namedType("mymod.ns.Type"));
+    Node arrayType = arrayType(namedType("mymod.ns.Type"));
     Node lhs = IR.name("foo");
     lhs.setDeclaredTypeExpression(arrayType);
     Node var = IR.var(lhs);
@@ -168,7 +167,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Test
   public void testParameterizedType() {
-    TypeDeclarationNode type =
+    Node type =
         parameterizedType(
             namedType("my.parameterized.Type"),
             ImmutableList.of(namedType("ns.A"), namedType("ns.B")));
