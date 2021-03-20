@@ -2434,6 +2434,37 @@ chrome.enterprise.reportingPrivate.DeviceInfo;
 chrome.enterprise.reportingPrivate.getDeviceInfo = function(callback) {};
 
 /**
+ * Represents possible states for the EnterpriseRealTimeUrlCheckMode policy
+ * @enum {number}
+ */
+chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode = {
+  DISABLED: 0,
+  ENABLED_MAIN_FRAME: 0,
+};
+
+/**
+ * Type of the object returned by getContextInfo.
+ * @typedef {?{
+ *   browserAffiliationIds: (!Array<string>|undefined),
+ *   profileAffiliationIds: (!Array<string>|undefined),
+ *   onFileAttachedProviders: (!Array<string>|undefined),
+ *   onFileDownloadedProviders: (!Array<string>|undefined),
+ *   onBulkDataEntryProviders: (!Array<string>|undefined),
+ *   onSecurityEventProviders: (!Array<string>|undefined),
+ *   realtimeUrlCheckMode: chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode,
+ *   browserVersion: string,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.ContextInfo;
+
+/**
+ * Returns the context information object.
+ * @param {(function(!chrome.enterprise.reportingPrivate.ContextInfo): void)}
+ *     callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.getContextInfo = function(callback) {};
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */
