@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.refactoring.examples;
+package com.google.javascript.refactoring.examples.security;
 
 import com.google.javascript.refactoring.testing.RefasterJsTestCase;
 import org.junit.Test;
@@ -26,11 +26,11 @@ public class NavigationalXssSinksRefactoringTest {
   /** Path of the directory containing test inputs and expected outputs. */
   private static final String TESTDATA_DIR =
       "test/"
-          + "com/google/javascript/refactoring/examples/testdata";
+          + "com/google/javascript/refactoring/examples/security/testdata";
 
   /** The RefasterJs template to use. */
   private static final String NAVIGATIONAL_XSS_SINKS_TEMPLATE =
-      "com/google/javascript/refactoring/examples/refasterjs/navigational_xss_sinks.js";
+      "com/google/javascript/refactoring/examples/refasterjs/security/navigational_xss_sinks.js";
 
   @Test
   public void test_refactorings() throws Exception {

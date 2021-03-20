@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.refactoring.examples;
+package com.google.javascript.refactoring.examples.security;
 
 import com.google.javascript.refactoring.testing.RefasterJsTestCase;
 import org.junit.Test;
@@ -26,15 +26,15 @@ public class SetLocationTest {
   /** Path of the directory containing test inputs and expected outputs. */
   private static final String TESTDATA_DIR =
       "test/"
-          + "com/google/javascript/refactoring/examples/testdata";
+          + "com/google/javascript/refactoring/examples/security/testdata";
 
   /** The RefasterJs template to use for Location#href. */
   private static final String SET_LOCATION_HREF_TEMPLATE =
-      "com/google/javascript/refactoring/examples/refasterjs/set_location_href.js";
+      "com/google/javascript/refactoring/examples/refasterjs/security/set_location_href.js";
 
   /** The RefasterJs template to use for Window#location. */
   private static final String SET_WINDOW_LOCATION_TEMPLATE =
-      "com/google/javascript/refactoring/examples/refasterjs/set_window_location.js";
+      "com/google/javascript/refactoring/examples/refasterjs/security/set_window_location.js";
 
   @Test
   public void testLocationHref() throws Exception {
