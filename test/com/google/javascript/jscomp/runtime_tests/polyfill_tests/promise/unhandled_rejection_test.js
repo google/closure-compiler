@@ -25,6 +25,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 
 const expectedError = new Error('expected error');
 
+const TIMEOUT = 400;
+
 /**
  * Expects `unhandledrejection` handler to be triggered.
  * @param {function()} runTest A function that starts the test case when called.
@@ -45,7 +47,7 @@ function expectUnhandledRejectionEvent(runTest) {
     id = Timer.callOnce(() => {
       window.removeEventListener('unhandledrejection', handler);
       reject('unhandledrejection is not triggered before timeout.');
-    }, 100);
+    }, TIMEOUT);
   });
 }
 
@@ -66,7 +68,7 @@ function expectNoUnhandledRejectionEvent(runTest) {
     Timer.callOnce(() => {
       window.removeEventListener('unhandledrejection', handler);
       resolve();
-    }, 100);
+    }, TIMEOUT);
   });
 }
 
