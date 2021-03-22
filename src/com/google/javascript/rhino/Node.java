@@ -384,28 +384,6 @@ public class Node implements Serializable {
       setString(str);
     }
 
-    /**
-     * returns the string content.
-     * @return non null.
-     */
-    @Override
-    public String getString() {
-      return this.str;
-    }
-
-    /**
-     * sets the string content.
-     * @param str the new value.  Non null.
-     */
-    @Override
-    public void setString(String str) {
-      if (null == str) {
-        throw new IllegalArgumentException("StringNode: str is null");
-      }
-      // Intern the string reference so that serialization won't save repeated strings.
-      this.str = RhinoStringPool.addOrGet(str);
-    }
-
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -1308,28 +1286,14 @@ public class Node implements Serializable {
     }
   }
 
-  /** Can only be called when node has String context. */
-  public String getString() {
-    if (this.token == Token.STRING) {
-      throw new IllegalStateException(
-          "String node not created with Node.newString");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a string node");
-    }
+  /** vReturns the string content.v */
+  public final String getString() {
+    return ((StringNode) this).str;
   }
 
-  /**
-   * Can only be called for a Token.STRING or Token.NAME.
-   *
-   * @param value the value to set.
-   */
-  public void setString(String value) {
-    if (this.token == Token.STRING || this.token == Token.NAME) {
-      throw new IllegalStateException(
-          "String node not created with Node.newString");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a string node");
-    }
+  /** Sets the string content. */
+  public final void setString(String str) {
+    ((StringNode) this).str = RhinoStringPool.addOrGet(str); // RhinoStringPool is null-hostile.
   }
 
   /** Can only be called when <code>getType() == Token.TEMPLATELIT_STRING</code> */
