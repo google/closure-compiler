@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.RetrievalType;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -116,6 +117,7 @@ public final class CoverageInstrumenterTest {
                 .setLineNumber(1)
                 .setColumnPosition(5)
                 .setIdentifier("x")
+                .setRetrievalType(RetrievalType.EXACT)
                 .build());
   }
 }

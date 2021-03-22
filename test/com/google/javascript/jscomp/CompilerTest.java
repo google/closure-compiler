@@ -34,6 +34,7 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.RetrievalType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
@@ -186,6 +187,7 @@ public final class CompilerTest {
                 .setLineNumber(18)
                 .setColumnPosition(25)
                 .setIdentifier("testSymbolName")
+                .setRetrievalType(RetrievalType.APPROXIMATED_LINE)
                 .build());
     assertThat(compiler.getSourceLine(origSourceName, 1)).isEqualTo("<div ng-show='foo()'>");
   }
