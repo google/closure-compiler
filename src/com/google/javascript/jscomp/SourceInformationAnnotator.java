@@ -21,25 +21,19 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.Node;
 
 /**
- * Annotates nodes with information from their original input file
- * before the compiler performs work that changes this information (such
- * as its original location, its original name, etc).
+ * Annotates nodes with information from their original input file before the compiler performs work
+ * that changes this information (such as its original location, its original name, etc).
  *
- * Information saved:
+ * <p>Information saved:
  *
- * - Annotates all NAME nodes with an ORIGINALNAME_PROP indicating its original
- *   name.
- *
- * - Annotates all string GET_PROP nodes with an ORIGINALNAME_PROP.
- *
- * - Annotates all OBJECT_LITERAL unquoted string key nodes with an
- *   ORIGINALNAME_PROP.
- *
- * - Annotates all FUNCTION nodes with an ORIGINALNAME_PROP indicating its
- *   nearest original name.
+ * <ul>
+ *   <li>Annotates all NAME nodes with an ORIGINALNAME_PROP indicating its original name.
+ *   <li>Annotates all string GET_PROP nodes with an original name.
+ *   <li>Annotates all OBJECT_LITERAL unquoted string key nodes with an original name.
+ *   <li>Annotates all FUNCTION nodes with an original name indicating its nearest original name.
+ * </ul>
  */
-class SourceInformationAnnotator extends
-  NodeTraversal.AbstractPostOrderCallback {
+class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
   private final String sourceFile;
   private final boolean checkAnnotated;
 

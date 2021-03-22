@@ -95,8 +95,6 @@ public class Node implements Serializable {
     SYNTHETIC,
     // Used to indicate BLOCK that is added
     ADDED_BLOCK,
-    // The original name of the node, before renaming.
-    ORIGINALNAME,
     // Function or constructor call side effect flags.
     SIDE_EFFECT_FLAGS,
     // The variable or property is constant.
@@ -250,7 +248,6 @@ public class Node implements Serializable {
   public static final Prop JSDOC_INFO_PROP = Prop.JSDOC_INFO;
   public static final Prop INCRDECR_PROP = Prop.INCRDECR;
   public static final Prop QUOTED_PROP = Prop.QUOTED;
-  public static final Prop ORIGINALNAME_PROP = Prop.ORIGINALNAME;
   public static final Prop IS_CONSTANT_NAME = Prop.IS_CONSTANT_NAME;
   public static final Prop IS_NAMESPACE = Prop.IS_NAMESPACE;
   public static final Prop DIRECT_EVAL = Prop.DIRECT_EVAL;
@@ -1442,6 +1439,8 @@ public class Node implements Serializable {
 
   @Nullable private transient JSType jstype;
 
+  @Nullable private transient String originalName;
+
   /**
    * Linked list of properties. Since vast majority of nodes would have no more than 2 properties,
    * linked list saves memory and provides fast lookup. If this does not holds, propListHead can be
@@ -1533,12 +1532,12 @@ public class Node implements Serializable {
 
   /** The original name of this node, if the node has been renamed. */
   @Nullable
-  public String getOriginalName() {
-    return (String) this.getProp(Prop.ORIGINALNAME);
+  public final String getOriginalName() {
+    return this.originalName;
   }
 
-  public void setOriginalName(String originalName) {
-    this.putProp(Prop.ORIGINALNAME, originalName);
+  public final void setOriginalName(String s) {
+    this.originalName = (s == null) ? null : RhinoStringPool.addOrGet(s);
   }
 
   /**
@@ -2371,6 +2370,7 @@ public class Node implements Serializable {
     dstNode.sourcePosition = this.sourcePosition;
     dstNode.length = this.length;
     dstNode.jstype = this.jstype;
+    dstNode.originalName = this.originalName;
     dstNode.propListHead = this.propListHead;
 
     // TODO(johnlenz): Remove this once JSTypeExpression are immutable
@@ -2422,7 +2422,7 @@ public class Node implements Serializable {
    */
   public final Node useSourceInfoFrom(Node other) {
     setStaticSourceFileFrom(other);
-    putProp(Prop.ORIGINALNAME, other.getProp(Prop.ORIGINALNAME));
+    this.originalName = other.originalName;
     sourcePosition = other.sourcePosition;
     length = other.length;
     return this;
@@ -2463,8 +2463,8 @@ public class Node implements Serializable {
     // TODO(lharker): should this be inside the above if condition?
     // If the node already has a source file, it seems strange to
     // go ahead and set the original name anyway.
-    if (getProp(Prop.ORIGINALNAME) == null) {
-      putProp(Prop.ORIGINALNAME, other.getProp(Prop.ORIGINALNAME));
+    if (this.originalName == null) {
+      this.originalName = other.originalName;
     }
 
     return this;
@@ -3538,6 +3538,7 @@ public class Node implements Serializable {
 
     writeEncodedInt(out, sourcePosition);
     writeEncodedInt(out, length);
+    out.writeObject(this.originalName);
 
     // Serialize the embedded children linked list here to limit the depth of recursion (and avoid
     // serializing redundant information like the previous reference)
@@ -3559,6 +3560,7 @@ public class Node implements Serializable {
     token = TOKEN_VALUES[in.readUnsignedByte()];
     sourcePosition = readEncodedInt(in);
     length = readEncodedInt(in);
+    this.setOriginalName((String) in.readObject());
 
     // Deserialize the children list restoring the value of the previous reference.
     first = (Node) in.readObject();
