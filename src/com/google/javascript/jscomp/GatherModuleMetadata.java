@@ -33,6 +33,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -48,6 +49,11 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           "JSC_INVALID_NAMESPACE_OR_MODULE_ID",
           "Namespace and module ID must be a dot-separated sequence of legal property"
               + " identifiers. Found ''{0}''");
+
+  static final DiagnosticType INVALID_MODULE_ID =
+      DiagnosticType.error(
+          "JSC_INVALID_MODULE_ID",
+          "Module ID must only contain ASCII, 0-9, $, ., and _. Found ''{0}''");
 
   static final DiagnosticType INVALID_DECLARE_MODULE_ID_CALL =
       DiagnosticType.error(
@@ -376,7 +382,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         currentModule.moduleType(ModuleType.GOOG_PROVIDE, t, n);
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           String namespace = n.getLastChild().getString();
-          addNamespace(currentModule, namespace, t, n);
+          addNamespace(currentModule, ModuleType.GOOG_PROVIDE, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
         }
@@ -384,7 +390,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         currentModule.moduleType(ModuleType.GOOG_MODULE, t, n);
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           String namespace = n.getLastChild().getString();
-          addNamespace(currentModule, namespace, t, n);
+          addNamespace(currentModule, ModuleType.GOOG_MODULE, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_MODULE_ID_ARG);
         }
@@ -398,7 +404,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           currentModule.recordDeclareModuleId(n);
           String namespace = n.getLastChild().getString();
-          addNamespace(currentModule, namespace, t, n);
+          addNamespace(currentModule, ModuleType.GOOG_MODULE, namespace, t, n);
         } else {
           t.report(n, INVALID_DECLARE_MODULE_ID_CALL);
         }
@@ -434,9 +440,16 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
      * not.
      */
     private void addNamespace(
-        ModuleMetadataBuilder module, String namespace, NodeTraversal t, Node n) {
+        ModuleMetadataBuilder module,
+        ModuleType moduleType,
+        String namespace,
+        NodeTraversal t,
+        Node n) {
       if (!isValidNamespaceOrModuleId(namespace)) {
         compiler.report(JSError.make(n, INVALID_NAMESPACE_OR_MODULE_ID, namespace));
+      } else if (moduleType.equals(ModuleType.GOOG_MODULE) && !isValidModuleId(namespace)) {
+
+        compiler.report(JSError.make(n, INVALID_MODULE_ID, namespace));
       }
 
       ModuleType existingType = null;
@@ -513,6 +526,14 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     }
     return true;
   }
+
+  // stricter than isValidNamespace. Must match closure/base.js's goog.VALID_MODULE_RE_
+  private static boolean isValidModuleId(String id) {
+    return NAMESPACE_SEGMENT_REGEX.matcher(id).matches();
+  }
+
+  private static final Pattern NAMESPACE_SEGMENT_REGEX =
+      Pattern.compile("^[a-zA-Z_$][a-zA-Z0-9_$.]*$");
 
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 }

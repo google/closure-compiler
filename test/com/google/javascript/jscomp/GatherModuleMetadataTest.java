@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_MODULE_ID;
 import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
 
 import com.google.common.collect.ImmutableList;
@@ -121,6 +122,16 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProvideNamespaceValidation() {
+    test(srcs("goog.provide('');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.provide(' ');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.provide('a..b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+
+    testSame(srcs("goog.provide('ā');"));
+    testSame(srcs("goog.provide('a');"));
+  }
+
+  @Test
   public void testGoogModule() {
     testSame("goog.module('my.module');");
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
@@ -140,8 +151,11 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     test(srcs("goog.module('a. .b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
     test(srcs("goog.module('a.-.b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
 
+    test(srcs("goog.module('0');"), error(INVALID_MODULE_ID));
+    test(srcs("goog.module('ā');"), error(INVALID_MODULE_ID));
+
     testSame(srcs("goog.module('a');"));
-    testSame(srcs("goog.module('0');"));
+    testSame(srcs("goog.module('a0');"));
     testSame(srcs("goog.module('$');"));
   }
 
