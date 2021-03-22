@@ -196,6 +196,25 @@ function PerformanceEventTiming() {}
 /** @type {boolean} */ PerformanceEventTiming.prototype.cancelable;
 /** @type {?Node} */ PerformanceEventTiming.prototype.target;
 
+/**
+ * @record
+ * @see https://www.w3.org/TR/user-timing-3/#performancemarkoptions-dictionary
+ */
+function PerformanceMarkOptions() {}
+/** @type {Object|undefined} */ PerformanceMarkOptions.prototype.detail;
+/** @type {number|undefined} */ PerformanceMarkOptions.prototype.startTime;
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/user-timing-3/#performancemeasureoptions-dictionary
+ */
+function PerformanceMeasureOptions() {}
+/** @type {Object|undefined} */ PerformanceMeasureOptions.prototype.detail;
+/** @type {string|number|undefined} */ PerformanceMeasureOptions.prototype
+    .start;
+/** @type {number|undefined} */ PerformanceMeasureOptions.prototype.duration;
+/** @type {string|number|undefined} */ PerformanceMeasureOptions.prototype.end;
+
 /** @constructor */
 function Performance() {}
 
@@ -264,9 +283,10 @@ Performance.prototype.now = function() {};
 
 /**
  * @param {string} markName
- * @return {undefined}
+ * @param {PerformanceMarkOptions=} markOptions
+ * @return {PerformanceMark|undefined}
  */
-Performance.prototype.mark = function(markName) {};
+Performance.prototype.mark = function(markName, markOptions) {};
 
 /**
  * @param {string=} opt_markName
@@ -276,12 +296,12 @@ Performance.prototype.clearMarks = function(opt_markName) {};
 
 /**
  * @param {string} measureName
- * @param {string=} opt_startMark
- * @param {string=} opt_endMark
- * @return {undefined}
+ * @param {string|PerformanceMeasureOptions=} startOrMeasureOptions
+ * @param {string=} endMark
+ * @return {PerformanceMeasure|undefined}
  */
 Performance.prototype.measure = function(
-    measureName, opt_startMark, opt_endMark) {};
+    measureName, startOrMeasureOptions, endMark) {};
 
 /**
  * @param {string=} opt_measureName
@@ -297,6 +317,24 @@ Window.prototype.performance;
  * @suppress {duplicate}
  */
 var performance;
+
+/**
+ * @constructor
+ * @extends {PerformanceEntry}
+ * @param {string} markName
+ * @param {PerformanceMarkOptions=} markOptions
+ * @see https://www.w3.org/TR/user-timing-3/#performancemark
+ */
+function PerformanceMark(markName, markOptions) {}
+/** @type {Object} (readonly) */ PerformanceMark.prototype.detail;
+
+/**
+ * @constructor
+ * @extends {PerformanceEntry}
+ * @see https://www.w3.org/TR/user-timing-3/#performancemeasure
+ */
+function PerformanceMeasure() {}
+/** @type {Object} (readonly) */ PerformanceMeasure.prototype.detail;
 
 /**
  * @constructor
