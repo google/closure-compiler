@@ -1672,9 +1672,13 @@ public final class ConformanceRules {
 
   /** Banned global var declarations. */
   public static final class BanGlobalVars extends AbstractRule {
+    private ImmutableSet<String> allowlistedNames;
+
     public BanGlobalVars(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
+
+      this.allowlistedNames = ImmutableSet.copyOf(requirement.getValueList());
     }
 
     @Override
@@ -1717,6 +1721,10 @@ public final class ConformanceRules {
     }
 
     private boolean isAllowlistedName(String name) {
+      if (this.allowlistedNames.contains(name)) {
+        return true;
+      }
+      // names created by JSCompiler internals
       return name.equals("$jscomp")
           || name.startsWith("$jscomp$compprop")
           || ClosureRewriteModule.isModuleContent(name)

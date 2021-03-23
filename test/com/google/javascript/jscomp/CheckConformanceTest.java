@@ -2431,6 +2431,23 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCustomBanGlobalVarsWithAllowlist() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
+            + "  value: 'foo'\n"
+            + "  value: 'bar'\n"
+            + "  error_message: 'BanGlobalVars Message'\n"
+            + "}";
+
+    testWarning(
+        "var baz;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: BanGlobalVars Message");
+
+    testNoWarning("var foo; var bar;");
+  }
+
+  @Test
   public void testRequireFileoverviewVisibility() {
     configuration =
         "requirement: {\n"
