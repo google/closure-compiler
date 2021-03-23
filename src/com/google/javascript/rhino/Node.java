@@ -84,8 +84,6 @@ public class Node implements Serializable {
     NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
     JSDOC_INFO,
-    // Contains a Color object
-    COLOR,
     // Whether incrdecr is pre (false) or post (true)
     INCRDECR,
     // Set to indicate a quoted object lit key
@@ -1380,8 +1378,8 @@ public class Node implements Serializable {
       }
     }
 
-    if (printType && jstype != null) {
-      String typeString = jstype.toString();
+    if (printType && jstypeOrColor != null) {
+      String typeString = jstypeOrColor.toString();
       if (typeString != null) {
         sb.append(" : ");
         sb.append(typeString);
@@ -1437,7 +1435,7 @@ public class Node implements Serializable {
   /** The length of the code represented by the node. */
   private transient int length;
 
-  @Nullable private transient JSType jstype;
+  @Nullable private transient Object jstypeOrColor;
 
   @Nullable private transient String originalName;
 
@@ -1963,9 +1961,7 @@ public class Node implements Serializable {
       return false;
     }
 
-    if (compareType
-        && (!Objects.equals(getJSType(), node.getJSType())
-            || !Objects.equals(getColor(), node.getColor()))) {
+    if (compareType && !Objects.equals(this.jstypeOrColor, node.jstypeOrColor)) {
       return false;
     }
 
@@ -2369,7 +2365,7 @@ public class Node implements Serializable {
     final Node dstNode = dst;
     dstNode.sourcePosition = this.sourcePosition;
     dstNode.length = this.length;
-    dstNode.jstype = this.jstype;
+    dstNode.jstypeOrColor = this.jstypeOrColor;
     dstNode.originalName = this.originalName;
     dstNode.propListHead = this.propListHead;
 
@@ -2492,17 +2488,17 @@ public class Node implements Serializable {
    */
   @Nullable
   public final JSType getJSType() {
-    return jstype;
+    return (this.jstypeOrColor instanceof JSType) ? (JSType) this.jstypeOrColor : null;
   }
 
   /** Returns the compiled inferred type on this node, or throws an NPE if there isn't one. */
   public final JSType getJSTypeRequired() {
-    checkNotNull(jstype, "no jstype: %s", this);
-    return jstype;
+    return checkNotNull(this.getJSType(), "no jstypeOrColor: %s", this);
   }
 
-  public final Node setJSType(@Nullable JSType jstype) {
-    this.jstype = jstype;
+  public final Node setJSType(@Nullable JSType x) {
+    checkState(this.jstypeOrColor == null || this.jstypeOrColor instanceof JSType, this);
+    this.jstypeOrColor = x;
     return this;
   }
 
@@ -2512,18 +2508,19 @@ public class Node implements Serializable {
    */
   @Nullable
   public final Color getColor() {
-    return (Color) getProp(Prop.COLOR);
+    return (this.jstypeOrColor instanceof Color) ? (Color) this.jstypeOrColor : null;
   }
 
-  public final Node setColor(@Nullable Color jstype) {
-    putProp(Prop.COLOR, jstype);
+  public final Node setColor(@Nullable Color x) {
+    checkState(this.jstypeOrColor == null || this.jstypeOrColor instanceof Color, this);
+    this.jstypeOrColor = x;
     return this;
   }
 
   /** Copies a nodes JSTYpe and Color (if present) */
+  @Deprecated
   public final Node copyTypeFrom(Node other) {
-    this.jstype = other.jstype;
-    this.setColor(other.getColor());
+    this.jstypeOrColor = other.jstypeOrColor;
     return this;
   }
 
@@ -3550,6 +3547,7 @@ public class Node implements Serializable {
     // Null marks the end of the children.
     out.writeObject(null);
     out.writeObject(propListHead);
+    out.writeObject((Color) this.jstypeOrColor);
   }
 
   @GwtIncompatible("ObjectInputStream")
@@ -3586,6 +3584,7 @@ public class Node implements Serializable {
       first.previous = lastChild;
     }
     propListHead = (PropListItem) in.readObject();
+    this.jstypeOrColor = (Color) in.readObject();
   }
 
   /**

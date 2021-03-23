@@ -119,8 +119,8 @@ public abstract class CompilerTestCase {
   private boolean typeCheckEnabled;
 
   /**
-   * If true, run the ConvertTypesToColors pass and the {@link RemoveTypes} pass, which removes
-   * references to JSTypes and converts JSDoc to its simplified optimization form.
+   * If true, run the ConvertTypesToColors pass, which removes references to JSTypes and converts
+   * JSDoc to its simplified optimization form.
    */
   private boolean replaceTypesWithColors;
 
@@ -1527,11 +1527,8 @@ public abstract class CompilerTestCase {
         // Run type -> color replacement whenever multistage compilation is requested as that pass
         // always runs at the end of stage 1.
         if ((replaceTypesWithColors && i == 0) || runMultistageCompilation) {
-          if (typeCheckEnabled) {
-            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
-                .process(externsRoot, mainRoot);
-          }
-          new RemoveTypes(compiler).process(externsRoot, mainRoot);
+          new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+              .process(externsRoot, mainRoot);
         }
 
         if (runMultistageCompilation) {

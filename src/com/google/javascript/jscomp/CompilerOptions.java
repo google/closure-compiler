@@ -1980,6 +1980,7 @@ public class CompilerOptions implements Serializable {
     this.shouldUnsafelyPreserveTypesForDebugging = preserveTypes;
   }
 
+  @Deprecated
   public boolean shouldUnsafelyPreserveTypesForDebugging() {
     return this.shouldUnsafelyPreserveTypesForDebugging;
   }

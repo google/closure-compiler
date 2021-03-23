@@ -494,14 +494,7 @@ public final class DefaultPassConfig extends PassConfig {
       // Gather property names in externs so they can be queried by the optimizing passes.
       // See b/180424427 for why this runs in stage 1 and not stage 2.
       checks.add(gatherExternProperties);
-
-      if (options.checkTypes || options.inferTypes) {
-        checks.add(typesToColors);
-      }
-
-      if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-        checks.add(removeTypes);
-      }
+      checks.add(typesToColors);
     }
 
     assertAllOneTimePasses(checks);
@@ -2821,14 +2814,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ConvertTypesToColors(compiler, SerializationOptions.SKIP_DEBUG_INFO))
-          .setFeatureSetForOptimizations()
-          .build();
-
-  /** Remove types */
-  private final PassFactory removeTypes =
-      PassFactory.builder()
-          .setName("removeTypes")
-          .setInternalFactory(RemoveTypes::new)
           .setFeatureSetForOptimizations()
           .build();
 

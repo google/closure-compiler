@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
@@ -56,34 +57,66 @@ public final class ConvertTypesToColors implements CompilerPass {
     this.serializationOptions = serializationOptions;
   }
 
-  private static class ColorAst extends AbstractPostOrderCallback {
+  private static class RemoveTypeSyntax extends AbstractPostOrderCallback {
+
+    RemoveTypeSyntax() {}
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      n.setDeclaredTypeExpression(null);
+
+      JSDocInfo jsdoc = n.getJSDocInfo();
+      if (jsdoc != null) {
+        n.setJSDocInfo(JsdocSerializer.convertJSDocInfoForOptimizations(jsdoc));
+      }
+    }
+  }
+
+  private static class RemoveTypeSyntaxAndSwapInColors extends RemoveTypeSyntax {
     private final ColorDeserializer deserializer;
     private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
 
-    ColorAst(
+    RemoveTypeSyntaxAndSwapInColors(
         ColorDeserializer deserializer, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
+      super();
       this.deserializer = deserializer;
       this.typePointersByJstype = typePointersByJstype;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      super.visit(t, n, parent);
+
       JSType oldType = n.getJSType();
-      if (oldType != null && typePointersByJstype.containsKey(oldType)) {
-        n.setColor(deserializer.pointerToColor(typePointersByJstype.get(oldType)));
+      if (oldType != null) {
+        n.setJSType(null);
+
+        TypePointer pointer = typePointersByJstype.get(oldType);
+        if (pointer != null) {
+          n.setColor(deserializer.pointerToColor(pointer));
+        }
       }
+
       if (n.getJSTypeBeforeCast() != null) {
         // used by FunctionInjector and InlineVariables when inlining as a hint that a node has a
         // more specific color
         n.setColorFromTypeCast();
+        n.setJSTypeBeforeCast(null);
       }
+
+      n.setTypedefTypeProp(null);
     }
   }
 
   @Override
   public void process(Node externs, Node root) {
-    // Step 1: Serialize types
     Node externsAndJsRoot = root.getParent();
+
+    if (!compiler.hasTypeCheckingRun()) {
+      NodeTraversal.traverse(compiler, externsAndJsRoot, new RemoveTypeSyntax());
+      return;
+    }
+
     SerializeTypesCallback serializeJstypes =
         SerializeTypesCallback.create(compiler, this.serializationOptions);
     JSTypeSerializer serializer = serializeJstypes.getSerializer();
@@ -93,17 +126,22 @@ public final class ConvertTypesToColors implements CompilerPass {
       serializer.serializeType(mismatch.getRequired());
     }
 
-    // Step 2: Remove types and add colors
     TypePool typePool = serializeJstypes.generateTypePool();
     StringPool stringPool = serializeJstypes.generateStringPool();
+    logSerializationDebugInfo(serializer, typePool);
+
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
     NodeTraversal.traverse(
         compiler,
         externsAndJsRoot,
-        new ColorAst(deserializer, serializeJstypes.getTypePointersByJstype()));
+        new RemoveTypeSyntaxAndSwapInColors(
+            deserializer, serializeJstypes.getTypePointersByJstype()));
 
+    compiler.clearJSTypeRegistry();
     compiler.setColorRegistry(deserializer.getRegistry());
+  }
 
+  private void logSerializationDebugInfo(JSTypeSerializer serializer, TypePool typePool) {
     // Log information about how the JSTypes correspond to the colors. This may be useful later on
     // in optimizations.
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
