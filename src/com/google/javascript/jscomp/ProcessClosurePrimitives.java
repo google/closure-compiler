@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -89,10 +88,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       "JSC_BASE_CLASS_ERROR",
       "incorrect use of {0}.base: {1}");
 
-  static final DiagnosticType CLOSURE_DEFINES_ERROR = DiagnosticType.error(
-      "JSC_CLOSURE_DEFINES_ERROR",
-      "Invalid CLOSURE_DEFINES definition");
-
   static final DiagnosticType INVALID_FORWARD_DECLARE =
       DiagnosticType.error("JSC_INVALID_FORWARD_DECLARE", "Malformed goog.forwardDeclare");
 
@@ -148,13 +143,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           this.checkGoogFunctions(t, n);
           this.maybeProcessClassBaseCall(n);
           this.checkPropertyRenameCall(n);
-        }
-        break;
-
-      case ASSIGN:
-      case NAME:
-        if (n.isName() && n.getString().equals("CLOSURE_DEFINES")) {
-          handleClosureDefinesValues(n);
         }
         break;
 
@@ -247,38 +235,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
     return true;
-  }
-
-  private void handleClosureDefinesValues(Node n) {
-    // var CLOSURE_DEFINES = {};
-    if (NodeUtil.isNameDeclaration(n.getParent())
-        && n.hasOneChild()
-        && n.getFirstChild().isObjectLit()) {
-      HashMap<String, Node> builder = new HashMap<>();
-      builder.putAll(compiler.getDefaultDefineValues());
-      for (Node c = n.getFirstFirstChild(); c != null; c = c.getNext()) {
-        if (c.isStringKey() && isValidDefineValue(c.getFirstChild())) {
-          builder.put(c.getString(), c.getFirstChild().cloneTree());
-        } else {
-          reportBadClosureCommonDefinesDefinition(c);
-        }
-      }
-      compiler.setDefaultDefineValues(ImmutableMap.copyOf(builder));
-    }
-  }
-
-  static boolean isValidDefineValue(Node val) {
-    switch (val.getToken()) {
-      case STRING:
-      case NUMBER:
-      case TRUE:
-      case FALSE:
-        return true;
-      case NEG:
-        return val.getFirstChild().isNumber();
-      default:
-        return false;
-    }
   }
 
   private void maybeProcessClassBaseCall(Node n) {
@@ -515,11 +471,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   /** Reports an incorrect use of super-method calling. */
   private void reportBadBaseMethodUse(Node n, String className, String extraMessage) {
     compiler.report(JSError.make(n, BASE_CLASS_ERROR, className, extraMessage));
-  }
-
-  /** Reports an incorrect CLOSURE_DEFINES definition. */
-  private void reportBadClosureCommonDefinesDefinition(Node n) {
-    compiler.report(JSError.make(n, CLOSURE_DEFINES_ERROR));
   }
 
   /**

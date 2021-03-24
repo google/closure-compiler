@@ -55,6 +55,31 @@ class ProcessDefines implements CompilerPass {
    */
   private static final ImmutableSet<String> KNOWN_DEFINES =
       ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
+  private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
+
+  private final AbstractCompiler compiler;
+  private final JSTypeRegistry registry;
+  private final ImmutableMap<String, Node> replacementValuesFromFlags;
+  private final Mode mode;
+  private final Supplier<GlobalNamespace> namespaceSupplier;
+  private final boolean recognizeClosureDefines;
+
+  private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
+  private final LinkedHashSet<Node> knownGoogDefineCalls = new LinkedHashSet<>();
+  private final LinkedHashMap<String, Define> defineByDefineName = new LinkedHashMap<>();
+  // from var CLOSURE_DEFINES = {
+  private final LinkedHashMap<String, Node> replacementValuesFromClosureDefines =
+      new LinkedHashMap<>();
+  private final LinkedHashSet<Node> validDefineValueExpressions = new LinkedHashSet<>();
+
+  private GlobalNamespace namespace;
+
+  // Warnings
+
+  static final DiagnosticType UNKNOWN_DEFINE_WARNING =
+      DiagnosticType.warning("JSC_UNKNOWN_DEFINE_WARNING", "unknown @define variable {0}");
+
+  // Errors
 
   static final DiagnosticType INVALID_DEFINE_NAME_ERROR =
       DiagnosticType.error(
@@ -63,28 +88,6 @@ class ProcessDefines implements CompilerPass {
   static final DiagnosticType MISSING_DEFINE_ANNOTATION =
       DiagnosticType.error("JSC_INVALID_MISSING_DEFINE_ANNOTATION", "Missing @define annotation");
 
-  private final AbstractCompiler compiler;
-  private final JSTypeRegistry registry;
-  private final ImmutableMap<String, Node> replacementValues;
-  private final Mode mode;
-  private final Supplier<GlobalNamespace> namespaceSupplier;
-  private final boolean recognizeClosureDefines;
-
-  private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
-  private final LinkedHashSet<Node> knownGoogDefineCalls = new LinkedHashSet<>();
-  private final LinkedHashMap<String, Define> defineByDefineName = new LinkedHashMap<>();
-  private final LinkedHashSet<Node> validDefineValueExpressions = new LinkedHashSet<>();
-
-  private GlobalNamespace namespace;
-
-  private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
-
-  // Warnings
-  static final DiagnosticType UNKNOWN_DEFINE_WARNING = DiagnosticType.warning(
-      "JSC_UNKNOWN_DEFINE_WARNING",
-      "unknown @define variable {0}");
-
-  // Errors
   static final DiagnosticType INVALID_DEFINE_TYPE =
       DiagnosticType.error("JSC_INVALID_DEFINE_TYPE", "@define tag only permits primitive types");
 
@@ -100,6 +103,14 @@ class ProcessDefines implements CompilerPass {
   static final DiagnosticType NON_CONST_DEFINE =
       DiagnosticType.error("JSC_NON_CONST_DEFINE", "@define {0} has already been set at {1}.");
 
+  static final DiagnosticType CLOSURE_DEFINES_ERROR =
+      DiagnosticType.error("JSC_CLOSURE_DEFINES_ERROR", "Invalid CLOSURE_DEFINES definition");
+
+  static final DiagnosticType NON_GLOBAL_CLOSURE_DEFINES_ERROR =
+      DiagnosticType.error(
+          "JSC_NON_GLOBAL_CLOSURE_DEFINES_ERROR",
+          "CLOSURE_DEFINES definition must be in top-level global scope");
+
   static final DiagnosticType DEFINE_CALL_WITHOUT_ASSIGNMENT =
       DiagnosticType.error(
           "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
@@ -110,7 +121,7 @@ class ProcessDefines implements CompilerPass {
     this.mode = builder.mode;
     this.compiler = builder.compiler;
     this.registry = this.mode.check ? this.compiler.getTypeRegistry() : null;
-    this.replacementValues = ImmutableMap.copyOf(builder.replacementValues);
+    this.replacementValuesFromFlags = ImmutableMap.copyOf(builder.replacementValues);
     this.namespaceSupplier = builder.namespaceSupplier;
     this.recognizeClosureDefines = builder.recognizeClosureDefines;
   }
@@ -228,7 +239,9 @@ class ProcessDefines implements CompilerPass {
     if (this.mode.check) {
       Set<String> unusedReplacements =
           Sets.difference(
-              this.replacementValues.keySet(),
+              Sets.union(
+                  this.replacementValuesFromFlags.keySet(),
+                  this.replacementValuesFromClosureDefines.keySet()),
               Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
 
       for (String unknownDefine : unusedReplacements) {
@@ -237,11 +250,26 @@ class ProcessDefines implements CompilerPass {
     }
   }
 
+  /**
+   * Returns the replacement value for a @define, if any.
+   *
+   * <ol>
+   *   <li>First checks the flags/compiler options `--define=FOO=1`
+   *   <li>If nothing was found, check for values in a "var CLOSURE_DEFINES = {'FOO': 1}` definition
+   *   <li>If nothing was found, and this is defined via a goog.define call, replace the call with
+   *       the default value.
+   */
   @Nullable
   private Node getReplacementForDefine(Define define) {
-    Node replacementFromFlags = this.replacementValues.get(define.defineName);
+    Node replacementFromFlags = this.replacementValuesFromFlags.get(define.defineName);
     if (replacementFromFlags != null) {
       return replacementFromFlags;
+    }
+
+    Node replacementFromClosureDefines =
+        this.replacementValuesFromClosureDefines.get(define.defineName);
+    if (replacementFromClosureDefines != null) {
+      return replacementFromClosureDefines;
     }
 
     if (isGoogDefineCall(define.value) && define.value.getChildCount() == 3) {
@@ -251,9 +279,7 @@ class ProcessDefines implements CompilerPass {
     return null;
   }
 
-  /**
-   * Only defines of literal number, string, or boolean are supported.
-   */
+  /** Only defines of literal number, string, or boolean are supported. */
   private boolean isValidDefineType(JSTypeExpression expression) {
     JSType type = registry.evaluateTypeExpressionInGlobalScope(expression);
     return !type.isUnknownType()
@@ -263,6 +289,11 @@ class ProcessDefines implements CompilerPass {
   /** Finds all defines, and creates a {@link Define} data structure for each one. */
   private void collectDefines() {
     for (Name name : this.namespace.getAllSymbols()) {
+      if (this.recognizeClosureDefines && name.getFullName().equals("CLOSURE_DEFINES")) {
+        collectClosureDefinesValues(name);
+        continue;
+      }
+
       Ref declaration = this.selectDefineDeclaration(name);
       if (declaration == null) {
         continue;
@@ -451,7 +482,55 @@ class ProcessDefines implements CompilerPass {
           if (isGoogDefineCall(n) && this.knownGoogDefineCalls.add(n)) {
             verifyGoogDefine(n);
           }
+
+          if (n.matchesName("CLOSURE_DEFINES")
+              && NodeUtil.isNameDeclaration(parent)
+              && !NodeUtil.getEnclosingScopeRoot(n).isRoot()) {
+            compiler.report(JSError.make(n, NON_GLOBAL_CLOSURE_DEFINES_ERROR));
+          }
         });
+  }
+
+  private void collectClosureDefinesValues(Name closureDefines) {
+    // var CLOSURE_DEFINES = {};
+    for (Ref ref : closureDefines.getRefs()) {
+      if (!ref.isSet()) {
+        continue;
+      }
+
+      Node n = ref.getNode();
+      if (!(NodeUtil.isNameDeclaration(n.getParent())
+          && n.hasOneChild()
+          && n.getFirstChild().isObjectLit())) {
+        continue;
+      }
+
+      for (Node c = n.getFirstFirstChild(); c != null; c = c.getNext()) {
+        if (c.isStringKey() && isValidClosureDefinesValue(c.getFirstChild())) {
+          this.replacementValuesFromClosureDefines.put(
+              c.getString(), c.getFirstChild().cloneNode());
+        } else if (this.mode.check) {
+          compiler.report(JSError.make(n, CLOSURE_DEFINES_ERROR));
+        }
+      }
+    }
+  }
+
+  private static boolean isValidClosureDefinesValue(Node val) {
+    // Values allowed in 'var CLOSURE_DEFINES = {'
+    // Must be a subset of the values allowed for <val> in
+    // /** @define {...} */ var DEF = <val>
+    switch (val.getToken()) {
+      case STRING:
+      case NUMBER:
+      case TRUE:
+      case FALSE:
+        return true;
+      case NEG:
+        return val.getFirstChild().isNumber();
+      default:
+        return false;
+    }
   }
 
   private boolean hasValidValue(Define define) {

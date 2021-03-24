@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -608,21 +607,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract List<Comment> getComments(String filename);
 
-   /**
-    * Stores a map of default @define values.  These values
-    * can be overridden by values specifically set in the CompilerOptions.
-    */
-   abstract void setDefaultDefineValues(ImmutableMap<String, Node> values);
-
-   /**
-    * Gets a map of default @define values.  These values
-    * can be overridden by values specifically set in the CompilerOptions.
-    */
-   abstract ImmutableMap<String, Node> getDefaultDefineValues();
-
-  /**
-   * Gets the module loader.
-   */
+  /** Gets the module loader. */
   abstract ModuleLoader getModuleLoader();
 
   /** Lookup the type of a module from its name. */
