@@ -557,7 +557,6 @@ final class TypedAstDeserializer {
         case TRAILING_COMMA:
           n.setTrailingComma(true);
           continue;
-        case DEFINE_NAME:
         case FEATURE_SET:
         case SIDE_EFFECT_FLAGS:
         case DIRECTIVES:

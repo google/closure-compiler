@@ -311,12 +311,10 @@ enum NodeProperty {
   // Indicates that a SCRIPT node is or was an ES module. Remains set after the
   // module is rewritten.
   ES6_MODULE = 40;
-  // Original name of a goog.define call.
-  DEFINE_NAME = 41;
   // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the
   // start of an optional chain.
-  START_OF_OPT_CHAIN = 42;
+  START_OF_OPT_CHAIN = 41;
   // Indicates a trailing comma in an array literal, object literal, parameter
   // list, or argument list
-  TRAILING_COMMA = 43;
+  TRAILING_COMMA = 42;
 }
