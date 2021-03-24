@@ -18,6 +18,8 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -33,23 +35,39 @@ import java.util.List;
 /**
  * Class that deserializes a TypedAst proto into the JSCompiler AST structure.
  *
- * <p>NOTE: This is a work in progress, and incomplete. In particular, optimization types/colors are
- * currently not yet implemented and are dropped during deserialization.
+ * <p>NOTE: This is a work in progress, and incomplete.
  */
 final class TypedAstDeserializer {
 
   private final TypedAst typedAst;
+  private final ColorDeserializer colorDeserializer;
   private FeatureSet currentFileFeatures = null;
   private int previousLine;
   private int previousColumn;
 
-  private TypedAstDeserializer(TypedAst typedAst) {
+  private TypedAstDeserializer(TypedAst typedAst, ColorDeserializer colorDeserializer) {
     this.typedAst = typedAst;
+    this.colorDeserializer = colorDeserializer;
   }
 
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
-  static Node deserialize(TypedAst typedAst) {
-    return new TypedAstDeserializer(typedAst).deserializeToScriptNodes();
+  static DeserializedAst deserialize(TypedAst typedAst) {
+    ColorDeserializer colorDeserializer =
+        ColorDeserializer.buildFromTypePool(typedAst.getTypePool(), typedAst.getStringPool());
+    Node root = new TypedAstDeserializer(typedAst, colorDeserializer).deserializeToScriptNodes();
+    return DeserializedAst.create(root, colorDeserializer.getRegistry());
+  }
+
+  /** The result of deserializing a given TypedAst object */
+  @AutoValue
+  public abstract static class DeserializedAst {
+    public abstract Node getRoot();
+
+    public abstract ColorRegistry getColorRegistry();
+
+    private static DeserializedAst create(Node root, ColorRegistry colorRegistry) {
+      return new AutoValue_TypedAstDeserializer_DeserializedAst(root, colorRegistry);
+    }
   }
 
   private Node deserializeToScriptNodes() {
@@ -88,6 +106,9 @@ final class TypedAstDeserializer {
     previousColumn = currentColumn;
     for (AstNode child : astNode.getChildList()) {
       n.addChildToBack(visit(child));
+    }
+    if (astNode.hasType()) {
+      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
     }
     return n;
   }

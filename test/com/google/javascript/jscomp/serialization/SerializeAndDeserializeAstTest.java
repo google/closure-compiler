@@ -16,12 +16,15 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.function.Consumer;
@@ -178,6 +181,21 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     testSame("const s = '\ud800';");
   }
 
+  @Test
+  public void testConvertsNumberTypeToColor() {
+    enableTypeCheck();
+
+    TypedAstDeserializer.DeserializedAst result = TypedAstDeserializer.deserialize(compile("3"));
+    Node newScript = result.getRoot().getSecondChild().getFirstChild();
+    assertNode(newScript).hasToken(Token.SCRIPT);
+    Node three = newScript.getFirstFirstChild();
+
+    assertNode(three).hasToken(Token.NUMBER);
+    assertThat(three.getColor()).isNative(NativeColorId.NUMBER);
+    assertThat(three.getColor())
+        .isSameInstanceAs(result.getColorRegistry().get(NativeColorId.NUMBER));
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);
@@ -187,7 +205,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void test(String code, String expected) {
     TypedAst ast = compile(code);
     Node expectedRoot = getLastCompiler().parseSyntheticCode(expected);
-    Node newRoot = TypedAstDeserializer.deserialize(ast).getLastChild().getFirstChild();
+    Node newRoot = TypedAstDeserializer.deserialize(ast).getRoot().getLastChild().getFirstChild();
     assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
     consumer = null;
   }
