@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.serialization;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
@@ -73,6 +74,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testConstObjectDeclaration() {
     testSame("const obj = {x: 7};");
+  }
+
+  @Test
+  public void testObjectWithShorthandProperty() {
+    testSame("const z = 0; const obj = {z};");
   }
 
   @Test
@@ -147,8 +153,36 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEmptyClassDeclaration() {
+    testSame("class Foo {}");
+  }
+
+  @Test
+  public void testEmptyClassDeclarationWithExtends() {
+    testSame("class Foo {} class Foo extends Bar {}");
+  }
+
+  @Test
+  public void testClassDeclarationWithMethods() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  a() {}",
+            "  'b'() {}",
+            "  get c() {}",
+            "  set d(x) {}",
+            "  ['e']() {}",
+            "}"));
+  }
+
+  @Test
   public void testVanillaFunctionDeclaration() {
     testSame("function f(x, y) { return x ** y; }");
+  }
+
+  @Test
+  public void testBlockScopedFunctionDeclaration() {
+    testSame("if (true) { function f() {} }");
   }
 
   @Test
@@ -172,8 +206,23 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAsyncGeneratorFunctionDeclaration() {
+    testSame("async function* f(x) {};");
+  }
+
+  @Test
   public void testYieldAll() {
     testSame("function* f(x) { yield* x; };");
+  }
+
+  @Test
+  public void testFunctionCallRestAndSpread() {
+    testSame("function f(...x) {} f(...[1, 2, 3]);");
+  }
+
+  @Test
+  public void testFunctionDefaultAndDestructuringParameters() {
+    testSame("function f(x = 0, {y, ...z} = {}, [a, b]) {}");
   }
 
   @Test
@@ -222,6 +271,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node expectedRoot = getLastCompiler().parseSyntheticCode(expected);
     Node newRoot = TypedAstDeserializer.deserialize(ast).getRoot().getLastChild().getFirstChild();
     assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
+    new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true).validateScript(newRoot);
     consumer = null;
   }
 

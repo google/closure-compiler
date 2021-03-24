@@ -74,18 +74,18 @@ final class TypedAstDeserializer {
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
     for (JavascriptFile file : typedAst.getExternFileList()) {
-      externRoot.addChildToBack(deserializeScriptNode(file));
+      externRoot.addChildToBack(deserializeScriptNode(file, externRoot));
     }
     for (JavascriptFile file : typedAst.getSourceFileList()) {
-      codeRoot.addChildToBack(deserializeScriptNode(file));
+      codeRoot.addChildToBack(deserializeScriptNode(file, codeRoot));
     }
     return IR.root(externRoot, codeRoot);
   }
 
-  private Node deserializeScriptNode(JavascriptFile file) {
+  private Node deserializeScriptNode(JavascriptFile file, Node root) {
     currentFileFeatures = FeatureSet.BARE_MINIMUM;
     previousLine = previousColumn = 0;
-    Node scriptNode = visit(file.getRoot());
+    Node scriptNode = visit(file.getRoot(), root);
     SimpleSourceFile sourceFile = new SimpleSourceFile(file.getFilename(), SourceKind.STRONG);
     scriptNode.setStaticSourceFile(sourceFile);
     scriptNode.setInputId(new InputId(sourceFile.getName()));
@@ -94,7 +94,7 @@ final class TypedAstDeserializer {
     return scriptNode;
   }
 
-  private Node visit(AstNode astNode) {
+  private Node visit(AstNode astNode, Node parent) {
     int currentLine = previousLine + astNode.getRelativeLine();
     int currentColumn = previousColumn + astNode.getRelativeColumn();
     Node n = deserializeSingleNode(astNode);
@@ -105,12 +105,154 @@ final class TypedAstDeserializer {
     previousLine = currentLine;
     previousColumn = currentColumn;
     for (AstNode child : astNode.getChildList()) {
-      n.addChildToBack(visit(child));
+      Node deserializedChild = visit(child, n);
+      n.addChildToBack(deserializedChild);
+      // record script features here instead of while visiting child because some features are
+      // context-dependent, and we need to know the parent and/or grandparent.
+      recordScriptFeatures(parent, n, deserializedChild);
     }
     if (astNode.hasType()) {
       n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
     }
     return n;
+  }
+
+  private void recordScriptFeatures(Node grandparent, Node parent, Node node) {
+    if (parent.isClass() && !node.isEmpty() && node.isSecondChildOf(parent)) {
+      currentFileFeatures = currentFileFeatures.with(Feature.CLASS_EXTENDS);
+    }
+
+    switch (node.getToken()) {
+      case FUNCTION:
+        if (node.isAsyncGeneratorFunction()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.ASYNC_GENERATORS);
+        }
+        if (node.isArrowFunction()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.ARROW_FUNCTIONS);
+        }
+        if (node.isAsyncFunction()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.ASYNC_FUNCTIONS);
+        }
+        if (node.isGeneratorFunction()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.GENERATORS);
+        }
+
+        if (parent.isBlock() && !grandparent.isFunction()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+        }
+        return;
+
+      case STRING_KEY:
+        if (node.isShorthandProperty()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.EXTENDED_OBJECT_LITERALS);
+        }
+        return;
+
+      case DEFAULT_VALUE:
+        if (parent.isParamList()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.DEFAULT_PARAMETERS);
+        }
+        return;
+
+      case GETTER_DEF:
+        currentFileFeatures = currentFileFeatures.with(Feature.GETTER);
+        if (parent.isClassMembers()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.CLASS_GETTER_SETTER);
+        }
+        return;
+
+      case SETTER_DEF:
+        currentFileFeatures = currentFileFeatures.with(Feature.SETTER);
+        if (parent.isClassMembers()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.CLASS_GETTER_SETTER);
+        }
+        return;
+
+      case EMPTY:
+        if (parent.isCatch()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CATCH_BINDING);
+        }
+        return;
+      case ITER_REST:
+        currentFileFeatures = currentFileFeatures.with(Feature.ARRAY_PATTERN_REST);
+        if (parent.isParamList()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.REST_PARAMETERS);
+        }
+        return;
+      case ITER_SPREAD:
+        currentFileFeatures = currentFileFeatures.with(Feature.SPREAD_EXPRESSIONS);
+        return;
+      case OBJECT_REST:
+        currentFileFeatures = currentFileFeatures.with(Feature.OBJECT_PATTERN_REST);
+        return;
+      case OBJECT_SPREAD:
+        currentFileFeatures = currentFileFeatures.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
+        return;
+      case BIGINT:
+        currentFileFeatures = currentFileFeatures.with(Feature.BIGINT);
+        return;
+      case EXPONENT:
+        currentFileFeatures = currentFileFeatures.with(Feature.EXPONENT_OP);
+        return;
+      case TAGGED_TEMPLATELIT:
+      case TEMPLATELIT:
+        currentFileFeatures = currentFileFeatures.with(Feature.TEMPLATE_LITERALS);
+        return;
+      case NEW_TARGET:
+        currentFileFeatures = currentFileFeatures.with(Feature.NEW_TARGET);
+        return;
+      case COMPUTED_PROP:
+        currentFileFeatures = currentFileFeatures.with(Feature.COMPUTED_PROPERTIES);
+        return;
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+        currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
+        return;
+      case COALESCE:
+        currentFileFeatures = currentFileFeatures.with(Feature.NULL_COALESCE_OP);
+        return;
+      case DYNAMIC_IMPORT:
+        currentFileFeatures = currentFileFeatures.with(Feature.DYNAMIC_IMPORT);
+        return;
+      case FOR:
+        if (node.isForOf()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.FOR_OF);
+        } else if (node.isForAwaitOf()) {
+          currentFileFeatures = currentFileFeatures.with(Feature.FOR_AWAIT_OF);
+        }
+        return;
+      case IMPORT:
+      case EXPORT:
+        currentFileFeatures = currentFileFeatures.with(Feature.MODULES);
+        return;
+
+      case CONST:
+        currentFileFeatures = currentFileFeatures.with(Feature.CONST_DECLARATIONS);
+        return;
+      case LET:
+        currentFileFeatures = currentFileFeatures.with(Feature.LET_DECLARATIONS);
+        return;
+      case CLASS:
+        currentFileFeatures = currentFileFeatures.with(Feature.CLASSES);
+        return;
+      case CLASS_MEMBERS:
+      case MEMBER_FUNCTION_DEF:
+        currentFileFeatures = currentFileFeatures.with(Feature.MEMBER_DECLARATIONS);
+        return;
+      case SUPER:
+        currentFileFeatures = currentFileFeatures.with(Feature.SUPER);
+        return;
+      case ARRAY_PATTERN:
+        currentFileFeatures = currentFileFeatures.with(Feature.ARRAY_DESTRUCTURING);
+        return;
+      case OBJECT_PATTERN:
+        currentFileFeatures = currentFileFeatures.with(Feature.OBJECT_DESTRUCTURING);
+        return;
+
+      default:
+        return;
+    }
   }
 
   private String getStringByPointer(int pointer) {
@@ -150,7 +292,6 @@ final class TypedAstDeserializer {
       case VOID:
         return new Node(Token.VOID);
       case BIGINT_LITERAL:
-        currentFileFeatures = currentFileFeatures.with(Feature.BIGINT);
         return IR.bigint(new BigInteger(getString(n)));
       case REGEX_LITERAL:
         return new Node(Token.REGEXP);
@@ -218,7 +359,6 @@ final class TypedAstDeserializer {
       case MODULO:
         return new Node(Token.MOD);
       case EXPONENT:
-        currentFileFeatures = currentFileFeatures.with(Feature.EXPONENT_OP);
         return new Node(Token.EXPONENT);
       case BITWISE_NOT:
         return new Node(Token.BITNOT);
@@ -279,10 +419,8 @@ final class TypedAstDeserializer {
       case DELETE:
         return new Node(Token.DELPROP);
       case TAGGED_TEMPLATELIT:
-        currentFileFeatures = currentFileFeatures.with(Feature.TEMPLATE_LITERALS);
         return new Node(Token.TAGGED_TEMPLATELIT);
       case TEMPLATELIT:
-        currentFileFeatures = currentFileFeatures.with(Feature.TEMPLATE_LITERALS);
         return new Node(Token.TEMPLATELIT);
       case TEMPLATELIT_SUB:
         return new Node(Token.TEMPLATELIT_SUB);
@@ -292,27 +430,20 @@ final class TypedAstDeserializer {
         String cookedString = getStringByPointer(templateStringValue.getCookedStringPointer());
         return Node.newTemplateLitString(cookedString, rawString);
       case NEW_TARGET:
-        currentFileFeatures = currentFileFeatures.with(Feature.NEW_TARGET);
         return new Node(Token.NEW_TARGET);
       case COMPUTED_PROP:
-        currentFileFeatures = currentFileFeatures.with(Feature.COMPUTED_PROPERTIES);
         return new Node(Token.COMPUTED_PROP);
       case IMPORT_META:
         return new Node(Token.IMPORT_META);
       case OPTCHAIN_PROPERTY_ACCESS:
-        currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
         return Node.newString(Token.OPTCHAIN_GETPROP, getString(n));
       case OPTCHAIN_CALL:
-        currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
         return new Node(Token.OPTCHAIN_CALL);
       case OPTCHAIN_ELEMENT_ACCESS:
-        currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
         return new Node(Token.OPTCHAIN_GETELEM);
       case COALESCE:
-        currentFileFeatures = currentFileFeatures.with(Feature.NULL_COALESCE_OP);
         return new Node(Token.COALESCE);
       case DYNAMIC_IMPORT:
-        currentFileFeatures = currentFileFeatures.with(Feature.DYNAMIC_IMPORT);
         return new Node(Token.DYNAMIC_IMPORT);
 
       case CAST:
@@ -333,10 +464,8 @@ final class TypedAstDeserializer {
       case FOR_IN_STATEMENT:
         return new Node(Token.FOR_IN);
       case FOR_OF_STATEMENT:
-        currentFileFeatures = currentFileFeatures.with(Feature.FOR_OF);
         return new Node(Token.FOR_OF);
       case FOR_AWAIT_OF_STATEMENT:
-        currentFileFeatures = currentFileFeatures.with(Feature.FOR_AWAIT_OF);
         return new Node(Token.FOR_AWAIT_OF);
       case IF_STATEMENT:
         return new Node(Token.IF);
@@ -355,24 +484,19 @@ final class TypedAstDeserializer {
       case WITH:
         return new Node(Token.WITH);
       case IMPORT:
-        currentFileFeatures = currentFileFeatures.with(Feature.MODULES);
         return new Node(Token.IMPORT);
       case EXPORT:
-        currentFileFeatures = currentFileFeatures.with(Feature.MODULES);
         return new Node(Token.EXPORT);
 
       case VAR_DECLARATION:
         return new Node(Token.VAR);
       case CONST_DECLARATION:
-        currentFileFeatures = currentFileFeatures.with(Feature.CONST_DECLARATIONS);
         return new Node(Token.CONST);
       case LET_DECLARATION:
-        currentFileFeatures = currentFileFeatures.with(Feature.LET_DECLARATIONS);
         return new Node(Token.LET);
       case FUNCTION_LITERAL:
         return new Node(Token.FUNCTION);
       case CLASS_LITERAL:
-        currentFileFeatures = currentFileFeatures.with(Feature.CLASSES);
         return new Node(Token.CLASS);
 
       case BLOCK:
@@ -382,10 +506,8 @@ final class TypedAstDeserializer {
       case LABELED_NAME:
         return IR.labelName(getString(n));
       case CLASS_MEMBERS:
-        currentFileFeatures = currentFileFeatures.with(Feature.MEMBER_DECLARATIONS);
         return new Node(Token.CLASS_MEMBERS);
       case METHOD_DECLARATION:
-        currentFileFeatures = currentFileFeatures.with(Feature.MEMBER_DECLARATIONS);
         return Node.newString(Token.MEMBER_FUNCTION_DEF, getString(n));
       case PARAMETER_LIST:
         return new Node(Token.PARAM_LIST);
@@ -404,10 +526,8 @@ final class TypedAstDeserializer {
       case SUPER:
         return new Node(Token.SUPER);
       case ARRAY_PATTERN:
-        currentFileFeatures = currentFileFeatures.with(Feature.ARRAY_DESTRUCTURING);
         return new Node(Token.ARRAY_PATTERN);
       case OBJECT_PATTERN:
-        currentFileFeatures = currentFileFeatures.with(Feature.OBJECT_DESTRUCTURING);
         return new Node(Token.OBJECT_PATTERN);
       case DESTRUCTURING_LHS:
         return new Node(Token.DESTRUCTURING_LHS);
@@ -416,7 +536,6 @@ final class TypedAstDeserializer {
 
       case RENAMABLE_GETTER_DEF:
       case QUOTED_GETTER_DEF:
-        currentFileFeatures = currentFileFeatures.with(Feature.GETTER);
         Node getterDef = Node.newString(Token.GETTER_DEF, getString(n));
         if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
           getterDef.setQuotedString();
@@ -424,7 +543,6 @@ final class TypedAstDeserializer {
         return getterDef;
       case RENAMABLE_SETTER_DEF:
       case QUOTED_SETTER_DEF:
-        currentFileFeatures = currentFileFeatures.with(Feature.SETTER);
         Node setterDef = Node.newString(Token.SETTER_DEF, getString(n));
         if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
           setterDef.setQuotedString();
@@ -461,15 +579,12 @@ final class TypedAstDeserializer {
     for (NodeProperty prop : serializedNode.getBooleanPropertyList()) {
       switch (prop) {
         case ARROW_FN:
-          currentFileFeatures = currentFileFeatures.with(Feature.ARROW_FUNCTIONS);
           n.setIsArrowFunction(true);
           continue;
         case ASYNC_FN:
-          currentFileFeatures = currentFileFeatures.with(Feature.ASYNC_FUNCTIONS);
           n.setIsAsyncFunction(true);
           continue;
         case GENERATOR_FN:
-          currentFileFeatures = currentFileFeatures.with(Feature.GENERATORS);
           n.setIsGeneratorFunction(true);
           continue;
         case IS_PARENTHESIZED:
