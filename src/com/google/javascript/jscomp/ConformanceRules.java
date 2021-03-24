@@ -1672,7 +1672,7 @@ public final class ConformanceRules {
 
   /** Banned global var declarations. */
   public static final class BanGlobalVars extends AbstractRule {
-    private ImmutableSet<String> allowlistedNames;
+    private final ImmutableSet<String> allowlistedNames;
 
     public BanGlobalVars(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
