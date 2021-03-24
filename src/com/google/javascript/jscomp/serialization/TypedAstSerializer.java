@@ -517,9 +517,9 @@ final class TypedAstSerializer {
       case DEFAULT_VALUE:
         return NodeKind.DEFAULT_VALUE;
       case GETTER_DEF:
-        return NodeKind.GETTER_DEF;
+        return n.isQuotedString() ? NodeKind.QUOTED_GETTER_DEF : NodeKind.RENAMABLE_GETTER_DEF;
       case SETTER_DEF:
-        return NodeKind.SETTER_DEF;
+        return n.isQuotedString() ? NodeKind.QUOTED_SETTER_DEF : NodeKind.RENAMABLE_SETTER_DEF;
 
       case IMPORT_SPECS:
         return NodeKind.IMPORT_SPECS;

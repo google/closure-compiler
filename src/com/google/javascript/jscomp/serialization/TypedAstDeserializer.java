@@ -413,12 +413,23 @@ final class TypedAstDeserializer {
         return new Node(Token.DESTRUCTURING_LHS);
       case DEFAULT_VALUE:
         return new Node(Token.DEFAULT_VALUE);
-      case GETTER_DEF:
+
+      case RENAMABLE_GETTER_DEF:
+      case QUOTED_GETTER_DEF:
         currentFileFeatures = currentFileFeatures.with(Feature.GETTER);
-        return Node.newString(Token.GETTER_DEF, getString(n));
-      case SETTER_DEF:
+        Node getterDef = Node.newString(Token.GETTER_DEF, getString(n));
+        if (n.getKind().equals(NodeKind.QUOTED_GETTER_DEF)) {
+          getterDef.setQuotedString();
+        }
+        return getterDef;
+      case RENAMABLE_SETTER_DEF:
+      case QUOTED_SETTER_DEF:
         currentFileFeatures = currentFileFeatures.with(Feature.SETTER);
-        return Node.newString(Token.SETTER_DEF, getString(n));
+        Node setterDef = Node.newString(Token.SETTER_DEF, getString(n));
+        if (n.getKind().equals(NodeKind.QUOTED_SETTER_DEF)) {
+          setterDef.setQuotedString();
+        }
+        return setterDef;
 
       case IMPORT_SPECS:
         return new Node(Token.IMPORT_SPECS);

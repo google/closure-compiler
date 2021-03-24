@@ -81,13 +81,28 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectWithQuotedMethod() {
+    testSame("let obj = {'method'() {}};");
+  }
+
+  @Test
   public void testObjectWithGetter() {
     testSame("let obj = {get x() {}};");
   }
 
   @Test
+  public void testObjectWithQuotedGetter() {
+    testSame("let obj = {get 'x'() {}};");
+  }
+
+  @Test
   public void testObjectWithSetter() {
     testSame("let obj = {set x(value) {}};");
+  }
+
+  @Test
+  public void testObjectWithQuotedSetter() {
+    testSame("let obj = {set 'x'(value) {}};");
   }
 
   @Test
