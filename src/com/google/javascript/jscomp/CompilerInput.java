@@ -47,7 +47,7 @@ import java.util.TreeMap;
  * and maintain state such as module for the input and whether the input is an extern. Also
  * calculates provided and required types.
  */
-public class CompilerInput extends DependencyInfo.Base implements SourceAst {
+public class CompilerInput extends DependencyInfo.Base {
 
   private static final long serialVersionUID = 2L;
 
@@ -120,7 +120,6 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   }
 
   /** Returns a name for this input. Must be unique across all inputs. */
-  @Override
   public InputId getInputId() {
     return id;
   }
@@ -138,7 +137,6 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public Node getAstRoot(AbstractCompiler compiler) {
     Node root = checkNotNull(ast.getAstRoot(compiler));
     checkState(root.isScript());
@@ -146,17 +144,14 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return root;
   }
 
-  @Override
   public void clearAst() {
     ast.clearAst();
   }
 
-  @Override
   public SourceFile getSourceFile() {
     return ast.getSourceFile();
   }
 
-  @Override
   public void setSourceFile(SourceFile file) {
     ast.setSourceFile(file);
   }
