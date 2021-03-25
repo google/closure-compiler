@@ -125,8 +125,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         }
         new CollapseProperties(compiler, PropertyCollapseLevel.ALL).process(externs, js);
         if (runDisambiguateProperties) {
-          SourceInformationAnnotator sia =
-              new SourceInformationAnnotator("test", false /* checkAnnotated */);
+          SourceInformationAnnotator sia = SourceInformationAnnotator.create();
           NodeTraversal.traverse(compiler, js, sia);
 
           new DisambiguateProperties2(compiler, ImmutableSet.of("foobar")).process(externs, js);

@@ -1791,7 +1791,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           // Annotate the nodes in the tree with information from the
           // input file. This information is used to construct the SourceMap.
           SourceInformationAnnotator sia =
-              new SourceInformationAnnotator(input.getName(), options.devMode != DevMode.OFF);
+              DevMode.OFF.equals(options.devMode)
+                  ? SourceInformationAnnotator.create()
+                  : SourceInformationAnnotator.createWithAnnotationChecks(input.getName());
           NodeTraversal.traverse(this, n, sia);
         }
 

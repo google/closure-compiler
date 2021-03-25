@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 
 /**
  * Annotates nodes with information from their original input file before the compiler performs work
@@ -28,26 +29,36 @@ import com.google.javascript.rhino.Node;
  *
  * <ul>
  *   <li>Annotates all NAME nodes with an ORIGINALNAME_PROP indicating its original name.
- *   <li>Annotates all string GET_PROP nodes with an original name.
+ *   <li>Annotates all GETPROP and OPTCHAIN_GETPROP nodes with an original name.
  *   <li>Annotates all OBJECT_LITERAL unquoted string key nodes with an original name.
  *   <li>Annotates all FUNCTION nodes with an original name indicating its nearest original name.
  * </ul>
  */
-class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
-  private final String sourceFile;
-  private final boolean checkAnnotated;
+final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
+  @Nullable private final String sourceFileToCheck;
 
-  public SourceInformationAnnotator(
-      String sourceFile, boolean checkAnnotated) {
-    this.sourceFile = sourceFile;
-    this.checkAnnotated = checkAnnotated;
+  private SourceInformationAnnotator(String sourceFileToCheck) {
+    this.sourceFileToCheck = sourceFileToCheck;
+  }
+
+  /** Returns an annotator that sets the original name of nodes */
+  static SourceInformationAnnotator create() {
+    return new SourceInformationAnnotator(null);
+  }
+
+  /**
+   * Returns an annotator that both sets original name and verifies {@link Node#getSourceFileName}
+   * is accurate
+   */
+  static SourceInformationAnnotator createWithAnnotationChecks(String sourceFile) {
+    return new SourceInformationAnnotator(sourceFile);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     // Verify the source file is annotated.
-    if (checkAnnotated && sourceFile != null) {
-      checkState(sourceFile.equals(n.getSourceFileName()));
+    if (sourceFileToCheck != null) {
+      checkState(sourceFileToCheck.equals(n.getSourceFileName()));
     }
 
     // Annotate the original name.
@@ -60,6 +71,7 @@ class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback
         break;
 
       case GETPROP:
+      case OPTCHAIN_GETPROP:
       case NAME:
         setOriginalName(n, n.getString());
         break;
@@ -77,7 +89,7 @@ class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback
     }
   }
 
-  static void setOriginalName(Node n, String name) {
+  private static void setOriginalName(Node n, String name) {
     if (!name.isEmpty() && n.getOriginalName() == null) {
       n.setOriginalName(name);
     }

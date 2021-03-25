@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import org.junit.Test;
@@ -26,17 +27,7 @@ import org.junit.runners.JUnit4;
 
 /** @author johnlenz@google.com (John Lenz) */
 @RunWith(JUnit4.class)
-public final class SourceInformationAnnotatorTest extends CompilerTestCase {
-
-  @Override
-  protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        NodeTraversal.traverse(compiler, root,
-            new SourceInformationAnnotator("", false));
-      }};
-  }
+public final class SourceInformationAnnotatorTest {
 
   @Test
   public void testPreserveAnnotatedName() {
@@ -45,8 +36,42 @@ public final class SourceInformationAnnotatorTest extends CompilerTestCase {
     name.setOriginalName("bar");
     root.addChildToBack(name);
 
-    NodeTraversal.traverse(new Compiler(), root,
-        new SourceInformationAnnotator("", false));
+    NodeTraversal.traverse(new Compiler(), root, SourceInformationAnnotator.create());
     assertThat(name.getOriginalName()).isEqualTo("bar");
+  }
+
+  @Test
+  public void testSetOriginalGetpropNames() {
+    Node root = new Node(Token.SCRIPT);
+    Node getprop = IR.getprop(IR.name("x"), "y");
+    root.addChildToBack(IR.exprResult(getprop));
+
+    NodeTraversal.traverse(new Compiler(), root, SourceInformationAnnotator.create());
+
+    assertThat(getprop.getOriginalName()).isEqualTo("y");
+  }
+
+  @Test
+  public void testSetOriginalOptChainGetpropNames() {
+    Node root = new Node(Token.SCRIPT);
+    Node getprop = IR.startOptChainGetprop(IR.name("x"), "y");
+    root.addChildToBack(IR.exprResult(getprop));
+
+    NodeTraversal.traverse(new Compiler(), root, SourceInformationAnnotator.create());
+
+    assertThat(getprop.getOriginalName()).isEqualTo("y");
+  }
+
+  @Test
+  public void doesNotSetOriginalStringName() {
+    Node root = new Node(Token.SCRIPT);
+    Node string = IR.string("x");
+    root.addChildToBack(IR.exprResult(string));
+
+    NodeTraversal.traverse(new Compiler(), root, SourceInformationAnnotator.create());
+
+    // No need for the original name because strings are almost never mangled by JSCompiler and
+    // source information mapping "identifier"s don't care about raw strings.
+    assertThat(string.getOriginalName()).isNull();
   }
 }
