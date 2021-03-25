@@ -986,18 +986,6 @@ public class Node implements Serializable {
     child.parent = null;
   }
 
-  public final void replaceChildAfter(Node prevChild, Node newChild) {
-    checkNotNull(prevChild.next, "prev doesn't have a sibling to replace.");
-    replaceChild(prevChild.next, newChild);
-  }
-
-  /** Detaches the child after the given child, or the first child if prev is null. */
-  public final void replaceFirstOrChildAfter(@Nullable Node prev, Node newChild) {
-    Node target = prev == null ? first : prev.next;
-    checkNotNull(target, "prev doesn't have a sibling to replace.");
-    replaceChild(target, newChild);
-  }
-
   @VisibleForTesting
   @Nullable
   final PropListItem lookupProperty(Prop prop) {
