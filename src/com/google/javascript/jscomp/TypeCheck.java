@@ -2444,6 +2444,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
+    if (functionType == null) {
+      return;
+    }
     if (functionType.isConstructor()) {
       checkConstructor(n, functionType);
     } else if (functionType.isInterface()) {
@@ -2469,6 +2472,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   /** Visits a CLASS node. */
   private void visitClass(Node n) {
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
+    if (functionType == null) {
+      return null;
+    }
     Node extendsClause = n.getSecondChild();
     if (!extendsClause.isEmpty()) {
       // Ensure that the `extends` clause is actually a constructor or interface.  If it is, but
