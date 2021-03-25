@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.serialization.SerializationOptions;
@@ -249,7 +250,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testConvertsNumberTypeToColor() {
     enableTypeCheck();
 
-    TypedAstDeserializer.DeserializedAst result = TypedAstDeserializer.deserialize(compile("3"));
+    TypedAstDeserializer.DeserializedAst result = testAndReturnResult("3", "3");
     Node newScript = result.getRoot().getSecondChild().getFirstChild();
     assertNode(newScript).hasToken(Token.SCRIPT);
     Node three = newScript.getFirstFirstChild();
@@ -260,6 +261,44 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
         .isSameInstanceAs(result.getColorRegistry().get(NativeColorId.NUMBER));
   }
 
+  @Test
+  public void testOriginalNamePreserved() {
+    Node newRoot =
+        testAndReturnResult("const x = 0;", "const x = 0;")
+            .getRoot()
+            .getSecondChild()
+            .getFirstChild();
+
+    Node constDeclaration = newRoot.getFirstChild();
+    assertNode(constDeclaration).hasToken(Token.CONST);
+
+    Node x = constDeclaration.getOnlyChild();
+    assertNode(x).hasStringThat().isEqualTo("x");
+    assertNode(x).hasOriginalNameThat().isEqualTo("x");
+  }
+
+  @Test
+  public void testOriginalNamePreservedAfterModuleRewriting() {
+    enableRewriteClosureCode();
+
+    Node newRoot =
+        testAndReturnResult(
+                "goog.module('a.b.c'); const x = 0;",
+                lines(
+                    "/** @const */ var module$exports$a$b$c = {};",
+                    "const module$contents$a$b$c_x = 0;"))
+            .getRoot()
+            .getSecondChild()
+            .getFirstChild();
+
+    Node constDeclaration = newRoot.getSecondChild();
+    assertNode(constDeclaration).hasToken(Token.CONST);
+
+    Node globalizedXName = constDeclaration.getOnlyChild();
+    assertNode(globalizedXName).hasStringThat().isEqualTo("module$contents$a$b$c_x");
+    assertNode(globalizedXName).hasOriginalNameThat().isEqualTo("x");
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);
@@ -267,12 +306,18 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Override
   public void test(String code, String expected) {
+    testAndReturnResult(code, expected);
+  }
+
+  private DeserializedAst testAndReturnResult(String code, String expected) {
     TypedAst ast = compile(code);
     Node expectedRoot = getLastCompiler().parseSyntheticCode(expected);
-    Node newRoot = TypedAstDeserializer.deserialize(ast).getRoot().getLastChild().getFirstChild();
+    DeserializedAst result = TypedAstDeserializer.deserialize(ast);
+    Node newRoot = result.getRoot().getLastChild().getFirstChild();
     assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
     new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true).validateScript(newRoot);
     consumer = null;
+    return result;
   }
 
   TypedAst compile(String code) {

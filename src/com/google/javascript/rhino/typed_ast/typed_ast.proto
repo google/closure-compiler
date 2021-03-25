@@ -20,6 +20,8 @@ message TypedAst {
 }
 
 message StringPool {
+  // the "0th" index must always be the empty string so "0" may be used as a
+  // default for "no string"
   repeated bytes strings = 1;
 }
 
@@ -46,6 +48,10 @@ message AstNode {
   // Relative to column 0 for the first AST node
   sint32 relative_column = 6;
   OptimizationJsdoc jsdoc = 7;
+  // the name of this node in the original source pre-rewriting. default value
+  // '0' is equivalent to no original name.
+  // TODO(b/183734530): delete this field
+  uint32 original_name_pointer = 9;
 
   repeated NodeProperty boolean_property = 14;
   TypePointer type = 15;

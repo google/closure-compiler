@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  *   <li>Annotates all FUNCTION nodes with an original name indicating its nearest original name.
  * </ul>
  */
-final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
+public final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
   @Nullable private final String sourceFileToCheck;
 
   private SourceInformationAnnotator(String sourceFileToCheck) {
@@ -62,30 +62,38 @@ final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCa
     }
 
     // Annotate the original name.
-    switch (n.getToken()) {
-      case FUNCTION:
+    if (isStringNodeRequiringOriginalName(n)) {
+      setOriginalName(n, n.getString());
+      return;
+    }
+
+    if (n.isFunction()) {
         String functionName = NodeUtil.getNearestFunctionName(n);
         if (functionName != null) {
           setOriginalName(n, functionName);
         }
-        break;
+    }
+  }
 
+  /**
+   * Whether JSCompiler attempts to preserve the original string attached to this node on the AST
+   * post-mangling and in source maps.
+   */
+  public static boolean isStringNodeRequiringOriginalName(Node node) {
+    switch (node.getToken()) {
       case GETPROP:
       case OPTCHAIN_GETPROP:
       case NAME:
-        setOriginalName(n, n.getString());
-        break;
+        return true;
 
-      case OBJECTLIT:
-        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-          // Set the original name for unquoted string properties.
-          if (!key.isComputedProp() && !key.isQuotedString() && !key.isSpread()) {
-            setOriginalName(key, key.getString());
-          }
-        }
-        break;
+      case MEMBER_FUNCTION_DEF:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case STRING_KEY:
+        return node.getParent().isObjectLit() && !node.isQuotedString();
+
       default:
-        break;
+        return false;
     }
   }
 

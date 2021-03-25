@@ -385,6 +385,11 @@ public final class NodeSubject extends Subject {
     return check("getString()").that(actual.getString());
   }
 
+  @CheckReturnValue
+  public StringSubject hasOriginalNameThat() {
+    return check("getOriginalName()").that(actual.getOriginalName());
+  }
+
   @Override
   protected String actualCustomStringRepresentation() {
     return serializeNode(actual);

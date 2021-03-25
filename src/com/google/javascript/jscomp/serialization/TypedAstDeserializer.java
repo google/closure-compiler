@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.serialization;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
+import com.google.javascript.jscomp.SourceInformationAnnotator;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -71,6 +72,8 @@ final class TypedAstDeserializer {
   }
 
   private Node deserializeToScriptNodes() {
+    doValidation();
+
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
     for (JavascriptFile file : typedAst.getExternFileList()) {
@@ -80,6 +83,13 @@ final class TypedAstDeserializer {
       codeRoot.addChildToBack(deserializeScriptNode(file, codeRoot));
     }
     return IR.root(externRoot, codeRoot);
+  }
+
+  private void doValidation() {
+    checkState(
+        this.getStringByPointer(0).isEmpty(),
+        "First StringPool element must be the empty string, found %s",
+        this.getStringByPointer(0));
   }
 
   private Node deserializeScriptNode(JavascriptFile file, Node root) {
@@ -110,6 +120,7 @@ final class TypedAstDeserializer {
       // record script features here instead of while visiting child because some features are
       // context-dependent, and we need to know the parent and/or grandparent.
       recordScriptFeatures(parent, n, deserializedChild);
+      setOriginalNameIfPresent(child, deserializedChild);
     }
     if (astNode.hasType()) {
       n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
@@ -252,6 +263,18 @@ final class TypedAstDeserializer {
 
       default:
         return;
+    }
+  }
+
+  private void setOriginalNameIfPresent(AstNode astNode, Node n) {
+    if (astNode.getOriginalNamePointer() != 0) {
+      n.setOriginalName(getStringByPointer(astNode.getOriginalNamePointer()));
+    } else if (SourceInformationAnnotator.isStringNodeRequiringOriginalName(n)) {
+      // This step will give new original names to nodes synthesized in stage1 without an original
+      // name, as we don't verify that this string node had an original name prior to serialization.
+      // This is probably fine: names from new stage 1 nodes should be generally  readable enough to
+      // include in source maps.
+      n.setOriginalName(getStringByPointer(astNode.getStringValuePointer()));
     }
   }
 

@@ -20,9 +20,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.LinkedHashMap;
 
-/** Aggregates strings into a {@link StringPool} */
+/**
+ * Aggregates strings into a {@link StringPool}
+ *
+ * <p>The zeroth offset in the string pool is always the empty string. This is validated inside
+ * {@link TypedAstDeserializer}.
+ *
+ * <p>This implies default/unset/0-valued uuint32 StringPool pointers in protos are equivalent to
+ * the empty string.
+ */
 final class StringPoolBuilder {
   private final LinkedHashMap<String, Integer> stringPool = new LinkedHashMap<>();
+
+  StringPoolBuilder() {
+    this.put("");
+  }
 
   /** Inserts the given string into the string pool if not present and returns its index */
   int put(String string) {

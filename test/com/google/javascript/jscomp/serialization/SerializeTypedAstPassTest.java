@@ -498,7 +498,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(0) // x
+                                .setStringValuePointer(1) // x
                                 .setRelativeColumn(6)
                                 .setType(numberType)
                                 .addChild(
@@ -546,12 +546,12 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(0) // s
+                                .setStringValuePointer(1) // s
                                 .setType(stringType)
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(1) // hello
+                                        .setStringValuePointer(2) // hello
                                         .setType(stringType)
                                         .build())
                                 .build())
@@ -590,6 +590,61 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                                         .build())
                                 .build())
                         .build())
+                .build());
+  }
+
+  @Test
+  public void testRewrittenGoogModule_containsOriginalNames() {
+    enableRewriteClosureCode();
+
+    TypedAst ast = compile("goog.module('a.b.c'); function f(x) {}");
+    assertThat(ast.getSourceFileList().get(0).getRoot())
+        .ignoringFieldDescriptors(
+            AstNode.getDescriptor().findFieldByName("relative_line"),
+            AstNode.getDescriptor().findFieldByName("relative_column"),
+            AstNode.getDescriptor().findFieldByName("type"))
+        .isEqualTo(
+            AstNode.newBuilder()
+                .setKind(NodeKind.SOURCE_FILE)
+                .addBooleanProperty(NodeProperty.GOOG_MODULE)
+                // `/** @const */ var module$exports$a$b$c = {};`
+                .addChild(
+                    AstNode.newBuilder()
+                        .setKind(NodeKind.VAR_DECLARATION)
+                        .addBooleanProperty(NodeProperty.IS_NAMESPACE)
+                        .setJsdoc(OptimizationJsdoc.newBuilder().addKind(JsdocTag.JSDOC_CONST))
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.IDENTIFIER)
+                                .setStringValuePointer(
+                                    findInStringPool(ast.getStringPool(), "module$exports$a$b$c"))
+
+                                // note: no originalNamePointer, as the node is synthetic with no
+                                // original name
+                                .addChild(AstNode.newBuilder().setKind(NodeKind.OBJECT_LITERAL))))
+                // `function module$contents$a$b$c_f(x) {}`
+                .addChild(
+                    AstNode.newBuilder()
+                        .setKind(NodeKind.FUNCTION_LITERAL)
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.IDENTIFIER)
+                                .setStringValuePointer(
+                                    findInStringPool(
+                                        ast.getStringPool(), "module$contents$a$b$c_f"))
+                                .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f")))
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.PARAMETER_LIST)
+                                .addChild(
+                                    AstNode.newBuilder()
+                                        .setKind(NodeKind.IDENTIFIER)
+                                        .setStringValuePointer(
+                                            findInStringPool(ast.getStringPool(), "x"))
+                                        // note: no originalNamePointer, as the original name ===
+                                        // the string value
+                                        .build()))
+                        .addChild(AstNode.newBuilder().setKind(NodeKind.BLOCK)))
                 .build());
   }
 

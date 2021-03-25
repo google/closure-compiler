@@ -23,8 +23,10 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.SourceInformationAnnotator;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.RhinoStringPool;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.serialization.SerializationOptions;
@@ -115,6 +117,8 @@ final class TypedAstSerializer {
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       builder.addChild(visit(child));
     }
+    setOriginalName(builder, n);
+
     return builder.build();
   }
 
@@ -262,6 +266,23 @@ final class TypedAstSerializer {
         // No value
         return;
     }
+  }
+
+  private void setOriginalName(AstNode.Builder builder, Node n) {
+    String originalName = n.getOriginalName();
+    if (originalName == null) {
+      builder.setOriginalNamePointer(0); // equivalent to 'not set'
+      return;
+    }
+
+    if (SourceInformationAnnotator.isStringNodeRequiringOriginalName(n)
+        && RhinoStringPool.uncheckedEquals(n.getString(), originalName)) {
+      // space optimization - TypedAstDeserializer will set the original name to n.getString().
+      builder.setOriginalNamePointer(0); // equivalent to 'not set'
+      return;
+    }
+
+    builder.setOriginalNamePointer(stringPool.put(originalName));
   }
 
   private NodeKind kindTranslator(Node n) {
