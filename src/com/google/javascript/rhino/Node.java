@@ -276,13 +276,11 @@ public class Node implements Serializable {
   public static final Prop IS_SHORTHAND_PROPERTY = Prop.IS_SHORTHAND_PROPERTY;
   public static final Prop ES6_MODULE = Prop.ES6_MODULE;
 
-  private static final String propToString(Prop propType) {
-    return Ascii.toLowerCase(String.valueOf(propType));
-  }
-
   private static final class NumberNode extends Node {
 
     private static final long serialVersionUID = 1L;
+
+    private double number;
 
     NumberNode(double number) {
       super(Token.NUMBER);
@@ -292,16 +290,6 @@ public class Node implements Serializable {
     public NumberNode(double number, int lineno, int charno) {
       super(Token.NUMBER, lineno, charno);
       this.number = number;
-    }
-
-    @Override
-    public double getDouble() {
-      return this.number;
-    }
-
-    @Override
-    public void setDouble(double d) {
-      this.number = d;
     }
 
     @Override
@@ -319,30 +307,22 @@ public class Node implements Serializable {
       return false;
     }
 
-    private double number;
-
     @Override
-    public NumberNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new NumberNode(number), cloneTypeExprs);
+    NumberNode cloneNode(boolean cloneTypeExprs) {
+      NumberNode clone = new NumberNode(number);
+      copyBaseNodeFields(this, clone, cloneTypeExprs);
+      return clone;
     }
   }
 
   private static final class BigIntNode extends Node {
     private static final long serialVersionUID = 1L;
 
+    private BigInteger bigint;
+
     BigIntNode(BigInteger bigint) {
       super(Token.BIGINT);
       setBigInt(bigint);
-    }
-
-    @Override
-    public BigInteger getBigInt() {
-      return this.bigint;
-    }
-
-    @Override
-    public void setBigInt(BigInteger number) {
-      this.bigint = number;
     }
 
     @Override
@@ -352,17 +332,19 @@ public class Node implements Serializable {
           && getBigInt().equals(node.getBigInt());
     }
 
-    private BigInteger bigint;
-
     @Override
-    public BigIntNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new BigIntNode(bigint), cloneTypeExprs);
+    BigIntNode cloneNode(boolean cloneTypeExprs) {
+      BigIntNode clone = new BigIntNode(bigint);
+      copyBaseNodeFields(this, clone, cloneTypeExprs);
+      return clone;
     }
   }
 
   private static final class StringNode extends Node {
 
     private static final long serialVersionUID = 1L;
+
+    private String str;
 
     // Only for cloneNode
     private StringNode(Token token) {
@@ -382,38 +364,16 @@ public class Node implements Serializable {
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      // NOTE: we take advantage of the string interning done in #setString and use
-      // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
       return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && RhinoStringPool.uncheckedEquals(this.str, ((StringNode) node).str);
     }
 
-    /**
-     * If the property is not defined, this was not a quoted key.  The
-     * Prop.QUOTED int property is only assigned to STRING tokens used as
-     * object lit keys.
-     * @return true if this was a quoted string key in an object literal.
-     */
     @Override
-    public boolean isQuotedString() {
-      return getBooleanProp(Prop.QUOTED);
-    }
-
-    /**
-     * This should only be called for STRING nodes created in object lits.
-     */
-    @Override
-    public void setQuotedString() {
-      putBooleanProp(Prop.QUOTED, true);
-    }
-
-    private String str;
-
-    @Override
-    public StringNode cloneNode(boolean cloneTypeExprs) {
+    StringNode cloneNode(boolean cloneTypeExprs) {
       StringNode clone = new StringNode(this.getToken());
+      copyBaseNodeFields(this, clone, cloneTypeExprs);
       clone.str = this.str;
-      return copyNodeFields(clone, cloneTypeExprs);
+      return clone;
     }
 
     @GwtIncompatible("ObjectInputStream")
@@ -452,32 +412,12 @@ public class Node implements Serializable {
     }
 
     /**
-     * returns the raw string content.
-     * @return non null.
-     */
-    @Override
-    public String getRawString() {
-      return this.raw;
-    }
-
-    /**
-     * @return the cooked string content.
-     */
-    @Override @Nullable
-    public String getCookedString() {
-      return this.cooked;
-    }
-
-    /**
      * sets the raw string content.
+     *
      * @param str the new value. Non null.
      */
-    public void setRaw(String str) {
-      if (null == str) {
-        throw new IllegalArgumentException("TemplateLiteralSubstringNode: raw str is null");
-      }
-      // Intern the string reference so that serialization won't save repeated strings.
-      this.raw = RhinoStringPool.addOrGet(str);
+    private void setRaw(String str) {
+      this.raw = RhinoStringPool.addOrGet(str); // RhinoStringPool is null-hostile.
     }
 
     private void setCooked(String s) {
@@ -497,11 +437,12 @@ public class Node implements Serializable {
     }
 
     @Override
-    public TemplateLiteralSubstringNode cloneNode(boolean cloneTypeExprs) {
+    TemplateLiteralSubstringNode cloneNode(boolean cloneTypeExprs) {
       TemplateLiteralSubstringNode clone = new TemplateLiteralSubstringNode();
+      copyBaseNodeFields(this, clone, cloneTypeExprs);
       clone.raw = raw;
       clone.cooked = cooked;
-      return copyNodeFields(clone, cloneTypeExprs);
+      return clone;
     }
 
     @GwtIncompatible("ObjectInputStream")
@@ -1081,15 +1022,9 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final boolean hasProps() {
-    return propListHead != null;
-  }
-
   public final void removeProp(Prop propType) {
     PropListItem result = removeProp(propListHead, (byte) propType.ordinal());
-    if (result != propListHead) {
-      propListHead = result;
-    }
+    this.propListHead = result;
   }
 
   /**
@@ -1126,11 +1061,8 @@ public class Node implements Serializable {
     return getIntProp(propType) != 0;
   }
 
-  /**
-   * Returns the integer value for the property, or 0 if the property
-   * is not defined.
-   */
-  public final int getIntProp(Prop propType) {
+  /** Returns the integer value for the property, or 0 if the property is not defined. */
+  private final int getIntProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return 0;
@@ -1235,81 +1167,37 @@ public class Node implements Serializable {
     return keys;
   }
 
-  /** Can only be called when <code>getType() == TokenStream.NUMBER</code> */
-  public double getDouble() {
-    if (this.token == Token.NUMBER) {
-      throw new IllegalStateException(
-          "Number node not created with Node.newNumber");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a number node");
-    }
+  public final double getDouble() {
+    return ((NumberNode) this).number;
   }
 
-  /**
-   * Can only be called when <code>getType() == Token.NUMBER</code>
-   *
-   * @param value value to set.
-   */
-  public void setDouble(double value) {
-    if (this.token == Token.NUMBER) {
-      throw new IllegalStateException(
-          "Number node not created with Node.newNumber");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a number node");
-    }
+  public final void setDouble(double d) {
+    ((NumberNode) this).number = d;
   }
 
-  /** Can only be called when <code>getType() == TokenStream.BIGINT</code> */
-  public BigInteger getBigInt() {
-    if (this.token == Token.BIGINT) {
-      throw new IllegalStateException("BigInt node not created with Node.newBigInt");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a bigint node");
-    }
+  public final BigInteger getBigInt() {
+    return ((BigIntNode) this).bigint;
   }
 
-  /**
-   * Can only be called when <code>getType() == Token.BIGINT</code>
-   *
-   * @param value value to set.
-   */
-  public void setBigInt(BigInteger value) {
-    if (this.token == Token.BIGINT) {
-      throw new IllegalStateException("BigInt node not created with Node.newBigInt");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a bigint node");
-    }
+  public final void setBigInt(BigInteger number) {
+    ((BigIntNode) this).bigint = checkNotNull(number);
   }
 
-  /** vReturns the string content.v */
   public final String getString() {
     return ((StringNode) this).str;
   }
 
-  /** Sets the string content. */
   public final void setString(String str) {
     ((StringNode) this).str = RhinoStringPool.addOrGet(str); // RhinoStringPool is null-hostile.
   }
 
-  /** Can only be called when <code>getType() == Token.TEMPLATELIT_STRING</code> */
-  public String getRawString() {
-    if (this.token == Token.TEMPLATELIT_STRING) {
-      throw new IllegalStateException(
-          "Template Literal String node not created with Node.newTemplateLitString");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a template literal string node");
-    }
+  public final String getRawString() {
+    return ((TemplateLiteralSubstringNode) this).raw;
   }
 
-  /** Can only be called when <code>getType() == Token.TEMPLATELIT_STRING</code> */
   @Nullable
-  public String getCookedString() {
-    if (this.token == Token.TEMPLATELIT_STRING) {
-      throw new IllegalStateException(
-          "Template Literal String node not created with Node.newTemplateLitString");
-    } else {
-      throw new UnsupportedOperationException(this + " is not a template literal string node");
-    }
+  public final String getCookedString() {
+    return ((TemplateLiteralSubstringNode) this).cooked;
   }
 
   @Override
@@ -1371,7 +1259,7 @@ public class Node implements Serializable {
         Prop type = Prop.values()[keys[i]];
         PropListItem x = lookupProperty(type);
         sb.append(" [");
-        sb.append(propToString(type));
+        sb.append(Ascii.toLowerCase(String.valueOf(type)));
         sb.append(": ");
         sb.append(x);
         sb.append(']');
@@ -1567,15 +1455,6 @@ public class Node implements Serializable {
 
   public final void setLength(int length) {
     this.length = length;
-  }
-
-  /** Useful to set length of a transpiled node tree to map back to the length of original node. */
-  public final void setLengthForTree(int length) {
-    this.length = length;
-
-    for (Node child = first; child != null; child = child.next) {
-      child.setLengthForTree(length);
-    }
   }
 
   public final int getLineno() {
@@ -2345,6 +2224,13 @@ public class Node implements Serializable {
     return target;
   }
 
+  @DoNotCall
+  @GwtIncompatible
+  @Override
+  public final Object clone() {
+    throw new UnsupportedOperationException("Did you mean cloneNode?");
+  }
+
   /**
    * @return A detached clone of the Node, specifically excluding its children.
    */
@@ -2353,30 +2239,28 @@ public class Node implements Serializable {
     return cloneNode(false);
   }
 
-  /**
-   * @return A detached clone of the Node, specifically excluding its children.
-   */
+  /** @return A detached clone of the Node, specifically excluding its children. */
   @CheckReturnValue
-  protected Node cloneNode(boolean cloneTypeExprs) {
-    return copyNodeFields(new Node(token), cloneTypeExprs);
+  Node cloneNode(boolean cloneTypeExprs) {
+    Node clone = new Node(token);
+    copyBaseNodeFields(this, clone, cloneTypeExprs);
+    return clone;
   }
 
-  final <T extends Node> T copyNodeFields(T dst, boolean cloneTypeExprs) {
-    final Node dstNode = dst;
-    dstNode.sourcePosition = this.sourcePosition;
-    dstNode.length = this.length;
-    dstNode.jstypeOrColor = this.jstypeOrColor;
-    dstNode.originalName = this.originalName;
-    dstNode.propListHead = this.propListHead;
+  private static void copyBaseNodeFields(Node source, Node dest, boolean cloneTypeExprs) {
+    dest.sourcePosition = source.sourcePosition;
+    dest.length = source.length;
+    dest.jstypeOrColor = source.jstypeOrColor;
+    dest.originalName = source.originalName;
+    dest.propListHead = source.propListHead;
 
     // TODO(johnlenz): Remove this once JSTypeExpression are immutable
     if (cloneTypeExprs) {
-      JSDocInfo info = this.getJSDocInfo();
+      JSDocInfo info = source.getJSDocInfo();
       if (info != null) {
-        dst.setJSDocInfo(info.clone(true));
+        dest.setJSDocInfo(info.clone(true));
       }
     }
-    return dst;
   }
 
   /**
@@ -3077,18 +2961,13 @@ public class Node implements Serializable {
     setConstantVarFlag(ConstantVarFlags.INFERRED, value);
   }
 
-  /**
-   * This should only be called for STRING nodes children of OBJECTLIT.
-   */
-  public boolean isQuotedString() {
-    return false;
+  public final boolean isQuotedString() {
+    return (this instanceof StringNode) && this.getBooleanProp(Prop.QUOTED);
   }
 
-  /**
-   * This should only be called for STRING nodes children of OBJECTLIT.
-   */
-  public void setQuotedString() {
-    throw new IllegalStateException(this + " is not a StringNode");
+  public final void setQuotedString() {
+    checkState(this instanceof StringNode, this);
+    this.putBooleanProp(Prop.QUOTED, true);
   }
 
 

@@ -460,6 +460,22 @@ public class NodeTest {
   }
 
   @Test
+  public void testCloneValues() {
+    Node number = Node.newNumber(100);
+    assertThat(number.cloneNode().getDouble()).isEqualTo(100);
+
+    Node string = Node.newString(new String("a"));
+    assertThat(string.cloneNode().getString()).isSameInstanceAs(string.getString());
+
+    Node template = Node.newTemplateLitString(new String("a"), new String("b"));
+    assertThat(template.cloneNode().getCookedString()).isSameInstanceAs(template.getCookedString());
+    assertThat(template.cloneNode().getRawString()).isSameInstanceAs(template.getRawString());
+
+    Node bigint = Node.newBigInt(new BigInteger("100"));
+    assertThat(bigint.cloneNode().getBigInt()).isSameInstanceAs(bigint.getBigInt());
+  }
+
+  @Test
   public void testSharedProps1() {
     Node n = getCall("A");
     n.setSideEffectFlags(5);
