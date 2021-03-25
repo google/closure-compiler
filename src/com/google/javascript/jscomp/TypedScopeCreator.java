@@ -3487,6 +3487,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void defineGetterSetter(Node n) {
       String name = n.getString();
       FunctionType methodType = n.getLastChild().getJSType().toMaybeFunctionType();
+      if (methodType == null) {
+        return;
+      }
 
       final JSType propertyType;
       switch (n.getToken()) {

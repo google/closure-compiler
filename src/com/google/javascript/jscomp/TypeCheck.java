@@ -1172,6 +1172,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     String propertyName = child.getString();
 
     FunctionType methodType = child.getLastChild().getJSType().toMaybeFunctionType();
+    if (methodType == null) {
+      return;
+    }
     JSType propertyType =
         child.isGetterDef()
             ? determineGetterType(methodType)

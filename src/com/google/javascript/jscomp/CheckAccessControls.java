@@ -781,6 +781,9 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    */
   private void checkEs6ConstructorInvocationVisibility(Node target) {
     FunctionType ctorType = target.getJSType().toMaybeFunctionType();
+    if (ctorType == null) {
+      return;
+    }
     ObjectType prototypeType = ctorType.getPrototype();
 
     // We use the class definition site because classes automatically get a implicit constructor,
