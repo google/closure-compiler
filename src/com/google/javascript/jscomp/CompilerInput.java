@@ -86,20 +86,29 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   }
 
   public CompilerInput(SourceAst ast, boolean isExtern) {
-    this(ast, ast.getInputId(), isExtern);
-  }
-
-  public CompilerInput(SourceAst ast, String inputId, boolean isExtern) {
-    this(ast, new InputId(inputId), isExtern);
-  }
-
-  public CompilerInput(SourceAst ast, InputId inputId, boolean isExtern) {
     this.ast = ast;
-    this.id = inputId;
+    this.id = ast.getInputId();
 
     if (isExtern) {
       setIsExtern();
     }
+  }
+
+  /** @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern) */
+  @Deprecated
+  public CompilerInput(SourceAst ast, String inputId, boolean isExtern) {
+    this(ast, new InputId(inputId), isExtern);
+  }
+
+  /** @deprecated the inputId is read from the SourceAst. Use CompilerInput(ast, isExtern) */
+  @Deprecated
+  public CompilerInput(SourceAst ast, InputId inputId, boolean isExtern) {
+    this(ast, isExtern);
+    checkArgument(
+        inputId.equals(ast.getInputId()),
+        "mismatched input ids\nctor param: %s\nast.getInputId(): %s",
+        inputId,
+        ast.getInputId());
   }
 
   public CompilerInput(SourceFile file) {
