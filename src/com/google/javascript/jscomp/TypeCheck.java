@@ -2473,7 +2473,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void visitClass(Node n) {
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
     if (functionType == null) {
-      return null;
+      return;
     }
     Node extendsClause = n.getSecondChild();
     if (!extendsClause.isEmpty()) {
