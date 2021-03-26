@@ -1369,13 +1369,9 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isScript()) {
-        Set<String> directives = n.getDirectives();
-        if (directives == null || !directives.contains("use strict")) {
-          return ConformanceResult.VIOLATION;
-        }
-      }
-      return ConformanceResult.CONFORMANCE;
+      return (n.isScript() && !n.isUseStrict())
+          ? ConformanceResult.VIOLATION
+          : ConformanceResult.CONFORMANCE;
     }
   }
 

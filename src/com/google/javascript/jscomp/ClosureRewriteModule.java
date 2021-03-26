@@ -141,8 +141,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
           "Internal compiler error: rewritten module global name {0} is already in use.");
 
-  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
-
   private static final String MODULE_EXPORTS_PREFIX = "module$exports$";
 
   private static final String MODULE_CONTENTS_PREFIX = "module$contents$";
@@ -1598,17 +1596,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   static void checkAndSetStrictModeDirective(NodeTraversal t, Node n) {
     checkState(n.isScript(), n);
 
-    Set<String> directives = n.getDirectives();
-    if (directives != null && directives.contains("use strict")) {
+    if (n.isUseStrict()) {
       t.report(n, USELESS_USE_STRICT_DIRECTIVE);
     } else {
-      if (directives == null) {
-        n.setDirectives(USE_STRICT_ONLY);
-      } else {
-        ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<String>().add("use strict");
-        builder.addAll(directives);
-        n.setDirectives(builder.build());
-      }
+      n.setUseStrict(true);
     }
   }
 

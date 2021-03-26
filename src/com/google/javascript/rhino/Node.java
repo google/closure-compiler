@@ -63,7 +63,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -100,8 +99,8 @@ public class Node implements Serializable {
     IS_CONSTANT_NAME,
     // The variable creates a namespace.
     IS_NAMESPACE,
-    // The ES5 directives on this node.
-    DIRECTIVES,
+    // The presence of the "use strict" directive on this node.
+    USE_STRICT,
     // ES5 distinguishes between direct and indirect calls to eval.
     DIRECT_EVAL,
     // A CALL without an explicit "this" value.
@@ -2488,18 +2487,14 @@ public class Node implements Serializable {
     return getBooleanProp(Prop.SYNTHETIC);
   }
 
-  /**
-   * Sets the ES5 directives on this node.
-   */
-  public final void setDirectives(Set<String> val) {
-    putProp(Prop.DIRECTIVES, val);
+  /** Sets whether this node contained the "use strict" directive. */
+  public final void setUseStrict(boolean x) {
+    this.putBooleanProp(Prop.USE_STRICT, x);
   }
 
-  /** Returns the set of ES5 directives for this node. */
-  @SuppressWarnings("unchecked")
-  @Nullable
-  public final Set<String> getDirectives() {
-    return (Set<String>) getProp(Prop.DIRECTIVES);
+  /** Returns whether this node contained the "use strict" directive. */
+  public final boolean isUseStrict() {
+    return this.getBooleanProp(Prop.USE_STRICT);
   }
 
   /**

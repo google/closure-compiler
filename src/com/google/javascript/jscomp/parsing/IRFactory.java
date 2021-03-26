@@ -200,11 +200,6 @@ class IRFactory {
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
 
-  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
-
-  private static final ImmutableSet<String> ALLOWED_DIRECTIVES =
-      USE_STRICT_ONLY;
-
   private static final ImmutableSet<String> ES5_RESERVED_KEYWORDS =
       ImmutableSet.of(
           // From Section 7.6.1.2
@@ -1285,41 +1280,31 @@ class IRFactory {
     /**
      * Parse the directives, encode them in the AST, and remove their nodes.
      *
-     * For information on ES5 directives, see section 14.1 of
-     * ECMA-262, Edition 5.
+     * <p>The only suported directive is "use strict".
      *
-     * It would be nice if Rhino would eventually take care of this for
-     * us, but right now their directive-processing is a one-off.
+     * <p>For information on ES5 directives, see section 14.1 of ECMA-262, Edition 5.
      */
     private void parseDirectives(Node node) {
-      // Remove all the directives, and encode them in the AST.
-      ImmutableSet.Builder<String> directives = null;
-      while (isDirective(node.getFirstChild())) {
-        String directive = node.removeFirstChild().getFirstChild().getString();
-        if (directives == null) {
-          directives = new ImmutableSet.Builder<>();
+      boolean useStrict = false;
+      while (true) {
+        Node statement = node.getFirstChild();
+        if (statement == null || !statement.isExprResult()) {
+          break;
         }
-        directives.add(directive);
+
+        Node directive = statement.getFirstChild();
+        if (!directive.isString() || !directive.getString().equals("use strict")) {
+          break;
+        }
+
+        useStrict = true;
+        // TODO(nickreid): Should we also remove other directives that aren't "use strict"?
+        statement.detach();
       }
 
-      if (directives != null) {
-        ImmutableSet<String> result = directives.build();
-        if (result.size() == 1 && result.contains("use strict")) {
-          // Use a shared set.
-          result = USE_STRICT_ONLY;
-        }
-        node.setDirectives(result);
+      if (useStrict) {
+        node.setUseStrict(true);
       }
-    }
-
-    private boolean isDirective(Node n) {
-      if (n == null) {
-        return false;
-      }
-      Token nType = n.getToken();
-      return nType == Token.EXPR_RESULT &&
-          n.getFirstChild().isString() &&
-          ALLOWED_DIRECTIVES.contains(n.getFirstChild().getString());
     }
 
     Node processBlock(BlockTree blockNode) {
