@@ -156,8 +156,7 @@ public class ConformanceAllowlisterTest {
     options.setCheckTypes(true);
     // TODO(bangert): Support banned property on OBJECT even if types are not checked.
     options.setChecksOnly(true);
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    List<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources, options);
     assertThat(result.success).isTrue();

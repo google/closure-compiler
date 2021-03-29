@@ -166,7 +166,9 @@ public final class CommandLineRunnerTest {
     args.add("--jscomp_error=checkTypes");
     args.add("--language_in=ES6_STRICT");
     args.add("--language_out=ES3");
-    externs = AbstractCommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addArray().addArguments().buildExternsFile("externs"));
     test(
         Joiner.on('\n').join(
             "class Cat {meow() {}}",

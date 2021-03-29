@@ -36,6 +36,7 @@ import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -1467,9 +1468,9 @@ public final class CompilerTest {
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
     options.processCommonJSModules = true;
-
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addAlert().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1492,9 +1493,9 @@ public final class CompilerTest {
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
-
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addAlert().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1520,7 +1521,8 @@ public final class CompilerTest {
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1546,7 +1548,8 @@ public final class CompilerTest {
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1574,7 +1577,8 @@ public final class CompilerTest {
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1602,7 +1606,8 @@ public final class CompilerTest {
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1628,7 +1633,8 @@ public final class CompilerTest {
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1653,8 +1659,7 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
 
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    List<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
@@ -1965,8 +1970,8 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    List<SourceFile> externs = ImmutableList.of();
+
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
     assertThat(result.success).isTrue();
@@ -2009,8 +2014,8 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("/entry.js"))));
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    List<SourceFile> externs = ImmutableList.of();
+
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, sources.build(), options);
     assertThat(result.success).isTrue();
@@ -2057,8 +2062,7 @@ public final class CompilerTest {
     options.setDependencyOptions(
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forFile("entry.js"))));
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    List<SourceFile> externs = ImmutableList.of();
 
     for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
       java.util.Collections.shuffle(sources);
@@ -2107,7 +2111,8 @@ public final class CompilerTest {
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
     compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
@@ -2151,7 +2156,8 @@ public final class CompilerTest {
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
     compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
@@ -2194,7 +2200,8 @@ public final class CompilerTest {
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ResolutionMode.WEBPACK);
     List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+        ImmutableList.of(
+            new TestExternsBuilder().addConsole().buildExternsFile("default_externs.js"));
     Compiler compiler = new Compiler();
     compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
