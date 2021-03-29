@@ -64,7 +64,6 @@ import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.OR;
 import static com.google.javascript.rhino.Token.REGEXP;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
-import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.Token.STRING_KEY;
 import static com.google.javascript.rhino.Token.SUB;
 import static com.google.javascript.rhino.Token.SUPER;
@@ -260,7 +259,7 @@ public final class AstAnalyzerTest {
           // Note: RegExp objects are not immutable, for instance, the exec
           // method maintains state for "global" searches.
           kase().js("/abc/gi").token(REGEXP).expect(true),
-          kase().js("'a'").token(STRING).expect(false),
+          kase().js("'a'").token(Token.STRINGLIT).expect(false),
           kase().js("0").token(NUMBER).expect(false),
           kase().js("1n").token(BIGINT).expect(false),
           kase().js("a + c").token(ADD).expect(false),

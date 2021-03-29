@@ -4268,7 +4268,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(findTokenType(Token.TRUE, globalScope).toString()).isEqualTo("boolean");
     assertThat(findTokenType(Token.FALSE, globalScope).toString()).isEqualTo("boolean");
     assertThat(findTokenType(Token.NUMBER, globalScope).toString()).isEqualTo("number");
-    assertThat(findTokenType(Token.STRING, globalScope).toString()).isEqualTo("string");
+    assertThat(findTokenType(Token.STRINGLIT, globalScope).toString()).isEqualTo("string");
     assertThat(findTokenType(Token.BIGINT, globalScope).toString()).isEqualTo("bigint");
     assertThat(findTokenType(Token.OBJECTLIT, globalScope).toString()).isEqualTo("{}");
   }

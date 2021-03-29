@@ -84,7 +84,7 @@ public final class CheckPrimitiveAsObject extends AbstractPostOrderCallback
     NodeUtil.visitPreOrder(
         typeRoot,
         node -> {
-          if (node.isString()) {
+          if (node.isStringLit()) {
             String typeName = node.getString();
             if (PRIMITIVE_OBJECT_CONSTRUCTORS.contains(typeName)) {
               t.report(node, PRIMITIVE_OBJECT_DECLARATION, typeName);

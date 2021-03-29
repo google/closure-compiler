@@ -117,8 +117,13 @@ public final class NodeIteratorsTest {
 
   @Test
   public void testHaltAtSideEffects5() {
-    testVarMotionWithCode("var A = 1, X = A, Y = 3; A = 'a';",
-        Token.NUMBER, Token.NAME, Token.VAR, Token.NAME, Token.STRING);
+    testVarMotionWithCode(
+        "var A = 1, X = A, Y = 3; A = 'a';",
+        Token.NUMBER,
+        Token.NAME,
+        Token.VAR,
+        Token.NAME,
+        Token.STRINGLIT);
   }
 
   @Test

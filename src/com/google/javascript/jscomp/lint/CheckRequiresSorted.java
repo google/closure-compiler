@@ -349,7 +349,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
         && (n.getFirstChild().matchesQualifiedName("goog.require")
             || n.getFirstChild().matchesQualifiedName("goog.requireType")
             || n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"))
-        && n.getSecondChild().isString();
+        && n.getSecondChild().isStringLit();
   }
 
   private static ImportStatement parseImport(Node callNode) {

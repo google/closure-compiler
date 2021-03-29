@@ -118,7 +118,7 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     Node stringLiteral = astFactory.createString("hello");
-    assertNode(stringLiteral).hasType(Token.STRING);
+    assertNode(stringLiteral).hasType(Token.STRINGLIT);
     assertThat(stringLiteral.getString()).isEqualTo("hello");
     assertType(stringLiteral.getJSType()).isString();
   }

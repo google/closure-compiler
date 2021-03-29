@@ -94,8 +94,8 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     JSTypeExpression enumTypeExpr = jsDocInfo.getEnumParameterType();
 
     Node enumType = enumTypeExpr.getRoot();
-    boolean isStringEnum = enumType.isString() && enumType.getString().equals("string");
-    boolean isNumberEnum = enumType.isString() && enumType.getString().equals("number");
+    boolean isStringEnum = enumType.isStringLit() && enumType.getString().equals("string");
+    boolean isNumberEnum = enumType.isStringLit() && enumType.getString().equals("number");
     if (!isStringEnum && !isNumberEnum) {
       // warn on `@enum {?}`, `@enum {boolean}`, `@enum {Some|Another}`, `@enum {SomeName}` etc`
       t.report(n, ENUM_TYPE_NOT_STRING_OR_NUMBER);
@@ -111,7 +111,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     for (Node prop = enumNode.getFirstChild(); prop != null; prop = prop.getNext()) {
       // valueNode is guaranteed to exist by this time, as shorthand `{A}`s are converted to `{A:A}`
       Node valueNode = prop.getLastChild();
-      if (!valueNode.isString() && !(valueNode.isTemplateLit() && valueNode.hasOneChild())) {
+      if (!valueNode.isStringLit() && !(valueNode.isTemplateLit() && valueNode.hasOneChild())) {
         // neither string nor substitution-free template literal; report finding.
         t.report(valueNode, NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM);
       }
@@ -146,7 +146,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
       String value;
       if (valueNode == null) {
         return;
-      } else if (valueNode.isString()) {
+      } else if (valueNode.isStringLit()) {
         value = valueNode.getString();
       } else if (valueNode.isNumber()) {
         value = Double.toString(valueNode.getDouble());

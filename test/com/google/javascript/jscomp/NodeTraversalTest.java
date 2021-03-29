@@ -787,7 +787,7 @@ public final class NodeTraversalTest {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isString()) {
+      if (n.isStringLit()) {
         strings.add(n.getString());
       }
     }

@@ -81,7 +81,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     for (String primitiveName : primitiveNames) {
       if (callee.matchesQualifiedName(primitiveName)) {
         Node target = callee.getNext();
-        if (target != null && target.isString()) {
+        if (target != null && target.isStringLit()) {
           return target.getString();
         }
       }
@@ -226,7 +226,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
     Node callee = call.getFirstChild();
-    if (callee.matchesQualifiedName("goog.module.get") && call.getSecondChild().isString()) {
+    if (callee.matchesQualifiedName("goog.module.get") && call.getSecondChild().isStringLit()) {
       usages.add(call.getSecondChild().getString());
     }
   }

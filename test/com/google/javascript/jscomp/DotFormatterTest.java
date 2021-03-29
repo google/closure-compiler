@@ -97,7 +97,7 @@ public final class DotFormatterTest {
   public void testToDot3Elements_nodesWithoutNames() throws Exception {
     Node ast = new Node(Token.BLOCK);
     ast.addChildToBack(Node.newString(Token.NAME, ""));
-    ast.addChildToBack(Node.newString(Token.STRING, ""));
+    ast.addChildToBack(Node.newString(Token.STRINGLIT, ""));
 
     String expected = "digraph AST {\n" +
         "  node [color=lightblue2, style=filled];\n" +
@@ -115,7 +115,7 @@ public final class DotFormatterTest {
   public void testToDot3Elements_NodesCreatedWithNewString() throws Exception {
     Node ast = new Node(Token.BLOCK);
     ast.addChildToBack(Node.newString(Token.NAME, "a"));
-    ast.addChildToBack(Node.newString(Token.STRING, "b"));
+    ast.addChildToBack(Node.newString(Token.STRINGLIT, "b"));
 
     String expected =
         "digraph AST {\n"
@@ -135,7 +135,7 @@ public final class DotFormatterTest {
     Node ast = new Node(Token.IMPORT);
     ast.addChildToBack(new Node(Token.EMPTY));
     ast.addChildToBack(Node.newString(Token.IMPORT_STAR, "name"));
-    ast.addChildToBack(Node.newString(Token.STRING, "module-name"));
+    ast.addChildToBack(Node.newString(Token.STRINGLIT, "module-name"));
 
     String expected =
         "digraph AST {\n"

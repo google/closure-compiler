@@ -114,7 +114,7 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
     return n.isCall()
         && n.hasTwoChildren()
         && n.getFirstChild().matchesQualifiedName("goog.provide")
-        && n.getSecondChild().isString();
+        && n.getSecondChild().isStringLit();
   }
 
   private static String getNamespace(Node n) {

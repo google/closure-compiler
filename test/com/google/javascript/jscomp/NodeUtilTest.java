@@ -2397,33 +2397,33 @@ public final class NodeUtilTest {
     @Test
     public void testGetRValueOfLValueDestructuringPattern() {
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x] = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x, y] = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [y, x] = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x: x} = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {y: x} = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x} = 'rhs';"))))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
     }
 
     @Test
     public void testGetRValueOfLValueDestructuringLhs() {
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [x] = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [x, y] = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var [y, x] = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {x: x} = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {y: x} = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
       assertNode(NodeUtil.getRValueOfLValue(parseFirst(DESTRUCTURING_LHS, "var {x} = 'rhs';")))
-          .hasType(Token.STRING);
+          .hasType(Token.STRINGLIT);
     }
 
     @Test
