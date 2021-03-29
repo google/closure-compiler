@@ -31,6 +31,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
+import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -2009,6 +2010,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
               + "--chunk_output_type is set to ES_MODULES.");
     }
     options.chunkOutputType = flags.chunkOutputType;
+    if (options.chunkOutputType == ChunkOutputType.ES_MODULES
+        && level == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
+      options.setExtractPrototypeMemberDeclarations(
+          ExtractPrototypeMemberDeclarationsMode.USE_CHUNK_TEMP);
+    }
 
     return options;
   }
