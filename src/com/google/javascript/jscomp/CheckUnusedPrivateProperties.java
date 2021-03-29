@@ -144,8 +144,8 @@ class CheckUnusedPrivateProperties
                 .getCodingConvention()
                 .isPropertyRenameFunction(target.getOriginalQualifiedName())) {
            Node propName = target.getNext();
-           if (propName.isString()) {
-             used.add(propName.getString());
+          if (propName.isStringLit()) {
+            used.add(propName.getString());
            }
          }
          break;

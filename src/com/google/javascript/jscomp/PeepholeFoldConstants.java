@@ -710,7 +710,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // ... + <STRINGLITERAL> + (<LITERAL> + ...)
     // aka. when the literal might be collapsible into the string
     if (leftParent.isAdd()
-        && left.isString()
+        && left.isStringLit()
         && rightParent.isAdd()
         && NodeUtil.isLiteralValue(right, /* includeFunctions= */ false)) {
       Node rightGrandparent = rightParent.getParent();
@@ -722,7 +722,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           (rr != null && NodeUtil.isStringResult(rr))
               || (rr != null
                   // If right.getNext() isn't a string result, right must be a string to be folded
-                  && right.isString()
+                  && right.isStringLit()
                   // Access the right grandparent safely...
                   && rightGrandparent != null
                   && rightGrandparent.isAdd()
@@ -750,7 +750,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Try to fold an ADD node with constant operands */
   private Node tryFoldAddConstantString(Node n, Node left, Node right) {
-    if (left.isString() || right.isString() || left.isArrayLit() || right.isArrayLit()) {
+    if (left.isStringLit() || right.isStringLit() || left.isArrayLit() || right.isArrayLit()) {
       // Add strings.
       String leftString = getSideEffectFreeStringValue(left);
       String rightString = getSideEffectFreeStringValue(right);
@@ -1064,11 +1064,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else {
-        if (left.isString() && left.getString().isEmpty() && isStringTyped(right)) {
+        if (left.isStringLit() && left.getString().isEmpty() && isStringTyped(right)) {
           return replace(node, right.cloneTree(true));
-        } else if (right.isString()
-            && right.getString().isEmpty()
-            && isStringTyped(left)) {
+        } else if (right.isStringLit() && right.getString().isEmpty() && isStringTyped(left)) {
           return replace(node, left.cloneTree(true));
         }
         // a + 7 or 6 + a
@@ -1518,12 +1516,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     checkArgument(n.isGetElem() || n.isOptChainGetElem());
 
     if (left.isObjectLit()) {
-      if (right.isString()) {
+      if (right.isStringLit()) {
         return tryFoldObjectPropAccess(n, left, right.getString());
       }
     } else if (left.isArrayLit()) {
       return tryFoldArrayAccess(n, left, right);
-    } else if (left.isString()) {
+    } else if (left.isStringLit()) {
       return tryFoldStringArrayAccess(n, left, right);
     }
     return n;
@@ -1678,7 +1676,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    checkState(left.isString());
+    checkState(left.isStringLit());
     String value = left.getString();
     if (intIndex < 0 || intIndex >= value.length()) {
       Node undefined = NodeUtil.newUndefinedNode(left);
@@ -1754,7 +1752,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         case COMPUTED_PROP:
           // don't handle computed properties unless the input is a simple string
           Node prop = c.getFirstChild();
-          if (!prop.isString()) {
+          if (!prop.isStringLit()) {
             return n;
           }
           if (prop.getString().equals(name)) {

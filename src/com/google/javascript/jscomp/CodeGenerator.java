@@ -398,7 +398,7 @@ public class CodeGenerator {
         }
 
       case REGEXP:
-        if (!first.isString() || !last.isString()) {
+        if (!first.isStringLit() || !last.isStringLit()) {
           throw new Error("Expected children to be strings");
         }
 

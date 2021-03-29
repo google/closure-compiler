@@ -758,7 +758,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
             if (n.getToken() == Token.BANG) {
               n = n.getFirstChild();
             }
-            if (n.isString()
+            if (n.isStringLit()
                 && !n.hasChildren() // templated object types are ok.
                 && n.getString().equals("Object")) {
               compiler.report(

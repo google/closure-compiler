@@ -2611,7 +2611,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
     // If the module specifier is a string, attempt to resolve the module
     ModuleMap moduleMap = compiler.getModuleMap();
-    if (dynamicImport.getFirstChild().isString() && moduleMap != null) {
+    if (dynamicImport.getFirstChild().isStringLit() && moduleMap != null) {
       ModulePath targetPath =
           compiler.getModuleLoader().resolve(dynamicImport.getFirstChild().getString());
       Module targetModule = moduleMap.getModule(targetPath);

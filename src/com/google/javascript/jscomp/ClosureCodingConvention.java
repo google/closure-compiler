@@ -231,7 +231,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       Node callee = node.getFirstChild();
       if (callee != null && callee.isGetProp() && callee.matchesQualifiedName(functionName)) {
         Node target = callee.getNext();
-        if (target != null && target.isString()) {
+        if (target != null && target.isStringLit()) {
           className = target.getString();
         }
       }
@@ -263,7 +263,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
     if (callName.matchesQualifiedName("goog.forwardDeclare") && n.hasTwoChildren()) {
       Node typeDeclaration = n.getSecondChild();
-      if (typeDeclaration.isString()) {
+      if (typeDeclaration.isStringLit()) {
         return ImmutableList.of(typeDeclaration.getString());
       }
     }

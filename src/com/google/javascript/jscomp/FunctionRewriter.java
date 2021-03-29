@@ -487,7 +487,7 @@ class FunctionRewriter implements CompilerPass {
 
       Node propName = getSetPropertyName(node);
       if (propName != null) {
-        if (!propName.isString()) {
+        if (!propName.isStringLit()) {
           throw new IllegalStateException("Expected STRING, got " + propName.getToken());
         }
 

@@ -258,7 +258,7 @@ abstract class MethodCompilerPass implements CompilerPass {
   private static String getPropName(Node getPropElem) {
     if (getPropElem.isGetProp()) {
       return getPropElem.getString();
-    } else if (getPropElem.getSecondChild().isString()) {
+    } else if (getPropElem.getSecondChild().isStringLit()) {
       return getPropElem.getSecondChild().getString();
     } else {
       return null;

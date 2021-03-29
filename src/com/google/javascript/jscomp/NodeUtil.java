@@ -861,7 +861,7 @@ public final class NodeUtil {
    */
   static boolean isSomeCompileTimeConstStringValue(Node node) {
     // TODO(bangert): Support constants, using a Scope argument. See ConstParamCheck
-    if (node.isString() || (node.isTemplateLit() && node.hasOneChild())) {
+    if (node.isStringLit() || (node.isTemplateLit() && node.hasOneChild())) {
       return true;
     } else if (node.isAdd()) {
       checkState(node.hasTwoChildren(), node);
@@ -3048,7 +3048,7 @@ public final class NodeUtil {
         return callee.getString().equals(methodName);
       } else if (isNormalOrOptChainGet(callee)) {
         Node last = callee.getLastChild();
-        if (last != null && last.isString()) {
+        if (last != null && last.isStringLit()) {
           String propName = last.getString();
           return (propName.equals(methodName));
         }
@@ -3488,7 +3488,7 @@ public final class NodeUtil {
       case MEMBER_FUNCTION_DEF:
         return key;
       case COMPUTED_PROP:
-        return key.getFirstChild().isString() ? key.getFirstChild() : null;
+        return key.getFirstChild().isStringLit() ? key.getFirstChild() : null;
       default:
         break;
     }
@@ -4945,7 +4945,7 @@ public final class NodeUtil {
       name = getNode.getString();
     } else if (isNormalOrOptChainGet(getNode)) {
       Node propNode = getNode.getLastChild();
-      if (!propNode.isString()) {
+      if (!propNode.isStringLit()) {
         return false;
       }
       name = propNode.getString();

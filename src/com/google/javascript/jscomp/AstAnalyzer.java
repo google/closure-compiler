@@ -190,14 +190,14 @@ public class AstAnalyzer {
           String method = callee.getString();
           Node param = callee.getNext();
           if (param != null) {
-            if (param.isString()) {
+            if (param.isStringLit()) {
               if (STRING_REGEXP_METHODS.contains(method)) {
                 return false;
               }
             } else if (param.isRegExp()) {
               if ("replace".equals(method)) {
                 // Assume anything but a string constant has side-effects
-                return !param.getNext().isString();
+                return !param.getNext().isStringLit();
               } else if (STRING_REGEXP_METHODS.contains(method)) {
                 return false;
               }
@@ -211,7 +211,7 @@ public class AstAnalyzer {
   }
 
   private boolean isTypedAsString(Node n) {
-    if (n.isString()) {
+    if (n.isStringLit()) {
       return true;
     }
 

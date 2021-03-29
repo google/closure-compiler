@@ -411,8 +411,7 @@ class InlineVariables implements CompilerPass {
       }
 
       // Determine if we should really inline a String or not.
-      return !value.isString() ||
-          isStringWorthInlining(var, refInfo.references);
+      return !value.isStringLit() || isStringWorthInlining(var, refInfo.references);
     }
 
     /**
@@ -647,7 +646,7 @@ class InlineVariables implements CompilerPass {
 
         boolean isImmutableValueWorthInlining =
             NodeUtil.isImmutableValue(value)
-                && (!value.isString() || isStringWorthInlining(v, refInfo.references));
+                && (!value.isStringLit() || isStringWorthInlining(v, refInfo.references));
         boolean isInlinableThisAlias = value.isThis() && !refInfo.isEscaped();
         if (!isImmutableValueWorthInlining && !isInlinableThisAlias) {
           return false;

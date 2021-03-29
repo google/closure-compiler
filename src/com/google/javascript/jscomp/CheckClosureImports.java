@@ -304,7 +304,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         return;
       }
 
-      if (!call.hasTwoChildren() || !call.getSecondChild().isString()) {
+      if (!call.hasTwoChildren() || !call.getSecondChild().isStringLit()) {
         t.report(call, INVALID_CLOSURE_IMPORT_CALL, "goog.module.get");
         return;
       }
@@ -398,7 +398,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         return;
       }
 
-      if (!call.hasTwoChildren() || !call.getSecondChild().isString()) {
+      if (!call.hasTwoChildren() || !call.getSecondChild().isStringLit()) {
         t.report(call, INVALID_CLOSURE_IMPORT_CALL, importType.callName());
         return;
       }

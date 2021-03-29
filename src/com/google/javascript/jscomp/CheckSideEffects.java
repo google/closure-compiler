@@ -120,7 +120,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
       if (isSimpleOp || !t.getCompiler().getAstAnalyzer().mayHaveSideEffects(n)) {
         if (report) {
           String msg = "This code lacks side-effects. Is there a bug?";
-          if (n.isString() || n.isTemplateLit()) {
+          if (n.isStringLit() || n.isTemplateLit()) {
             msg = "Is there a missing '+' on the previous line?";
           } else if (isSimpleOp) {
             msg =
@@ -136,8 +136,10 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         if (!NodeUtil.isStatement(n)) {
           problemNodes.add(n);
         }
-      } else if (n.isCall() && (n.getFirstChild().isGetProp()
-          || n.getFirstChild().isName() || n.getFirstChild().isString())) {
+      } else if (n.isCall()
+          && (n.getFirstChild().isGetProp()
+              || n.getFirstChild().isName()
+              || n.getFirstChild().isStringLit())) {
         String qname = n.getFirstChild().getQualifiedName();
 
         // The name should not be defined in src scopes - only externs

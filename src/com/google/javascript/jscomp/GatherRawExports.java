@@ -70,7 +70,7 @@ class GatherRawExports extends AbstractPostOrderCallback implements CompilerPass
     if (NodeUtil.isNormalOrOptChainGet(n) && isGlobalThisObject(t, n.getFirstChild())) {
       if (NodeUtil.isNormalOrOptChainGetProp(n)) {
         exportedVariables.add(n.getString());
-      } else if (NodeUtil.isNormalOrOptChainGet(n) && n.getSecondChild().isString()) {
+      } else if (NodeUtil.isNormalOrOptChainGet(n) && n.getSecondChild().isStringLit()) {
         exportedVariables.add(n.getSecondChild().getString());
       }
     }

@@ -121,7 +121,7 @@ class TypeTransformation {
   }
 
   private boolean isTypeName(Node n) {
-    return n.isString();
+    return n.isStringLit();
   }
 
   private boolean isBooleanOperation(Node n) {

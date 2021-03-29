@@ -212,7 +212,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
     Node namespaceArg = crDefineCallNode.getSecondChild();
     Node function = crDefineCallNode.getChildAtIndex(2);
 
-    if (!namespaceArg.isString()) {
+    if (!namespaceArg.isStringLit()) {
       compiler.report(JSError.make(namespaceArg, CR_DEFINE_INVALID_FIRST_ARGUMENT));
       return;
     }

@@ -1183,7 +1183,7 @@ final class PolymerClassRewriter {
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {
         Node observer = NodeUtil.getFirstPropMatchingKey(prop.value, "observer");
-        if (observer != null && observer.isString()) {
+        if (observer != null && observer.isStringLit()) {
           Node observerDirectReference =
               IR.getprop(cls.target.cloneTree(), "prototype", observer.getString())
                   .useSourceInfoFrom(observer);
@@ -1207,7 +1207,7 @@ final class PolymerClassRewriter {
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {
         Node computed = NodeUtil.getFirstPropMatchingKey(prop.value, "computed");
-        if (computed != null && computed.isString()) {
+        if (computed != null && computed.isStringLit()) {
           propertySinkStatements.addAll(
               replaceMethodStringWithReflectedCalls(cls.target, computed));
         }
@@ -1242,7 +1242,7 @@ final class PolymerClassRewriter {
       if (complexObservers != null) {
         for (Node complexObserver = complexObservers.getFirstChild(); complexObserver != null; ) {
           final Node next = complexObserver.getNext();
-          if (complexObserver.isString()) {
+          if (complexObserver.isStringLit()) {
             propertySinkStatements.addAll(
                 replaceMethodStringWithReflectedCalls(cls.target, complexObserver));
           }
@@ -1261,7 +1261,7 @@ final class PolymerClassRewriter {
    * <p>Returns a list of property sink statements to guard against dead code elimination.
    */
   private List<Node> replaceMethodStringWithReflectedCalls(Node className, Node methodSignature) {
-    checkArgument(methodSignature.isString());
+    checkArgument(methodSignature.isStringLit());
     List<Node> propertySinkStatements = new ArrayList<>();
     String methodSignatureString = methodSignature.getString().trim();
     int openParenIndex = methodSignatureString.indexOf('(');

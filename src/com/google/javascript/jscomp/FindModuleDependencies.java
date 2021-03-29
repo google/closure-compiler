@@ -196,7 +196,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         && n.isCall()
         && n.getFirstChild().matchesQualifiedName("goog.require")
         && n.getSecondChild() != null
-        && n.getSecondChild().isString()) {
+        && n.getSecondChild().isStringLit()) {
       String namespace = n.getSecondChild().getString();
       if (namespace.startsWith("goog.")) {
         t.getInput().addOrderedRequire(Require.BASE);

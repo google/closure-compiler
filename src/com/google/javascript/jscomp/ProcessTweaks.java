@@ -101,7 +101,7 @@ class ProcessTweaks implements CompilerPass {
     REGISTER_BOOLEAN("goog.tweak.registerBoolean", "boolean", Token.TRUE,
         Token.FALSE),
     REGISTER_NUMBER("goog.tweak.registerNumber", "number", Token.NUMBER),
-    REGISTER_STRING("goog.tweak.registerString", "string", Token.STRING),
+    REGISTER_STRING("goog.tweak.registerString", "string", Token.STRINGLIT),
     GET_BOOLEAN("goog.tweak.getBoolean", REGISTER_BOOLEAN),
     GET_NUMBER("goog.tweak.getNumber", REGISTER_NUMBER),
     GET_STRING("goog.tweak.getString", REGISTER_STRING);
@@ -283,7 +283,7 @@ class ProcessTweaks implements CompilerPass {
 
       // Ensure the first parameter (the tweak ID) is a string literal.
       Node tweakIdNode = n.getSecondChild();
-      if (!tweakIdNode.isString()) {
+      if (!tweakIdNode.isStringLit()) {
         compiler.report(JSError.make(tweakIdNode, NON_LITERAL_TWEAK_ID_ERROR));
         return;
       }

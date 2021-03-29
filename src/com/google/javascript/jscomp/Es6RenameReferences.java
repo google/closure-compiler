@@ -57,7 +57,7 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
   }
 
   private void renameTypeNodeRecursive(NodeTraversal t, Node n) {
-    if (n.isString()) {
+    if (n.isStringLit()) {
       renameReference(t, n, true);
     }
 

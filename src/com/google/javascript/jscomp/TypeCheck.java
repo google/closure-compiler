@@ -720,10 +720,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           right = n.getLastChild();
 
           if (left.isTypeOf()) {
-            if (right.isString()) {
+            if (right.isStringLit()) {
               checkTypeofString(right, right.getString());
             }
-          } else if (right.isTypeOf() && left.isString()) {
+          } else if (right.isTypeOf() && left.isStringLit()) {
             checkTypeofString(left, left.getString());
           }
 

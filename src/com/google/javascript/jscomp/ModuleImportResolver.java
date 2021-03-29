@@ -71,7 +71,7 @@ final class ModuleImportResolver {
     if (value == null
         || !value.isCall()
         || !value.hasTwoChildren()
-        || !value.getSecondChild().isString()) {
+        || !value.getSecondChild().isStringLit()) {
       return false;
     }
     Node callee = value.getFirstChild();

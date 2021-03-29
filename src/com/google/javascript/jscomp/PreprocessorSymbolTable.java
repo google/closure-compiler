@@ -109,7 +109,7 @@ final class PreprocessorSymbolTable
    * module names.
    */
   public String getQualifiedName(Node n) {
-    return n.isString() ? n.getString() : n.getQualifiedName();
+    return n.isStringLit() ? n.getString() : n.getQualifiedName();
   }
 
   static final class Reference extends SimpleReference<SimpleSlot> {

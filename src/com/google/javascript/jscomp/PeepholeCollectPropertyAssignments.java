@@ -232,7 +232,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
       Node property = obj.getNext();
       if (property.isNumber()) {
         propertyName = getSideEffectFreeStringValue(property);
-      } else if (property.isString()) {
+      } else if (property.isStringLit()) {
         propertyName = property.getString();
       } else {
         return false;

@@ -185,10 +185,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
           && (requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE)
               || requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE_NAMESPACE))
-          && (requireCall.getSecondChild().isNumber() || requireCall.getSecondChild().isString())) {
+          && (requireCall.getSecondChild().isNumber()
+              || requireCall.getSecondChild().isStringLit())) {
         return true;
       } else if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
-          && requireCall.getSecondChild().isString()) {
+          && requireCall.getSecondChild().isStringLit()) {
         return true;
       }
     } else if (requireCall.isCall()
@@ -196,7 +197,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         && resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
         && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".bind")
         && requireCall.getSecondChild().isNull()
-        && (requireCall.getLastChild().isNumber() || requireCall.getLastChild().isString())) {
+        && (requireCall.getLastChild().isNumber() || requireCall.getLastChild().isStringLit())) {
       return true;
     }
     return false;
@@ -256,7 +257,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (export.matchesQualifiedName(MODULE + "." + EXPORTS)
         || (export.isGetElem()
             && export.getFirstChild().matchesQualifiedName(MODULE)
-            && export.getSecondChild().isString()
+            && export.getSecondChild().isStringLit()
             && export.getSecondChild().getString().equals(EXPORTS))) {
       Var v = t.getScope().getVar(MODULE);
       if (v == null || v.isExtern()) {
@@ -609,7 +610,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (n.matchesQualifiedName(MODULE + "." + EXPORTS)
           || (n.isGetElem()
               && n.getFirstChild().matchesQualifiedName(MODULE)
-              && n.getSecondChild().isString()
+              && n.getSecondChild().isStringLit()
               && n.getSecondChild().getString().equals(EXPORTS))) {
         if (isCommonJsExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
@@ -743,7 +744,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       for (Node dep = dependencies.getFirstChild(); dep != null; dep = dep.getNext()) {
-        if (!dep.isString()) {
+        if (!dep.isStringLit()) {
           compiler.report(
               JSError.make(
                   dep,
@@ -846,7 +847,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // Find babel transpiled interop assignment
           // module.exports = exports['default'];
         } else if (export.node.getParent().isGetElem()
-            && export.node.getNext().isString()
+            && export.node.getNext().isStringLit()
             && export.node.getNext().getString().equals(EXPORT_PROPERTY_NAME)
             && export.node.getGrandparent().isAssign()
             && export.node.getParent().getPrevious() != null
@@ -2086,7 +2087,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * Update any type references in JSDoc annotations to account for all the rewriting we've done.
      */
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
-      if (typeNode.isString()) {
+      if (typeNode.isStringLit()) {
         String name = typeNode.getString();
         // Type nodes can be module paths.
         if (ModuleLoader.isPathIdentifier(name)) {

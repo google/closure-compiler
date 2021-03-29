@@ -372,7 +372,7 @@ class RenameProperties implements CompilerPass {
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.
           Node child = n.getLastChild();
-          if (child != null && child.isString()) {
+          if (child != null && child.isStringLit()) {
             quotedNames.add(child.getString());
           }
           break;
@@ -480,7 +480,7 @@ class RenameProperties implements CompilerPass {
         fnName = callNode.getFirstChild().getString();
       }
       Node firstArg = callNode.getSecondChild();
-      if (!firstArg.isString()) {
+      if (!firstArg.isStringLit()) {
         t.report(callNode, BAD_CALL, fnName);
         return;
       }

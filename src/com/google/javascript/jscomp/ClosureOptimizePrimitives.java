@@ -190,7 +190,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   private boolean canOptimizeObjectCreateSet(Node firstParam) {
     if (firstParam != null
         && firstParam.getNext() == null
-        && !(firstParam.isNumber() || firstParam.isString())) {
+        && !(firstParam.isNumber() || firstParam.isStringLit())) {
       // if there is only one argument, and it's an array, then the method uses the array elements
       // as keys. Don't optimize it to {[arr]: true}. We only special-case number and string
       // arguments in order to not regress ES5-out behavior
@@ -204,9 +204,9 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       if (!isOptimizableKey(curParam)) {
         return false;
       }
-      if (curParam.isString() || curParam.isNumber()) {
+      if (curParam.isStringLit() || curParam.isNumber()) {
         String key =
-            curParam.isString() ? curParam.getString() : numberToString(curParam.getDouble());
+            curParam.isStringLit() ? curParam.getString() : numberToString(curParam.getDouble());
         if (!keys.add(key)) {
           compiler.report(JSError.make(firstParam.getPrevious(), DUPLICATE_SET_MEMBER, key));
           return false;
@@ -219,7 +219,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
   private void addKeyValueToObjLit(Node objNode, Node keyNode, Node valueNode,
       Node scriptNode) {
-    if (keyNode.isNumber() || keyNode.isString()) {
+    if (keyNode.isNumber() || keyNode.isStringLit()) {
       if (keyNode.isNumber()) {
         keyNode = IR.string(numberToString(keyNode.getDouble()))
             .srcref(keyNode);
@@ -238,7 +238,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       return !NodeUtil.isStatement(curParam);
     } else {
       // Not ES6, all keys must be strings or numbers.
-      return curParam.isString() || curParam.isNumber();
+      return curParam.isStringLit() || curParam.isNumber();
     }
   }
 }

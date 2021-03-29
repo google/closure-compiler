@@ -162,7 +162,7 @@ public final class SourceMap {
     StaticSourceFile sourceFile = node.getStaticSourceFile();
 
     // TODO(b/179517798): Delete this impossible case.
-    if (node.isString()
+    if (node.isStringLit()
         && parent != null
         && NodeUtil.isNormalOrOptChainGetProp(parent)
         && node.isSecondChildOf(parent)) {

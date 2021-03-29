@@ -533,7 +533,7 @@ class GlobalNamespace
             globalName.usedHasOwnProperty = true;
           } else if (parent.isExprResult()
               && GOOG_PROVIDE.matches(n.getFirstChild())
-              && n.getSecondChild().isString()) {
+              && n.getSecondChild().isStringLit()) {
             // goog.provide goes through a different code path than regular sets because it can
             // create multiple names, e.g. `goog.provide('a.b.c');` creates the global names
             // a, a.b, and a.b.c. Other sets only create a single global name.

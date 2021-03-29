@@ -174,7 +174,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       case "exportSymbol":
         // Note: exportSymbol is allowed in local scope
         Node arg = callee.getNext();
-        if (arg.isString()) {
+        if (arg.isStringLit()) {
           String argString = arg.getString();
           int dot = argString.indexOf('.');
           if (dot == -1) {
@@ -348,7 +348,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // Handle methods.
     Node methodNameNode = thisArg.getNext();
     if (methodNameNode == null
-        || !methodNameNode.isString()
+        || !methodNameNode.isStringLit()
         || !methodNameNode.getString().equals("constructor")) {
       reportBadBaseMethodUse(n, baseContainer, "Second argument must be 'constructor'.");
       return;
@@ -391,7 +391,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
     // Handle methods.
     Node methodNameNode = thisArg.getNext();
-    if (methodNameNode == null || !methodNameNode.isString()) {
+    if (methodNameNode == null || !methodNameNode.isStringLit()) {
       reportBadBaseMethodUse(n, baseContainer, "Second argument must name a method.");
       return;
     }
@@ -491,9 +491,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext()) {
         Node value = key.getFirstChild();
-        if (!key.isStringKey()
-            || value == null
-            || !value.isString()) {
+        if (!key.isStringKey() || value == null || !value.isStringLit()) {
           compiler.report(JSError.make(n, NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR));
           return;
         }
@@ -628,7 +626,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       diagnostic = EXPECTED_OBJECTLIT_ERROR;
     } else if (firstArg.getNext() != null) {
       Node secondArg = firstArg.getNext();
-      if (!secondArg.isString()) {
+      if (!secondArg.isStringLit()) {
         diagnostic = EXPECTED_STRING_ERROR;
       } else if (secondArg.getNext() != null) {
         diagnostic = TOO_MANY_ARGUMENTS_ERROR;
@@ -663,7 +661,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
 
     Node propName = callee.getNext();
-    if (propName == null || !propName.isString()) {
+    if (propName == null || !propName.isStringLit()) {
       compiler.report(
           JSError.make(
               call,

@@ -149,10 +149,10 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       for (String entryName : possibleMainEntries) {
         Node entry = NodeUtil.getFirstPropMatchingKey(jsonObject, entryName);
 
-        if (entry != null && (entry.isString() || entry.isObjectLit())) {
+        if (entry != null && (entry.isStringLit() || entry.isObjectLit())) {
           String dirName = inputPath.substring(0, inputPath.length() - "package.json".length());
 
-          if (entry.isString()) {
+          if (entry.isStringLit()) {
             packageJsonMainEntries.put(inputPath, dirName + entry.getString());
             break;
           } else if (entry.isObjectLit()) {
@@ -179,7 +179,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
     for (Node child = entry.getFirstChild(); child != null; child = child.getNext()) {
       Node value = child.getFirstChild();
 
-      checkState(child.isStringKey() && (value.isString() || value.isFalse()));
+      checkState(child.isStringKey() && (value.isStringLit() || value.isFalse()));
 
       String path = child.getString();
 
@@ -188,7 +188,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       }
 
       String replacement =
-          value.isString()
+          value.isStringLit()
               ? dirName + value.getString()
               : ModuleLoader.JSC_BROWSER_SKIPLISTED_MARKER;
 

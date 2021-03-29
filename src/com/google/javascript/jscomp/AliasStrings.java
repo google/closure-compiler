@@ -147,7 +147,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isString() && !parent.isGetProp() && !parent.isRegExp()) {
+    if (n.isStringLit() && !parent.isGetProp() && !parent.isRegExp()) {
 
       String str = n.getString();
 

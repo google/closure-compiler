@@ -1786,7 +1786,7 @@ public final class SymbolTable {
 
     public void visitTypeNode(
         ImmutableMap<String, JSTypeExpression> templateTypeNames, SymbolScope scope, Node n) {
-      if (n.isString()
+      if (n.isStringLit()
           && !isNativeSourcelessType(n.getString())
           && !templateTypeNames.containsKey(n.getString())) {
         Symbol symbol = lookupPossiblyDottedName(scope, n.getString());

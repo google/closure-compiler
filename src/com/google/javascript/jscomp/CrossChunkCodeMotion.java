@@ -710,7 +710,7 @@ class CrossChunkCodeMotion implements CompilerPass {
     if (expression.isNE()) {
       Node undefinedString = expression.getFirstChild();
       Node typeofNode = expression.getLastChild();
-      return undefinedString.isString()
+      return undefinedString.isStringLit()
           && undefinedString.getString().equals("undefined")
           && typeofNode.isTypeOf()
           && typeofNode.getFirstChild().isEquivalentTo(reference);

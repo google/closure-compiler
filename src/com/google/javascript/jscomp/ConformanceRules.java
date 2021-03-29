@@ -816,14 +816,14 @@ public final class ConformanceRules {
         case GETELEM:
           {
             Node string = n.getSecondChild();
-            name = string.isString() ? string.getString() : null;
+            name = string.isStringLit() ? string.getString() : null;
           }
           break;
 
         case COMPUTED_PROP:
           {
             Node string = n.getFirstChild();
-            name = string.isString() ? string.getString() : null;
+            name = string.isStringLit() ? string.getString() : null;
           }
           break;
 
@@ -1785,7 +1785,7 @@ public final class ConformanceRules {
       if (n.isCall()) {
         Node tag = n.getSecondChild();
         if (tag != null
-            && tag.isString()
+            && tag.isStringLit()
             && bannedTags.contains(Ascii.toLowerCase(tag.getString()))) {
           return checkCreateElement(n);
         }
@@ -1938,7 +1938,7 @@ public final class ConformanceRules {
     }
 
     private ImmutableCollection<String> getTagNames(Node tag) {
-      if (tag.isString()) {
+      if (tag.isStringLit()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));

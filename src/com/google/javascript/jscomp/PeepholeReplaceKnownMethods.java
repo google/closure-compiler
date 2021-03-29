@@ -231,7 +231,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // then dispatch to specific folding method.
     Node stringNode = callTarget.getFirstChild();
 
-    boolean isStringLiteral = stringNode.isString();
+    boolean isStringLiteral = stringNode.isStringLit();
     String functionNameString = callTarget.getString();
     Node firstArg = callTarget.getNext();
     if (isStringLiteral) {
@@ -313,7 +313,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       // then dispatch to specific folding method.
       String functionNameString = callTarget.getString();
       Node firstArgument = callTarget.getNext();
-      if ((firstArgument != null) && (firstArgument.isString() || firstArgument.isNumber())
+      if ((firstArgument != null)
+          && (firstArgument.isStringLit() || firstArgument.isNumber())
           && (functionNameString.equals("parseInt") || functionNameString.equals("parseFloat"))) {
         subtree = tryFoldParseNumber(subtree, functionNameString, firstArgument);
       }
@@ -545,7 +546,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   private Node tryFoldStringIndexOf(
       Node n, String functionName, Node lstringNode, Node firstArg) {
     checkArgument(n.isCall());
-    checkArgument(lstringNode.isString());
+    checkArgument(lstringNode.isStringLit());
 
     String lstring = lstringNode.getString();
     boolean isIndexOf = functionName.equals("indexOf");
@@ -597,7 +598,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (right != null && right.isString() && ",".equals(right.getString())) {
+    if (right != null && right.isStringLit() && ",".equals(right.getString())) {
       // "," is the default, it doesn't need to be explicit
       n.removeChild(right);
       reportChangeToEnclosingScope(n);
@@ -660,7 +661,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         if (foldedStringNode.isSpread() || foldedSize > originalSize) {
           return n;
         }
-        if (foldedStringNode.isString()) {
+        if (foldedStringNode.isStringLit()) {
           arrayNode.detachChildren();
           n.replaceWith(foldedStringNode);
           reportChangeToEnclosingScope(foldedStringNode);
@@ -698,7 +699,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringSubstr(Node n, Node stringNode, Node arg1) {
     checkArgument(n.isCall());
-    checkArgument(stringNode.isString());
+    checkArgument(stringNode.isStringLit());
     checkArgument(arg1 != null);
 
     int start;
@@ -754,7 +755,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringSubstringOrSlice(Node n, Node stringNode, Node arg1) {
     checkArgument(n.isCall());
-    checkArgument(stringNode.isString());
+    checkArgument(stringNode.isStringLit());
     checkArgument(arg1 != null);
 
     int start;
@@ -818,7 +819,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringCharAt(Node n, Node stringNode, Node arg1) {
     checkArgument(n.isCall());
-    checkArgument(stringNode.isString());
+    checkArgument(stringNode.isStringLit());
 
     int index;
     String stringAsString = stringNode.getString();
@@ -849,7 +850,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringCharCodeAt(Node n, Node stringNode, Node arg1) {
     checkArgument(n.isCall());
-    checkArgument(stringNode.isString());
+    checkArgument(stringNode.isStringLit());
 
     int index;
     String stringAsString = stringNode.getString();
@@ -952,7 +953,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     checkArgument(n.isCall());
-    checkArgument(stringNode.isString());
+    checkArgument(stringNode.isStringLit());
 
     String separator = null;
     String stringValue = stringNode.getString();
@@ -961,7 +962,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int limit = stringValue.length() + 1;
 
     if (arg1 != null) {
-      if (arg1.isString()) {
+      if (arg1.isStringLit()) {
         separator = arg1.getString();
       } else if (!arg1.isNull()) {
         return n;

@@ -538,7 +538,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       new NodeUtil.Visitor() {
         @Override
         public void visit(Node typeRefNode) {
-          if (!typeRefNode.isString()) {
+          if (!typeRefNode.isStringLit()) {
             return;
           }
           // A type name that might be simple like "Foo" or qualified like "foo.Bar".
@@ -875,7 +875,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogModule(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
-    if (!namespaceIdNode.isString()) {
+    if (!namespaceIdNode.isStringLit()) {
       t.report(namespaceIdNode, INVALID_MODULE_ID_ARG);
       return;
     }
@@ -904,7 +904,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogProvide(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
-    if (!namespaceIdNode.isString()) {
+    if (!namespaceIdNode.isStringLit()) {
       t.report(namespaceIdNode, INVALID_PROVIDE_NAMESPACE);
       return;
     }
@@ -925,7 +925,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     maybeSplitMultiVar(call);
 
     Node namespaceIdNode = call.getLastChild();
-    if (!namespaceIdNode.isString()) {
+    if (!namespaceIdNode.isStringLit()) {
       t.report(namespaceIdNode, INVALID_REQUIRE_NAMESPACE);
       return;
     }
@@ -942,7 +942,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogRequireType(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
-    if (!namespaceIdNode.isString()) {
+    if (!namespaceIdNode.isStringLit()) {
       t.report(namespaceIdNode, INVALID_REQUIRE_TYPE_NAMESPACE);
       return;
     }
@@ -955,7 +955,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogForwardDeclare(NodeTraversal t, Node call) {
     Node namespaceNode = call.getLastChild();
-    if (!call.hasTwoChildren() || !namespaceNode.isString()) {
+    if (!call.hasTwoChildren() || !namespaceNode.isStringLit()) {
       t.report(namespaceNode, INVALID_FORWARD_DECLARE_NAMESPACE);
       return;
     }
@@ -971,7 +971,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogModuleGet(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
-    if (!call.hasTwoChildren() || !namespaceIdNode.isString()) {
+    if (!call.hasTwoChildren() || !namespaceIdNode.isStringLit()) {
       t.report(namespaceIdNode, INVALID_GET_NAMESPACE);
       return;
     }
@@ -1920,7 +1920,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       n.putBooleanProp(Node.MODULE_ALIAS, true);
       // Alias can be used in js types. Types have node type STRING and not NAME so we have to
       // use their name as string.
-      String nodeName = n.isString() ? n.getString() : preprocessorSymbolTable.getQualifiedName(n);
+      String nodeName =
+          n.isStringLit() ? n.getString() : preprocessorSymbolTable.getQualifiedName(n);
       // We need to include module as part of the name because aliases are local to current module.
       // Aliases with the same name from different module should be completely different entities.
       String name = "alias_" + module + "_" + nodeName;

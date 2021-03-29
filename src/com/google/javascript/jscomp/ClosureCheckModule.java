@@ -320,7 +320,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         new NodeUtil.Visitor() {
           @Override
           public void visit(Node node) {
-            if (!node.isString()) {
+            if (!node.isStringLit()) {
               return;
             }
 
@@ -438,7 +438,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   private static String extractFirstArgumentName(Node callNode) {
     Node firstArg = callNode.getSecondChild();
-    if (firstArg != null && firstArg.isString()) {
+    if (firstArg != null && firstArg.isStringLit()) {
       return firstArg.getString();
     }
     return null;
@@ -446,7 +446,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
     checkState(callNode.isCall());
-    checkState(callNode.getLastChild().isString());
+    checkState(callNode.getLastChild().isStringLit());
     switch (parent.getToken()) {
       case EXPR_RESULT:
         String key = extractFirstArgumentName(callNode);

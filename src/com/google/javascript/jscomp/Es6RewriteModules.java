@@ -226,7 +226,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         return;
       }
 
-      if (!n.hasTwoChildren() || !n.getLastChild().isString()) {
+      if (!n.hasTwoChildren() || !n.getLastChild().isStringLit()) {
         if (isRequire) {
           t.report(n, INVALID_REQUIRE_NAMESPACE);
         } else if (isRequireType) {
@@ -745,7 +745,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
   }
 
   private void inlineAliasedTypes(NodeTraversal t, Node typeNode) {
-    if (typeNode.isString()) {
+    if (typeNode.isStringLit()) {
       String name = typeNode.getString();
       List<String> split = DOT_SPLITTER.limit(2).splitToList(name);
 
@@ -769,7 +769,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
   }
 
   private void visitGoogModuleGet(NodeTraversal t, Node getCall, Node parent) {
-    if (!getCall.hasTwoChildren() || !getCall.getLastChild().isString()) {
+    if (!getCall.hasTwoChildren() || !getCall.getLastChild().isStringLit()) {
       t.report(getCall, INVALID_GET_NAMESPACE);
       return;
     }
@@ -803,7 +803,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
 
   private void visitRequireOrGet(
       NodeTraversal t, Node requireCall, Node parent, boolean isRequire) {
-    if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isString()) {
+    if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isStringLit()) {
       t.report(requireCall, INVALID_REQUIRE_NAMESPACE);
       return;
     }
@@ -1022,7 +1022,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
      * prefixes. Eg: {Foo} becomes {module$test.Foo}.
      */
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
-      if (typeNode.isString()) {
+      if (typeNode.isStringLit()) {
         Module thisModule = moduleMap.getModule(t.getInput().getPath());
         String name = typeNode.getString();
         List<String> splitted = DOT_SPLITTER.splitToList(name);
@@ -1098,7 +1098,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
     // Alias can be used in js types. Types have node type STRING and not NAME so we have to
     // use their name as string.
     String nodeName =
-        n.isString() || n.isImportStar()
+        n.isStringLit() || n.isImportStar()
             ? n.getString()
             : preprocessorSymbolTable.getQualifiedName(n);
     // We need to include module as part of the name because aliases are local to current module.

@@ -611,7 +611,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     // Confirm the arguments are the expected types. If they are not,
     // then we have an export that we cannot statically identify.
-    if (!nameArg.isString()) {
+    if (!nameArg.isStringLit()) {
       return;
     }
 
@@ -641,7 +641,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
 
-    if (!nameArg.isString()) {
+    if (!nameArg.isStringLit()) {
       return;
     }
 

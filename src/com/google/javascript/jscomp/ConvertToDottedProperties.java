@@ -57,7 +57,8 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
       case GETELEM:
         Node left = n.getFirstChild();
         Node right = left.getNext();
-        if (right.isString() && NodeUtil.isValidPropertyName(FeatureSet.ES3, right.getString())) {
+        if (right.isStringLit()
+            && NodeUtil.isValidPropertyName(FeatureSet.ES3, right.getString())) {
           n.removeChild(left);
           n.removeChild(right);
           Node newGetProp = IR.getprop(left, right.getString());

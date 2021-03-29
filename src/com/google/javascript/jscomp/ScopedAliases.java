@@ -863,7 +863,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     private void fixTypeNode(Node typeNode) {
-      if (typeNode.isString()) {
+      if (typeNode.isStringLit()) {
         String name = typeNode.getString();
         int endIndex = name.indexOf('.');
         if (endIndex == -1) {

@@ -704,7 +704,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (callee.isQualifiedName()
         && codingConvention.isPropertyRenameFunction(callee.getOriginalQualifiedName())) {
       Node propertyNameNode = callee.getNext();
-      if (propertyNameNode != null && propertyNameNode.isString()) {
+      if (propertyNameNode != null && propertyNameNode.isStringLit()) {
         markPropertyNameAsPinned(propertyNameNode.getString());
       }
       traverseChildren(callNode, scope);
@@ -768,13 +768,13 @@ class RemoveUnusedCode implements CompilerPass {
     switch (n.getToken()) {
       case NAME:
         // Need to work correctly after CollapseProperties.
-        return n.getString().equals("$jscomp$polyfill") && n.getNext().isString();
+        return n.getString().equals("$jscomp$polyfill") && n.getNext().isStringLit();
       case GETPROP:
         // Need to work correctly without CollapseProperties.
         return n.getString().equals("polyfill")
             && n.getFirstChild().isName()
             && n.getFirstChild().getString().equals("$jscomp")
-            && n.getNext().isString();
+            && n.getNext().isStringLit();
       default:
         return false;
     }

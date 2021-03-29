@@ -230,7 +230,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         Node val = propdef.removeFirstChild();
         boolean isQuotedAccess = propdef.isQuotedString();
 
-        propdef.setToken(Token.STRING);
+        propdef.setToken(Token.STRINGLIT);
         propdef.setJSType(stringType);
         propdef.putBooleanProp(Node.QUOTED_PROP, false);
 

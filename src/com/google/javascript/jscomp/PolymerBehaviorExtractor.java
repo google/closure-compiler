@@ -317,7 +317,7 @@ final class PolymerBehaviorExtractor {
     }
     return GOOG_MODULE_GET.matches(callNode.getFirstChild())
         && callNode.hasTwoChildren()
-        && callNode.getSecondChild().isString();
+        && callNode.getSecondChild().isStringLit();
   }
 
   private ResolveBehaviorNameResult resolveGoogModuleGet(String moduleNamespace) {

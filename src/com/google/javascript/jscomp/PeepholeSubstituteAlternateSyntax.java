@@ -412,7 +412,7 @@ class PeepholeSubstituteAlternateSyntax
       if ("RegExp".equals(className)) {
         // Fold "new RegExp()" to "RegExp()", but only if the argument is a string.
         // See issue 1260.
-        if (n.getSecondChild() == null || n.getSecondChild().isString()) {
+        if (n.getSecondChild() == null || n.getSecondChild().isStringLit()) {
           return true;
         }
       }
@@ -525,12 +525,12 @@ class PeepholeSubstituteAlternateSyntax
     }
 
     if ( // is pattern folded
-    pattern.isString()
+    pattern.isStringLit()
         // make sure empty pattern doesn't fold to a comment //
         && !"".equals(pattern.getString())
         // make sure empty pattern doesn't fold to a comment /*
         && !pattern.getString().startsWith("*")
-        && (null == flags || flags.isString())
+        && (null == flags || flags.isStringLit())
         // don't escape patterns with Unicode escapes since Safari behaves badly
         // (read can't parse or crashes) on regex literals with Unicode escapes
         && (isEcmaScript5OrGreater() || !containsUnicodeEscape(pattern.getString()))) {
@@ -613,7 +613,7 @@ class PeepholeSubstituteAlternateSyntax
   private Node tryMinimizeArrayLiteral(Node n) {
     boolean allStrings = true;
     for (Node cur = n.getFirstChild(); cur != null; cur = cur.getNext()) {
-      if (!cur.isString()) {
+      if (!cur.isStringLit()) {
         allStrings = false;
       }
     }

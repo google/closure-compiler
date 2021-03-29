@@ -416,21 +416,21 @@ public class CompilerInput extends DependencyInfo.Base {
                 loadFlags.put("module", "goog");
                 // Fall-through
               case "provide":
-                if (!argument.isString()) {
+                if (!argument.isStringLit()) {
                   return;
                 }
                 provides.add(argument.getString());
                 return;
 
               case "require":
-                if (!argument.isString()) {
+                if (!argument.isStringLit()) {
                   return;
                 }
                 requires.add(Require.googRequireSymbol(argument.getString()));
                 return;
 
               case "requireType":
-                if (!argument.isString()) {
+                if (!argument.isStringLit()) {
                   return;
                 }
                 typeRequires.add(argument.getString());
@@ -449,7 +449,7 @@ public class CompilerInput extends DependencyInfo.Base {
               && parent.matchesQualifiedName("goog.declareModuleId")
               && parent.getParent().isCall()) {
             Node argument = parent.getParent().getSecondChild();
-            if (!argument.isString()) {
+            if (!argument.isStringLit()) {
               return;
             }
             provides.add(argument.getString());
@@ -500,7 +500,7 @@ public class CompilerInput extends DependencyInfo.Base {
     }
 
     void visitEs6ModuleName(Node n, Node parent) {
-      checkArgument(n.isString());
+      checkArgument(n.isStringLit());
       checkArgument(parent.isExport() || parent.isImport());
 
       // TODO(blickly): Move this (and the duplicated logic in JsFileRegexParser/Es6RewriteModules)

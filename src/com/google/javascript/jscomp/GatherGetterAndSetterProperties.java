@@ -123,7 +123,7 @@ public final class GatherGetterAndSetterProperties implements CompilerPass {
       Node propertyNameNode = definePropertyCall.getChildAtIndex(2);
       Node descriptor = definePropertyCall.getChildAtIndex(3);
 
-      if (!propertyNameNode.isString() || !descriptor.isObjectLit()) {
+      if (!propertyNameNode.isStringLit() || !descriptor.isObjectLit()) {
         return;
       }
 

@@ -94,7 +94,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     final Nullability nullability;
 
     private Result(Node node, Nullability nullability) {
-      checkArgument(node.isString());
+      checkArgument(node.isStringLit());
       this.node = node;
       this.nullability = nullability;
     }
@@ -130,7 +130,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
           new NodeUtil.Visitor() {
             @Override
             public void visit(Node node) {
-              if (!node.isString()) {
+              if (!node.isStringLit()) {
                 return;
               }
               if (thrownTypes.contains(node)) {
@@ -154,7 +154,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                       for (Node child = parent.getFirstChild();
                           child != null;
                           child = child.getNext()) {
-                        if ((child.isString() && child.getString().equals("null"))
+                        if ((child.isStringLit() && child.getString().equals("null"))
                             || child.getToken() == Token.QMARK) {
                           return; // Inside a union that contains null or nullable type
                         }

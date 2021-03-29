@@ -154,7 +154,7 @@ class ReplaceCssNames implements CompilerPass {
         switch (count) {
           case 2:
             // Replace the function call with the processed argument.
-            if (first.isString()) {
+            if (first.isStringLit()) {
               processStringNode(first);
               n.removeChild(first);
               parent.replaceChild(n, first);
@@ -171,10 +171,10 @@ class ReplaceCssNames implements CompilerPass {
 
             Node second = first.getNext();
 
-            if (!second.isString()) {
+            if (!second.isStringLit()) {
               compiler.report(
                   JSError.make(n, STRING_LITERAL_EXPECTED_ERROR, second.getToken().toString()));
-            } else if (first.isString()) {
+            } else if (first.isStringLit()) {
               compiler.report(
                   JSError.make(
                       n, UNEXPECTED_STRING_LITERAL_ERROR, first.getString(), second.getString()));

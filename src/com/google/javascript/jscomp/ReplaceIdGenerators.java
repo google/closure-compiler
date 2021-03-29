@@ -343,9 +343,8 @@ class ReplaceIdGenerators implements CompilerPass {
       Node arg = n.getSecondChild();
       if (arg == null) {
         compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));
-      } else if (arg.isString()) {
-        String rename = getObfuscatedName(
-            arg, callName, nameGenerator, arg.getString());
+      } else if (arg.isStringLit()) {
+        String rename = getObfuscatedName(arg, callName, nameGenerator, arg.getString());
         parent.replaceChild(n, IR.string(rename));
         t.reportCodeChange();
       } else if (arg.isObjectLit()) {
@@ -404,7 +403,7 @@ class ReplaceIdGenerators implements CompilerPass {
   }
 
   static String getIdForGeneratorNode(boolean consistent, Node n) {
-    checkState(n.isString() || n.isStringKey(), n);
+    checkState(n.isStringLit() || n.isStringKey(), n);
     if (consistent) {
       return n.getString();
     } else {
