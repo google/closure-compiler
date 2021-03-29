@@ -57,13 +57,16 @@ public final class ConvertTypesToColors implements CompilerPass {
     this.serializationOptions = serializationOptions;
   }
 
-  private static class RemoveTypeSyntax extends AbstractPostOrderCallback {
+  private static class RemoveTypes extends AbstractPostOrderCallback {
 
-    RemoveTypeSyntax() {}
+    RemoveTypes() {}
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      n.setJSType(null);
+      n.setJSTypeBeforeCast(null);
       n.setDeclaredTypeExpression(null);
+      n.setTypedefTypeProp(null);
 
       JSDocInfo jsdoc = n.getJSDocInfo();
       if (jsdoc != null) {
@@ -72,11 +75,11 @@ public final class ConvertTypesToColors implements CompilerPass {
     }
   }
 
-  private static class RemoveTypeSyntaxAndSwapInColors extends RemoveTypeSyntax {
+  private static class RemoveTypesAndApplyColors extends RemoveTypes {
     private final ColorDeserializer deserializer;
     private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
 
-    RemoveTypeSyntaxAndSwapInColors(
+    RemoveTypesAndApplyColors(
         ColorDeserializer deserializer, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
       super();
       this.deserializer = deserializer;
@@ -85,26 +88,23 @@ public final class ConvertTypesToColors implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      JSType oldType = n.getJSType();
+      JSType oldTypeBeforeCast = n.getJSTypeBeforeCast();
+
       super.visit(t, n, parent);
 
-      JSType oldType = n.getJSType();
       if (oldType != null) {
-        n.setJSType(null);
-
         TypePointer pointer = typePointersByJstype.get(oldType);
         if (pointer != null) {
           n.setColor(deserializer.pointerToColor(pointer));
         }
       }
 
-      if (n.getJSTypeBeforeCast() != null) {
+      if (oldTypeBeforeCast != null) {
         // used by FunctionInjector and InlineVariables when inlining as a hint that a node has a
         // more specific color
         n.setColorFromTypeCast();
-        n.setJSTypeBeforeCast(null);
       }
-
-      n.setTypedefTypeProp(null);
     }
   }
 
@@ -113,7 +113,8 @@ public final class ConvertTypesToColors implements CompilerPass {
     Node externsAndJsRoot = root.getParent();
 
     if (!compiler.hasTypeCheckingRun()) {
-      NodeTraversal.traverse(compiler, externsAndJsRoot, new RemoveTypeSyntax());
+      NodeTraversal.traverse(compiler, externsAndJsRoot, new RemoveTypes());
+      compiler.clearJSTypeRegistry();
       return;
     }
 
@@ -134,8 +135,7 @@ public final class ConvertTypesToColors implements CompilerPass {
     NodeTraversal.traverse(
         compiler,
         externsAndJsRoot,
-        new RemoveTypeSyntaxAndSwapInColors(
-            deserializer, serializeJstypes.getTypePointersByJstype()));
+        new RemoveTypesAndApplyColors(deserializer, serializeJstypes.getTypePointersByJstype()));
 
     compiler.clearJSTypeRegistry();
     compiler.setColorRegistry(deserializer.getRegistry());
