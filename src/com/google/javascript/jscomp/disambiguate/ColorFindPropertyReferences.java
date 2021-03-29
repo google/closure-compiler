@@ -154,7 +154,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
 
   private void handlePropertyReflectorCall(Node call) {
     Node name = call.getSecondChild();
-    if (name == null || !name.isString()) {
+    if (name == null || !name.isStringLit()) {
       return;
     }
 

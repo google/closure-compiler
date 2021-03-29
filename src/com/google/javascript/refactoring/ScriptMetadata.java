@@ -129,7 +129,7 @@ public final class ScriptMetadata {
         case CALL:
           if (n.getChildCount() != 2
               || !n.getFirstChild().matchesQualifiedName("goog.module")
-              || !n.getSecondChild().isString()) {
+              || !n.getSecondChild().isStringLit()) {
             return;
           }
           break;
@@ -171,7 +171,7 @@ public final class ScriptMetadata {
       if (call == null
           || !call.isCall()
           || call.getChildCount() != 2
-          || !call.getSecondChild().isString()) {
+          || !call.getSecondChild().isStringLit()) {
         return false;
       }
 

@@ -97,7 +97,7 @@ final class ClosureRequireProcessor {
     if (value == null
         || !value.isCall()
         || !value.hasTwoChildren()
-        || !value.getSecondChild().isString()) {
+        || !value.getSecondChild().isStringLit()) {
       return null;
     }
     Node callee = value.getFirstChild();

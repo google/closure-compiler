@@ -212,7 +212,7 @@ public final class Matchers {
   public static Matcher googRequirelike(final String namespace) {
     return (Node node, NodeMetadata metadata) ->
         googRequirelike().matches(node, metadata)
-            && node.getSecondChild().isString()
+            && node.getSecondChild().isStringLit()
             && node.getSecondChild().getString().equals(namespace);
   }
 

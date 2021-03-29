@@ -834,7 +834,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNode(node).hasToken(Token.TYPEOF);
     assertThat(node.getChildCount()).isEqualTo(1);
     Node fooNode = node.getFirstChild();
-    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasToken(Token.STRINGLIT);
     assertNode(fooNode).hasStringThat().isEqualTo("Foo");
     assertNode(fooNode).hasCharno(14);
   }
@@ -845,7 +845,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNode(node).hasToken(Token.TYPEOF);
     assertThat(node.getChildCount()).isEqualTo(1);
     Node fooNode = node.getFirstChild();
-    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasToken(Token.STRINGLIT);
     assertNode(fooNode).hasStringThat().isEqualTo("Foo");
     assertNode(fooNode).hasCharno(15);
   }
@@ -856,17 +856,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNode(node).hasToken(Token.PIPE);
     assertNode(node.getFirstChild()).hasToken(Token.TYPEOF);
     Node fooNode = node.getFirstFirstChild();
-    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasToken(Token.STRINGLIT);
     assertNode(fooNode).hasStringThat().isEqualTo("Foo");
     assertNode(fooNode).hasCharno(14);
     Node barNode = node.getLastChild();
-    assertNode(barNode).hasToken(Token.STRING);
+    assertNode(barNode).hasToken(Token.STRINGLIT);
     assertNode(barNode).hasStringThat().isEqualTo("Bar");
     assertNode(barNode).hasCharno(18);
     assertNode(barNode.getFirstChild()).hasToken(Token.BLOCK);
     assertNode(barNode.getFirstFirstChild()).hasToken(Token.TYPEOF);
     Node bazNode = barNode.getFirstFirstChild().getFirstChild();
-    assertNode(bazNode).hasToken(Token.STRING);
+    assertNode(bazNode).hasToken(Token.STRINGLIT);
     assertNode(bazNode).hasStringThat().isEqualTo("Baz");
     assertNode(bazNode).hasCharno(29);
   }
@@ -877,7 +877,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNode(node).hasToken(Token.TYPEOF);
     assertThat(node.getChildCount()).isEqualTo(1);
     Node fooNode = node.getFirstChild();
-    assertNode(fooNode).hasToken(Token.STRING);
+    assertNode(fooNode).hasToken(Token.STRINGLIT);
     assertNode(fooNode).hasStringThat().isEqualTo("Foo");
     assertNode(fooNode).hasCharno(2);
     assertNode(fooNode).hasLineno(1);
@@ -886,7 +886,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypenameSourceInfo_simpleName() {
     Node node = parse("@type {Foo} */").getType().getRoot();
-    assertNode(node).hasToken(Token.STRING);
+    assertNode(node).hasToken(Token.STRINGLIT);
     assertThat(node.getLineno()).isEqualTo(0);
     assertThat(node.getCharno()).isEqualTo(7);
     assertThat(node.getLength()).isEqualTo(3);
@@ -895,7 +895,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypenameSourceInfo_qualifiedName() {
     Node node = parse("@type {bar.baz.Foo} */").getType().getRoot();
-    assertNode(node).hasToken(Token.STRING);
+    assertNode(node).hasToken(Token.STRINGLIT);
     assertThat(node.getLineno()).isEqualTo(0);
     assertThat(node.getCharno()).isEqualTo(7);
     assertThat(node.getLength()).isEqualTo(11);
@@ -904,7 +904,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testTypenameSourceInfo_qualifiedName_multiline() {
     Node node = parse(lines("@type {bar.", "       baz.Foo} */")).getType().getRoot();
-    assertNode(node).hasToken(Token.STRING);
+    assertNode(node).hasToken(Token.STRINGLIT);
     assertThat(node.getLineno()).isEqualTo(0);
     assertThat(node.getCharno()).isEqualTo(7);
     assertThat(node.getLength()).isEqualTo(19); // Including newline and spaces.
@@ -919,7 +919,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
                     "    Foo} */"))
             .getType()
             .getRoot();
-    assertNode(node).hasToken(Token.STRING);
+    assertNode(node).hasToken(Token.STRINGLIT);
     assertThat(node.getLineno()).isEqualTo(1);
     assertThat(node.getCharno()).isEqualTo(4);
     assertThat(node.getLength()).isEqualTo(3);
@@ -5431,7 +5431,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getType()).isNotNull();
     Node root = info.getType().getRoot();
     checkTokenPosition(root, Token.BANG, 1, 2);
-    checkTokenPosition(root.getFirstChild(), Token.STRING, 1, 3);
+    checkTokenPosition(root.getFirstChild(), Token.STRINGLIT, 1, 3);
   }
 
   @Test
@@ -5441,7 +5441,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {?Object} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root, Token.QMARK, 0, 7);
-    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 8);
+    checkTokenPosition(root.getFirstChild(), Token.STRINGLIT, 0, 8);
   }
 
   @Test
@@ -5451,7 +5451,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {Object!} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root, Token.BANG, 0, 13);
-    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 7);
+    checkTokenPosition(root.getFirstChild(), Token.STRINGLIT, 0, 7);
   }
 
   @Test
@@ -5461,7 +5461,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {Object?} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root, Token.QMARK, 0, 13);
-    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 7);
+    checkTokenPosition(root.getFirstChild(), Token.STRINGLIT, 0, 7);
   }
 
   @Test
@@ -5473,7 +5473,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {(string|!Object)} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root.getLastChild(), Token.BANG, 0, 15);
-    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRING, 0, 16);
+    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRINGLIT, 0, 16);
   }
 
   @Test
@@ -5484,7 +5484,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {Set<!string>} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root.getFirstFirstChild(), Token.BANG, 0, 11);
-    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRING, 0, 12);
+    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRINGLIT, 0, 12);
   }
 
   @Test
@@ -5503,7 +5503,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     checkTokenPosition(root.getFirstChild().getFirstFirstChild().getLastChild(), Token.BANG, 0, 14);
     checkTokenPosition(
         root.getFirstChild().getFirstFirstChild().getLastChild().getFirstChild(),
-        Token.STRING,
+        Token.STRINGLIT,
         0,
         15);
   }
@@ -5519,9 +5519,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info = parse("@type {function(!Object): ?string} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root.getFirstFirstChild(), Token.BANG, 0, 16);
-    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRING, 0, 17);
+    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRINGLIT, 0, 17);
     checkTokenPosition(root.getLastChild(), Token.QMARK, 0, 26);
-    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRING, 0, 27);
+    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRINGLIT, 0, 27);
   }
 
   @Test
@@ -5598,10 +5598,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Node root = info.getTemplateTypes().get("T").getRoot();
     checkTokenPosition(root, Token.PIPE, 0, 18);
 
-    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 11);
+    checkTokenPosition(root.getFirstChild(), Token.STRINGLIT, 0, 11);
     assertThat(root.getFirstChild().getString().equals("string")).isTrue();
 
-    checkTokenPosition(root.getSecondChild(), Token.STRING, 0, 18);
+    checkTokenPosition(root.getSecondChild(), Token.STRINGLIT, 0, 18);
     assertThat(root.getSecondChild().getString().equals("number")).isTrue();
   }
 
@@ -5652,7 +5652,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       int endCharno,
       boolean hasBrackets) {
     assertThat(marker.getType()).isNotNull();
-    assertThat(marker.getType().getItem().isString()).isTrue();
+    assertThat(marker.getType().getItem().isStringLit()).isTrue();
 
     // Match the name and brackets information.
     String foundName = marker.getType().getItem().getString();

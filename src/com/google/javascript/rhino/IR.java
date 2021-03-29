@@ -67,7 +67,7 @@ public class IR {
     checkState(
         importSpecs.isImportSpec() || importSpecs.isImportStar() || importSpecs.isEmpty(),
         importSpecs);
-    checkState(moduleIdentifier.isString(), moduleIdentifier);
+    checkState(moduleIdentifier.isStringLit(), moduleIdentifier);
     return new Node(Token.IMPORT, name, importSpecs, moduleIdentifier);
   }
 
@@ -641,13 +641,13 @@ public class IR {
   }
 
   public static Node regexp(Node expr) {
-    checkState(expr.isString());
+    checkState(expr.isStringLit());
     return new Node(Token.REGEXP, expr);
   }
 
   public static Node regexp(Node expr, Node flags) {
-    checkState(expr.isString());
-    checkState(flags.isString());
+    checkState(expr.isStringLit());
+    checkState(flags.isStringLit());
     return new Node(Token.REGEXP, expr, flags);
   }
 

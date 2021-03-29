@@ -547,7 +547,7 @@ public final class JsDocInfoParser {
           type = null;
           if (token != JsDocToken.EOL && token != JsDocToken.EOC) {
             Node typeNode = parseAndRecordTypeNode(token);
-            if (typeNode != null && typeNode.isString()) {
+            if (typeNode != null && typeNode.isStringLit()) {
               String typeName = typeNode.getString();
               if (!primitiveTypes.contains(typeName)) {
                 typeNode = wrapNode(Token.BANG, typeNode);
@@ -1940,7 +1940,7 @@ public final class JsDocInfoParser {
       if (typeNode != null) {
         skipEOLs();
         if (!match(JsDocToken.RIGHT_CURLY)) {
-          if (typeNode.isString() && "import".equals(typeNode.getString())) {
+          if (typeNode.isStringLit() && "import".equals(typeNode.getString())) {
             reportTypeSyntaxWarning("msg.jsdoc.import");
           } else {
             reportTypeSyntaxWarning("msg.jsdoc.missing.rc");

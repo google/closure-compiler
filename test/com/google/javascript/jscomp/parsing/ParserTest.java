@@ -432,7 +432,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node n = parse("'안녕세계!'");
     Node exprResult = n.getFirstChild();
     Node string = exprResult.getFirstChild();
-    assertNode(string).hasType(Token.STRING);
+    assertNode(string).hasType(Token.STRINGLIT);
     assertNode(string).hasLength(7); // 2 quotes, plus 5 characters
   }
 
@@ -1231,7 +1231,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node str = exprRes.getFirstChild();
 
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
-    assertNode(str).hasType(Token.STRING);
+    assertNode(str).hasType(Token.STRINGLIT);
     assertThat(str.getIsParenthesized()).isTrue();
   }
 
@@ -3640,7 +3640,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testStringLiteral() {
     Node n = parse("'foo'");
     Node stringNode = n.getFirstFirstChild();
-    assertNode(stringNode).hasType(Token.STRING);
+    assertNode(stringNode).hasType(Token.STRINGLIT);
     assertThat(stringNode.getString()).isEqualTo("foo");
   }
 

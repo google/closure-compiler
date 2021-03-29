@@ -197,7 +197,7 @@ public final class NodeSubject extends Subject {
   }
 
   public NodeSubject isString(String value) {
-    check("getToken()").that(actual.getToken()).isEqualTo(Token.STRING);
+    check("getToken()").that(actual.getToken()).isEqualTo(Token.STRINGLIT);
     check("getString()").that(actual.getString()).isEqualTo(value);
     return this;
   }

@@ -2144,7 +2144,7 @@ public class JSTypeRegistry {
 
   private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope) {
     // Other node types may be appropriate in the future.
-    checkState(n.isName() || n.isString(), n);
+    checkState(n.isName() || n.isStringLit(), n);
     checkNotNull(type);
 
     if (isNonNullableName(scope, n.getString())) {

@@ -28,7 +28,6 @@ import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
-import static com.google.javascript.rhino.Token.STRING;
 import static com.google.javascript.rhino.Token.STRING_KEY;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.util.Arrays.stream;
@@ -340,7 +339,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
                 "FOO_PROTOTYPE: Foo.prototype;"));
 
     // Then
-    this.assertThatUsesOf("a").containsExactly("FOO_PROTOTYPE", STRING);
+    this.assertThatUsesOf("a").containsExactly("FOO_PROTOTYPE", Token.STRINGLIT);
   }
 
   @Test
@@ -355,7 +354,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
                 ));
 
     // Then
-    this.assertThatUsesOf("a").containsExactly(null, STRING);
+    this.assertThatUsesOf("a").containsExactly(null, Token.STRINGLIT);
   }
 
   @Test

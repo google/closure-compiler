@@ -325,7 +325,7 @@ abstract class PotentialDeclaration {
 
     static Node makeEmptyValueNode(JSTypeExpression type) {
       Node n = type.getRoot();
-      while (n != null && !n.isString() && !n.isName()) {
+      while (n != null && !n.isStringLit() && !n.isName()) {
         n = n.getFirstChild();
       }
       switch (n != null ? n.getString() : "") {

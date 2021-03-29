@@ -104,7 +104,7 @@ public final class JSTypeExpression implements Serializable {
       replaceNames(child, names);
       child = next;
     }
-    if (n.isString() && names.contains(n.getString())) {
+    if (n.isStringLit() && names.contains(n.getString())) {
       Node qMark = new Node(Token.QMARK);
       qMark.addChildrenToBack(n.removeChildren());
       if (n.hasParent()) {
@@ -137,7 +137,7 @@ public final class JSTypeExpression implements Serializable {
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       visitAllTypeNodes(child, visitor);
     }
-    if (n.isString()) {
+    if (n.isStringLit()) {
       visitor.accept(n);
     }
   }

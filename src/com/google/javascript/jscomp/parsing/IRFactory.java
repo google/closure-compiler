@@ -1060,7 +1060,7 @@ class IRFactory {
         ret = processString(token.asLiteral());
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
-      checkState(ret.isString());
+      checkState(ret.isStringLit());
       return ret;
     }
 
@@ -1293,7 +1293,7 @@ class IRFactory {
         }
 
         Node directive = statement.getFirstChild();
-        if (!directive.isString() || !directive.getString().equals("use strict")) {
+        if (!directive.isStringLit() || !directive.getString().equals("use strict")) {
           break;
         }
 
@@ -1837,7 +1837,7 @@ class IRFactory {
     Node processName(IdentifierToken identifierToken, boolean asString) {
       Node node;
       if (asString) {
-        node = newStringNode(Token.STRING, identifierToken.value);
+        node = newStringNode(Token.STRINGLIT, identifierToken.value);
       } else {
         JSDocInfo info = handleJsDoc(identifierToken);
         maybeWarnReservedKeyword(identifierToken);
@@ -1852,7 +1852,7 @@ class IRFactory {
 
     Node processString(LiteralToken token) {
       checkArgument(token.type == TokenType.STRING);
-      Node node = newStringNode(Token.STRING, normalizeString(token, false));
+      Node node = newStringNode(Token.STRINGLIT, normalizeString(token, false));
       setSourceInfo(node, token);
       return node;
     }

@@ -410,7 +410,7 @@ public class AmbiguateProperties implements CompilerPass {
           && compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
 
         Node propName = call.getSecondChild();
-        if (propName == null || !propName.isString()) {
+        if (propName == null || !propName.isStringLit()) {
           return;
         }
 
@@ -438,7 +438,7 @@ public class AmbiguateProperties implements CompilerPass {
       checkArgument(objectLit.isObjectLit() || objectLit.isObjectPattern(), objectLit);
       switch (key.getToken()) {
         case COMPUTED_PROP:
-          if (key.getFirstChild().isString()) {
+          if (key.getFirstChild().isStringLit()) {
             // If this quoted prop name is statically determinable, ensure we don't rename some
             // other property in a way that could conflict with it.
             //
@@ -492,7 +492,7 @@ public class AmbiguateProperties implements CompilerPass {
       // ensure that we never rename some other property in a way that
       // could conflict with this quoted name.
       Node child = n.getLastChild();
-      if (child.isString()) {
+      if (child.isStringLit()) {
         quotedNames.add(child.getString());
       }
     }
@@ -520,7 +520,7 @@ public class AmbiguateProperties implements CompilerPass {
         } else if (member.isComputedProp()) {
           // ignore ['foo']() {}
           // for simple cases, we also prevent renaming collisions
-          if (member.getFirstChild().isString()) {
+          if (member.getFirstChild().isStringLit()) {
             quotedNames.add(member.getFirstChild().getString());
           }
           continue;

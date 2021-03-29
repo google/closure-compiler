@@ -189,7 +189,7 @@ public final class TypeTransformationParser {
   }
 
   private boolean isTypeName(Node n) {
-    return n.isString();
+    return n.isStringLit();
   }
 
   private boolean isOperation(Node n) {
@@ -457,7 +457,7 @@ public final class TypeTransformationParser {
       return false;
     }
     Node typeString = getCallArgument(expr, 0);
-    if (!typeString.isString()) {
+    if (!typeString.isStringLit()) {
       warnInvalidExpression("native type");
       warnInvalidInside(Keywords.TYPEEXPR.name);
       return false;
@@ -511,7 +511,7 @@ public final class TypeTransformationParser {
   }
 
   private boolean isValidStringParam(Node expr) {
-    if (!expr.isName() && !expr.isString()) {
+    if (!expr.isName() && !expr.isStringLit()) {
       warnInvalid("string");
       return false;
     }
@@ -729,7 +729,7 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.TYPEOFVAR)) {
       return false;
     }
-    if (!getCallArgument(expr, 0).isString()) {
+    if (!getCallArgument(expr, 0).isStringLit()) {
       warnInvalid("name");
       warnInvalidInside(Keywords.TYPEOFVAR.name);
       return false;
@@ -760,7 +760,7 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.PRINTTYPE)) {
       return false;
     }
-    if (!getCallArgument(expr, 0).isString()) {
+    if (!getCallArgument(expr, 0).isStringLit()) {
       warnInvalid("message");
       warnInvalidInside(Keywords.PRINTTYPE.name);
       return false;
@@ -778,7 +778,7 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.PROPTYPE)) {
       return false;
     }
-    if (!getCallArgument(expr, 0).isString()) {
+    if (!getCallArgument(expr, 0).isStringLit()) {
       warnInvalid("property name");
       warnInvalidInside(Keywords.PROPTYPE.name);
       return false;

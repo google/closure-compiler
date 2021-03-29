@@ -713,7 +713,7 @@ public final class SuggestedFix {
             lastModuleOrProvideNode = grandchild;
           } else if (Matchers.googRequirelike().matches(grandchild, metadata)) {
             lastGoogRequireNode = grandchild;
-            if (grandchild.getLastChild().isString()
+            if (grandchild.getLastChild().isStringLit()
                 && namespace.compareTo(grandchild.getLastChild().getString()) < 0) {
               nodeToInsertBefore = child;
               break;
