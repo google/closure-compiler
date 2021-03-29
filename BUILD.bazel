@@ -223,7 +223,7 @@ java_library(
     ] + glob([
         "test/com/google/javascript/jscomp/testdata/**/*",
         "test/com/google/javascript/jscomp/instrumentation/reporter/testdata/**/*",
-        "test/com/google/javascript/refactoring/examples/testdata/**/*",
+        "test/com/google/javascript/refactoring/examples/**/testdata/**/*",
     ]),
     resources = glob([
         "src/com/google/javascript/refactoring/examples/refasterjs/**/*.js",

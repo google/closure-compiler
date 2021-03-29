@@ -4,7 +4,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "google_bazel_common",
-    commit = "e388861b8ee72d805044967bb42b8f584ae629a8",
+    commit = "9d1beb9294151cb1b28cd4b4dc842fd7559f9147",
     remote = "git://github.com/google/bazel-common.git",
 )
 
