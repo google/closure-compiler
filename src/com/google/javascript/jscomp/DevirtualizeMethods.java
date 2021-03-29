@@ -139,13 +139,15 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     String devirtualizedName = rewrittenMethodNameOf(name);
+    JSDocInfo bestJSDoc = NodeUtil.getBestJSDocInfo(canonicalDefinitionSite);
+    boolean isConstantName = bestJSDoc != null && bestJSDoc.isConstant();
 
     for (Node callSite : callSites) {
-      rewriteCall(callSite, devirtualizedName);
+      rewriteCall(callSite, devirtualizedName, isConstantName);
     }
     // We only have to rewrite one definition. We've checked they're all identical so any of them
     // can replace the others. The un-rewritten ones will be dead-code eliminated.
-    rewriteDefinition(canonicalDefinitionSite, devirtualizedName);
+    rewriteDefinition(canonicalDefinitionSite, devirtualizedName, isConstantName);
   }
 
   private boolean isPrototypeOrStaticMethodDefinition(Node node) {
@@ -391,7 +393,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>After: foo(o, a, b, c)
    */
-  private void rewriteCall(Node getprop, String newMethodName) {
+  private void rewriteCall(Node getprop, String newMethodName, boolean isConstantName) {
     checkArgument(getprop.isGetProp(), getprop);
     Node call = getprop.getParent();
     checkArgument(call.isCall(), call);
@@ -407,7 +409,11 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
 
     getprop.removeChild(receiver);
     call.replaceChild(getprop, receiver);
-    call.addChildToFront(IR.name(newMethodName).copyTypeFrom(getprop).srcref(getprop));
+    Node newReceiver = IR.name(newMethodName).copyTypeFrom(getprop).srcref(getprop);
+    if (isConstantName) {
+      newReceiver.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
+    call.addChildToFront(newReceiver);
 
     if (receiver.isSuper()) {
       // Case: `super.foo(a, b)` => `foo(this, a, b)`
@@ -425,7 +431,8 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>After: var b = function(self, a, b, c) {...}
    */
-  private void rewriteDefinition(Node definitionSite, String newMethodName) {
+  private void rewriteDefinition(
+      Node definitionSite, String newMethodName, boolean isConstantName) {
     final Node function;
     final Node subtreeToRemove;
     final Node nameSource;
@@ -453,6 +460,9 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(nameSource);
     Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(nameSource);
     statement.getParent().addChildBefore(newVarNode, statement);
+    if (isConstantName) {
+      newNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    }
 
     // Copy the JSDocInfo, if any, from the original declaration
     JSDocInfo originalJSDoc = NodeUtil.getBestJSDocInfo(definitionSite);

@@ -1170,6 +1170,22 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewriteDeclWithConstJSDoc() {
+    test(
+        lines(
+            "class C {", //
+            "  /** @const */ foo() {}",
+            "}",
+            "o.foo();"),
+        lines(
+            "/** @const */",
+            "var JSCompiler_StaticMethods_foo =",
+            "  function(JSCompiler_StaticMethods_foo$self) {};",
+            "class C {}",
+            "JSCompiler_StaticMethods_foo(o)"));
+  }
+
+  @Test
   public void testNoRewriteGet1() {
     // Getters and setter require special handling.
     testSame("function a(){}; a.prototype = {get foo(){return f}}; var o = new a; o.foo()");
