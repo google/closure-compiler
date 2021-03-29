@@ -3309,11 +3309,15 @@ public class Node implements Serializable {
   }
 
   public final boolean isString() {
-    return this.token == Token.STRING;
+    return this.token == Token.STRINGLIT;
   }
 
   public final boolean isStringKey() {
     return this.token == Token.STRING_KEY;
+  }
+
+  public final boolean isStringLit() {
+    return this.token == Token.STRINGLIT;
   }
 
   public final boolean isSuper() {
