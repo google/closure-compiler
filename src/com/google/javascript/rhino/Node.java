@@ -871,6 +871,53 @@ public class Node implements Serializable {
     addChildrenAfter(newChild, node);
   }
 
+  public final void insertAfter(Node existing) {
+    final Node existingParent = existing.parent;
+    final Node existingNext = existing.next;
+
+    checkState(existingParent != null);
+    checkState(this.parent == null);
+    checkState(this.next == null);
+    checkState(this.previous == null);
+
+    this.parent = existingParent;
+
+    existing.next = this;
+    this.previous = existing;
+
+    if (existingNext == null) {
+      existingParent.first.previous = this;
+      // this.next remains null
+    } else {
+      existingNext.previous = this;
+      this.next = existingNext;
+    }
+  }
+
+  public final void insertBefore(Node existing) {
+    final Node existingParent = existing.parent;
+    final Node existingPrevious = existing.previous;
+
+    checkState(existingParent != null);
+    checkState(this.parent == null);
+    checkState(this.next == null);
+    checkState(this.previous == null);
+
+    this.parent = existingParent;
+
+    this.next = existing;
+    existing.previous = this;
+
+    this.previous = existingPrevious;
+    if (existingPrevious.next == null) {
+      existingParent.first = this;
+      // existingPrevious.next remains null
+    } else {
+      // existingParent.first remains existing
+      existingPrevious.next = this;
+    }
+  }
+
   /**
    * Add all children after 'node'. If 'node' is null, add them to the front of this node.
    *
