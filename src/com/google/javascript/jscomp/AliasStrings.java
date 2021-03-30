@@ -23,7 +23,6 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -135,8 +134,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isStringLit() && !parent.isGetProp() && !parent.isRegExp()) {
-
+    if (n.isStringLit() && !parent.isRegExp()) {
       String str = n.getString();
 
       // "undefined" is special-cased, since it needs to be used when JS code
@@ -147,15 +145,14 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       }
 
       if (aliasableStrings == null || aliasableStrings.contains(str)) {
-        StringOccurrence occurrence = new StringOccurrence(n, parent);
+        Node occurrence = n;
         StringInfo info = getOrCreateStringInfo(str);
 
         info.occurrences.add(occurrence);
-        info.numOccurrences++;
 
         // The current module.
         JSModule module = t.getModule();
-        if (info.numOccurrences != 1) {
+        if (info.occurrences.size() != 1) {
           // Check whether the current module depends on the module containing
           // the declaration.
           if (module != null
@@ -200,9 +197,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       String literal = entry.getKey();
       StringInfo info = entry.getValue();
       if (shouldReplaceWithAlias(literal, info)) {
-        for (StringOccurrence occurrence : info.occurrences) {
-          replaceStringWithAliasName(
-              occurrence, info.getVariableName(literal), info);
+        for (Node node : info.occurrences) {
+          replaceStringWithAliasName(node, info.getVariableName(literal), info);
         }
       }
     }
@@ -220,7 +216,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       }
       String alias = info.getVariableName(entry.getKey());
       Node var = IR.var(IR.name(alias), IR.string(entry.getKey()));
-      var.useSourceInfoFromForTree(info.parentForNewVarDecl);
+      Node firstUse = info.occurrences.get(0);
+      var.useSourceInfoFromForTree(firstUse);
       if (info.siblingToInsertVarDeclBefore == null) {
         info.parentForNewVarDecl.addChildToFront(var);
       } else {
@@ -250,24 +247,23 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     // strings more than 32k apart.
 
     int sizeOfLiteral = 2 + str.length();
-    int sizeOfStrings = info.numOccurrences * sizeOfLiteral;
+    int count = info.occurrences.size();
+    int sizeOfStrings = count * sizeOfLiteral;
     int sizeOfVariable = 3;
     //  '6' comes from: 'var =;' in var XXX="...";
-    int sizeOfAliases = 6 + sizeOfVariable + sizeOfLiteral    // declaration
-        + info.numOccurrences * sizeOfVariable;               // + uses
+    int sizeOfAliases =
+        6
+            + sizeOfVariable
+            + sizeOfLiteral // declaration
+            + count * sizeOfVariable; // + uses
 
     return sizeOfAliases < sizeOfStrings;
   }
 
-  /**
-   * Replaces a string literal with a reference to the string's alias variable.
-   */
-  private void replaceStringWithAliasName(StringOccurrence occurrence,
-                                          String name,
-                                          StringInfo info) {
+  /** Replaces a string literal with a reference to the string's alias variable. */
+  private void replaceStringWithAliasName(Node n, String name, StringInfo info) {
     Node nameNode = IR.name(name);
-    occurrence.parent.replaceChild(occurrence.node,
-                                   nameNode);
+    n.replaceWith(nameNode);
     info.isAliased = true;
     compiler.reportChangeToEnclosingScope(nameNode);
   }
@@ -279,8 +275,9 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     StringBuilder sb = new StringBuilder("Strings used more than once:\n");
     for (Entry<String, StringInfo> stringInfoEntry : stringInfoMap.entrySet()) {
       StringInfo info = stringInfoEntry.getValue();
-      if (info.numOccurrences > 1) {
-        sb.append(info.numOccurrences);
+      int count = info.occurrences.size();
+      if (count > 1) {
+        sb.append(count);
         sb.append(": ");
         sb.append(stringInfoEntry.getKey());
         sb.append('\n');
@@ -293,19 +290,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   // -------------------------------------------------------------------------
 
   /**
-   * A class that holds the location of a single JavaScript string literal
-   */
-  private static final class StringOccurrence {
-    final Node node;
-    final Node parent;
-
-    StringOccurrence(Node node, Node parent) {
-      this.node = node;
-      this.parent = parent;
-    }
-  }
-
-  /**
    * A class that holds information about a JavaScript string that might become
    * aliased.
    */
@@ -314,8 +298,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
     boolean isAliased;      // set to 'true' when reference to alias created
 
-    final List<StringOccurrence> occurrences;
-    int numOccurrences;
+    final ArrayList<Node> occurrences = new ArrayList<>();
 
     JSModule moduleToContainDecl;
     Node parentForNewVarDecl;
@@ -325,7 +308,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
     StringInfo(int id) {
       this.id = id;
-      this.occurrences = new ArrayList<>();
       this.isAliased = false;
     }
 
