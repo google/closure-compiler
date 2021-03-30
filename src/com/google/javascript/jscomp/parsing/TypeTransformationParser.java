@@ -249,7 +249,7 @@ public final class TypeTransformationParser {
   public boolean parseTypeTransformation() {
     Config config =
         Config.builder()
-            .setLanguageMode(Config.LanguageMode.ECMASCRIPT6)
+            .setLanguageMode(Config.LanguageMode.ES_NEXT)
             .setStrictMode(Config.StrictMode.SLOPPY)
             .build();
     // TODO(lpino): ParserRunner reports errors if the expression is not

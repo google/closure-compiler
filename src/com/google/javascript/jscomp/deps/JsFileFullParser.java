@@ -178,7 +178,7 @@ public class JsFileFullParser {
     Config config =
         ParserRunner.createConfig(
             // TODO(sdh): ES8 STRICT, with a non-strict fallback - then give warnings.
-            Config.LanguageMode.ECMASCRIPT8,
+            Config.LanguageMode.ES_NEXT,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
             Config.RunMode.STOP_AFTER_ERROR,
             /* extraAnnotationNames */ ImmutableSet.<String>of(),
