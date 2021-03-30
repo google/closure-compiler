@@ -647,7 +647,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             if (isHoisted) {
               grandparent.addChildToFront(newDecl);
             } else {
-              grandparent.addChildBefore(newDecl, varNode);
+              newDecl.insertBefore(varNode);
             }
             compiler.reportChangeToEnclosingScope(newDecl);
             injectedDecls.add(newDecl.getFirstChild());

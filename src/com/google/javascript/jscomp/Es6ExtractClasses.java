@@ -196,7 +196,7 @@ public final class Es6ExtractClasses
         IR.constNode(classNameLhs, classNode).useSourceInfoIfMissingFromForTree(classNode);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     classDeclaration.setJSDocInfo(JSDocInfo.Builder.maybeCopyFrom(info).build());
-    statement.getParent().addChildBefore(classDeclaration, statement);
+    classDeclaration.insertBefore(statement);
 
     // If the original statement was a variable declaration or qualified name assignment like
     // like these:

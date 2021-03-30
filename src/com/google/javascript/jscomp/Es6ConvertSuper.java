@@ -225,7 +225,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       grandparent.addChildToFront(callTarget);
       Node thisNode = astFactory.createThis(clazz.getJSType());
       thisNode.makeNonIndexable(); // no direct correlation with original source
-      grandparent.addChildAfter(thisNode, callTarget);
+      thisNode.insertAfter(callTarget);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     } else {
       // Replace super node to give
@@ -243,7 +243,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       JSType thisType = getInstanceTypeForClassNode(clazz);
       Node thisNode = astFactory.createThis(thisType);
       thisNode.makeNonIndexable(); // no direct correlation with original source
-      grandparent.addChildAfter(thisNode, callTarget);
+      thisNode.insertAfter(callTarget);
       grandparent.putBooleanProp(Node.FREE_CALL, false);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     }

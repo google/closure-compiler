@@ -253,7 +253,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
 
     Node var = IR.var(astFactory.createName(objName, objectType), obj);
     var.useSourceInfoIfMissingFromForTree(statement);
-    statement.getParent().addChildBefore(var, statement);
+    var.insertBefore(statement);
     compiler.reportChangeToEnclosingScope(var);
   }
 }

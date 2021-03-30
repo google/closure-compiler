@@ -496,7 +496,7 @@ class CollapseProperties implements CompilerPass {
     // Create a stub variable declaration right
     // before the current statement.
     Node stubVar = IR.var(nameNode.cloneTree()).useSourceInfoIfMissingFrom(nameNode);
-    currentParent.addChildBefore(stubVar, current);
+    stubVar.insertBefore(current);
 
     parent.replaceChild(ref.getNode(), nameNode);
     compiler.reportChangeToEnclosingScope(nameNode);
@@ -623,8 +623,7 @@ class CollapseProperties implements CompilerPass {
 
     if (canCollapseChildNames) {
       if (isObjLit) {
-        declareVariablesForObjLitValues(
-            n, alias, rvalue, varNode, varNode.getPrevious(), varParent);
+        declareVariablesForObjLitValues(n, alias, rvalue, varNode, varNode.getPrevious());
       }
 
       addStubsForUndeclaredProperties(n, alias, varParent, varNode);
@@ -688,8 +687,7 @@ class CollapseProperties implements CompilerPass {
     boolean isObjLit = rvalue.isObjectLit();
 
     if (isObjLit) {
-      declareVariablesForObjLitValues(
-          n, name, rvalue, variableNode, variableNode.getPrevious(), grandparent);
+      declareVariablesForObjLitValues(n, name, rvalue, variableNode, variableNode.getPrevious());
     }
 
     addStubsForUndeclaredProperties(n, name, grandparent, variableNode);
@@ -771,7 +769,7 @@ class CollapseProperties implements CompilerPass {
 
     // add a var declaration, creating `var Foo$m = function() {}; class Foo {}`
     Node varDecl = IR.var(NodeUtil.newName(compiler, alias, memberFn), fnNode).srcref(memberFn);
-    enclosingStatement.getParent().addChildBefore(varDecl, enclosingStatement);
+    varDecl.insertBefore(enclosingStatement);
     compiler.reportChangeToEnclosingScope(varDecl);
 
     // collapsing this name's properties requires updating this Ref
@@ -787,15 +785,9 @@ class CollapseProperties implements CompilerPass {
    * @param varNode The VAR node to which new global variables should be added as children
    * @param nameToAddAfter The child of {@code varNode} after which new variables should be added
    *     (may be null)
-   * @param varParent {@code varNode}'s parent
    */
   private void declareVariablesForObjLitValues(
-      Name objlitName,
-      String alias,
-      Node objlit,
-      Node varNode,
-      Node nameToAddAfter,
-      Node varParent) {
+      Name objlitName, String alias, Node objlit, Node varNode, Node nameToAddAfter) {
     int arbitraryNameCounter = 0;
     boolean discardKeys = !objlitName.shouldKeepKeys();
 
@@ -859,9 +851,9 @@ class CollapseProperties implements CompilerPass {
       }
       Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(key);
       if (nameToAddAfter != null) {
-        varParent.addChildAfter(newVar, nameToAddAfter);
+        newVar.insertAfter(nameToAddAfter);
       } else {
-        varParent.addChildBefore(newVar, varNode);
+        newVar.insertBefore(varNode);
       }
       compiler.reportChangeToEnclosingScope(newVar);
       nameToAddAfter = newVar;
@@ -908,7 +900,7 @@ class CollapseProperties implements CompilerPass {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
       Node nameNode = IR.name(propAlias);
       Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
-      parent.addChildAfter(newVar, addAfter);
+      newVar.insertAfter(addAfter);
 
       // Determine if this is a constant var by checking the first
       // reference to it. Don't check the declaration, as it might be null.

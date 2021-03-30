@@ -212,7 +212,7 @@ class RuntimeTypeCheck implements CompilerPass {
                   IR.getelem(IR.getprop(classNode, "prototype"), IR.string(markerName)),
                   IR.trueNode()));
 
-      nodeToInsertAfter.getParent().addChildAfter(assign, nodeToInsertAfter);
+      assign.insertAfter(nodeToInsertAfter);
       compiler.reportChangeToEnclosingScope(assign);
       return assign;
     }
@@ -308,7 +308,7 @@ class RuntimeTypeCheck implements CompilerPass {
         if (insertionPoint == null) {
           block.addChildToFront(checkNode);
         } else {
-          block.addChildAfter(checkNode, insertionPoint);
+          checkNode.insertAfter(insertionPoint);
         }
 
         compiler.reportChangeToEnclosingScope(block);
@@ -457,7 +457,7 @@ class RuntimeTypeCheck implements CompilerPass {
                 NodeUtil.newQName(compiler, "$jscomp.typecheck.log"),
                 NodeUtil.newQName(compiler, logFunction)));
     checkState(node.getParent().isScript(), node.getParent());
-    node.getParent().addChildAfter(logOverride, node);
+    logOverride.insertAfter(node);
     compiler.reportChangeToEnclosingScope(node);
   }
 

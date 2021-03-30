@@ -416,12 +416,11 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
                 // $jscomp$super$get$x(...)   =>   $jscomp$super$get$x().call($jscomp$async$this,
                 // ...)
                 getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
-                grandparent.addChildAfter(
-                    astFactory
-                        .createThisAliasReferenceForFunction(
-                            ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode())
-                        .useSourceInfoFrom(superDotProperty),
-                    superDotProperty);
+                astFactory
+                    .createThisAliasReferenceForFunction(
+                        ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode())
+                    .useSourceInfoFrom(superDotProperty)
+                    .insertAfter(superDotProperty);
                 asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone();
               }
               getPropReplacement.useSourceInfoFromForTree(superDotProperty);

@@ -2643,10 +2643,10 @@ public final class NodeUtil {
       declParent.replaceChild(decl, newStatement);
     } else if (declChild.getNext() == null) {
       decl.removeChild(declChild);
-      declParent.addChildAfter(newStatement, decl);
+      newStatement.insertAfter(decl);
     } else if (declChild.getPrevious() == null) {
       decl.removeChild(declChild);
-      declParent.addChildBefore(newStatement, decl);
+      newStatement.insertBefore(decl);
     } else {
       checkState(decl.hasMoreThanOneChild());
       Node newDecl = new Node(decl.getToken()).srcref(decl);
@@ -2655,8 +2655,8 @@ public final class NodeUtil {
         newDecl.addChildToBack(after.detach());
       }
       decl.removeChild(declChild);
-      declParent.addChildAfter(newStatement, decl);
-      declParent.addChildAfter(newDecl, newStatement);
+      newStatement.insertAfter(decl);
+      newDecl.insertAfter(newStatement);
     }
   }
 
@@ -2685,7 +2685,7 @@ public final class NodeUtil {
       Node previous = block;
       while (block.hasChildren()) {
         Node child = block.removeFirstChild();
-        parent.addChildAfter(child, previous);
+        child.insertAfter(previous);
         previous = child;
       }
       parent.removeChild(block);

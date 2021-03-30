@@ -190,7 +190,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       Node declaration = IR.exprResult(getprop);
       declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
       Node parent = inheritsCall.getParent();
-      parent.getParent().addChildBefore(declaration, parent);
+      declaration.insertBefore(parent);
       compiler.reportChangeToEnclosingScope(parent);
 
       // Copy over field access so that subclasses of this subclass can also make the declarations
@@ -237,7 +237,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
       Node exprResult = IR.exprResult(assign);
       exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
       Node inheritsExpressionResult = inheritsCall.getParent();
-      inheritsExpressionResult.getParent().addChildAfter(exprResult, inheritsExpressionResult);
+      exprResult.insertAfter(inheritsExpressionResult);
       compiler.reportChangeToEnclosingScope(inheritsExpressionResult);
 
       // Add the static member to the subclass so that subclasses also copy this member.

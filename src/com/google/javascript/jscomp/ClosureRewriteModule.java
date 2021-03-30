@@ -859,7 +859,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         Node newExport =
             IR.exprResult(astFactory.createAssign(lhs, rhs).srcref(key).setJSDocInfo(jsdoc))
                 .srcref(key);
-        insertionPoint.getParent().addChildAfter(newExport, insertionPoint);
+        newExport.insertAfter(insertionPoint);
         insertionPoint = newExport;
       }
       n.getGrandparent().detach();
@@ -1582,9 +1582,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     Node binaryNamespaceExportNode = IR.var(binaryNamespaceName, astFactory.createObjectLit());
     if (addAt == AddAt.BEFORE) {
-      atNode.getParent().addChildBefore(binaryNamespaceExportNode, atNode);
+      binaryNamespaceExportNode.insertBefore(atNode);
     } else if (addAt == AddAt.AFTER) {
-      atNode.getParent().addChildAfter(binaryNamespaceExportNode, atNode);
+      binaryNamespaceExportNode.insertAfter(atNode);
     }
     binaryNamespaceExportNode.putBooleanProp(Node.IS_NAMESPACE, true);
     binaryNamespaceExportNode.srcrefTree(atNode);
@@ -1618,7 +1618,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node nameNode = rhsNode.getParent();
     nameNode.detach();
     rhsNode.detach();
-    statementNode.getParent().addChildBefore(IR.var(nameNode, rhsNode), statementNode);
+    IR.var(nameNode, rhsNode).insertBefore(statementNode);
   }
 
   private static void markConstAndCopyJsDoc(Node from, Node target) {

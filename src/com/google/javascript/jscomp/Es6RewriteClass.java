@@ -240,7 +240,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                         metadata.getFullClassNameNode().cloneTree(),
                         metadata.getSuperClassNameNode().cloneTree()))
                 .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
-        enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
+        inheritsCall.insertAfter(enclosingStatement);
       }
     }
 
@@ -429,7 +429,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       Node declaration =
           property.getDeclaration(astFactory, scope, metadata.getFullClassNameNode().cloneTree());
       declaration.useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
-      insertionPoint.getParent().addChildAfter(declaration, insertionPoint);
+      declaration.insertAfter(insertionPoint);
       insertionPoint = declaration;
     }
   }
@@ -740,7 +740,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     }
 
     void insertNodeAndAdvance(Node newNode) {
-      insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
+      newNode.insertAfter(insertionPoint);
       insertionPoint = newNode;
     }
 

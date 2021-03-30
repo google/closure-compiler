@@ -198,9 +198,8 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
 
   /** Replaces `export let Element = ...` with `let Element = ...; export {Element};` */
   private void normalizePolymerExport(Node nameDecl, Node export) {
-    Node block = export.getParent();
     Node name = nameDecl.getFirstChild();
-    block.addChildBefore(nameDecl.detach(), export);
+    nameDecl.detach().insertBefore(export);
 
     Node exportSpec = new Node(Token.EXPORT_SPEC);
     exportSpec.addChildToFront(name.cloneNode());

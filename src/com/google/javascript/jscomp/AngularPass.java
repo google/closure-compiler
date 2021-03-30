@@ -153,7 +153,7 @@ class AngularPass extends AbstractPostOrderCallback
         next = insertionPoint.getNext();
       }
 
-      insertionPoint.getParent().addChildAfter(statement, insertionPoint);
+      statement.insertAfter(insertionPoint);
       compiler.reportChangeToEnclosingScope(statement);
     }
   }

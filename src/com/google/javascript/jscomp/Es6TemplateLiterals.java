@@ -160,7 +160,7 @@ class Es6TemplateLiterals {
     // as injecting to the top of the script causes runtime errors
     // https://github.com/google/closure-compiler/issues/3589. For any subsequent script(s), the
     // call is injected to the top of that script.
-    insertBefore.getParent().addChildBefore(tagFnFirstArgDeclaration, insertBefore);
+    tagFnFirstArgDeclaration.insertBefore(insertBefore);
     t.reportCodeChange(tagFnFirstArgDeclaration);
 
     // Generate the call expression.

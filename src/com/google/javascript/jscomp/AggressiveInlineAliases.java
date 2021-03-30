@@ -145,7 +145,7 @@ class AggressiveInlineAliases implements CompilerPass {
         Node identifier = key.getFirstChild();
         Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(identifier);
         Node newConstNode = IR.constNode(identifier.detach(), newRhs).srcref(n);
-        insertionPoint.getParent().addChildAfter(newConstNode, insertionPoint);
+        newConstNode.insertAfter(insertionPoint);
         insertionPoint = newConstNode;
       }
       n.detach();

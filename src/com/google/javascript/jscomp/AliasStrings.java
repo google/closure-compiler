@@ -221,8 +221,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       if (info.siblingToInsertVarDeclBefore == null) {
         info.parentForNewVarDecl.addChildToFront(var);
       } else {
-        info.parentForNewVarDecl.addChildBefore(
-            var, info.siblingToInsertVarDeclBefore);
+        var.insertBefore(info.siblingToInsertVarDeclBefore);
       }
       compiler.reportChangeToEnclosingScope(var);
     }

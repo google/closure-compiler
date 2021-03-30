@@ -834,7 +834,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     private void createNamespaceInitialization(Node replacement) {
       replacementNode = replacement;
       if (firstModule == minimumModule) {
-        firstNode.getParent().addChildBefore(replacementNode, firstNode);
+        replacementNode.insertBefore(firstNode);
       } else {
         // In this case, the name was implicitly provided by two independent
         // modules. We need to move this code up to a common module.
@@ -847,10 +847,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
           ProvidedName parentName = providedNames.get(namespace.substring(0, indexOfDot));
           checkNotNull(parentName);
           checkNotNull(parentName.replacementNode);
-          parentName
-              .replacementNode
-              .getParent()
-              .addChildAfter(replacementNode, parentName.replacementNode);
+          replacementNode.insertAfter(parentName.replacementNode);
         }
       }
       compiler.reportChangeToEnclosingScope(replacementNode);

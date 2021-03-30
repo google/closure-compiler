@@ -518,9 +518,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
             .createAssignStatement(classNameDotPrototypeDotPropName, stubCall)
             .useSourceInfoIfMissingFromForTree(methodDefinition);
     Node classDefiningStatement = NodeUtil.getEnclosingStatement(classMembers);
-    classDefiningStatement
-        .getParent()
-        .addChildAfter(stubDefinitionStatement, classDefiningStatement);
+    stubDefinitionStatement.insertAfter(classDefiningStatement);
 
     // remove the definition from the class
     methodDefinition.detach();

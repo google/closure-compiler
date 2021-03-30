@@ -69,7 +69,6 @@ public final class RewriteNullishCoalesceOperator
     // (temp = a) != null) : temp ? b()
     String tempVarName = TEMP_VAR_NAME_PREFIX + uniqueNameIdSuppier.get();
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
-    Node body = enclosingStatement.getParent();
 
     Node left = n.removeFirstChild();
     Node right = n.getLastChild().detach();
@@ -87,7 +86,7 @@ public final class RewriteNullishCoalesceOperator
     ne.useSourceInfoIfMissingFromForTree(left);
     hookName.useSourceInfoIfMissingFromForTree(left);
 
-    body.addChildBefore(let, enclosingStatement);
+    let.insertBefore(enclosingStatement);
     n.replaceWith(hook);
 
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);

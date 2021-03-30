@@ -309,7 +309,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
                   astFactory.createSingleConstNameDeclaration(
                       child.getFirstChild().getString(), globalName.toQname(astFactory));
               constNode.useSourceInfoFromForTree(child);
-              statementNode.getParent().addChildBefore(constNode, statementNode);
+              constNode.insertBefore(statementNode);
             }
           }
           statementNode.detach();

@@ -281,7 +281,7 @@ final class PolymerClassDefinition {
     Node target = IR.name(madeUpName).clonePropsFrom(exportName).srcref(exportName);
     callNode.replaceWith(target);
     Node newDecl = IR.var(target.cloneNode(), callNode).srcref(assignExpr);
-    moduleBody.addChildBefore(newDecl, assignExpr);
+    newDecl.insertBefore(assignExpr);
     newDecl.setJSDocInfo(assignExpr.getJSDocInfo());
     assignExpr.setJSDocInfo(null);
     return target;

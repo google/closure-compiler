@@ -263,7 +263,11 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
                   ? IR.exprResult(astFactory.createAssign(lhs, rhs))
                   : IR.var(lhs, rhs);
           newStatement.useSourceInfoIfMissingFromForTree(param);
-          body.addChildAfter(newStatement, insertSpot);
+          if (insertSpot == null) {
+            body.addChildToFront(newStatement);
+          } else {
+            newStatement.insertAfter(insertSpot);
+          }
           insertSpot = newStatement;
         }
 
@@ -305,7 +309,11 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     patternParam.replaceWith(newParam);
     Node newDecl = IR.var(patternParam, astFactory.createName(tempVarName, paramType));
     newDecl.useSourceInfoIfMissingFromForTree(patternParam);
-    function.getLastChild().addChildAfter(newDecl, insertSpot);
+    if (insertSpot == null) {
+      function.getLastChild().addChildToFront(newDecl);
+    } else {
+      newDecl.insertAfter(insertSpot);
+    }
     return newDecl;
   }
 
@@ -398,7 +406,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       jsDoc.recordConstancy();
       tempDecl.setJSDocInfo(jsDoc.build());
     }
-    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+    tempDecl.insertBefore(nodeToDetach);
 
     for (Node child = objectPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
@@ -446,7 +454,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
               astFactory.createName(exprEvalTempVarName, propExpr.getJSType()); // clone this node
           Node exprEvalDecl = IR.var(exprEvalTempVarModel.cloneNode(), propExpr);
           exprEvalDecl.useSourceInfoIfMissingFromForTree(child);
-          nodeToDetach.getParent().addChildBefore(exprEvalDecl, nodeToDetach);
+          exprEvalDecl.insertBefore(nodeToDetach);
           propExpr = exprEvalTempVarModel.cloneNode();
           propsToDeleteForRest.add(exprEvalTempVarModel.cloneNode());
         }
@@ -460,7 +468,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           Node intermediateDecl =
               IR.var(astFactory.createName(intermediateTempVarName, getelem.getJSType()), getelem);
           intermediateDecl.useSourceInfoIfMissingFromForTree(child);
-          nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
+          intermediateDecl.insertBefore(nodeToDetach);
 
           // tempVarName2 === undefined ? defaultValue : tempVarName2
           newRHS =
@@ -483,7 +491,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
         Node restTempDecl = IR.var(astFactory.createName(restTempVarName, tempVarType), assignCall);
         restTempDecl.useSourceInfoIfMissingFromForTree(objectPattern);
-        nodeToDetach.getParent().addChildAfter(restTempDecl, tempDecl);
+        restTempDecl.insertAfter(tempDecl);
 
         Node restName = child.getOnlyChild(); // e.g. get `rest` from `const {...rest} = {};`
         newLHS = astFactory.createName(restName.getString(), restName.getJSType());
@@ -502,7 +510,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       }
       newNode.useSourceInfoIfMissingFromForTree(child);
 
-      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
+      newNode.insertBefore(nodeToDetach);
 
       // Explicitly visit the LHS of the new node since it may be a nested
       // destructuring pattern.
@@ -599,7 +607,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     Node tempVarModel = astFactory.createName(tempVarName, makeIteratorCall.getJSType());
     Node tempDecl = IR.var(tempVarModel.cloneNode(), makeIteratorCall);
     tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
-    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+    tempDecl.insertBefore(nodeToDetach);
 
     for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
@@ -609,7 +617,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
             IR.exprResult(
                 astFactory.createCall(astFactory.createGetProp(tempVarModel.cloneNode(), "next")));
         nextCall.useSourceInfoIfMissingFromForTree(child);
-        nodeToDetach.getParent().addChildBefore(nextCall, nodeToDetach);
+        nextCall.insertBefore(nodeToDetach);
         continue;
       }
 
@@ -631,7 +639,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         // `var temp1 = temp.next().value`
         Node var = IR.var(astFactory.createName(nextVarName, nextVarType), nextCallDotValue);
         var.useSourceInfoIfMissingFromForTree(child);
-        nodeToDetach.getParent().addChildBefore(var, nodeToDetach);
+        var.insertBefore(nodeToDetach);
 
         // `x`
         newLHS = child.removeFirstChild();
@@ -668,7 +676,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       }
       newNode.useSourceInfoIfMissingFromForTree(arrayPattern);
 
-      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
+      newNode.insertBefore(nodeToDetach);
       // Explicitly visit the LHS of the new node since it may be a nested
       // destructuring pattern.
       visit(t, newLHS, newLHS.getParent());

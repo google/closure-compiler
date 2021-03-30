@@ -614,7 +614,7 @@ class FunctionInjector {
         NodeUtil.markFunctionsDeleted(firstChild, compiler);
         Preconditions.checkState(!parent.hasChildren());
         // Add the call, after the VAR.
-        greatGrandParent.addChildAfter(newBlock, grandParent);
+        newBlock.insertAfter(grandParent);
         break;
 
       case SIMPLE_ASSIGNMENT:

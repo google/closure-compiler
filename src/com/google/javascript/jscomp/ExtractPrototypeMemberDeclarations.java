@@ -220,7 +220,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
           IR.exprResult(IR.assign(IR.name(alias), IR.getprop(classNameNode, "prototype")))
               .useSourceInfoIfMissingFromForTree(first.node);
 
-      instance.parent.addChildBefore(stmt, first.node);
+      stmt.insertBefore(first.node);
       compiler.reportChangeToEnclosingScope(stmt);
     } else if (pattern == Pattern.USE_IIFE) {
       Node block = IR.block();
@@ -235,7 +235,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
       Node stmt = IR.exprResult(call);
       stmt.useSourceInfoIfMissingFromForTree(first.node);
-      instance.parent.addChildBefore(stmt, first.node);
+      stmt.insertBefore(first.node);
       compiler.reportChangeToEnclosingScope(stmt);
       for (PrototypeMemberDeclaration declar : instance.declarations) {
         compiler.reportChangeToEnclosingScope(declar.node);

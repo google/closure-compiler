@@ -220,7 +220,7 @@ class PeepholeMinimizeConditions
           break;
         } else if (elseBranch != null && statementMustExitParent(thenBranch)) {
           child.removeChild(elseBranch);
-          n.addChildAfter(elseBranch, child);
+          elseBranch.insertAfter(child);
           reportChangeToEnclosingScope(n);
         }
       }
@@ -788,7 +788,7 @@ class PeepholeMinimizeConditions
       }
       lastTrue.detach();
       lastFalse.detach();
-      parent.addChildAfter(lastTrue, n);
+      lastTrue.insertAfter(n);
       reportChangeToEnclosingScope(parent);
     }
   }

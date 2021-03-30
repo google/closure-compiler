@@ -323,7 +323,7 @@ final class PolymerClassRewriter {
         if (propsAndBehaviorCode != null) {
           parent.addChildrenAfter(propsAndBehaviorCode, beforeRoot);
         }
-        parent.addChildAfter(declarationCode, beforeRoot);
+        declarationCode.insertAfter(beforeRoot);
       }
       compiler.reportChangeToEnclosingScope(parent);
     }
@@ -467,7 +467,7 @@ final class PolymerClassRewriter {
           Node protectorCall = IR.call(name, propertyRef).srcref(propertyRef);
           protectorCall.putBooleanProp(Node.FREE_CALL, true);
           protectorCall = IR.exprResult(protectorCall).useSourceInfoFrom(propertyRef);
-          insertAfterReference.getParent().addChildAfter(protectorCall, insertAfterReference);
+          protectorCall.insertAfter(insertAfterReference);
           insertAfterReference = protectorCall;
         }
 
@@ -1162,7 +1162,7 @@ final class PolymerClassRewriter {
     while (!NodeUtil.isStatementBlock(insertAfter.getParent())) {
       insertAfter = insertAfter.getParent();
     }
-    insertAfter.getParent().addChildAfter(expression, insertAfter);
+    expression.insertAfter(insertAfter);
     compiler.reportChangeToEnclosingScope(expression);
   }
 

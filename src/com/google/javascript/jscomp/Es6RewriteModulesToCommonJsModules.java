@@ -318,10 +318,14 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
           if (importedNames.add(varName)) {
             Node requireCall = IR.call(IR.name(REQUIRE), IR.string(request.specifier()));
             requireCall.putBooleanProp(Node.FREE_CALL, true);
-            Node var = IR.var(IR.name(varName), requireCall);
-            var.useSourceInfoIfMissingFromForTree(script);
-            script.addChildAfter(var, requireInsertSpot);
-            requireInsertSpot = var;
+            Node decl = IR.var(IR.name(varName), requireCall);
+            decl.useSourceInfoIfMissingFromForTree(script);
+            if (requireInsertSpot == null) {
+              script.addChildToFront(decl);
+            } else {
+              decl.insertAfter(requireInsertSpot);
+            }
+            requireInsertSpot = decl;
           }
         }
       }
@@ -444,7 +448,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Node moduleIdentifier = export.getLastChild();
       Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
       importNode.useSourceInfoFrom(export);
-      parent.addChildBefore(importNode, export);
+      importNode.insertBefore(export);
       visit(t, importNode, parent);
 
       String moduleName = getVarNameOfImport(moduleIdentifier.getString());
@@ -516,7 +520,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       // Make an "import 'spec'" from this export node and then visit it to rewrite to a require().
       Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
       importNode.useSourceInfoFrom(export);
-      parent.addChildBefore(importNode, export);
+      importNode.insertBefore(export);
       visit(t, importNode, parent);
 
       String moduleName = getVarNameOfImport(moduleIdentifier.getString());

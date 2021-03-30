@@ -213,7 +213,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node name = declarationList.getLastChild();
       Node newDeclaration = IR.var(name.detach()).useSourceInfoFrom(declarationList);
       maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
-      parent.addChildAfter(newDeclaration, declarationList);
+      newDeclaration.insertAfter(declarationList);
       compiler.reportChangeToEnclosingScope(parent);
     }
     maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
@@ -225,7 +225,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     while (insertSpot.getParent().isLabel()) {
       insertSpot = insertSpot.getParent();
     }
-    insertSpot.getParent().addChildBefore(newNode, insertSpot);
+    newNode.insertBefore(insertSpot);
     compiler.reportChangeToEnclosingScope(newNode);
   }
 

@@ -652,8 +652,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
       // super.x(...)   =>   super.x.call($this, ...)
       getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
-      grandparent.addChildAfter(
-          astFactory.createName(t.getScope(), thisVarName).useSourceInfoFrom(parent), parent);
+      astFactory
+          .createName(t.getScope(), thisVarName)
+          .useSourceInfoFrom(parent)
+          .insertAfter(parent);
       ctx.thisSuperArgsContext.usedThis = true;
     }
     getPropReplacement.useSourceInfoFromForTree(parent);

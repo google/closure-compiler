@@ -203,8 +203,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
             .useSourceInfoIfMissingFromForTree(aliasNode);
       }
 
-      script.addChildBefore(requireNode,
-          defineNode.getParent());
+      requireNode.insertBefore(defineNode.getParent());
     }
 
     /**
@@ -243,7 +242,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
       callbackBlock.detach();
       Node before = script.getChildAtIndex(curIndex);
       if (before != null) {
-        script.addChildBefore(callbackBlock, before);
+        callbackBlock.insertBefore(before);
       }
       script.addChildToBack(callbackBlock);
       NodeUtil.tryMergeBlock(callbackBlock, false);

@@ -191,7 +191,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                                     .setJSType(numberType))
                             .setJSType(numberType))))
             .useSourceInfoIfMissingFromForTree(restParam);
-    functionBody.addChildAfter(copyLoop, newArrayDeclaration);
+    copyLoop.insertAfter(newArrayDeclaration);
 
     functionBody.addChildToBack(newBlock);
     compiler.reportChangeToEnclosingScope(newBlock);
@@ -405,9 +405,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       Node statementContainingSpread = NodeUtil.getEnclosingStatement(spreadParent);
       freshVarDeclaration.useSourceInfoIfMissingFromForTree(statementContainingSpread);
 
-      statementContainingSpread
-          .getParent()
-          .addChildBefore(freshVarDeclaration, statementContainingSpread);
+      freshVarDeclaration.insertBefore(statementContainingSpread);
       callee.addChildToFront(
           IR.assign(freshVar.cloneTree(), callee.removeFirstChild()).setJSType(receiverType));
 

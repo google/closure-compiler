@@ -326,7 +326,7 @@ public class GenerateExports implements CompilerPass {
     }
 
     Node block = exprRoot.getParent();
-    block.addChildAfter(stmt, exprRoot);
+    stmt.insertAfter(exprRoot);
     compiler.reportChangeToEnclosingScope(stmt);
   }
 

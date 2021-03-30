@@ -141,7 +141,7 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
     Node extendsAlias =
         IR.constNode(IR.name(name), originalExtends)
             .useSourceInfoIfMissingFromForTree(originalExtends);
-    statement.getParent().addChildBefore(extendsAlias, statement);
+    extendsAlias.insertBefore(statement);
     NodeUtil.addFeatureToScript(
         NodeUtil.getEnclosingScript(classNode), Feature.CONST_DECLARATIONS, compiler);
     t.reportCodeChange(classNode);

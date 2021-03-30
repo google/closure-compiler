@@ -366,8 +366,8 @@ class Normalize implements CompilerPass {
           n.setToken(Token.FOR);
           Node empty = IR.empty();
           empty.useSourceInfoIfMissingFrom(n);
-          n.addChildBefore(empty, expr);
-          n.addChildAfter(empty.cloneNode(), expr);
+          empty.insertBefore(expr);
+          empty.cloneNode().insertAfter(expr);
           reportCodeChange("WHILE node", n);
           break;
 
@@ -447,7 +447,7 @@ class Normalize implements CompilerPass {
         Iterable<Node> names;
         if (c.isClass() || c.isFunction()) {
           names = Collections.singleton(c.getFirstChild());
-          n.getParent().addChildBefore(c, n);
+          c.insertBefore(n);
         } else {
           names = NodeUtil.findLhsNodesInNode(c);
           // Split up var declarations onto separate lines.
@@ -455,7 +455,7 @@ class Normalize implements CompilerPass {
             final Node next = child.getNext();
             child.detach();
             Node newDeclaration = new Node(c.getToken(), child).srcref(n);
-            n.getParent().addChildBefore(newDeclaration, n);
+            newDeclaration.insertBefore(n);
             child = next;
           }
         }
@@ -601,7 +601,7 @@ class Normalize implements CompilerPass {
                       name);
                   Node newName = IR.name(name.getString()).srcref(name);
                   Node newVar = IR.var(newName).srcref(name);
-                  insertBeforeParent.addChildBefore(newVar, insertBefore);
+                  newVar.insertBefore(insertBefore);
                 }
 
                 // Transform for (var [a, b]... ) to for ([a, b]...
@@ -616,7 +616,7 @@ class Normalize implements CompilerPass {
                 // Clone just the node, to remove any initialization.
                 Node name = newStatement.getFirstChild().cloneNode();
                 first.replaceWith(name);
-                insertBeforeParent.addChildBefore(newStatement, insertBefore);
+                newStatement.insertBefore(insertBefore);
               }
               reportCodeChange("FOR-IN var declaration", n);
             }
@@ -642,7 +642,7 @@ class Normalize implements CompilerPass {
                 newStatement = NodeUtil.newExpr(init);
               }
 
-              insertBeforeParent.addChildBefore(newStatement, insertBefore);
+              newStatement.insertBefore(insertBefore);
               reportCodeChange("FOR initializer", n);
             }
             break;
@@ -672,7 +672,7 @@ class Normalize implements CompilerPass {
             Node name = c.getFirstChild();
             c.removeChild(name);
             Node newVar = new Node(c.getToken(), name).srcref(n);
-            n.addChildBefore(newVar, c);
+            newVar.insertBefore(c);
             reportCodeChange("VAR with multiple children", n);
           }
         }
@@ -736,7 +736,7 @@ class Normalize implements CompilerPass {
       if (after == null) {
         parent.addChildToFront(newChild);
       } else {
-        parent.addChildAfter(newChild, after);
+        newChild.insertAfter(after);
       }
       return newChild;
     }

@@ -164,7 +164,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
     Node definitionNode = IR.exprResult(getPropNode).srcref(parent);
 
-    parent.getParent().addChildAfter(definitionNode, parent);
+    definitionNode.insertAfter(parent);
     compiler.reportChangeToEnclosingScope(isCrDefinePropertyCall ? call : getPropNode);
   }
 
@@ -197,7 +197,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private void createAndInsertObjectsForQualifiedName(Node scriptChild, String namespace) {
     List<Node> objectsForQualifiedName = createObjectsForQualifiedName(namespace);
     for (Node n : objectsForQualifiedName) {
-      scriptChild.getParent().addChildBefore(n, scriptChild);
+      n.insertBefore(scriptChild);
     }
     if (!objectsForQualifiedName.isEmpty()) {
       compiler.reportChangeToEnclosingScope(scriptChild);

@@ -321,7 +321,7 @@ class OptionalChainRewriter {
     Node declarationStatement =
         astFactory.createSingleLetNameDeclaration(tempVarName).srcrefTree(valueNode);
     declarationStatement.getFirstChild().setInferredConstantVar(true);
-    enclosingStatement.getParent().addChildBefore(declarationStatement, enclosingStatement);
+    declarationStatement.insertBefore(enclosingStatement);
     if (scope != null) {
       scope.declare(tempVarName, declarationStatement.getFirstChild(), /* input= */ null);
     }

@@ -451,7 +451,7 @@ class InlineObjectLiterals implements CompilerPass {
         } else {
           recordStaleVarReferencesInTree(val, v.getScope());
         }
-        vnode.getParent().addChildBefore(newVarNode, vnode);
+        newVarNode.insertBefore(vnode);
         compiler.reportChangeToEnclosingScope(vnode);
       }
 

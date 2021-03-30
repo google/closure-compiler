@@ -278,7 +278,7 @@ class PeepholeSubstituteAlternateSyntax
         markNewScopesChanged(newCallTarget);
         n.replaceChild(callTarget, newCallTarget);
         markFunctionsDeleted(callTarget);
-        n.addChildAfter(bind.thisValue.cloneTree(), newCallTarget);
+        bind.thisValue.cloneTree().insertAfter(newCallTarget);
         n.putBooleanProp(Node.FREE_CALL, false);
       } else {
         n.putBooleanProp(Node.FREE_CALL, true);
@@ -292,7 +292,7 @@ class PeepholeSubstituteAlternateSyntax
     if (parameterList != null) {
       // push the last parameter to the head of the list first.
       addParameterAfter(parameterList.getNext(), after);
-      after.getParent().addChildAfter(parameterList.cloneTree(), after);
+      parameterList.cloneTree().insertAfter(after);
     }
   }
 
@@ -316,7 +316,7 @@ class PeepholeSubstituteAlternateSyntax
 
       // This modifies outside the subtree, which is not
       // desirable in a peephole optimization.
-      parent.getParent().addChildAfter(newStatement, parent);
+      newStatement.insertAfter(parent);
       reportChangeToEnclosingScope(parent);
       return left;
     } else {

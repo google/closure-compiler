@@ -137,7 +137,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
         // Not safe to reference `this` until after super() has been called.
         // TODO(bradfordcsmith): Some complex cases still aren't covered, like
         //     if (...) { super(); arrow function } else { super(); }
-        scopeBody.addChildAfter(thisVar, context.lastSuperStatement);
+        thisVar.insertAfter(context.lastSuperStatement);
       }
       compiler.reportChangeToEnclosingScope(thisVar);
     }

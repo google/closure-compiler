@@ -151,7 +151,7 @@ public class ExportTestFunctions implements CompilerPass {
 
             Node expression = IR.exprResult(call);
 
-            scriptNode.addChildAfter(expression, addAfter);
+            expression.insertAfter(addAfter);
             compiler.reportChangeToEnclosingScope(expression);
             addAfter = expression;
           }
@@ -235,7 +235,7 @@ public class ExportTestFunctions implements CompilerPass {
 
     Node expression = IR.exprResult(call);
 
-    scriptNode.addChildAfter(expression, node);
+    expression.insertAfter(node);
     compiler.reportChangeToEnclosingScope(expression);
   }
 

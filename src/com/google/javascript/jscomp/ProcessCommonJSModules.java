@@ -1296,7 +1296,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 scopeRoot.addChildToFront(functionExpr.detach());
               }
             } else if (insertionPoint != functionExpr && insertionPoint.getNext() != functionExpr) {
-              scopeRoot.addChildAfter(functionExpr.detach(), insertionPoint);
+              functionExpr.detach().insertAfter(insertionPoint);
             }
           }
 
@@ -1608,7 +1608,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         Node expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
-        insertionParent.addChildAfter(expr, insertionRef);
+        expr.insertAfter(insertionRef);
         ExportInfo newExport = new ExportInfo(lhs.getFirstChild(), scope);
         visitExport(t, newExport);
 
@@ -2188,7 +2188,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         newVar.useSourceInfoFrom(var);
-        var.getParent().addChildBefore(newVar, var);
+        newVar.insertBefore(var);
         vars.add(newVar);
       }
       vars.add(var);

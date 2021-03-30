@@ -524,7 +524,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     Node getError =
         IR.var(astFactory.createName(TMP_ERROR, thisType))
             .useSourceInfoIfMissingFromForTree(superCall);
-    body.addChildBefore(getError, superStatement);
+    getError.insertBefore(superStatement);
 
     // Create an expression to initialize `this` from temporary Error object at the point
     // where super.apply() was called.

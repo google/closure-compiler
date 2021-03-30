@@ -309,7 +309,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         sideEffects = IR.comma(sideEffects, next).srcref(next);
       }
 
-      expression.getParent().addChildBefore(sideEffects, expression);
+      sideEffects.insertBefore(expression);
       deleteNode(expression);
       return sideEffects;
     }
@@ -507,8 +507,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
     if (shouldHoistCondition) {
       Node switchBlock = caseBlock.getGrandparent();
-      switchBlock.getParent().addChildAfter(
-          IR.exprResult(n.removeFirstChild()).srcref(n), switchBlock.getPrevious());
+      IR.exprResult(n.removeFirstChild()).srcref(n).insertBefore(switchBlock);
     }
     n.replaceWith(caseBlock.detach());
     reportChangeToEnclosingScope(caseBlock);
@@ -1109,7 +1108,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       increment = trySimplifyUnusedResult(increment);
       if (increment == null) {
         increment = IR.empty().srcref(n);
-        n.addChildAfter(increment, cond);
+        increment.insertAfter(cond);
       }
     }
 
@@ -1163,7 +1162,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     n.replaceWith(block.detach());
     if (mayHaveSideEffects(cond)) {
       Node condStatement = IR.exprResult(cond.detach()).srcref(cond);
-      parent.addChildAfter(condStatement, block);
+      condStatement.insertAfter(block);
     }
     reportChangeToEnclosingScope(parent);
 

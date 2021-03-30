@@ -1011,7 +1011,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     if (insertionPoint == null) {
       block.addChildToBack(stmt);
     } else {
-      block.addChildBefore(stmt, insertionPoint);
+      stmt.insertBefore(insertionPoint);
     }
     compiler.reportChangeToEnclosingScope(stmt);
   }

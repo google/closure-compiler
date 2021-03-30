@@ -252,7 +252,6 @@ class IsolatePolyfills implements CompilerPass {
    *                      .call(tmpNode, arg)</code>
    */
   private void rewritePolyfillInCall(Node callee) {
-    final Node callNode = callee.getParent();
     final Node methodName = IR.string(callee.getString()).useSourceInfoFrom(callee);
     final Node receiver = callee.removeFirstChild();
 
@@ -278,7 +277,7 @@ class IsolatePolyfills implements CompilerPass {
     //   lookupMethod(receiver, 'includes').call(receiver, arg)
     Node receiverDotCall = IR.getprop(polyfilledMethod, "call").srcrefTree(callee);
     callee.replaceWith(receiverDotCall);
-    callNode.addChildAfter(thisNode, receiverDotCall);
+    thisNode.insertAfter(receiverDotCall);
   }
 
   private Node createTempName(Node srcref) {

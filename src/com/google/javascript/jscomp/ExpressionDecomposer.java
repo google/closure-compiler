@@ -317,7 +317,7 @@ class ExpressionDecomposer {
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
     newExpressionRoot.getFirstChild().copyTypeFrom(expression);
-    injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
+    newExpressionRoot.insertBefore(injectionPoint);
 
     compiler.reportChangeToEnclosingScope(injectionPointParent);
   }
@@ -463,7 +463,7 @@ class ExpressionDecomposer {
 
   private static void insertBefore(Node injectionPoint, Node newNode) {
     final Node injectionParent = injectionPoint.getParent();
-    injectionParent.addChildBefore(newNode, injectionPoint);
+    newNode.insertBefore(injectionPoint);
   }
 
   /**
@@ -551,9 +551,8 @@ class ExpressionDecomposer {
           astFactory
               .createSingleVarNameDeclaration(tempName)
               .useSourceInfoIfMissingFromForTree(expr);
-      Node injectionPointParent = injectionPoint.getParent();
-      injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
-      injectionPointParent.addChildAfter(ifNode, tempVarNode);
+      tempVarNode.insertBefore(injectionPoint);
+      ifNode.insertAfter(tempVarNode);
 
       // Replace the expression with the temporary name.
       Node replacementValueNode = IR.name(tempName).copyTypeFrom(expr);

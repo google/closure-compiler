@@ -863,7 +863,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // No transpilation is needed
       if (!target.isGeneratorMarker() && !body.isGeneratorMarker()) {
-        n.addChildAfter(detachedExpr, target);
+        detachedExpr.insertAfter(target);
         n.setGeneratorMarker(false);
         transpileUnmarkedNode(n);
         return;
@@ -1593,9 +1593,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         }
         if (breakSuppressors == 0) {
           // continue;  =>  $context.jumpTo(x); break;
-          sourceNode.getParent().addChildBefore(
-              callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode)),
-              sourceNode);
+          callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode))
+              .insertBefore(sourceNode);
           sourceNode.replaceWith(createBreakNodeFor(sourceNode));
         } else {
           // "break;" inside a loop or swtich statement:

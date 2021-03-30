@@ -206,7 +206,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (prev == null) {
           parent.addChildToFront(var);
         } else {
-          parent.addChildAfter(var, prev);
+          var.insertAfter(prev);
         }
         compiler.reportChangeToEnclosingScope(parent);
       }
@@ -558,12 +558,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
           // Var statement outside of for-loop.
           Node expr = IR.exprResult(c.cloneTree()).srcref(c);
           NodeUtil.markNewScopesChanged(expr, compiler);
-          parent.addChildBefore(expr, n);
+          expr.insertBefore(n);
         }
       }
       if (!commas.isEmpty()) {
         Node comma = joinOnComma(commas, n);
-        parent.addChildBefore(comma, n);
+        comma.insertBefore(n);
       }
       // Remove the var/const/let node.
       parent.removeChild(n);

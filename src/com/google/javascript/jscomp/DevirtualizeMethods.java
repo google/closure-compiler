@@ -459,7 +459,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     Node statement = NodeUtil.getEnclosingStatement(definitionSite);
     Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(nameSource);
     Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(nameSource);
-    statement.getParent().addChildBefore(newVarNode, statement);
+    newVarNode.insertBefore(statement);
     if (isConstantName) {
       newNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }

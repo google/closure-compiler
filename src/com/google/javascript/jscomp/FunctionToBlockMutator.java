@@ -569,7 +569,7 @@ class FunctionToBlockMutator {
       parent.replaceChild(current, breakNode);
       if (resultNode != null) {
         resultNode.useSourceInfoIfMissingFromForTree(current);
-        parent.addChildBefore(resultNode, breakNode);
+        resultNode.insertBefore(breakNode);
       }
       current = breakNode;
     } else {

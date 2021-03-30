@@ -135,7 +135,7 @@ class DestructuringGlobalNameExtractor {
       // create an entirely new statement
       Node newDeclaration = new Node(declaration.getToken()).srcref(declaration);
       newDeclaration.addChildToBack(newLvalue);
-      declaration.getParent().addChildAfter(newDeclaration, declaration);
+      newDeclaration.insertAfter(declaration);
     } else {
       // `const {} = originalRvalue, newLvalue = newRvalue;`
       // The Normalize pass tries to ensure name declarations are always in statement blocks, but

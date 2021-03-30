@@ -208,7 +208,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
               boolean keepValue = !isRemovableValue(result);
               result.detach();
               if (keepValue) {
-                n.getParent().addChildBefore(IR.exprResult(result).srcref(result), n);
+                IR.exprResult(result).srcref(result).insertBefore(n);
               } else {
                 NodeUtil.markFunctionsDeleted(result, compiler);
               }
