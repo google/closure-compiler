@@ -20,8 +20,8 @@
  */
 
 /**
- * @interface
- * @see https://w3c.github.io/clipboard-apis/#async-clipboard-api
+ * @constructor
+ * @see https://w3c.github.io/clipboard-apis/#clipboard-interface
  */
 function Clipboard() {}
 
