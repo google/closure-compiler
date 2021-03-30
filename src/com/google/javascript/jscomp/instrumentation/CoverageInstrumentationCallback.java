@@ -197,9 +197,7 @@ class CoverageInstrumentationCallback extends
 
     // For any other statement, add instrumentation code just before it.
     if (parent != null && NodeUtil.isStatementBlock(parent) && !node.isModuleBody()) {
-      parent.addChildBefore(
-          newInstrumentationNode(traversal, node),
-          node);
+      newInstrumentationNode(traversal, node).insertBefore(node);
       traversal.reportCodeChange();
       return;
     }

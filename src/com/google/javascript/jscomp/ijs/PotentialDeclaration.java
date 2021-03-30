@@ -273,7 +273,7 @@ abstract class PotentialDeclaration {
       newStatement.useSourceInfoIfMissingFromForTree(getLhs());
       NodeUtil.deleteNode(getRemovableNode(), compiler);
       if (insertionPoint.hasParent()) {
-        insertionPoint.getParent().addChildAfter(newStatement, insertionPoint);
+        newStatement.insertAfter(insertionPoint);
         compiler.reportChangeToEnclosingScope(newStatement);
       }
     }

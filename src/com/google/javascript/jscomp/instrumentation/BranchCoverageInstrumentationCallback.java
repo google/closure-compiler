@@ -108,15 +108,11 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
               // When the destination of an outEdge of the CFG is not null and the source node's
               // parent is a block. If parent is not a block it may result in an illegal state
               // exception
-              destination.getParent().addChildBefore(exitBlock, destination);
+              exitBlock.insertBefore(destination);
             } else {
               // When the destination of an outEdge of the CFG is null then we need to add an empty
               // block directly after the loop structure that we can later instrument
-              outEdge
-                  .getSource()
-                  .getValue()
-                  .getParent()
-                  .addChildAfter(exitBlock, outEdge.getSource().getValue());
+              exitBlock.insertAfter(outEdge.getSource().getValue());
             }
             blocks.add(exitBlock);
           }

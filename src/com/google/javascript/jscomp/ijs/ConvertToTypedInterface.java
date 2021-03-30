@@ -337,7 +337,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         if (isExport) {
           newDeclaration = IR.export(newDeclaration).srcref(statement);
         }
-        statement.getParent().addChildAfter(newDeclaration, statement);
+        newDeclaration.insertAfter(statement);
         t.reportCodeChange();
       }
     }

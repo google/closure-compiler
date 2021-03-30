@@ -110,7 +110,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           while (newScriptNode.getLastChild() != null) {
             Node lastChild = newScriptNode.getLastChild();
             newScriptNode.removeChild(lastChild);
-            scriptNode.addChildBefore(lastChild, scriptNode.getFirstChild());
+            lastChild.insertBefore(scriptNode.getFirstChild());
           }
         }
 
