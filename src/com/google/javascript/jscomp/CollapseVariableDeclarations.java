@@ -164,7 +164,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
       while (var.getNext() != null
           && (var.getNext().getToken() == var.getToken())) {
-        Node next = collapse.parent.removeChildAfter(var);
+        Node next = var.getNext().detach();
 
         // Move all children of the next var node into the first one.
         var.addChildrenToBack(next.removeChildren());

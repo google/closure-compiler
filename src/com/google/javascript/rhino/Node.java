@@ -2199,23 +2199,6 @@ public class Node implements Serializable {
     first = null;
   }
 
-  public final Node removeChildAfter(Node prev) {
-    Node target = prev.next;
-    checkNotNull(target, "no next sibling.");
-    removeChild(target);
-    return target;
-  }
-
-  /** Remove the child after the given child, or the first child if given null. */
-  public final Node removeFirstOrChildAfter(@Nullable Node prev) {
-    checkArgument(prev == null || prev.parent == this, "invalid node.");
-    Node target = prev == null ? first : prev.next;
-
-    checkNotNull(target, "no next sibling.");
-    removeChild(target);
-    return target;
-  }
-
   @DoNotCall
   @GwtIncompatible
   @Override
