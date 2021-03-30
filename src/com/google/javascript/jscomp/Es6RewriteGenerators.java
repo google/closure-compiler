@@ -290,8 +290,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
      * @see #newGeneratorHoistBlock
      */
     private void hoistNode(Node node) {
-      newGeneratorHoistBlock.addChildBefore(
-          /* newChild= */ node, /* node= */ newGeneratorHoistBlock.getLastChild());
+      node.insertBefore(newGeneratorHoistBlock.getLastChild());
     }
 
     /**
