@@ -772,6 +772,17 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testParamWithNoTypeInfo_optional() {
+    testWarning(
+        lines(
+            "/**",
+            " * @param x A param with no type information.",
+            " */",
+            "function f(x = undefined) { }"),
+        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+  }
+
+  @Test
   public void testParamWithNoTypeInfo_withES6Modules() {
     testSame(
         lines(

@@ -76,8 +76,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           "JSC_MUST_HAVE_TRAILING_UNDERSCORE", "Private property {0} should end with ''_''");
 
   public static final DiagnosticType OPTIONAL_PARAM_NOT_MARKED_OPTIONAL =
-      DiagnosticType.disabled("JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
-          "Parameter {0} is optional so its type must end with =");
+      DiagnosticType.disabled(
+          "JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
+          "Parameter {0} is optional so it must have a JSDoc type ending with ''=''");
 
   public static final DiagnosticType WRONG_NUMBER_OF_PARAMS =
       DiagnosticType.disabled("JSC_WRONG_NUMBER_OF_PARAMS", "Wrong number of @param annotations");
@@ -370,14 +371,14 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
 
   /**
-   * Checks that the given parameter node has the given name, and that the given type is
-   * compatible.
+   * Checks that the given parameter node has the given name, and that the given type is compatible.
+   *
    * @param param If this is a non-NAME node, such as a destructuring pattern, skip the name check.
    * @param name If null, skip the name check
    * @return Whether a warning was reported
    */
   private boolean checkParam(
-      NodeTraversal t, Node param, @Nullable String name, JSTypeExpression paramType) {
+      NodeTraversal t, Node param, @Nullable String name, @Nullable JSTypeExpression paramType) {
     boolean nameOptional;
     Node nodeToCheck = param;
     if (param.isDefaultValue()) {
@@ -398,12 +399,18 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       return true;
     }
 
-    boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
-    if (nameOptional && !jsDocOptional) {
-      t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, name);
-      return true;
+    if (!nameOptional) {
+      return false;
     }
-    return false;
+
+    boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
+    if (jsDocOptional) {
+      return false;
+    }
+
+    Node errorSource = paramType != null ? paramType.getRoot() : nodeToCheck;
+    t.report(errorSource, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, name);
+    return true;
   }
 
   private static boolean isDefaultAssignedParamWithInlineJsDoc(Node param) {
