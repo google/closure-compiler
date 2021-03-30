@@ -461,11 +461,6 @@ class ExpressionDecomposer {
     }
   }
 
-  private static void insertBefore(Node injectionPoint, Node newNode) {
-    final Node injectionParent = injectionPoint.getParent();
-    newNode.insertBefore(injectionPoint);
-  }
-
   /**
    * @param expr The conditional expression to extract.
    * @param injectionPoint The node before which the extracted expression would be injected.
@@ -516,8 +511,7 @@ class ExpressionDecomposer {
             astFactory
                 .createSingleVarNameDeclaration(tempNameAssign)
                 .useSourceInfoIfMissingFromForTree(expr);
-        Node injectionPointParent = injectionPoint.getParent();
-        injectionPointParent.addChildBefore(tempVarNodeAssign, injectionPoint);
+        tempVarNodeAssign.insertBefore(injectionPoint);
 
         Node assignLhs = buildResultExpression(first, true, tempNameAssign);
         Node nullNode = astFactory.createNull().useSourceInfoFrom(expr);
@@ -694,7 +688,7 @@ class ExpressionDecomposer {
     Scope containingHoistScope = scope.getClosestHoistScope();
     containingHoistScope.declare(tempName, tempVarNode.getFirstChild(), /* input= */ null);
 
-    insertBefore(injectionPoint, tempVarNode);
+    tempVarNode.insertBefore(injectionPoint);
 
     if (firstExtractedNode == null) {
       firstExtractedNode = tempVarNode;

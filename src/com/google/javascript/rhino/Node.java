@@ -829,38 +829,6 @@ public class Node implements Serializable {
     addChildrenAfter(children, getLastChild());
   }
 
-  /**
-   * Add 'child' before 'node'.
-   */
-  public final void addChildBefore(Node newChild, Node node) {
-    checkArgument(node.parent == this, "The existing child node of the parent should not be null.");
-    checkArgument(newChild.next == null, "The new child node has next siblings.");
-    checkArgument(newChild.previous == null, "The new child node has previous siblings.");
-    checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    if (first == node) {
-      Node last = first.previous;
-      // NOTE: last.next remains null
-      newChild.parent = this;
-      newChild.next = first;
-      newChild.previous = last;
-      first.previous = newChild;
-      first = newChild;
-    } else {
-      addChildAfter(newChild, node.previous);
-    }
-  }
-
-  /**
-   * Add 'newChild' after 'node'.  If 'node' is null, add it to the front of this node.
-   */
-  public final void addChildAfter(Node newChild, @Nullable Node node) {
-    checkArgument(newChild.next == null, "The new child node has next siblings.");
-    checkArgument(newChild.previous == null, "The new child node has previous siblings.");
-    // NOTE: newChild.next remains null
-    newChild.previous = newChild;
-    addChildrenAfter(newChild, node);
-  }
-
   public final void insertAfter(Node existing) {
     final Node existingParent = existing.parent;
     final Node existingNext = existing.next;
