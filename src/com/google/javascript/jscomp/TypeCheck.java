@@ -687,7 +687,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(n, VOID_TYPE);
         break;
 
-      case STRING:
+      case STRINGLIT:
       case TYPEOF:
       case TEMPLATELIT:
       case TEMPLATELIT_STRING:

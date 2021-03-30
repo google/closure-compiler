@@ -305,7 +305,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case FUNCTION:
         typeNameString = "function";
         break;
-      case STRING:
+      case STRINGLIT:
         typeNameString = "string";
         break;
       case NUMBER:
@@ -1551,7 +1551,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
           knownLength = left.getChildCount();
           break;
-        case STRING:
+        case STRINGLIT:
           knownLength = left.getString().length();
           break;
         default:

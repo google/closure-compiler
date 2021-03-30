@@ -239,20 +239,20 @@ public class IRTest {
     testIR(
         IR.var(IR.name("x"), new Node(Token.TEMPLATELIT, IR.string(""))),
         LINE_JOINER.join(
-            "VAR",
+            "VAR", //
             "    NAME x",
             "        TEMPLATELIT",
-            "            STRING ",
+            "            STRINGLIT ",
             ""));
 
     testIR(
         IR.var(IR.name("x"), new Node(Token.TAGGED_TEMPLATELIT, IR.name("y"), IR.string(""))),
         LINE_JOINER.join(
-            "VAR",
+            "VAR", //
             "    NAME x",
             "        TAGGED_TEMPLATELIT",
             "            NAME y",
-            "            STRING ",
+            "            STRINGLIT ",
             ""));
   }
 

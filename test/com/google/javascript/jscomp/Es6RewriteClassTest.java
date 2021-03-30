@@ -2804,7 +2804,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         break;
 
       case NAME:
-      case STRING:
+      case STRINGLIT:
       case MEMBER_FUNCTION_DEF:
       case STRING_KEY:
         if (root.getString().equals(name)) {

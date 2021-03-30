@@ -157,7 +157,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         // The message is a function. Modify the function node.
         updateFunctionNode(message, origValueNode);
         return origValueNode;
-      case STRING:
+      case STRINGLIT:
         // The message is a simple string. Modify the string node.
         String newString = message.toString();
         if (!origValueNode.getString().equals(newString)) {
@@ -463,7 +463,7 @@ final class ReplaceMessages extends JsMessageVisitor {
       throw new IllegalArgumentException("Expected a string; found: null");
     }
     switch (node.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case TEMPLATELIT:
         break;
       case ADD:

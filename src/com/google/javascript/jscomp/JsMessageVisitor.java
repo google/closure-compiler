@@ -448,7 +448,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // Determine the message's value
     Node valueNode = nameNode.getFirstChild();
     switch (valueNode.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case ADD:
         maybeInitMetaDataFromJsDocOrHelpVar(builder, parentNode, grandParentNode);
         builder.appendStringPart(extractStringFromStringExprNode(valueNode));
@@ -576,7 +576,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    */
   private static String extractStringFromStringExprNode(Node node) throws MalformedException {
     switch (node.getToken()) {
-      case STRING:
+      case STRINGLIT:
         return node.getString();
       case TEMPLATELIT:
         if (node.hasOneChild()) {
@@ -687,7 +687,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       throws MalformedException {
 
     switch (node.getToken()) {
-      case STRING:
+      case STRINGLIT:
         builder.appendStringPart(node.getString());
         break;
       case NAME:

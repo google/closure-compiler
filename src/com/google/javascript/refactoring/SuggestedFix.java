@@ -326,7 +326,7 @@ public final class SuggestedFix {
           range = replaceNameSubtree ? subtreeRangeOfIdentifier(n) : n;
           break;
 
-        case STRING:
+        case STRINGLIT:
           checkState(n.getParent().isGetProp(), n);
           // Fall through
         case STRING_KEY:

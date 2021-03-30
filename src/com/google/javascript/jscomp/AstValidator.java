@@ -315,7 +315,7 @@ public final class AstValidator implements CompilerPass {
         return;
 
         // Node types that require special handling
-      case STRING:
+      case STRINGLIT:
         validateString(n);
         return;
 

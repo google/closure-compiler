@@ -881,7 +881,7 @@ public class IR {
       case RSH:
       case SHEQ:
       case SHNE:
-      case STRING:
+      case STRINGLIT:
       case SUB:
       case SUPER:
       case TEMPLATELIT:

@@ -1121,7 +1121,7 @@ public class CodeGenerator {
         addStringKey(node);
         break;
 
-      case STRING:
+      case STRINGLIT:
         Preconditions.checkState(childCount == 0, "String node %s may not have children", node);
         addJsString(node);
         break;

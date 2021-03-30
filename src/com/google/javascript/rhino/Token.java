@@ -87,7 +87,7 @@ public enum Token {
   NAME,
   NUMBER,
   BIGINT,
-  STRING,
+  STRINGLIT,
   NULL,
   THIS,
   FALSE,
@@ -257,7 +257,7 @@ public enum Token {
   PLACEHOLDER2,
   PLACEHOLDER3;
 
-  public static final Token STRINGLIT = STRING;
+  public static final Token STRING = STRINGLIT;
 
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
@@ -305,7 +305,7 @@ public enum Token {
       case NULL:
       case NUMBER:
       case BIGINT:
-      case STRING:
+      case STRINGLIT:
       case TEMPLATELIT_STRING:
       case THIS:
       case TRUE:

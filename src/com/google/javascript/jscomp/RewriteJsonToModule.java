@@ -83,7 +83,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       case TRUE:
       case FALSE:
       case NULL:
-      case STRING:
+      case STRINGLIT:
         break;
 
       case STRING_KEY:

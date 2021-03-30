@@ -139,7 +139,7 @@ public final class PerformanceTrackerTest {
                     "PARAM_LIST,1",
                     "ROOT,1",
                     "SCRIPT,1",
-                    "STRING,3"),
+                    "STRINGLIT,3"),
                 Pattern.DOTALL));
   }
 

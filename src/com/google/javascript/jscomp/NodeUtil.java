@@ -120,7 +120,7 @@ public final class NodeUtil {
           return TernaryValue.UNKNOWN;
         }
 
-      case STRING:
+      case STRINGLIT:
         return TernaryValue.forBoolean(n.getString().length() > 0);
 
       case NUMBER:
@@ -196,7 +196,7 @@ public final class NodeUtil {
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
     switch (n.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case STRING_KEY:
         return n.getString();
 
@@ -359,7 +359,7 @@ public final class NodeUtil {
         }
         return getStringNumberValue(string);
 
-      case STRING:
+      case STRINGLIT:
         return getStringNumberValue(n.getString());
 
       case ARRAYLIT:
@@ -454,7 +454,7 @@ public final class NodeUtil {
         }
         return getStringBigIntValue(string);
 
-      case STRING:
+      case STRINGLIT:
         return getStringBigIntValue(n.getString());
 
       case ARRAYLIT:
@@ -669,7 +669,7 @@ public final class NodeUtil {
     // hasSideEffects and canBeSideEffected should be used for the other case.
 
     switch (n.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case BIGINT:
       case NULL:
@@ -1155,7 +1155,7 @@ public final class NodeUtil {
     // TODO(b/127862986): The type of the iterable should also allow us to say it's pure.
     switch (node.getToken()) {
       case ARRAYLIT:
-      case STRING:
+      case STRINGLIT:
       case TEMPLATELIT:
         return true; // These iterables are known to be pure.
       default:
@@ -1343,7 +1343,7 @@ public final class NodeUtil {
       case OBJECT_REST:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
-      case STRING:
+      case STRINGLIT:
       case STRING_KEY:
       case MEMBER_VARIABLE_DEF:
       case INDEX_SIGNATURE:
@@ -1566,7 +1566,7 @@ public final class NodeUtil {
         return ValueType.BOOLEAN;
 
       case TYPEOF:
-      case STRING:
+      case STRINGLIT:
       case TEMPLATELIT:
         return ValueType.STRING;
 
@@ -4865,7 +4865,7 @@ public final class NodeUtil {
       case ARRAYLIT:
       case OBJECTLIT:
       case TEMPLATELIT:
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case BIGINT:
       case NULL:

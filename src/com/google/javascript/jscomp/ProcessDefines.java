@@ -521,7 +521,7 @@ class ProcessDefines implements CompilerPass {
     // Must be a subset of the values allowed for <val> in
     // /** @define {...} */ var DEF = <val>
     switch (val.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case TRUE:
       case FALSE:
@@ -560,7 +560,7 @@ class ProcessDefines implements CompilerPass {
     }
 
     switch (val.getToken()) {
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case TRUE:
       case FALSE:

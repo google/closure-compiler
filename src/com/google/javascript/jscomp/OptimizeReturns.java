@@ -233,7 +233,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
         return true;
 
       case REGEXP:
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case NULL:
       case TRUE:

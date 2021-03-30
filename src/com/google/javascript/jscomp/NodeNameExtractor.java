@@ -69,7 +69,7 @@ class NodeNameExtractor {
         }
       case NAME:
         return node.getString();
-      case STRING:
+      case STRINGLIT:
       case STRING_KEY:
       case MEMBER_FUNCTION_DEF:
         return TokenStream.isJSIdentifier(node.getString()) ?

@@ -340,7 +340,7 @@ class FunctionArgumentInjector {
           case THIS:
             safe = true;
             break;
-          case STRING:
+          case STRINGLIT:
             safe = (cArg.getString().length() < 2);
             break;
           default:

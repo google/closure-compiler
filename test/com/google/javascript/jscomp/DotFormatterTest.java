@@ -99,14 +99,15 @@ public final class DotFormatterTest {
     ast.addChildToBack(Node.newString(Token.NAME, ""));
     ast.addChildToBack(Node.newString(Token.STRINGLIT, ""));
 
-    String expected = "digraph AST {\n" +
-        "  node [color=lightblue2, style=filled];\n" +
-        "  node0 [label=\"BLOCK\"];\n" +
-        "  node1 [label=\"NAME\"];\n" +
-        "  node0 -> node1 [weight=1];\n" +
-        "  node2 [label=\"STRING\"];\n" +
-        "  node0 -> node2 [weight=1];\n" +
-        "}\n";
+    String expected =
+        "digraph AST {\n"
+            + "  node [color=lightblue2, style=filled];\n"
+            + "  node0 [label=\"BLOCK\"];\n"
+            + "  node1 [label=\"NAME\"];\n"
+            + "  node0 -> node1 [weight=1];\n"
+            + "  node2 [label=\"STRINGLIT\"];\n"
+            + "  node0 -> node2 [weight=1];\n"
+            + "}\n";
     test(expected, ast);
   }
 
@@ -123,7 +124,7 @@ public final class DotFormatterTest {
             + "  node0 [label=\"BLOCK\"];\n"
             + "  node1 [label=\"NAME(a)\"];\n"
             + "  node0 -> node1 [weight=1];\n"
-            + "  node2 [label=\"STRING(b)\"];\n"
+            + "  node2 [label=\"STRINGLIT(b)\"];\n"
             + "  node0 -> node2 [weight=1];\n"
             + "}\n";
     test(expected, ast);
@@ -145,7 +146,7 @@ public final class DotFormatterTest {
             + "  node0 -> node1 [weight=1];\n"
             + "  node2 [label=\"IMPORT_STAR(name)\"];\n"
             + "  node0 -> node2 [weight=1];\n"
-            + "  node3 [label=\"STRING(module-nam)\"];\n"
+            + "  node3 [label=\"STRINGLIT(module-nam)\"];\n"
             + "  node0 -> node3 [weight=1];\n"
             + "}\n";
     test(expected, ast);

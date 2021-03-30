@@ -973,7 +973,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           n.setJSType(getNativeType(VOID_TYPE));
           break;
 
-        case STRING:
+        case STRINGLIT:
         case TEMPLATELIT_STRING:
           n.setJSType(getNativeType(STRING_TYPE));
           break;

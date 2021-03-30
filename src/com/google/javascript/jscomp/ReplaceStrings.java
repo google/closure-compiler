@@ -263,7 +263,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     String key = null;
     String replacementString;
     switch (expr.getToken()) {
-      case STRING:
+      case STRINGLIT:
         key = expr.getString();
         replacementString = getReplacement(key);
         replacement = IR.string(replacementString);
@@ -353,7 +353,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
           }
         }
         return prefix;
-      case STRING:
+      case STRINGLIT:
         keyBuilder.append(expr.getString());
         return prefix;
       case NAME:

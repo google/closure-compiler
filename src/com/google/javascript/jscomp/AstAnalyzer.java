@@ -374,7 +374,7 @@ public class AstAnalyzer {
       case TRUE:
       case FALSE:
       case NULL:
-      case STRING:
+      case STRINGLIT:
       case SWITCH:
       case TEMPLATELIT_SUB:
       case TRY:

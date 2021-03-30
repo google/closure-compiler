@@ -2034,7 +2034,7 @@ public class JSTypeRegistry {
           return type;
         }
 
-      case STRING:
+      case STRINGLIT:
         {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());

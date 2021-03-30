@@ -242,7 +242,7 @@ final class TypedAstSerializer {
       case OPTCHAIN_GETPROP:
       case MEMBER_FUNCTION_DEF:
       case NAME:
-      case STRING:
+      case STRINGLIT:
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
@@ -292,7 +292,7 @@ final class TypedAstSerializer {
 
       case NUMBER:
         return NodeKind.NUMBER_LITERAL;
-      case STRING:
+      case STRINGLIT:
         return NodeKind.STRING_LITERAL;
       case BIGINT:
         return NodeKind.BIGINT_LITERAL;

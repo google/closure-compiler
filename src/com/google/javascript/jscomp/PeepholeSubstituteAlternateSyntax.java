@@ -493,7 +493,7 @@ class PeepholeSubstituteAlternateSyntax
       action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
     } else {
       switch (arg.getToken()) {
-        case STRING:
+        case STRINGLIT:
           // "Array('a')" --> "['a']"
           action = FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS;
           break;

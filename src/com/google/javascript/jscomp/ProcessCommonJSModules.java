@@ -992,7 +992,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                       break;
                     }
                     return;
-                  case STRING:
+                  case STRINGLIT:
                     if (node.getParent().isIn() && node.getString().equals("amd")) {
                       break;
                     }

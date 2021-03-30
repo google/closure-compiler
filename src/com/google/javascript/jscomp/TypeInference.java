@@ -880,7 +880,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
       case TRUE:
       case FALSE:
-      case STRING:
+      case STRINGLIT:
       case NUMBER:
       case BIGINT:
       case NULL:
