@@ -42,8 +42,7 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    AliasStrings pass =
-        new AliasStrings(compiler, compiler.getModuleGraph(), strings, "(?i)secret", false);
+    AliasStrings pass = new AliasStrings(compiler, compiler.getModuleGraph(), strings, false);
     if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
     }
@@ -251,23 +250,6 @@ public final class AliasStringsTest extends CompilerTestCase {
     strings = ImmutableSet.of("px");
 
     testSame("/px/.match('10px')");
-  }
-
-  @Test
-  public void testSkipList() {
-    // The 'TOPseCreT' string is configured to be ignored even though it fits the aliasing
-    // conditions.
-    test(
-        "(function() {"
-            + "  var f = 'sec ret sec ret sec ' + 'sec ret sec ret sec ';"
-            + "  g = 'TOPseCreT TOPseCreT ' + 'TOPseCreT TOPseCreT '"
-            + "})"
-            + "",
-        "var $$S_sec$20ret$20sec$20ret$20sec$20 = 'sec ret sec ret sec ';"
-            + "(function() {"
-            + "  var f = $$S_sec$20ret$20sec$20ret$20sec$20 + $$S_sec$20ret$20sec$20ret$20sec$20;"
-            + "  g = 'TOPseCreT TOPseCreT ' + 'TOPseCreT TOPseCreT '"
-            + "})");
   }
 
   @Test

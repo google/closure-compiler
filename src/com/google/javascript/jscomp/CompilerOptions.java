@@ -493,12 +493,6 @@ public class CompilerOptions implements Serializable {
   public Set<String> aliasableStrings;
 
   /**
-   * A blacklist in the form of a regular expression to block strings that contains certain words
-   * from being aliased. If the value is the empty string, no words are blacklisted.
-   */
-  public String aliasStringsBlacklist;
-
-  /**
    * Aliases all string literals to global instances, to avoid creating more objects than necessary
    * (if true, overrides any set of strings passed in to aliasableStrings)
    */
@@ -1275,7 +1269,6 @@ public class CompilerOptions implements Serializable {
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
     aliasableStrings = ImmutableSet.of();
-    aliasStringsBlacklist = "";
     aliasAllStrings = false;
     outputJsStringUsage = false;
     convertToDottedProperties = false;
@@ -2074,10 +2067,6 @@ public class CompilerOptions implements Serializable {
     this.aliasableStrings = aliasableStrings;
   }
 
-  public void setAliasStringsBlacklist(String aliasStringsBlacklist) {
-    this.aliasStringsBlacklist = aliasStringsBlacklist;
-  }
-
   public void setAliasAllStrings(boolean aliasAllStrings) {
     this.aliasAllStrings = aliasAllStrings;
   }
@@ -2672,7 +2661,6 @@ public class CompilerOptions implements Serializable {
         .add("aliasableStrings", aliasableStrings)
         .add("aliasAllStrings", aliasAllStrings)
         .add("aliasHandler", getAliasTransformationHandler())
-        .add("aliasStringsBlacklist", aliasStringsBlacklist)
         .add("allowHotswapReplaceScript", allowsHotswapReplaceScript())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)

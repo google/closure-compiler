@@ -30,8 +30,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A compiler pass for aliasing strings. String declarations
@@ -58,9 +56,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
 
   private final JSModuleGraph moduleGraph;
-
-  // Regular expression matcher for a skiplisting strings in aliasing.
-  private Matcher skiplist = null;
 
   /**
    * Strings that can be aliased, or null if all strings except 'undefined'
@@ -92,7 +87,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * @param moduleGraph The module graph, or null if there are no modules
    * @param strings Set of strings to be aliased. If null, all strings except 'undefined' will be
    *     aliased.
-   * @param skiplistRegex The regex to skiplist words in aliasing strings.
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
    */
@@ -100,16 +94,10 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       AbstractCompiler compiler,
       JSModuleGraph moduleGraph,
       Set<String> strings,
-      String skiplistRegex,
       boolean outputStringUsage) {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
     this.aliasableStrings = strings;
-    if (skiplistRegex.length() != 0) {
-      this.skiplist = Pattern.compile(skiplistRegex).matcher("");
-    } else {
-      this.skiplist = null;
-    }
     this.outputStringUsage = outputStringUsage;
   }
 
@@ -155,10 +143,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       // is unloading and therefore variable references aren't available.
       // This is because of a bug in Firefox.
       if ("undefined".equals(str)) {
-        return;
-      }
-
-      if (skiplist != null && skiplist.reset(str).find()) {
         return;
       }
 

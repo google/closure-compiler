@@ -2479,7 +2479,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getModuleGraph(),
                       options.aliasAllStrings ? null : options.aliasableStrings,
-                      options.aliasStringsBlacklist,
                       options.outputJsStringUsage))
           .setFeatureSetForOptimizations()
           .build();
