@@ -717,16 +717,6 @@ public class Node implements Serializable {
     return this == parent.first ? null : previous;
   }
 
-  @Nullable
-  private final Node getPrevious(@Nullable Node firstSibling) {
-    return this == firstSibling ? null : previous;
-  }
-
-  @Nullable
-  public final Node getChildBefore(Node child) {
-    return child.getPrevious(first);
-  }
-
   /**
    * Gets the ith child, note that this is O(N) where N is the number of children.
    *
