@@ -34,7 +34,7 @@ function PermissionsPolicy() {}
  * @param {string=} origin
  * @return {boolean}
  */
-PermissionsPolicy.prototype.allowFeatures = function(feature, origin) {};
+PermissionsPolicy.prototype.allowsFeature = function(feature, origin) {};
 
 /**
  * @return {!Array<string>}
@@ -53,12 +53,12 @@ PermissionsPolicy.prototype.allowedFeatures = function() {};
 PermissionsPolicy.prototype.getAllowlistForFeature = function(feature) {};
 
 /**
- * @return {!PermissionsPolicy|undefined}
+ * @type {!PermissionsPolicy|undefined}
  */
 Document.prototype.featurePolicy;
 
 /**
- * @return {!PermissionsPolicy|undefined}
+ * @type {!PermissionsPolicy|undefined}
  * @see https://w3c.github.io/webappsec-permissions-policy/#the-policy-object
  */
 Document.prototype.permissionsPolicy;
