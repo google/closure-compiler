@@ -2271,11 +2271,7 @@ public class Node implements Serializable {
     return result;
   }
 
-  public final Node useSourceInfoFrom(Node other) {
-    return this.srcref(other);
-  }
-
-  /** Overwrite all the source information in this node with that of {@code other}. */
+  /** Copy the source info from `other` onto `this`. */
   public final Node srcref(Node other) {
     setStaticSourceFileFrom(other);
     this.originalName = other.originalName;
@@ -2284,13 +2280,7 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final Node useSourceInfoFromForTree(Node other) {
-    return this.srcrefTree(other);
-  }
-
-  /**
-   * Overwrite all the source information in this node and its subtree with that of {@code other}.
-   */
+  /** For all Nodes in the subtree of `this`, copy the source info from `other`. */
   public final Node srcrefTree(Node other) {
     this.srcref(other);
     for (Node child = first; child != null; child = child.next) {
@@ -2299,14 +2289,7 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final Node useSourceInfoIfMissingFrom(Node other) {
-    return this.srcrefIfMissing(other);
-  }
-
-  /**
-   * Overwrite all the source information in this node with that of {@code other} iff the source
-   * info is missing.
-   */
+  /** Iff source info is not set on `this`, copy the source info from `other`. */
   public final Node srcrefIfMissing(Node other) {
     if (getStaticSourceFile() == null) {
       setStaticSourceFileFrom(other);
@@ -2324,13 +2307,9 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final Node useSourceInfoIfMissingFromForTree(Node other) {
-    return this.srcrefTreeIfMissing(other);
-  }
-
   /**
-   * Overwrite all the source information in this node and its subtree with that of {@code other}
-   * iff the source info is missing.
+   * For all Nodes in the subtree of `this`, iff source info is not set, copy the source info from
+   * `other`.
    */
   public final Node srcrefTreeIfMissing(Node other) {
     this.srcrefIfMissing(other);
