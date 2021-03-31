@@ -316,7 +316,7 @@ public final class AstValidator implements CompilerPass {
 
         // Node types that require special handling
       case STRINGLIT:
-        validateString(n);
+        validateStringLit(n);
         return;
 
       case NUMBER:
@@ -630,7 +630,7 @@ public final class AstValidator implements CompilerPass {
         validateNodeType(Token.EMPTY, secondChild);
     }
 
-    validateString(n.getChildAtIndex(2));
+    validateStringLit(n.getChildAtIndex(2));
   }
 
   private void validateImportSpecifiers(Node n) {
@@ -654,7 +654,7 @@ public final class AstValidator implements CompilerPass {
     if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) { // export * from "mod"
       validateChildCount(n, 2);
       validateNodeType(Token.EMPTY, n.getFirstChild());
-      validateString(n.getSecondChild());
+      validateStringLit(n.getSecondChild());
     } else if (n.getBooleanProp(Node.EXPORT_DEFAULT)) { // export default foo = 2
       validateChildCount(n, 1);
       validateExpression(n.getFirstChild());
@@ -666,7 +666,7 @@ public final class AstValidator implements CompilerPass {
         validateStatement(n.getFirstChild(), isAmbient);
       }
       if (n.hasTwoChildren()) {
-        validateString(n.getSecondChild());
+        validateStringLit(n.getSecondChild());
       }
     }
   }
@@ -1605,12 +1605,12 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.REGEXP, n);
     validateChildCountIn(n, 1, 2);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateString(c);
+      validateStringLit(c);
     }
   }
 
-  private void validateString(Node n) {
-    validateNodeType(Token.STRING, n);
+  private void validateStringLit(Node n) {
+    validateNodeType(Token.STRINGLIT, n);
     validateChildCount(n);
     try {
       // Validate that getString doesn't throw

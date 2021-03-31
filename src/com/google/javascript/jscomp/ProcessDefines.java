@@ -728,7 +728,7 @@ class ProcessDefines implements CompilerPass {
 
     // Verify first arg
     Node arg = args;
-    if (!verifyNotNull(methodName, arg) || !verifyOfType(methodName, arg, Token.STRING)) {
+    if (!verifyNotNull(methodName, arg) || !verifyOfType(methodName, arg, Token.STRINGLIT)) {
       return false;
     }
 

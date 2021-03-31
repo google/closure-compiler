@@ -646,7 +646,7 @@ public class Node implements Serializable {
   }
 
   public static Node newString(String str) {
-    return new StringNode(Token.STRING, str);
+    return new StringNode(Token.STRINGLIT, str);
   }
 
   public static Node newString(Token token, String str) {
@@ -654,7 +654,7 @@ public class Node implements Serializable {
   }
 
   public static Node newString(String str, int lineno, int charno) {
-    return new StringNode(Token.STRING, str, lineno, charno);
+    return new StringNode(Token.STRINGLIT, str, lineno, charno);
   }
 
   public static Node newString(Token token, String str, int lineno, int charno) {

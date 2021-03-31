@@ -468,7 +468,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
    */
   private boolean verifyLastArgumentIsString(Node methodName, Node arg) {
     return verifyNotNull(methodName, arg)
-        && verifyOfType(methodName, arg, Token.STRING)
+        && verifyOfType(methodName, arg, Token.STRINGLIT)
         && verifyIsLast(methodName, arg);
   }
 
