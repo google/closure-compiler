@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,6 +164,11 @@ public class JSDocInfo implements Serializable {
     }
 
     @Override
+    boolean equalValues(JSTypeExpression left, JSTypeExpression right) {
+      return left.isEquivalentTo(right);
+    }
+
+    @Override
     ImmutableList<JSTypeExpression> getTypeExpressions(JSTypeExpression type) {
       return ImmutableList.of(type);
     }
@@ -193,6 +199,23 @@ public class JSDocInfo implements Serializable {
     }
 
     @Override
+    boolean equalValues(ArrayList<JSTypeExpression> left, ArrayList<JSTypeExpression> right) {
+      if (left.size() != right.size()) {
+        return false;
+      }
+      final Iterator<JSTypeExpression> leftIterator = left.iterator();
+      final Iterator<JSTypeExpression> rightIterator = right.iterator();
+      while (leftIterator.hasNext()) {
+        final JSTypeExpression leftExpr = leftIterator.next();
+        final JSTypeExpression rightExpr = rightIterator.next();
+        if (!leftExpr.isEquivalentTo(rightExpr)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @Override
     Iterable<JSTypeExpression> getTypeExpressions(ArrayList<JSTypeExpression> types) {
       return types;
     }
@@ -217,6 +240,29 @@ public class JSDocInfo implements Serializable {
         }
       }
       return out;
+    }
+
+    @Override
+    boolean equalValues(
+        LinkedHashMap<String, JSTypeExpression> left,
+        LinkedHashMap<String, JSTypeExpression> right) {
+      final Set<String> leftKeys = left.keySet();
+      final Set<String> rightKeys = right.keySet();
+      if (!leftKeys.equals(rightKeys)) {
+        return false;
+      }
+      for (String key : leftKeys) {
+        final JSTypeExpression leftExpr = left.get(key);
+        final JSTypeExpression rightExpr = right.get(key);
+        if (!areEquivalent(leftExpr, rightExpr)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private boolean areEquivalent(JSTypeExpression expr1, JSTypeExpression expr2) {
+      return Objects.equals(expr1, expr2) || (expr1 != null && expr1.isEquivalentTo(expr2));
     }
 
     @Override
@@ -435,11 +481,12 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * A piece of information (found in a marker) which contains a position
-   * with a string that has no leading or trailing whitespace.
+   * A piece of information (found in a marker) which contains a position with a string that has no
+   * leading or trailing whitespace.
    */
   static class TrimmedStringPosition extends StringPosition {
-    @Override public void setItem(String item) {
+    @Override
+    public void setItem(String item) {
       checkArgument(
           item.charAt(0) != ' ' && item.charAt(item.length() - 1) != ' ',
           "String has leading or trailing whitespace");
@@ -489,14 +536,11 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Defines a class for containing the parsing information
-   * for this JSDocInfo. For each annotation found in the
-   * JsDoc, a marker will be created indicating the annotation
-   * itself, the name of the annotation (if any; for example,
-   * a @param has a name, but a @return does not), the
-   * textual description found on that annotation and, if applicable,
-   * the type declaration. All this information is only collected
-   * if documentation collection is turned on.
+   * Defines a class for containing the parsing information for this JSDocInfo. For each annotation
+   * found in the JsDoc, a marker will be created indicating the annotation itself, the name of the
+   * annotation (if any; for example, a @param has a name, but a @return does not), the textual
+   * description found on that annotation and, if applicable, the type declaration. All this
+   * information is only collected if documentation collection is turned on.
    */
   public static final class Marker {
     private TrimmedStringPosition annotation;
@@ -504,9 +548,7 @@ public class JSDocInfo implements Serializable {
     private StringPosition description;
     private TypePosition type;
 
-    /**
-     * Gets the position information for the annotation name. (e.g., "param")
-     */
+    /** Gets the position information for the annotation name. (e.g., "param") */
     public StringPosition getAnnotation() {
       return annotation;
     }
@@ -515,10 +557,7 @@ public class JSDocInfo implements Serializable {
       annotation = p;
     }
 
-    /**
-     * Gets the position information for the name found
-     * in an @param tag.
-     */
+    /** Gets the position information for the name found in an @param tag. */
     public NamePosition getNameNode() {
       return nameNode;
     }
@@ -527,10 +566,7 @@ public class JSDocInfo implements Serializable {
       nameNode = p;
     }
 
-    /**
-     * Gets the position information for the description found
-     * in a block tag.
-     */
+    /** Gets the position information for the description found in a block tag. */
     public StringPosition getDescription() {
       return description;
     }
@@ -540,8 +576,8 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
-     * Gets the position information for the type expression found
-     * in some block tags, like "@param" and "@return".
+     * Gets the position information for the type expression found in some block tags, like "@param"
+     * and "@return".
      */
     public TypePosition getType() {
       return type;
@@ -586,7 +622,7 @@ public class JSDocInfo implements Serializable {
     return builder;
   }
 
-  @SuppressWarnings("MissingOverride")  // Adding @Override breaks the GWT compilation.
+  @SuppressWarnings("MissingOverride") // Adding @Override breaks the GWT compilation.
   public JSDocInfo clone() {
     return clone(false);
   }
@@ -721,9 +757,8 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether the {@code @define} annotation is present on this
-   * {@link JSDocInfo}. If this annotation is present, then the
-   * {@link #getType()} method will retrieve the define type.
+   * Returns whether the {@code @define} annotation is present on this {@link JSDocInfo}. If this
+   * annotation is present, then the {@link #getType()} method will retrieve the define type.
    */
   public boolean isDefine() {
     return checkBit(Bit.DEFINE);
@@ -892,9 +927,8 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Gets the visibility specified by {@code @private}, {@code @protected} or
-   * {@code @public} annotation. If no visibility is specified, visibility
-   * is inherited from the base class.
+   * Gets the visibility specified by {@code @private}, {@code @protected} or {@code @public}
+   * annotation. If no visibility is specified, visibility is inherited from the base class.
    */
   public Visibility getVisibility() {
     Visibility visibility = VISIBILITY.get(this);
@@ -903,18 +937,17 @@ public class JSDocInfo implements Serializable {
 
   /**
    * Gets the type of a given named parameter.
+   *
    * @param parameter the parameter's name
-   * @return the parameter's type or {@code null} if this parameter is not
-   *     defined or has a {@code null} type
+   * @return the parameter's type or {@code null} if this parameter is not defined or has a {@code
+   *     null} type
    */
   public JSTypeExpression getParameterType(String parameter) {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
     return params != null ? params.get(parameter) : null;
   }
 
-  /**
-   * Returns whether the parameter is defined.
-   */
+  /** Returns whether the parameter is defined. */
   public boolean hasParameter(String parameter) {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
     return params != null && params.containsKey(parameter);
@@ -923,20 +956,19 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns whether the parameter has an attached type.
    *
-   * @return {@code true} if the parameter has an attached type, {@code false}
-   *     if the parameter has no attached type or does not exist.
+   * @return {@code true} if the parameter has an attached type, {@code false} if the parameter has
+   *     no attached type or does not exist.
    */
   public boolean hasParameterType(String parameter) {
     return getParameterType(parameter) != null;
   }
 
   /**
-   * Returns the set of names of the defined parameters. The iteration order
-   * of the returned set is the order in which parameters are defined in the
-   * JSDoc, rather than the order in which the function declares them.
+   * Returns the set of names of the defined parameters. The iteration order of the returned set is
+   * the order in which parameters are defined in the JSDoc, rather than the order in which the
+   * function declares them.
    *
-   * @return the set of names of the defined parameters. The returned set is
-   *     immutable.
+   * @return the set of names of the defined parameters. The returned set is immutable.
    */
   public Set<String> getParameterNames() {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
@@ -944,9 +976,8 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns the nth name in the defined parameters. The iteration order
-   * is the order in which parameters are defined in the JSDoc, rather
-   * than the order in which the function declares them.
+   * Returns the nth name in the defined parameters. The iteration order is the order in which
+   * parameters are defined in the JSDoc, rather than the order in which the function declares them.
    */
   public String getParameterNameAt(int index) {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
@@ -974,16 +1005,16 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether an enum parameter type, specified using the {@code @enum}
-   * annotation, is present on this JSDoc.
+   * Returns whether an enum parameter type, specified using the {@code @enum} annotation, is
+   * present on this JSDoc.
    */
   public boolean hasEnumParameterType() {
     return ENUM_PARAMETER_TYPE.get(this) != null;
   }
 
   /**
-   * Returns whether a typedef parameter type, specified using the
-   * {@code @typedef} annotation, is present on this JSDoc.
+   * Returns whether a typedef parameter type, specified using the {@code @typedef} annotation, is
+   * present on this JSDoc.
    */
   public boolean hasTypedefType() {
     return TYPEDEF_TYPE.get(this) != null;
@@ -995,8 +1026,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether a type, specified using the {@code @type} annotation, is
-   * present on this JSDoc.
+   * Returns whether a type, specified using the {@code @type} annotation, is present on this JSDoc.
    */
   public boolean hasType() {
     return TYPE.get(this) != null;
@@ -1056,13 +1086,12 @@ public class JSDocInfo implements Serializable {
   /**
    * Gets the meaning specified by the {@code @meaning} annotation.
    *
-   * <p>In localization systems, two messages with the same content but
-   * different "meanings" may be translated differently. By default, we
-   * use the name of the variable that the message is initialized to as
-   * the "meaning" of the message.
+   * <p>In localization systems, two messages with the same content but different "meanings" may be
+   * translated differently. By default, we use the name of the variable that the message is
+   * initialized to as the "meaning" of the message.
    *
-   * <p>But some code generators (like Closure Templates) inject their own
-   * meaning with the jsdoc {@code @meaning} annotation.
+   * <p>But some code generators (like Closure Templates) inject their own meaning with the jsdoc
+   * {@code @meaning} annotation.
    */
   public String getMeaning() {
     return MEANING.get(this);
@@ -1166,10 +1195,7 @@ public class JSDocInfo implements Serializable {
     return helper.omitNullValues().toString();
   }
 
-  /**
-   * Returns whether this {@link JSDocInfo} contains a type for {@code @extends}
-   * annotation.
-   */
+  /** Returns whether this {@link JSDocInfo} contains a type for {@code @extends} annotation. */
   public boolean hasBaseType() {
     return getBaseType() != null;
   }
@@ -1177,17 +1203,13 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the types specified by the {@code @implements} annotation.
    *
-   * @return An immutable list of JSTypeExpression objects that can
-   *    be resolved to types.
+   * @return An immutable list of JSTypeExpression objects that can be resolved to types.
    */
   public List<JSTypeExpression> getImplementedInterfaces() {
     return IMPLEMENTED_INTERFACES.getUnmodifiable(this);
   }
 
-  /**
-   * Gets the number of interfaces specified by the {@code @implements}
-   * annotation.
-   */
+  /** Gets the number of interfaces specified by the {@code @implements} annotation. */
   public int getImplementedInterfaceCount() {
     ArrayList<?> list = IMPLEMENTED_INTERFACES.get(this);
     return list != null ? list.size() : 0;
@@ -1196,8 +1218,7 @@ public class JSDocInfo implements Serializable {
   /**
    * Returns the interfaces extended by an interface
    *
-   * @return An immutable list of JSTypeExpression objects that can
-   *    be resolved to types.
+   * @return An immutable list of JSTypeExpression objects that can be resolved to types.
    */
   public List<JSTypeExpression> getExtendedInterfaces() {
     return EXTENDED_INTERFACES.getUnmodifiable(this);
@@ -1376,8 +1397,8 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns the original JSDoc comment string. Returns null unless
-   * parseJsDocDocumentation is enabled via the ParserConfig.
+   * Returns the original JSDoc comment string. Returns null unless parseJsDocDocumentation is
+   * enabled via the ParserConfig.
    */
   public String getOriginalCommentString() {
     return SOURCE_COMMENT.get(this);
@@ -2336,14 +2357,15 @@ public class JSDocInfo implements Serializable {
       return interfaceType != null && addUnique(EXTENDED_INTERFACES, interfaceType);
     }
 
-    private <T> boolean addUnique(Property<ArrayList<T>> prop, T elem) {
-      ArrayList<T> list = getPropWithDefault(prop, ArrayList::new);
-      if (!list.contains(elem)) {
+    private boolean addUnique(Property<ArrayList<JSTypeExpression>> prop, JSTypeExpression elem) {
+      ArrayList<JSTypeExpression> list = getPropWithDefault(prop, ArrayList::new);
+      if (list.stream().anyMatch(elem::isEquivalentTo)) {
+        return false;
+      } else {
         list.add(elem);
         populated = true;
         return true;
       }
-      return false;
     }
 
     /** Records that we're lending to another name. */

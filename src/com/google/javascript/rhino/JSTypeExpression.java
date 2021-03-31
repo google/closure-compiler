@@ -47,6 +47,7 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * When parsing a jsdoc, a type-annotation string is parsed to a type AST. Somewhat confusingly, we
@@ -142,10 +143,7 @@ public final class JSTypeExpression implements Serializable {
     }
   }
 
-  /**
-   * Make the given type expression into an optional type expression,
-   * if possible.
-   */
+  /** Make the given type expression into an optional type expression, if possible. */
   public static JSTypeExpression makeOptionalArg(JSTypeExpression expr) {
     if (expr.isOptionalArg() || expr.isVarArgs()) {
       return expr;
@@ -156,16 +154,12 @@ public final class JSTypeExpression implements Serializable {
     }
   }
 
-  /**
-   * @return Whether this expression denotes an optional {@code @param}.
-   */
+  /** @return Whether this expression denotes an optional {@code @param}. */
   public boolean isOptionalArg() {
     return root.getToken() == Token.EQUALS;
   }
 
-  /**
-   * @return Whether this expression denotes a rest args {@code @param}.
-   */
+  /** @return Whether this expression denotes a rest args {@code @param}. */
   public boolean isVarArgs() {
     return root.getToken() == Token.ITER_REST;
   }
@@ -177,20 +171,14 @@ public final class JSTypeExpression implements Serializable {
     return type;
   }
 
-  @Override
-  public boolean equals(Object other) {
-    return other instanceof JSTypeExpression &&
-        ((JSTypeExpression) other).root.isEquivalentTo(root);
-  }
-
-  @Override
-  public int hashCode() {
-    return root.hashCode();
+  /** Does this object represent a type expression that is equivalent to the other one? */
+  public boolean isEquivalentTo(@Nullable JSTypeExpression other) {
+    return other != null && root.isEquivalentTo(other.root);
   }
 
   /**
-   * @return The source for this type expression.  Note that it will not
-   * contain an expression if there's an @override tag.
+   * @return The source for this type expression. Note that it will not contain an expression if
+   *     there's an @override tag.
    */
   public Node getRoot() {
     return root;
