@@ -23,7 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.RetrievalType;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -173,7 +173,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
     int index = search(entries, column, 0, entries.size() - 1);
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
-    return getOriginalMappingForEntry(entries.get(index), RetrievalType.EXACT);
+    return getOriginalMappingForEntry(entries.get(index), Precision.EXACT);
   }
 
   @Override
@@ -432,13 +432,13 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       lineNumber--;
     } while (lines.get(lineNumber) == null);
     ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(Iterables.getLast(entries), RetrievalType.APPROXIMATED_LINE);
+    return getOriginalMappingForEntry(Iterables.getLast(entries), Precision.APPROXIMATE_LINE);
   }
 
   /**
    * Creates an "OriginalMapping" object for the given entry object.
    */
-  private OriginalMapping getOriginalMappingForEntry(Entry entry, RetrievalType retrievalType) {
+  private OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
     if (entry.getSourceFileId() == UNMAPPED) {
       return null;
     } else {
@@ -447,7 +447,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
         .setOriginalFile(sources[entry.getSourceFileId()])
         .setLineNumber(entry.getSourceLine() + 1)
         .setColumnPosition(entry.getSourceColumn() + 1)
-        .setRetrievalType(retrievalType);
+        .setPrecision(precision);
       if (entry.getNameId() != UNMAPPED) {
         x.setIdentifier(names[entry.getNameId()]);
       }

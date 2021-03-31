@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.RetrievalType;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -154,7 +154,7 @@ public final class SourceMapConsumerV3Test {
     
     assertThat(mapping).isNotNull();
     assertThat(mapping.getLineNumber()).isEqualTo(1);
-    assertThat(mapping.getRetrievalType()).isEqualTo(RetrievalType.EXACT);
+    assertThat(mapping.getPrecision()).isEqualTo(Precision.EXACT);
     
   }
 
@@ -175,7 +175,7 @@ public final class SourceMapConsumerV3Test {
     assertThat(mapping).isNotNull();
     // The Previous line mapping was retrieved, and thus it is "approximated"
     assertThat(mapping.getLineNumber()).isEqualTo(9);
-    assertThat(mapping.getRetrievalType()).isEqualTo(RetrievalType.APPROXIMATED_LINE);
+    assertThat(mapping.getPrecision()).isEqualTo(Precision.APPROXIMATE_LINE);
     
   }
 }
