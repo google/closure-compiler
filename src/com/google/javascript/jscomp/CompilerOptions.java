@@ -1063,7 +1063,7 @@ public class CompilerOptions implements Serializable {
    * <p>When {@code false}, the compiler is free to make unsafe (breaking) optimizations to code
    * that depends on static inheritance. These optimizations represent a substantial code-size
    * reduction for older projects and therefore cannot be unilaterally disabled. {@code false} was
-   * the long-standing implicit assumption before static inheritance came about in ES6.
+   * the long-standing implicit assumption before static inheritance came about in ES2015.
    *
    * <p>Example of what may break if this flag is {@code false}:
    *
@@ -2478,7 +2478,7 @@ public class CompilerOptions implements Serializable {
     return processCommonJSModules;
   }
 
-  /** How ES6 modules should be transformed. */
+  /** How ES modules should be transformed. */
   public enum Es6ModuleTranspilation {
     /** Do not touch any Es6 module feature. */
     NONE,
@@ -2489,7 +2489,7 @@ public class CompilerOptions implements Serializable {
     /** Rewrite to common js like modules for bundling. */
     TO_COMMON_JS_LIKE_MODULES,
 
-    /** Compile ES6 modules. */
+    /** Compile ES modules. */
     COMPILE
   }
 
@@ -2976,11 +2976,11 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT5_STRICT:
           return FeatureSet.ES5;
         case ECMASCRIPT_2015:
-          return FeatureSet.ES6_MODULES;
+          return FeatureSet.ES2015_MODULES;
         case ECMASCRIPT_2016:
-          return FeatureSet.ES7_MODULES;
+          return FeatureSet.ES2016_MODULES;
         case ECMASCRIPT_2017:
-          return FeatureSet.ES8_MODULES;
+          return FeatureSet.ES2017_MODULES;
         case ECMASCRIPT_2018:
           return FeatureSet.ES2018_MODULES;
         case ECMASCRIPT_2019:

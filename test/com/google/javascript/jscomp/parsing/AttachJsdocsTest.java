@@ -927,7 +927,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineInExport() {
-    mode = LanguageMode.ECMASCRIPT6;
+    mode = LanguageMode.ECMASCRIPT_2015;
     Node root = parse("export var /** number */ x;");
     Node moduleBody = root.getFirstChild();
     Node exportNode = moduleBody.getFirstChild();

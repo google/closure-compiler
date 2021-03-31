@@ -54,10 +54,10 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2020).contains(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2019).contains(FeatureSet.ES2018);
-    assertFS(FeatureSet.ES2018).contains(FeatureSet.ES8);
-    assertFS(FeatureSet.ES8).contains(FeatureSet.ES7);
-    assertFS(FeatureSet.ES7).contains(FeatureSet.ES6);
-    assertFS(FeatureSet.ES6).contains(FeatureSet.ES5);
+    assertFS(FeatureSet.ES2018).contains(FeatureSet.ES2017);
+    assertFS(FeatureSet.ES2017).contains(FeatureSet.ES2016);
+    assertFS(FeatureSet.ES2016).contains(FeatureSet.ES2015);
+    assertFS(FeatureSet.ES2015).contains(FeatureSet.ES5);
     assertFS(FeatureSet.ES5).contains(FeatureSet.ES3);
     assertFS(FeatureSet.ES3).contains(FeatureSet.BARE_MINIMUM);
   }
@@ -67,9 +67,9 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.ES2020_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2019_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2018_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2018);
-    assertFS(FeatureSet.ES8_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES8);
-    assertFS(FeatureSet.ES7_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES7);
-    assertFS(FeatureSet.ES6_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES6);
+    assertFS(FeatureSet.ES2017_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2017);
+    assertFS(FeatureSet.ES2016_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2016);
+    assertFS(FeatureSet.ES2015_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2015);
   }
 
   @Test
@@ -77,12 +77,12 @@ public final class FeatureSetTest {
     // ES_NEXT, ES_UNSUPPORTED, TS_UNSUPPORTED are tested separately - see below
     assertThat(FeatureSet.ES3.versionForDebugging()).isEqualTo("es3");
     assertThat(FeatureSet.ES5.versionForDebugging()).isEqualTo("es5");
-    assertThat(FeatureSet.ES6.versionForDebugging()).isEqualTo("es6");
-    assertThat(FeatureSet.ES6_MODULES.versionForDebugging()).isEqualTo("es6");
-    assertThat(FeatureSet.ES7.versionForDebugging()).isEqualTo("es7");
-    assertThat(FeatureSet.ES7_MODULES.versionForDebugging()).isEqualTo("es7");
-    assertThat(FeatureSet.ES8.versionForDebugging()).isEqualTo("es8");
-    assertThat(FeatureSet.ES8_MODULES.versionForDebugging()).isEqualTo("es8");
+    assertThat(FeatureSet.ES2015.versionForDebugging()).isEqualTo("es6");
+    assertThat(FeatureSet.ES2015_MODULES.versionForDebugging()).isEqualTo("es6");
+    assertThat(FeatureSet.ES2016.versionForDebugging()).isEqualTo("es7");
+    assertThat(FeatureSet.ES2016_MODULES.versionForDebugging()).isEqualTo("es7");
+    assertThat(FeatureSet.ES2017.versionForDebugging()).isEqualTo("es8");
+    assertThat(FeatureSet.ES2017_MODULES.versionForDebugging()).isEqualTo("es8");
     assertThat(FeatureSet.ES2018.versionForDebugging()).isEqualTo("es9");
     assertThat(FeatureSet.ES2018_MODULES.versionForDebugging()).isEqualTo("es9");
     assertThat(FeatureSet.ES2019.versionForDebugging()).isEqualTo("es_2019");
@@ -140,9 +140,9 @@ public final class FeatureSetTest {
   public void testValueOf() {
     assertFS(FeatureSet.valueOf("es3")).equals(FeatureSet.ES3);
     assertFS(FeatureSet.valueOf("es5")).equals(FeatureSet.ES5);
-    assertFS(FeatureSet.valueOf("es6")).equals(FeatureSet.ES6);
-    assertFS(FeatureSet.valueOf("es7")).equals(FeatureSet.ES7);
-    assertFS(FeatureSet.valueOf("es8")).equals(FeatureSet.ES8);
+    assertFS(FeatureSet.valueOf("es6")).equals(FeatureSet.ES2015);
+    assertFS(FeatureSet.valueOf("es7")).equals(FeatureSet.ES2016);
+    assertFS(FeatureSet.valueOf("es8")).equals(FeatureSet.ES2017);
     assertFS(FeatureSet.valueOf("es_2018")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es9")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es_2019")).equals(FeatureSet.ES2019);

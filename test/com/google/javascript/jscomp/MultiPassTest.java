@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
@@ -57,7 +57,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setName("validityCheck")
             .setRunInFixedPointLoop(true)
             .setInternalFactory(ValidityCheck::new)
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
     compiler.setPhaseOptimizer(phaseopt);
     return phaseopt;
@@ -381,7 +381,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setInternalFactory(
                 (compiler) ->
                     new InlineObjectLiterals(compiler, compiler.getUniqueNameIdSupplier()))
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -391,7 +391,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setName("removeUnreachableCode")
             .setRunInFixedPointLoop(true)
             .setInternalFactory(UnreachableCodeElimination::new)
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -409,7 +409,7 @@ public final class MultiPassTest extends CompilerTestCase {
                         true,
                         true,
                         CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING))
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -420,7 +420,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setRunInFixedPointLoop(true)
             .setInternalFactory(
                 (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.ALL, true))
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -442,7 +442,7 @@ public final class MultiPassTest extends CompilerTestCase {
                       new PeepholeFoldConstants(late, false /* useTypes */),
                       new PeepholeCollectPropertyAssignments());
                 })
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -457,7 +457,7 @@ public final class MultiPassTest extends CompilerTestCase {
                         .removeUnusedThisProperties(true)
                         .removeUnusedObjectDefinePropertiesDefinitions(true)
                         .build())
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -468,7 +468,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setRunInFixedPointLoop(true)
             .setInternalFactory(
                 (compiler) -> new RemoveUnusedCode.Builder(compiler).removeLocalVars(true).build())
-            .setFeatureSet(ES8_MODULES)
+            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 
@@ -482,7 +482,7 @@ public final class MultiPassTest extends CompilerTestCase {
                         .setDestructuringRewriteMode(
                             ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS)
                         .build())
-            .setFeatureSet(FeatureSet.ES8_MODULES)
+            .setFeatureSet(FeatureSet.ES2017_MODULES)
             .build());
   }
 
@@ -491,7 +491,7 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("arrowFunctionPass")
             .setInternalFactory(Es6RewriteArrowFunction::new)
-            .setFeatureSet(FeatureSet.ES8_MODULES)
+            .setFeatureSet(FeatureSet.ES2017_MODULES)
             .build());
   }
 
@@ -500,7 +500,7 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("splitVariableDeclarationsPass")
             .setInternalFactory(Es6SplitVariableDeclarations::new)
-            .setFeatureSet(FeatureSet.ES8_MODULES)
+            .setFeatureSet(FeatureSet.ES2017_MODULES)
             .build());
   }
 
@@ -509,7 +509,7 @@ public final class MultiPassTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("renameVariablesInParamListsPass")
             .setInternalFactory(Es6RenameVariablesInParamLists::new)
-            .setFeatureSet(FeatureSet.ES8_MODULES)
+            .setFeatureSet(FeatureSet.ES2017_MODULES)
             .build());
   }
 

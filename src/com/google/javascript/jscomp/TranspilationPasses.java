@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2020;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
 
@@ -75,7 +75,7 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
+    // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
       // Numeric separators are flagged as present by the parser,
@@ -111,16 +111,16 @@ public class TranspilationPasses {
       passes.add(rewriteObjectSpread);
     }
 
-    if (options.needsTranspilationFrom(ES8)) {
+    if (options.needsTranspilationFrom(ES2017)) {
       passes.add(removeTrailingCommaFromParamList);
       passes.add(rewriteAsyncFunctions);
     }
 
-    if (options.needsTranspilationFrom(ES7)) {
+    if (options.needsTranspilationFrom(ES2016)) {
       passes.add(rewriteExponentialOperator);
     }
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES2015)) {
       // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
       // with the features they transpile and as the passes themselves are updated to propagate type
       // information to the transpiled code.
@@ -158,9 +158,7 @@ public class TranspilationPasses {
     }
   }
 
-  /**
-   * Adds the pass to inject ES6 polyfills, which goes after the late ES6 passes.
-   */
+  /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
   }
@@ -187,11 +185,11 @@ public class TranspilationPasses {
           .setInternalFactory(
               (compiler) ->
                   new RewriteAsyncFunctions.Builder(compiler)
-                      // If ES6 classes will not be transpiled away later,
+                      // If ES2015 classes will not be transpiled away later,
                       // transpile away property references that use `super` in async functions.
                       // See explanation in RewriteAsyncFunctions.
                       .rewriteSuperPropertyReferencesWithoutSuper(
-                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
                       .build())
           .setFeatureSet(ES_NEXT)
           .build();
@@ -202,11 +200,11 @@ public class TranspilationPasses {
           .setInternalFactory(
               (compiler) ->
                   new RewriteAsyncIteration.Builder(compiler)
-                      // If ES6 classes will not be transpiled away later,
+                      // If ES2015 classes will not be transpiled away later,
                       // transpile away property references that use `super` in async iteration.
                       // See explanation in RewriteAsyncIteration.
                       .rewriteSuperPropertyReferencesWithoutSuper(
-                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
                       .build())
           .setFeatureSet(ES_NEXT)
           .build();
@@ -271,14 +269,14 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName(PassNames.ES6_EXTRACT_CLASSES)
           .setInternalFactory(Es6ExtractClasses::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory es6RewriteClass =
       PassFactory.builderForHotSwap()
           .setName("Es6RewriteClass")
           .setInternalFactory(Es6RewriteClass::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory getEs6RewriteDestructuring(ObjectDestructuringRewriteMode rewriteMode) {
@@ -304,7 +302,7 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("Es6RewriteArrowFunction")
           .setInternalFactory(Es6RewriteArrowFunction::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory rewritePolyfills =
@@ -333,7 +331,7 @@ public class TranspilationPasses {
           .setFeatureSet(ES2018)
           .build();
 
-  /** Injects runtime library code needed for transpiled ES6+ code. */
+  /** Injects runtime library code needed for transpiled ES2015+ code. */
   static final PassFactory injectTranspilationRuntimeLibraries =
       PassFactory.builderForHotSwap()
           .setName("es6InjectRuntimeLibraries")
@@ -350,8 +348,8 @@ public class TranspilationPasses {
           .build();
 
   /**
-   * Does the main ES6 to ES3 conversion. There are a few other passes which run before this one, to
-   * convert constructs which are not converted by this pass. This pass can run after NTI
+   * Does the main ES2015 to ES3 conversion. There are a few other passes which run before this one,
+   * to convert constructs which are not converted by this pass. This pass can run after NTI
    */
   static final PassFactory lateConvertEs6ToEs3 =
       PassFactory.builderForHotSwap()
@@ -364,28 +362,28 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("es6ForOf")
           .setInternalFactory(Es6ForOfConverter::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory rewriteBlockScopedFunctionDeclaration =
       PassFactory.builderForHotSwap()
           .setName("Es6RewriteBlockScopedFunctionDeclaration")
           .setInternalFactory(Es6RewriteBlockScopedFunctionDeclaration::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory rewriteBlockScopedDeclaration =
       PassFactory.builderForHotSwap()
           .setName("Es6RewriteBlockScopedDeclaration")
           .setInternalFactory(Es6RewriteBlockScopedDeclaration::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory rewriteGenerators =
       PassFactory.builderForHotSwap()
           .setName("rewriteGenerators")
           .setInternalFactory(Es6RewriteGenerators::new)
-          .setFeatureSet(ES8)
+          .setFeatureSet(ES2017)
           .build();
 
   static final PassFactory rewriteOptionalChainingOperator =
@@ -405,7 +403,7 @@ public class TranspilationPasses {
 
   /**
    * @param script The SCRIPT node representing a JS file
-   * @return If the file has any features which are part of ES6 or higher but not part of ES5.
+   * @return If the file has any features which are part of ES2015 or higher but not part of ES5.
    */
   static boolean isScriptEs6OrHigher(Node script) {
     FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
@@ -428,7 +426,7 @@ public class TranspilationPasses {
    * @param compiler An AbstractCompiler
    * @param combinedRoot The combined root for all JS files.
    * @param featureSet Ignored
-   * @param callbacks The callbacks that should be invoked if a file has ES6 features.
+   * @param callbacks The callbacks that should be invoked if a file has ES2015 features.
    */
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
@@ -460,7 +458,7 @@ public class TranspilationPasses {
    * @param compiler An AbstractCompiler
    * @param scriptRoot The SCRIPT root for the JS file.
    * @param featureSet Ignored
-   * @param callbacks The callbacks that should be invoked if the file has ES6 features.
+   * @param callbacks The callbacks that should be invoked if the file has ES2015 features.
    */
   static void hotSwapTranspile(
       AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {

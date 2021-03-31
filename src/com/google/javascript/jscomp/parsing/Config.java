@@ -47,9 +47,9 @@ public abstract class Config {
     // most features, and _STRICT versions should be supplied after unspecified strictness.
     ECMASCRIPT3(FeatureSet.ES3),
     ECMASCRIPT5(FeatureSet.ES5),
-    ECMASCRIPT6(FeatureSet.ES6_MODULES),
-    ECMASCRIPT7(FeatureSet.ES7_MODULES),
-    ECMASCRIPT8(FeatureSet.ES8_MODULES),
+    ECMASCRIPT_2015(FeatureSet.ES2015_MODULES),
+    ECMASCRIPT_2016(FeatureSet.ES2016_MODULES),
+    ECMASCRIPT_2017(FeatureSet.ES2017_MODULES),
     ECMASCRIPT_2018(FeatureSet.ES2018_MODULES),
     ECMASCRIPT_2019(FeatureSet.ES2019_MODULES),
     ECMASCRIPT_2020(FeatureSet.ES2020_MODULES),

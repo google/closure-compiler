@@ -20,7 +20,7 @@ import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
@@ -106,7 +106,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     return PassFactory.builder()
         .setName(name)
         .setInternalFactory((compiler) -> pass)
-        .setFeatureSet(ES7_MODULES)
+        .setFeatureSet(ES2016_MODULES)
         .build();
   }
 

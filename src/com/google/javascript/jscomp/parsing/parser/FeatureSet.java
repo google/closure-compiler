@@ -48,21 +48,30 @@ public final class FeatureSet implements Serializable {
   /** Features from ES5 only. */
   public static final FeatureSet ES5 = ES3.with(LangVersion.ES5.features());
 
-  /** All ES6 features, including modules. */
-  public static final FeatureSet ES6_MODULES = ES5.with(LangVersion.ES6.features());
+  /** All ES2015 features, including modules. */
+  public static final FeatureSet ES2015_MODULES = ES5.with(LangVersion.ES2015.features());
 
-  /** The full set of ES6 features, not including modules. */
-  public static final FeatureSet ES6 = ES6_MODULES.without(Feature.MODULES);
+  /** @deprecated Please use ES2015_MODULES instead. */
+  @Deprecated public static final FeatureSet ES6_MODULES = ES2015_MODULES;
 
-  public static final FeatureSet ES7_MODULES = ES6_MODULES.with(LangVersion.ES7.features());
+  /** The full set of ES2015 features, not including modules. */
+  public static final FeatureSet ES2015 = ES2015_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES7 = ES7_MODULES.without(Feature.MODULES);
+  /** @deprecated Please use ES2015 instead. */
+  @Deprecated public static final FeatureSet ES6 = ES2015;
 
-  public static final FeatureSet ES8_MODULES = ES7_MODULES.with(LangVersion.ES8.features());
+  public static final FeatureSet ES2016_MODULES =
+      ES2015_MODULES.with(LangVersion.ES2016.features());
 
-  public static final FeatureSet ES8 = ES8_MODULES.without(Feature.MODULES);
+  public static final FeatureSet ES2016 = ES2016_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES2018_MODULES = ES8_MODULES.with(LangVersion.ES2018.features());
+  public static final FeatureSet ES2017_MODULES =
+      ES2016_MODULES.with(LangVersion.ES2017.features());
+
+  public static final FeatureSet ES2017 = ES2017_MODULES.without(Feature.MODULES);
+
+  public static final FeatureSet ES2018_MODULES =
+      ES2017_MODULES.with(LangVersion.ES2018.features());
 
   public static final FeatureSet ES2018 = ES2018_MODULES.without(Feature.MODULES);
 
@@ -108,9 +117,9 @@ public final class FeatureSet implements Serializable {
   private enum LangVersion {
     ES3,
     ES5,
-    ES6,
-    ES7,
-    ES8,
+    ES2015,
+    ES2016,
+    ES2017,
     ES2018,
     ES2019,
     ES2020,
@@ -142,42 +151,42 @@ public final class FeatureSet implements Serializable {
     STRING_CONTINUATION("string continuation", LangVersion.ES5),
     TRAILING_COMMA("trailing comma", LangVersion.ES5),
 
-    // ES6 features (besides modules): all stable browsers are now fully compliant
-    ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES6),
-    ARROW_FUNCTIONS("arrow function", LangVersion.ES6),
-    BINARY_LITERALS("binary literal", LangVersion.ES6),
-    BLOCK_SCOPED_FUNCTION_DECLARATION("block-scoped function declaration", LangVersion.ES6),
-    CLASSES("class", LangVersion.ES6),
-    CLASS_EXTENDS("class extends", LangVersion.ES6),
-    CLASS_GETTER_SETTER("class getters/setters", LangVersion.ES6),
-    COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
-    CONST_DECLARATIONS("const declaration", LangVersion.ES6),
-    DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
-    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES6),
-    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES6),
-    EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES6),
-    FOR_OF("for-of loop", LangVersion.ES6),
-    GENERATORS("generator", LangVersion.ES6),
-    LET_DECLARATIONS("let declaration", LangVersion.ES6),
-    MEMBER_DECLARATIONS("member declaration", LangVersion.ES6),
-    NEW_TARGET("new.target", LangVersion.ES6),
-    OCTAL_LITERALS("octal literal", LangVersion.ES6),
-    REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES6),
-    REGEXP_FLAG_Y("RegExp flag 'y'", LangVersion.ES6),
-    REST_PARAMETERS("rest parameter", LangVersion.ES6),
-    SPREAD_EXPRESSIONS("spread expression", LangVersion.ES6),
-    SUPER("super", LangVersion.ES6),
-    TEMPLATE_LITERALS("template literal", LangVersion.ES6),
+    // ES2015 features (besides modules): all stable browsers are now fully compliant
+    ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES2015),
+    ARROW_FUNCTIONS("arrow function", LangVersion.ES2015),
+    BINARY_LITERALS("binary literal", LangVersion.ES2015),
+    BLOCK_SCOPED_FUNCTION_DECLARATION("block-scoped function declaration", LangVersion.ES2015),
+    CLASSES("class", LangVersion.ES2015),
+    CLASS_EXTENDS("class extends", LangVersion.ES2015),
+    CLASS_GETTER_SETTER("class getters/setters", LangVersion.ES2015),
+    COMPUTED_PROPERTIES("computed property", LangVersion.ES2015),
+    CONST_DECLARATIONS("const declaration", LangVersion.ES2015),
+    DEFAULT_PARAMETERS("default parameter", LangVersion.ES2015),
+    ARRAY_DESTRUCTURING("array destructuring", LangVersion.ES2015),
+    OBJECT_DESTRUCTURING("object destructuring", LangVersion.ES2015),
+    EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES2015),
+    FOR_OF("for-of loop", LangVersion.ES2015),
+    GENERATORS("generator", LangVersion.ES2015),
+    LET_DECLARATIONS("let declaration", LangVersion.ES2015),
+    MEMBER_DECLARATIONS("member declaration", LangVersion.ES2015),
+    NEW_TARGET("new.target", LangVersion.ES2015),
+    OCTAL_LITERALS("octal literal", LangVersion.ES2015),
+    REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES2015),
+    REGEXP_FLAG_Y("RegExp flag 'y'", LangVersion.ES2015),
+    REST_PARAMETERS("rest parameter", LangVersion.ES2015),
+    SPREAD_EXPRESSIONS("spread expression", LangVersion.ES2015),
+    SUPER("super", LangVersion.ES2015),
+    TEMPLATE_LITERALS("template literal", LangVersion.ES2015),
 
-    // ES6 modules
-    MODULES("modules", LangVersion.ES6),
+    // ES modules
+    MODULES("modules", LangVersion.ES2015),
 
     // ES 2016 only added one new feature:
-    EXPONENT_OP("exponent operator (**)", LangVersion.ES7),
+    EXPONENT_OP("exponent operator (**)", LangVersion.ES2016),
 
     // ES 2017 features:
-    ASYNC_FUNCTIONS("async function", LangVersion.ES8),
-    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
+    ASYNC_FUNCTIONS("async function", LangVersion.ES2017),
+    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES2017),
 
     // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
     OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),
@@ -249,13 +258,13 @@ public final class FeatureSet implements Serializable {
     if (ES5.contains(this)) {
       return "es5";
     }
-    if (ES6_MODULES.contains(this)) {
+    if (ES2015_MODULES.contains(this)) {
       return "es6";
     }
-    if (ES7_MODULES.contains(this)) {
+    if (ES2016_MODULES.contains(this)) {
       return "es7";
     }
-    if (ES8_MODULES.contains(this)) {
+    if (ES2017_MODULES.contains(this)) {
       return "es8";
     }
     if (ES2018_MODULES.contains(this)) {
@@ -409,13 +418,13 @@ public final class FeatureSet implements Serializable {
         return ES5;
       case "es_2015":
       case "es6":
-        return ES6;
+        return ES2015;
       case "es_2016":
       case "es7":
-        return ES7;
+        return ES2016;
       case "es_2017":
       case "es8":
-        return ES8;
+        return ES2017;
       case "es_2018":
       case "es9":
         return ES2018;

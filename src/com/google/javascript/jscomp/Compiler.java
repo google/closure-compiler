@@ -2659,11 +2659,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       case ECMASCRIPT5_STRICT:
         return LanguageMode.ECMASCRIPT5;
       case ECMASCRIPT_2015:
-        return LanguageMode.ECMASCRIPT6;
+        return LanguageMode.ECMASCRIPT_2015;
       case ECMASCRIPT_2016:
-        return LanguageMode.ECMASCRIPT7;
+        return LanguageMode.ECMASCRIPT_2016;
       case ECMASCRIPT_2017:
-        return LanguageMode.ECMASCRIPT8;
+        return LanguageMode.ECMASCRIPT_2017;
       case ECMASCRIPT_2018:
         return LanguageMode.ECMASCRIPT_2018;
       case ECMASCRIPT_2019:
