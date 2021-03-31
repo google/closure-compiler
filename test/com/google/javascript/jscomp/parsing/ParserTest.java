@@ -4942,6 +4942,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaAfterRestParameters() {
+    mode = LanguageMode.ECMASCRIPT8;
+    strictMode = SLOPPY;
+
+    parseError("function f(...a,) {}", "A trailing comma must not follow a rest parameter.");
+    // http://b/184088793, trailing commas should be allowed in arrow function then
+    // the proper error is reported.
+    parseError("((...xs,) => xs)", "')' expected");
+  }
+
+  @Test
   public void testDestructuredRestParameters() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;

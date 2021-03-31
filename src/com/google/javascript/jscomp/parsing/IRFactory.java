@@ -1632,7 +1632,7 @@ class IRFactory {
     Node processFormalParameterList(FormalParameterListTree tree) {
       Node params = newNode(Token.PARAM_LIST);
       params.setTrailingComma(tree.hasTrailingComma);
-      if (!checkParameters(tree.parameters)) {
+      if (!checkParameters(tree)) {
         return params;
       }
 
@@ -2756,7 +2756,8 @@ class IRFactory {
       return newNode(Token.IMPORT_META);
     }
 
-    private boolean checkParameters(ImmutableList<ParseTree> params) {
+    private boolean checkParameters(FormalParameterListTree tree) {
+      ImmutableList<ParseTree> params = tree.parameters;
       boolean good = true;
       for (int i = 0; i < params.size(); i++) {
         ParseTree param = params.get(i);
@@ -2764,6 +2765,13 @@ class IRFactory {
           if (i != params.size() - 1) {
             errorReporter.error(
                 "A rest parameter must be last in a parameter list.",
+                sourceName,
+                lineno(param),
+                charno(param));
+            good = false;
+          } else if (tree.hasTrailingComma) {
+            errorReporter.error(
+                "A trailing comma must not follow a rest parameter.",
                 sourceName,
                 lineno(param),
                 charno(param));
