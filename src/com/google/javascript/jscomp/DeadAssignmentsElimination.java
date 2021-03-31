@@ -307,7 +307,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       } else if (isDeclarationNode) {
         lhs.removeChild(rhs);
         IR.exprResult(rhs).insertAfter(parent);
-        rhs.getParent().useSourceInfoFrom(rhs);
+        rhs.getParent().srcref(rhs);
       } else {
         // Not reachable.
         throw new IllegalStateException("Unknown statement");

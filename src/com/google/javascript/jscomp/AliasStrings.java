@@ -217,7 +217,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       String alias = info.getVariableName(entry.getKey());
       Node var = IR.var(IR.name(alias), IR.string(entry.getKey()));
       Node firstUse = info.occurrences.get(0);
-      var.useSourceInfoFromForTree(firstUse);
+      var.srcrefTree(firstUse);
       if (info.siblingToInsertVarDeclBefore == null) {
         info.parentForNewVarDecl.addChildToFront(var);
       } else {

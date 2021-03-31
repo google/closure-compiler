@@ -105,7 +105,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
       newNode.setJSDocInfo(jsDocInfo);
     }
 
-    newNode.useSourceInfoFromForTree(node);
+    newNode.srcrefTree(node);
     newNode.setOriginalName(name);
     newNode.makeNonIndexableRecursive();
     node.getGrandparent().addChildToBack(IR.exprResult(newNode));

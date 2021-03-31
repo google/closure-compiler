@@ -134,7 +134,7 @@ class AngularPass extends AbstractPostOrderCallback
               dependenciesArray
           )
       );
-      statement.useSourceInfoFromForTree(entry.getNode());
+      statement.srcrefTree(entry.getNode());
       statement.setOriginalName(name);
       // Set the visibility of the newly created property.
       JSDocInfo.Builder newPropertyDoc = JSDocInfo.builder();

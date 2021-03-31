@@ -102,7 +102,7 @@ public final class Es7RewriteExponentialOperator
     callClone.addChildToBack(operator.removeFirstChild()); // Base argument.
     callClone.addChildToBack(operator.removeFirstChild()); // Exponent argument.
 
-    callClone.useSourceInfoIfMissingFromForTree(operator);
+    callClone.srcrefTreeIfMissing(operator);
     operator.replaceWith(callClone);
 
     compiler.reportChangeToEnclosingScope(callClone);
@@ -117,7 +117,7 @@ public final class Es7RewriteExponentialOperator
 
     Node assignment = IR.assign(lValue, callClone).setJSType(numberType);
 
-    assignment.useSourceInfoIfMissingFromForTree(operator);
+    assignment.srcrefTreeIfMissing(operator);
     operator.replaceWith(assignment);
 
     compiler.reportChangeToEnclosingScope(assignment);

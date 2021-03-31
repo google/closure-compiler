@@ -92,7 +92,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       Node constructor = astFactory.createFunction("", IR.paramList(), body, classNode.getJSType());
       memberDef = astFactory.createMemberFunctionDef("constructor", constructor);
     }
-    memberDef.useSourceInfoIfMissingFromForTree(classNode);
+    memberDef.srcrefTreeIfMissing(classNode);
     memberDef.makeNonIndexableRecursive();
     classMembers.addChildToFront(memberDef);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
@@ -218,7 +218,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node callNode = IR.string("call");
     callNode.makeNonIndexable();
     if (enclosingMemberDef.isStaticMember()) {
-      Node expandedSuper = superName.cloneTree().useSourceInfoFromForTree(node);
+      Node expandedSuper = superName.cloneTree().srcrefTree(node);
       expandedSuper.setOriginalName("super");
       callTarget.replaceChild(node, expandedSuper);
       callTarget = astFactory.createGetProp(callTarget.detach(), "call");
@@ -226,14 +226,12 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       Node thisNode = astFactory.createThis(clazz.getJSType());
       thisNode.makeNonIndexable(); // no direct correlation with original source
       thisNode.insertAfter(callTarget);
-      grandparent.useSourceInfoIfMissingFromForTree(parent);
+      grandparent.srcrefTreeIfMissing(parent);
     } else {
       // Replace super node to give
       // super.method(...) -> SuperClass.prototype.method(...)
       Node expandedSuper =
-          astFactory
-              .createGetProp(superName.cloneTree(), "prototype")
-              .useSourceInfoFromForTree(node);
+          astFactory.createGetProp(superName.cloneTree(), "prototype").srcrefTree(node);
       expandedSuper.setOriginalName("super");
       node.replaceWith(expandedSuper);
       // Set the 'this' object correctly for the call
@@ -245,7 +243,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       thisNode.makeNonIndexable(); // no direct correlation with original source
       thisNode.insertAfter(callTarget);
       grandparent.putBooleanProp(Node.FREE_CALL, false);
-      grandparent.useSourceInfoIfMissingFromForTree(parent);
+      grandparent.srcrefTreeIfMissing(parent);
     }
     compiler.reportChangeToEnclosingScope(grandparent);
   }
@@ -283,26 +281,23 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
 
     if (enclosingMemberDef.isStaticMember()) {
       // super.prop -> SuperClass.prop
-      Node expandedSuper = superName.cloneTree().useSourceInfoFromForTree(node);
+      Node expandedSuper = superName.cloneTree().srcrefTree(node);
       expandedSuper.setOriginalName("super");
       node.replaceWith(expandedSuper);
     } else {
       if (astFactory.isAddingTypes()) {
         // super.prop -> SuperClass.prototype.prop
         Node newprop =
-            astFactory
-                .createGetProp(superName.cloneTree(), "prototype")
-                .useSourceInfoFromForTree(node);
+            astFactory.createGetProp(superName.cloneTree(), "prototype").srcrefTree(node);
         newprop.setOriginalName("super");
         node.replaceWith(newprop);
       } else {
         String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
         // TODO(bradfordcsmith): This is required for Kythe, which doesn't work correctly with
-        // Node#useSourceInfoIfMissingFromForTree.  Fortunately, we only care about Kythe
+        // Node#srcrefTreeIfMissing.  Fortunately, we only care about Kythe
         // if we're not adding types.
         // Once this pass is always run after type checking, we can eliminate this branch.
-        node.replaceWith(
-            NodeUtil.newQName(compiler, newPropName, node, "super").useSourceInfoFromForTree(node));
+        node.replaceWith(NodeUtil.newQName(compiler, newPropName, node, "super").srcrefTree(node));
       }
     }
 

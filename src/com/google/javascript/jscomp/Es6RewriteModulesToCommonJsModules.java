@@ -319,7 +319,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
             Node requireCall = IR.call(IR.name(REQUIRE), IR.string(request.specifier()));
             requireCall.putBooleanProp(Node.FREE_CALL, true);
             Node decl = IR.var(IR.name(varName), requireCall);
-            decl.useSourceInfoIfMissingFromForTree(script);
+            decl.srcrefTreeIfMissing(script);
             if (requireInsertSpot == null) {
               script.addChildToFront(decl);
             } else {
@@ -361,7 +361,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
                           compiler.getModuleLoader().resolve(t.getInput().getName()).toString())),
                   shallowDeps));
 
-      script.addChildToBack(exprResult.useSourceInfoIfMissingFromForTree(script));
+      script.addChildToBack(exprResult.srcrefTreeIfMissing(script));
 
       compiler.reportChangeToChangeScope(script);
       compiler.reportChangeToChangeScope(moduleFunction);
@@ -383,7 +383,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
                         NodeUtil.newQName(compiler, "Object.defineProperties"),
                         IR.name(EXPORTS),
                         definePropertiesLit))
-                .useSourceInfoIfMissingFromForTree(script));
+                .srcrefTreeIfMissing(script));
       }
     }
 
@@ -392,7 +392,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Node exportedValue = NodeUtil.newQName(compiler, localQName.qName);
       Node getterFunction =
           IR.function(IR.name(""), IR.paramList(), IR.block(IR.returnNode(exportedValue)));
-      getterFunction.useSourceInfoFromForTree(localQName.nodeForSourceInfo);
+      getterFunction.srcrefTree(localQName.nodeForSourceInfo);
 
       Node objLit =
           IR.objectlit(
@@ -435,7 +435,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         // Default exports are constant in more ways than one. Not only can they not be
         // overwritten but they also act like a const for temporal dead-zone purposes.
         Node var = IR.constNode(IR.name(name), export.removeFirstChild());
-        parent.replaceChild(export, var.useSourceInfoIfMissingFromForTree(export));
+        parent.replaceChild(export, var.srcrefTreeIfMissing(export));
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       }
 
@@ -447,7 +447,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       //   export {x, y as z} from 'moduleIdentifier';
       Node moduleIdentifier = export.getLastChild();
       Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
-      importNode.useSourceInfoFrom(export);
+      importNode.srcref(export);
       importNode.insertBefore(export);
       visit(t, importNode, parent);
 
@@ -519,7 +519,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
       // Make an "import 'spec'" from this export node and then visit it to rewrite to a require().
       Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
-      importNode.useSourceInfoFrom(export);
+      importNode.srcref(export);
       importNode.insertBefore(export);
       visit(t, importNode, parent);
 
@@ -527,7 +527,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       export.replaceWith(
           IR.exprResult(
                   IR.call(IR.getprop(IR.name("$$module"), "exportAllFrom"), IR.name(moduleName)))
-              .useSourceInfoFromForTree(export));
+              .srcrefTree(export));
 
       t.reportCodeChange();
     }

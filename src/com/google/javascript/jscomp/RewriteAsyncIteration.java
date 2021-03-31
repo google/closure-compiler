@@ -390,7 +390,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
     originalFunction.setIsAsyncFunction(false);
     originalFunction.setIsGeneratorFunction(false);
-    originalFunction.useSourceInfoIfMissingFromForTree(originalFunction);
+    originalFunction.srcrefTreeIfMissing(originalFunction);
     // Both the inner and original functions should be marked as changed.
     compiler.reportChangeToChangeScope(originalFunction);
     compiler.reportChangeToChangeScope(innerFunction);
@@ -420,7 +420,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
             astFactory.createQName(t.getScope(), ACTION_RECORD_NAME),
             astFactory.createQName(t.getScope(), ACTION_ENUM_AWAIT),
             expression);
-    newActionRecord.useSourceInfoIfMissingFromForTree(awaitNode);
+    newActionRecord.srcrefTreeIfMissing(awaitNode);
     awaitNode.addChildToFront(newActionRecord);
     awaitNode.setToken(Token.YIELD);
   }
@@ -468,7 +468,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       newActionRecord.addChildToBack(expression);
     }
 
-    newActionRecord.useSourceInfoIfMissingFromForTree(yieldNode);
+    newActionRecord.srcrefTreeIfMissing(yieldNode);
     yieldNode.addChildToFront(newActionRecord);
     yieldNode.removeProp(Node.YIELD_ALL);
   }
@@ -514,7 +514,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         astFactory
             .createSingleConstNameDeclaration(
                 iteratorTempName, astFactory.createJSCompMakeAsyncIteratorCall(rhs, t.getScope()))
-            .useSourceInfoIfMissingFromForTree(rhs);
+            .srcrefTreeIfMissing(rhs);
 
     // IIterableResult<VALUE>
     JSType iterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, typeParam);
@@ -556,7 +556,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     } else {
       throw new AssertionError("unexpected for-await-of lhs");
     }
-    lhsAssignment.useSourceInfoIfMissingFromForTree(lhs);
+    lhsAssignment.srcrefTreeIfMissing(lhs);
 
     Node newForLoop =
         astFactory.createFor(
@@ -566,14 +566,14 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
             astFactory.createBlock(
                 resultDeclaration, breakIfDone, lhsAssignment, ensureBlock(originalBody)));
     forAwaitOf.replaceWith(newForLoop);
-    newForLoop.useSourceInfoIfMissingFromForTree(forAwaitOf);
+    newForLoop.srcrefTreeIfMissing(forAwaitOf);
     compiler.reportChangeToEnclosingScope(newForLoop);
   }
 
   private Node ensureBlock(Node possiblyBlock) {
     return possiblyBlock.isBlock()
         ? possiblyBlock
-        : astFactory.createBlock(possiblyBlock).useSourceInfoFrom(possiblyBlock);
+        : astFactory.createBlock(possiblyBlock).srcref(possiblyBlock);
   }
 
   private Node constructAwaitNextResult(
@@ -612,7 +612,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(t.getScope(), thisVarName).useSourceInfoFrom(n));
+    n.replaceWith(astFactory.createName(t.getScope(), thisVarName).srcref(n));
     ctx.thisSuperArgsContext.usedThis = true;
     compiler.reportChangeToChangeScope(ctx.function);
   }
@@ -623,7 +623,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(t.getScope(), argumentsVarName).useSourceInfoFrom(n));
+    n.replaceWith(astFactory.createName(t.getScope(), argumentsVarName).srcref(n));
     ctx.thisSuperArgsContext.usedArguments = true;
     compiler.reportChangeToChangeScope(ctx.function);
   }
@@ -652,13 +652,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
       // super.x(...)   =>   super.x.call($this, ...)
       getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
-      astFactory
-          .createName(t.getScope(), thisVarName)
-          .useSourceInfoFrom(parent)
-          .insertAfter(parent);
+      astFactory.createName(t.getScope(), thisVarName).srcref(parent).insertAfter(parent);
       ctx.thisSuperArgsContext.usedThis = true;
     }
-    getPropReplacement.useSourceInfoFromForTree(parent);
+    getPropReplacement.srcrefTree(parent);
     grandparent.replaceChild(parent, getPropReplacement);
     ctx.thisSuperArgsContext.usedSuperProperties.add(propertyName);
     compiler.reportChangeToChangeScope(ctx.function);
@@ -705,7 +702,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       prefixBlock.addChildToBack(
           astFactory
               .createThisAliasDeclarationForFunction(thisVarName, function)
-              .useSourceInfoFromForTree(block));
+              .srcrefTree(block));
     }
     if (thisSuperArgsCtx.usedArguments) {
       // { // prefixBlock
@@ -716,7 +713,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
           astFactory
               .createSingleConstNameDeclaration(
                   argumentsVarName, astFactory.createName(t.getScope(), "arguments"))
-              .useSourceInfoFromForTree(block));
+              .srcrefTree(block));
     }
     for (String replacedMethodName : thisSuperArgsCtx.usedSuperProperties) {
       // const super$get$x = () => super.x;
@@ -752,7 +749,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       prefixBlock.addChildToBack(
           astFactory.createSingleConstNameDeclaration(superReplacementName, arrowFunction));
     }
-    prefixBlock.useSourceInfoIfMissingFromForTree(block);
+    prefixBlock.srcrefTreeIfMissing(block);
     // Pulls all declarations out of prefixBlock and prepends in block
     // block: {
     //   // declarations

@@ -348,7 +348,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     public void applyAlias(AbstractCompiler compiler) {
       Node aliasDefinition = aliasVar.getInitialValue();
       Node replacement = aliasDefinition.cloneTree();
-      replacement.useSourceInfoFromForTree(aliasReference);
+      replacement.srcrefTree(aliasReference);
       // Given alias "var Bar = foo.Bar;" here we replace a usage of Bar with foo.Bar.
       // foo is generated and never visible to user. Because of that we should mark all new nodes as
       // non-indexable leaving only Bar indexable.
@@ -617,11 +617,11 @@ class ScopedAliases implements HotSwapCompilerPass {
             } else {
               newName = IR.empty();
             }
-            newName.useSourceInfoFrom(n);
+            newName.srcref(n);
             value.replaceChild(n, newName);
             compiler.reportChangeToEnclosingScope(newName);
 
-            varNode = IR.var(n).useSourceInfoFrom(n);
+            varNode = IR.var(n).srcref(n);
             grandparent.replaceChild(parent, varNode);
           } else {
             if (value != null) {
@@ -635,13 +635,10 @@ class ScopedAliases implements HotSwapCompilerPass {
           // Add $jscomp.scope.name = EXPR;
           // Make sure we copy over all the jsdoc and debug info.
           if (value != null || varDocInfo != null) {
-            Node newDecl = NodeUtil.newQNameDeclaration(
-                compiler,
-                globalName,
-                value,
-                varDocInfo)
-                .useSourceInfoIfMissingFromForTree(n);
-            newDecl.getFirstFirstChild().useSourceInfoFrom(n);
+            Node newDecl =
+                NodeUtil.newQNameDeclaration(compiler, globalName, value, varDocInfo)
+                    .srcrefTreeIfMissing(n);
+            newDecl.getFirstFirstChild().srcref(n);
             newDecl.getFirstFirstChild().setOriginalName(name);
 
             if (isHoisted) {

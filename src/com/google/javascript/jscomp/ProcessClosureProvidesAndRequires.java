@@ -821,7 +821,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       assignNode.removeChild(nameNode);
       assignNode.removeChild(valueNode);
 
-      Node varNode = IR.var(nameNode, valueNode).useSourceInfoFrom(candidateDefinition);
+      Node varNode = IR.var(nameNode, valueNode).srcref(candidateDefinition);
       varNode.setJSDocInfo(assignNode.getJSDocInfo());
       varNode.putBooleanProp(Node.IS_NAMESPACE, true);
 
@@ -925,7 +925,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         sourceInfoNode.setLength(namespace.length() - firstCharIndex);
       }
 
-      newNode.useSourceInfoFromForTree(sourceInfoNode);
+      newNode.srcrefTree(sourceInfoNode);
     }
 
     private Node getProvideStringNode() {

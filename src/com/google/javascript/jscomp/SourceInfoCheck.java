@@ -44,7 +44,7 @@ class SourceInfoCheck implements Callback, CompilerPass {
           "No source location information associated with {0}."
               + "\nMost likely a Node has been created without setting the source file"
               + " and line/column location.  Usually this is done using"
-              + " Node.useSourceInfoIfMissingFrom and supplying a Node from the source AST.");
+              + " Node.srcrefIfMissing and supplying a Node from the source AST.");
 
   private static final DiagnosticType MISSING_LENGTH =
       DiagnosticType.error(

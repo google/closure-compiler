@@ -40,7 +40,7 @@ final class J2clStringValueOfRewriterPass extends AbstractPeepholeOptimization {
 
     Node replacement = tryRewriteStringValueOfCall(node);
     if (replacement != node) {
-      replacement = replacement.useSourceInfoIfMissingFrom(node);
+      replacement = replacement.srcrefIfMissing(node);
       node.replaceWith(replacement);
       reportChangeToEnclosingScope(replacement);
     }
@@ -62,7 +62,7 @@ final class J2clStringValueOfRewriterPass extends AbstractPeepholeOptimization {
       return IR.string("null");
     } else if (NodeUtil.isDefinedValue(param) && !param.isArrayLit()) {
       // Generate String(param), let other peephole optimizations handle the rest when safe
-      return NodeUtil.newCallNode(IR.name("String").useSourceInfoFrom(n), param.detach());
+      return NodeUtil.newCallNode(IR.name("String").srcref(n), param.detach());
     }
     return n;
   }

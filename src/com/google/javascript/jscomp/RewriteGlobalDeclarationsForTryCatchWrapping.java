@@ -81,8 +81,7 @@ class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, Compiler
           Node nameNode = n.getFirstChild();
           String name = nameNode.getString();
           nameNode.setString("");
-          addingRoot.addChildToFront(
-              IR.var(IR.name(name), n).useSourceInfoIfMissingFromForTree(n));
+          addingRoot.addChildToFront(IR.var(IR.name(name), n).srcrefTreeIfMissing(n));
           compiler.reportChangeToEnclosingScope(nameNode);
         }
         compiler.reportChangeToEnclosingScope(addingRoot);

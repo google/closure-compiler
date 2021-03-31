@@ -508,20 +508,16 @@ class ExpressionDecomposer {
         // a = x ?? y --> if ((temp=x)!=null) {a=temp} else {a=y}
         String tempNameAssign = getTempValueName();
         Node tempVarNodeAssign =
-            astFactory
-                .createSingleVarNameDeclaration(tempNameAssign)
-                .useSourceInfoIfMissingFromForTree(expr);
+            astFactory.createSingleVarNameDeclaration(tempNameAssign).srcrefTreeIfMissing(expr);
         tempVarNodeAssign.insertBefore(injectionPoint);
 
         Node assignLhs = buildResultExpression(first, true, tempNameAssign);
-        Node nullNode = astFactory.createNull().useSourceInfoFrom(expr);
-        cond = astFactory.createNe(assignLhs, nullNode).useSourceInfoFrom(expr);
+        Node nullNode = astFactory.createNull().srcref(expr);
+        cond = astFactory.createNe(assignLhs, nullNode).srcref(expr);
         trueExpr.addChildToFront(
             astFactory.exprResult(
                 buildResultExpression(
-                    astFactory
-                        .createName(tempNameAssign, first.getJSType())
-                        .useSourceInfoFrom(expr),
+                    astFactory.createName(tempNameAssign, first.getJSType()).srcref(expr),
                     needResult,
                     tempName)));
         falseExpr.addChildToFront(
@@ -538,13 +534,11 @@ class ExpressionDecomposer {
     } else {
       ifNode = astFactory.createIf(cond, trueExpr);
     }
-    ifNode.useSourceInfoIfMissingFrom(expr);
+    ifNode.srcrefIfMissing(expr);
 
     if (needResult) {
       Node tempVarNode =
-          astFactory
-              .createSingleVarNameDeclaration(tempName)
-              .useSourceInfoIfMissingFromForTree(expr);
+          astFactory.createSingleVarNameDeclaration(tempName).srcrefTreeIfMissing(expr);
       tempVarNode.insertBefore(injectionPoint);
       ifNode.insertAfter(tempVarNode);
 
@@ -635,7 +629,7 @@ class ExpressionDecomposer {
       Node opNode =
           new Node(NodeUtil.getOpFromAssignmentOp(parent))
               .copyTypeFrom(parent)
-              .useSourceInfoIfMissingFrom(parent);
+              .srcrefIfMissing(parent);
 
       Node rightOperand = parent.getLastChild();
 
@@ -664,10 +658,10 @@ class ExpressionDecomposer {
         case ARRAYLIT:
         case CALL:
         case NEW:
-          tempNameValue = astFactory.createArraylit(expr).useSourceInfoFrom(expr.getOnlyChild());
+          tempNameValue = astFactory.createArraylit(expr).srcref(expr.getOnlyChild());
           break;
         case OBJECTLIT:
-          tempNameValue = astFactory.createObjectLit(expr).useSourceInfoFrom(expr.getOnlyChild());
+          tempNameValue = astFactory.createObjectLit(expr).srcref(expr.getOnlyChild());
           break;
         default:
           throw new IllegalStateException("Unexpected parent of SPREAD:" + parent.toStringTree());
@@ -767,9 +761,7 @@ class ExpressionDecomposer {
     call.removeFirstChild();
     call.addChildToFront(receiverNode);
     call.addChildToFront(
-        IR.getprop(functionNameNode, "call")
-            .setJSType(fnCallType)
-            .useSourceInfoIfMissingFromForTree(call));
+        IR.getprop(functionNameNode, "call").setJSType(fnCallType).srcrefTreeIfMissing(call));
     call.removeProp(Node.FREE_CALL);
   }
 

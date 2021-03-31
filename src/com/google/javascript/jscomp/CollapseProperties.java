@@ -278,7 +278,7 @@ class CollapseProperties implements CompilerPass {
   private void flattenSimpleStubDeclaration(Name name, String alias) {
     Ref ref = Iterables.getOnlyElement(name.getRefs());
     Node nameNode = NodeUtil.newName(compiler, alias, ref.getNode(), name.getFullName());
-    Node varNode = IR.var(nameNode).useSourceInfoIfMissingFrom(nameNode);
+    Node varNode = IR.var(nameNode).srcrefIfMissing(nameNode);
 
     checkState(ref.getNode().getParent().isExprResult());
     Node parent = ref.getNode().getParent();
@@ -495,7 +495,7 @@ class CollapseProperties implements CompilerPass {
 
     // Create a stub variable declaration right
     // before the current statement.
-    Node stubVar = IR.var(nameNode.cloneTree()).useSourceInfoIfMissingFrom(nameNode);
+    Node stubVar = IR.var(nameNode.cloneTree()).srcrefIfMissing(nameNode);
     stubVar.insertBefore(current);
 
     parent.replaceChild(ref.getNode(), nameNode);
@@ -849,7 +849,7 @@ class CollapseProperties implements CompilerPass {
       if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(key);
+      Node newVar = IR.var(nameNode).srcrefTreeIfMissing(key);
       if (nameToAddAfter != null) {
         newVar.insertAfter(nameToAddAfter);
       } else {
@@ -899,7 +899,7 @@ class CollapseProperties implements CompilerPass {
 
       String propAlias = appendPropForAlias(alias, p.getBaseName());
       Node nameNode = IR.name(propAlias);
-      Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
+      Node newVar = IR.var(nameNode).srcrefTreeIfMissing(addAfter);
       newVar.insertAfter(addAfter);
 
       // Determine if this is a constant var by checking the first

@@ -109,9 +109,8 @@ final class PolymerPassStaticUtils {
                   return;
                 }
 
-                Node key = IR.string(n.getString()).clonePropsFrom(n).useSourceInfoFrom(n);
-                Node getelem =
-                    IR.getelem(dollarSign.detach(), key).clonePropsFrom(n).useSourceInfoFrom(n);
+                Node key = IR.string(n.getString()).clonePropsFrom(n).srcref(n);
+                Node getelem = IR.getelem(dollarSign.detach(), key).clonePropsFrom(n).srcref(n);
                 n.replaceWith(getelem);
                 compiler.reportChangeToEnclosingScope(getelem);
               }
@@ -264,7 +263,7 @@ final class PolymerPassStaticUtils {
         typeNode = new Node(Token.QMARK);
     }
 
-    typeNode.useSourceInfoFromForTree(typeValue);
+    typeNode.srcrefTree(typeValue);
     return new JSTypeExpression(typeNode, VIRTUAL_FILE);
   }
 

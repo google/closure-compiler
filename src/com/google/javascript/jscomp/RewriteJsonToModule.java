@@ -135,12 +135,11 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
     String moduleName = t.getInput().getPath().toModuleName();
 
     n.addChildToFront(
-        IR.var(IR.name(moduleName).useSourceInfoFrom(jsonObject), jsonObject)
-            .useSourceInfoFrom(jsonObject));
+        IR.var(IR.name(moduleName).srcref(jsonObject), jsonObject).srcref(jsonObject));
 
     n.addChildToFront(
         IR.exprResult(IR.call(IR.getprop(IR.name("goog"), "provide"), IR.string(moduleName)))
-            .useSourceInfoIfMissingFromForTree(n));
+            .srcrefTreeIfMissing(n));
 
     String inputPath = t.getInput().getSourceFile().getOriginalPath();
     if (inputPath.endsWith("/package.json") && jsonObject.isObjectLit()) {

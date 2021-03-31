@@ -172,9 +172,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
-      Node var =
-          NodeUtil.newVarNode(PROTOTYPE_ALIAS, null)
-              .useSourceInfoIfMissingFromForTree(injectionPoint);
+      Node var = NodeUtil.newVarNode(PROTOTYPE_ALIAS, null).srcrefTreeIfMissing(injectionPoint);
 
       injectionPoint.addChildToFront(var);
       compiler.reportChangeToEnclosingScope(var);
@@ -189,8 +187,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         if (info.shouldExtractModule(entry.getKey())) {
           Node injectionPoint = compiler.getNodeForCodeInsertion(entry.getKey());
           alias = PROTOTYPE_ALIAS + entry.getKey().getIndex();
-          Node var =
-              NodeUtil.newVarNode(alias, null).useSourceInfoIfMissingFromForTree(injectionPoint);
+          Node var = NodeUtil.newVarNode(alias, null).srcrefTreeIfMissing(injectionPoint);
 
           injectionPoint.addChildToFront(var);
           compiler.reportChangeToEnclosingScope(var);
@@ -218,7 +215,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       classNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, first.constant);
       Node stmt =
           IR.exprResult(IR.assign(IR.name(alias), IR.getprop(classNameNode, "prototype")))
-              .useSourceInfoIfMissingFromForTree(first.node);
+              .srcrefTreeIfMissing(first.node);
 
       stmt.insertBefore(first.node);
       compiler.reportChangeToEnclosingScope(stmt);
@@ -234,7 +231,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       call.putIntProp(Node.FREE_CALL, 1);
 
       Node stmt = IR.exprResult(call);
-      stmt.useSourceInfoIfMissingFromForTree(first.node);
+      stmt.srcrefTreeIfMissing(first.node);
       stmt.insertBefore(first.node);
       compiler.reportChangeToEnclosingScope(stmt);
       for (PrototypeMemberDeclaration declar : instance.declarations) {
@@ -263,7 +260,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     Node accessNode = declar.lhs.getFirstFirstChild();
     String originalName = accessNode.getOriginalName();
     String className = originalName != null ? originalName : "?";
-    name.getFirstChild().useSourceInfoFromForTree(lhs);
+    name.getFirstChild().srcrefTree(lhs);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, lhs.getBooleanProp(Node.IS_CONSTANT_NAME));
     name.getFirstChild().setOriginalName(className + ".prototype");
 

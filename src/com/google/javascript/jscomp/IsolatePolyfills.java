@@ -229,7 +229,7 @@ class IsolatePolyfills implements CompilerPass {
       rewritePolyfillInCall(polyfillAccess);
     } else {
       // e.g. [].includes.call(myIter, 0)
-      Node methodName = IR.string(polyfillAccess.getString()).useSourceInfoFrom(polyfillAccess);
+      Node methodName = IR.string(polyfillAccess.getString()).srcref(polyfillAccess);
       Node receiver = polyfillAccess.removeFirstChild();
       polyfillAccess.replaceWith(
           createPolyfillMethodLookup(receiver, methodName).srcrefTree(polyfillAccess));
@@ -252,7 +252,7 @@ class IsolatePolyfills implements CompilerPass {
    *                      .call(tmpNode, arg)</code>
    */
   private void rewritePolyfillInCall(Node callee) {
-    final Node methodName = IR.string(callee.getString()).useSourceInfoFrom(callee);
+    final Node methodName = IR.string(callee.getString()).srcref(callee);
     final Node receiver = callee.removeFirstChild();
 
     boolean requiresTemp = compiler.getAstAnalyzer().mayEffectMutableState(receiver);

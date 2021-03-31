@@ -466,7 +466,7 @@ final class PolymerClassRewriter {
           name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
           Node protectorCall = IR.call(name, propertyRef).srcref(propertyRef);
           protectorCall.putBooleanProp(Node.FREE_CALL, true);
-          protectorCall = IR.exprResult(protectorCall).useSourceInfoFrom(propertyRef);
+          protectorCall = IR.exprResult(protectorCall).srcref(propertyRef);
           protectorCall.insertAfter(insertAfterReference);
           insertAfterReference = protectorCall;
         }
@@ -488,7 +488,7 @@ final class PolymerClassRewriter {
       if (info == null || !info.hasReturnType()) {
         JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(info);
         builder.recordReturnType(jsType);
-        jsType.getRoot().useSourceInfoIfMissingFromForTree(getter);
+        jsType.getRoot().srcrefTreeIfMissing(getter);
         getter.setJSDocInfo(builder.build());
       }
     }
@@ -507,7 +507,7 @@ final class PolymerClassRewriter {
                 NodeUtil.newQName(compiler, "$jscomp.reflectObject"),
                 cls.target.cloneTree(),
                 propertiesLiteral.detach())
-            .useSourceInfoIfMissingFromForTree(propertiesLiteral);
+            .srcrefTreeIfMissing(propertiesLiteral);
     parent.addChildToFront(objReflectCall);
     compiler.reportChangeToEnclosingScope(parent);
   }
@@ -569,7 +569,7 @@ final class PolymerClassRewriter {
         Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
         if (readOnlyValue != null && readOnlyValue.isTrue()) {
           Node setter = makeReadOnlySetter(prop, qualifiedPath);
-          setter.useSourceInfoIfMissingFromForTree(prop.name);
+          setter.srcrefTreeIfMissing(prop.name);
           block.addChildToBack(setter);
           readOnlyProps.add(prop);
         }
@@ -583,7 +583,7 @@ final class PolymerClassRewriter {
           Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
           if (readOnlyValue != null && readOnlyValue.isTrue()) {
             Node setter = makeReadOnlySetter(prop, qualifiedPath);
-            setter.useSourceInfoIfMissingFromForTree(prop.name);
+            setter.srcrefTreeIfMissing(prop.name);
             block.addChildToBack(setter);
             readOnlyProps.add(prop);
           }
@@ -657,13 +657,13 @@ final class PolymerClassRewriter {
       NodeUtil.markNewScopesChanged(assign, compiler);
       assign.setJSDocInfo(constructorDoc.build());
       Node exprResult = IR.exprResult(assign);
-      exprResult.useSourceInfoIfMissingFromForTree(cls.target);
+      exprResult.srcrefTreeIfMissing(cls.target);
       return exprResult;
     } else {
       // var foo = Polymer({...}); OR Polymer({...});
       Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
       NodeUtil.markNewScopesChanged(var, compiler);
-      var.useSourceInfoIfMissingFromForTree(exprRoot);
+      var.srcrefTreeIfMissing(exprRoot);
       var.setJSDocInfo(constructorDoc.build());
       String name = cls.target.getString();
       Var existingVar = traversal.getScope().getSlot(name);
@@ -702,7 +702,7 @@ final class PolymerClassRewriter {
     }
     Node propertyNode =
         IR.exprResult(NodeUtil.newQName(compiler, basePath + prop.name.getString()));
-    propertyNode.useSourceInfoIfMissingFromForTree(prop.name);
+    propertyNode.srcrefTreeIfMissing(prop.name);
 
     return propertyNode;
   }
@@ -819,7 +819,7 @@ final class PolymerClassRewriter {
     colon.addChildToBack(unknown);
     leftBracket.addChildToBack(colon);
     leftCurly.addChildToBack(leftBracket);
-    leftCurly.useSourceInfoIfMissingFromForTree(prop.name);
+    leftCurly.srcrefTreeIfMissing(prop.name);
     return new JSTypeExpression(leftCurly, sourceName);
   }
 
@@ -897,7 +897,7 @@ final class PolymerClassRewriter {
         NodeUtil.markNewScopesChanged(fnValue, compiler);
         Node exprResult =
             IR.exprResult(IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
-        exprResult.useSourceInfoIfMissingFromForTree(behaviorFunction.name);
+        exprResult.srcrefTreeIfMissing(behaviorFunction.name);
 
         JSDocInfo.Builder info = getJSDocInfoBuilderForBehavior(behavior, behaviorFunction);
 
@@ -946,7 +946,7 @@ final class PolymerClassRewriter {
         }
 
         Node exprResult = IR.exprResult(NodeUtil.newQName(compiler, qualifiedPath + propName));
-        exprResult.useSourceInfoFromForTree(behaviorProp.name);
+        exprResult.srcrefTree(behaviorProp.name);
 
         JSDocInfo.Builder info = getJSDocInfoBuilderForBehavior(behavior, behaviorProp);
 
@@ -1121,7 +1121,7 @@ final class PolymerClassRewriter {
       block.addChildToBack(setterExprNode);
     }
 
-    block.useSourceInfoIfMissingFromForTree(polymerElementExterns);
+    block.srcrefTreeIfMissing(polymerElementExterns);
 
     Node scopeRoot = polymerElementExterns;
     if (!scopeRoot.isScript()) {
@@ -1156,7 +1156,7 @@ final class PolymerClassRewriter {
     }
     info.recordExport();
     getprop.setJSDocInfo(info.build());
-    Node expression = IR.exprResult(getprop).useSourceInfoIfMissingFromForTree(method.name);
+    Node expression = IR.exprResult(getprop).srcrefTreeIfMissing(method.name);
     // Walk up until we find a statement we can insert after.
     Node insertAfter = cls.definition;
     while (!NodeUtil.isStatementBlock(insertAfter.getParent())) {
@@ -1170,7 +1170,7 @@ final class PolymerClassRewriter {
   private static Node varToAssign(Node var) {
     Node assign =
         IR.assign(var.getFirstChild().cloneNode(), var.getFirstChild().removeFirstChild());
-    return IR.exprResult(assign).useSourceInfoIfMissingFromForTree(var);
+    return IR.exprResult(assign).srcrefTreeIfMissing(var);
   }
 
   /**
@@ -1186,7 +1186,7 @@ final class PolymerClassRewriter {
         if (observer != null && observer.isStringLit()) {
           Node observerDirectReference =
               IR.getprop(cls.target.cloneTree(), "prototype", observer.getString())
-                  .useSourceInfoFrom(observer);
+                  .srcref(observer);
 
           observer.replaceWith(observerDirectReference);
           compiler.reportChangeToEnclosingScope(observerDirectReference);
@@ -1286,8 +1286,7 @@ final class PolymerClassRewriter {
     // Add reflect and property sinks for the method name which will be a property on the class
     String methodName = methodSignatureString.substring(0, openParenIndex).trim();
     propertySinkStatements.add(
-        IR.getprop(className.cloneTree(), "prototype", methodName)
-            .useSourceInfoFromForTree(methodSignature));
+        IR.getprop(className.cloneTree(), "prototype", methodName).srcrefTree(methodSignature));
 
     Node reflectedMethodName =
         IR.call(
@@ -1342,7 +1341,7 @@ final class PolymerClassRewriter {
                 // Create both a property sink and a reflection call
                 propertySinkStatements.add(
                     IR.getprop(className.cloneTree(), "prototype", paramParts.get(i))
-                        .useSourceInfoFromForTree(methodSignature));
+                        .srcrefTree(methodSignature));
               }
               Node reflectedParamPart =
                   IR.call(
@@ -1372,7 +1371,7 @@ final class PolymerClassRewriter {
       reflectedSignature = IR.add(reflectedSignature, IR.string("()"));
     }
 
-    methodSignature.replaceWith(reflectedSignature.useSourceInfoFromForTree(methodSignature));
+    methodSignature.replaceWith(reflectedSignature.srcrefTree(methodSignature));
     compiler.reportChangeToEnclosingScope(reflectedSignature);
     return propertySinkStatements;
   }

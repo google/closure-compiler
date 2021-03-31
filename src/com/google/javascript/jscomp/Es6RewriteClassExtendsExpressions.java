@@ -137,10 +137,9 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
 
     Node statement = NodeUtil.getEnclosingStatement(classNode);
     Node originalExtends = classNode.getSecondChild();
-    originalExtends.replaceWith(IR.name(name).useSourceInfoFrom(originalExtends));
+    originalExtends.replaceWith(IR.name(name).srcref(originalExtends));
     Node extendsAlias =
-        IR.constNode(IR.name(name), originalExtends)
-            .useSourceInfoIfMissingFromForTree(originalExtends);
+        IR.constNode(IR.name(name), originalExtends).srcrefTreeIfMissing(originalExtends);
     extendsAlias.insertBefore(statement);
     NodeUtil.addFeatureToScript(
         NodeUtil.getEnclosingScript(classNode), Feature.CONST_DECLARATIONS, compiler);
@@ -162,7 +161,7 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
     Node call = NodeUtil.newCallNode(function);
     classNode.replaceWith(call);
     functionBody.addChildToBack(IR.returnNode(classNode));
-    call.useSourceInfoIfMissingFromForTree(classNode);
+    call.srcrefTreeIfMissing(classNode);
     // NOTE: extractExtends() will end up reporting the change for the new function, so we only
     //     need to report the change to the enclosing scope
     t.reportCodeChange(call);

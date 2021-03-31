@@ -181,10 +181,9 @@ class ReplaceCssNames implements CompilerPass {
             } else {
               processStringNode(second);
               n.removeChild(first);
-              Node replacement = IR.add(first,
-                  IR.string("-" + second.getString())
-                      .useSourceInfoIfMissingFrom(second))
-                  .useSourceInfoIfMissingFrom(n);
+              Node replacement =
+                  IR.add(first, IR.string("-" + second.getString()).srcrefIfMissing(second))
+                      .srcrefIfMissing(n);
               replacement.setJSType(getNativeStringType());
               parent.replaceChild(n, replacement);
               t.reportCodeChange();

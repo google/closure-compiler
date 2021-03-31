@@ -144,12 +144,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
     private void handleDefineObjectLiteral(NodeTraversal t, Node parent, Node onlyExport,
         Node script) {
       onlyExport.detach();
-      script.replaceChild(parent,
-          IR.exprResult(
-              IR.assign(
-                  NodeUtil.newQName(compiler, "module.exports"),
-                  onlyExport))
-          .useSourceInfoIfMissingFromForTree(onlyExport));
+      script.replaceChild(
+          parent,
+          IR.exprResult(IR.assign(NodeUtil.newQName(compiler, "module.exports"), onlyExport))
+              .srcrefTreeIfMissing(onlyExport));
       t.reportCodeChange();
     }
 
@@ -187,11 +185,9 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         Node call = IR.call(IR.name("require"), IR.string(moduleName));
         call.putBooleanProp(Node.FREE_CALL, true);
         if (aliasName != null) {
-          requireNode = IR.var(IR.name(aliasName), call)
-              .useSourceInfoIfMissingFromForTree(aliasNode);
+          requireNode = IR.var(IR.name(aliasName), call).srcrefTreeIfMissing(aliasNode);
         } else {
-          requireNode = IR.exprResult(call).
-              useSourceInfoIfMissingFromForTree(modNode);
+          requireNode = IR.exprResult(call).srcrefTreeIfMissing(modNode);
         }
       } else {
         // ignore exports, require and module (because they are implicit
@@ -199,8 +195,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         if (isVirtualModuleName(aliasName)) {
           return;
         }
-        requireNode = IR.var(IR.name(aliasName), IR.nullNode())
-            .useSourceInfoIfMissingFromForTree(aliasNode);
+        requireNode = IR.var(IR.name(aliasName), IR.nullNode()).srcrefTreeIfMissing(aliasNode);
       }
 
       requireNode.insertBefore(defineNode.getParent());
@@ -263,7 +258,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         parent.replaceChild(
             n,
             IR.exprResult(IR.assign(IR.getprop(IR.name("module"), "exports"), retVal))
-                .useSourceInfoFromForTree(n));
+                .srcrefTree(n));
       }
     }
   }

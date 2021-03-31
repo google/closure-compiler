@@ -341,17 +341,14 @@ class FunctionToBlockMutator {
                 && (referencesThis || compiler.getAstAnalyzer().mayHaveSideEffects(value))) {
               String newName = getUniqueThisName();
               Node newValue = entry.getValue().cloneTree();
-              Node newNode =
-                  NodeUtil.newVarNode(newName, newValue)
-                      .useSourceInfoIfMissingFromForTree(newValue);
+              Node newNode = NodeUtil.newVarNode(newName, newValue).srcrefTreeIfMissing(newValue);
               newVars.add(0, newNode);
               // Remove the parameter from the list to replace.
               newArgMap.put(THIS_MARKER, IR.name(newName).srcrefTree(newValue));
             }
           } else {
             Node newValue = entry.getValue().cloneTree();
-            Node newNode = NodeUtil.newVarNode(name, newValue)
-                .useSourceInfoIfMissingFromForTree(newValue);
+            Node newNode = NodeUtil.newVarNode(name, newValue).srcrefTreeIfMissing(newValue);
             newVars.add(0, newNode);
             // Remove the parameter from the list to replace.
             newArgMap.remove(name);
@@ -457,7 +454,7 @@ class FunctionToBlockMutator {
     Node srcLocation = node;
     Node retVal = NodeUtil.newUndefinedNode(srcLocation);
     Node resultNode = createAssignStatementNode(resultName, retVal);
-    resultNode.useSourceInfoIfMissingFromForTree(node);
+    resultNode.srcrefTreeIfMissing(node);
 
     node.addChildToBack(resultNode);
   }
@@ -479,7 +476,7 @@ class FunctionToBlockMutator {
     if (resultNode == null) {
       block.removeChild(ret);
     } else {
-      resultNode.useSourceInfoIfMissingFromForTree(ret);
+      resultNode.srcrefTreeIfMissing(ret);
       block.replaceChild(ret, resultNode);
     }
   }
@@ -565,10 +562,10 @@ class FunctionToBlockMutator {
       Node breakNode = IR.breakNode(IR.labelName(labelName));
 
       // Replace the node in parent, and reset current to the first new child.
-      breakNode.useSourceInfoIfMissingFromForTree(current);
+      breakNode.srcrefTreeIfMissing(current);
       parent.replaceChild(current, breakNode);
       if (resultNode != null) {
-        resultNode.useSourceInfoIfMissingFromForTree(current);
+        resultNode.srcrefTreeIfMissing(current);
         resultNode.insertBefore(breakNode);
       }
       current = breakNode;

@@ -211,7 +211,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
     while (declarationList.hasMoreThanOneChild()) {
       Node name = declarationList.getLastChild();
-      Node newDeclaration = IR.var(name.detach()).useSourceInfoFrom(declarationList);
+      Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
       maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
       newDeclaration.insertAfter(declarationList);
       compiler.reportChangeToEnclosingScope(parent);
@@ -372,8 +372,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node updateLoopObject =
             createAssignNode(createLoopObjectNameNode(loopObject), objectLitNextIteration);
         Node objectLit =
-            IR.var(createLoopObjectNameNode(loopObject), createObjectLit())
-                .useSourceInfoFromForTree(loopNode);
+            IR.var(createLoopObjectNameNode(loopObject), createObjectLit()).srcrefTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
         if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
@@ -381,23 +380,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           loopNode.replaceChild(initializer, IR.empty());
           if (!initializer.isEmpty()) {
             if (!NodeUtil.isNameDeclaration(initializer)) {
-              initializer = IR.exprResult(initializer).useSourceInfoFrom(initializer);
+              initializer = IR.exprResult(initializer).srcref(initializer);
             }
             addNodeBeforeLoop(initializer, loopNode);
           }
 
           Node increment = loopNode.getChildAtIndex(2);
           if (increment.isEmpty()) {
-            loopNode.replaceChild(
-                increment,
-                updateLoopObject.useSourceInfoIfMissingFromForTree(loopNode));
+            loopNode.replaceChild(increment, updateLoopObject.srcrefTreeIfMissing(loopNode));
           } else {
             Node placeHolder = IR.empty();
             loopNode.replaceChild(increment, placeHolder);
             loopNode.replaceChild(
                 placeHolder,
-                createCommaNode(updateLoopObject, increment)
-                    .useSourceInfoIfMissingFromForTree(loopNode));
+                createCommaNode(updateLoopObject, increment).srcrefTreeIfMissing(loopNode));
           }
         } else {
           // We need to make sure the loop object update happens on every loop iteration.
@@ -430,8 +426,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 IR.label(IR.labelName(innerBlockLabel).srcref(loopBody), innerBlock)
                     .srcref(loopBody));
           }
-          loopBody.addChildToBack(
-              IR.exprResult(updateLoopObject).useSourceInfoIfMissingFromForTree(loopNode));
+          loopBody.addChildToBack(IR.exprResult(updateLoopObject).srcrefTreeIfMissing(loopNode));
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
@@ -472,7 +467,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                                   createLoopVarReferenceReplacement(
                                       loopObject, reference, newPropertyName),
                                   loopVarReference))
-                          .useSourceInfoIfMissingFromForTree(reference));
+                          .srcrefTreeIfMissing(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
                 Node declaration = reference.getParent();
@@ -488,8 +483,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                   maybeAddConstJSDoc(declaration, grandParent, reference, declaration);
                   assign.setJSDocInfo(declaration.getJSDocInfo());
 
-                  Node replacement = IR.exprResult(assign)
-                      .useSourceInfoIfMissingFromForTree(declaration);
+                  Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
                   grandParent.replaceChild(declaration, replacement);
                   reference = newReference;
                 } else {
@@ -553,10 +547,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;
         if (NodeUtil.isFunctionDeclaration(function)) {
-          replacement = IR.var(IR.name(function.getFirstChild().getString()), call)
-              .useSourceInfoIfMissingFromForTree(function);
+          replacement =
+              IR.var(IR.name(function.getFirstChild().getString()), call)
+                  .srcrefTreeIfMissing(function);
         } else {
-          replacement = call.useSourceInfoIfMissingFromForTree(function);
+          replacement = call.srcrefTreeIfMissing(function);
         }
         function.replaceWith(replacement);
         returnNode.addChildToFront(function);
@@ -581,7 +576,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
         replacement.setJSType(jsType);
       }
-      replacement.useSourceInfoFromForTree(reference);
+      replacement.srcrefTree(reference);
       return replacement;
     }
 

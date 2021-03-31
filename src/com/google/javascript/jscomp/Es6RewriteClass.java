@@ -196,7 +196,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                   createObjectDotDefineProperties(t.getScope()),
                   metadata.getClassPrototypeNode().cloneTree(),
                   metadata.getDefinePropertiesObjForPrototype()));
-      definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
+      definePropsCall.srcrefTreeIfMissing(classNode);
       metadata.insertNodeAndAdvance(definePropsCall);
     }
 
@@ -207,7 +207,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                   createObjectDotDefineProperties(t.getScope()),
                   metadata.getFullClassNameNode().cloneTree(),
                   metadata.getDefinePropertiesObjForClass()));
-      definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
+      definePropsCall.srcrefTreeIfMissing(classNode);
       metadata.insertNodeAndAdvance(definePropsCall);
     }
 
@@ -239,7 +239,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                         astFactory.createQName(t.getScope(), "$jscomp.inherits"),
                         metadata.getFullClassNameNode().cloneTree(),
                         metadata.getSuperClassNameNode().cloneTree()))
-                .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
+                .srcrefTreeIfMissing(metadata.getSuperClassNameNode());
         inheritsCall.insertAfter(enclosingStatement);
       }
     }
@@ -249,7 +249,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     if (NodeUtil.isStatement(classNode)) {
       constructor.getFirstChild().setString("");
       Node ctorVar = IR.let(metadata.getClassNameNode().cloneNode(), constructor);
-      ctorVar.useSourceInfoIfMissingFromForTree(classNode);
+      ctorVar.srcrefTreeIfMissing(classNode);
       parent.replaceChild(classNode, ctorVar);
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     } else {
@@ -318,7 +318,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         astFactory.createStringKey(member.isGetterDef() ? "get" : "set", function.detach());
     stringKey.setJSDocInfo(info);
     prop.addChildToBack(stringKey);
-    prop.useSourceInfoIfMissingFromForTree(member);
+    prop.srcrefTreeIfMissing(member);
   }
 
   /** Appends an Object.defineProperty call defining the given computed getter or setter */
@@ -343,7 +343,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             createObjectDotDefineProperty(scope), owner.cloneTree(), property, propertyDescriptor);
 
     metadata.insertNodeAndAdvance(
-        IR.exprResult(objectDefinePropertyCall).useSourceInfoIfMissingFromForTree(computedMember));
+        IR.exprResult(objectDefinePropertyCall).srcrefTreeIfMissing(computedMember));
   }
 
   /**
@@ -398,8 +398,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     // Use the source info from the method (a FUNCTION) not the MEMBER_FUNCTION_DEF
     // because the MEMBER_FUNCTION_DEf source info only corresponds to the identifier
-    Node assign =
-        astFactory.createAssign(qualifiedMemberAccess, method).useSourceInfoIfMissingFrom(method);
+    Node assign = astFactory.createAssign(qualifiedMemberAccess, method).srcrefIfMissing(method);
 
     JSDocInfo info = member.getJSDocInfo();
     if (member.isStaticMember() && NodeUtil.referencesOwnReceiver(assign.getLastChild())) {
@@ -428,7 +427,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     for (ClassProperty property : metadata.getClassMembersToDeclare().values()) {
       Node declaration =
           property.getDeclaration(astFactory, scope, metadata.getFullClassNameNode().cloneTree());
-      declaration.useSourceInfoIfMissingFromForTree(metadata.getClassNameNode());
+      declaration.srcrefTreeIfMissing(metadata.getClassNameNode());
       declaration.insertAfter(insertionPoint);
       insertionPoint = declaration;
     }
@@ -451,12 +450,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     if (member.isComputedProp()) {
       return astFactory
           .createGetElem(context, member.removeFirstChild())
-          .useSourceInfoIfMissingFromForTree(member);
+          .srcrefTreeIfMissing(member);
     } else {
       Node methodName = member.getFirstFirstChild();
-      return astFactory
-          .createGetProp(context, member.getString())
-          .useSourceInfoFromForTree(methodName);
+      return astFactory.createGetProp(context, member.getString()).srcrefTree(methodName);
     }
   }
 

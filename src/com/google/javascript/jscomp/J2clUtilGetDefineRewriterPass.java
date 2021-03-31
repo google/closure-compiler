@@ -62,7 +62,7 @@ public class J2clUtilGetDefineRewriterPass extends AbstractPostOrderCallback
     }
 
     Node replacement = getDefineReplacement(firstExpr, secondExpr);
-    replacement.useSourceInfoIfMissingFromForTree(callNode);
+    replacement.srcrefTreeIfMissing(callNode);
     callNode.replaceWith(replacement);
     t.reportCodeChange();
   }

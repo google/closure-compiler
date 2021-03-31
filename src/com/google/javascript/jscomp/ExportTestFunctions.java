@@ -257,7 +257,7 @@ public class ExportTestFunctions implements CompilerPass {
 
     Node exportCall = this.compiler.parseSyntheticCode(exportCallStr)
         .removeChildren();
-    exportCall.useSourceInfoFromForTree(scriptNode);
+    exportCall.srcrefTree(scriptNode);
 
     scriptNode.addChildrenAfter(exportCall, parent);
     compiler.reportChangeToEnclosingScope(exportCall);

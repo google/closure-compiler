@@ -157,7 +157,7 @@ class OptionalChainRewriter {
       final Node dotCallNode =
           astFactory
               .createGetProp(optChainReplacement, "call")
-              .useSourceInfoIfMissingFromForTree(optChainReplacement);
+              .srcrefTreeIfMissing(optChainReplacement);
       chainParent.addChildToFront(dotCallNode);
     }
 
@@ -262,9 +262,7 @@ class OptionalChainRewriter {
       receiverNode = fullChainStart.removeFirstChild();
       fullChainStart.addChildToFront(tmpThisNode);
       fullChainStart.addChildToFront(
-          astFactory
-              .createGetProp(tmpReceiverNode, "call")
-              .useSourceInfoIfMissingFromForTree(receiverNode));
+          astFactory.createGetProp(tmpReceiverNode, "call").srcrefTreeIfMissing(receiverNode));
     } else {
       // `expr?.x.y`
       // needs to become
@@ -279,7 +277,7 @@ class OptionalChainRewriter {
                 astFactory.createEq(receiverNode, astFactory.createNull()),
                 isBeingDeleted ? astFactory.createBoolean(true) : astFactory.createUndefinedValue(),
                 isBeingDeleted ? astFactory.createDelProp(fullChainEnd) : fullChainEnd)
-            .useSourceInfoIfMissingFromForTree(fullChainEnd);
+            .srcrefTreeIfMissing(fullChainEnd);
 
     placeholder.replaceWith(optChainReplacement);
 
@@ -301,8 +299,7 @@ class OptionalChainRewriter {
     String tempVarName = declareTempVarName(subExpr);
     Node placeholder = IR.empty();
     subExpr.replaceWith(placeholder);
-    Node replacement =
-        astFactory.createAssign(tempVarName, subExpr).useSourceInfoIfMissingFromForTree(subExpr);
+    Node replacement = astFactory.createAssign(tempVarName, subExpr).srcrefTreeIfMissing(subExpr);
     placeholder.replaceWith(replacement);
     return replacement.getFirstChild().cloneNode();
   }

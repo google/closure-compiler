@@ -232,7 +232,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   private void changeMethodSignature(ImmutableSortedMap<Integer, String> argNames, Node paramList) {
     ImmutableSortedMap<Integer, String> newParams = argNames.tailMap(paramList.getChildCount());
     for (String name : newParams.values()) {
-      paramList.addChildToBack(IR.name(name).useSourceInfoIfMissingFrom(paramList));
+      paramList.addChildToBack(IR.name(name).srcrefIfMissing(paramList));
     }
     if (!newParams.isEmpty()) {
       compiler.reportChangeToEnclosingScope(paramList);
@@ -255,7 +255,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         continue;
       }
 
-      Node newName = IR.name(name).useSourceInfoIfMissingFrom(parent);
+      Node newName = IR.name(name).srcrefIfMissing(parent);
       parent.replaceWith(newName);
       // TODO(nickreid): See if we can do this fewer times. The accesses may be in different scopes.
       compiler.reportChangeToEnclosingScope(newName);

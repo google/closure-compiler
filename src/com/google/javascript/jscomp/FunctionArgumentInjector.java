@@ -137,7 +137,7 @@ class FunctionArgumentInjector {
         if (fnParam.isRest()) {
           checkState(fnParam.getOnlyChild().isName(), fnParam.getOnlyChild());
           Node array = IR.arraylit();
-          array.useSourceInfoIfMissingFromForTree(cArg);
+          array.srcrefTreeIfMissing(cArg);
           while (cArg != null) {
             array.addChildToBack(cArg.cloneTree());
             cArg = cArg.getNext();

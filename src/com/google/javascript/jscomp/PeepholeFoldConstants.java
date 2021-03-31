@@ -771,7 +771,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
     Node result = performArithmeticOp(n.getToken(), left, right);
     if (result != null) {
-      result.useSourceInfoIfMissingFromForTree(n);
+      result.srcrefTreeIfMissing(n);
       reportChangeToEnclosingScope(n);
       n.replaceWith(result);
       return result;
@@ -1047,7 +1047,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         n.replaceChild(left, left.removeFirstChild());
         // New "-Infinity" node need location info explicitly
         // added.
-        replacement.useSourceInfoIfMissingFromForTree(right);
+        replacement.srcrefTreeIfMissing(right);
         n.replaceChild(right, replacement);
         reportChangeToEnclosingScope(n);
       }
@@ -1500,7 +1500,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node newString = IR.string(stringValue);
 
       parent.replaceChild(n, newString);
-      newString.useSourceInfoIfMissingFrom(parent);
+      newString.srcrefIfMissing(parent);
       reportChangeToEnclosingScope(parent);
 
       return newString;

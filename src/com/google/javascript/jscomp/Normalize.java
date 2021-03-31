@@ -170,11 +170,11 @@ class Normalize implements CompilerPass {
       if (n.isGetProp()) {
         String propName = n.getString();
         if (exposedProperties.contains(propName)) {
-          Node string = IR.string(propName).useSourceInfoFrom(n);
+          Node string = IR.string(propName).srcref(n);
           Node getelem =
               IR.getelem(n.removeFirstChild(), string)
                   .clonePropsFrom(n)
-                  .useSourceInfoFrom(n)
+                  .srcref(n)
                   .setJSType(n.getJSType());
 
           compiler.reportChangeToEnclosingScope(n);
@@ -365,7 +365,7 @@ class Normalize implements CompilerPass {
           Node expr = n.getFirstChild();
           n.setToken(Token.FOR);
           Node empty = IR.empty();
-          empty.useSourceInfoIfMissingFrom(n);
+          empty.srcrefIfMissing(n);
           empty.insertBefore(expr);
           empty.cloneNode().insertAfter(expr);
           reportCodeChange("WHILE node", n);
@@ -491,7 +491,7 @@ class Normalize implements CompilerPass {
       if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
         Node returnValue = NodeUtil.getFunctionBody(n);
         Node body = IR.block(IR.returnNode(returnValue.detach()));
-        body.useSourceInfoIfMissingFromForTree(returnValue);
+        body.srcrefTreeIfMissing(returnValue);
         n.addChildToBack(body);
         compiler.reportChangeToEnclosingScope(body);
       }
@@ -551,7 +551,7 @@ class Normalize implements CompilerPass {
           return;
         default:
           Node block = IR.block();
-          block.useSourceInfoIfMissingFrom(last);
+          block.srcrefIfMissing(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
           reportCodeChange("LABEL normalization", n);
@@ -630,7 +630,7 @@ class Normalize implements CompilerPass {
               }
 
               Node empty = IR.empty();
-              empty.useSourceInfoIfMissingFrom(c);
+              empty.srcrefIfMissing(c);
               c.replaceChild(init, empty);
 
               Node newStatement;
@@ -718,8 +718,7 @@ class Normalize implements CompilerPass {
         Node parent = shorthand.getParent();
         Node insertPoint = IR.empty();
         parent.replaceChild(shorthand, insertPoint);
-        Node assign = IR.assign(name.cloneNode().useSourceInfoFrom(name), shorthand)
-            .useSourceInfoFrom(shorthand);
+        Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
         assign.setJSDocInfo(shorthand.getJSDocInfo());
         shorthand.setJSDocInfo(null);
         parent.replaceChild(insertPoint, assign);
@@ -819,7 +818,7 @@ class Normalize implements CompilerPass {
         n.removeChild(value);
         Node replacement = IR.assign(n, value);
         replacement.setJSDocInfo(parent.getJSDocInfo());
-        replacement.useSourceInfoIfMissingFrom(parent);
+        replacement.srcrefIfMissing(parent);
         Node statement = NodeUtil.newExpr(replacement);
         grandparent.replaceChild(parent, statement);
         reportCodeChange("Duplicate VAR declaration", statement);

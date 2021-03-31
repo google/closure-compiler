@@ -162,7 +162,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     Node stringKey = astFactory.createStringKey(name, n.removeFirstChild());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
-    stringKey.useSourceInfoFrom(nameNode);
+    stringKey.srcref(nameNode);
     compiler.reportChangeToEnclosingScope(stringKey);
   }
 
@@ -248,11 +248,11 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
       statement = statement.getParent();
     }
 
-    result.useSourceInfoIfMissingFromForTree(obj);
+    result.srcrefTreeIfMissing(obj);
     obj.replaceWith(result);
 
     Node var = IR.var(astFactory.createName(objName, objectType), obj);
-    var.useSourceInfoIfMissingFromForTree(statement);
+    var.srcrefTreeIfMissing(statement);
     var.insertBefore(statement);
     compiler.reportChangeToEnclosingScope(var);
   }

@@ -211,7 +211,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     Node body = function.getLastChild();
     if (!body.isBlock()) {
       body.detach();
-      Node replacement = IR.block(IR.returnNode(body)).useSourceInfoIfMissingFromForTree(body);
+      Node replacement = IR.block(IR.returnNode(body)).srcrefTreeIfMissing(body);
       function.addChildToBack(replacement);
       t.reportCodeChange();
     }
@@ -262,7 +262,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
               nameOrPattern.isName()
                   ? IR.exprResult(astFactory.createAssign(lhs, rhs))
                   : IR.var(lhs, rhs);
-          newStatement.useSourceInfoIfMissingFromForTree(param);
+          newStatement.srcrefTreeIfMissing(param);
           if (insertSpot == null) {
             body.addChildToFront(newStatement);
           } else {
@@ -308,7 +308,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     newParam.setJSDocInfo(patternParam.getJSDocInfo());
     patternParam.replaceWith(newParam);
     Node newDecl = IR.var(patternParam, astFactory.createName(tempVarName, paramType));
-    newDecl.useSourceInfoIfMissingFromForTree(patternParam);
+    newDecl.srcrefTreeIfMissing(patternParam);
     if (insertSpot == null) {
       function.getLastChild().addChildToFront(newDecl);
     } else {
@@ -399,7 +399,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     // create the declaration `var temp = rhs;`
     Node tempDecl =
         IR.var(astFactory.createName(tempVarName, tempVarType), rhs.detach())
-            .useSourceInfoIfMissingFromForTree(objectPattern);
+            .srcrefTreeIfMissing(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
     if (parent.isConst()) {
       JSDocInfo.Builder jsDoc = JSDocInfo.builder();
@@ -453,7 +453,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           Node exprEvalTempVarModel =
               astFactory.createName(exprEvalTempVarName, propExpr.getJSType()); // clone this node
           Node exprEvalDecl = IR.var(exprEvalTempVarModel.cloneNode(), propExpr);
-          exprEvalDecl.useSourceInfoIfMissingFromForTree(child);
+          exprEvalDecl.srcrefTreeIfMissing(child);
           exprEvalDecl.insertBefore(nodeToDetach);
           propExpr = exprEvalTempVarModel.cloneNode();
           propsToDeleteForRest.add(exprEvalTempVarModel.cloneNode());
@@ -467,7 +467,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           String intermediateTempVarName = getTempVariableName();
           Node intermediateDecl =
               IR.var(astFactory.createName(intermediateTempVarName, getelem.getJSType()), getelem);
-          intermediateDecl.useSourceInfoIfMissingFromForTree(child);
+          intermediateDecl.srcrefTreeIfMissing(child);
           intermediateDecl.insertBefore(nodeToDetach);
 
           // tempVarName2 === undefined ? defaultValue : tempVarName2
@@ -490,7 +490,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         assignCall.addChildToBack(astFactory.createName(tempVarName, tempVarType));
 
         Node restTempDecl = IR.var(astFactory.createName(restTempVarName, tempVarType), assignCall);
-        restTempDecl.useSourceInfoIfMissingFromForTree(objectPattern);
+        restTempDecl.srcrefTreeIfMissing(objectPattern);
         restTempDecl.insertAfter(tempDecl);
 
         Node restName = child.getOnlyChild(); // e.g. get `rest` from `const {...rest} = {};`
@@ -508,7 +508,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       } else {
         throw new IllegalStateException("not reached");
       }
-      newNode.useSourceInfoIfMissingFromForTree(child);
+      newNode.srcrefTreeIfMissing(child);
 
       newNode.insertBefore(nodeToDetach);
 
@@ -558,7 +558,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       }
       result = astFactory.createComma(comma, result);
     }
-    result.useSourceInfoIfMissingFromForTree(rest);
+    result.srcrefTreeIfMissing(rest);
     return result;
   }
 
@@ -606,7 +606,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     Node makeIteratorCall = astFactory.createJSCompMakeIteratorCall(rhs.detach(), t.getScope());
     Node tempVarModel = astFactory.createName(tempVarName, makeIteratorCall.getJSType());
     Node tempDecl = IR.var(tempVarModel.cloneNode(), makeIteratorCall);
-    tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
+    tempDecl.srcrefTreeIfMissing(arrayPattern);
     tempDecl.insertBefore(nodeToDetach);
 
     for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
@@ -616,7 +616,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         Node nextCall =
             IR.exprResult(
                 astFactory.createCall(astFactory.createGetProp(tempVarModel.cloneNode(), "next")));
-        nextCall.useSourceInfoIfMissingFromForTree(child);
+        nextCall.srcrefTreeIfMissing(child);
         nextCall.insertBefore(nodeToDetach);
         continue;
       }
@@ -638,7 +638,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         JSType nextVarType = nextCallDotValue.getJSType();
         // `var temp1 = temp.next().value`
         Node var = IR.var(astFactory.createName(nextVarName, nextVarType), nextCallDotValue);
-        var.useSourceInfoIfMissingFromForTree(child);
+        var.srcrefTreeIfMissing(child);
         var.insertBefore(nodeToDetach);
 
         // `x`
@@ -674,7 +674,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       } else {
         newNode = IR.declaration(newLHS, newRHS, parent.getToken());
       }
-      newNode.useSourceInfoIfMissingFromForTree(arrayPattern);
+      newNode.srcrefTreeIfMissing(arrayPattern);
 
       newNode.insertBefore(nodeToDetach);
       // Explicitly visit the LHS of the new node since it may be a nested
@@ -715,7 +715,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     // Create a call to the function, and replace the pattern with the call.
     Node call = astFactory.createCall(arrowFn);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
-    call.useSourceInfoIfMissingFromForTree(assignment);
+    call.srcrefTreeIfMissing(assignment);
     call.putBooleanProp(Node.FREE_CALL, true);
     assignment.replaceWith(call);
     NodeUtil.markNewScopesChanged(call, compiler);
@@ -735,13 +735,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node forNode = pattern.getParent();
       Node block = forNode.getLastChild();
       Node decl = IR.var(astFactory.createName(tempVarName, pattern.getJSType()));
-      decl.useSourceInfoIfMissingFromForTree(pattern);
+      decl.srcrefTreeIfMissing(pattern);
       forNode.replaceChild(pattern, decl);
       Node exprResult =
           IR.exprResult(
               astFactory.createAssign(
                   pattern, astFactory.createName(tempVarName, pattern.getJSType())));
-      exprResult.useSourceInfoIfMissingFromForTree(pattern);
+      exprResult.srcrefTreeIfMissing(pattern);
       block.addChildToFront(exprResult);
     } else {
       // for (const [a, b, c] of arr) {
@@ -753,14 +753,14 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node block = forNode.getLastChild();
       declarationNode.replaceChild(
           destructuringLhs,
-          astFactory.createName(tempVarName, pattern.getJSType()).useSourceInfoFrom(pattern));
+          astFactory.createName(tempVarName, pattern.getJSType()).srcref(pattern));
       Token declarationType = declarationNode.getToken();
       Node decl =
           IR.declaration(
               pattern.detach(),
               astFactory.createName(tempVarName, pattern.getJSType()),
               declarationType);
-      decl.useSourceInfoIfMissingFromForTree(pattern);
+      decl.srcrefTreeIfMissing(pattern);
       // Move the body into an inner block to handle cases where declared variables in the for
       // loop initializer are shadowed by variables in the for loop body. e.g.
       //   for (const [value] of []) { const value = 1; }

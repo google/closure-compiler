@@ -393,7 +393,7 @@ class CrossChunkCodeMotion implements CompilerPass {
         IR.and(
             new Node(Token.NE, IR.string("undefined"), new Node(Token.TYPEOF, referenceForTypeOf)),
             instanceofNode);
-    and.useSourceInfoIfMissingFromForTree(instanceofNode);
+    and.srcrefTreeIfMissing(instanceofNode);
     tmp.replaceWith(and);
     compiler.reportChangeToEnclosingScope(and);
   }

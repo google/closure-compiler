@@ -457,8 +457,8 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
 
     // Define a new variable after the original declaration.
     Node statement = NodeUtil.getEnclosingStatement(definitionSite);
-    Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(nameSource);
-    Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(nameSource);
+    Node newNameNode = IR.name(newMethodName).srcrefIfMissing(nameSource);
+    Node newVarNode = IR.var(newNameNode).srcrefIfMissing(nameSource);
     newVarNode.insertBefore(statement);
     if (isConstantName) {
       newNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
@@ -475,7 +475,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     // Create the `this` param.
     String selfName = newMethodName + "$self";
     Node paramList = function.getSecondChild();
-    paramList.addChildToFront(IR.name(selfName).useSourceInfoIfMissingFrom(function));
+    paramList.addChildToFront(IR.name(selfName).srcrefIfMissing(function));
     compiler.reportChangeToEnclosingScope(paramList);
 
     // Eliminate `this`.
@@ -497,7 +497,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     for (Node child = node.getFirstChild(); child != null; ) {
       final Node next = child.getNext();
       if (child.isThis()) {
-        Node newName = IR.name(name).useSourceInfoFrom(child).copyTypeFrom(child);
+        Node newName = IR.name(name).srcref(child).copyTypeFrom(child);
         child.replaceWith(newName);
         compiler.reportChangeToEnclosingScope(newName);
       } else {

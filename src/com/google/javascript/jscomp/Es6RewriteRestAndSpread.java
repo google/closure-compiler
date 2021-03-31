@@ -154,9 +154,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node newArrayName = IR.name(REST_PARAMS).setJSType(arrayType);
     Node cursorName = IR.name(REST_INDEX).setJSType(numberType);
 
-    Node newBlock = IR.block().useSourceInfoFrom(functionBody);
+    Node newBlock = IR.block().srcref(functionBody);
     Node name = IR.name(paramName);
-    Node let = IR.let(name, newArrayName).useSourceInfoIfMissingFromForTree(functionBody);
+    Node let = IR.let(name, newArrayName).srcrefTreeIfMissing(functionBody);
     newBlock.addChildToFront(let);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
@@ -167,7 +167,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     }
 
     Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), arrayLitWithJSType());
-    functionBody.addChildToFront(newArrayDeclaration.useSourceInfoIfMissingFromForTree(restParam));
+    functionBody.addChildToFront(newArrayDeclaration.srcrefTreeIfMissing(restParam));
 
     // TODO(b/74074478): Use a general utility method instead of an inlined loop.
     Node copyLoop =
@@ -190,7 +190,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                                 IR.getelem(IR.name("arguments"), cursorName.cloneTree())
                                     .setJSType(numberType))
                             .setJSType(numberType))))
-            .useSourceInfoIfMissingFromForTree(restParam);
+            .srcrefTreeIfMissing(restParam);
     copyLoop.insertAfter(newArrayDeclaration);
 
     functionBody.addChildToBack(newBlock);
@@ -326,7 +326,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       joinedGroups = IR.call(concat, groups.toArray(new Node[0]));
     }
 
-    joinedGroups.useSourceInfoIfMissingFromForTree(spreadParent);
+    joinedGroups.srcrefTreeIfMissing(spreadParent);
     joinedGroups.setJSType(arrayType);
 
     spreadParent.replaceWith(joinedGroups);
@@ -403,7 +403,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       Node freshVarDeclaration = IR.var(freshVar.cloneTree());
 
       Node statementContainingSpread = NodeUtil.getEnclosingStatement(spreadParent);
-      freshVarDeclaration.useSourceInfoIfMissingFromForTree(statementContainingSpread);
+      freshVarDeclaration.srcrefTreeIfMissing(statementContainingSpread);
 
       freshVarDeclaration.insertBefore(statementContainingSpread);
       callee.addChildToFront(
@@ -424,7 +424,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     }
 
     callToApply.setJSType(spreadParent.getJSType());
-    callToApply.useSourceInfoIfMissingFromForTree(spreadParent);
+    callToApply.srcrefTreeIfMissing(spreadParent);
     spreadParent.replaceWith(callToApply);
     compiler.reportChangeToEnclosingScope(callToApply);
   }
@@ -493,7 +493,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                     bindApply, callee, joinedGroups /* function(new:[spreadParent]) */))
             .setJSType(spreadParent.getJSType());
 
-    result.useSourceInfoIfMissingFromForTree(spreadParent);
+    result.srcrefTreeIfMissing(spreadParent);
     spreadParent.replaceWith(result);
     compiler.reportChangeToEnclosingScope(result);
   }

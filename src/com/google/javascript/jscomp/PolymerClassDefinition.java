@@ -175,7 +175,7 @@ final class PolymerClassDefinition {
     if (constructor == null) {
       constructor = NodeUtil.emptyFunction();
       compiler.reportChangeToChangeScope(constructor);
-      constructor.useSourceInfoFromForTree(callNode);
+      constructor.srcrefTree(callNode);
     } else {
       ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
     }

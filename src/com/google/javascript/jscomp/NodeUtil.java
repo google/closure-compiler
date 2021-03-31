@@ -589,7 +589,7 @@ public final class NodeUtil {
     checkState(n.isFunction() || n.isClass());
     Node originalName = n.getFirstChild();
     Node emptyName = n.isFunction() ? IR.name("") : IR.empty();
-    n.replaceChild(originalName, emptyName.useSourceInfoFrom(originalName));
+    n.replaceChild(originalName, emptyName.srcref(originalName));
   }
 
   /**
@@ -3746,7 +3746,7 @@ public final class NodeUtil {
   static Node newQName(
       AbstractCompiler compiler, String name, Node basisNode, String originalName) {
     Node node = newQName(compiler, name);
-    node.useSourceInfoIfMissingFromForTree(basisNode);
+    node.srcrefTreeIfMissing(basisNode);
     if (!originalName.equals(node.getOriginalName())) {
       // If basisNode already had the correct original name, then it will already be set correctly.
       // Setting it again will force the QName node to have a different property list from all of
@@ -4231,7 +4231,7 @@ public final class NodeUtil {
   public static Node newUndefinedNode(Node srcReferenceNode) {
     Node node = IR.voidNode(IR.number(0));
     if (srcReferenceNode != null) {
-      node.useSourceInfoFromForTree(srcReferenceNode);
+      node.srcrefTree(srcReferenceNode);
     }
     return node;
   }

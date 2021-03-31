@@ -419,11 +419,11 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
                 astFactory
                     .createThisAliasReferenceForFunction(
                         ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode())
-                    .useSourceInfoFrom(superDotProperty)
+                    .srcref(superDotProperty)
                     .insertAfter(superDotProperty);
                 asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone();
               }
-              getPropReplacement.useSourceInfoFromForTree(superDotProperty);
+              getPropReplacement.srcrefTree(superDotProperty);
               grandparent.replaceChild(superDotProperty, getPropReplacement);
               compiler.reportChangeToChangeScope(contextRootNode);
             }
@@ -588,7 +588,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       originalBody =
           astFactory
               .createBlock(astFactory.createReturn(originalBody))
-              .useSourceInfoIfMissingFromForTree(originalBody);
+              .srcrefTreeIfMissing(originalBody);
     }
     // NOTE: visit() will already have made appropriate replacements in originalBody so it may
     // be used as the generator function body.
@@ -603,7 +603,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
             astFactory.createJscompAsyncExecutePromiseGeneratorFunctionCall(
                 t.getScope(), generatorFunction)));
 
-    newBody.useSourceInfoIfMissingFromForTree(originalBody);
+    newBody.srcrefTreeIfMissing(originalBody);
     compiler.reportChangeToEnclosingScope(newBody);
   }
 }

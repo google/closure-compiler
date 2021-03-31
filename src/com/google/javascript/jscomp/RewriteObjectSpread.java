@@ -120,7 +120,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
       child = next;
     }
 
-    result.useSourceInfoIfMissingFromForTree(obj);
+    result.srcrefTreeIfMissing(obj);
     obj.replaceWith(result);
     compiler.reportChangeToEnclosingScope(result);
   }

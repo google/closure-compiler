@@ -121,7 +121,7 @@ public final class Es6ExtractClasses
         case CLASS:
           if (needsInnerNameRewriting(n, parent)) {
             classStack.removeFirst();
-            n.replaceChild(n.getFirstChild(), IR.empty().useSourceInfoFrom(n.getFirstChild()));
+            n.replaceChild(n.getFirstChild(), IR.empty().srcref(n.getFirstChild()));
             compiler.reportChangeToEnclosingScope(n);
           }
           break;
@@ -139,9 +139,7 @@ public final class Es6ExtractClasses
           Var var = t.getScope().getVar(nameNode.getString());
           if (var != null && var.getNameNode() == klass.nameNode) {
             Node newNameNode =
-                IR.name(klass.outerName)
-                    .setJSType(nameNode.getJSType())
-                    .useSourceInfoFrom(nameNode);
+                IR.name(klass.outerName).setJSType(nameNode.getJSType()).srcref(nameNode);
             parent.replaceChild(nameNode, newNameNode);
             compiler.reportChangeToEnclosingScope(newNameNode);
             return;
@@ -192,8 +190,7 @@ public final class Es6ExtractClasses
     // class name node that replaces the class literal in the original statement
     Node classNameRhs = classNameLhs.cloneTree();
     parent.replaceChild(classNode, classNameRhs);
-    Node classDeclaration =
-        IR.constNode(classNameLhs, classNode).useSourceInfoIfMissingFromForTree(classNode);
+    Node classDeclaration = IR.constNode(classNameLhs, classNode).srcrefTreeIfMissing(classNode);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     classDeclaration.setJSDocInfo(JSDocInfo.Builder.maybeCopyFrom(info).build());
     classDeclaration.insertBefore(statement);

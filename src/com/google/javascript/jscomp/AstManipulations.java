@@ -40,7 +40,7 @@ public final class AstManipulations {
       return exp1;
     }
     Node comma = new Node(Token.COMMA, exp1);
-    comma.useSourceInfoIfMissingFrom(exp2);
+    comma.srcrefIfMissing(exp2);
 
     // We can just join the new comma expression with another comma but
     // lets keep all the comma's in a straight line. That way we can use

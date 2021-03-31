@@ -999,7 +999,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     if (lhs != null) {
       stmt = NodeUtil.newVarNode(lhs, value);
     } else {
-      stmt = IR.exprResult(value).useSourceInfoFrom(value);
+      stmt = IR.exprResult(value).srcref(value);
     }
 
     // Insert the statement at the beginning of the function body, but after any
@@ -1048,7 +1048,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           Node value = NodeUtil.newUndefinedNode(formal);
           stmt = NodeUtil.newVarNode(formal, value);
         } else {
-          stmt = IR.var(formal).useSourceInfoIfMissingFrom(formal);
+          stmt = IR.var(formal).srcrefIfMissing(formal);
         }
       }
       fnNode.getLastChild().addChildToFront(stmt);

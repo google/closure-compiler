@@ -257,7 +257,7 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       block.addChildToBack(newProp);
     }
 
-    block.useSourceInfoIfMissingFromForTree(polymerElementExterns);
+    block.srcrefTreeIfMissing(polymerElementExterns);
 
     Node parent = polymerElementExterns.getParent();
     Node stmts = block.removeChildren();

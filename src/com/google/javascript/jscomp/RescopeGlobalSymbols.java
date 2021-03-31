@@ -458,7 +458,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     private void replaceSymbol(Node node, String name) {
       Node parent = node.getParent();
       Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
-      replacement.useSourceInfoFromForTree(node);
+      replacement.srcrefTree(node);
 
       parent.replaceChild(node, replacement);
       compiler.reportChangeToEnclosingScope(replacement);
@@ -575,7 +575,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       Node comma = commas.get(0);
       for (int i = 1; i < commas.size(); i++) {
         Node nextComma = IR.comma(comma, commas.get(i));
-        nextComma.useSourceInfoIfMissingFrom(source);
+        nextComma.srcrefIfMissing(source);
         comma = nextComma;
       }
       return comma;

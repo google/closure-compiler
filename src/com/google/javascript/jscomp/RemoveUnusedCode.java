@@ -2315,7 +2315,7 @@ class RemoveUnusedCode implements CompilerPass {
         if (!nameNode.isEmpty()) {
           // Just empty the class's name. If the expression is assigned to an unused variable,
           // then the whole class might still be removed as part of that assignment.
-          classNode.replaceChild(nameNode, IR.empty().useSourceInfoFrom(nameNode));
+          classNode.replaceChild(nameNode, IR.empty().srcref(nameNode));
           compiler.reportChangeToEnclosingScope(classNode);
         }
       }
@@ -2431,7 +2431,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (valueNode != null && astAnalyzer.mayHaveSideEffects(valueNode)) {
         compiler.reportChangeToEnclosingScope(declarationStatement);
         valueNode.detach();
-        declarationStatement.replaceWith(IR.exprResult(valueNode).useSourceInfoFrom(valueNode));
+        declarationStatement.replaceWith(IR.exprResult(valueNode).srcref(valueNode));
       } else {
         NodeUtil.deleteNode(declarationStatement, compiler);
       }
@@ -2630,8 +2630,7 @@ class RemoveUnusedCode implements CompilerPass {
           lhs.isGetElem() && astAnalyzer.mayHaveSideEffects(lhs.getLastChild());
 
       if (mustPreserveRhs && mustPreserveGetElmExpr) {
-        Node replacement =
-            IR.comma(lhs.getLastChild().detach(), rhs.detach()).useSourceInfoFrom(assignNode);
+        Node replacement = IR.comma(lhs.getLastChild().detach(), rhs.detach()).srcref(assignNode);
         replaceNodeWith(assignNode, replacement);
       } else if (mustPreserveGetElmExpr) {
         replaceNodeWith(assignNode, lhs.getLastChild().detach());
@@ -2680,8 +2679,7 @@ class RemoveUnusedCode implements CompilerPass {
       boolean mustPreserveObjExpression = astAnalyzer.mayHaveSideEffects(objExpression);
 
       if (mustPreserveRhs && mustPreserveObjExpression) {
-        Node replacement =
-            IR.comma(objExpression.detach(), rhs.detach()).useSourceInfoFrom(assignNode);
+        Node replacement = IR.comma(objExpression.detach(), rhs.detach()).srcref(assignNode);
         replaceNodeWith(assignNode, replacement);
       } else if (mustPreserveObjExpression) {
         replaceNodeWith(assignNode, objExpression.detach());
@@ -3182,7 +3180,7 @@ class RemoveUnusedCode implements CompilerPass {
       //     for-loop vars whose initializing values have side effects.
       if (nameNode.getPrevious() == null && nameNode.getNext() == null) {
         // only child, so we can remove the whole declaration
-        declaration.replaceWith(IR.empty().useSourceInfoFrom(declaration));
+        declaration.replaceWith(IR.empty().srcref(declaration));
       } else {
         declaration.removeChild(nameNode);
       }
@@ -3205,7 +3203,7 @@ class RemoveUnusedCode implements CompilerPass {
       replaceNodeWith(parent, otherChild.detach());
     } else {
       // value isn't needed, but we need to keep the AST valid.
-      replaceNodeWith(expression, IR.number(0).useSourceInfoFrom(expression));
+      replaceNodeWith(expression, IR.number(0).srcref(expression));
     }
   }
 

@@ -122,7 +122,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
         //     side-effects.
         for (Node superCall : superCalls) {
-          Node thisNode = astFactory.createThis(thisType).useSourceInfoFrom(superCall);
+          Node thisNode = astFactory.createThis(thisType).srcref(superCall);
           superCall.replaceWith(thisNode);
           compiler.reportChangeToEnclosingScope(thisNode);
         }
@@ -154,7 +154,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
                 superCall,
                 astFactory
                     .createComma(newSuperCall, astFactory.createThis(thisType))
-                    .useSourceInfoIfMissingFromForTree(superCall));
+                    .srcrefTreeIfMissing(superCall));
           }
           compiler.reportChangeToEnclosingScope(superCallParent);
         }
@@ -188,8 +188,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
                       superClassNameNode, superCalls.get(0), superCalls.get(0).getJSType()),
                   astFactory.createThis(thisType));
           constructorBody.replaceChild(
-              firstStatement,
-              IR.returnNode(newReturn).useSourceInfoIfMissingFromForTree(firstStatement));
+              firstStatement, IR.returnNode(newReturn).srcrefTreeIfMissing(firstStatement));
         } else {
           final JSType typeOfThis = getTypeOfThisForConstructor(constructor);
           // `this` -> `$jscomp$super$this` throughout the constructor body,
@@ -197,12 +196,11 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           updateThisToSuperThis(typeOfThis, constructorBody, superCalls);
           // Start constructor with `var $jscomp$super$this;`
           constructorBody.addChildToFront(
-              IR.var(astFactory.createName(SUPER_THIS, typeOfThis))
-                  .useSourceInfoFromForTree(constructorBody));
+              IR.var(astFactory.createName(SUPER_THIS, typeOfThis)).srcrefTree(constructorBody));
           // End constructor with `return $jscomp$super$this;`
           constructorBody.addChildToBack(
               IR.returnNode(astFactory.createName(SUPER_THIS, typeOfThis))
-                  .useSourceInfoFromForTree(constructorBody));
+                  .srcrefTree(constructorBody));
           // Replace each super() call with `($jscomp$super$this = <newSuperCall> || this)`
           for (Node superCall : superCalls) {
             Node newSuperCall = createNewSuperCall(superClassNameNode, superCall, typeOfThis);
@@ -211,7 +209,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
                     .createAssign(
                         astFactory.createName(SUPER_THIS, typeOfThis),
                         astFactory.createOr(newSuperCall, astFactory.createThis(typeOfThis)))
-                    .useSourceInfoIfMissingFromForTree(superCall));
+                    .srcrefTreeIfMissing(superCall));
           }
         }
         compiler.reportChangeToEnclosingScope(constructorBody);
@@ -410,12 +408,10 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       //
       // Foo.call.apply(Foo, [this, x, $jscomp.arrayFromIterable(params), y])
       Node superClassDotApply =
-          astFactory
-              .createGetProp(superClassQNameNode.cloneTree(), "apply")
-              .useSourceInfoFromForTree(callee);
+          astFactory.createGetProp(superClassQNameNode.cloneTree(), "apply").srcrefTree(callee);
       // Create `SuperClass.call(this)`
-      Node newSuperCall = astFactory.createCall(superClassDotApply).useSourceInfoFrom(superCall);
-      newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
+      Node newSuperCall = astFactory.createCall(superClassDotApply).srcref(superCall);
+      newSuperCall.addChildToBack(astFactory.createThis(thisType).srcref(callee));
       newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
       // It's very common to just have `super(...arguments)`, because we generate constructors
       // containing that for extending classes that don't have an explicit constructor.
@@ -425,7 +421,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       if (isSingleSpreadOfArguments(args)) {
         newSuperCall.addChildToBack(Iterables.getOnlyElement(args).getOnlyChild().detach());
       } else {
-        newSuperCall.addChildToBack(astFactory.createArraylit(args).useSourceInfoFrom(superCall));
+        newSuperCall.addChildToBack(astFactory.createArraylit(args).srcref(superCall));
       }
       return newSuperCall;
     } else {
@@ -437,11 +433,9 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       //
       // Using `call` is shorter than using `apply`.
       Node superClassDotCall =
-          astFactory
-              .createGetProp(superClassQNameNode.cloneTree(), "call")
-              .useSourceInfoFromForTree(callee);
-      Node newSuperCall = astFactory.createCall(superClassDotCall).useSourceInfoFrom(superCall);
-      newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
+          astFactory.createGetProp(superClassQNameNode.cloneTree(), "call").srcrefTree(callee);
+      Node newSuperCall = astFactory.createCall(superClassDotCall).srcref(superCall);
+      newSuperCall.addChildToBack(astFactory.createThis(thisType).srcref(callee));
       newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
       for (Node arg : args) {
         newSuperCall.addChildToBack(arg);
@@ -522,8 +516,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
 
     // var $jscomp$tmp$error;
     Node getError =
-        IR.var(astFactory.createName(TMP_ERROR, thisType))
-            .useSourceInfoIfMissingFromForTree(superCall);
+        IR.var(astFactory.createName(TMP_ERROR, thisType)).srcrefTreeIfMissing(superCall);
     getError.insertBefore(superStatement);
 
     // Create an expression to initialize `this` from temporary Error object at the point
@@ -550,7 +543,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     Node superErrorExpr =
         astFactory
             .createCommas(getTmpError, copyMessage, setStack, astFactory.createThis(thisType))
-            .useSourceInfoIfMissingFromForTree(superCall);
+            .srcrefTreeIfMissing(superCall);
     superCall.replaceWith(superErrorExpr);
     compiler.reportChangeToEnclosingScope(superErrorExpr);
   }
@@ -655,12 +648,11 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
             if (n.isThis()) {
-              Node superThis =
-                  astFactory.createName(SUPER_THIS, n.getJSType()).useSourceInfoFrom(n);
+              Node superThis = astFactory.createName(SUPER_THIS, n.getJSType()).srcref(n);
               parent.replaceChild(n, superThis);
             } else if (n.isReturn() && !n.hasChildren()) {
               // An empty return needs to be changed to return $jscomp$super$this
-              n.addChildToFront(astFactory.createName(SUPER_THIS, typeOfThis).useSourceInfoFrom(n));
+              n.addChildToFront(astFactory.createName(SUPER_THIS, typeOfThis).srcref(n));
             }
           }
         };

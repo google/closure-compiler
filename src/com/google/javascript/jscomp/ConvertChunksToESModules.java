@@ -128,7 +128,7 @@ final class ConvertChunksToESModules implements CompilerPass {
           scriptFeatures = scriptFeatures.union(FeatureSet.ES6_MODULES);
           astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
           Node moduleBody = new Node(Token.MODULE_BODY);
-          moduleBody.useSourceInfoFrom(astRoot);
+          moduleBody.srcref(astRoot);
           moduleBody.addChildrenToFront(astRoot.removeChildren());
           astRoot.addChildToFront(moduleBody);
           compiler.reportChangeToEnclosingScope(moduleBody);
@@ -162,7 +162,7 @@ final class ConvertChunksToESModules implements CompilerPass {
         exportSpec.putIntProp(Node.IS_SHORTHAND_PROPERTY, 1);
         exportSpecs.addChildToBack(exportSpec);
       }
-      Node export = IR.export(exportSpecs).useSourceInfoFromForTree(moduleBody);
+      Node export = IR.export(exportSpecs).srcrefTree(moduleBody);
       moduleBody.addChildToBack(export);
       compiler.reportChangeToEnclosingScope(moduleBody);
     }
@@ -211,7 +211,7 @@ final class ConvertChunksToESModules implements CompilerPass {
         importStatement.addChildToFront(IR.string(importPath));
         importStatement.addChildToFront(importSpecs);
         importStatement.addChildToFront(IR.empty());
-        importStatement.useSourceInfoFromForTree(moduleBody);
+        importStatement.srcrefTree(moduleBody);
         importStatements.add(0, importStatement);
       }
       for (Node importStatement : importStatements) {

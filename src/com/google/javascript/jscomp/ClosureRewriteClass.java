@@ -480,7 +480,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
                           cls.name.getQualifiedName() + ".prototype." + def.name.getString()),
                       def.value)
                   .setJSDocInfo(def.info));
-      exprResult.useSourceInfoIfMissingFromForTree(def.name);
+      exprResult.srcrefTreeIfMissing(def.name);
 
       // The length needs to be set explicitly to include the string key node and the function node.
       // If we just used the length of def.name or def.value alone, then refactorings which try to

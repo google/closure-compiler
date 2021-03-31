@@ -80,11 +80,11 @@ public final class RewriteNullishCoalesceOperator
     Node hookName = astFactory.createName(tempVarName, left.getJSType());
     Node hook = astFactory.createHook(ne, hookName, right);
 
-    let.useSourceInfoIfMissingFromForTree(left);
-    assignName.useSourceInfoIfMissingFromForTree(left);
-    assign.useSourceInfoIfMissingFromForTree(left);
-    ne.useSourceInfoIfMissingFromForTree(left);
-    hookName.useSourceInfoIfMissingFromForTree(left);
+    let.srcrefTreeIfMissing(left);
+    assignName.srcrefTreeIfMissing(left);
+    assign.srcrefTreeIfMissing(left);
+    ne.srcrefTreeIfMissing(left);
+    hookName.srcrefTreeIfMissing(left);
 
     let.insertBefore(enclosingStatement);
     n.replaceWith(hook);

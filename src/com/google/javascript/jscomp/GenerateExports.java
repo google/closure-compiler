@@ -193,7 +193,7 @@ public class GenerateExports implements CompilerPass {
     JSType objCtor = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE);
     objectPrototype.getFirstChild().setJSType(objCtor);
     Node propstmt = IR.exprResult(IR.getprop(objectPrototype, export));
-    propstmt.useSourceInfoFromForTree(getSynthesizedExternsRoot());
+    propstmt.srcrefTree(getSynthesizedExternsRoot());
     propstmt.setOriginalName(export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
     compiler.reportChangeToEnclosingScope(propstmt);
@@ -277,7 +277,7 @@ public class GenerateExports implements CompilerPass {
                 compiler, export,
                 context, exportPropertyFunction));
 
-    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(context);
+    Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
     annotate(expression);
 
     addStatement(context, expression);
@@ -297,7 +297,7 @@ public class GenerateExports implements CompilerPass {
                 compiler, export,
                 context, export));
 
-    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(context);
+    Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
     annotate(expression);
 
     addStatement(context, expression);

@@ -1077,8 +1077,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void updateGoogModule(NodeTraversal t, Node call) {
     if (!currentScript.isModule) {
       compiler.reportChangeToEnclosingScope(call);
-      Node undefined =
-          astFactory.createVoid(astFactory.createNumber(0)).useSourceInfoFromForTree(call);
+      Node undefined = astFactory.createVoid(astFactory.createNumber(0)).srcrefTree(call);
       call.replaceWith(undefined);
       return;
     }
@@ -1487,7 +1486,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       this.declareGlobalVariable(binaryNamespaceName, t);
 
       Node exportsObjectCreationNode = IR.var(binaryNamespaceName, rhs);
-      exportsObjectCreationNode.useSourceInfoIfMissingFromForTree(exprResultNode);
+      exportsObjectCreationNode.srcrefTreeIfMissing(exprResultNode);
       exportsObjectCreationNode.putBooleanProp(Node.IS_NAMESPACE, true);
       exprResultNode.replaceWith(exportsObjectCreationNode);
       jsdocNode = exportsObjectCreationNode;
@@ -1785,7 +1784,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           updateSourceInfoForExportedTopLevelVariable(assign, nameNode);
         }
         nameParent.setJSDocInfo(null);
-        newDeclaration.useSourceInfoIfMissingFromForTree(nameParent);
+        newDeclaration.srcrefTreeIfMissing(nameParent);
         statementParent.replaceChild(placeholder, newDeclaration);
         NodeUtil.removeName(nameParent);
         return true;
@@ -1813,7 +1812,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             assign.setJSDocInfo(jsdoc);
           }
         }
-        newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+        newStatement.srcrefTreeIfMissing(nameParent);
         NodeUtil.replaceDeclarationChild(nameNode, newStatement);
         return true;
 
@@ -1852,7 +1851,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     sourceName.setLength(name.length());
 
     // Receiver and prop string should both use the position of the source name.
-    getProp.useSourceInfoFromForTree(sourceName);
+    getProp.srcrefTree(sourceName);
   }
 
   private boolean isTopLevel(NodeTraversal t, Node n, ScopeType scopeType) {
@@ -1934,7 +1933,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    * @return A NAMESPACE node with the same name and source info as provided node.
    */
   private static Node createNamespaceNode(Node n) {
-    return Node.newString(n.getString()).useSourceInfoFrom(n);
+    return Node.newString(n.getString()).srcref(n);
   }
 
   /**

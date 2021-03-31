@@ -165,15 +165,15 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
               declarationType,
               astFactory
                   .createName(variable.getFirstChild().getString(), typeParam)
-                  .useSourceInfoFrom(variable.getFirstChild()));
+                  .srcref(variable.getFirstChild()));
       declarationOrAssign
           .getFirstChild()
           .addChildToBack(astFactory.createGetProp(iterResult.cloneTree(), "value"));
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
-    Node newBody = IR.block(declarationOrAssign, body).useSourceInfoFrom(body);
+    Node newBody = IR.block(declarationOrAssign, body).srcref(body);
     Node newFor = IR.forNode(init, cond, incr, newBody);
-    newFor.useSourceInfoIfMissingFromForTree(node);
+    newFor.srcrefTreeIfMissing(node);
     parent.replaceChild(node, newFor);
     compiler.reportChangeToEnclosingScope(newFor);
   }

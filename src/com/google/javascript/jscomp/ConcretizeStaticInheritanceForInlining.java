@@ -188,7 +188,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
 
       getprop.setJSDocInfo(null);
       Node declaration = IR.exprResult(getprop);
-      declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
+      declaration.srcrefTreeIfMissing(inheritsCall);
       Node parent = inheritsCall.getParent();
       declaration.insertBefore(parent);
       compiler.reportChangeToEnclosingScope(parent);
@@ -235,7 +235,7 @@ public final class ConcretizeStaticInheritanceForInlining implements CompilerPas
               IR.getprop(superclassNameNode.cloneTree(), memberName));
       assign.setJSDocInfo(info.build());
       Node exprResult = IR.exprResult(assign);
-      exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
+      exprResult.srcrefTreeIfMissing(sourceInfoNode);
       Node inheritsExpressionResult = inheritsCall.getParent();
       exprResult.insertAfter(inheritsExpressionResult);
       compiler.reportChangeToEnclosingScope(inheritsExpressionResult);

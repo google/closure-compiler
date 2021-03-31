@@ -146,7 +146,7 @@ class PeepholeSubstituteAlternateSyntax
         Node newNameNode = IR.name(node.getString());
         Node parentNode = node.getParent();
 
-        newNameNode.useSourceInfoFrom(node);
+        newNameNode.srcref(node);
         parentNode.replaceChild(node, newNameNode);
 
         if (parentNode.isCall() || parentNode.isOptChainCall()) {
@@ -174,8 +174,8 @@ class PeepholeSubstituteAlternateSyntax
       Node first = n.removeFirstChild();
       Node second = rhs.removeFirstChild();
       Node third = rhs.getLastChild().detach();
-      Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
-      Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
+      Node newLhs = new Node(n.getToken(), first, second).srcrefIfMissing(n);
+      Node newRoot = new Node(rhs.getToken(), newLhs, third).srcrefIfMissing(rhs);
       n.replaceWith(newRoot);
       reportChangeToEnclosingScope(newRoot);
       return newRoot;
@@ -312,7 +312,7 @@ class PeepholeSubstituteAlternateSyntax
       parent.replaceChild(n, left);
       // Add the right expression afterward.
       Node newStatement = IR.exprResult(right);
-      newStatement.useSourceInfoIfMissingFrom(n);
+      newStatement.srcrefIfMissing(n);
 
       // This modifies outside the subtree, which is not
       // desirable in a peephole optimization.
@@ -602,7 +602,7 @@ class PeepholeSubstituteAlternateSyntax
       }
 
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));
-      not.useSourceInfoIfMissingFromForTree(n);
+      not.srcrefTreeIfMissing(n);
       n.replaceWith(not);
       reportChangeToEnclosingScope(not);
       return not;
@@ -649,7 +649,7 @@ class PeepholeSubstituteAlternateSyntax
     if (delimiter != null) {
       String template = Joiner.on(delimiter).join(strings);
       Node call = IR.call(IR.getprop(IR.string(template), "split"), IR.string("" + delimiter));
-      call.useSourceInfoIfMissingFromForTree(n);
+      call.srcrefTreeIfMissing(n);
       n.replaceWith(call);
       reportChangeToEnclosingScope(call);
       return call;

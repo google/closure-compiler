@@ -82,7 +82,7 @@ class Es6TemplateLiterals {
                           : child.removeFirstChild())
                   .setJSType(n.getJSType());
         }
-        n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
+        n.replaceWith(add.srcrefTreeIfMissing(n));
       }
     }
     t.reportCodeChange();
@@ -154,7 +154,7 @@ class Es6TemplateLiterals {
         astFactory
             .createSingleVarNameDeclaration(TEMPLATELIT_VAR + uniqueId, callTemplateTagArgCreator)
             .setJSDocInfo(info)
-            .useSourceInfoIfMissingFromForTree(n);
+            .srcrefTreeIfMissing(n);
 
     // For the first script, insertion point is right after the runtime injected function definition
     // as injecting to the top of the script causes runtime errors
@@ -171,7 +171,7 @@ class Es6TemplateLiterals {
         call.addChildToBack(child.removeFirstChild());
       }
     }
-    call.useSourceInfoIfMissingFromForTree(templateLit);
+    call.srcrefTreeIfMissing(templateLit);
     call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
     n.replaceWith(call);
     t.reportCodeChange();

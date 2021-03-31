@@ -293,7 +293,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     checkNotNull(replacementString);
     recordReplacement(key);
 
-    replacement.useSourceInfoIfMissingFromForTree(expr);
+    replacement.srcrefTreeIfMissing(expr);
     parent.replaceChild(expr, replacement);
     t.reportCodeChange();
     return replacement;

@@ -241,7 +241,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       Node definitionStatement =
           astFactory
               .createAssignStatement(ownerDotPrototypeDotPropName, functionNode)
-              .useSourceInfoIfMissingFromForTree(stringKey);
+              .srcrefTreeIfMissing(stringKey);
       destParent.addChildToFront(definitionStatement);
       compiler.reportChangeToEnclosingScope(destParent);
     } else {
@@ -259,7 +259,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       Node definitionStatement =
           astFactory
               .createAssignStatement(ownerDotPrototypeDotPropName, unstubCall)
-              .useSourceInfoIfMissingFromForTree(stringKey);
+              .srcrefTreeIfMissing(stringKey);
       destParent.addChildToFront(definitionStatement);
       compiler.reportChangeToEnclosingScope(destParent);
     }
@@ -352,7 +352,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       Node definitionStatement =
           astFactory
               .createAssignStatement(ownerDotPrototypeDotPropName, functionNode.detach())
-              .useSourceInfoIfMissingFromForTree(memberFunctionDef);
+              .srcrefTreeIfMissing(memberFunctionDef);
       destParent.addChildToFront(definitionStatement);
       compiler.reportChangeToEnclosingScope(destParent);
     } else {
@@ -370,7 +370,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       Node definitionStatement =
           astFactory
               .createAssignStatement(ownerDotPrototypeDotPropName, unstubCall)
-              .useSourceInfoIfMissingFromForTree(memberFunctionDef);
+              .srcrefTreeIfMissing(memberFunctionDef);
       destParent.addChildToFront(definitionStatement);
       compiler.reportChangeToEnclosingScope(destParent);
     }
@@ -389,7 +389,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
             // We can't look up the type of the stub creating method, because we add its
             // definition after type checking.
             astFactory.createNameWithUnknownType(STUB_METHOD_NAME), astFactory.createNumber(stubId))
-        .useSourceInfoIfMissingFromForTree(originalDefinition);
+        .srcrefTreeIfMissing(originalDefinition);
   }
 
   /**
@@ -407,7 +407,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
             astFactory.createNameWithUnknownType(UNSTUB_METHOD_NAME),
             astFactory.createNumber(stubId),
             functionNode)
-        .useSourceInfoIfMissingFromForTree(functionNode);
+        .srcrefTreeIfMissing(functionNode);
   }
 
   /**
@@ -490,7 +490,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node definitionStatementNode =
         astFactory
             .createAssignStatement(classNameDotPrototypeDotPropName, functionNode)
-            .useSourceInfoIfMissingFromForTree(methodDefinition);
+            .srcrefTreeIfMissing(methodDefinition);
     destinationParent.addChildToFront(definitionStatementNode);
     compiler.reportChangeToEnclosingScope(destinationParent);
   }
@@ -516,7 +516,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node stubDefinitionStatement =
         astFactory
             .createAssignStatement(classNameDotPrototypeDotPropName, stubCall)
-            .useSourceInfoIfMissingFromForTree(methodDefinition);
+            .srcrefTreeIfMissing(methodDefinition);
     Node classDefiningStatement = NodeUtil.getEnclosingStatement(classMembers);
     stubDefinitionStatement.insertAfter(classDefiningStatement);
 
@@ -534,7 +534,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     Node statementNode =
         astFactory
             .createAssignStatement(classNameDotPrototypeDotPropName2, unstubCall)
-            .useSourceInfoIfMissingFromForTree(methodDefinition);
+            .srcrefTreeIfMissing(methodDefinition);
     destinationParent.addChildToFront(statementNode);
     compiler.reportChangeToEnclosingScope(destinationParent);
   }

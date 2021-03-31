@@ -1126,11 +1126,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (!mayHaveSideEffects(cond)) {
       NodeUtil.removeChild(parent, n);
     } else {
-      Node statement = IR.exprResult(cond.detach())
-          .useSourceInfoIfMissingFrom(cond);
+      Node statement = IR.exprResult(cond.detach()).srcrefIfMissing(cond);
       if (parent.isLabel()) {
         Node block = IR.block();
-        block.useSourceInfoIfMissingFrom(statement);
+        block.srcrefIfMissing(statement);
         block.addChildToFront(statement);
         statement = block;
       }

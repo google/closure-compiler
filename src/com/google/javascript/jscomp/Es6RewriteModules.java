@@ -308,7 +308,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
               Node constNode =
                   astFactory.createSingleConstNameDeclaration(
                       child.getFirstChild().getString(), globalName.toQname(astFactory));
-              constNode.useSourceInfoFromForTree(child);
+              constNode.srcrefTree(child);
               constNode.insertBefore(statementNode);
             }
           }
@@ -339,7 +339,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
                 astFactory
                     .createName(
                         ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), n.getJSType())
-                    .useSourceInfoFromForTree(n));
+                    .srcrefTree(n));
             t.reportCodeChange();
           }
         }
@@ -359,7 +359,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
                 astFactory
                     .createName(
                         ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), n.getJSType())
-                    .useSourceInfoFromForTree(n));
+                    .srcrefTree(n));
           }
         }
         t.reportCodeChange();
@@ -503,7 +503,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
                 ModuleRenaming.DEFAULT_EXPORT_VAR_PREFIX, export.removeFirstChild());
         var.setJSDocInfo(child.getJSDocInfo());
         child.setJSDocInfo(null);
-        var.useSourceInfoIfMissingFromForTree(export);
+        var.srcrefTreeIfMissing(export);
         parent.replaceChild(export, var);
       }
       t.reportCodeChange();
@@ -620,7 +620,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
     infoBuilder.recordConstancy();
     moduleVar.setJSDocInfo(infoBuilder.build());
     moduleVar.getFirstChild().setDeclaredConstantVar(true);
-    script.addChildToBack(moduleVar.useSourceInfoIfMissingFromForTree(script));
+    script.addChildToBack(moduleVar.srcrefTreeIfMissing(script));
 
     Module thisModule = moduleMap.getModule(t.getInput().getPath());
 
@@ -652,8 +652,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         builder.recordTypedef(typeExpr);
         JSDocInfo info = builder.build();
         getProp.setJSDocInfo(info);
-        Node exprResult =
-            astFactory.exprResult(getProp).useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
+        Node exprResult = astFactory.exprResult(getProp).srcrefTreeIfMissing(nodeForSourceInfo);
         script.addChildToBack(exprResult);
       } else if (mutated) {
         final Node globalExportName = astFactory.createName(boundVariableName, getProp.getJSType());
@@ -670,8 +669,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         builder.recordConstancy();
         JSDocInfo info = builder.build();
         assign.setJSDocInfo(info);
-        script.addChildToBack(
-            astFactory.exprResult(assign).useSourceInfoIfMissingFromForTree(nodeForSourceInfo));
+        script.addChildToBack(astFactory.exprResult(assign).srcrefTreeIfMissing(nodeForSourceInfo));
       }
     }
 
@@ -698,7 +696,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       getter.setJSType(compiler.getTypeRegistry().createFunctionType(value.getJSType()));
     }
 
-    getter.useSourceInfoIfMissingFromForTree(forSourceInfo);
+    getter.srcrefTreeIfMissing(forSourceInfo);
     compiler.reportChangeToEnclosingScope(getter.getFirstChild().getLastChild());
     compiler.reportChangeToEnclosingScope(getter);
   }
@@ -737,7 +735,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
             Var v = t.getScope().getVar(n.getString());
             if (v == null || v.getNameNode() != n) {
               GlobalizedModuleName replacementName = namesToInlineByAlias.get(n.getString());
-              Node replacement = replacementName.toQname(astFactory).useSourceInfoFromForTree(n);
+              Node replacement = replacementName.toQname(astFactory).srcrefTree(n);
               n.replaceWith(replacement);
             }
           }
@@ -1054,7 +1052,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
             // STRING node "bar.Foo". ES6 import rewrite replaces only "module"
             // part of the type: "bar.Foo" => "module$full$path$bar$Foo". We have to record
             // "bar" as alias.
-            Node onlyBaseName = Node.newString(baseName).useSourceInfoFrom(typeNode);
+            Node onlyBaseName = Node.newString(baseName).srcref(typeNode);
             onlyBaseName.setLength(baseName.length());
             maybeAddAliasToSymbolTable(onlyBaseName, t.getSourceName());
           }

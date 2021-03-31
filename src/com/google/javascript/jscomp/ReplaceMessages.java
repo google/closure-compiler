@@ -136,7 +136,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     }
 
     if (newValue != msgNode) {
-      newValue.useSourceInfoIfMissingFromForTree(msgNode);
+      newValue.srcrefTreeIfMissing(msgNode);
       msgNode.replaceWith(newValue);
       compiler.reportChangeToEnclosingScope(newValue);
     }
@@ -221,7 +221,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         /* recurse= */ true,
         /* jsDoc= */ false,
         /* sideEffect= */ false)) {
-      newBlockNode.useSourceInfoIfMissingFromForTree(oldBlockNode);
+      newBlockNode.srcrefTreeIfMissing(oldBlockNode);
       functionNode.replaceChild(oldBlockNode, newBlockNode);
       compiler.reportChangeToEnclosingScope(newBlockNode);
     }
