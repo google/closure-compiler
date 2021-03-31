@@ -319,14 +319,14 @@ public class IR {
   public static Node tryFinally(Node tryBody, Node finallyBody) {
     checkState(tryBody.isBlock());
     checkState(finallyBody.isBlock());
-    Node catchBody = block().useSourceInfoIfMissingFrom(tryBody);
+    Node catchBody = block().srcrefIfMissing(tryBody);
     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
   }
 
   public static Node tryCatch(Node tryBody, Node catchNode) {
     checkState(tryBody.isBlock());
     checkState(catchNode.isCatch());
-    Node catchBody = blockUnchecked(catchNode).useSourceInfoIfMissingFrom(catchNode);
+    Node catchBody = blockUnchecked(catchNode).srcrefIfMissing(catchNode);
     return new Node(Token.TRY, tryBody, catchBody);
   }
 

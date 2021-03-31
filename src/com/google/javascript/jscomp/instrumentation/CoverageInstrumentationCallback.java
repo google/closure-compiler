@@ -90,7 +90,7 @@ class CoverageInstrumentationCallback extends
         fileName, (String k) -> new FileInstrumentationData(k, arrayName));
     instrumentationData.get(fileName).setLineAsInstrumented(lineNumber);
 
-    return exprNode.useSourceInfoIfMissingFromForTree(node);
+    return exprNode.srcrefTreeIfMissing(node);
   }
 
   /**
@@ -134,7 +134,7 @@ class CoverageInstrumentationCallback extends
                 IR.call(
                     IR.getprop(IR.getelem(IR.name(objName), IR.string("fileNames")), "push"),
                     IR.string(fileName))))
-        .useSourceInfoIfMissingFromForTree(srcref);
+        .srcrefTreeIfMissing(srcref);
   }
 
   /**
@@ -168,7 +168,7 @@ class CoverageInstrumentationCallback extends
     if (node.isFunction() && !NodeUtil.getFunctionBody(node).isBlock()) {
       Node returnValue = NodeUtil.getFunctionBody(node);
       Node body = IR.block(IR.returnNode(returnValue.detach()));
-      body.useSourceInfoIfMissingFromForTree(returnValue);
+      body.srcrefTreeIfMissing(returnValue);
       node.addChildToBack(body);
     }
 

@@ -2024,7 +2024,7 @@ class IRFactory {
       Node key = transform(tree.property);
       Node body = transform(tree.body);
       Node function = IR.function(IR.name(""), IR.paramList(), body);
-      function.useSourceInfoIfMissingFromForTree(body);
+      function.srcrefTreeIfMissing(body);
       Node n = newNode(Token.COMPUTED_PROP, key, function);
       n.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
       n.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
@@ -2042,7 +2042,7 @@ class IRFactory {
       Node body = transform(tree.body);
 
       Node function = IR.function(IR.name(""), paramList, body);
-      function.useSourceInfoIfMissingFromForTree(body);
+      function.srcrefTreeIfMissing(body);
 
       Node n = newNode(Token.COMPUTED_PROP, key, function);
       n.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);

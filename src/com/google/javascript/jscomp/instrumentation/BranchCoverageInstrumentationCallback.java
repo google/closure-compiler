@@ -171,7 +171,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     String fileName = traversal.getSourceName();
     instrumentationData.computeIfAbsent(
         fileName, (String k) -> new FileInstrumentationData(k, arrayName));
-    return exprNode.useSourceInfoIfMissingFromForTree(node);
+    return exprNode.srcrefTreeIfMissing(node);
   }
 
   /** Add branch instrumentation information for each block. */
@@ -192,7 +192,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   private Node addDefaultBlock(Node node) {
     Node defaultBlock = IR.block();
     node.addChildToBack(defaultBlock);
-    return defaultBlock.useSourceInfoIfMissingFromForTree(node);
+    return defaultBlock.srcrefTreeIfMissing(node);
   }
 
   private Node newHeaderNode(NodeTraversal traversal, Node srcref) {
@@ -229,7 +229,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
             IR.call(
                 IR.getprop(IR.getelem(IR.name(objName), IR.string("fileNames")), "push"),
                 IR.string(fileName))));
-    return IR.block(nodes).useSourceInfoIfMissingFromForTree(srcref);
+    return IR.block(nodes).srcrefTreeIfMissing(srcref);
   }
 
   private Node newArrayDeclarationNode(NodeTraversal traversal) {
@@ -250,7 +250,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
                 IR.assign(
                     IR.getelem(IR.name(name), IR.number(lineWithBranch++)),
                     IR.number(numBranches)));
-        assignments.add(assignment.useSourceInfoIfMissingFromForTree(assignment));
+        assignments.add(assignment.srcrefTreeIfMissing(assignment));
       }
     }
     return IR.block(assignments);

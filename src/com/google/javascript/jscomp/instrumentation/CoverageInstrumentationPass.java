@@ -79,7 +79,7 @@ public class CoverageInstrumentationPass implements CompilerPass {
         compiler
             .parseSyntheticCode("if (!self.window) { self.window = self; self.window.top = self; }")
             .removeFirstChild()
-            .useSourceInfoIfMissingFromForTree(script));
+            .srcrefTreeIfMissing(script));
   }
 
   private void addProductionHeaderCode(Node script, String arrayName) {
@@ -87,7 +87,7 @@ public class CoverageInstrumentationPass implements CompilerPass {
     Node arrayLit = IR.arraylit();
     Node name = IR.name(arrayName);
     Node varNode = IR.var(name, arrayLit);
-    script.addChildToFront(varNode.useSourceInfoIfMissingFromForTree(script));
+    script.addChildToFront(varNode.srcrefTreeIfMissing(script));
   }
 
   private void checkIfArrayNameExternDeclared(Node externsNode, String arrayName) {
@@ -173,6 +173,6 @@ public class CoverageInstrumentationPass implements CompilerPass {
                 IR.assign(
                     IR.getelem(IR.getprop(IR.name("window"), "top"), IR.string("__jscov")),
                     jscovData)));
-    return var.useSourceInfoIfMissingFromForTree(srcref);
+    return var.srcrefTreeIfMissing(srcref);
   }
 }

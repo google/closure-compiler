@@ -149,8 +149,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
         }
         if (!hasDefaultCase) {
           Node defaultBlock = IR.block();
-          defaultBlock.useSourceInfoIfMissingFromForTree(node);
-          Node defaultCase = IR.defaultCase(defaultBlock).useSourceInfoIfMissingFromForTree(node);
+          defaultBlock.srcrefTreeIfMissing(node);
+          Node defaultCase = IR.defaultCase(defaultBlock).srcrefTreeIfMissing(node);
           node.addChildToBack(defaultCase);
           instrumentBlockNode(defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
@@ -246,14 +246,14 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     Node functionCall = IR.call(prop, IR.string(encodedParam));
     Node exprNode = IR.exprResult(functionCall);
 
-    return exprNode.useSourceInfoIfMissingFromForTree(node);
+    return exprNode.srcrefTreeIfMissing(node);
   }
 
   /** Add an else block for If statements if one is not already present. */
   private Node addElseBlock(Node node) {
     Node defaultBlock = IR.block();
     node.addChildToBack(defaultBlock);
-    return defaultBlock.useSourceInfoIfMissingFromForTree(node);
+    return defaultBlock.srcrefTreeIfMissing(node);
   }
 
   public VariableMap getInstrumentationMapping() {

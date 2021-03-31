@@ -195,7 +195,7 @@ abstract class PotentialDeclaration {
       // Just completely remove the RHS, and replace with a getprop.
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
-      newStatement.useSourceInfoIfMissingFromForTree(nameNode);
+      newStatement.srcrefTreeIfMissing(nameNode);
       Node oldStatement = getRemovableNode();
       NodeUtil.deleteChildren(oldStatement, compiler);
       if (oldStatement.isExport()) {
@@ -270,7 +270,7 @@ abstract class PotentialDeclaration {
       // Just completely remove the RHS, if present, and replace with a getprop.
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, getFullyQualifiedName(), null, getJsDoc());
-      newStatement.useSourceInfoIfMissingFromForTree(getLhs());
+      newStatement.srcrefTreeIfMissing(getLhs());
       NodeUtil.deleteNode(getRemovableNode(), compiler);
       if (insertionPoint.hasParent()) {
         newStatement.insertAfter(insertionPoint);

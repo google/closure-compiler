@@ -566,37 +566,37 @@ public class NodeTest {
   }
 
   @Test
-  public void testUseSourceInfoIfMissingFrom() {
+  public void testSrcrefIfMissing() {
     Node assign = getAssignExpr("b", "c");
     assign.setLineno(99);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
-    lhs.useSourceInfoIfMissingFrom(assign);
+    lhs.srcrefIfMissing(assign);
     assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
     assign.setLineno(101);
     assign.setSourceFileForTesting("bar.js");
-    lhs.useSourceInfoIfMissingFrom(assign);
+    lhs.srcrefIfMissing(assign);
     assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
   }
 
   @Test
-  public void testUseSourceInfoFrom() {
+  public void testSrcref() {
     Node assign = getAssignExpr("b", "c");
     assign.setLineno(99);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
-    lhs.useSourceInfoFrom(assign);
+    lhs.srcref(assign);
     assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
     assign.setLineno(101);
     assign.setSourceFileForTesting("bar.js");
-    lhs.useSourceInfoFrom(assign);
+    lhs.srcref(assign);
     assertNode(lhs).hasLineno(101);
     assertThat(lhs.getSourceFileName()).isEqualTo("bar.js");
   }
