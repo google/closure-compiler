@@ -1634,6 +1634,19 @@ WorkerGlobalScope.prototype.self;
 WorkerGlobalScope.prototype.location;
 
 /**
+ * @const {string}
+ * @see https://html.spec.whatwg.org/#windoworworkerglobalscope-mixin
+ */
+WorkerGlobalScope.prototype.origin;
+
+/**
+ * @const {string}
+ * Duplicate definition, since we don't model WindowOrWorkerGlobalScope.
+ * @see https://html.spec.whatwg.org/#windoworworkerglobalscope-mixin
+ */
+Window.prototype.origin;
+
+/**
  * Closes the worker represented by this WorkerGlobalScope.
  * @return {undefined}
  */
