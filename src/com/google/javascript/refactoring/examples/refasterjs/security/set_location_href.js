@@ -74,8 +74,5 @@ function before_setLocationUntypedHref(loc, url) {
  * @param {?} url The url.
  */
 function after_setLocationUntypedHref(loc, url) {
-  // TODO(bangert): add test once we have go/api-prohibition-design
-  // (which will re-do the test infrastructure for this).
-  // TODO(bangert): add tests for nullable locations
   goog.dom.safe.setLocationHref(loc, goog.asserts.assertString(url));
 }

@@ -99,7 +99,6 @@ function after_windowOpen(win, url) {
 
 /**
  * Name must be a string literal.
- * TODO(bangert): Change API .
  */
 /**
  * +require {goog.dom.safe}
