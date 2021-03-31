@@ -733,6 +733,16 @@ class IRFactory {
     return previousComments;
   }
 
+  private NonJSDocComment handleNonJSDocComments(
+      com.google.javascript.jscomp.parsing.parser.Token token) {
+    ArrayList<Comment> nonJSDocComments = getNonJSDocComments(token);
+    if (!nonJSDocComments.isEmpty()) {
+      NonJSDocComment nonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+      return nonJSDocComment;
+    }
+    return null;
+  }
+
   private static ParseTree findNearestNode(ParseTree tree) {
     while (true) {
       switch (tree.type) {
@@ -858,6 +868,13 @@ class IRFactory {
     JSDocInfo jsDocInfo = handleJsDoc(token);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
+    }
+    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      NonJSDocComment nonJSDocComment = handleNonJSDocComments(token);
+      if (nonJSDocComment != null) {
+        nonJSDocComment.setIsInline(true);
+        irNode.setNonJSDocComment(nonJSDocComment);
+      }
     }
     setSourceInfo(irNode, token);
     return irNode;
@@ -1846,6 +1863,13 @@ class IRFactory {
           node.setJSDocInfo(info);
         }
       }
+      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+        NonJSDocComment nonJSDocComment = handleNonJSDocComments(identifierToken);
+        if (nonJSDocComment != null) {
+          nonJSDocComment.setIsInline(true);
+          node.setNonJSDocComment(nonJSDocComment);
+        }
+      }
       setSourceInfo(node, identifierToken);
       return node;
     }
@@ -1853,6 +1877,13 @@ class IRFactory {
     Node processString(LiteralToken token) {
       checkArgument(token.type == TokenType.STRING);
       Node node = newStringNode(Token.STRINGLIT, normalizeString(token, false));
+      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+        NonJSDocComment nonJSDocComment = handleNonJSDocComments(token);
+        if (nonJSDocComment != null) {
+          nonJSDocComment.setIsInline(true);
+          node.setNonJSDocComment(nonJSDocComment);
+        }
+      }
       setSourceInfo(node, token);
       return node;
     }

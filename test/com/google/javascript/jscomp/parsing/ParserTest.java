@@ -1355,12 +1355,41 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node destructuringLhs = letNode.getFirstChild();
     Node objectPattern = destructuringLhs.getFirstChild();
 
-    Node normalProp = objectPattern.getFirstChild();
-    assertNode(normalProp).hasType(Token.STRING_KEY);
-    // TODO(b/138749905): Unlike inline JSDoc in the corresponding test above, inline nonJSDoc
-    // comment on key should be allowed, i.e. it should be attached to the string key and not the
-    // name value
-    assertThat(normalProp.getOnlyChild().getNonJSDocCommentString()).contains("/* blah */");
+    Node normalPropKey = objectPattern.getFirstChild();
+    assertNode(normalPropKey).hasType(Token.STRING_KEY);
+    assertThat(normalPropKey.getNonJSDocCommentString()).contains("/* blah */");
+  }
+
+  @Test
+  public void testInlineNonJSDocCommentAttachment_numberAsKey() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node script = parse("var { /*comment */ 3: x} = foo();");
+    Node var = script.getFirstChild();
+    Node destructuringLHS = var.getFirstChild();
+    Node objLit = destructuringLHS.getFirstChild();
+    Node three = objLit.getFirstChild();
+    Node x = three.getFirstChild();
+    assertThat(three.getNonJSDocComment()).isNotNull();
+    assertThat(three.getNonJSDocComment().getCommentString()).isEqualTo("/*comment */");
+    assertThat(three.getNonJSDocComment().isInline()).isTrue();
+    assertThat(x.getNonJSDocComment()).isNull();
+  }
+
+  @Test
+  public void testInlineNonJSDocCommentAttachment_quotedKey() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node script = parse("var { /*comment */ 'a': x} = foo();");
+    Node var = script.getFirstChild();
+    Node destructuringLHS = var.getFirstChild();
+    Node objLit = destructuringLHS.getFirstChild();
+    Node a = objLit.getFirstChild();
+    Node x = a.getFirstChild();
+    assertThat(a.getNonJSDocComment()).isNotNull();
+    assertThat(a.getNonJSDocComment().getCommentString()).isEqualTo("/*comment */");
+    assertThat(a.getNonJSDocComment().isInline()).isTrue();
+    assertThat(x.getNonJSDocComment()).isNull();
   }
 
   @Test
@@ -1389,8 +1418,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node shorthandProp = objectPattern.getFirstChild();
     assertNode(shorthandProp).hasType(Token.STRING_KEY);
-    Node shorthandPropTarget = shorthandProp.getOnlyChild();
-    assertThat(shorthandPropTarget.getNonJSDocCommentString()).contains("/* blah */");
+    assertThat(shorthandProp.getNonJSDocCommentString()).contains("/* blah */");
   }
 
   @Test
