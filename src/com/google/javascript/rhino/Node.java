@@ -956,7 +956,7 @@ public class Node implements Serializable {
     checkState(child.parent == this, "%s is not the parent of %s", this, child);
 
     // Copy over important information.
-    newChild.useSourceInfoIfMissingFrom(child);
+    newChild.srcrefIfMissing(child);
     newChild.parent = this;
 
     Node nextSibling = child.next;
@@ -2271,11 +2271,12 @@ public class Node implements Serializable {
     return result;
   }
 
-  /**
-   * Overwrite all the source information in this node with
-   * that of {@code other}.
-   */
   public final Node useSourceInfoFrom(Node other) {
+    return this.srcref(other);
+  }
+
+  /** Overwrite all the source information in this node with that of {@code other}. */
+  public final Node srcref(Node other) {
     setStaticSourceFileFrom(other);
     this.originalName = other.originalName;
     sourcePosition = other.sourcePosition;
@@ -2283,32 +2284,30 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final Node srcref(Node other) {
-    return useSourceInfoFrom(other);
+  public final Node useSourceInfoFromForTree(Node other) {
+    return this.srcrefTree(other);
   }
 
   /**
-   * Overwrite all the source information in this node and its subtree with
-   * that of {@code other}.
+   * Overwrite all the source information in this node and its subtree with that of {@code other}.
    */
-  public final Node useSourceInfoFromForTree(Node other) {
-    useSourceInfoFrom(other);
+  public final Node srcrefTree(Node other) {
+    this.srcref(other);
     for (Node child = first; child != null; child = child.next) {
-      child.useSourceInfoFromForTree(other);
+      child.srcrefTree(other);
     }
-
     return this;
   }
 
-  public final Node srcrefTree(Node other) {
-    return useSourceInfoFromForTree(other);
+  public final Node useSourceInfoIfMissingFrom(Node other) {
+    return this.srcrefIfMissing(other);
   }
 
   /**
-   * Overwrite all the source information in this node with
-   * that of {@code other} iff the source info is missing.
+   * Overwrite all the source information in this node with that of {@code other} iff the source
+   * info is missing.
    */
-  public final Node useSourceInfoIfMissingFrom(Node other) {
+  public final Node srcrefIfMissing(Node other) {
     if (getStaticSourceFile() == null) {
       setStaticSourceFileFrom(other);
       sourcePosition = other.sourcePosition;
@@ -2325,16 +2324,19 @@ public class Node implements Serializable {
     return this;
   }
 
-  /**
-   * Overwrite all the source information in this node and its subtree with
-   * that of {@code other} iff the source info is missing.
-   */
   public final Node useSourceInfoIfMissingFromForTree(Node other) {
-    useSourceInfoIfMissingFrom(other);
-    for (Node child = first; child != null; child = child.next) {
-      child.useSourceInfoIfMissingFromForTree(other);
-    }
+    return this.srcrefTreeIfMissing(other);
+  }
 
+  /**
+   * Overwrite all the source information in this node and its subtree with that of {@code other}
+   * iff the source info is missing.
+   */
+  public final Node srcrefTreeIfMissing(Node other) {
+    this.srcrefIfMissing(other);
+    for (Node child = first; child != null; child = child.next) {
+      child.srcrefTreeIfMissing(other);
+    }
     return this;
   }
 
