@@ -143,7 +143,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es6")).equals(FeatureSet.ES6);
     assertFS(FeatureSet.valueOf("es7")).equals(FeatureSet.ES7);
     assertFS(FeatureSet.valueOf("es8")).equals(FeatureSet.ES8);
-    assertFS(FeatureSet.valueOf("es2018")).equals(FeatureSet.ES2018);
+    assertFS(FeatureSet.valueOf("es_2018")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es9")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es_2019")).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.valueOf("es_2020")).equals(FeatureSet.ES2020);
