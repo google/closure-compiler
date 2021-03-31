@@ -98,7 +98,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void setUp() throws Exception {
     mode = LanguageMode.ES_NEXT_IN;
     parsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
-    strictMode = SLOPPY;
+    strictMode = STRICT;
     isIdeMode = false;
     expectedFeatures = FeatureSet.BARE_MINIMUM;
   }
@@ -147,8 +147,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testExponentOperator() {
     mode = LanguageMode.ECMASCRIPT7;
-    strictMode = STRICT;
-
+    
     parseError("-x**y", "Unary operator '-' requires parentheses before '**'");
 
     expectFeatures(Feature.EXPONENT_OP);
@@ -173,7 +172,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testExponentAssignmentOperator() {
     mode = LanguageMode.ECMASCRIPT7;
-    strictMode = STRICT;
     expectFeatures(Feature.EXPONENT_OP);
     parse("x**=y;");
 
@@ -3226,7 +3224,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testLetForbidden3() {
     mode = LanguageMode.ECMASCRIPT5;
-    strictMode = STRICT;
     parseError("function f() { var let = 3; }", "'identifier' expected");
 
     mode = LanguageMode.ECMASCRIPT6;
@@ -3248,7 +3245,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testGenerator() {
     expectFeatures(Feature.GENERATORS);
     mode = LanguageMode.ECMASCRIPT6;
-    strictMode = STRICT;
     parse("var obj = { *f() { yield 3; } };");
     parse("function* f() { yield 3; }");
     parse("function f() { return function* g() {} }");
@@ -3531,7 +3527,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testYield2() {
     mode = LanguageMode.ECMASCRIPT6;
-    strictMode = STRICT;
     expectFeatures(Feature.GENERATORS);
     parse("function * f() { yield; }");
     parse("function * f() { yield /a/i; }");
@@ -3570,7 +3565,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testYield3() {
     mode = LanguageMode.ECMASCRIPT6;
-    strictMode = STRICT;
     expectFeatures(Feature.GENERATORS);
     // TODO(johnlenz): validate "yield" parsing. Firefox rejects this
     // use of "yield".
@@ -3696,7 +3690,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     parse("var test = `\nhello\\0`");
 
-    strictMode = STRICT;
     parse("var test = `\nhello\\0`");
   }
 
@@ -4362,8 +4355,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // parse("public = 2;");
 
     mode = LanguageMode.ECMASCRIPT5;
-    strictMode = STRICT;
-
+    
     expectFeatures(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
     parse("var boolean;");
     parse("function boolean() {};");
@@ -4437,8 +4429,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("x().catch();");
 
     mode = LanguageMode.ECMASCRIPT5;
-    strictMode = STRICT;
-
+    
     parse("var x = {function: 1};");
     parse("x.function;");
     parse("var x = {get function(){} };");
@@ -4468,8 +4459,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testKeywordsAsProperties3() {
     mode = LanguageMode.ECMASCRIPT5;
-    strictMode = STRICT;
-
+    
     parse("var x = {get 'function'(){} };");
     parse("var x = {get 1(){} };");
     parse("var x = {set 'function'(a){} };");
@@ -4610,6 +4600,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var str = '\\f'");
     parse("var str = '\\/'");
     parse("var str = '\\0'");
+    strictMode = SLOPPY;
     parseWarning("var str = '\\1'", "Unnecessary escape: '\\1' is equivalent to just '1'");
     parseWarning("var str = '\\2'", "Unnecessary escape: '\\2' is equivalent to just '2'");
     parseWarning("var str = '\\3'", "Unnecessary escape: '\\3' is equivalent to just '3'");
@@ -5565,7 +5556,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testAsyncGeneratorFunction() {
     mode = LanguageMode.ES_NEXT;
     expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.GENERATORS, Feature.ASYNC_GENERATORS);
-    strictMode = STRICT;
     parse("async function *f(){}");
     parse("f = async function *(){}");
     parse("class C { async *foo(){} }");
@@ -5601,14 +5591,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testAsyncArrowInvalid() {
     mode = LanguageMode.ECMASCRIPT8;
-    strictMode = STRICT;
     parseError("f = not_async (x) => x + 1;", "'=>' unexpected");
   }
 
   @Test
   public void testAsyncMethod() {
     mode = LanguageMode.ECMASCRIPT8;
-    strictMode = STRICT;
     expectFeatures(Feature.ASYNC_FUNCTIONS);
     parse("o={async m(){}}");
     parse("o={async [a+b](){}}");
@@ -5634,7 +5622,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // newline after 'async' forces it to be the property name
     mode = LanguageMode.ECMASCRIPT8;
-    strictMode = STRICT;
     parseError("o={async\nm(){}}", "'}' expected");
     parseError("o={static async\nm(){}}", "Cannot use keyword in short object literal");
     parseError("class C{async\nm(){}}", "'(' expected");
@@ -5644,7 +5631,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testAwaitExpression() {
     mode = LanguageMode.ECMASCRIPT8;
-    strictMode = STRICT;
     expectFeatures(Feature.ASYNC_FUNCTIONS);
     parse("async function f(p){await p}");
     parse("f = async function(p){await p}");
@@ -6280,7 +6266,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     }
 
     mode = LanguageMode.ECMASCRIPT_2020;
-    strictMode = STRICT;
     parseError("function foo() { import bar from './someModule'; }", "'(' expected");
   }
 
