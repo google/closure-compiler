@@ -249,6 +249,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testForcedESModuleSemantics() {
+    ignoreWarnings(LOAD_WARNING);
     test(
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -256,7 +257,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .build(),
         JSChunkGraphBuilder.forStar()
             .addChunk("var a = 1; export {};")
-            .addChunk("var b = 1; export {};")
+            .addChunk("import './m0.js'; var b = 1;")
             .build());
   }
 
@@ -269,5 +270,19 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .build(),
         ASSIGNMENT_TO_IMPORT,
         "Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned");
+  }
+
+  @Test
+  public void testChunkDependenciesCreateImportStatementsForSideEffects() {
+    ignoreWarnings(LOAD_WARNING);
+    test(
+        JSChunkGraphBuilder.forStar() //
+            .addChunk("window.a = true")
+            .addChunk("console.log(window.a) // should be true")
+            .build(),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("window.a = true; export {};")
+            .addChunk("import './m0.js'; console.log(window.a);")
+            .build());
   }
 }

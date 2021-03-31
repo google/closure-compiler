@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -209,8 +210,15 @@ final class ConvertChunksToESModules implements CompilerPass {
                   getChunkName(exportingChunk)));
         }
         importStatement.addChildToFront(IR.string(importPath));
-        importStatement.addChildToFront(importSpecs);
+        if (importSpecs.hasChildren()) {
+          importStatement.addChildToFront(importSpecs);
+        } else {
+          // Empty import of a dependent chunk for side effects
+          // import './chunk.js'
+          importStatement.addChildToFront(IR.empty());
+        }
         importStatement.addChildToFront(IR.empty());
+
         importStatement.useSourceInfoFromForTree(moduleBody);
         importStatements.add(0, importStatement);
       }
@@ -225,7 +233,22 @@ final class ConvertChunksToESModules implements CompilerPass {
   private class FindCrossChunkReferences extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName()) {
+      if (n.isScript()) {
+        JSModule chunk = t.getModule();
+        List<JSModule> chunkDependencies = chunk.getDependencies();
+
+        // Ensure every chunk dependency is explicitly listed with an import
+        // Dependent chunks may have side effects even if there isn't an explicit name reference
+        if (chunkDependencies.size() > 0) {
+          Map<JSModule, Set<String>> namesToImportByModule =
+              crossChunkImports.computeIfAbsent(
+                  chunk, (JSModule k) -> new LinkedHashMap<>());
+          for (JSModule dependency : chunkDependencies) {
+            namesToImportByModule.computeIfAbsent(
+                dependency, (JSModule k) -> new LinkedHashSet<>());
+          }
+        }
+      } else if (n.isName()) {
         String name = n.getString();
         if ("".equals(name)) {
           return;
