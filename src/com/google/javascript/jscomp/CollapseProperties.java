@@ -282,8 +282,7 @@ class CollapseProperties implements CompilerPass {
 
     checkState(ref.getNode().getParent().isExprResult());
     Node parent = ref.getNode().getParent();
-    Node grandparent = parent.getParent();
-    grandparent.replaceChild(parent, varNode);
+    parent.replaceWith(varNode);
     compiler.reportChangeToEnclosingScope(varNode);
   }
 
@@ -422,8 +421,7 @@ class CollapseProperties implements CompilerPass {
       parent.putBooleanProp(Node.FREE_CALL, true);
     }
 
-
-    parent.replaceChild(n, ref);
+    n.replaceWith(ref);
     compiler.reportChangeToEnclosingScope(ref);
   }
 
@@ -498,7 +496,7 @@ class CollapseProperties implements CompilerPass {
     Node stubVar = IR.var(nameNode.cloneTree()).srcrefIfMissing(nameNode);
     stubVar.insertBefore(current);
 
-    parent.replaceChild(ref.getNode(), nameNode);
+    ref.getNode().replaceWith(nameNode);
     compiler.reportChangeToEnclosingScope(nameNode);
   }
 
@@ -585,7 +583,7 @@ class CollapseProperties implements CompilerPass {
 
     if (isObjLit && canEliminate(n)) {
       // Eliminate the object literal altogether.
-      varParent.replaceChild(grandparent, varNode);
+      grandparent.replaceWith(varNode);
       n.updateRefNode(ref, null);
       insertedVarNode = true;
       compiler.reportChangeToEnclosingScope(varNode);
@@ -596,7 +594,7 @@ class CollapseProperties implements CompilerPass {
       }
 
       compiler.reportChangeToEnclosingScope(rvalue);
-      ref.getNode().getParent().removeChild(rvalue);
+      rvalue.detach();
 
       Node nameNode =
           NodeUtil.newName(compiler, alias, ref.getNode().getAncestor(2), n.getFullName());
@@ -613,7 +611,7 @@ class CollapseProperties implements CompilerPass {
       }
       varNode.addChildToBack(nameNode);
       nameNode.addChildToFront(rvalue);
-      varParent.replaceChild(grandparent, varNode);
+      grandparent.replaceWith(varNode);
 
       // Update the node ancestry stored in the reference.
       n.updateRefNode(ref, nameNode);
@@ -631,7 +629,7 @@ class CollapseProperties implements CompilerPass {
 
     if (insertedVarNode) {
       if (!varNode.hasChildren()) {
-        varParent.removeChild(varNode);
+        varNode.detach();
       }
     }
   }
@@ -693,10 +691,10 @@ class CollapseProperties implements CompilerPass {
     addStubsForUndeclaredProperties(n, name, grandparent, variableNode);
 
     if (isObjLit && canEliminate(n)) {
-      variableNode.removeChild(ref.getNode());
+      ref.getNode().detach();
       compiler.reportChangeToEnclosingScope(variableNode);
       if (!variableNode.hasChildren()) {
-        grandparent.removeChild(variableNode);
+        variableNode.detach();
       }
 
       // Clear out the object reference, since we've eliminated it from the
@@ -829,7 +827,7 @@ class CollapseProperties implements CompilerPass {
       String propAlias = appendPropForAlias(alias, propName);
       Node refNode = null;
       if (discardKeys) {
-        objlit.removeChild(key);
+        key.detach();
         value.detach();
         // Don't report a change here because the objlit has already been removed from the tree.
       } else {
@@ -839,7 +837,7 @@ class CollapseProperties implements CompilerPass {
           refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
 
-        key.replaceChild(value, refNode);
+        value.replaceWith(refNode);
         compiler.reportChangeToEnclosingScope(refNode);
       }
 

@@ -511,7 +511,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
           (NodeTraversal unused, Node n, Node parent) -> {
             if (n.isName() && n.getString().equals(argName)) {
               Node newName = cls.name.cloneTree();
-              parent.replaceChild(n, newName);
+              n.replaceWith(newName);
               compiler.reportChangeToEnclosingScope(newName);
             }
           });
@@ -529,7 +529,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     Node parent = exprRoot.getParent();
     Node stmts = block.removeChildren();
     parent.addChildrenAfter(stmts, exprRoot);
-    parent.removeChild(exprRoot);
+    exprRoot.detach();
 
     // compiler.reportChangeToEnclosingScope(parent);
     t.reportCodeChange();

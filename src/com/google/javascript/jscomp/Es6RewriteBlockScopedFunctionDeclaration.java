@@ -100,7 +100,7 @@ public final class Es6RewriteBlockScopedFunctionDeclaration extends AbstractPost
     compiler.reportChangeToEnclosingScope(oldNameNode);
 
     // Move the function to the front of the parent.
-    parent.removeChild(n);
+    n.detach();
     parent.addChildToFront(let);
     compiler.reportChangeToEnclosingScope(let);
     fnNameNode.addChildToFront(n);

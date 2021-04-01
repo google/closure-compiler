@@ -440,7 +440,7 @@ class Normalize implements CompilerPass {
       }
       Node c = n.getFirstChild();
       if (NodeUtil.isDeclaration(c)) {
-        n.removeChild(c);
+        c.detach();
 
         Node exportSpecs = new Node(Token.EXPORT_SPECS).srcref(n);
         n.addChildToFront(exportSpecs);
@@ -606,7 +606,7 @@ class Normalize implements CompilerPass {
 
                 // Transform for (var [a, b]... ) to for ([a, b]...
                 Node destructuringPattern = lhs.removeFirstChild();
-                c.replaceChild(first, destructuringPattern);
+                first.replaceWith(destructuringPattern);
               } else {
                 // Transform:
                 //    for (var a = 1 in b) {}
@@ -631,7 +631,7 @@ class Normalize implements CompilerPass {
 
               Node empty = IR.empty();
               empty.srcrefIfMissing(c);
-              c.replaceChild(init, empty);
+              init.replaceWith(empty);
 
               Node newStatement;
               // Only VAR statements, and expressions are allowed,
@@ -670,7 +670,7 @@ class Normalize implements CompilerPass {
 
           while (c.getFirstChild() != c.getLastChild()) {
             Node name = c.getFirstChild();
-            c.removeChild(name);
+            name.detach();
             Node newVar = new Node(c.getToken(), name).srcref(n);
             newVar.insertBefore(c);
             reportCodeChange("VAR with multiple children", n);
@@ -700,7 +700,7 @@ class Normalize implements CompilerPass {
         Node next = current.getNext();
         if (NodeUtil.isFunctionDeclaration(current)) {
           // Remove the declaration from the body.
-          functionBody.removeChild(current);
+          current.detach();
 
           // Read the function at the top of the function body (after any
           // previous declarations).
@@ -715,13 +715,12 @@ class Normalize implements CompilerPass {
       if (shorthand.getFirstChild().isName()) {
         Node name = shorthand.getFirstChild();
         shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
-        Node parent = shorthand.getParent();
         Node insertPoint = IR.empty();
-        parent.replaceChild(shorthand, insertPoint);
+        shorthand.replaceWith(insertPoint);
         Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
         assign.setJSDocInfo(shorthand.getJSDocInfo());
         shorthand.setJSDocInfo(null);
-        parent.replaceChild(insertPoint, assign);
+        insertPoint.replaceWith(assign);
         compiler.reportChangeToEnclosingScope(assign);
       }
     }
@@ -812,26 +811,26 @@ class Normalize implements CompilerPass {
     private void replaceVarWithAssignment(Node n, Node parent, Node grandparent) {
       if (n.hasChildren()) {
         // The  *  is being initialize, preserve the new value.
-        parent.removeChild(n);
+        n.detach();
         // Convert "var name = value" to "name = value"
         Node value = n.getFirstChild();
-        n.removeChild(value);
+        value.detach();
         Node replacement = IR.assign(n, value);
         replacement.setJSDocInfo(parent.getJSDocInfo());
         replacement.srcrefIfMissing(parent);
         Node statement = NodeUtil.newExpr(replacement);
-        grandparent.replaceChild(parent, statement);
+        parent.replaceWith(statement);
         reportCodeChange("Duplicate VAR declaration", statement);
       } else {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(grandparent)) {
-          grandparent.removeChild(parent);
+          parent.detach();
         } else if (grandparent.isForIn() || grandparent.isForOf()) {
           // This is the "for (var a in b)..." case.  We don't need to worry
           // about initializers in "for (var a;;)..." as those are moved out
           // as part of the other normalizations.
-          parent.removeChild(n);
-          grandparent.replaceChild(parent, n);
+          n.detach();
+          parent.replaceWith(n);
         } else {
           // We should never get here. LABELs with a single VAR statement should
           // already have been normalized to have a BLOCK.

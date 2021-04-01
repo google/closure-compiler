@@ -407,8 +407,8 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     // doing so means extracting `receiver` into a new variable at each call-site. This  has a
     // significant code-size impact (circa 2018-11-19).
 
-    getprop.removeChild(receiver);
-    call.replaceChild(getprop, receiver);
+    receiver.detach();
+    getprop.replaceWith(receiver);
     Node newReceiver = IR.name(newMethodName).copyTypeFrom(getprop).srcref(getprop);
     if (isConstantName) {
       newReceiver.putBooleanProp(Node.IS_CONSTANT_NAME, true);

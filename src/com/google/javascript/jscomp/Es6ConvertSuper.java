@@ -220,7 +220,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     if (enclosingMemberDef.isStaticMember()) {
       Node expandedSuper = superName.cloneTree().srcrefTree(node);
       expandedSuper.setOriginalName("super");
-      callTarget.replaceChild(node, expandedSuper);
+      node.replaceWith(expandedSuper);
       callTarget = astFactory.createGetProp(callTarget.detach(), "call");
       grandparent.addChildToFront(callTarget);
       Node thisNode = astFactory.createThis(clazz.getJSType());

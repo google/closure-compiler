@@ -424,7 +424,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
                 asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone();
               }
               getPropReplacement.srcrefTree(superDotProperty);
-              grandparent.replaceChild(superDotProperty, getPropReplacement);
+              superDotProperty.replaceWith(getPropReplacement);
               compiler.reportChangeToChangeScope(contextRootNode);
             }
             break;
@@ -551,7 +551,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       return;
     }
     Node newBody = astFactory.createBlock();
-    originalFunction.replaceChild(originalBody, newBody);
+    originalBody.replaceWith(newBody);
 
     if (functionContext.mustAddAsyncThisVariable) {
       // const this$ = this;

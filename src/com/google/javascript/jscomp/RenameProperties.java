@@ -230,7 +230,7 @@ class RenameProperties implements CompilerPass {
         }
         sb.append(replacement);
       }
-      parent.replaceChild(nodeEntry.getKey(), IR.string(sb.toString()));
+      nodeEntry.getKey().replaceWith(IR.string(sb.toString()));
       compiler.reportChangeToEnclosingScope(parent);
     }
 

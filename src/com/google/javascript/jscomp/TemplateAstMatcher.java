@@ -255,12 +255,11 @@ public final class TemplateAstMatcher {
   }
 
   void replaceNodeInPlace(Node n, Node replacement) {
-    Node parent = n.getParent();
     if (n.hasChildren()) {
       Node children = n.removeChildren();
       replacement.addChildrenToFront(children);
     }
-    parent.replaceChild(n, replacement);
+    n.replaceWith(replacement);
   }
 
   private static interface Visitor {

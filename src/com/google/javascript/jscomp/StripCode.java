@@ -206,7 +206,7 @@ class StripCode implements CompilerPass {
             || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
           // Remove the NAME.
           varsToRemove.put(name, name);
-          n.removeChild(nameNode);
+          nameNode.detach();
           NodeUtil.markFunctionsDeleted(nameNode, compiler);
         }
       }
@@ -269,8 +269,8 @@ class StripCode implements CompilerPass {
               } else {
                 // Substitute the r-value for the assignment.
                 Node rvalue = n.getNext();
-                parent.removeChild(rvalue);
-                grandparent.replaceChild(parent, rvalue);
+                rvalue.detach();
+                parent.replaceWith(rvalue);
                 t.reportCodeChange();
               }
             } else {
@@ -313,7 +313,7 @@ class StripCode implements CompilerPass {
           break;
         }
         if (ancestor.isAssign()) {
-          ancestorParent.replaceChild(ancestor, ancestor.getLastChild().detach());
+          ancestor.replaceWith(ancestor.getLastChild().detach());
           break;
         }
         if (!NodeUtil.isNormalGet(ancestor) && !ancestor.isCall()) {
@@ -428,7 +428,7 @@ class StripCode implements CompilerPass {
           case MEMBER_FUNCTION_DEF:
             if (isStripName(key.getString())) {
               Node next = key.getNext();
-              n.removeChild(key);
+              key.detach();
               NodeUtil.markFunctionsDeleted(key, compiler);
               key = next;
               compiler.reportChangeToEnclosingScope(n);
@@ -676,7 +676,7 @@ class StripCode implements CompilerPass {
      * @param parent {@code n}'s parent
      */
     void replaceWithNull(Node n, Node parent) {
-      parent.replaceChild(n, IR.nullNode());
+      n.replaceWith(IR.nullNode());
       NodeUtil.markFunctionsDeleted(n, compiler);
     }
 

@@ -600,7 +600,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     if (right != null && right.isStringLit() && ",".equals(right.getString())) {
       // "," is the default, it doesn't need to be explicit
-      n.removeChild(right);
+      right.detach();
       reportChangeToEnclosingScope(n);
     }
 
@@ -743,7 +743,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node resultNode = IR.string(result);
 
     Node parent = n.getParent();
-    parent.replaceChild(n, resultNode);
+    n.replaceWith(resultNode);
     reportChangeToEnclosingScope(parent);
     return resultNode;
   }
@@ -799,7 +799,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node resultNode = IR.string(result);
 
     Node parent = n.getParent();
-    parent.replaceChild(n, resultNode);
+    n.replaceWith(resultNode);
     reportChangeToEnclosingScope(parent);
     return resultNode;
   }
@@ -838,7 +838,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node resultNode = IR.string(
         stringAsString.substring(index, index + 1));
     Node parent = n.getParent();
-    parent.replaceChild(n, resultNode);
+    n.replaceWith(resultNode);
     reportChangeToEnclosingScope(parent);
     return resultNode;
   }
@@ -868,7 +868,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node resultNode = IR.number(stringAsString.charAt(index));
     Node parent = n.getParent();
-    parent.replaceChild(n, resultNode);
+    n.replaceWith(resultNode);
     reportChangeToEnclosingScope(parent);
     return resultNode;
   }
@@ -987,7 +987,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     Node parent = n.getParent();
-    parent.replaceChild(n, arrayOfStrings);
+    n.replaceWith(arrayOfStrings);
     reportChangeToEnclosingScope(parent);
     return arrayOfStrings;
   }
@@ -1026,9 +1026,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       return concatFunctionCall;
     }
 
-    callNode.removeChild(firstArg);
-    Node currentTarget = callNode.getFirstChild();
-    currentTarget.replaceChild(arrayLiteralToRemove, firstArg);
+    firstArg.detach();
+    arrayLiteralToRemove.replaceWith(firstArg);
 
     reportChangeToEnclosingScope(callNode);
     return createConcatFunctionCallForNode(callNode);

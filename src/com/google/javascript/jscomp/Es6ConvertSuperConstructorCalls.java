@@ -147,11 +147,10 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           Node superCallParent = superCall.getParent();
           if (superCallParent.hasOneChild() && NodeUtil.isStatement(superCallParent)) {
             // super() is a statement unto itself
-            superCallParent.replaceChild(superCall, newSuperCall);
+            superCall.replaceWith(newSuperCall);
           } else {
             // super() is part of an expression, so it must return `this`.
-            superCallParent.replaceChild(
-                superCall,
+            superCall.replaceWith(
                 astFactory
                     .createComma(newSuperCall, astFactory.createThis(thisType))
                     .srcrefTreeIfMissing(superCall));
@@ -187,8 +186,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
                   createNewSuperCall(
                       superClassNameNode, superCalls.get(0), superCalls.get(0).getJSType()),
                   astFactory.createThis(thisType));
-          constructorBody.replaceChild(
-              firstStatement, IR.returnNode(newReturn).srcrefTreeIfMissing(firstStatement));
+          firstStatement.replaceWith(IR.returnNode(newReturn).srcrefTreeIfMissing(firstStatement));
         } else {
           final JSType typeOfThis = getTypeOfThisForConstructor(constructor);
           // `this` -> `$jscomp$super$this` throughout the constructor body,
@@ -649,7 +647,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           public void visit(NodeTraversal t, Node n, Node parent) {
             if (n.isThis()) {
               Node superThis = astFactory.createName(SUPER_THIS, n.getJSType()).srcref(n);
-              parent.replaceChild(n, superThis);
+              n.replaceWith(superThis);
             } else if (n.isReturn() && !n.hasChildren()) {
               // An empty return needs to be changed to return $jscomp$super$this
               n.addChildToFront(astFactory.createName(SUPER_THIS, typeOfThis).srcref(n));

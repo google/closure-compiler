@@ -130,12 +130,10 @@ class FunctionRewriter implements CompilerPass {
    * Information needed to apply a reduction.
    */
   private class Reduction {
-    private final Node parent;
     private final Node oldChild;
     private final Node newChild;
 
     Reduction(Node parent, Node oldChild, Node newChild) {
-      this.parent = parent;
       this.oldChild = oldChild;
       this.newChild = newChild;
     }
@@ -144,7 +142,7 @@ class FunctionRewriter implements CompilerPass {
      * Apply the reduction by replacing the old child with the new child.
      */
     void apply() {
-      parent.replaceChild(oldChild, newChild);
+      oldChild.replaceWith(newChild);
       NodeUtil.markFunctionsDeleted(oldChild, compiler);
       compiler.reportChangeToEnclosingScope(newChild);
     }

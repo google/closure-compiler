@@ -121,8 +121,7 @@ class PeepholeMinimizeConditions
 
         // Preserve the IF ELSE expression is there is one.
         if (maybeIf.hasXChildren(3)) {
-          block.replaceChild(maybeIf,
-              maybeIf.getLastChild().detach());
+          maybeIf.replaceWith(maybeIf.getLastChild().detach());
         } else {
           NodeUtil.redeclareVarsInsideBranch(thenBlock);
           block.removeFirstChild();
@@ -135,11 +134,11 @@ class PeepholeMinimizeConditions
         // OK, join the IF expression with the FOR expression
         Node forCondition = NodeUtil.getConditionExpression(n);
         if (forCondition.isEmpty()) {
-          n.replaceChild(forCondition, fixedIfCondition);
+          forCondition.replaceWith(fixedIfCondition);
           reportChangeToEnclosingScope(fixedIfCondition);
         } else {
           Node replacement = new Node(Token.AND);
-          n.replaceChild(forCondition, replacement);
+          forCondition.replaceWith(replacement);
           replacement.addChildToBack(forCondition);
           replacement.addChildToBack(fixedIfCondition);
           reportChangeToEnclosingScope(replacement);
@@ -177,7 +176,7 @@ class PeepholeMinimizeConditions
             child.detach();
             child.detachChildren();
             Node newCond = new Node(Token.OR, cond);
-            nextNode.replaceChild(nextCond, newCond);
+            nextCond.replaceWith(newCond);
             newCond.addChildToBack(nextCond);
             reportChangeToEnclosingScope(newCond);
           } else if (nextElse != null
@@ -190,7 +189,7 @@ class PeepholeMinimizeConditions
             child.detachChildren();
             Node newCond = new Node(Token.AND,
                 IR.not(cond).srcref(cond));
-            nextNode.replaceChild(nextCond, newCond);
+            nextCond.replaceWith(newCond);
             newCond.addChildToBack(nextCond);
             reportChangeToEnclosingScope(newCond);
           }
@@ -213,13 +212,13 @@ class PeepholeMinimizeConditions
           Node returnNode = IR.returnNode(
                                 IR.hook(cond, thenExpr, elseExpr)
                                     .srcref(child));
-          n.replaceChild(child, returnNode);
-          n.removeChild(nextNode);
+          child.replaceWith(returnNode);
+          nextNode.detach();
           reportChangeToEnclosingScope(n);
           // everything else in the block is dead code.
           break;
         } else if (elseBranch != null && statementMustExitParent(thenBranch)) {
-          child.removeChild(elseBranch);
+          elseBranch.detach();
           elseBranch.insertAfter(child);
           reportChangeToEnclosingScope(n);
         }
@@ -435,7 +434,7 @@ class PeepholeMinimizeConditions
     }
     Node newOperator = n.removeFirstChild();
     newOperator.setToken(complementOperator);
-    parent.replaceChild(n, newOperator);
+    n.replaceWith(newOperator);
     reportChangeToEnclosingScope(parent);
     return newOperator;
   }
@@ -476,7 +475,7 @@ class PeepholeMinimizeConditions
       // Swap the HOOK
       Node thenBranch = n.getSecondChild();
       replaceNode(originalCond, mNode.withoutNot());
-      n.removeChild(thenBranch);
+      thenBranch.detach();
       n.addChildToBack(thenBranch);
       reportChangeToEnclosingScope(n);
     } else {
@@ -535,7 +534,7 @@ class PeepholeMinimizeConditions
               replacementCond,
               expr.removeFirstChild()).srcref(n);
           Node newExpr = NodeUtil.newExpr(or);
-          parent.replaceChild(n, newExpr);
+          n.replaceWith(newExpr);
           reportChangeToEnclosingScope(parent);
 
           return newExpr;
@@ -557,7 +556,7 @@ class PeepholeMinimizeConditions
         Node replacementCond = replaceNode(originalCond, shortCond).detach();
         Node and = IR.and(replacementCond, expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
-        parent.replaceChild(n, newExpr);
+        n.replaceWith(newExpr);
         reportChangeToEnclosingScope(parent);
 
         return newExpr;
@@ -604,7 +603,7 @@ class PeepholeMinimizeConditions
     // An additional set of curly braces isn't worth it.
     if (shortCond.isNot() && !consumesDanglingElse(elseBranch)) {
       replaceNode(originalCond, shortCond.withoutNot());
-      n.removeChild(thenBranch);
+      thenBranch.detach();
       n.addChildToBack(thenBranch);
       reportChangeToEnclosingScope(n);
       return n;
@@ -625,7 +624,7 @@ class PeepholeMinimizeConditions
       Node returnNode = IR.returnNode(
                             IR.hook(replacementCond, thenExpr, elseExpr)
                                 .srcref(n));
-      parent.replaceChild(n, returnNode);
+      n.replaceWith(returnNode);
       reportChangeToEnclosingScope(returnNode);
       return returnNode;
     }
@@ -653,13 +652,13 @@ class PeepholeMinimizeConditions
             Node assignName = thenOp.removeFirstChild();
             Node thenExpr = thenOp.removeFirstChild();
             Node elseExpr = elseOp.getLastChild();
-            elseOp.removeChild(elseExpr);
+            elseExpr.detach();
 
             Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr)
                 .srcref(n);
             Node assign = new Node(thenOp.getToken(), assignName, hookNode).srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
-            parent.replaceChild(n, expr);
+            n.replaceWith(expr);
             reportChangeToEnclosingScope(parent);
 
             return expr;
@@ -672,7 +671,7 @@ class PeepholeMinimizeConditions
       elseOp.detach();
       Node expr = IR.exprResult(
           IR.hook(replacementCond, thenOp, elseOp).srcref(n));
-      parent.replaceChild(n, expr);
+      n.replaceWith(expr);
       reportChangeToEnclosingScope(parent);
       return expr;
     }
@@ -700,7 +699,7 @@ class PeepholeMinimizeConditions
         Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr).srcref(n);
         var.detach();
         name1.addChildToBack(hookNode);
-        parent.replaceChild(n, var);
+        n.replaceWith(var);
         reportChangeToEnclosingScope(parent);
         return var;
       }
@@ -725,7 +724,7 @@ class PeepholeMinimizeConditions
         Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr).srcref(n);
         var.detach();
         name2.addChildToBack(hookNode);
-        parent.replaceChild(n, var);
+        n.replaceWith(var);
         reportChangeToEnclosingScope(parent);
 
         return var;
@@ -1059,7 +1058,7 @@ class PeepholeMinimizeConditions
 
             if (replacement != null) {
               n.detachChildren();
-              parent.replaceChild(n, replacement);
+              n.replaceWith(replacement);
               reportChangeToEnclosingScope(parent);
               return replacement;
             }
@@ -1115,7 +1114,7 @@ class PeepholeMinimizeConditions
           }
 
           if (replacement != null) {
-            parent.replaceChild(n, replacement);
+            n.replaceWith(replacement);
             reportChangeToEnclosingScope(replacement);
             n = replacement;
           }
@@ -1129,7 +1128,7 @@ class PeepholeMinimizeConditions
         if (nVal != TernaryValue.UNKNOWN) {
           boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;
-          return maybeReplaceChildWithNumber(n, parent, equivalentResult);
+          return maybeReplaceChildWithNumber(n, equivalentResult);
         }
         // We can't do anything else currently.
         return n;
@@ -1137,15 +1136,15 @@ class PeepholeMinimizeConditions
   }
 
   /**
-   * Replaces a node with a number node if the new number node is not equivalent
-   * to the current node.
+   * Replaces a node with a number node if the new number node is not equivalent to the current
+   * node.
    *
-   * Returns the replacement for n if it was replaced, otherwise returns n.
+   * <p>Returns the replacement for n if it was replaced, otherwise returns n.
    */
-  private Node maybeReplaceChildWithNumber(Node n, Node parent, int num) {
+  private Node maybeReplaceChildWithNumber(Node n, int num) {
     Node newNode = IR.number(num);
     if (!newNode.isEquivalentTo(n)) {
-      parent.replaceChild(n, newNode);
+      n.replaceWith(newNode);
       reportChangeToEnclosingScope(newNode);
       markFunctionsDeleted(n);
 

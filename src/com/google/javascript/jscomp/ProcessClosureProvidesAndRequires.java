@@ -818,8 +818,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       checkArgument(assignNode.isAssign(), assignNode);
       checkArgument(nameNode.isName(), nameNode);
       Node valueNode = nameNode.getNext();
-      assignNode.removeChild(nameNode);
-      assignNode.removeChild(valueNode);
+      nameNode.detach();
+      valueNode.detach();
 
       Node varNode = IR.var(nameNode, valueNode).srcref(candidateDefinition);
       varNode.setJSDocInfo(assignNode.getJSDocInfo());

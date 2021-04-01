@@ -475,7 +475,7 @@ class InlineObjectLiterals implements CompilerPass {
         } else if (NodeUtil.isNameDeclaration(ref.getParent())) {
           // The old variable declaration. It didn't have a
           // value. Remove it entirely as it should now be unused.
-          ref.getGrandparent().removeChild(ref.getParent());
+          ref.getParent().detach();
         } else {
           // Make sure that the reference is a GETPROP as we expect it to be.
           Node getprop = ref.getParent();
@@ -491,7 +491,7 @@ class InlineObjectLiterals implements CompilerPass {
           // Replace the GETPROP node with a NAME.
           Node replacement = IR.name(varmap.get(var));
           replacement.srcrefIfMissing(getprop);
-          ref.getGrandparent().replaceChild(ref.getParent(), replacement);
+          ref.getParent().replaceWith(replacement);
         }
       }
     }

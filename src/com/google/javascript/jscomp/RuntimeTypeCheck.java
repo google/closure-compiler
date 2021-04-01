@@ -348,7 +348,7 @@ class RuntimeTypeCheck implements CompilerPass {
         return;
       }
 
-      n.replaceChild(retValue, checkNode);
+      retValue.replaceWith(checkNode);
       t.reportCodeChange();
     }
 

@@ -1475,7 +1475,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
               .createQName(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
-      assignNode.replaceChild(n, legacyQname);
+      n.replaceWith(legacyQname);
       jsdocNode = assignNode;
     } else {
       rhs.detach();
@@ -1747,7 +1747,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    nameParent.replaceChild(nameNode, newQualifiedName);
+    nameNode.replaceWith(newQualifiedName);
     // Given import "var Bar = goog.require('foo.Bar');" here we replace a usage of Bar with
     // foo.Bar if Bar is goog.provided. 'foo' node is generated and never visible to user.
     // Because of that we should mark all such nodes as non-indexable leaving only Bar indexable.

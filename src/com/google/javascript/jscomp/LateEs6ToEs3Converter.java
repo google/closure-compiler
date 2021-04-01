@@ -135,7 +135,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         break;
       case MEMBER_FUNCTION_DEF:
         if (parent.isObjectLit()) {
-          visitMemberFunctionDefInObjectLit(n, parent);
+          visitMemberFunctionDefInObjectLit(n);
         }
         break;
       case TAGGED_TEMPLATELIT:
@@ -153,15 +153,15 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   }
 
   /**
-   * Converts a member definition in an object literal to an ES3 key/value pair.
-   * Member definitions in classes are handled in {@link Es6RewriteClass}.
+   * Converts a member definition in an object literal to an ES3 key/value pair. Member definitions
+   * in classes are handled in {@link Es6RewriteClass}.
    */
-  private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
+  private void visitMemberFunctionDefInObjectLit(Node n) {
     String name = n.getString();
     Node nameNode = n.getFirstFirstChild();
     Node stringKey = astFactory.createStringKey(name, n.removeFirstChild());
     stringKey.setJSDocInfo(n.getJSDocInfo());
-    parent.replaceChild(n, stringKey);
+    n.replaceWith(stringKey);
     stringKey.srcref(nameNode);
     compiler.reportChangeToEnclosingScope(stringKey);
   }
@@ -205,7 +205,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         currElement = currElement.getNext();
       } else {
         Node nextNode = currElement.getNext();
-        obj.removeChild(currElement);
+        currElement.detach();
         props.add(currElement);
         currElement = nextNode;
       }

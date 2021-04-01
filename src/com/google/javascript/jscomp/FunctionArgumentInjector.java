@@ -76,7 +76,7 @@ class FunctionArgumentInjector {
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
-        parent.replaceChild(node, replacement);
+        node.replaceWith(replacement);
         return replacement;
       }
     } else if (replaceThis && node.isThis()) {
@@ -86,7 +86,7 @@ class FunctionArgumentInjector {
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
-        parent.replaceChild(node, replacement);
+        node.replaceWith(replacement);
 
         // Remove the value.  This isn't required but it ensures that we won't
         // inject side-effects multiple times as it will trigger the null

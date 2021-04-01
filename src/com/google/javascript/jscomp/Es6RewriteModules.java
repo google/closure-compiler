@@ -464,7 +464,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       }
     }
 
-    parent.removeChild(importDecl);
+    importDecl.detach();
     t.reportCodeChange();
   }
 
@@ -496,7 +496,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
 
       if (name != null) {
         Node decl = child.detach();
-        parent.replaceChild(export, decl);
+        export.replaceWith(decl);
       } else {
         Node var =
             astFactory.createSingleVarNameDeclaration(
@@ -504,7 +504,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         var.setJSDocInfo(child.getJSDocInfo());
         child.setJSDocInfo(null);
         var.srcrefTreeIfMissing(export);
-        parent.replaceChild(export, var);
+        export.replaceWith(var);
       }
       t.reportCodeChange();
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)
@@ -513,10 +513,10 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       //   export * from 'moduleIdentifier';
       //   export {x, y as z} from 'moduleIdentifier';
       //   export {Foo};
-      parent.removeChild(export);
+      export.detach();
       t.reportCodeChange();
     } else {
-      visitExportDeclaration(t, export, parent);
+      visitExportDeclaration(t, export);
     }
   }
 
@@ -535,7 +535,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
     }
   }
 
-  private void visitExportDeclaration(NodeTraversal t, Node export, Node parent) {
+  private void visitExportDeclaration(NodeTraversal t, Node export) {
     //    export var Foo;
     //    export function Foo() {}
     // etc.
@@ -545,7 +545,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       visitExportNameDeclaration(declaration);
     }
 
-    parent.replaceChild(export, declaration.detach());
+    export.replaceWith(declaration.detach());
     t.reportCodeChange();
   }
 
@@ -855,7 +855,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       } else {
         GlobalizedModuleName name = getGlobalNameAndType(m, namespace, isFromFallbackMetadata);
         Node replacement = name.toQname(astFactory).srcrefTree(requireCall);
-        parent.replaceChild(requireCall, replacement);
+        requireCall.replaceWith(replacement);
       }
     } else {
       checkState(requireCall.getParent().isExprResult());

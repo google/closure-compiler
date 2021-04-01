@@ -212,7 +212,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         // We've already collected a value for this index.
         return false;
       }
-      arrayLiteral.replaceChild(currentValue, rhs.detach());
+      currentValue.replaceWith(rhs.detach());
     }
 
     propertyCandidate.detach();

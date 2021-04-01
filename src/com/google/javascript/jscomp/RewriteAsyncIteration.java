@@ -376,8 +376,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         astFactory.createEmptyAsyncGeneratorWrapperArgument(asyncGeneratorWrapperRef.getJSType());
 
     Node innerBlock = originalFunction.getLastChild();
-    originalFunction.removeChild(innerBlock);
-    innerFunction.replaceChild(innerFunction.getLastChild(), innerBlock);
+    innerBlock.detach();
+    innerFunction.getLastChild().replaceWith(innerBlock);
 
     // Body should be:
     // return new $jscomp.AsyncGeneratorWrapper((new function with original block here)());
@@ -656,7 +656,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       ctx.thisSuperArgsContext.usedThis = true;
     }
     getPropReplacement.srcrefTree(parent);
-    grandparent.replaceChild(parent, getPropReplacement);
+    parent.replaceWith(getPropReplacement);
     ctx.thisSuperArgsContext.usedSuperProperties.add(propertyName);
     compiler.reportChangeToChangeScope(ctx.function);
   }

@@ -3231,7 +3231,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       reportChangeToChangeScope(next);
     }
 
-    jsRoot.removeChild(astRoot);
+    astRoot.detach();
 
     // bookkeeping to mark scopes and nodes as deleted
     reportChangeToChangeScope(astRoot);
@@ -3398,7 +3398,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         default:
           throw new RuntimeException("Bad directive: " + directive);
       }
-      ast.removeChild(node);
+      node.detach();
     }
 
     // Insert the code immediately after the last-inserted runtime library.

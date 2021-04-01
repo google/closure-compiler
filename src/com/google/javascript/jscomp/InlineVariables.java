@@ -361,7 +361,7 @@ class InlineVariables implements CompilerPass {
       Node grandparent = decl.getGrandparent();
 
       compiler.reportChangeToEnclosingScope(decl.getNode());
-      varNode.removeChild(decl.getNode());
+      decl.getNode().detach();
       // Remove var node if empty
       if (!varNode.hasChildren()) {
         NodeUtil.removeChild(grandparent, varNode);

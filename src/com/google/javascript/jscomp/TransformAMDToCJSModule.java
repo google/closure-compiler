@@ -104,7 +104,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         } else if (defineArity == 1) {
           callback = n.getSecondChild();
           if (callback.isObjectLit()) {
-            handleDefineObjectLiteral(t, parent, callback, script);
+            handleDefineObjectLiteral(t, parent, callback);
             return;
           }
         } else if (defineArity == 2) {
@@ -137,15 +137,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
       }
     }
 
-    /**
-     * When define is called with an object literal, assign it to module.exports and
-     * we're done.
-     */
-    private void handleDefineObjectLiteral(NodeTraversal t, Node parent, Node onlyExport,
-        Node script) {
+    /** When define is called with an object literal, assign it to module.exports and we're done. */
+    private void handleDefineObjectLiteral(NodeTraversal t, Node parent, Node onlyExport) {
       onlyExport.detach();
-      script.replaceChild(
-          parent,
+      parent.replaceWith(
           IR.exprResult(IR.assign(NodeUtil.newQName(compiler, "module.exports"), onlyExport))
               .srcrefTreeIfMissing(onlyExport));
       t.reportCodeChange();
@@ -232,7 +227,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
     private void moveCallbackContentToTopLevel(Node defineParent, Node script,
         Node callbackBlock) {
       int curIndex = script.getIndexOfChild(defineParent);
-      script.removeChild(defineParent);
+      defineParent.detach();
       NodeUtil.markFunctionsDeleted(defineParent, compiler);
       callbackBlock.detach();
       Node before = script.getChildAtIndex(curIndex);
@@ -254,9 +249,8 @@ public final class TransformAMDToCJSModule implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isReturn() && n.hasChildren()) {
         Node retVal = n.getFirstChild();
-        n.removeChild(retVal);
-        parent.replaceChild(
-            n,
+        retVal.detach();
+        n.replaceWith(
             IR.exprResult(IR.assign(IR.getprop(IR.name("module"), "exports"), retVal))
                 .srcrefTree(n));
       }

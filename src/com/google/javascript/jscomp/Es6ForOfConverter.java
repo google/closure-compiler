@@ -75,12 +75,12 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isForOf()) {
-      visitForOf(n, parent);
+      visitForOf(n);
     }
   }
 
   // TODO(lharker): break up this method
-  private void visitForOf(Node node, Node parent) {
+  private void visitForOf(Node node) {
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
@@ -174,7 +174,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
     Node newFor = IR.forNode(init, cond, incr, newBody);
     newFor.srcrefTreeIfMissing(node);
-    parent.replaceChild(node, newFor);
+    node.replaceWith(newFor);
     compiler.reportChangeToEnclosingScope(newFor);
   }
 

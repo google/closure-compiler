@@ -345,7 +345,7 @@ final class PolymerClassRewriter {
 
     if (NodeUtil.isNameDeclaration(exprRoot)) {
       Node assignExpr = varToAssign(exprRoot);
-      parent.replaceChild(exprRoot, assignExpr);
+      exprRoot.replaceWith(assignExpr);
       compiler.reportChangeToEnclosingScope(assignExpr);
     }
 
@@ -890,7 +890,7 @@ final class PolymerClassRewriter {
 
         // Avoid copying over the same function twice. The last definition always wins.
         if (nameToExprResult.containsKey(fnName)) {
-          block.removeChild(nameToExprResult.get(fnName));
+          nameToExprResult.get(fnName).detach();
         }
 
         Node fnValue = behaviorFunction.value.cloneTree();
@@ -942,7 +942,7 @@ final class PolymerClassRewriter {
       for (MemberDefinition behaviorProp : behavior.nonPropertyMembersToCopy) {
         String propName = behaviorProp.name.getString();
         if (nameToExprResult.containsKey(propName)) {
-          block.removeChild(nameToExprResult.get(propName));
+          nameToExprResult.get(propName).detach();
         }
 
         Node exprResult = IR.exprResult(NodeUtil.newQName(compiler, qualifiedPath + propName));

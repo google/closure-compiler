@@ -2315,7 +2315,7 @@ class RemoveUnusedCode implements CompilerPass {
         if (!nameNode.isEmpty()) {
           // Just empty the class's name. If the expression is assigned to an unused variable,
           // then the whole class might still be removed as part of that assignment.
-          classNode.replaceChild(nameNode, IR.empty().srcref(nameNode));
+          nameNode.replaceWith(IR.empty().srcref(nameNode));
           compiler.reportChangeToEnclosingScope(classNode);
         }
       }
@@ -3182,7 +3182,7 @@ class RemoveUnusedCode implements CompilerPass {
         // only child, so we can remove the whole declaration
         declaration.replaceWith(IR.empty().srcref(declaration));
       } else {
-        declaration.removeChild(nameNode);
+        nameNode.detach();
       }
       NodeUtil.markFunctionsDeleted(nameNode, compiler);
     }

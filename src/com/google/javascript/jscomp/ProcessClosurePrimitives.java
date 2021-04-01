@@ -186,7 +186,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
         break;
       case "addDependency":
         if (validateUnaliasablePrimitiveCall(t, call, methodName)) {
-          processAddDependency(call, call.getParent());
+          processAddDependency(call);
         }
         break;
       case "setCssNameMapping":
@@ -355,14 +355,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     }
 
     // We're good to go.
-    n.replaceChild(
-        callee,
+    callee.replaceWith(
         NodeUtil.newQName(
             compiler,
             baseClassNode.getQualifiedName() + ".call",
             callee,
             enclosingQname + ".base"));
-    n.removeChild(methodNameNode);
+    methodNameNode.detach();
     compiler.reportChangeToEnclosingScope(n);
   }
 
@@ -405,14 +404,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
     // We're good to go.
     Node className = enclosingFnNameNode.getFirstFirstChild();
-    n.replaceChild(
-        callee,
+    callee.replaceWith(
         NodeUtil.newQName(
             compiler,
             className.getQualifiedName() + ".superClass_." + methodName + ".call",
             callee,
             enclosingQname + ".base"));
-    n.removeChild(methodNameNode);
+    methodNameNode.detach();
     compiler.reportChangeToEnclosingScope(n);
   }
 
@@ -567,7 +565,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /** Process a goog.addDependency() call and record any forward declarations. */
-  private void processAddDependency(Node n, Node parent) {
+  private void processAddDependency(Node n) {
     CodingConvention convention = compiler.getCodingConvention();
     List<String> typeDecls =
         convention.identifyTypeDeclarationCall(n);
@@ -583,7 +581,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // We can't modify parent, so just create a node that will
     // get compiled out.
     Node emptyNode = IR.number(0);
-    parent.replaceChild(n, emptyNode);
+    n.replaceWith(emptyNode);
     compiler.reportChangeToEnclosingScope(emptyNode);
   }
 

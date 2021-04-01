@@ -469,21 +469,21 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       }
     } else if (NodeUtil.isEnhancedFor(parent)) {
       // convert `for (let x of ...` to `for (x of ...`
-      parent.replaceChild(var, name.detach());
+      var.replaceWith(name.detach());
     } else {
       // either `var x = 0;` or `var x;`
       checkState(var.hasOneChild() && var.getFirstChild() == name, var);
       if (name.hasChildren()) {
         // convert `let x = 0;` to `x = 0;`
         Node value = name.removeFirstChild();
-        var.removeChild(name);
+        name.detach();
         Node assign = IR.assign(name, value).srcref(name);
 
         // We don't need to wrapped it with EXPR node if it is within a FOR.
         if (!parent.isVanillaFor()) {
           assign = NodeUtil.newExpr(assign);
         }
-        parent.replaceChild(var, assign);
+        var.replaceWith(assign);
 
       } else {
         // convert `let x;` to ``

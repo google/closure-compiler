@@ -156,8 +156,8 @@ class ReplaceCssNames implements CompilerPass {
             // Replace the function call with the processed argument.
             if (first.isStringLit()) {
               processStringNode(first);
-              n.removeChild(first);
-              parent.replaceChild(n, first);
+              first.detach();
+              n.replaceWith(first);
               t.reportCodeChange();
             } else {
               compiler.report(
@@ -180,12 +180,12 @@ class ReplaceCssNames implements CompilerPass {
                       n, UNEXPECTED_STRING_LITERAL_ERROR, first.getString(), second.getString()));
             } else {
               processStringNode(second);
-              n.removeChild(first);
+              first.detach();
               Node replacement =
                   IR.add(first, IR.string("-" + second.getString()).srcrefIfMissing(second))
                       .srcrefIfMissing(n);
               replacement.setJSType(getNativeStringType());
-              parent.replaceChild(n, replacement);
+              n.replaceWith(replacement);
               t.reportCodeChange();
             }
             break;

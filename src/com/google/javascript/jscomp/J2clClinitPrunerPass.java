@@ -281,7 +281,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       // Check that the clinit call is safe to prune.
       Node staticFnNode = var.getInitialValue();
       if (callsClinit(staticFnNode, clinitName) && hasSafeArguments(t, callOrNewNode)) {
-        parent.removeChild(node);
+        node.detach();
         compiler.reportChangeToEnclosingScope(parent);
       }
     }

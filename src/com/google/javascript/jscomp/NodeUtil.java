@@ -589,7 +589,7 @@ public final class NodeUtil {
     checkState(n.isFunction() || n.isClass());
     Node originalName = n.getFirstChild();
     Node emptyName = n.isFunction() ? IR.name("") : IR.empty();
-    n.replaceChild(originalName, emptyName.srcref(originalName));
+    originalName.replaceWith(emptyName.srcref(originalName));
   }
 
   /**
@@ -2524,11 +2524,11 @@ public final class NodeUtil {
     Node parent = n.getParent();
     if (parent.isExprResult()) {
       Node grandParent = parent.getParent();
-      grandParent.removeChild(parent);
+      parent.detach();
       parent = grandParent;
     } else {
       // Seems like part of more complex expression, fallback to replacing with no-op.
-      parent.replaceChild(n, newUndefinedNode(n));
+      n.replaceWith(newUndefinedNode(n));
     }
 
     NodeUtil.markFunctionsDeleted(n, compiler);
@@ -2550,7 +2550,7 @@ public final class NodeUtil {
     if (isTryFinallyNode(parent, node)) {
       if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
         // A finally can only be removed if there is a catch.
-        parent.removeChild(node);
+        node.detach();
       } else {
         // Otherwise, only its children can be removed.
         node.detachChildren();
@@ -2572,38 +2572,38 @@ public final class NodeUtil {
       node.detachChildren();
     } else if (isStatementBlock(parent) || isSwitchCase(node) || node.isMemberFunctionDef()) {
       // A statement in a block or a member function can simply be removed
-      parent.removeChild(node);
+      node.detach();
     } else if (isNameDeclaration(parent) || parent.isExprResult()) {
       if (parent.hasMoreThanOneChild()) {
-        parent.removeChild(node);
+        node.detach();
       } else {
         // Remove the node from the parent, so it can be reused.
-        parent.removeChild(node);
+        node.detach();
         // This would leave an empty VAR, remove the VAR itself.
         removeChild(parent.getParent(), parent);
       }
     } else if (parent.isLabel() && node == parent.getLastChild()) {
       // Remove the node from the parent, so it can be reused.
-      parent.removeChild(node);
+      node.detach();
       // A LABEL without children can not be referred to, remove it.
       removeChild(parent.getParent(), parent);
     } else if (parent.isVanillaFor()) {
       // Only Token.FOR can have an Token.EMPTY other control structure
       // need something for the condition. Others need to be replaced
       // or the structure removed.
-      parent.replaceChild(node, IR.empty());
+      node.replaceWith(IR.empty());
     } else if (parent.isObjectPattern()) {
       // Remove the name from the object pattern
-      parent.removeChild(node);
+      node.detach();
     } else if (parent.isArrayPattern()) {
       if (node == parent.getLastChild()) {
-        parent.removeChild(node);
+        node.detach();
       } else {
-        parent.replaceChild(node, IR.empty());
+        node.replaceWith(IR.empty());
       }
     } else if (parent.isDestructuringLhs()) {
       // Destructuring is empty so we should remove the node
-      parent.removeChild(node);
+      node.detach();
       if (parent.getParent().hasChildren()) {
         // removing the destructuring could leave an empty variable declaration node, so we would
         // want to remove it from the AST
@@ -2613,11 +2613,11 @@ public final class NodeUtil {
       // Rest params can only ever have one child node
       parent.detach();
     } else if (parent.isParamList()) {
-      parent.removeChild(node);
+      node.detach();
     } else if (parent.isImport()) {
       // An import node must always have three child nodes. Only the first can be safely removed.
       if (node == parent.getFirstChild()) {
-        parent.replaceChild(node, IR.empty());
+        node.replaceWith(IR.empty());
       } else {
         throw new IllegalStateException("Invalid attempt to remove: " + node + " from " + parent);
       }
@@ -2638,14 +2638,13 @@ public final class NodeUtil {
     checkArgument(null == newStatement.getParent());
 
     Node decl = declChild.getParent();
-    Node declParent = decl.getParent();
     if (decl.hasOneChild()) {
-      declParent.replaceChild(decl, newStatement);
+      decl.replaceWith(newStatement);
     } else if (declChild.getNext() == null) {
-      decl.removeChild(declChild);
+      declChild.detach();
       newStatement.insertAfter(decl);
     } else if (declChild.getPrevious() == null) {
-      decl.removeChild(declChild);
+      declChild.detach();
       newStatement.insertBefore(decl);
     } else {
       checkState(decl.hasMoreThanOneChild());
@@ -2654,7 +2653,7 @@ public final class NodeUtil {
         next = after.getNext();
         newDecl.addChildToBack(after.detach());
       }
-      decl.removeChild(declChild);
+      declChild.detach();
       newStatement.insertAfter(decl);
       newDecl.insertAfter(newStatement);
     }
@@ -2688,7 +2687,7 @@ public final class NodeUtil {
         child.insertAfter(previous);
         previous = child;
       }
-      parent.removeChild(block);
+      block.detach();
       return true;
     } else {
       return false;

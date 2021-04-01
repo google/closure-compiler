@@ -628,7 +628,7 @@ class AggressiveInlineAliases implements CompilerPass {
       return false;
     }
     Node aliasParent = alias.getNode().getParent();
-    aliasParent.replaceChild(alias.getNode(), IR.nullNode());
+    alias.getNode().replaceWith(IR.nullNode());
     alias.name.removeRef(alias);
     codeChanged = true;
     compiler.reportChangeToEnclosingScope(aliasParent);
@@ -679,7 +679,7 @@ class AggressiveInlineAliases implements CompilerPass {
     final Node newNode =
         originalRefNode.isName() ? originalRefNode.cloneNode() : originalRefNode.cloneTree();
     newNode.srcrefTree(nodeToReplace);
-    aliasRef.getParent().replaceChild(nodeToReplace, newNode);
+    nodeToReplace.replaceWith(newNode);
     compiler.reportChangeToEnclosingScope(newNode);
     return new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode);
   }
@@ -755,7 +755,7 @@ class AggressiveInlineAliases implements CompilerPass {
           compiler.reportChangeToEnclosingScope(aliasGrandparent);
         } else {
           // just set the original alias to null.
-          aliasParent.replaceChild(alias.getNode(), IR.nullNode());
+          alias.getNode().replaceWith(IR.nullNode());
           compiler.reportChangeToEnclosingScope(aliasParent);
         }
         codeChanged = true;

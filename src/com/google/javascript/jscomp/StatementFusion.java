@@ -42,7 +42,7 @@ final class StatementFusion extends AbstractPeepholeOptimization {
 
     Node start = n.getFirstChild();
     Node end = n.getLastChild();
-    Node result = fuseIntoOneStatement(n, start, end);
+    Node result = fuseIntoOneStatement(start, end);
     fuseExpressionIntoControlFlowStatement(result, n.getLastChild());
 
     reportChangeToEnclosingScope(n);
@@ -106,7 +106,7 @@ final class StatementFusion extends AbstractPeepholeOptimization {
    * @param last The last statement to fuse (exclusive)
    * @return A single statement that contains all the fused statement as one.
    */
-  private static Node fuseIntoOneStatement(Node parent, Node first, Node last) {
+  private static Node fuseIntoOneStatement(Node first, Node last) {
     // Nothing to fuse if there is only one statement.
     if (first.getNext() == last) {
       return first;
@@ -119,7 +119,7 @@ final class StatementFusion extends AbstractPeepholeOptimization {
     for (Node cur = first.getNext(); cur != last; cur = next) {
       commaTree = AstManipulations.fuseExpressions(commaTree, cur.removeFirstChild());
       next = cur.getNext();
-      parent.removeChild(cur);
+      cur.detach();
     }
 
     // Step two: The last EXPR_RESULT will now hold the comma tree with all

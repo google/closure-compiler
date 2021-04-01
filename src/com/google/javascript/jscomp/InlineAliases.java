@@ -144,7 +144,7 @@ final class InlineAliases implements CompilerPass {
             if (newNode.isGetProp()) {
               newNode.getFirstChild().makeNonIndexableRecursive();
             }
-            parent.replaceChild(n, newNode);
+            n.replaceWith(newNode);
             t.reportCodeChange();
           }
           break;

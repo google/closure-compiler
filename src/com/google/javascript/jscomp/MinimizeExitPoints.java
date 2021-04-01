@@ -289,18 +289,18 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
         ifNode.addChildToBack(newDestBlock);
       } else if (destBlock.isEmpty()) {
         // Use the new block.
-        ifNode.replaceChild(destBlock, newDestBlock);
+        destBlock.replaceWith(newDestBlock);
       } else if (destBlock.isBlock()) {
         // Reuse the existing block.
         newDestBlock = destBlock;
       } else {
         // Add the existing statement to the new block.
-        ifNode.replaceChild(destBlock, newDestBlock);
+        destBlock.replaceWith(newDestBlock);
         newDestBlock.addChildToBack(destBlock);
       }
 
       // Move all the if node's following siblings.
-      moveAllFollowing(ifNode, ifNode.getParent(), newDestBlock);
+      moveAllFollowing(ifNode, newDestBlock);
       reportChangeToEnclosingScope(ifNode);
     }
   }
@@ -334,17 +334,16 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Move all the child nodes following start in srcParent to the end of
-   * destParent's child list.
+   * Move all the child nodes following start in srcParent to the end of destParent's child list.
+   *
    * @param start The start point in the srcParent child list.
    * @param srcParent The parent node of start.
    * @param destParent The destination node.
    */
-  private static void moveAllFollowing(
-      Node start, Node srcParent, Node destParent) {
+  private static void moveAllFollowing(Node start, Node destParent) {
     for (Node n = start.getNext(); n != null; n = start.getNext()) {
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(n);
-      srcParent.removeChild(n);
+      n.detach();
       if (isFunctionDeclaration) {
         destParent.addChildToFront(n);
       } else {

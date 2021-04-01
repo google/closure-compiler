@@ -75,7 +75,7 @@ class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, Compiler
       if (!fnNodes.isEmpty()) {
         for (Node n : fnNodes) {
           Node parent = n.getParent();
-          parent.removeChild(n);
+          n.detach();
           compiler.reportChangeToEnclosingScope(parent);
 
           Node nameNode = n.getFirstChild();

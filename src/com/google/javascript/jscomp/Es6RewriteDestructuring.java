@@ -271,7 +271,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           insertSpot = newStatement;
         }
 
-        paramList.replaceChild(param, newParam);
+        param.replaceWith(newParam);
         newParam.setJSDocInfo(jsDoc);
 
         compiler.reportChangeToChangeScope(function);
@@ -736,7 +736,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node block = forNode.getLastChild();
       Node decl = IR.var(astFactory.createName(tempVarName, pattern.getJSType()));
       decl.srcrefTreeIfMissing(pattern);
-      forNode.replaceChild(pattern, decl);
+      pattern.replaceWith(decl);
       Node exprResult =
           IR.exprResult(
               astFactory.createAssign(
@@ -751,8 +751,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Node forNode = declarationNode.getParent();
       checkState(NodeUtil.isEnhancedFor(forNode));
       Node block = forNode.getLastChild();
-      declarationNode.replaceChild(
-          destructuringLhs,
+      destructuringLhs.replaceWith(
           astFactory.createName(tempVarName, pattern.getJSType()).srcref(pattern));
       Token declarationType = declarationNode.getToken();
       Node decl =

@@ -419,7 +419,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       imports.add(importDecl);
     }
 
-    private void visitExportDefault(NodeTraversal t, Node export, Node parent) {
+    private void visitExportDefault(NodeTraversal t, Node export) {
       Node child = export.getFirstChild();
       String name = null;
 
@@ -429,13 +429,13 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
       if (name != null) {
         Node decl = child.detach();
-        parent.replaceChild(export, decl);
+        export.replaceWith(decl);
       } else {
         name = JSCOMP_DEFAULT_EXPORT;
         // Default exports are constant in more ways than one. Not only can they not be
         // overwritten but they also act like a const for temporal dead-zone purposes.
         Node var = IR.constNode(IR.name(name), export.removeFirstChild());
-        parent.replaceChild(export, var.srcrefTreeIfMissing(export));
+        export.replaceWith(var.srcrefTreeIfMissing(export));
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       }
 
@@ -461,11 +461,11 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
             new LocalQName(moduleName + "." + exportSpec.getFirstChild().getString(), exportSpec));
       }
 
-      parent.removeChild(export);
+      export.detach();
       t.reportCodeChange();
     }
 
-    private void visitExportSpecs(NodeTraversal t, Node export, Node parent) {
+    private void visitExportSpecs(NodeTraversal t, Node export) {
       //     export {Foo};
       for (Node exportSpec = export.getFirstFirstChild();
           exportSpec != null;
@@ -479,7 +479,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         exportedNameToLocalQName.put(
             exportSpec.getLastChild().getString(), new LocalQName(localName, exportSpec));
       }
-      parent.removeChild(export);
+      export.detach();
       t.reportCodeChange();
     }
 
@@ -495,7 +495,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       }
     }
 
-    private void visitExportDeclaration(NodeTraversal t, Node export, Node parent) {
+    private void visitExportDeclaration(NodeTraversal t, Node export) {
       //    export var Foo;
       //    export function Foo() {}
       // etc.
@@ -509,7 +509,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         exportedNameToLocalQName.put(name, new LocalQName(name, export));
       }
 
-      parent.replaceChild(export, declaration.detach());
+      export.replaceWith(declaration.detach());
       t.reportCodeChange();
     }
 
@@ -534,16 +534,16 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
     private void visitExport(NodeTraversal t, Node export, Node parent) {
       if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
-        visitExportDefault(t, export, parent);
+        visitExportDefault(t, export);
       } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
         visitExportStar(t, export, parent);
       } else if (export.hasTwoChildren()) {
         visitExportFrom(t, export, parent);
       } else {
         if (export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
-          visitExportSpecs(t, export, parent);
+          visitExportSpecs(t, export);
         } else {
-          visitExportDeclaration(t, export, parent);
+          visitExportDeclaration(t, export);
         }
       }
     }

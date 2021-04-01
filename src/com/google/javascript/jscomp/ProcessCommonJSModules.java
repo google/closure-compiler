@@ -1049,7 +1049,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         Node newNode = umdPattern.activeBranch;
 
         if (newNode == null) {
-          parent.removeChild(umdPattern.ifRoot);
+          umdPattern.ifRoot.detach();
           reportNestedScopesDeleted(umdPattern.ifRoot);
           compiler.reportChangeToEnclosingScope(parent);
           needsRetraverse = true;
@@ -1063,7 +1063,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           newNode.detach();
         }
         needsRetraverse = true;
-        parent.replaceChild(umdPattern.ifRoot, newNode);
+        umdPattern.ifRoot.replaceWith(newNode);
         reportNestedScopesDeleted(umdPattern.ifRoot);
         changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
@@ -1159,11 +1159,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                       .getFirstChild()
                       .addChildToFront(
                           newStatements.getFirstFirstChild().getSecondChild().detach());
-                  newStatements.replaceChild(newStatements.getFirstChild(), newName);
+                  newStatements.getFirstChild().replaceWith(newName);
                 } else {
                   newStatements.addChildToFront(newName);
                 }
-                expr.replaceChild(expr.getSecondChild(), newName.getFirstChild().cloneNode());
+                expr.getSecondChild().replaceWith(newName.getFirstChild().cloneNode());
                 newStatements.addChildToBack(expr.getParent().detach());
               }
             }
@@ -1181,7 +1181,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             compiler.reportChangeToEnclosingScope(callRootParent);
             reportNestedScopesDeleted(enclosingFnCall);
           } else {
-            parent.replaceChild(umdPattern.ifRoot, newNode);
+            umdPattern.ifRoot.replaceWith(newNode);
             compiler.reportChangeToEnclosingScope(newNode);
             reportNestedScopesDeleted(umdPattern.ifRoot);
           }
@@ -1257,7 +1257,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // Class names can't be changed during the middle of a traversal. Unlike functions,
           // the name can be the EMPTY token rather than just a zero length string.
           for (Node clazz : rewrittenClassExpressions) {
-            clazz.replaceChild(clazz.getFirstChild(), IR.empty().srcref(clazz.getFirstChild()));
+            clazz.getFirstChild().replaceWith(IR.empty().srcref(clazz.getFirstChild()));
             t.reportCodeChange();
           }
 
@@ -1303,7 +1303,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
           for (Node require : imports) {
-            visitRequireCall(t, require, require.getParent());
+            visitRequireCall(t, require);
           }
 
           break;
@@ -1437,12 +1437,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * Visit require calls. Rewrite require statements to be a direct reference to name of require
      * module. By this point all references to the import alias should have already been renamed.
      */
-    private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
+    private void visitRequireCall(NodeTraversal t, Node require) {
       String moduleName = getImportedModuleName(t, require);
       Node moduleRef =
           NodeUtil.newQName(compiler, getBasePropertyImport(moduleName, require))
               .srcrefTree(require.getSecondChild());
-      parent.replaceChild(require, moduleRef);
+      require.replaceWith(moduleRef);
 
       t.reportCodeChange();
     }
@@ -1747,7 +1747,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (newNameIsModuleExport) {
               newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
             }
-            Node grandparent = parent.getParent();
 
             Node expr;
             if (!newNameIsQualified && newNameDeclaration == null) {
@@ -1763,18 +1762,18 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               expr.getFirstChild().setJSDocInfo(info.build());
               fixTypeAnnotationsForNode(t, expr.getFirstChild());
             }
-            grandparent.replaceChild(parent, expr);
+            parent.replaceWith(expr);
             if (expr.isLet()) {
-              expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
+              expr.getFirstFirstChild().replaceWith(parent);
             } else {
-              expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
+              expr.getFirstChild().getSecondChild().replaceWith(parent);
             }
           } else if (parent.getIndexOfChild(nameRef) == 1) {
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             if (newNameIsModuleExport) {
               newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
             }
-            parent.replaceChild(nameRef, newNameRef);
+            nameRef.replaceWith(newNameRef);
           } else {
             nameRef.setString(newName);
             nameRef.setOriginalName(originalName);
@@ -1793,7 +1792,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (newNameIsModuleExport) {
               newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
             }
-            Node grandparent = parent.getParent();
             nameRef.setString("");
 
             Node expr;
@@ -1803,11 +1801,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               expr =
                   IR.exprResult(IR.assign(newNameRef, IR.nullNode())).srcrefTreeIfMissing(nameRef);
             }
-            grandparent.replaceChild(parent, expr);
+            parent.replaceWith(expr);
             if (expr.isVar()) {
-              expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
+              expr.getFirstFirstChild().replaceWith(parent);
             } else {
-              expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
+              expr.getFirstChild().getSecondChild().replaceWith(parent);
               JSDocInfo.Builder info = JSDocInfo.Builder.maybeCopyFrom(parent.getJSDocInfo());
               parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
@@ -1909,7 +1907,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               name.setJSDocInfo(info);
             }
             name.srcrefTree(nameRef);
-            parent.replaceChild(nameRef, name);
+            nameRef.replaceWith(name);
             if (nameRef.hasChildren()) {
               name.addChildrenToFront(nameRef.removeChildren());
             }

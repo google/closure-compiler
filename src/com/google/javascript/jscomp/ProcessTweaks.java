@@ -220,12 +220,12 @@ class ProcessTweaks implements CompilerPass {
                 functionCall.tweakFunc.registerFunction;
             newValue = registerFunction.createDefaultValueNode();
           }
-          parent.replaceChild(callNode, newValue);
+          callNode.replaceWith(newValue);
           compiler.reportChangeToEnclosingScope(parent);
         } else {
           Node voidZeroNode = IR.voidNode(IR.number(0).srcref(callNode))
               .srcref(callNode);
-          parent.replaceChild(callNode, voidZeroNode);
+          callNode.replaceWith(voidZeroNode);
           compiler.reportChangeToEnclosingScope(parent);
         }
       }

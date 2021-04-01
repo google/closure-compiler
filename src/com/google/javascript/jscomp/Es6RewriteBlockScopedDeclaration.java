@@ -377,7 +377,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
           Node initializer = loopNode.getFirstChild();
-          loopNode.replaceChild(initializer, IR.empty());
+          initializer.replaceWith(IR.empty());
           if (!initializer.isEmpty()) {
             if (!NodeUtil.isNameDeclaration(initializer)) {
               initializer = IR.exprResult(initializer).srcref(initializer);
@@ -387,12 +387,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
           Node increment = loopNode.getChildAtIndex(2);
           if (increment.isEmpty()) {
-            loopNode.replaceChild(increment, updateLoopObject.srcrefTreeIfMissing(loopNode));
+            increment.replaceWith(updateLoopObject.srcrefTreeIfMissing(loopNode));
           } else {
             Node placeHolder = IR.empty();
-            loopNode.replaceChild(increment, placeHolder);
-            loopNode.replaceChild(
-                placeHolder,
+            increment.replaceWith(placeHolder);
+            placeHolder.replaceWith(
                 createCommaNode(updateLoopObject, increment).srcrefTreeIfMissing(loopNode));
           }
         } else {
@@ -484,10 +483,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                   assign.setJSDocInfo(declaration.getJSDocInfo());
 
                   Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);
-                  grandParent.replaceChild(declaration, replacement);
+                  declaration.replaceWith(replacement);
                   reference = newReference;
                 } else {
-                  grandParent.removeChild(declaration);
+                  declaration.detach();
                 }
                 letConsts.remove(declaration);
                 compiler.reportChangeToEnclosingScope(grandParent);

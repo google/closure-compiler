@@ -345,7 +345,7 @@ class ReplaceIdGenerators implements CompilerPass {
         compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));
       } else if (arg.isStringLit()) {
         String rename = getObfuscatedName(arg, callName, nameGenerator, arg.getString());
-        parent.replaceChild(n, IR.string(rename));
+        n.replaceWith(IR.string(rename));
         t.reportCodeChange();
       } else if (arg.isObjectLit()) {
         for (Node key = arg.getFirstChild(); key != null; key = key.getNext()) {
@@ -365,7 +365,7 @@ class ReplaceIdGenerators implements CompilerPass {
           key.putBooleanProp(Node.QUOTED_PROP, true);
         }
         arg.detach();
-        parent.replaceChild(n, arg);
+        n.replaceWith(arg);
         t.reportCodeChange();
       } else {
         compiler.report(JSError.make(n, INVALID_GENERATOR_PARAMETER));

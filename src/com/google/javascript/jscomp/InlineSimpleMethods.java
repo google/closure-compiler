@@ -103,13 +103,13 @@ class InlineSimpleMethods extends MethodCompilerPass {
               if (logger.isLoggable(Level.FINE)) {
                 logger.fine("Inlining property accessor: " + callName);
               }
-              inlinePropertyReturn(parent, callNode, returned);
+              inlinePropertyReturn(callNode, returned);
             } else if (NodeUtil.isLiteralValue(returned, false)
                 && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
               if (logger.isLoggable(Level.FINE)) {
                 logger.fine("Inlining constant accessor: " + callName);
               }
-              inlineConstReturn(parent, callNode, returned);
+              inlineConstReturn(callNode, returned);
             }
           } else if (isEmptyMethod(firstDefinition)
               && !astAnalyzer.mayHaveSideEffects(callNode.getFirstChild())) {
@@ -153,7 +153,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
   private static void replaceThis(Node expectedGetprop, Node replacement) {
     Node leftChild = expectedGetprop.getFirstChild();
     if (leftChild.isThis()) {
-      expectedGetprop.replaceChild(leftChild, replacement);
+      leftChild.replaceWith(replacement);
     } else {
       replaceThis(leftChild, replacement);
     }
@@ -207,28 +207,22 @@ class InlineSimpleMethods extends MethodCompilerPass {
   /**
    * Replace the provided method call with the tree specified in returnedValue
    *
-   * Parse tree of a call is
-   * name
-   *   call
-   *     getprop
-   *       obj
-   *       string
+   * <p>Parse tree of a call is name call getprop obj string
    */
-  private void inlinePropertyReturn(Node parent, Node call, Node returnedValue) {
+  private void inlinePropertyReturn(Node call, Node returnedValue) {
     Node getProp = returnedValue.cloneTree();
     replaceThis(getProp, call.getFirstChild().removeFirstChild());
-    parent.replaceChild(call, getProp);
+    call.replaceWith(getProp);
     compiler.reportChangeToEnclosingScope(getProp);
   }
 
   /**
-   * Replace the provided object and its method call with the tree specified
-   * in returnedValue. Should be called only if the object reference has
-   * no side effects.
+   * Replace the provided object and its method call with the tree specified in returnedValue.
+   * Should be called only if the object reference has no side effects.
    */
-  private void inlineConstReturn(Node parent, Node call, Node returnedValue) {
+  private void inlineConstReturn(Node call, Node returnedValue) {
     Node retValue = returnedValue.cloneTree();
-    parent.replaceChild(call, retValue);
+    call.replaceWith(retValue);
     compiler.reportChangeToEnclosingScope(retValue);
   }
 
@@ -244,7 +238,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       NodeUtil.markFunctionsDeleted(parent, compiler);
     } else {
       Node srcLocation = call;
-      parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));
+      call.replaceWith(NodeUtil.newUndefinedNode(srcLocation));
       NodeUtil.markFunctionsDeleted(call, compiler);
     }
     t.reportCodeChange();

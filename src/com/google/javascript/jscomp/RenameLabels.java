@@ -180,7 +180,7 @@ final class RenameLabels implements CompilerPass {
     public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getToken()) {
         case LABEL:
-          visitLabel(t, node, parent);
+          visitLabel(t, node);
           break;
 
         case BREAK:
@@ -220,10 +220,11 @@ final class RenameLabels implements CompilerPass {
 
     /**
      * Rename or remove labels.
-     * @param node  The label node.
+     *
+     * @param node The label node.
      * @param parent The parent of the label node.
      */
-    private void visitLabel(NodeTraversal t, Node node, Node parent) {
+    private void visitLabel(NodeTraversal t, Node node) {
       Node nameNode = node.getFirstChild();
       checkState(nameNode != null);
       String name = nameNode.getString();
@@ -241,8 +242,8 @@ final class RenameLabels implements CompilerPass {
       } else {
         // ... and it is not referenced, just remove it.
         Node newChild = node.getLastChild();
-        node.removeChild(newChild);
-        parent.replaceChild(node, newChild);
+        newChild.detach();
+        node.replaceWith(newChild);
         if (newChild.isBlock()) {
           NodeUtil.tryMergeBlock(newChild, false);
         }

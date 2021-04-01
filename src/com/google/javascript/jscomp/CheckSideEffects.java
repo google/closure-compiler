@@ -229,7 +229,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
           Node expr = n.getLastChild();
           n.detachChildren();
-          parent.replaceChild(n, expr);
+          n.replaceWith(expr);
           t.reportCodeChange();
         }
       }

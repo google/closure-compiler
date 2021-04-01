@@ -474,10 +474,10 @@ class FunctionToBlockMutator {
     Node resultNode = getReplacementReturnStatement(ret, resultName);
 
     if (resultNode == null) {
-      block.removeChild(ret);
+      ret.detach();
     } else {
       resultNode.srcrefTreeIfMissing(ret);
-      block.replaceChild(ret, resultNode);
+      ret.replaceWith(resultNode);
     }
   }
 
@@ -563,7 +563,7 @@ class FunctionToBlockMutator {
 
       // Replace the node in parent, and reset current to the first new child.
       breakNode.srcrefTreeIfMissing(current);
-      parent.replaceChild(current, breakNode);
+      current.replaceWith(breakNode);
       if (resultNode != null) {
         resultNode.srcrefTreeIfMissing(current);
         resultNode.insertBefore(breakNode);

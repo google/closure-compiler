@@ -492,16 +492,16 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         }
         compiler.reportChangeToEnclosingScope(defParent);
         defParent.detach();
-        useParent.replaceChild(use, rhs);
+        use.replaceWith(rhs);
       } else if (NodeUtil.isNameDeclaration(defParent)) {
         Node rhs = def.getLastChild();
         if (defParent.isConst()) {
           // If it is a const var we don't want to remove the rhs of the variable
-          def.replaceChild(rhs, Node.newString(Token.NAME, "undefined"));
-          useParent.replaceChild(use, rhs);
+          rhs.replaceWith(Node.newString(Token.NAME, "undefined"));
+          use.replaceWith(rhs);
         } else {
-          def.removeChild(rhs);
-          useParent.replaceChild(use, rhs);
+          rhs.detach();
+          use.replaceWith(rhs);
         }
       } else {
         throw new IllegalStateException("No other definitions can be inlined.");

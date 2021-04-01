@@ -165,7 +165,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * ExtractInstance and performs extraction there.
    */
   private void maybeDoExtraction(GatherExtractionInfo info) {
-    if ((pattern == Pattern.USE_IIFE || pattern == pattern.USE_GLOBAL_TEMP)
+    if ((pattern == Pattern.USE_IIFE || pattern == Pattern.USE_GLOBAL_TEMP)
         && !info.shouldExtractGlobal()) {
       return;
     }
@@ -264,7 +264,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     name.putBooleanProp(Node.IS_CONSTANT_NAME, lhs.getBooleanProp(Node.IS_CONSTANT_NAME));
     name.getFirstChild().setOriginalName(className + ".prototype");
 
-    assignment.replaceChild(lhs, name);
+    lhs.replaceWith(name);
     compiler.reportChangeToEnclosingScope(name);
   }
 

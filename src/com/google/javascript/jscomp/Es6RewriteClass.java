@@ -171,8 +171,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         if (!metadata.isAnonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
           // i.e. attaches the name to the ctor function.
-          constructor.replaceChild(
-              constructor.getFirstChild(), metadata.getClassNameNode().cloneNode());
+          constructor.getFirstChild().replaceWith(metadata.getClassNameNode().cloneNode());
         }
       } else if (member.isEmpty()) {
         // Do nothing.
@@ -250,10 +249,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       constructor.getFirstChild().setString("");
       Node ctorVar = IR.let(metadata.getClassNameNode().cloneNode(), constructor);
       ctorVar.srcrefTreeIfMissing(classNode);
-      parent.replaceChild(classNode, ctorVar);
+      classNode.replaceWith(ctorVar);
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     } else {
-      parent.replaceChild(classNode, constructor);
+      classNode.replaceWith(constructor);
     }
     NodeUtil.markFunctionsDeleted(classNode, compiler);
 

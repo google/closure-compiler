@@ -109,7 +109,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     // Move the function to the front of the parent
     Node parent = n.getParent();
-    parent.removeChild(n);
+    n.detach();
     parent.addChildToFront(var);
     compiler.reportChangeToEnclosingScope(var);
     fnNameNode.addChildToFront(n);

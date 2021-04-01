@@ -188,7 +188,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryReduceVoid(Node n) {
     Node child = n.getFirstChild();
     if ((!child.isNumber() || child.getDouble() != 0.0) && !mayHaveSideEffects(n)) {
-      n.replaceChild(child, IR.number(0));
+      child.replaceWith(IR.number(0));
       reportChangeToEnclosingScope(n);
     }
     return n;
@@ -377,7 +377,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case POS:
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
-          parent.replaceChild(n, left.detach());
+          n.replaceWith(left.detach());
           reportChangeToEnclosingScope(parent);
           return left;
         }
@@ -389,8 +389,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return n;
           } else if (left.getString().equals("NaN")) {
             // "-NaN" is "NaN".
-            n.removeChild(left);
-            parent.replaceChild(n, left);
+            left.detach();
+            n.replaceWith(left);
             reportChangeToEnclosingScope(parent);
             return left;
           }
@@ -400,7 +400,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           double negNum = -left.getDouble();
 
           Node negNumNode = IR.number(negNum);
-          parent.replaceChild(n, negNumNode);
+          n.replaceWith(negNumNode);
           reportChangeToEnclosingScope(parent);
           return negNumNode;
         }
@@ -412,7 +412,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           if (Math.floor(val) == val) {
             int intVal = jsConvertDoubleToBits(val);
             Node notIntValNode = IR.number(~intVal);
-            parent.replaceChild(n, notIntValNode);
+            n.replaceWith(notIntValNode);
             reportChangeToEnclosingScope(parent);
             return notIntValNode;
           } else {
@@ -422,7 +422,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         } else if (left.isBigInt()) {
           BigInteger val = left.getBigInt();
           Node notValNode = IR.bigint(val.not());
-          parent.replaceChild(n, notValNode);
+          n.replaceWith(notValNode);
           reportChangeToEnclosingScope(parent);
           return notValNode;
         } else {
@@ -629,7 +629,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (result != null) {
       // Fold it!
       n.detachChildren();
-      parent.replaceChild(n, result);
+      n.replaceWith(result);
       reportChangeToEnclosingScope(result);
       if (dropped != null) {
         markFunctionsDeleted(dropped);
@@ -642,7 +642,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** Try to fold a COALESCE node. */
   private Node tryFoldCoalesce(Node n, Node left, Node right) {
-    Node parent = n.getParent();
 
     Node result = null;
     Node dropped = null;
@@ -668,7 +667,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (result != null) {
       // Fold!
       n.detachChildren();
-      parent.replaceChild(n, result);
+      n.replaceWith(result);
       reportChangeToEnclosingScope(result);
       if (dropped != null) {
         markFunctionsDeleted(dropped);
@@ -1042,13 +1041,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       if (replacement != null) {
         // Remove the child that has been combined
-        left.removeChild(valueToCombine);
+        valueToCombine.detach();
         // Replace the left op with the remaining child.
-        n.replaceChild(left, left.removeFirstChild());
+        left.replaceWith(left.removeFirstChild());
         // New "-Infinity" node need location info explicitly
         // added.
         replacement.srcrefTreeIfMissing(right);
-        n.replaceChild(right, replacement);
+        right.replaceWith(replacement);
         reportChangeToEnclosingScope(n);
       }
     }
@@ -1456,7 +1455,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (srcObj.isObjectLit() && !srcObj.hasChildren()) {
         Node parent = n.getParent();
         Node destObj = n.getSecondChild().detach();
-        parent.replaceChild(n, destObj);
+        n.replaceWith(destObj);
         reportChangeToEnclosingScope(parent);
       }
     }
@@ -1499,7 +1498,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node parent = n.getParent();
       Node newString = IR.string(stringValue);
 
-      parent.replaceChild(n, newString);
+      n.replaceWith(newString);
       newString.srcrefIfMissing(parent);
       reportChangeToEnclosingScope(parent);
 
@@ -1616,7 +1615,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     } else if (elem.isEmpty()) {
       elem = NodeUtil.newUndefinedNode(elem);
     } else {
-      left.removeChild(elem);
+      elem.detach();
     }
 
     // Replace the entire GETELEM with the value

@@ -123,7 +123,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
     // Swap the existing param into the list, moving requisite AST annotations.
     nameNode.setJSDocInfo(restParam.getJSDocInfo());
-    paramList.replaceChild(restParam, nameNode.detach());
+    restParam.replaceWith(nameNode.detach());
 
     // Make sure rest parameters are typechecked.
     JSDocInfo inlineInfo = restParam.getJSDocInfo();
@@ -354,7 +354,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // methods assume the node they are passed has a non-null parent).
     boolean calleeMayHaveSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(callee);
     // Must remove callee before extracting argument groups.
-    spreadParent.removeChild(callee);
+    callee.detach();
 
     while (callee.isCast()) {
       // Drop any CAST nodes. They're not needed anymore since this pass runs at the end of

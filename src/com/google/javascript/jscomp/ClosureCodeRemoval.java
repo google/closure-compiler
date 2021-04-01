@@ -120,11 +120,11 @@ final class ClosureCodeRemoval implements CompilerPass {
       Node last = parent;
       for (Node ancestor : assignAncestors) {
         if (ancestor.isExprResult()) {
-          lastAncestor.removeChild(ancestor);
+          ancestor.detach();
           NodeUtil.markFunctionsDeleted(ancestor, compiler);
         } else {
           rhs.detach();
-          ancestor.replaceChild(last, rhs);
+          last.replaceWith(rhs);
         }
         last = ancestor;
       }
@@ -225,7 +225,7 @@ final class ClosureCodeRemoval implements CompilerPass {
     for (Node memberFunction : abstractMemberFunctionNodes) {
       compiler.reportFunctionDeleted(memberFunction.getFirstChild());
       Node parent = memberFunction.getParent();
-      parent.removeChild(memberFunction);
+      memberFunction.detach();
       compiler.reportChangeToEnclosingScope(parent);
     }
 
@@ -241,11 +241,11 @@ final class ClosureCodeRemoval implements CompilerPass {
         // which is the return value of the assertion.
         Node firstArg = call.getSecondChild();
         if (firstArg == null) {
-          parent.replaceChild(call, NodeUtil.newUndefinedNode(call));
+          call.replaceWith(NodeUtil.newUndefinedNode(call));
         } else {
           Node replacement = firstArg.detach();
           replacement.copyTypeFrom(call);
-          parent.replaceChild(call, replacement);
+          call.replaceWith(replacement);
         }
         NodeUtil.markFunctionsDeleted(call, compiler);
       }

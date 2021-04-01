@@ -238,14 +238,14 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       for (int parameter : config.parameters) {
         Node arg = n.getChildAtIndex(parameter);
         if (arg != null) {
-          replaceExpression(t, arg, n);
+          replaceExpression(t, arg);
         }
       }
     } else {
       // Replace all parameters.
       Node firstParam = n.getSecondChild();
       for (Node arg = firstParam; arg != null; arg = arg.getNext()) {
-        arg = replaceExpression(t, arg, n);
+        arg = replaceExpression(t, arg);
       }
     }
   }
@@ -258,7 +258,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    * @param parent The expression node's parent
    * @return The replacement node (or the original expression if no replacement is made)
    */
-  private Node replaceExpression(NodeTraversal t, Node expr, Node parent) {
+  private Node replaceExpression(NodeTraversal t, Node expr) {
     Node replacement;
     String key = null;
     String replacementString;
@@ -294,7 +294,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     recordReplacement(key);
 
     replacement.srcrefTreeIfMissing(expr);
-    parent.replaceChild(expr, replacement);
+    expr.replaceWith(replacement);
     t.reportCodeChange();
     return replacement;
   }

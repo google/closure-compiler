@@ -129,10 +129,10 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       void remove() {
         Node classMembers = getKey.getParent();
         checkState(classMembers.isClassMembers(), classMembers);
-        classMembers.removeChild(getKey);
+        getKey.detach();
         NodeUtil.markFunctionsDeleted(getKey, compiler);
         if (setKey != null) {
-          classMembers.removeChild(setKey);
+          setKey.detach();
           NodeUtil.markFunctionsDeleted(setKey, compiler);
         }
         compiler.reportChangeToEnclosingScope(classMembers);

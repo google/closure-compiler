@@ -311,8 +311,7 @@ class ExpressionDecomposer {
     checkState(NodeUtil.isStatementBlock(injectionPointParent));
 
     // Replace the expression with a reference to the new name.
-    Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(expression, IR.name(resultName).copyTypeFrom(expression));
+    expression.replaceWith(IR.name(resultName).copyTypeFrom(expression));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
@@ -544,13 +543,12 @@ class ExpressionDecomposer {
 
       // Replace the expression with the temporary name.
       Node replacementValueNode = IR.name(tempName).copyTypeFrom(expr);
-      parent.replaceChild(expr, replacementValueNode);
+      expr.replaceWith(replacementValueNode);
     } else {
       // Only conditionals that are the direct child of an expression statement
       // don't need results, for those simply replace the expression statement.
       checkArgument(parent.isExprResult());
-      Node grandparent = parent.getParent();
-      grandparent.replaceChild(parent, ifNode);
+      parent.replaceWith(ifNode);
     }
 
     return ifNode;
@@ -634,7 +632,7 @@ class ExpressionDecomposer {
       Node rightOperand = parent.getLastChild();
 
       parent.setToken(Token.ASSIGN);
-      parent.replaceChild(rightOperand, opNode);
+      rightOperand.replaceWith(opNode);
       opNode.addChildToFront(replacementValueNode);
       opNode.addChildToBack(rightOperand);
 
@@ -668,7 +666,7 @@ class ExpressionDecomposer {
       }
     } else {
       // Replace the expression with the temporary name.
-      parent.replaceChild(expr, replacementValueNode);
+      expr.replaceWith(replacementValueNode);
 
       // Keep the original node so that CALL expressions can still be found
       // and inlined properly.

@@ -133,7 +133,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
     } else if (!declarationAssignedValue.equals(clinitAssignedValue)) {
       checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
       // Replace the assignment in declaration with the value from clinit
-      declarationInClass.replaceChild(declarationAssignedValue, clinitAssignedValue);
+      declarationAssignedValue.replaceWith(clinitAssignedValue);
       compiler.reportChangeToEnclosingScope(topLevelDeclaration);
     }
     declarationInClass.setDeclaredConstantVar(true);

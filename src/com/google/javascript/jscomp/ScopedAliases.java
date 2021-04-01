@@ -618,11 +618,11 @@ class ScopedAliases implements HotSwapCompilerPass {
               newName = IR.empty();
             }
             newName.srcref(n);
-            value.replaceChild(n, newName);
+            n.replaceWith(newName);
             compiler.reportChangeToEnclosingScope(newName);
 
             varNode = IR.var(n).srcref(n);
-            grandparent.replaceChild(parent, varNode);
+            parent.replaceWith(varNode);
           } else {
             if (value != null) {
               // If this is a VAR, we can just detach the expression and

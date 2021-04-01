@@ -357,7 +357,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
           exprResult.getFirstChild().setJSDocInfo(n.getJSDocInfo());
           clone.removeProp(Node.JSDOC_INFO_PROP);
         }
-        this.namespaceBlock.replaceChild(n, exprResult);
+        n.replaceWith(exprResult);
         NodeUtil.markFunctionsDeleted(n, compiler);
         compiler.reportChangeToEnclosingScope(exprResult);
       } else if (n.isName()
@@ -387,7 +387,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
             if (parent.getJSDocInfo() != null) {
               exprResult.getFirstChild().setJSDocInfo(parent.getJSDocInfo().clone());
             }
-            this.namespaceBlock.replaceChild(parent, exprResult);
+            parent.replaceWith(exprResult);
             compiler.reportChangeToEnclosingScope(exprResult);
           }
         } else {
@@ -403,7 +403,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
             parent.putBooleanProp(Node.FREE_CALL, false);
           }
 
-          parent.replaceChild(n, newNode);
+          n.replaceWith(newNode);
           compiler.reportChangeToEnclosingScope(newNode);
         }
       }

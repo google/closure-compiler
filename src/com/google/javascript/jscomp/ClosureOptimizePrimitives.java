@@ -101,8 +101,8 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         Node valueNode = curParam.getNext();
         curParam = valueNode.getNext();
 
-        callNode.removeChild(keyNode);
-        callNode.removeChild(valueNode);
+        keyNode.detach();
+        valueNode.detach();
 
         addKeyValueToObjLit(objNode, keyNode, valueNode, NodeUtil.getEnclosingScript(callNode));
       }
@@ -136,7 +136,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     Node newTarget = IR.name(NodeUtil.JSC_PROPERTY_NAME_FN).srcref(nameNode);
     newTarget.setOriginalName(nameNode.getOriginalQualifiedName());
 
-    callNode.replaceChild(nameNode, newTarget);
+    nameNode.replaceWith(newTarget);
     callNode.putBooleanProp(Node.FREE_CALL, true);
     compiler.reportChangeToEnclosingScope(callNode);
   }
@@ -175,7 +175,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         Node valueNode = IR.trueNode().srcref(keyNode);
 
         curParam = curParam.getNext();
-        callNode.removeChild(keyNode);
+        keyNode.detach();
 
         addKeyValueToObjLit(objNode, keyNode, valueNode, NodeUtil.getEnclosingScript(callNode));
       }

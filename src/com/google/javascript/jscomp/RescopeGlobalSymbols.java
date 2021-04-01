@@ -460,7 +460,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
       replacement.srcrefTree(node);
 
-      parent.replaceChild(node, replacement);
+      node.replaceWith(replacement);
       compiler.reportChangeToEnclosingScope(replacement);
       if (parent.isCall() && !maybeReferencesThis.contains(name)) {
         // Do not write calls like this: (0, _a)() but rather as _.a(). The
@@ -566,7 +566,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         comma.insertBefore(n);
       }
       // Remove the var/const/let node.
-      parent.removeChild(n);
+      n.detach();
       NodeUtil.markFunctionsDeleted(n, compiler);
       compiler.reportChangeToEnclosingScope(parent);
     }

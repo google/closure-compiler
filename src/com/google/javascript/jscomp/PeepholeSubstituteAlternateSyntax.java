@@ -147,7 +147,7 @@ class PeepholeSubstituteAlternateSyntax
         Node parentNode = node.getParent();
 
         newNameNode.srcref(node);
-        parentNode.replaceChild(node, newNameNode);
+        node.replaceWith(newNameNode);
 
         if (parentNode.isCall() || parentNode.isOptChainCall()) {
           // e.g. when converting `window.Array?.()` to `Array?.()`, ensure that the
@@ -189,7 +189,7 @@ class PeepholeSubstituteAlternateSyntax
       int lhsPrecedence = NodeUtil.precedence(lhs.getToken());
       int rhsPrecedence = NodeUtil.precedence(rhs.getToken());
       if (rhsPrecedence == precedence && lhsPrecedence != precedence) {
-        n.removeChild(rhs);
+        rhs.detach();
         lhs.replaceWith(rhs);
         n.addChildToBack(lhs);
         reportChangeToEnclosingScope(n);
@@ -265,7 +265,7 @@ class PeepholeSubstituteAlternateSyntax
     if (bind != null) {
       // replace the call target
       bind.target.detach();
-      n.replaceChild(callTarget, bind.target);
+      callTarget.replaceWith(bind.target);
       callTarget = bind.target;
 
       // push the parameters
@@ -276,7 +276,7 @@ class PeepholeSubstituteAlternateSyntax
         // rewrite from "fn(a, b)" to "fn.call(thisValue, a, b)"
         Node newCallTarget = IR.getprop(callTarget.cloneTree(), "call");
         markNewScopesChanged(newCallTarget);
-        n.replaceChild(callTarget, newCallTarget);
+        callTarget.replaceWith(newCallTarget);
         markFunctionsDeleted(callTarget);
         bind.thisValue.cloneTree().insertAfter(newCallTarget);
         n.putBooleanProp(Node.FREE_CALL, false);
@@ -309,7 +309,7 @@ class PeepholeSubstituteAlternateSyntax
       // split comma
       n.detachChildren();
       // Replace the original expression with the left operand.
-      parent.replaceChild(n, left);
+      n.replaceWith(left);
       // Add the right expression afterward.
       Node newStatement = IR.exprResult(right);
       newStatement.srcrefIfMissing(n);
@@ -554,11 +554,11 @@ class PeepholeSubstituteAlternateSyntax
         if (!areSafeFlagsToFold(flags.getString())) {
           return n;
         }
-        n.removeChild(flags);
+        flags.detach();
         regexLiteral = IR.regexp(pattern, flags);
       }
 
-      parent.replaceChild(n, regexLiteral);
+      n.replaceWith(regexLiteral);
       reportChangeToEnclosingScope(parent);
       return regexLiteral;
     }

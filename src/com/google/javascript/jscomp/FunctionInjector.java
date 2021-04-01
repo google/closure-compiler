@@ -360,7 +360,6 @@ class FunctionInjector {
   private Node inlineReturnValue(Reference ref, Node fnNode) {
     Node callNode = ref.callNode;
     Node block = fnNode.getLastChild();
-    Node callParentNode = callNode.getParent();
 
     // NOTE: As the normalize pass guarantees globals aren't being
     // shadowed and an expression can't introduce new names, there is
@@ -400,7 +399,7 @@ class FunctionInjector {
       newExpression.setColor(callNode.getColor());
       newExpression.setColorFromTypeCast();
     }
-    callParentNode.replaceChild(callNode, newExpression);
+    callNode.replaceWith(newExpression);
     NodeUtil.markFunctionsDeleted(callNode, compiler);
     return newExpression;
   }

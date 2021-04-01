@@ -257,7 +257,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       // regardless of what the liveness results because it
       // does not change the result afterward.
       if (rhs != null && rhs.isName() && rhs.getString().equals(var.getName()) && n.isAssign()) {
-        n.removeChild(rhs);
+        rhs.detach();
         n.replaceWith(rhs);
         compiler.reportChangeToEnclosingScope(rhs);
         return;
@@ -284,28 +284,27 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       }
 
       if (n.isAssign()) {
-        n.removeChild(rhs);
+        rhs.detach();
         n.replaceWith(rhs);
       } else if (NodeUtil.isAssignmentOp(n)) {
-        n.removeChild(rhs);
-        n.removeChild(lhs);
+        rhs.detach();
+        lhs.detach();
         Node op = new Node(NodeUtil.getOpFromAssignmentOp(n), lhs, rhs);
-        parent.replaceChild(n, op);
+        n.replaceWith(op);
       } else if (n.isInc() || n.isDec()) {
         if (parent.isExprResult()) {
-          parent.replaceChild(n,
-              IR.voidNode(IR.number(0).srcref(n)));
+          n.replaceWith(IR.voidNode(IR.number(0).srcref(n)));
         } else if (n.isComma() && n != parent.getLastChild()) {
-          parent.removeChild(n);
+          n.detach();
         } else if (parent.isVanillaFor() && NodeUtil.getConditionExpression(parent) != n) {
-          parent.replaceChild(n, IR.empty());
+          n.replaceWith(IR.empty());
         } else {
           // Cannot replace x = a++ with x = a because that's not valid
           // when a is not a number.
           return;
         }
       } else if (isDeclarationNode) {
-        lhs.removeChild(rhs);
+        rhs.detach();
         IR.exprResult(rhs).insertAfter(parent);
         rhs.getParent().srcref(rhs);
       } else {

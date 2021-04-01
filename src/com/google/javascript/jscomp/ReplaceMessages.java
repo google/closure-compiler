@@ -222,7 +222,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         /* jsDoc= */ false,
         /* sideEffect= */ false)) {
       newBlockNode.srcrefTreeIfMissing(oldBlockNode);
-      functionNode.replaceChild(oldBlockNode, newBlockNode);
+      oldBlockNode.replaceWith(newBlockNode);
       compiler.reportChangeToEnclosingScope(newBlockNode);
     }
   }
