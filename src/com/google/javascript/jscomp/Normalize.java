@@ -391,7 +391,7 @@ class Normalize implements CompilerPass {
 
         case CAST:
           compiler.reportChangeToEnclosingScope(n);
-          parent.replaceChild(n, n.removeFirstChild());
+          n.replaceWith(n.removeFirstChild());
           break;
 
         default:
@@ -552,7 +552,7 @@ class Normalize implements CompilerPass {
         default:
           Node block = IR.block();
           block.srcrefIfMissing(last);
-          n.replaceChild(last, block);
+          last.replaceWith(block);
           block.addChildToFront(last);
           reportCodeChange("LABEL normalization", n);
           return;

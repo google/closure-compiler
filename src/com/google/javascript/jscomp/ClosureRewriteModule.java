@@ -1773,9 +1773,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           return false;
         }
 
-        Node statementParent = nameParent.getParent();
         Node placeholder = IR.empty();
-        statementParent.replaceChild(nameParent, placeholder);
+        nameParent.replaceWith(placeholder);
         Node newDeclaration =
             NodeUtil.getDeclarationFromName(newQualifiedName, nameParent, Token.VAR, jsdoc);
         if (NodeUtil.isExprAssign(newDeclaration)) {
@@ -1785,7 +1784,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         }
         nameParent.setJSDocInfo(null);
         newDeclaration.srcrefTreeIfMissing(nameParent);
-        statementParent.replaceChild(placeholder, newDeclaration);
+        placeholder.replaceWith(newDeclaration);
         NodeUtil.removeName(nameParent);
         return true;
 

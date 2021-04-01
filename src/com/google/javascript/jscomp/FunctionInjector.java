@@ -605,7 +605,6 @@ class FunctionInjector {
     // TODO(nicksantos): Create a common mutation function that
     // can replace either a VAR name assignment, assignment expression or
     // a EXPR_RESULT.
-    Node greatGrandParent = grandParent.getParent();
     switch (callSiteType) {
       case VAR_DECL_SIMPLE_ASSIGNMENT:
         // Remove the call from the name node.
@@ -620,14 +619,14 @@ class FunctionInjector {
         // The assignment is now part of the inline function so
         // replace it completely.
         Preconditions.checkState(grandParent.isExprResult());
-        greatGrandParent.replaceChild(grandParent, newBlock);
+        grandParent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(grandParent, compiler);
         break;
 
       case SIMPLE_CALL:
         // If nothing is looking at the result just replace the call.
         Preconditions.checkState(parent.isExprResult());
-        grandParent.replaceChild(parent, newBlock);
+        parent.replaceWith(newBlock);
         NodeUtil.markFunctionsDeleted(parent, compiler);
         break;
 

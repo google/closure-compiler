@@ -371,7 +371,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         }
         Node replacementNode = NodeUtil.booleanNode(!leftVal.toBoolean(true));
-        parent.replaceChild(n, replacementNode);
+        n.replaceWith(replacementNode);
         reportChangeToEnclosingScope(parent);
         return replacementNode;
       case POS:
