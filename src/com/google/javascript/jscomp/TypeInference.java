@@ -1096,7 +1096,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     return NodeUtil.getSourceFile(n).isExtern();
   }
 
-  private static boolean isPossibleMixinApplication(Node lvalue, Node rvalue) {
+  private static boolean isPossibleMixinApplication(Node lvalue, @Nullable Node rvalue) {
     if (isInExternFile(lvalue)) {
       return true;
     }
@@ -1106,7 +1106,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         && jsdoc.isConstructor()
         && jsdoc.getImplementedInterfaceCount() > 0
         && lvalue.isQualifiedName()
-        && rvalue.isCall();
+        && (rvalue != null && rvalue.isCall());
   }
 
   /**
@@ -1114,15 +1114,16 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
    *     The constructor implements at least one interface. If the constructor is missing some
    *     properties of the inherited interfaces, this method declares these properties.
    */
-  private static void addMissingInterfaceProperties(JSType constructor) {
-    if (constructor != null && constructor.isConstructor()) {
-      FunctionType f = constructor.toMaybeFunctionType();
-      ObjectType proto = f.getPrototype();
-      for (ObjectType interf : f.getImplementedInterfaces()) {
-        for (String pname : interf.getPropertyNames()) {
-          if (!proto.hasProperty(pname)) {
-            proto.defineDeclaredProperty(pname, interf.getPropertyType(pname), null);
-          }
+  private static void addMissingInterfaceProperties(@Nullable JSType constructor) {
+    if (constructor == null || !constructor.isConstructor()) {
+      return;
+    }
+    FunctionType f = constructor.toMaybeFunctionType();
+    ObjectType proto = f.getPrototype();
+    for (ObjectType interf : f.getImplementedInterfaces()) {
+      for (String pname : interf.getPropertyNames()) {
+        if (!proto.hasProperty(pname)) {
+          proto.defineDeclaredProperty(pname, interf.getPropertyType(pname), null);
         }
       }
     }
@@ -1457,7 +1458,14 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       //     var x = 3;
       scope = traverse(value, scope);
       return updateScopeForAssignment(scope, n, getJSType(value), AssignmentType.DECLARATION);
-    } else if (n.getParent().isLet()) {
+    }
+
+    if (NodeUtil.isNameDeclaration(n.getParent())
+        && isPossibleMixinApplication(n, /* rvalue= */ null)) {
+      addMissingInterfaceProperties(type);
+    }
+
+    if (n.getParent().isLet()) {
       // Whenever we see a LET, we're guaranteed it's not yet in the scope, and we don't need to
       // worry about it being from an outer scope.  In this case, it has no child, so the actual
       // type should be undefined, but we make a special allowance for type-annotated variables.

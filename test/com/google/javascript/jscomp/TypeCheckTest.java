@@ -23192,6 +23192,46 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testMixinApplication1_inTypeSummaryWithVar() {
+    testTypesWithExterns(
+        lines(
+            "/** @typeSummary */",
+            MIXIN_DEFINITIONS,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "var MyElementWithToggle;"),
+        lines("class SubToggle extends MyElementWithToggle {}", "(new SubToggle).foobar(123);"),
+        lines(
+            "actual parameter 1 of MyElementWithToggle.prototype.foobar"
+                + " does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testMixinApplication1_inTypeSummaryWithLet() {
+    testTypesWithExterns(
+        lines(
+            "/** @typeSummary */",
+            MIXIN_DEFINITIONS,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "let MyElementWithToggle;"),
+        lines("class SubToggle extends MyElementWithToggle {}", "(new SubToggle).foobar(123);"),
+        lines(
+            "actual parameter 1 of MyElementWithToggle.prototype.foobar"
+                + " does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
   public void testMixinApplication2() {
     testTypes(
         lines(
