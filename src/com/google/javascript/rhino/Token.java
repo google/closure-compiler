@@ -257,8 +257,6 @@ public enum Token {
   PLACEHOLDER2,
   PLACEHOLDER3;
 
-  public static final Token STRING = STRINGLIT;
-
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
     switch (token) {
