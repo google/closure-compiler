@@ -1062,14 +1062,6 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public final int getExistingIntProp(Prop propType) {
-    PropListItem item = lookupProperty(propType);
-    if (item == null) {
-      throw new IllegalStateException("missing prop: " + propType);
-    }
-    return item.getIntValue();
-  }
-
   public final void putProp(Prop propType, @Nullable Object value) {
     removeProp(propType);
     if (value != null) {
