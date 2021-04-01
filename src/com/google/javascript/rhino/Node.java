@@ -830,13 +830,11 @@ public class Node implements Serializable {
   }
 
   public final void insertAfter(Node existing) {
+    existing.checkAttached();
+    this.checkDetached();
+
     final Node existingParent = existing.parent;
     final Node existingNext = existing.next;
-
-    checkState(existingParent != null);
-    checkState(this.parent == null);
-    checkState(this.next == null);
-    checkState(this.previous == null);
 
     this.parent = existingParent;
 
@@ -853,13 +851,11 @@ public class Node implements Serializable {
   }
 
   public final void insertBefore(Node existing) {
+    existing.checkAttached();
+    this.checkDetached();
+
     final Node existingParent = existing.parent;
     final Node existingPrevious = existing.previous;
-
-    checkState(existingParent != null);
-    checkState(this.parent == null);
-    checkState(this.next == null);
-    checkState(this.previous == null);
 
     this.parent = existingParent;
 
@@ -914,80 +910,124 @@ public class Node implements Serializable {
     children.previous = node;
   }
 
-  /** Detach a child from its parent and siblings. */
-  public final void removeChild(Node child) {
-    checkState(child.parent == this, "%s is not the parent of %s", this, child);
-    checkNotNull(child.previous);
+  /** Swaps `replacement` and its subtree into the position of `this`. */
+  public final void replaceWith(Node replacement) {
+    this.checkAttached();
+    replacement.checkDetached();
 
-    Node last = first.previous;
-    Node prevSibling = child.previous;
-    Node nextSibling = child.next;
-    if (first == child) {
-      first = nextSibling;
-      if (nextSibling != null) {
-        nextSibling.previous = last;
-      }
-      // last.next remains null
-    } else if (child == last) {
-      first.previous = prevSibling;
-      prevSibling.next = null;
+    final Node existingParent = this.parent;
+    final Node existingNext = this.next;
+    final Node existingPrevious = this.previous;
+
+    // Copy over important information.
+    // TODO(nickreid): Stop doing this. It's totally unexpected.
+    replacement.srcrefIfMissing(this);
+
+    // The sequence below also has to work when `this` is an only child, ehich can cause many of the
+    // variables to point to the same object.
+
+    this.parent = null;
+    replacement.parent = existingParent;
+
+    this.previous = null;
+    replacement.previous = existingPrevious;
+    if (existingPrevious.next == null) {
+      existingParent.first = replacement;
+      // existingPrevious.next remains null
     } else {
-      prevSibling.next = nextSibling;
-      nextSibling.previous = prevSibling;
+      // existingParent.first is unchanged;
+      existingPrevious.next = replacement;
     }
 
-    child.next = null;
-    child.previous = null;
-    child.parent = null;
+    if (existingNext == null) {
+      // this.next remains null;
+      existingParent.first.previous = replacement;
+      // replacement.next remains null
+    } else {
+      this.next = null;
+      existingNext.previous = replacement;
+      replacement.next = existingNext;
+    }
+  }
+
+  /** Removes this node from its parent, but retains its subtree. */
+  public final Node detach() {
+    this.checkAttached();
+
+    final Node existingParent = this.parent;
+    final Node existingNext = this.next;
+    final Node existingPrevious = this.previous;
+
+    // The sequence below also has to work when `this` is an only child or has a single sibling,
+    // which can cause many of the variables to point to the same object.
+
+    this.parent = null;
+
+    if (existingNext == null) {
+      // this.next remains null;
+      existingParent.first.previous = existingPrevious;
+    } else {
+      this.next = null;
+      existingNext.previous = existingPrevious;
+    }
+
+    this.previous = null;
+    if (existingPrevious.next == null) {
+      existingParent.first = existingNext;
+      // existingPrevious.next remains null
+    } else {
+      // existingParent.first is unchanged;
+      existingPrevious.next = existingNext;
+    }
+
+    return this;
+  }
+
+  private final void checkAttached() {
+    checkState(this.parent != null, "Has no parent: %s", this);
+  }
+
+  private final void checkDetached() {
+    checkState(this.parent == null, "Has parent: %s", this);
+    checkState(this.next == null, "Has next: %s", this);
+    checkState(this.previous == null, "Has previous: %s", this);
   }
 
   /**
-   * Detaches Node and replaces it with newNode.
+   * Removes the first child of Node. Equivalent to: node.removeChild(node.getFirstChild());
+   *
+   * @return The removed Node.
    */
-  public final void replaceWith(Node newNode) {
-    parent.replaceChild(this, newNode);
+  @Nullable
+  public final Node removeFirstChild() {
+    Node child = first;
+    if (child != null) {
+      child.detach();
+    }
+    return child;
   }
 
-  /** Detaches child from Node and replaces it with newChild. */
-  public final void replaceChild(Node child, Node newChild) {
-    checkArgument(newChild.next == null, "The new child node has next siblings.");
-    checkArgument(newChild.previous == null, "The new child node has previous siblings.");
-    checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    checkState(child.parent == this, "%s is not the parent of %s", this, child);
-
-    // Copy over important information.
-    newChild.srcrefIfMissing(child);
-    newChild.parent = this;
-
-    Node nextSibling = child.next;
-    Node prevSibling = child.previous;
-
-    Node last = first.previous;
-
-    if (child == prevSibling) {  // first and only child
-      first = newChild;
-      first.previous = newChild;
-    } else {
-      if (child == first) {
-        first = newChild;
-        // prevSibling == last, and last.next remains null
-      } else {
-        prevSibling.next = newChild;
-      }
-
-      if (child == last) {
-        first.previous = newChild;
-      } else {
-        nextSibling.previous = newChild;
-      }
-
-      newChild.previous = prevSibling;
+  /** @return A Node that is the head of the list of children. */
+  @Nullable
+  public final Node removeChildren() {
+    Node children = first;
+    for (Node child = first; child != null; child = child.next) {
+      child.parent = null;
     }
-    newChild.next = nextSibling;  // maybe null
+    first = null;
+    return children;
+  }
 
-    child.next = null;
-    child.previous = null;
-    child.parent = null;
+  /** Removes all children from this node and isolates the children from each other. */
+  public final void detachChildren() {
+    for (Node child = first; child != null; ) {
+      Node nextChild = child.next;
+      child.parent = null;
+      child.next = null;
+      child.previous = null;
+      child = nextChild;
+    }
+    first = null;
   }
 
   @VisibleForTesting
@@ -2139,56 +2179,6 @@ public class Node implements Serializable {
       default:
         return false;
     }
-  }
-
-  /**
-   * Removes this node from its parent. Equivalent to:
-   * node.getParent().removeChild();
-   */
-  public final Node detach() {
-    checkNotNull(parent);
-    parent.removeChild(this);
-    return this;
-  }
-
-  /**
-   * Removes the first child of Node. Equivalent to: node.removeChild(node.getFirstChild());
-   *
-   * @return The removed Node.
-   */
-  @Nullable
-  public final Node removeFirstChild() {
-    Node child = first;
-    if (child != null) {
-      removeChild(child);
-    }
-    return child;
-  }
-
-  /** @return A Node that is the head of the list of children. */
-  @Nullable
-  public final Node removeChildren() {
-    Node children = first;
-    for (Node child = first; child != null; child = child.next) {
-      child.parent = null;
-    }
-    first = null;
-    return children;
-  }
-
-  /**
-   * Removes all children from this node and isolates the children from each
-   * other.
-   */
-  public final void detachChildren() {
-    for (Node child = first; child != null;) {
-      Node nextChild = child.next;
-      child.parent = null;
-      child.next = null;
-      child.previous = null;
-      child = nextChild;
-    }
-    first = null;
   }
 
   @DoNotCall
