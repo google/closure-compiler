@@ -462,7 +462,7 @@ public class NodeTest {
   @Test
   public void testCloneValues() {
     Node number = Node.newNumber(100);
-    assertThat(number.cloneNode().getDouble()).isEqualTo(100);
+    assertThat(number.cloneNode().getDouble()).isEqualTo(100.0D);
 
     Node string = Node.newString(new String("a"));
     assertThat(string.cloneNode().getString()).isSameInstanceAs(string.getString());
