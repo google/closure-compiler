@@ -179,7 +179,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
               registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
               registry.getNativeType(JSTypeNative.VOID_TYPE)));
     }
-    promiseResolveCall.useSourceInfoFromForTree(dynamicImport);
+    promiseResolveCall.srcrefTree(dynamicImport);
     Node parent = dynamicImport.getParent();
     parent.replaceChild(dynamicImport, promiseResolveCall);
     t.reportCodeChange(parent);
@@ -223,7 +223,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     }
     final Node originalSpecifierNode = dynamicImport.getFirstChild();
     Node newSpecifier =
-        astFactory.createString(retargetedSpecifier).useSourceInfoFrom(originalSpecifierNode);
+        astFactory.createString(retargetedSpecifier).srcref(originalSpecifierNode);
     originalSpecifierNode.replaceWith(newSpecifier);
     t.reportCodeChange(newSpecifier);
   }
@@ -261,7 +261,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                     registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
                     registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
                 registry.createFunctionType(registry.getNativeType(JSTypeNative.ALL_TYPE))));
-    importThenCall.useSourceInfoIfMissingFromForTree(dynamicImport);
+    importThenCall.srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
       importThenCall.setJSType(dynamicImport.getJSType());
     }
@@ -293,7 +293,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     Node importAliasCall =
         astFactory
             .createCall(aliasNode, moduleSpecifier)
-            .useSourceInfoIfMissingFromForTree(dynamicImport);
+            .srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
       importAliasCall.setJSType(dynamicImport.getJSType());
     }
