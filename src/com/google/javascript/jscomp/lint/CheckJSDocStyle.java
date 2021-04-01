@@ -56,7 +56,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
               + " instead?");
 
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
-      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
+      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.{0}");
 
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
       DiagnosticType.disabled("JSC_MIXED_PARAM_JSDOC_STYLES",
@@ -320,7 +320,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
             ? ImmutableList.of()
             : ImmutableList.copyOf(jsDoc.getParameterNames());
     if (paramsFromJsDoc.isEmpty()) {
-      checkInlineParams(t, function);
+      checkInlineParams(t, function, jsDoc);
     } else {
       Node paramList = NodeUtil.getFunctionParameters(function);
       if (!paramList.hasXChildren(paramsFromJsDoc.size())) {
@@ -350,17 +350,22 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
-  /**
-   * Checks that the inline type annotations are correct.
-   */
-  private void checkInlineParams(NodeTraversal t, Node function) {
+  /** Checks that the inline type annotations are correct. */
+  private void checkInlineParams(NodeTraversal t, Node function, JSDocInfo fnJSDoc) {
     Node paramList = NodeUtil.getFunctionParameters(function);
 
     for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
       JSDocInfo jsDoc =
           param.isDefaultValue() ? param.getFirstChild().getJSDocInfo() : param.getJSDocInfo();
       if (jsDoc == null) {
-        t.report(param, MISSING_PARAMETER_JSDOC);
+        compiler.report(
+            JSError.make(
+                param,
+                MISSING_PARAMETER_JSDOC,
+                fnJSDoc != null && fnJSDoc.isOverride()
+                    ?
+                    ""
+                    : ""));
         return;
       } else {
         JSTypeExpression paramType = jsDoc.getType();

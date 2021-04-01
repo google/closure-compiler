@@ -1193,6 +1193,24 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingOverrideTypes_warningMessageIsCorrect() {
+    String src =
+        lines(
+            "/**", //
+            " * @override",
+            " */",
+            " function f(x) { }");
+    testWarning(
+        srcs(src),
+        warning(MISSING_PARAMETER_JSDOC)
+            .withMessageContaining(
+                "Parameter must have JSDoc."
+                    +
+                    ""
+                ));
+  }
+
+  @Test
   public void testMissingOverrideTypes_bothParamAndReturnMissing_inGoogModule() {
     String src =
         lines(
