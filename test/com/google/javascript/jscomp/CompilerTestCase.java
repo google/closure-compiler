@@ -1692,7 +1692,7 @@ public abstract class CompilerTestCase {
             Node nextChild = child.getNext();
             String sourceFile = child.getSourceFileName();
             if (sourceFile != null && sourceFile.startsWith(Compiler.SYNTHETIC_CODE_PREFIX)) {
-              scriptRoot.removeChild(child);
+              child.detach();
             }
             child = nextChild;
           }

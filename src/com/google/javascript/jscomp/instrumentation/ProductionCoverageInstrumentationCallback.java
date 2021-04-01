@@ -193,14 +193,13 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
    */
   private void addInstrumentationNodeWithComma(
       Node originalNode, String fileName, String functionName, Type type) {
-    Node parentNode = originalNode.getParent();
     Node cloneOfOriginal = originalNode.cloneTree();
     Node newInstrumentationNode =
         newInstrumentationNode(cloneOfOriginal, fileName, functionName, type);
 
     Node childOfInstrumentationNode = newInstrumentationNode.removeFirstChild();
     Node infusedExp = AstManipulations.fuseExpressions(childOfInstrumentationNode, cloneOfOriginal);
-    parentNode.replaceChild(originalNode, infusedExp);
+    originalNode.replaceWith(infusedExp);
   }
 
   /**

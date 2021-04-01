@@ -67,8 +67,7 @@ public final class GoogBindToArrow extends Scanner {
     if (body.hasOneChild()) {
       Node returnNode = body.getFirstChild();
       if (returnNode.isReturn()) {
-        arrowFunction.replaceChild(
-            arrowFunction.getLastChild(), returnNode.getFirstChild().detach());
+        arrowFunction.getLastChild().replaceWith(returnNode.getFirstChild().detach());
       }
     }
 

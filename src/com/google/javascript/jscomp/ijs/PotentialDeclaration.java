@@ -600,6 +600,6 @@ abstract class PotentialDeclaration {
   private static void removeStringKeyValue(Node stringKey) {
     Node value = stringKey.getOnlyChild();
     Node replacementValue = IR.number(0).srcrefTree(value);
-    stringKey.replaceChild(value, replacementValue);
+    value.replaceWith(replacementValue);
   }
 }

@@ -2508,7 +2508,7 @@ public final class JsDocInfoParser {
     }
     if (union.hasOneChild()) {
       Node firstChild = union.getFirstChild();
-      union.removeChild(firstChild);
+      firstChild.detach();
       return firstChild;
     }
     return union;

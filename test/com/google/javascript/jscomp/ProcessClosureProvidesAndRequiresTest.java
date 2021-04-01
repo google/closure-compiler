@@ -109,7 +109,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           }
           while (newScriptNode.getLastChild() != null) {
             Node lastChild = newScriptNode.getLastChild();
-            newScriptNode.removeChild(lastChild);
+            lastChild.detach();
             lastChild.insertBefore(scriptNode.getFirstChild());
           }
         }
@@ -124,7 +124,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           }
           while (newScriptNode.hasChildren()) {
             Node firstChild = newScriptNode.getFirstChild();
-            newScriptNode.removeChild(firstChild);
+            firstChild.detach();
             scriptNode.addChildToBack(firstChild);
           }
         }

@@ -139,7 +139,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
 
         for (Node childToRemove : nodesToRemove) {
           reportChangeToEnclosingScope(node);
-          node.removeChild(childToRemove);
+          childToRemove.detach();
         }
       }
 
