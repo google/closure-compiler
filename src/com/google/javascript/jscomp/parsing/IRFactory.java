@@ -737,8 +737,7 @@ class IRFactory {
       com.google.javascript.jscomp.parsing.parser.Token token) {
     ArrayList<Comment> nonJSDocComments = getNonJSDocComments(token);
     if (!nonJSDocComments.isEmpty()) {
-      NonJSDocComment nonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
-      return nonJSDocComment;
+      return combineCommentsIntoSingleComment(nonJSDocComments);
     }
     return null;
   }
