@@ -181,7 +181,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     }
     promiseResolveCall.srcrefTree(dynamicImport);
     Node parent = dynamicImport.getParent();
-    parent.replaceChild(dynamicImport, promiseResolveCall);
+    dynamicImport.replaceWith(promiseResolveCall);
     t.reportCodeChange(parent);
     dynamicImportsRemoved = true;
   }
@@ -248,7 +248,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node importParent = dynamicImport.getParent();
     final Node placeholder = IR.empty();
-    importParent.replaceChild(dynamicImport, placeholder);
+    dynamicImport.replaceWith(placeholder);
     final Node moduleNamespaceNode = createModuleNamespaceNode(targetModuleNs);
     final Node callbackFn = astFactory.createZeroArgArrowFunctionForExpression(moduleNamespaceNode);
     final Node importThenCall =
@@ -265,7 +265,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     if (dynamicImport.getJSType() != null) {
       importThenCall.setJSType(dynamicImport.getJSType());
     }
-    importParent.replaceChild(placeholder, importThenCall);
+    placeholder.replaceWith(importThenCall);
     compiler.reportChangeToChangeScope(callbackFn);
     compiler.reportChangeToEnclosingScope(importParent);
   }
