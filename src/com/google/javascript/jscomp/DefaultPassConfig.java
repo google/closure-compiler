@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -2073,8 +2074,8 @@ public final class DefaultPassConfig extends PassConfig {
                               compiler,
                               options.replaceStringsPlaceholderToken,
                               options.replaceStringsFunctionDescriptions,
-                              options.replaceStringsReservedStrings,
-                              options.replaceStringsInputMap);
+                              ImmutableSet.of(),
+                              /* previousMappings= */ null);
                       pass.process(externs, root);
                       compiler.setStringMap(pass.getStringMap());
                     }

@@ -799,8 +799,6 @@ public class CompilerOptions implements Serializable {
   List<String> replaceStringsFunctionDescriptions;
 
   String replaceStringsPlaceholderToken;
-  // A list of strings that should not be used as replacements
-  Set<String> replaceStringsReservedStrings;
   // A previous map of replacements to strings.
   VariableMap replaceStringsInputMap;
 
@@ -1321,7 +1319,6 @@ public class CompilerOptions implements Serializable {
     idGenerators = ImmutableMap.of();
     replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
-    replaceStringsReservedStrings = ImmutableSet.of();
     propertiesThatMustDisambiguate = ImmutableSet.of();
     inputSourceMaps = ImmutableMap.of();
 
@@ -2335,14 +2332,6 @@ public class CompilerOptions implements Serializable {
     this.replaceStringsPlaceholderToken = replaceStringsPlaceholderToken;
   }
 
-  public void setReplaceStringsReservedStrings(Set<String> replaceStringsReservedStrings) {
-    this.replaceStringsReservedStrings = replaceStringsReservedStrings;
-  }
-
-  public void setReplaceStringsInputMap(VariableMap serializedMap) {
-    this.replaceStringsInputMap = serializedMap;
-  }
-
   public void setPrettyPrint(boolean prettyPrint) {
     this.prettyPrint = prettyPrint;
   }
@@ -2806,9 +2795,7 @@ public class CompilerOptions implements Serializable {
         .add("replaceIdGenerators", replaceIdGenerators)
         .add("replaceMessagesWithChromeI18n", replaceMessagesWithChromeI18n)
         .add("replaceStringsFunctionDescriptions", replaceStringsFunctionDescriptions)
-        .add("replaceStringsInputMap", replaceStringsInputMap)
         .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
-        .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
         .add("reserveRawExports", reserveRawExports)
         .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
         .add("rewritePolyfills", rewritePolyfills)
