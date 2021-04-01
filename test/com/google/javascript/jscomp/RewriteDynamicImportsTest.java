@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.javascript.jscomp.RewriteDynamicImports.DYNAMIC_IMPORT_ALIAS_MISSING;
 import static com.google.javascript.jscomp.RewriteDynamicImports.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 
 import com.google.common.collect.ImmutableList;
@@ -86,12 +85,10 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
 
   @Test
   public void externalImportWithAlias() {
-    testExternChanges(
-        "import('./external.js')",
-        "/** @param {string} specifier @return {Promise<?>} */ function imprt_(specifier) {}");
-
-    this.allowExternsChanges();
-    test("import('./external.js')", "imprt_('./external.js')");
+    test(
+        externs("/** @param {string} a @return {!Promise<?>} */ function imprt_(a) {}"),
+        srcs("import('./external.js')"),
+        expected("imprt_('./external.js')"));
   }
 
   @Test
@@ -290,12 +287,6 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
         externs("const ns = {}; /** @const */ ns.imprt_ = function(path) {};"),
         srcs("import('./other.js');"),
         expected("ns.imprt_('./other.js');"));
-  }
-
-  @Test
-  public void qualifiedNameAliasError() {
-    this.dynamicImportAlias = "ns.imprt_";
-    testWarning("const ns = {}; import('./other.js');", DYNAMIC_IMPORT_ALIAS_MISSING);
   }
 
   @Test

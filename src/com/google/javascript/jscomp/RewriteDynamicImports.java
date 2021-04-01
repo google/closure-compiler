@@ -17,21 +17,16 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ModuleRenaming.GlobalizedModuleName;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
-import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -66,17 +61,10 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
           "JSC_UNABLE_TO_COMPUTE_RELATIVE_PATH",
           "Unable to compute relative import path from \"{0}\" to \"{1}\"");
 
-  static final DiagnosticType DYNAMIC_IMPORT_ALIAS_MISSING =
-      DiagnosticType.warning(
-          "JSC_DYNAMIC_IMPORT_ALIAS_MISSING",
-          "A dynamic import alias is specified as a qualified name but the definition "
-              + "is missing: \"{0}\"");
-
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final String alias;
   private boolean dynamicImportsRemoved = false;
-  private boolean shouldInjectAliasExtern = false;
 
   /** @param compiler The compiler */
   public RewriteDynamicImports(AbstractCompiler compiler, @Nullable String alias) {
@@ -88,7 +76,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   @Override
   public void process(Node externs, Node root) {
     dynamicImportsRemoved = false;
-    shouldInjectAliasExtern = false;
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
     NodeTraversal.traverse(compiler, root, this);
@@ -96,9 +83,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       // This pass removes dynamic import, but adds arrow functions.
       compiler.setFeatureSet(
           compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT).with(Feature.ARROW_FUNCTIONS));
-    }
-    if (shouldInjectAliasExtern) {
-      injectAliasAsExtern(externs);
     }
   }
 
@@ -303,12 +287,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    */
   private void aliasDynamicImport(NodeTraversal t, Node dynamicImport) {
     checkNotNull(this.alias);
-    if (NodeUtil.isValidSimpleName(this.alias) && t.getScope().getVar(this.alias) == null) {
-      shouldInjectAliasExtern = true;
-    } else if (t.getScope().getVar(this.alias) == null) {
-      compiler.report(JSError.make(dynamicImport, DYNAMIC_IMPORT_ALIAS_MISSING, this.alias));
-    }
-
     final Node aliasNode = astFactory.createQNameWithUnknownType(this.alias);
     aliasNode.setOriginalName("import");
     final Node moduleSpecifier = dynamicImport.getFirstChild().detach();
@@ -330,38 +308,5 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     Node moduleNamespace = moduleVarNode.cloneNode();
     moduleNamespace.setJSType(moduleVarNode.getJSType());
     return moduleNamespace;
-  }
-
-  /** Inject the alias definition for dynamic import expressions into the externs. */
-  private void injectAliasAsExtern(Node externs) {
-    checkState(alias != null && NodeUtil.isValidSimpleName(alias));
-
-    JSTypeRegistry registry = compiler.getTypeRegistry();
-    final JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    final FunctionType importFunctionType =
-        registry.createFunctionType(
-            registry.createTemplatizedType(
-                registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), unknownType),
-            registry.getNativeType(JSTypeNative.STRING_TYPE));
-    Node importAliasFunction =
-        astFactory.createFunction(
-            alias,
-            astFactory.createParamList("specifier"),
-            astFactory.createBlock(),
-            importFunctionType);
-    importAliasFunction.useSourceInfoFromForTree(externs);
-
-    String externsSourceFile =
-        compiler.getInput(externs.getFirstChild().getInputId()).getSourceFile().getName();
-    JSDocInfo.Builder info = JSDocInfo.builder();
-    info.recordParameter(
-        "specifier",
-        new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), externsSourceFile));
-    info.recordReturnType(
-        new JSTypeExpression(JsDocInfoParser.parseTypeString("Promise<?>"), externsSourceFile));
-    importAliasFunction.setJSDocInfo(info.build());
-
-    externs.getFirstChild().addChildToFront(importAliasFunction);
-    compiler.reportChangeToEnclosingScope(importAliasFunction);
   }
 }
