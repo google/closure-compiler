@@ -56,6 +56,18 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testWindowLocationAssign() {
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "window.location.assign(foo())", exprMatchesStr("foo()"));
+    helperMoveExpression(
+        "window.location.assign(foo())",
+        exprMatchesStr("foo()"),
+        lines(
+            "var result$jscomp$0 = foo();", //
+            "window.location.assign(result$jscomp$0)"));
+  }
+
+  @Test
   public void testCannotExpose_expression1() {
     // Can't move or decompose some classes of expressions.
     helperCanExposeExpression(

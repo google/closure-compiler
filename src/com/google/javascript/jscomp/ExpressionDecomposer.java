@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -1123,6 +1124,14 @@ class ExpressionDecomposer {
   }
 
   /**
+   * We must not decompose this method qname.
+   *
+   * <p>See usage location for more information.
+   */
+  private static final QualifiedName WINDOW_LOCATION_ASSIGN =
+      QualifiedName.of("window.location.assign");
+
+  /**
    * Determines if there is any subexpression below {@code tree} that would make it incorrect for
    * some expression that follows {@code tree}, {@code E}, to be executed before {@code tree}.
    *
@@ -1158,6 +1167,23 @@ class ExpressionDecomposer {
         return false;
       }
 
+      if (WINDOW_LOCATION_ASSIGN.matches(tree)) {
+        // IE11 throws an exception if we decompose a call to `window.location.assign`
+        // e.g.
+        // ```js
+        // obj = window.location, method = obj.assign, method.call(obj, url); // exception on IE11
+        // ```
+        // So we will consider it to be a constant value that doesn't need to be decomposed to
+        // protect it against side effects.
+        // This is a hack to work around a specific case we've seen in real world code.
+        // We know it won't catch some cases, but we would rather miss those than add more
+        // sophisticated logic that would also encounter false-positives (e.g. is `x.assign` a
+        // reference to `window.location.assign`?).
+        //
+        // We cannot have canBeSideEffected() (below) do this check for us, because it only accepts
+        // simple names as constants.
+        return false;
+      }
       // This is a superset of "NodeUtil.mayHaveSideEffects".
       return NodeUtil.canBeSideEffected(tree, this.knownConstantFunctions, scope);
     } else {
