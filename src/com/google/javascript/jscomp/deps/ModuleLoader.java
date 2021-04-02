@@ -308,7 +308,7 @@ public final class ModuleLoader {
     // example: m0.js
     if (fromFolder == null && toPath.getParent() == null) {
       return "./" + toUriPath;
-    } else if (fromFolder == null && toUriPath.startsWith(".") || toPath.startsWith("/")) {
+    } else if (fromFolder == null && (toUriPath.startsWith(".") || toPath.startsWith("/"))) {
       return toUriPath;
     } else if (fromFolder == null) {
       throw new IllegalArgumentException("Relative path between URIs cannot be calculated");

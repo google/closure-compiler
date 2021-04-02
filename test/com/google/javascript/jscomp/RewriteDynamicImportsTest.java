@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.RewriteDynamicImports.UNABLE_TO_COMPUTE_RELATIVE_PATH;
+import static com.google.javascript.jscomp.RewriteDynamicImports.DYNAMIC_IMPORT_ALIASING_REQUIRED;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -32,6 +33,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class RewriteDynamicImportsTest extends CompilerTestCase {
   private String dynamicImportAlias = "imprt_";
+  private LanguageMode langage = null;
+  private LanguageMode langageIn = null;
 
   @Override
   @Before
@@ -45,9 +48,13 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_2020);
     options.setPrettyPrint(true);
-
+    if (langage != null) {
+      options.setLanguage(langage);
+    }
+    if (langageIn != null) {
+      options.setLanguageIn(langageIn);
+    }
     return options;
   }
 
@@ -299,5 +306,19 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
 
     testError(srcs(new JSModule[] {actualChunk0, actualChunk1}), UNABLE_TO_COMPUTE_RELATIVE_PATH);
+  }
+
+  @Test
+  public void lowerLanguageWithoutAlias() {
+    this.dynamicImportAlias = null;
+    langage = LanguageMode.ECMASCRIPT_2015;
+    langageIn = LanguageMode.ECMASCRIPT_NEXT;
+    JSModule actualChunk0 = new JSModule("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSModule actualChunk1 = new JSModule("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
+
+    testWarning(srcs(new JSModule[] {actualChunk0, actualChunk1}), DYNAMIC_IMPORT_ALIASING_REQUIRED);
   }
 }

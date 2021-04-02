@@ -61,9 +61,15 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
           "JSC_UNABLE_TO_COMPUTE_RELATIVE_PATH",
           "Unable to compute relative import path from \"{0}\" to \"{1}\"");
 
+  static final DiagnosticType DYNAMIC_IMPORT_ALIASING_REQUIRED =
+      DiagnosticType.warning(
+          "JSC_DYNAMIC_IMPORT_ALIASING_REQUIRED",
+          "Dynamic Import Expressions should be aliased for for language level");
+
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final String alias;
+  private final boolean requiresAliasing;
   private boolean dynamicImportsRemoved = false;
 
   /** @param compiler The compiler */
@@ -71,6 +77,8 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.alias = alias;
+    this.requiresAliasing =
+        !compiler.getOptions().getOutputFeatureSet().contains(Feature.DYNAMIC_IMPORT);
   }
 
   @Override
@@ -126,6 +134,8 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     }
     if (this.alias != null) {
       aliasDynamicImport(t, n);
+    } else if (requiresAliasing) {
+      t.report(n, DYNAMIC_IMPORT_ALIASING_REQUIRED);
     }
   }
 
@@ -156,7 +166,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       JSType moduleNamespaceType;
       if (dynamicImport.getJSType() != null && dynamicImport.getJSType().isTemplatizedType()) {
         TemplatizedType templatizedType = (TemplatizedType) dynamicImport.getJSType();
-        moduleNamespaceType = templatizedType.getTemplateTypes().asList().get(0);
+        moduleNamespaceType = templatizedType.getTemplateTypes().get(0);
       } else {
         moduleNamespaceType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
       }
@@ -166,7 +176,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                   registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), moduleNamespaceType),
               registry.getNativeType(JSTypeNative.ALL_TYPE)));
       promiseResolveCall.addChildToBack(createModuleNamespaceNode(targetModuleNS));
-      promiseResolveCall.setJSType(dynamicImport.getJSType());
+      promiseResolveCall.copyTypeFrom(dynamicImport);
     } else {
       promiseDotResolve.setJSType(
           registry.createFunctionType(
@@ -241,7 +251,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    * After
    *
    * <pre>
-   *   import('./foo.js').then(function() { return module$foo; });
+   *   import('./foo.js').then(() => module$foo);
    * </pre>
    */
   private void addChainedThen(NodeTraversal t, Node dynamicImport, Var targetModuleNs) {
@@ -263,7 +273,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                 registry.createFunctionType(registry.getNativeType(JSTypeNative.ALL_TYPE))));
     importThenCall.srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
-      importThenCall.setJSType(dynamicImport.getJSType());
+      importThenCall.copyTypeFrom(dynamicImport);
     }
     placeholder.replaceWith(importThenCall);
     compiler.reportChangeToChangeScope(callbackFn);
@@ -295,7 +305,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
             .createCall(aliasNode, moduleSpecifier)
             .srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
-      importAliasCall.setJSType(dynamicImport.getJSType());
+      importAliasCall.copyTypeFrom(dynamicImport);
     }
     dynamicImport.replaceWith(importAliasCall);
     t.reportCodeChange(importAliasCall);
@@ -306,7 +316,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   private Node createModuleNamespaceNode(Var moduleVar) {
     final Node moduleVarNode = moduleVar.getNode();
     Node moduleNamespace = moduleVarNode.cloneNode();
-    moduleNamespace.setJSType(moduleVarNode.getJSType());
+    moduleNamespace.copyTypeFrom(moduleVarNode);
     return moduleNamespace;
   }
 }
