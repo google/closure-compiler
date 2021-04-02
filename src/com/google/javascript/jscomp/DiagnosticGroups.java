@@ -387,12 +387,13 @@ public class DiagnosticGroups {
           "typeInvalidation", DisambiguateProperties2.PROPERTY_INVALIDATION);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
-      DiagnosticGroups.registerGroup("duplicate",
+      DiagnosticGroups.registerGroup(
+          "duplicate",
           CollapseProperties.NAMESPACE_REDEFINED_WARNING,
-          VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           TypeCheck.FUNCTION_MASKS_VARIABLE,
+          VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
   public static final DiagnosticGroup ES5_STRICT =
@@ -400,17 +401,17 @@ public class DiagnosticGroups {
           "es5Strict",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           RhinoErrorReporter.DUPLICATE_PARAM,
-          StrictModeCheck.USE_OF_WITH,
-          StrictModeCheck.EVAL_DECLARATION,
-          StrictModeCheck.EVAL_ASSIGNMENT,
-          StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
-          StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_MEMBER,
+          StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
           StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
+          StrictModeCheck.DELETE_VARIABLE,
+          StrictModeCheck.DUPLICATE_MEMBER,
+          StrictModeCheck.EVAL_ASSIGNMENT,
+          StrictModeCheck.EVAL_DECLARATION,
+          StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN,
           StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
-          StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
+          StrictModeCheck.USE_OF_WITH);
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(
@@ -513,8 +514,8 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND,
           CheckSuspiciousCode.SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR,
           CheckSuspiciousCode.SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR,
-          TypeCheck.DETERMINISTIC_TEST,
-          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT);
+          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
+          TypeCheck.DETERMINISTIC_TEST);
 
   public static final DiagnosticGroup FUNCTION_PARAMS =
       DiagnosticGroups.registerGroup(
@@ -580,7 +581,6 @@ public class DiagnosticGroups {
               CheckEs6ModuleFileStructure.MUST_COME_BEFORE,
               CheckEs6Modules.DUPLICATE_IMPORT,
               CheckEs6Modules.NO_DEFAULT_EXPORT,
-              CheckNoMutatedEs6Exports.MUTATED_EXPORT,
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,
@@ -591,6 +591,7 @@ public class DiagnosticGroups {
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE,
+              CheckNoMutatedEs6Exports.MUTATED_EXPORT,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
@@ -636,16 +637,16 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "analyzerChecks", // undocumented
           ANALYZER_CHECKS_INTERNAL,
-          UNUSED_PRIVATE_PROPERTY,
-          MISSING_CONST_PROPERTY);
+          MISSING_CONST_PROPERTY,
+          UNUSED_PRIVATE_PROPERTY);
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
       DiagnosticGroups.registerGroup(
           "closureDepMethodUsageChecks",
-          INVALID_CLOSURE_CALL_SCOPE_ERROR,
-          INVALID_GET_CALL_SCOPE,
           CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR,
-          CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+          CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR,
+          INVALID_CLOSURE_CALL_SCOPE_ERROR,
+          INVALID_GET_CALL_SCOPE);
 
   // This group exists so that tests can check for these warnings. It is intentionally not
   // named so that it is is not suppressible via the command line or in code.
