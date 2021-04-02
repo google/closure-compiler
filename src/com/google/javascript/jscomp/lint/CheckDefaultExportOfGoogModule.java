@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -38,13 +39,27 @@ import com.google.javascript.rhino.Node;
  */
 public final class CheckDefaultExportOfGoogModule
     implements NodeTraversal.Callback, HotSwapCompilerPass {
-  public static final DiagnosticType DEFAULT_EXPORT_GOOG_MODULE =
+
+  private static final String WARNING_PREFIX =
+      "Default exports of goog.modules "
+          + "do not translate easily to ES module semantics.";
+
+  public static final DiagnosticType DEFAULT_EXPORT_IN_GOOG_MODULE =
       DiagnosticType.disabled(
-          "JSC_DEFAULT_EXPORT_GOOG_MODULE",
-          "Default exports of goog.modules "
-              + "do not translate easily to ES module semantics. Please use named exports instead"
-              + " (`exports = '{'{0}'}';`) and change the import sites to use destructuring"
-              + " (`const '{'{0}'}' = goog.require(''...'');`)."
+          "JSC_DEFAULT_EXPORT_IN_GOOG_MODULE",
+          WARNING_PREFIX
+              + " Please use named exports instead (`exports = '{'{0}'}';`) and change the import"
+              + " sites to use destructuring (`const '{'{0}'}' = goog.require(''...'');`)."
+          );
+
+  public static final DiagnosticType MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE =
+      DiagnosticType.disabled(
+          "JSC_MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE",
+          WARNING_PREFIX
+              + " The exports pattern \n"
+              + "{0} is a special case of default exports in JSCompiler as one of its keys is not"
+              + " initialized with a local name, and therefore it can not be destructured at the"
+              + " import site. Please use named exports instead."
           );
 
   private final AbstractCompiler compiler;
@@ -78,10 +93,21 @@ public final class CheckDefaultExportOfGoogModule
       if (rhs.isName()) {
         // e.g `exports = Foo;`
         String exportedName = rhs.getString();
-        t.report(n, DEFAULT_EXPORT_GOOG_MODULE, exportedName);
+        t.report(n, DEFAULT_EXPORT_IN_GOOG_MODULE, exportedName);
       } else {
-        // e.g. `exports = class Foo {}`
-        t.report(n, DEFAULT_EXPORT_GOOG_MODULE, "MyVariable");
+        if (rhs.isObjectLit()) {
+          // accidental default export. e.g. `exports = {foo : 0}`
+          int maxLength = 40;
+          String codeSnippet = new CodePrinter.Builder(n).setPrettyPrint(true).build();
+          if (codeSnippet.length() > maxLength) {
+            // limit to prevent error message length from exploding for large object literals
+            codeSnippet = codeSnippet.substring(0, maxLength) + "...};\n";
+          }
+          t.report(n, MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE, codeSnippet);
+        } else {
+          // e.g. `exports = class Foo {}`
+          t.report(n, DEFAULT_EXPORT_IN_GOOG_MODULE, "MyVariable");
+        }
       }
     }
   }

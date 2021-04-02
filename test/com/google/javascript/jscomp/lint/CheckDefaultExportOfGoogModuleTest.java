@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule.DEFAULT_EXPORT_GOOG_MODULE;
+import static com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule.DEFAULT_EXPORT_IN_GOOG_MODULE;
+import static com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule.MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE;
 
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -47,14 +48,14 @@ public final class CheckDefaultExportOfGoogModuleTest extends CompilerTestCase {
     // goog.module default export
     test(
         srcs("goog.module('a'); class Foo {}; exports = Foo;"),
-        warning(DEFAULT_EXPORT_GOOG_MODULE)
+        warning(DEFAULT_EXPORT_IN_GOOG_MODULE)
             .withMessageContaining(
                 "Please use named exports instead (`exports = {Foo};`) and change the import sites"
                     + " to use destructuring (`const {Foo} = goog.require('...');`)."));
 
     test(
         srcs("goog.module('a'); exports = class Foo {};"),
-        warning(DEFAULT_EXPORT_GOOG_MODULE)
+        warning(DEFAULT_EXPORT_IN_GOOG_MODULE)
             .withMessageContaining(
                 "Please use named exports instead (`exports = {MyVariable};`) and change the"
                     + " import sites to use destructuring (`const {MyVariable} ="
@@ -81,5 +82,35 @@ public final class CheckDefaultExportOfGoogModuleTest extends CompilerTestCase {
             "  class Foo {}",
             "  var exports = Foo;",
             "});"));
+  }
+
+  @Test
+  public void testMaybeAccidentalDefaultExports() {
+    test(
+        srcs("goog.module('a'); class Foo {}; exports = {bar: 0};"),
+        warning(MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE)
+            .withMessageContaining(
+                "The exports pattern \n"
+                    + "exports = {bar:0};\n"
+                    + " is a special case of default exports in JSCompiler as one of its keys is"
+                    + " not initialized with a local name, and therefore it can not be"
+                    + " destructured at the import site. Please use named exports instead."
+                ));
+  }
+
+  @Test
+  public void testMaybeAccidentalDefaultExports_veryLongExportsObject() {
+    test(
+        srcs(
+            "goog.module('a'); class Foo {}; exports = {a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, g: 0,"
+                + " h: 0, i: 0, j: 0, k: 0};"),
+        warning(MAYBE_ACCIDENTAL_DEFAULT_EXPORT_IN_GOOG_MODULE)
+            .withMessageContaining(
+                "The exports pattern \n"
+                    + "exports = {a:0, b:0, c:0, d:0, e:0, f:0,...};\n" // truncated
+                    + " is a special case of default exports in JSCompiler as one of its keys is"
+                    + " not initialized with a local name, and therefore it can not be"
+                    + " destructured at the import site. Please use named exports instead."
+                ));
   }
 }
