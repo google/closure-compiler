@@ -54,8 +54,8 @@ import javax.annotation.Nullable;
  * <p>This is an abstract class, so that we can make the methods package-private.
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
-  static final DiagnosticType READ_ERROR = DiagnosticType.error(
-      "JSC_READ_ERROR", "Cannot read file {0}: {1}");
+  static final DiagnosticType READ_ERROR =
+      DiagnosticType.error("JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
   protected Map<String, Object> annotationMap = new HashMap<>();
 
@@ -77,10 +77,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
 
-  /**
-   * Looks up an input (possibly an externs input) by input id.
-   * May return null.
-   */
+  /** Looks up an input (possibly an externs input) by input id. May return null. */
   public abstract CompilerInput getInput(InputId inputId);
 
   /** Looks up a source file by name. May return null. */
@@ -153,9 +150,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Whether the AST has been annotated with optimization colors. */
   public abstract boolean hasOptimizationColors();
 
-  /**
-   * Gets a central registry of type information from the compiled JS.
-   */
+  /** Gets a central registry of type information from the compiled JS. */
   public abstract JSTypeRegistry getTypeRegistry();
 
   public abstract void clearJSTypeRegistry();
@@ -168,14 +163,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void forwardDeclareType(String typeName);
 
-  /**
-   * Gets a memoized scope creator with type information. Only used by jsdev.
-   */
+  /** Gets a memoized scope creator with type information. Only used by jsdev. */
   abstract ScopeCreator getTypedScopeCreator();
 
-  /**
-   * Gets the top scope.
-   */
+  /** Gets the top scope. */
   public abstract TypedScope getTopScope();
 
   /**
@@ -190,19 +181,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract void putScopeCreator(IncrementalScopeCreator creator);
 
-  /**
-   * Report an error or warning.
-   */
+  /** Report an error or warning. */
   public abstract void report(JSError error);
 
-  /**
-   * Report an internal error.
-   */
+  /** Report an internal error. */
   abstract void throwInternalError(String msg, Throwable cause);
 
-  /**
-   * Gets the current coding convention.
-   */
+  /** Gets the current coding convention. */
   public abstract CodingConvention getCodingConvention();
 
   /**
@@ -223,25 +208,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract void reportFunctionDeleted(Node node);
 
-  /**
-   * Sets the CssRenamingMap.
-   */
+  /** Sets the CssRenamingMap. */
   abstract void setCssRenamingMap(CssRenamingMap map);
 
-  /**
-   * Gets the CssRenamingMap.
-   */
+  /** Gets the CssRenamingMap. */
   abstract CssRenamingMap getCssRenamingMap();
 
   /**
-   * Gets a suitable SCRIPT node to serve as a parent for code insertion. If
-   * {@code module} contains any inputs, the returned node will be the SCRIPT
-   * node corresponding to its first input. If {@code module} is empty, on the
-   * other hand, then the returned node will be the first SCRIPT node in a
-   * non-empty module that {@code module} depends on (the deepest one possible).
+   * Gets a suitable SCRIPT node to serve as a parent for code insertion. If {@code module} contains
+   * any inputs, the returned node will be the SCRIPT node corresponding to its first input. If
+   * {@code module} is empty, on the other hand, then the returned node will be the first SCRIPT
+   * node in a non-empty module that {@code module} depends on (the deepest one possible).
    *
-   * @param module A module. If null, will return the first SCRIPT node of all
-   *     modules.
+   * @param module A module. If null, will return the first SCRIPT node of all modules.
    * @return A SCRIPT node (never null).
    */
   abstract Node getNodeForCodeInsertion(@Nullable JSModule module);
@@ -256,14 +235,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Parses code for injecting. */
   public abstract Node parseSyntheticCode(String code);
 
-  /**
-   * Parses code for injecting, and associate it with a given source file.
-   */
+  /** Parses code for injecting, and associate it with a given source file. */
   abstract Node parseSyntheticCode(String filename, String code);
 
-  /**
-   * Parses code for testing.
-   */
+  /** Parses code for testing. */
   @VisibleForTesting
   abstract Node parseTestCode(String code);
 
@@ -271,24 +246,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @VisibleForTesting
   abstract Node parseTestCode(ImmutableList<String> code);
 
-  /**
-   * Prints a node to source code.
-   */
+  /** Prints a node to source code. */
   public abstract String toSource();
 
-  /**
-   * Prints a node to source code.
-   */
+  /** Prints a node to source code. */
   public abstract String toSource(Node root);
 
-  /**
-   * Gets a default error reporter for injecting into Rhino.
-   */
+  /** Gets a default error reporter for injecting into Rhino. */
   abstract ErrorReporter getDefaultErrorReporter();
 
-  /**
-   * Get an interpreter for type analysis.
-   */
+  /** Get an interpreter for type analysis. */
   public abstract ReverseAbstractInterpreter getReverseAbstractInterpreter();
 
   /** Returns the current life-cycle stage of the AST we're working on. */
@@ -325,20 +292,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @Deprecated
   abstract Supplier<String> getUniqueNameIdSupplier();
 
-  /**
-   * @return Whether any errors have been encountered that
-   *     should stop the compilation process.
-   */
+  /** @return Whether any errors have been encountered that should stop the compilation process. */
   abstract boolean hasHaltingErrors();
 
-  /**
-   * Register a listener for code change events.
-   */
+  /** Register a listener for code change events. */
   abstract void addChangeHandler(CodeChangeHandler handler);
 
-  /**
-   * Remove a listener for code change events.
-   */
+  /** Remove a listener for code change events. */
   abstract void removeChangeHandler(CodeChangeHandler handler);
 
   /** Register a provider for some type of index. */
@@ -377,67 +337,51 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract boolean hasScopeChanged(Node n);
 
   /**
-   * Represents the different contexts for which the compiler could have
-   * distinct configurations.
+   * Represents the different contexts for which the compiler could have distinct configurations.
    */
   static enum ConfigContext {
-    /**
-     * Normal JavaScript.
-     */
+    /** Normal JavaScript. */
     DEFAULT,
 
-    /**
-     * Externs files.
-     */
+    /** Externs files. */
     EXTERNS
   }
 
-  /**
-   * Returns the parser configuration for the specified context.
-   */
+  /** Returns the parser configuration for the specified context. */
   abstract Config getParserConfig(ConfigContext context);
 
   /**
-   * Normalizes the types of AST nodes in the given tree, and
-   * annotates any nodes to which the coding convention applies so that passes
-   * can read the annotations instead of using the coding convention.
+   * Normalizes the types of AST nodes in the given tree, and annotates any nodes to which the
+   * coding convention applies so that passes can read the annotations instead of using the coding
+   * convention.
    */
   abstract void prepareAst(Node root);
 
-  /**
-   * Gets the error manager.
-   */
+  /** Gets the error manager. */
   public abstract ErrorManager getErrorManager();
 
-  /**
-   * Set the current life-cycle state.
-   */
+  /** Set the current life-cycle state. */
   void setLifeCycleStage(LifeCycleStage stage) {
     this.stage = stage;
   }
 
   /**
-   * Are the nodes equal for the purpose of inlining?
-   * If type aware optimizations are on, type equality is checked.
+   * Are the nodes equal for the purpose of inlining? If type aware optimizations are on, type
+   * equality is checked.
    */
   abstract boolean areNodesEqualForInlining(Node n1, Node n2);
 
   /**
    * Set if RegExp global properties are used.
-   * @param references Whether there are references to the RegExp global object
-   *     properties.
+   *
+   * @param references Whether there are references to the RegExp global object properties.
    */
   abstract void setHasRegExpGlobalReferences(boolean references);
 
-  /**
-   * @return Whether the AST contains references to the RegExp global object
-   *     properties.
-   */
+  /** @return Whether the AST contains references to the RegExp global object properties. */
   abstract boolean hasRegExpGlobalReferences();
 
-  /**
-   * @return The error level the given error object will be reported at.
-   */
+  /** @return The error level the given error object will be reported at. */
   abstract CheckLevel getErrorLevel(JSError error);
 
   /** What point in optimizations we're in. For use by compiler passes */
@@ -467,13 +411,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /**
    * Runs a given compiler-pass by calling its {@code process()} method.
+   *
    * @param pass The pass to be run.
    */
   abstract void process(CompilerPass pass);
 
-  /**
-   * Returns the root node of the AST, which includes both externs and source.
-   */
+  /** Returns the root node of the AST, which includes both externs and source. */
   public abstract Node getRoot();
 
   abstract CompilerOptions getOptions();
@@ -504,75 +447,72 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /**
    * Updates the list of references for variables in global scope.
    *
-   * @param refMapPatch Maps each variable to all of its references; may contain
-   *     references collected from the whole AST or only a SCRIPT sub-tree.
-   * @param collectionRoot The root of sub-tree in which reference collection
-   *     has been done. This should either be a SCRIPT node (if collection is
-   *     done on a single file) or it is assumed that collection is on full AST.
+   * @param refMapPatch Maps each variable to all of its references; may contain references
+   *     collected from the whole AST or only a SCRIPT sub-tree.
+   * @param collectionRoot The root of sub-tree in which reference collection has been done. This
+   *     should either be a SCRIPT node (if collection is done on a single file) or it is assumed
+   *     that collection is on full AST.
    */
-  abstract void updateGlobalVarReferences(Map<Var, ReferenceCollection>
-      refMapPatch, Node collectionRoot);
+  abstract void updateGlobalVarReferences(
+      Map<Var, ReferenceCollection> refMapPatch, Node collectionRoot);
 
   /**
-   * This can be used to get the list of all references to all global variables
-   * based on all previous calls to {@code updateGlobalVarReferences}.
+   * This can be used to get the list of all references to all global variables based on all
+   * previous calls to {@code updateGlobalVarReferences}.
    *
    * @return The reference collection map associated to global scope variable.
    */
   abstract GlobalVarReferenceMap getGlobalVarReferences();
 
   /**
-   * @return a CompilerInput that can be modified to add additional extern
-   * definitions to the beginning of the externs AST
+   * @return a CompilerInput that can be modified to add additional extern definitions to the
+   *     beginning of the externs AST
    */
   abstract CompilerInput getSynthesizedExternsInput();
 
   /**
-   * @return a CompilerInput that can be modified to add additional extern
-   * definitions to the end of the externs AST
+   * @return a CompilerInput that can be modified to add additional extern definitions to the end of
+   *     the externs AST
    */
   abstract CompilerInput getSynthesizedExternsInputAtEnd();
 
   /**
-   * @return a number in [0,1] range indicating an approximate progress of the
-   * last compile. Note this should only be used as a hint and no assumptions
-   * should be made on accuracy, even a completed compile may choose not to set
-   * this to 1.0 at the end.
+   * @return a number in [0,1] range indicating an approximate progress of the last compile. Note
+   *     this should only be used as a hint and no assumptions should be made on accuracy, even a
+   *     completed compile may choose not to set this to 1.0 at the end.
    */
   public abstract double getProgress();
 
-  /**
-   * Gets the last pass name set by setProgress.
-   */
+  /** Gets the last pass name set by setProgress. */
   abstract String getLastPassName();
 
   /**
-   * Sets the progress percentage as well as the name of the last pass that
-   * ran (if available).
-   * @param progress A percentage expressed as a double in the range [0, 1].
-   *     Use -1 if you just want to set the last pass name.
+   * Sets the progress percentage as well as the name of the last pass that ran (if available).
+   *
+   * @param progress A percentage expressed as a double in the range [0, 1]. Use -1 if you just want
+   *     to set the last pass name.
    */
   abstract void setProgress(double progress, @Nullable String lastPassName);
 
   /**
-   * The subdir js/ contains libraries of code that we inject
-   * at compile-time only if requested by this function.
+   * The subdir js/ contains libraries of code that we inject at compile-time only if requested by
+   * this function.
    *
-   * Notice that these libraries will almost always create global symbols.
+   * <p>Notice that these libraries will almost always create global symbols.
    *
-   * @param resourceName The name of the library. For example, if "base" is
-   *     is specified, then we load js/base.js
+   * @param resourceName The name of the library. For example, if "base" is is specified, then we
+   *     load js/base.js
    * @param force Inject the library even if compiler options say not to.
-   * @return The last node of the most-recently-injected runtime library.
-   *     If new code was injected, this will be the last expression node of the
-   *     library. If the caller needs to add additional code, they should add
-   *     it as the next sibling of this node. If no runtime libraries have been
-   *     injected, then null is returned.
+   * @return The last node of the most-recently-injected runtime library. If new code was injected,
+   *     this will be the last expression node of the library. If the caller needs to add additional
+   *     code, they should add it as the next sibling of this node. If no runtime libraries have
+   *     been injected, then null is returned.
    */
   abstract Node ensureLibraryInjected(String resourceName, boolean force);
 
   /**
    * Sets the names of the properties defined in externs.
+   *
    * @param externProperties The set of property names defined in externs.
    */
   abstract void setExternProperties(Set<String> externProperties);
@@ -602,9 +542,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Sets the summary of properties with getters and setters. */
   public abstract void setAccessorSummary(AccessorSummary summary);
 
-  /**
-   * Returns all the comments from the given file.
-   */
+  /** Returns all the comments from the given file. */
   abstract List<Comment> getComments(String filename);
 
   /** Gets the module loader. */
