@@ -42,7 +42,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
   private final boolean getterSetterSupported;
 
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
-  private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
+  private static final FeatureSet requiredForFeatures = FeatureSet.ES2015.without(FeatureSet.ES5);
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;

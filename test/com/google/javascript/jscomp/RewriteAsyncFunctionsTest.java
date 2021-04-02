@@ -22,7 +22,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -38,11 +37,13 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
+  boolean rewriteSuperPropertyReferencesWithoutSuper;
+
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    rewriteSuperPropertyReferencesWithoutSuper = false;
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
     enableTypeInfoValidation();
@@ -51,8 +52,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RewriteAsyncFunctions.Builder(compiler)
-        .rewriteSuperPropertyReferencesWithoutSuper(
-            !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+        .rewriteSuperPropertyReferencesWithoutSuper(rewriteSuperPropertyReferencesWithoutSuper)
         .build();
   }
 
@@ -435,7 +435,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerSuperCallEs2015Out() {
-    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    rewriteSuperPropertyReferencesWithoutSuper = true;
     test(
         lines(
             "class A {",
@@ -537,7 +537,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testInnerSuperCallStaticEs2015Out() {
-    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    rewriteSuperPropertyReferencesWithoutSuper = true;
     test(
         lines(
             "class A {",

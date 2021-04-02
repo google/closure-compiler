@@ -1723,7 +1723,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         findModulesFromEntryPoints(
             options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
             options.processCommonJSModules);
-      } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
+      } else if (options.needsTranspilationFrom(FeatureSet.ES2015_MODULES)
           || options.processCommonJSModules) {
         if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
           parsePotentialModules(moduleGraph.getAllInputs());

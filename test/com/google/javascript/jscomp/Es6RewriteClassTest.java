@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015_MODULES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -78,7 +78,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     return PassFactory.builder()
         .setName(name)
         .setInternalFactory((compiler) -> pass)
-        .setFeatureSet(ES6_MODULES)
+        .setFeatureSet(ES2015_MODULES)
         .build();
   }
 

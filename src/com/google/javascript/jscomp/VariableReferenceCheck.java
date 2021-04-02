@@ -103,7 +103,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (!forTranspileOnly) {
       return true;
     }
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015)) {
       for (Node singleRoot = root.getFirstChild();
           singleRoot != null;
           singleRoot = singleRoot.getNext()) {
@@ -127,7 +127,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     if (!forTranspileOnly
-        || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)
+        || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015)
             && TranspilationPasses.isScriptEs6OrHigher(scriptRoot))) {
       new ReferenceCollectingCallback(
               compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))

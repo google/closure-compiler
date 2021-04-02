@@ -1929,7 +1929,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     options.rewritePolyfills =
-        flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
+        flags.rewritePolyfills
+            && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015);
 
     if (!flags.translationsFile.isEmpty()) {
       try {

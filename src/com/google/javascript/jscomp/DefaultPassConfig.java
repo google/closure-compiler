@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -172,7 +172,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES2015)) {
       if (options.getRewritePolyfills()) {
         if (options.getIsolatePolyfills()) {
           throw new IllegalStateException(
@@ -268,7 +268,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(chromePass);
     }
 
-    // Verify JsDoc annotations and check ES6 modules
+    // Verify JsDoc annotations and check ES modules
     checks.add(checkJsDocAndEs6Modules);
 
     checks.add(checkTypeImportCodeReferences);
@@ -718,7 +718,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES6)) {
+    if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
       passes.add(optimizeConstructors);
     }
 
@@ -844,8 +844,8 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(checkAstValidity);
     passes.add(varCheckValidity);
 
-    // Raise to ES6, if allowed
-    if (options.getOutputFeatureSet().contains(ES6)) {
+    // Raise to ES2015, if allowed
+    if (options.getOutputFeatureSet().contains(ES2015)) {
       passes.add(optimizeToEs6);
     }
     // must run after ast validity check as modules may not be allowed in the output feature set
@@ -1157,7 +1157,7 @@ public final class DefaultPassConfig extends PassConfig {
           "JSC_GENERATE_EXPORTS_ERROR",
           "Exports can only be generated if export symbol/property functions are set.");
 
-  /** Verifies JSDoc annotations are used properly and checks for ES6 modules. */
+  /** Verifies JSDoc annotations are used properly and checks for ES modules. */
   private final PassFactory checkJsDocAndEs6Modules =
       PassFactory.builderForHotSwap()
           .setName("checkJsDocAndEs6Modules")
@@ -2111,7 +2111,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new ClosureOptimizePrimitives(
                       compiler,
                       compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
-                      compiler.getOptions().getOutputFeatureSet().contains(ES6)))
+                      compiler.getOptions().getOutputFeatureSet().contains(ES2015)))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2819,7 +2819,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Optimizations that output ES6 features. */
+  /** Optimizations that output ES2015 features. */
   private final PassFactory optimizeToEs6 =
       PassFactory.builder()
           .setName("optimizeToEs6")
@@ -2901,7 +2901,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
           .build();
 
-  /** Rewrites ES6 modules import paths to be browser compliant */
+  /** Rewrites ES modules import paths to be browser compliant */
   private static final PassFactory forbidDynamicImportUsage =
       PassFactory.builder()
           .setName("FORBID_DYNAMIC_IMPORT")

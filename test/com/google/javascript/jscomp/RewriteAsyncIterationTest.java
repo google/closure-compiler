@@ -21,7 +21,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.function.Predicate;
@@ -101,13 +100,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     return allMatchingNodes.get(0);
   }
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
-  }
-
   @Before
   public void enableTypeCheckBeforePass() {
     enableTypeCheck();
@@ -127,8 +119,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RewriteAsyncIteration.Builder(compiler)
-        .rewriteSuperPropertyReferencesWithoutSuper(
-            !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6))
+        .rewriteSuperPropertyReferencesWithoutSuper(true)
         .build();
   }
 
