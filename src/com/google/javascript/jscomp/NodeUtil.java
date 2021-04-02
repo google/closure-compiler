@@ -1178,9 +1178,13 @@ public final class NodeUtil {
     return true;
   }
 
+  /** We will assume that side effects never change the values of these global variables. */
+  static final ImmutableSet<String> KNOWN_CONSTANTS =
+      ImmutableSet.of("undefined", "Infinity", "NaN");
+
   /** @return Whether the tree can be affected by side-effects or has side-effects. */
   static boolean canBeSideEffected(Node n) {
-    return canBeSideEffected(n, ImmutableSet.of("undefined", "Infinity", "NaN"), null);
+    return canBeSideEffected(n, KNOWN_CONSTANTS, null);
   }
 
   /**
