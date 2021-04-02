@@ -2119,6 +2119,7 @@ public class Parser {
   // 12.2 Primary Expression
   //   CoverParenthesizedExpressionAndArrowParameterList ::=
   //     ( Expression )
+  //     ( Expression, )
   //     ( )
   //     ( ... BindingIdentifier )
   //     ( Expression , ... BindingIdentifier )
@@ -2158,21 +2159,32 @@ public class Parser {
         return new MissingPrimaryExpressionTree(getTreeLocation(start));
       }
     }
-    // For either of the two remaining cases:
+    // For either of the three remaining cases:
     //     ( Expression )
-    //     ( Expression , ... BindingIdentifier )
+    //     ( Expression, )
+    //     ( Expression, ...BindingIdentifier )
     // we can parse as an expression.
     ParseTree result = parseExpression();
-    // If it follows witha comma, we must be in the
-    //     ( Expression , ... BindingIdentifier )
+    // If it follows with a comma, we must be in either of two cases
+    //     ( Expression, )
+    //     ( Expression, ...BindingIdentifier )
     // case.
     if (peek(TokenType.COMMA)) {
-      eat(TokenType.COMMA);
-      // Since we already parsed as an expression, we will guaranteed reparse this expression
-      // as an arrow function parameter list, but just leave it as a comma expression for now.
-      result =
-          new CommaExpressionTree(
-              getTreeLocation(start), ImmutableList.of(result, parseParameter()));
+      if (peek(1, TokenType.CLOSE_PAREN)) {
+        // Create the formal parameter list here so we can record
+        // the trailing comma
+        resetScanner(start);
+        // If we fail to parse as an ArrowFunction parameter list then
+        // parseFormalParameterList will take care of reporting errors.
+        return parseFormalParameterList();
+      } else {
+        eat(TokenType.COMMA);
+        // Since we already parsed as an expression, we will guaranteed reparse this expression
+        // as an arrow function parameter list, but just leave it as a comma expression for now.
+        result =
+            new CommaExpressionTree(
+                getTreeLocation(start), ImmutableList.of(result, parseParameter()));
+      }
     }
     eat(TokenType.CLOSE_PAREN);
     return new ParenExpressionTree(getTreeLocation(start), result);
@@ -2246,10 +2258,12 @@ public class Parser {
   private ParseTree parse(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree result = parseAssignment(expressionIn);
-    if (peek(TokenType.COMMA) && !peek(1, TokenType.ELLIPSIS)) {
+    if (peek(TokenType.COMMA) && !peek(1, TokenType.ELLIPSIS) && !peek(1, TokenType.CLOSE_PAREN)) {
       ImmutableList.Builder<ParseTree> exprs = ImmutableList.builder();
       exprs.add(result);
-      while (peek(TokenType.COMMA) && !peek(1, TokenType.ELLIPSIS)) {
+      while (peek(TokenType.COMMA)
+          && !peek(1, TokenType.ELLIPSIS)
+          && !peek(1, TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
         exprs.add(parseAssignment(expressionIn));
       }
@@ -2474,12 +2488,16 @@ public class Parser {
     return parsePattern(PatternKind.ANY);
   }
 
-  private void resetScanner(ParseTree tree) {
+  private void resetScanner(SourcePosition start) {
     // TODO(bradfordcsmith): lastSourcePosition should really point to the end of the last token
     //     before the tree to correctly detect implicit semicolons, but it doesn't matter for the
     //     current use case.
-    lastSourcePosition = tree.location.start;
+    lastSourcePosition = start;
     scanner.setPosition(lastSourcePosition);
+  }
+
+  private void resetScanner(ParseTree tree) {
+    scanner.setPosition(tree.location.start);
   }
 
   private void resetScannerAfter(ParseTree parseTree) {

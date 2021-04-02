@@ -265,6 +265,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaParamListArrow() {
+    Node paramList =
+        parse("x = (a, b,) => {};") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild() // ASSIGN
+            .getSecondChild() // FUNCTION
+            .getSecondChild(); // PARAM_LIST
+    assertNode(paramList).hasType(Token.PARAM_LIST);
+    assertNode(paramList).hasTrailingComma();
+
+    paramList =
+        parse("x = (a,) => {};") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild() // ASSIGN
+            .getSecondChild() // FUNCTION
+            .getSecondChild(); // PARAM_LIST
+    assertNode(paramList).hasType(Token.PARAM_LIST);
+    assertNode(paramList).hasTrailingComma();
+
+    paramList =
+        parse("x = async (a, b,) => {};") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild() // ASSIGN
+            .getSecondChild() // FUNCTION
+            .getSecondChild(); // PARAM_LIST
+    assertNode(paramList).hasType(Token.PARAM_LIST);
+    assertNode(paramList).hasTrailingComma();
+  }
+
+  @Test
   public void testTrailingCommaCallNode() {
     Node call =
         parse("f(a, b,);") // SCRIPT
@@ -4383,7 +4413,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // parse("public = 2;");
 
     mode = LanguageMode.ECMASCRIPT5;
-    
+
     expectFeatures(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
     parse("var boolean;");
     parse("function boolean() {};");
@@ -4457,7 +4487,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("x().catch();");
 
     mode = LanguageMode.ECMASCRIPT5;
-    
+
     parse("var x = {function: 1};");
     parse("x.function;");
     parse("var x = {get function(){} };");
@@ -4487,7 +4517,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testKeywordsAsProperties3() {
     mode = LanguageMode.ECMASCRIPT5;
-    
+
     parse("var x = {get 'function'(){} };");
     parse("var x = {get 1(){} };");
     parse("var x = {set 'function'(a){} };");
