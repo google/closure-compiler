@@ -202,7 +202,7 @@ public final class NodeUtil {
 
       case TEMPLATELIT:
         // Only convert a template literal if all its expressions can be converted.
-        String string = "";
+        StringBuilder string = new StringBuilder();
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           Node expression = child;
           if (child.isTemplateLitSub()) {
@@ -213,9 +213,9 @@ public final class NodeUtil {
             // Cannot convert.
             return null;
           }
-          string = string + expressionString;
+          string.append(expressionString);
         }
-        return string;
+        return string.toString();
 
       case TEMPLATELIT_STRING:
         return n.getCookedString();
@@ -1850,14 +1850,7 @@ public final class NodeUtil {
 
   /** Gets the closest ancestor to the given node of the provided type. */
   public static Node getEnclosingType(Node n, final Token type) {
-    return getEnclosingNode(
-        n,
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node n) {
-            return n.getToken() == type;
-          }
-        });
+    return getEnclosingNode(n, n1 -> n1.getToken() == type);
   }
 
   static Node getEnclosingNonArrowFunction(Node n) {
@@ -2834,7 +2827,7 @@ public final class NodeUtil {
     }
   }
 
-  /** see {@link #isClassDeclaration} */
+  /** Is this a class declaration. */
   public static boolean isClassDeclaration(Node n) {
     return n.isClass() && isDeclarationParent(n.getParent()) && isNamedClass(n);
   }
@@ -5296,20 +5289,7 @@ public final class NodeUtil {
   static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
     final int[] wrappedSize = {0};
-    visitPreOrder(
-        n,
-        new Visitor() {
-          @Override
-          public void visit(Node n) {
-            wrappedSize[0]++;
-          }
-        },
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node n) {
-            return wrappedSize[0] < limit;
-          }
-        });
+    visitPreOrder(n, n12 -> wrappedSize[0]++, n1 -> wrappedSize[0] < limit);
     return wrappedSize[0];
   }
 
