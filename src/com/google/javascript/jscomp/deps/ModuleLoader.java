@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -296,6 +297,29 @@ public final class ModuleLoader {
     }
     // Not underneath any of the roots.
     return path;
+  }
+
+  public static String relativePathFrom(String fromUriPath, String toUriPath) {
+    Path fromPath = Paths.get(fromUriPath);
+    Path toPath = Paths.get(toUriPath);
+    Path fromFolder = fromPath.getParent();
+
+    // if the from URIs are simple names without paths, they are in the same folder
+    // example: m0.js
+    if (fromFolder == null && toPath.getParent() == null) {
+      return "./" + toUriPath;
+    } else if (fromFolder == null
+        && (toUriPath.startsWith(".") || toPath.toString().startsWith("/"))) {
+      return toUriPath;
+    } else if (fromFolder == null) {
+      throw new IllegalArgumentException("Relative path between URIs cannot be calculated");
+    }
+
+    String calculatedPath = fromFolder.relativize(toPath).toString();
+    if (calculatedPath.startsWith(".") || calculatedPath.startsWith("/")) {
+      return calculatedPath;
+    }
+    return "./" + calculatedPath;
   }
 
   public void setErrorHandler(ErrorHandler errorHandler) {

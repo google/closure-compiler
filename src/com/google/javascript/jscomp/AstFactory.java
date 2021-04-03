@@ -455,6 +455,10 @@ final class AstFactory {
     return createQName(scope, DOT_SPLITTER.split(qname));
   }
 
+  Node createQNameWithUnknownType(String qname) {
+    return createQNameWithUnknownType(DOT_SPLITTER.split(qname));
+  }
+
   /**
    * Looks up the type of a name from a {@link TypedScope} created from typechecking
    *
@@ -482,6 +486,12 @@ final class AstFactory {
     return createQName(scope, baseName, propertyNames);
   }
 
+  private Node createQNameWithUnknownType(Iterable<String> names) {
+    String baseName = checkNotNull(Iterables.getFirst(names, null));
+    Iterable<String> propertyNames = Iterables.skip(names, 1);
+    return createQNameWithUnknownType(baseName, propertyNames);
+  }
+
   Node createQName(Scope scope, String baseName, String... propertyNames) {
     checkNotNull(baseName);
     return createQName(scope, baseName, Arrays.asList(propertyNames));
@@ -489,6 +499,11 @@ final class AstFactory {
 
   Node createQName(Scope scope, String baseName, Iterable<String> propertyNames) {
     Node baseNameNode = createName(scope, baseName);
+    return createGetProps(baseNameNode, propertyNames);
+  }
+
+  Node createQNameWithUnknownType(String baseName, Iterable<String> propertyNames) {
+    Node baseNameNode = createNameWithUnknownType(baseName);
     return createGetProps(baseNameNode, propertyNames);
   }
 
@@ -840,6 +855,14 @@ final class AstFactory {
       result.setJSType(type);
     }
     return result;
+  }
+
+  Node createParamList(String... parameterNames) {
+    final Node paramList = IR.paramList();
+    for (String parameterName : parameterNames) {
+      paramList.addChildToBack(createNameWithUnknownType(parameterName));
+    }
+    return paramList;
   }
 
   Node createZeroArgFunction(String name, Node body, @Nullable JSType returnType) {

@@ -1205,6 +1205,22 @@ public class CompilerOptions implements Serializable {
     return this.allowDynamicImport;
   }
 
+  private String dynamicImportAlias = null;
+
+  /** Set the alias name for dynamic import expressions */
+  public String getDynamicImportAlias() {
+    return this.dynamicImportAlias;
+  }
+
+  /** Set the alias name for dynamic import expressions */
+  public void setDynamicImportAlias(String value) {
+    this.dynamicImportAlias = value;
+  }
+
+  boolean shouldAliasDynamicImport() {
+    return this.dynamicImportAlias != null;
+  }
+
   ChunkOutputType chunkOutputType;
 
   /**

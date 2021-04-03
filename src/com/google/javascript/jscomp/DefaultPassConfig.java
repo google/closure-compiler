@@ -394,6 +394,12 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // Dynamic import rewriting must always occur after type checking
+    if (options.shouldAllowDynamicImport()
+        && options.getLanguageIn().toFeatureSet().has(Feature.DYNAMIC_IMPORT)) {
+      checks.add(rewriteDynamicImports);
+    }
+
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
@@ -2907,5 +2913,16 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("FORBID_DYNAMIC_IMPORT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory(ForbidDynamicImportUsage::new)
+          .build();
+
+  /** Rewrites Dynamic Import Expressions */
+  private static final PassFactory rewriteDynamicImports =
+      PassFactory.builder()
+          .setName("REWRITE_DYNAMIC_IMPORT")
+          .setFeatureSet(FeatureSet.all())
+          .setInternalFactory(
+              (compiler) ->
+                  new RewriteDynamicImports(
+                      compiler, compiler.getOptions().getDynamicImportAlias()))
           .build();
 }
