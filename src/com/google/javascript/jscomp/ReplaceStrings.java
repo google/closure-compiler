@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -64,7 +63,6 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  //
   private final Map<String, Config> functions = new HashMap<>();
   private final DefaultNameGenerator nameGenerator;
   private final Map<String, Result> results = new LinkedHashMap<>();
@@ -115,43 +113,17 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    * @param functionsToInspect A list of function configurations in the form of
    *     function($,,,):exclued_filename_suffix1,excluded_filename_suffix2,... or
    *     class.prototype.method($,,,):exclued_filename_suffix1,excluded_filename_suffix2,...
-   * @param skiplisted A set of names that should not be used as replacement strings. Useful to
-   *     prevent unwanted strings for appearing in the final output. where '$' is used to indicate
-   *     which parameter should be replaced.
-   *     <p>excluded_filename_suffix is a list of files whose callsites for a given function pattern
-   *     should be ignored.
    */
   ReplaceStrings(
-      AbstractCompiler compiler,
-      String placeholderToken,
-      List<String> functionsToInspect,
-      Set<String> skiplisted,
-      VariableMap previousMappings) {
+      AbstractCompiler compiler, String placeholderToken, List<String> functionsToInspect) {
     this.compiler = compiler;
     this.placeholderToken =
         placeholderToken.isEmpty() ? DEFAULT_PLACEHOLDER_TOKEN : placeholderToken;
 
-    Iterable<String> reservedNames = skiplisted;
-    if (previousMappings != null) {
-      Set<String> previous = previousMappings.getOriginalNameToNewNameMap().keySet();
-      reservedNames = Iterables.concat(skiplisted, previous);
-      initMapping(previousMappings, skiplisted);
-    }
-    this.nameGenerator = createNameGenerator(reservedNames);
+    this.nameGenerator = createNameGenerator();
 
     // Initialize the map of functions to inspect for renaming candidates.
     parseConfiguration(functionsToInspect);
-  }
-
-  private void initMapping(VariableMap previousVarMap, Set<String> reservedNames) {
-    Map<String, String> previous = previousVarMap.getOriginalNameToNewNameMap();
-    for (Map.Entry<String, String> entry : previous.entrySet()) {
-      String key = entry.getKey();
-      if (!reservedNames.contains(key)) {
-        String value = entry.getValue();
-        results.put(value, new Result(value, key));
-      }
-    }
   }
 
   static final Predicate<Result> USED_RESULTS = (Result result) -> result.didReplacement;
@@ -452,9 +424,9 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    * Use a name generate to create names so the names overlap with the names used for variable and
    * properties.
    */
-  private static DefaultNameGenerator createNameGenerator(Iterable<String> reserved) {
+  private static DefaultNameGenerator createNameGenerator() {
     final String namePrefix = "";
     final char[] reservedChars = new char[0];
-    return new DefaultNameGenerator(ImmutableSet.copyOf(reserved), namePrefix, reservedChars);
+    return new DefaultNameGenerator(ImmutableSet.of(), namePrefix, reservedChars);
   }
 }

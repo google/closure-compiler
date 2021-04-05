@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -27,7 +26,6 @@ import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.rhino.Node;
 import java.util.List;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,8 +35,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
-  private Set<String> reserved;
-  private VariableMap previous;
   private boolean runDisambiguateProperties;
   private boolean rename;
 
@@ -95,8 +91,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
-    reserved = ImmutableSet.of();
-    previous = null;
     runDisambiguateProperties = false;
     rename = false;
   }
@@ -115,7 +109,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    pass = new ReplaceStrings(compiler, "`", functionsToInspect, reserved, previous);
+    pass = new ReplaceStrings(compiler, "`", functionsToInspect);
 
     return new CompilerPass() {
       @Override
@@ -143,25 +137,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStable1() {
-    previous = VariableMap.fromMap(ImmutableMap.of("previous", "xyz"));
-    testDebugStrings("Error('xyz');", "Error('previous');", (new String[] {"previous", "xyz"}));
-    reserved = ImmutableSet.of("a", "b", "previous");
-    testDebugStrings("Error('xyz');", "Error('c');", (new String[] {"c", "xyz"}));
-  }
-
-  @Test
-  public void testStable2() {
-    // Two things happen here:
-    // 1) a previously used name "a" is not used for another string, "b" is
-    // chosen instead.
-    // 2) a previously used name "a" is dropped from the output map if
-    // it isn't used.
-    previous = VariableMap.fromMap(ImmutableMap.of("a", "unused"));
-    testDebugStrings("Error('xyz');", "Error('b');", (new String[] {"b", "xyz"}));
-  }
-
-  @Test
   public void testRenameName() {
     rename = true;
     testDebugStrings("Error('xyz');", "renamed_Error('a');", (new String[] {"a", "xyz"}));
@@ -174,14 +149,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         "goog.debug.Trace.startTracer('HistoryManager.updateHistory');",
         "renamed_goog.renamed_debug.renamed_Trace.renamed_startTracer('a');",
         (new String[] {"a", "HistoryManager.updateHistory"}));
-  }
-
-  @Test
-  public void testThrowError1() {
-    testDebugStrings("throw Error('xyz');", "throw Error('a');", (new String[] {"a", "xyz"}));
-    previous = VariableMap.fromMap(ImmutableMap.of("previous", "xyz"));
-    testDebugStrings(
-        "throw Error('xyz');", "throw Error('previous');", (new String[] {"previous", "xyz"}));
   }
 
   @Test
@@ -453,13 +420,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             + "throw Error('c');"
             + "throw Error('b');"
             + "throw Error('a');");
-  }
-
-  @Test
-  public void testReserved() {
-    testDebugStrings("throw Error('xyz');", "throw Error('a');", (new String[] {"a", "xyz"}));
-    reserved = ImmutableSet.of("a", "b", "c");
-    testDebugStrings("throw Error('xyz');", "throw Error('d');", (new String[] {"d", "xyz"}));
   }
 
   @Test
