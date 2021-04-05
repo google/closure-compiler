@@ -56,12 +56,6 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   private final JSModuleGraph moduleGraph;
 
-  /**
-   * Strings that can be aliased, or null if all strings except 'undefined'
-   * should be aliased
-   */
-  private final Set<String> aliasableStrings;
-
   private final boolean outputStringUsage;
 
   private final SortedMap<String, StringInfo> stringInfoMap = new TreeMap<>();
@@ -84,19 +78,15 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    *
    * @param compiler The compiler
    * @param moduleGraph The module graph, or null if there are no modules
-   * @param strings Set of strings to be aliased. If null, all strings except 'undefined' will be
-   *     aliased.
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
    */
   AliasStrings(
       AbstractCompiler compiler,
       JSModuleGraph moduleGraph,
-      Set<String> strings,
       boolean outputStringUsage) {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
-    this.aliasableStrings = strings;
     this.outputStringUsage = outputStringUsage;
   }
 
@@ -144,35 +134,33 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
         return;
       }
 
-      if (aliasableStrings == null || aliasableStrings.contains(str)) {
-        Node occurrence = n;
-        StringInfo info = getOrCreateStringInfo(str);
+      Node occurrence = n;
+      StringInfo info = getOrCreateStringInfo(str);
 
-        info.occurrences.add(occurrence);
+      info.occurrences.add(occurrence);
 
-        // The current module.
-        JSModule module = t.getModule();
-        if (info.occurrences.size() != 1) {
-          // Check whether the current module depends on the module containing
-          // the declaration.
-          if (module != null
-              && info.moduleToContainDecl != null
-              && module != info.moduleToContainDecl) {
-            // We need to declare this string in the deepest module in the
-            // module dependency graph that both of these modules depend on.
-            module =
-                moduleGraph.getDeepestCommonDependencyInclusive(module, info.moduleToContainDecl);
-          } else {
-            // use the previously saved insertion location.
-            return;
-          }
+      // The current module.
+      JSModule module = t.getModule();
+      if (info.occurrences.size() != 1) {
+        // Check whether the current module depends on the module containing
+        // the declaration.
+        if (module != null
+            && info.moduleToContainDecl != null
+            && module != info.moduleToContainDecl) {
+          // We need to declare this string in the deepest module in the
+          // module dependency graph that both of these modules depend on.
+          module =
+              moduleGraph.getDeepestCommonDependencyInclusive(module, info.moduleToContainDecl);
+        } else {
+          // use the previously saved insertion location.
+          return;
         }
-        Node varParent =
-            moduleVarParentMap.computeIfAbsent(module, compiler::getNodeForCodeInsertion);
-        info.moduleToContainDecl = module;
-        info.parentForNewVarDecl = varParent;
-        info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
       }
+      Node varParent =
+          moduleVarParentMap.computeIfAbsent(module, compiler::getNodeForCodeInsertion);
+      info.moduleToContainDecl = module;
+      info.parentForNewVarDecl = varParent;
+      info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
     }
   }
 

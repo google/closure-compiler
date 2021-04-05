@@ -25,8 +25,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.Test;
@@ -106,7 +104,6 @@ public final class CompilerOptionsTest {
     options.setDefineToBooleanLiteral("falseVar", false);
     options.setDefineToNumberLiteral("threeVar", 3);
     options.setDefineToStringLiteral("strVar", "str");
-    options.setAliasableStrings(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
     options.setOptimizeArgumentsArray(true);
     options.setAmbiguateProperties(false);
     options.setOutputCharset(US_ASCII);
@@ -122,8 +119,6 @@ public final class CompilerOptionsTest {
     assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
     assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
     assertEquivalent(Node.newString("str"), actual.get("strVar"));
-    assertThat(options.aliasableStrings)
-        .isEqualTo(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
     assertThat(options.shouldAmbiguateProperties()).isFalse();
     assertThat(options.optimizeArgumentsArray).isTrue();
     assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);

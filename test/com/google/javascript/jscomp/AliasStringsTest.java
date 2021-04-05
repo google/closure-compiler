@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import java.util.Set;
 import org.junit.Test;
@@ -33,7 +32,6 @@ public final class AliasStringsTest extends CompilerTestCase {
   private static final String EXTERNS = "alert";
   private static final Set<String> ALL_STRINGS = null;
 
-  private Set<String> strings = ALL_STRINGS;
   private boolean hashReduction = false;
 
   public AliasStringsTest() {
@@ -42,7 +40,7 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    AliasStrings pass = new AliasStrings(compiler, compiler.getModuleGraph(), strings, false);
+    AliasStrings pass = new AliasStrings(compiler, compiler.getModuleGraph(), false);
     if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
     }
@@ -51,7 +49,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testTemplateLiteral() {
-    strings = ImmutableSet.of("aliasable string");
     // TODO(bradfordcsmith): Maybe implement using aliases in template literals?
     test(
         lines(
@@ -65,197 +62,9 @@ public final class AliasStringsTest extends CompilerTestCase {
             "const AB = `${A}aliasable string${B}`"));
   }
 
-  @Test
-  public void testAssignment() {
-    strings = ImmutableSet.of("none", "width", "overimaginative");
-
-    // Strings not in alias list
-    testSame("var foo='foo'");
-    testSame("if(true) {myStr='width'}");
-    testSame("a='titanium',b='titanium',c='titanium',d='titanium'");
-
-    // Not worth aliasing:
-    testSame("myStr='width'");
-    testSame("Bar.prototype.start='none'");
-    // Worth aliasing:
-    test("a='overimaginative';b='overimaginative'",
-         "var $$S_overimaginative='overimaginative';" +
-         "a=$$S_overimaginative;b=$$S_overimaginative");
-    test("if(true) {a='overimaginative';b='overimaginative'}",
-        "var $$S_overimaginative='overimaginative';" +
-        "if(true) {a=$$S_overimaginative;b=$$S_overimaginative }");
-
-    testSame("var width=1234");
-    testSame("width=1234;width=10000;width=9900;width=17;");
-  }
-
-  @Test
-  public void testSeveral() {
-    strings = ImmutableSet.of("", "px", "none", "width");
-
-    // 'display' is not in the allowed string set and only 'none' and 'width' are large and common
-    // enough to be worth interning.
-    test(
-        "function f() {"
-            + "  var styles1 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "  var styles2 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "  var styles3 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "  var styles4 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "  var styles5 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "  var styles6 = ["
-            + "      'width', 100, 'px', 'display', 'none'"
-            + "  ].join('');"
-            + "}",
-        "var $$S_none = 'none';"
-            + "var $$S_width = 'width';"
-            + "function f() {"
-            + "  var styles1 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('');"
-            + "  var styles2 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('');"
-            + "  var styles3 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('');"
-            + "  var styles4 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('');"
-            + "  var styles5 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('');"
-            + "  var styles6 = ["
-            + "      $$S_width, 100, 'px', 'display', $$S_none"
-            + "  ].join('')"
-            + "}");
-  }
-
-  @Test
-  public void testSortedOutput() {
-    strings =
-        ImmutableSet.of(
-            "abababababababababab",
-            "aaaaaaaaaaaaaaaaaaaa",
-            "acacacacacacacacacac",
-            "bcabcabcabcabcabcabc",
-            "bbabbabbabbabbabbabb");
-    test(
-        "function f() {return ['abababababababababab', 'abababababababababab', "
-            + "                       'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', "
-            + "                       'acacacacacacacacacac', 'acacacacacacacacacac', "
-            + "                       'bcabcabcabcabcabcabc', 'bcabcabcabcabcabcabc', "
-            + "                       'bbabbabbabbabbabbabb', 'bbabbabbabbabbabbabb']}",
-        "var $$S_aaaaaaaaaaaaaaaaaaaa='aaaaaaaaaaaaaaaaaaaa';"
-            + "var $$S_abababababababababab='abababababababababab';"
-            + "var $$S_acacacacacacacacacac='acacacacacacacacacac';"
-            + "var $$S_bbabbabbabbabbabbabb='bbabbabbabbabbabbabb';"
-            + "var $$S_bcabcabcabcabcabcabc='bcabcabcabcabcabcabc';"
-            + "function f() {"
-            + "  return [$$S_abababababababababab, $$S_abababababababababab, "
-            + "          $$S_aaaaaaaaaaaaaaaaaaaa, $$S_aaaaaaaaaaaaaaaaaaaa, "
-            + "          $$S_acacacacacacacacacac, $$S_acacacacacacacacacac, "
-            + "          $$S_bcabcabcabcabcabcabc, $$S_bcabcabcabcabcabcabc, "
-            + "          $$S_bbabbabbabbabbabbabb, $$S_bbabbabbabbabbabbabb]}");
-  }
-
-  @Test
-  public void testObjectLiterals() {
-    strings = ImmutableSet.of("pxpxpxpxpxpxpxpxpxpx", "abcdefghijabcdefghij");
-
-    testSame("var foo={px:435}");
-
-    // string as key
-    testSame("var foo={'pxpxpxpxpxpxpxpxpxpx':435}");
-    testSame("bar=function f(){return {'pxpxpxpxpxpxpxpxpxpx':435}}");
-
-    test(
-        "function f() {var foo={bar:'abcdefghijabcdefghij'+'abcdefghijabcdefghij'}}",
-        "var $$S_abcdefghijabcdefghij='abcdefghijabcdefghij';"
-            + "function f() {var foo={bar:$$S_abcdefghijabcdefghij+$$S_abcdefghijabcdefghij}}");
-
-    test(
-        "function f() {"
-            + "  var foo = {"
-            + "      px: 435,"
-            + "      foo1: 'pxpxpxpxpxpxpxpxpxpx',"
-            + "      foo2: 'pxpxpxpxpxpxpxpxpxpx',"
-            + "      bar: 'baz'"
-            + "  }"
-            + "}",
-        "var $$S_pxpxpxpxpxpxpxpxpxpx = 'pxpxpxpxpxpxpxpxpxpx';"
-            + "function f() {"
-            + "  var foo = {"
-            + "      px: 435,"
-            + "      foo1: $$S_pxpxpxpxpxpxpxpxpxpx,"
-            + "      foo2: $$S_pxpxpxpxpxpxpxpxpxpx,"
-            + "      bar: 'baz'"
-            + "  }"
-            + "}");
-  }
-
-  @Test
-  public void testGetProp() {
-    strings = ImmutableSet.of("pxpxpxpxpxpxpxpxpxpx", "widthwidthwidthwidth");
-
-    testSame("function f(){element.style.px=1234}");
-
-    test(
-        "function f() {"
-            + "  shape.width.units='pxpxpxpxpxpxpxpxpxpx';"
-            + "  shape.width.units='pxpxpxpxpxpxpxpxpxpx';"
-            + "}",
-        "var $$S_pxpxpxpxpxpxpxpxpxpx='pxpxpxpxpxpxpxpxpxpx';"
-            + "function f() {"
-            + "  shape.width.units=$$S_pxpxpxpxpxpxpxpxpxpx;"
-            + "  shape.width.units=$$S_pxpxpxpxpxpxpxpxpxpx;"
-            + "}");
-
-    test(
-        "function f() {"
-            + "  shape['widthwidthwidthwidth'].units='pt';"
-            + "  shape['widthwidthwidthwidth'].units='pt';"
-            + "}",
-        "var $$S_widthwidthwidthwidth='widthwidthwidthwidth';"
-            + "function f() {"
-            + "  shape[$$S_widthwidthwidthwidth].units='pt';"
-            + "  shape[$$S_widthwidthwidthwidth].units='pt';"
-            + "}");
-  }
-
-  @Test
-  public void testFunctionCalls() {
-    strings = ImmutableSet.of("", ",", "overimaginative");
-
-    // Not worth aliasing
-    testSame("alert('')");
-    testSame("var a=[1,2,3];a.join(',')");
-    // worth aliasing
-    test("f('overimaginative', 'overimaginative')",
-         "var $$S_overimaginative='overimaginative';" +
-         "f($$S_overimaginative,$$S_overimaginative)");
- }
-
-  @Test
-  public void testRegularExpressions() {
-    strings = ImmutableSet.of("px");
-
-    testSame("/px/.match('10px')");
-  }
 
   @Test
   public void testLongStableAlias() {
-    strings = ALL_STRINGS;
-
     // Check long strings get a hash code
 
     test("a='Antidisestablishmentarianism';" +
@@ -279,7 +88,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testLongStableAliasHashCollision() {
-    strings = ALL_STRINGS;
     hashReduction = true;
 
     // Check that hash code collisions generate different alias
@@ -303,7 +111,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testStringsThatAreGlobalVarValues() {
-    strings = ALL_STRINGS;
 
     testSame("var foo='foo'; var bar='';");
 
@@ -333,7 +140,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testStringsInModules() {
-    strings = ALL_STRINGS;
 
     // Aliases must be placed in the correct module. The alias for
     // '------adios------' must be lifted from m2 and m3 and go in the
@@ -391,7 +197,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testStringsInModules2() {
-    strings = ALL_STRINGS;
 
     // Aliases must be placed in the correct module. The alias for
     // '------adios------' must be lifted from m2 and m3 and go in the
@@ -432,7 +237,6 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testAliasInCommonModuleInclusive() {
-    strings = ALL_STRINGS;
 
     JSModule[] modules =
         JSChunkGraphBuilder.forBush()

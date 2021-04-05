@@ -487,14 +487,7 @@ public class CompilerOptions implements Serializable {
   public boolean collapseAnonymousFunctions;
 
   /**
-   * If set to a non-empty set, those strings literals will be aliased to a single global instance
-   * per string, to avoid creating more objects than necessary.
-   */
-  public Set<String> aliasableStrings;
-
-  /**
    * Aliases all string literals to global instances, to avoid creating more objects than necessary
-   * (if true, overrides any set of strings passed in to aliasableStrings)
    */
   public boolean aliasAllStrings;
 
@@ -1282,7 +1275,6 @@ public class CompilerOptions implements Serializable {
     removeUnusedLocalVars = false;
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
-    aliasableStrings = ImmutableSet.of();
     aliasAllStrings = false;
     outputJsStringUsage = false;
     convertToDottedProperties = false;
@@ -2076,10 +2068,6 @@ public class CompilerOptions implements Serializable {
     this.collapseAnonymousFunctions = enabled;
   }
 
-  public void setAliasableStrings(Set<String> aliasableStrings) {
-    this.aliasableStrings = aliasableStrings;
-  }
-
   public void setAliasAllStrings(boolean aliasAllStrings) {
     this.aliasAllStrings = aliasAllStrings;
   }
@@ -2663,7 +2651,6 @@ public class CompilerOptions implements Serializable {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
-        .add("aliasableStrings", aliasableStrings)
         .add("aliasAllStrings", aliasAllStrings)
         .add("aliasHandler", getAliasTransformationHandler())
         .add("allowHotswapReplaceScript", allowsHotswapReplaceScript())

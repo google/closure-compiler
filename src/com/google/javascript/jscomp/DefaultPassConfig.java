@@ -785,7 +785,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // This comes after converting quoted property accesses to dotted property
     // accesses in order to avoid aliasing property names.
-    if (!options.aliasableStrings.isEmpty() || options.aliasAllStrings) {
+    if (options.aliasAllStrings) {
       passes.add(aliasStrings);
     }
 
@@ -2484,7 +2484,6 @@ public final class DefaultPassConfig extends PassConfig {
                   new AliasStrings(
                       compiler,
                       compiler.getModuleGraph(),
-                      options.aliasAllStrings ? null : options.aliasableStrings,
                       options.outputJsStringUsage))
           .setFeatureSetForOptimizations()
           .build();
