@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
 import com.google.javascript.jscomp.lint.CheckEs6Modules;
 import com.google.javascript.jscomp.lint.CheckExtraRequires;
+import com.google.javascript.jscomp.lint.CheckGoogModuleTypeScriptName;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -582,6 +583,7 @@ public class DiagnosticGroups {
               CheckEs6ModuleFileStructure.MUST_COME_BEFORE,
               CheckEs6Modules.DUPLICATE_IMPORT,
               CheckEs6Modules.NO_DEFAULT_EXPORT,
+              CheckGoogModuleTypeScriptName.MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE,
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,

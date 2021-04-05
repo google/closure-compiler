@@ -48,6 +48,7 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
 import com.google.javascript.jscomp.lint.CheckEs6Modules;
 import com.google.javascript.jscomp.lint.CheckExtraRequires;
+import com.google.javascript.jscomp.lint.CheckGoogModuleTypeScriptName;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -1814,6 +1815,7 @@ public final class DefaultPassConfig extends PassConfig {
                         .add(new CheckEs6ModuleFileStructure(compiler))
                         .add(new CheckEs6Modules(compiler))
                         .add(new CheckNoMutatedEs6Exports(compiler))
+                        .add(new CheckGoogModuleTypeScriptName(compiler))
                         .add(new CheckInterfaces(compiler))
                         .add(new CheckJSDocStyle(compiler))
                         .add(new CheckMissingSemicolon(compiler))

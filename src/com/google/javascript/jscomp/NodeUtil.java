@@ -5348,7 +5348,7 @@ public final class NodeUtil {
     return (int) l;
   }
 
-  static boolean isGoogModuleCall(Node n) {
+  public static boolean isGoogModuleCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module"));
