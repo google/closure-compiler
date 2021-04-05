@@ -2899,9 +2899,6 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2015. */
     ECMASCRIPT_2015,
 
-    /** A superset of ES6 which adds Typescript-style type declarations. Always strict. */
-    ECMASCRIPT6_TYPED,
-
     /** ECMAScript standard approved in 2016. Adds the exponent operator (**). */
     ECMASCRIPT_2016,
 
@@ -2997,8 +2994,6 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES_NEXT_IN;
         case UNSUPPORTED:
           return FeatureSet.ES_UNSUPPORTED;
-        case ECMASCRIPT6_TYPED:
-          return FeatureSet.TYPESCRIPT;
         case STABLE:
           throw new UnsupportedOperationException(
               "STABLE has different feature sets for language in and out. "

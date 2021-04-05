@@ -35,12 +35,6 @@ public final class CompilerOptionsPreprocessor {
       throw new InvalidOptionsException(
           "max_function_size_after_inlining has no effect if inlining is disabled.");
     }
-
-    // ECMASCRIPT6_TYPED and TS syntax support exist only for use by Gents
-    // (https://github.com/angular/clutz) which outputs TS syntax but does not parse it.
-    if (CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED.equals(options.getLanguageIn())) {
-      throw new InvalidOptionsException("Cannot set input language to ECMASCRIPT6_TYPED.");
-    }
   }
 
   /** Exception to indicate incompatible options in the CompilerOptions. */

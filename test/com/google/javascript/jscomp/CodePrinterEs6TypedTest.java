@@ -21,11 +21,11 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -39,13 +39,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    languageMode = LanguageMode.ECMASCRIPT6_TYPED;
-  }
-
   void assertPrettyPrint(Node root, String js) {
     String parsed =
         new CodePrinter.Builder(root)
@@ -57,6 +50,8 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
                         options.setPrettyPrint(true);
                         options.setPreferLineBreakAtEndOfFile(false);
                         options.setPreferSingleQuotes(true);
+                        options.setOutputFeatureSet(
+                            FeatureSet.ES_NEXT.with(Feature.TYPE_ANNOTATION));
                       }
                     }))
             .build();
