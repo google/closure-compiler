@@ -2339,8 +2339,7 @@ public class Node implements Serializable {
     return this;
   }
 
-  /** Copies a nodes JSTYpe and Color (if present) */
-  @Deprecated
+  /** Copies a nodes JSType or Color (if present) */
   public final Node copyTypeFrom(Node other) {
     this.jstypeOrColor = other.jstypeOrColor;
     return this;
