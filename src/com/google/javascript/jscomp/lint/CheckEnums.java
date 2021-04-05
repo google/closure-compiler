@@ -61,10 +61,8 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   public static final DiagnosticType NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM =
       DiagnosticType.disabled(
           "JSC_NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM",
-          "enum string values must be statically initialized."
-              + " Consider using a const object by replacing the '`@enum {string}'` with an"
-              + " '`@const'`, and adding '`@const {string}'` types to individual properties.");
-
+          "Enum string values must be statically initialized as per the style guide."
+          );
   private final AbstractCompiler compiler;
 
   public CheckEnums(AbstractCompiler compiler) {
