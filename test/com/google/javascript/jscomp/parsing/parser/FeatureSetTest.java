@@ -29,26 +29,25 @@ import org.junit.runners.JUnit4;
 public final class FeatureSetTest {
   @Test
   public void testContains() {
-    assertFS(FeatureSet.TYPESCRIPT).has(Feature.TYPE_ANNOTATION);
-    assertFS(FeatureSet.TYPESCRIPT).has(Feature.MODULES);
+    assertFS(FeatureSet.ALL).has(Feature.TYPE_ANNOTATION);
+    assertFS(FeatureSet.ALL).has(Feature.MODULES);
   }
 
   @Test
   public void testWithoutModules() {
-    assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).has(Feature.TYPE_ANNOTATION);
-    assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).doesNotHave(Feature.MODULES);
+    assertFS(FeatureSet.ALL.without(Feature.MODULES)).has(Feature.TYPE_ANNOTATION);
+    assertFS(FeatureSet.ALL.without(Feature.MODULES)).doesNotHave(Feature.MODULES);
   }
 
   @Test
   public void testWithoutTypes() {
-    assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).doesNotHave(Feature.TYPE_ANNOTATION);
-    assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).has(Feature.MODULES);
+    assertFS(FeatureSet.ALL.withoutTypes()).doesNotHave(Feature.TYPE_ANNOTATION);
+    assertFS(FeatureSet.ALL.withoutTypes()).has(Feature.MODULES);
   }
 
   @Test
   public void testEsOrdering() {
-    assertFS(FeatureSet.TS_UNSUPPORTED).contains(FeatureSet.TYPESCRIPT);
-    assertFS(FeatureSet.TYPESCRIPT).contains(FeatureSet.ES_NEXT);
+    assertFS(FeatureSet.ALL).contains(FeatureSet.ES_UNSUPPORTED);
     assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2020);
@@ -74,7 +73,7 @@ public final class FeatureSetTest {
 
   @Test
   public void testVersionForDebugging() {
-    // ES_NEXT, ES_UNSUPPORTED, TS_UNSUPPORTED are tested separately - see below
+    // ES_NEXT, ES_UNSUPPORTED are tested separately - see below
     assertThat(FeatureSet.ES3.versionForDebugging()).isEqualTo("es3");
     assertThat(FeatureSet.ES5.versionForDebugging()).isEqualTo("es5");
     assertThat(FeatureSet.ES2015.versionForDebugging()).isEqualTo("es6");
@@ -89,7 +88,7 @@ public final class FeatureSetTest {
     assertThat(FeatureSet.ES2019_MODULES.versionForDebugging()).isEqualTo("es_2019");
     assertThat(FeatureSet.ES2020.versionForDebugging()).isEqualTo("es_2020");
     assertThat(FeatureSet.ES2020_MODULES.versionForDebugging()).isEqualTo("es_2020");
-    assertThat(FeatureSet.TYPESCRIPT.versionForDebugging()).isEqualTo("ts");
+    assertThat(FeatureSet.ALL.versionForDebugging()).isEqualTo("all");
   }
 
   @Test
@@ -126,17 +125,6 @@ public final class FeatureSetTest {
   }
 
   @Test
-  public void testTsUnsupported() {
-    // TS_UNSUPPORTED is currently has all features of TYPESCRIPT, so versionForDebugging() will
-    // return ts
-    // This will change when new features are added to TYPESCRIPT/TS_UNSUPPORTED, so this test case
-    // will then have to change.
-    // This is on purpose so the test case serves as documentation that we intentionally
-    // have TS_UNSUPPORTED the same as or different from TYPESCRIPT
-    assertThat(FeatureSet.TS_UNSUPPORTED.versionForDebugging()).isEqualTo("ts");
-  }
-
-  @Test
   public void testValueOf() {
     assertFS(FeatureSet.valueOf("es3")).equals(FeatureSet.ES3);
     assertFS(FeatureSet.valueOf("es5")).equals(FeatureSet.ES5);
@@ -150,7 +138,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es_next")).equals(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.valueOf("es_next_in")).equals(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.valueOf("es_unsupported")).equals(FeatureSet.ES_UNSUPPORTED);
-    assertFS(FeatureSet.valueOf("ts")).equals(FeatureSet.TYPESCRIPT);
+    assertFS(FeatureSet.valueOf("all")).equals(FeatureSet.ALL);
     assertThrows(IllegalArgumentException.class, () -> FeatureSet.valueOf("bad"));
   }
 }

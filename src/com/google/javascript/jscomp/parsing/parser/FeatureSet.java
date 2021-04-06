@@ -94,8 +94,6 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet ES_UNSUPPORTED =
       ES_NEXT_IN.with(LangVersion.ES_UNSUPPORTED.features());
 
-  public static final FeatureSet TYPESCRIPT = ES_NEXT_IN.with(LangVersion.TYPESCRIPT.features());
-
   public static final FeatureSet BROWSER_2020 =
       ES2019_MODULES.without(
           // https://kangax.github.io/compat-table/es2016plus/
@@ -111,8 +109,7 @@ public final class FeatureSet implements Serializable {
           // Regexp lookbehind is missing in Safari 14.
           Feature.REGEXP_LOOKBEHIND);
 
-  public static final FeatureSet TS_UNSUPPORTED =
-      TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
+  public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
   private enum LangVersion {
     ES3,
@@ -127,7 +124,6 @@ public final class FeatureSet implements Serializable {
     ES_NEXT,
     ES_UNSUPPORTED,
     TYPESCRIPT,
-    TS_UNSUPPORTED,
     ;
 
     private EnumSet<Feature> features() {
@@ -285,11 +281,8 @@ public final class FeatureSet implements Serializable {
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
     }
-    if (TYPESCRIPT.contains(this)) {
-      return "ts";
-    }
-    if (TS_UNSUPPORTED.contains(this)) {
-      return "ts_unsupported";
+    if (ALL.contains(this)) {
+      return "all";
     }
     throw new IllegalStateException(this.toString());
   }
@@ -438,10 +431,8 @@ public final class FeatureSet implements Serializable {
         return ES_NEXT_IN;
       case "es_unsupported":
         return ES_UNSUPPORTED;
-      case "ts":
-        return TYPESCRIPT;
-      case "ts_unsupported":
-        return TS_UNSUPPORTED;
+      case "all":
+        return ALL;
       default:
         throw new IllegalArgumentException("No such FeatureSet: " + name);
     }
@@ -450,12 +441,12 @@ public final class FeatureSet implements Serializable {
   /**
    * Returns a {@code FeatureSet} containing all known features.
    *
-   * <p>NOTE: {@code PassFactory} classes that claim to support {@code FeatureSet.everything()}
-   * should be only those that cannot be broken by new features being added to the language. Mainly
-   * these are passes that don't have to actually look at the AST at all, like empty marker passes.
+   * <p>NOTE: {@code PassFactory} classes that claim to support {@code FeatureSet.all()} should be
+   * only those that cannot be broken by new features being added to the language. Mainly these are
+   * passes that don't have to actually look at the AST at all, like empty marker passes.
    */
   public static FeatureSet all() {
-    return TS_UNSUPPORTED;
+    return ALL;
   }
 
   public static FeatureSet latest() {
