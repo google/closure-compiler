@@ -17,7 +17,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
+import static com.google.javascript.jscomp.ConvertChunksToESModules.DYNAMIC_IMPORT_CALLBACK_FN;
 
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.ModuleRenaming.GlobalizedModuleName;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -30,6 +33,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import javax.annotation.Nullable;
 
@@ -56,11 +60,6 @@ import javax.annotation.Nullable;
 public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
-  static final DiagnosticType UNABLE_TO_COMPUTE_RELATIVE_PATH =
-      DiagnosticType.error(
-          "JSC_UNABLE_TO_COMPUTE_RELATIVE_PATH",
-          "Unable to compute relative import path from \"{0}\" to \"{1}\"");
-
   static final DiagnosticType DYNAMIC_IMPORT_ALIASING_REQUIRED =
       DiagnosticType.warning(
           "JSC_DYNAMIC_IMPORT_ALIASING_REQUIRED",
@@ -70,15 +69,21 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   private final AstFactory astFactory;
   private final String alias;
   private final boolean requiresAliasing;
+  private final boolean shouldWrapDynamicImportCallbacks;
   private boolean dynamicImportsRemoved = false;
+  private boolean arrowFunctionsAdded = false;
 
   /** @param compiler The compiler */
-  public RewriteDynamicImports(AbstractCompiler compiler, @Nullable String alias) {
+  public RewriteDynamicImports(
+      AbstractCompiler compiler,
+      @Nullable String alias,
+      ChunkOutputType chunkOutputType) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.alias = alias;
     this.requiresAliasing =
         !compiler.getOptions().getOutputFeatureSet().contains(Feature.DYNAMIC_IMPORT);
+    this.shouldWrapDynamicImportCallbacks = chunkOutputType == ChunkOutputType.ES_MODULES;
   }
 
   @Override
@@ -86,11 +91,17 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     dynamicImportsRemoved = false;
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
+    if (shouldWrapDynamicImportCallbacks) {
+      injectWrappingFunctionExtern();
+    }
+
     NodeTraversal.traverse(compiler, root, this);
     if (dynamicImportsRemoved) {
       // This pass removes dynamic import, but adds arrow functions.
-      compiler.setFeatureSet(
-          compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT).with(Feature.ARROW_FUNCTIONS));
+      compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT));
+    }
+    if (arrowFunctionsAdded) {
+      compiler.setFeatureSet(compiler.getFeatureSet().with(Feature.ARROW_FUNCTIONS));
     }
   }
 
@@ -104,8 +115,17 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     final ModuleMap moduleMap = compiler.getModuleMap();
     final Node importSpecifier = n.getFirstChild();
     if (importSpecifier.isString() && moduleMap != null) {
-      final ModulePath targetPath = compiler.getModuleLoader().resolve(importSpecifier.getString());
-      final Module module = compiler.getModuleMap().getModule(targetPath);
+      final ModulePath targetPath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  importSpecifier.getString(),
+                  n.getSourceFileName(),
+                  n.getLineno(),
+                  n.getCharno());
+      final Module module =
+          (targetPath == null) ? null : compiler.getModuleMap().getModule(targetPath);
+
       final String targetModuleVarName =
           (module == null)
               ? null
@@ -260,16 +280,22 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     dynamicImport.replaceWith(placeholder);
     final Node moduleNamespaceNode = createModuleNamespaceNode(targetModuleNs);
     final Node callbackFn = astFactory.createZeroArgArrowFunctionForExpression(moduleNamespaceNode);
+    callbackFn.setJSType(
+        registry.createFunctionType(
+            registry.createTemplatizedType(
+                registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
+                registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
+            registry.createFunctionType(registry.getNativeType(JSTypeNative.ALL_TYPE))));
+    Node thenArgument = callbackFn;
+    if (shouldWrapDynamicImportCallbacks) {
+      Node wrappingFunction =
+          astFactory.createName(
+              DYNAMIC_IMPORT_CALLBACK_FN,
+              registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType()));
+      thenArgument = astFactory.createCall(wrappingFunction, callbackFn);
+    }
     final Node importThenCall =
-        astFactory.createCall(astFactory.createGetProp(dynamicImport, "then"), callbackFn);
-    importThenCall
-        .getFirstChild()
-        .setJSType(
-            registry.createFunctionType(
-                registry.createTemplatizedType(
-                    registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
-                    registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
-                registry.createFunctionType(registry.getNativeType(JSTypeNative.ALL_TYPE))));
+        astFactory.createCall(astFactory.createGetProp(dynamicImport, "then"), thenArgument);
     importThenCall.srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
       importThenCall.copyTypeFrom(dynamicImport);
@@ -277,6 +303,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     placeholder.replaceWith(importThenCall);
     compiler.reportChangeToChangeScope(callbackFn);
     compiler.reportChangeToEnclosingScope(importParent);
+    arrowFunctionsAdded = true;
   }
 
   /**
@@ -315,5 +342,25 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     Node moduleNamespace = moduleVarNode.cloneNode();
     moduleNamespace.copyTypeFrom(moduleVarNode);
     return moduleNamespace;
+  }
+
+  /** For a given module, return a reference to the module namespace export */
+  private void injectWrappingFunctionExtern() {
+    JSTypeRegistry registry = compiler.getTypeRegistry();
+    TemplateType templateT = registry.createTemplateType("T");
+    final Node wrappingFunctionDefinition =
+        astFactory.createFunction(
+            DYNAMIC_IMPORT_CALLBACK_FN,
+            astFactory.createParamList("importCallback"),
+            astFactory.createBlock(),
+            registry.createFunctionType(templateT, templateT));
+
+
+    Node externsRoot = compiler
+        .getSynthesizedExternsInputAtEnd()
+        .getAstRoot(compiler);
+    wrappingFunctionDefinition.srcrefTree(externsRoot);
+    externsRoot.addChildToBack(wrappingFunctionDefinition);
+    compiler.reportChangeToEnclosingScope(wrappingFunctionDefinition);
   }
 }
