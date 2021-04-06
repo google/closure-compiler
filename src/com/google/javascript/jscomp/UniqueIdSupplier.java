@@ -27,7 +27,7 @@ import java.io.Serializable;
  * the compiler. The generated ID format is: uniqueId = "fileHashCode$counterForThisFile"
  */
 public final class UniqueIdSupplier implements Serializable {
-  private final Multiset<String> counter;
+  private final Multiset<Integer> counter;
 
   UniqueIdSupplier() {
     counter = HashMultiset.create();
@@ -43,7 +43,7 @@ public final class UniqueIdSupplier implements Serializable {
     int fileHashCode;
     String filePath = input.getSourceFile().getOriginalPath();
     fileHashCode = filePath.hashCode();
-    int id = counter.add(filePath, 1);
+    int id = counter.add(fileHashCode, 1);
     String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
     return fileHashString + "$" + id;
   }
