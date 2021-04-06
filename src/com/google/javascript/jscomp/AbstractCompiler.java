@@ -24,8 +24,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
+import com.google.javascript.jscomp.ExpressionDecomposer.Workaround;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -38,10 +40,12 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -603,6 +607,27 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   public AstAnalyzer getAstAnalyzer() {
     return new AstAnalyzer(this, getOptions().getAssumeGettersArePure());
+  }
+
+  public ExpressionDecomposer createDefaultExpressionDecomposer() {
+    return createExpressionDecomposer(
+        this.getUniqueNameIdSupplier(),
+        ImmutableSet.of(),
+        Scope.createGlobalScope(new Node(Token.SCRIPT)));
+  }
+
+  public ExpressionDecomposer createExpressionDecomposer(
+      Supplier<String> uniqueNameIdSupplier,
+      ImmutableSet<String> knownConstantFunctions,
+      Scope scope) {
+    // If the output is ES5, then it may end up running on IE11, so enable a workaround
+    // for one of its bugs.
+    final EnumSet<Workaround> enabledWorkarounds =
+        FeatureSet.ES5.contains(getOptions().getOutputFeatureSet())
+            ? EnumSet.of(Workaround.BROKEN_IE11_LOCATION_ASSIGN)
+            : EnumSet.noneOf(Workaround.class);
+    return new ExpressionDecomposer(
+        this, uniqueNameIdSupplier, knownConstantFunctions, scope, enabledWorkarounds);
   }
 
   public abstract ModuleMetadataMap getModuleMetadataMap();

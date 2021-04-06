@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -46,6 +47,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ExpressionDecomposerTest {
   private final Set<String> knownConstants = new HashSet<>();
+
+  /** The language out to set in the compiler options. If null, use the default. */
+  @Nullable private LanguageMode languageOut;
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 
@@ -53,10 +57,14 @@ public final class ExpressionDecomposerTest {
   public void setUp() {
     knownConstants.clear();
     shouldTestTypes = true;
+    languageOut = null;
   }
 
   @Test
   public void testWindowLocationAssign() {
+    // avoid decomposing `window.location.assign` when the output code could
+    // end up running on IE11. See more explanation in ExpressionDecomposer.java.
+    languageOut = LanguageMode.ECMASCRIPT5;
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "window.location.assign(foo())", exprMatchesStr("foo()"));
     helperMoveExpression(
@@ -65,6 +73,19 @@ public final class ExpressionDecomposerTest {
         lines(
             "var result$jscomp$0 = foo();", //
             "window.location.assign(result$jscomp$0)"));
+
+    // confirm that the default behavior does not treat window.location.assign
+    // specially
+    languageOut = null;
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "window.location.assign(foo())", exprMatchesStr("foo()"));
+    helperExposeExpression(
+        "window.location.assign(foo())",
+        exprMatchesStr("foo()"),
+        lines(
+            "var temp_const$jscomp$1 = window.location;",
+            "var temp_const$jscomp$0 = temp_const$jscomp$1.assign;",
+            "temp_const$jscomp$0.call(temp_const$jscomp$1, foo());"));
   }
 
   @Test
@@ -1766,12 +1787,7 @@ public final class ExpressionDecomposerTest {
       String code,
       Function<AbstractCompiler, Function<Node, Node>> nodeFinderFn) {
     Compiler compiler = getCompiler();
-    ExpressionDecomposer decomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+    ExpressionDecomposer decomposer = createDecomposer(compiler);
     Node tree = parse(compiler, code);
     assertThat(tree).isNotNull();
 
@@ -1842,12 +1858,7 @@ public final class ExpressionDecomposerTest {
     Node tree = parse(compiler, code);
     assertThat(tree).isNotNull();
 
-    ExpressionDecomposer decomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+    ExpressionDecomposer decomposer = createDecomposer(compiler);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
@@ -1874,12 +1885,7 @@ public final class ExpressionDecomposerTest {
       processForTypecheck(compiler, tree);
     }
 
-    ExpressionDecomposer decomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+    ExpressionDecomposer decomposer = createDecomposer(compiler);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
@@ -1901,6 +1907,11 @@ public final class ExpressionDecomposerTest {
     }
   }
 
+  private ExpressionDecomposer createDecomposer(Compiler compiler) {
+    return compiler.createExpressionDecomposer(
+        compiler.getUniqueNameIdSupplier(), ImmutableSet.copyOf(knownConstants), newScope());
+  }
+
   private void helperMoveExpression(
       String code,
       Function<AbstractCompiler, Function<Node, Node>> compilerToNodeFinder,
@@ -1917,12 +1928,7 @@ public final class ExpressionDecomposerTest {
       processForTypecheck(compiler, tree);
     }
 
-    ExpressionDecomposer decomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+    ExpressionDecomposer decomposer = createDecomposer(compiler);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
@@ -1980,6 +1986,11 @@ public final class ExpressionDecomposerTest {
   private Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    // If the specific test case requested an output language level,
+    // use it. Otherwise, keep the default.
+    if (languageOut != null) {
+      options.setLanguageOut(languageOut);
+    }
     options.setCodingConvention(new GoogleCodingConvention());
     options.setPrettyPrint(true);
     // Don't prefix the compiler output with `"use strict";`.

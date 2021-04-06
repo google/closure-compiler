@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -28,7 +27,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -60,12 +58,7 @@ public final class Es6ExtractClasses
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.expressionDecomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.of(),
-            Scope.createGlobalScope(new Node(Token.SCRIPT)));
+    this.expressionDecomposer = compiler.createDefaultExpressionDecomposer();
   }
 
   @Override

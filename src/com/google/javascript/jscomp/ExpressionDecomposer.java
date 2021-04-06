@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
+import java.util.EnumSet;
 import javax.annotation.Nullable;
 
 /**
@@ -60,23 +61,40 @@ class ExpressionDecomposer {
     DECOMPOSABLE
   }
 
+  /**
+   * Identify special case logic that needs to be enabled to work around edge cases, such as bad
+   * JSVM behavior.
+   */
+  public enum Workaround {
+    // IE11 throws an exception for `window.location.assign.call(window.location, url)`
+    BROKEN_IE11_LOCATION_ASSIGN
+  }
+
   private final AbstractCompiler compiler;
   private final AstAnalyzer astAnalyzer;
   private final AstFactory astFactory;
   private final Supplier<String> safeNameIdSupplier;
   private final ImmutableSet<String> knownConstantFunctions;
   private final Scope scope;
+  private final EnumSet<Workaround> enabledWorkarounds;
   @Nullable private final JSType unknownType;
 
   /**
+   * Create an ExpressionDecomposer.
+   *
+   * <p>DO NOT USE THIS METHOD DIRECTLY. Call `compiler.createExpressionDecomposer()` instead so the
+   * compiler can supply the workarounds needed for this compilation.
+   *
    * @param constFunctionNames set of names known to be constant functions. Used by InlineFunctions
    *     to prevent this pass from breaking bookkeeping for functions it's inlining.
+   * @param enabledWorkarounds indicates which workarounds for bad JSVM behavior should be enabled.
    */
   ExpressionDecomposer(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
       ImmutableSet<String> constFunctionNames,
-      Scope scope) {
+      Scope scope,
+      EnumSet<Workaround> enabledWorkarounds) {
     checkNotNull(compiler);
     checkNotNull(safeNameIdSupplier);
     checkNotNull(constFunctionNames);
@@ -86,6 +104,7 @@ class ExpressionDecomposer {
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstantFunctions = constFunctionNames;
     this.scope = scope;
+    this.enabledWorkarounds = enabledWorkarounds;
     this.unknownType =
         compiler.hasTypeCheckingRun() && !compiler.hasOptimizationColors()
             ? compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE)
@@ -1167,7 +1186,8 @@ class ExpressionDecomposer {
         return false;
       }
 
-      if (WINDOW_LOCATION_ASSIGN.matches(tree)) {
+      if (enabledWorkarounds.contains(Workaround.BROKEN_IE11_LOCATION_ASSIGN)
+          && WINDOW_LOCATION_ASSIGN.matches(tree)) {
         // IE11 throws an exception if we decompose a call to `window.location.assign`
         // e.g.
         // ```js

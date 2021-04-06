@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -163,12 +162,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     final ExpressionDecomposer decomposer;
 
     YieldExposer() {
-      decomposer =
-          new ExpressionDecomposer(
-              compiler,
-              compiler.getUniqueNameIdSupplier(),
-              ImmutableSet.of(),
-              Scope.createGlobalScope(new Node(Token.SCRIPT)));
+      decomposer = compiler.createDefaultExpressionDecomposer();
     }
 
     @Override

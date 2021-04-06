@@ -535,7 +535,7 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
-    return new ExpressionDecomposer(compiler, safeNameIdSupplier, knownConstantFunctions, scope);
+    return compiler.createExpressionDecomposer(safeNameIdSupplier, knownConstantFunctions, scope);
   }
 
   /**
