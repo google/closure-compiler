@@ -949,8 +949,7 @@ class IRFactory {
   }
 
   void setSourceInfo(Node node, Node ref) {
-    node.setLineno(ref.getLineno());
-    node.setCharno(ref.getCharno());
+    node.setLinenoCharno(ref.getLineno(), ref.getCharno());
     setLengthFrom(node, ref);
   }
 
@@ -971,10 +970,7 @@ class IRFactory {
       // If we didn't already set the line, then set it now. This avoids
       // cases like ParenthesizedExpression where we just return a previous
       // node, but don't want the new node to get its parent's line number.
-      int lineno = lineno(start);
-      node.setLineno(lineno);
-      int charno = charno(start);
-      node.setCharno(charno);
+      node.setLinenoCharno(lineno(start), charno(start));
       setLength(node, start, end);
     }
   }
@@ -2381,7 +2377,7 @@ class IRFactory {
         } else {
           operand.setDouble(-operand.getDouble());
         }
-        operand.setLineno(-1);
+        operand.setLinenoCharno(-1, -1);
         setSourceInfo(operand, exprNode.operator.getStart(), exprNode.operand.getEnd());
         return operand;
       } else {

@@ -54,25 +54,28 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class NodeTest {
   @Test
-  public void testMergeExtractNormal() {
-    testMergeExtract(5, 6);
-    testMergeExtract(456, 3423);
-    testMergeExtract(0, 0);
+  public void testLinenoCharnoNormal() {
+    assertLinenoCharno(5, 6, 5, 6);
+    assertLinenoCharno(456, 3423, 456, 3423);
+    assertLinenoCharno(0, 0, 0, 0);
   }
 
   @Test
-  public void testMergeExtractErroneous() {
-    assertThat(Node.mergeLineCharNo(-5, 90)).isEqualTo(-1);
-    assertThat(Node.mergeLineCharNo(0, -1)).isEqualTo(-1);
-    assertThat(Node.extractLineno(-1)).isEqualTo(-1);
-    assertThat(Node.extractCharno(-1)).isEqualTo(-1);
+  public void testLinenoCharnoErroneous() {
+    assertLinenoCharno(-5, 90, -1, -1);
+    assertLinenoCharno(90, -1, -1, -1);
   }
 
   @Test
   public void testMergeOverflowGraciously() {
-    int linecharno = Node.mergeLineCharNo(89, 4096);
-    assertThat(Node.extractLineno(linecharno)).isEqualTo(89);
-    assertThat(Node.extractCharno(linecharno)).isEqualTo(4095);
+    assertLinenoCharno(89, 4096, 89, 4095);
+  }
+
+  private void assertLinenoCharno(int linenoIn, int charnoIn, int linenoOut, int charnoOut) {
+    Node test = IR.block();
+    test.setLinenoCharno(linenoIn, charnoIn);
+    assertThat(test.getLineno()).isEqualTo(linenoOut);
+    assertThat(test.getCharno()).isEqualTo(charnoOut);
   }
 
   @Test
@@ -248,12 +251,6 @@ public class NodeTest {
     node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
-  }
-
-  private void testMergeExtract(int lineno, int charno) {
-    int linecharno = Node.mergeLineCharNo(lineno, charno);
-    assertThat(Node.extractLineno(linecharno)).isEqualTo(lineno);
-    assertThat(Node.extractCharno(linecharno)).isEqualTo(charno);
   }
 
   @Test
@@ -568,7 +565,7 @@ public class NodeTest {
   @Test
   public void testSrcrefIfMissing() {
     Node assign = getAssignExpr("b", "c");
-    assign.setLineno(99);
+    assign.setLinenoCharno(99, 0);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
@@ -576,7 +573,7 @@ public class NodeTest {
     assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
-    assign.setLineno(101);
+    assign.setLinenoCharno(101, 0);
     assign.setSourceFileForTesting("bar.js");
     lhs.srcrefIfMissing(assign);
     assertNode(lhs).hasLineno(99);
@@ -586,7 +583,7 @@ public class NodeTest {
   @Test
   public void testSrcref() {
     Node assign = getAssignExpr("b", "c");
-    assign.setLineno(99);
+    assign.setLinenoCharno(99, 0);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
@@ -594,7 +591,7 @@ public class NodeTest {
     assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
-    assign.setLineno(101);
+    assign.setLinenoCharno(101, 0);
     assign.setSourceFileForTesting("bar.js");
     lhs.srcref(assign);
     assertNode(lhs).hasLineno(101);
@@ -605,7 +602,7 @@ public class NodeTest {
   public void testInvalidSourceOffset() {
     Node string = Node.newString("a");
 
-    string.setLineno(-1);
+    string.setLinenoCharno(-1, -1);
     assertThat(string.getSourceOffset()).isLessThan(0);
 
     string.setSourceFileForTesting("foo.js");

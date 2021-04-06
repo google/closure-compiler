@@ -110,8 +110,7 @@ final class TypedAstDeserializer {
     Node n = deserializeSingleNode(astNode);
     deserializeProperties(n, astNode);
     n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc()));
-    n.setLineno(currentLine);
-    n.setCharno(currentColumn);
+    n.setLinenoCharno(currentLine, currentColumn);
     previousLine = currentLine;
     previousColumn = currentColumn;
     for (AstNode child : astNode.getChildList()) {

@@ -830,8 +830,7 @@ public final class SuggestedFix {
 
       Node result = IR.empty();
       result.setStaticSourceFile(n.getStaticSourceFile());
-      result.setLineno(leftmost.getLineno());
-      result.setCharno(leftmost.getCharno());
+      result.setLinenoCharno(leftmost.getLineno(), leftmost.getCharno());
       result.setLength(n.getLength() + (n.getSourceOffset() - leftmost.getSourceOffset()));
       return result;
     }

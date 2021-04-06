@@ -1800,7 +1800,8 @@ public final class SymbolTable {
           if (typeString.contains(".")) {
             String lastPart = typeString.substring(typeString.lastIndexOf('.') + 1);
             Node copy = n.cloneNode();
-            copy.setCharno(copy.getCharno() + copy.getLength() - lastPart.length());
+            copy.setLinenoCharno(
+                copy.getLineno(), copy.getCharno() + copy.getLength() - lastPart.length());
             copy.setLength(lastPart.length());
             ref = copy;
           }

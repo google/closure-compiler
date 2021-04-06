@@ -106,7 +106,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
     if (n.getLineno() == 1) {
       // We wrapped the expression in parens so our first-line columns are off by one.
       // We need to correct for this.
-      n.setCharno(n.getCharno() - 1);
+      n.setLinenoCharno(1, n.getCharno() - 1);
       t.reportCodeChange();
     }
   }

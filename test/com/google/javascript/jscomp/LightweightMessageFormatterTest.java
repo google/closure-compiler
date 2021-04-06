@@ -170,8 +170,7 @@ public final class LightweightMessageFormatterTest {
     Node foobar = IR.string("foobar");
     Node baz = IR.string("baz");
     Node orNode = IR.or(foobar, baz);
-    orNode.setLineno(5);
-    orNode.setCharno(4);
+    orNode.setLinenoCharno(5, 4);
     orNode.setLength("foobar\n      || baz".length());
     orNode.setSourceFileForTesting("javascript/complex.js");
 
@@ -190,8 +189,7 @@ public final class LightweightMessageFormatterTest {
   @Test
   public void testMultiline_longTruncatedErrorMessage() {
     Node qname = IR.getprop(IR.name("a"), "b", "c", "d", "e");
-    qname.setLineno(8);
-    qname.setCharno(0);
+    qname.setLinenoCharno(8, 0);
     qname.setLength("a\n .b\n .c\n .d\n .e".length());
     qname.setSourceFileForTesting("javascript/complex.js");
 
@@ -219,8 +217,7 @@ public final class LightweightMessageFormatterTest {
     Node baz = Node.newString("baz", 6, 6);
     baz.setLength("baz".length());
     Node orNode = IR.or(foobar, baz);
-    orNode.setLineno(5);
-    orNode.setCharno(4);
+    orNode.setLinenoCharno(5, 4);
     orNode.setLength(1000); // intentionally too long
     orNode.setSourceFileForTesting("javascript/complex.js");
 

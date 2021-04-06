@@ -530,7 +530,6 @@ public class Node implements Serializable {
   public Node(Token nodeType) {
     token = nodeType;
     parent = null;
-    sourcePosition = -1;
   }
 
   public Node(Token nodeType, Node child) {
@@ -544,7 +543,6 @@ public class Node implements Serializable {
     child.next = null;
     child.previous = first;
     child.parent = this;
-    sourcePosition = -1;
   }
 
   public Node(Token nodeType, Node left, Node right) {
@@ -563,7 +561,6 @@ public class Node implements Serializable {
     right.next = null;
     right.previous = left;
     right.parent = this;
-    sourcePosition = -1;
   }
 
   public Node(Token nodeType, Node left, Node mid, Node right) {
@@ -588,7 +585,6 @@ public class Node implements Serializable {
     right.next = null;
     right.previous = mid;
     right.parent = this;
-    sourcePosition = -1;
   }
 
   Node(Token nodeType, Node left, Node mid, Node mid2, Node right) {
@@ -619,18 +615,17 @@ public class Node implements Serializable {
     right.next = null;
     right.previous = mid2;
     right.parent = this;
-    sourcePosition = -1;
   }
 
   public Node(Token nodeType, int lineno, int charno) {
     token = nodeType;
     parent = null;
-    sourcePosition = mergeLineCharNo(lineno, charno);
+    this.setLinenoCharno(lineno, charno);
   }
 
   public Node(Token nodeType, Node child, int lineno, int charno) {
     this(nodeType, child);
-    sourcePosition = mergeLineCharNo(lineno, charno);
+    this.setLinenoCharno(lineno, charno);
   }
 
   public static Node newNumber(double number) {
@@ -1342,7 +1337,7 @@ public class Node implements Serializable {
    * of the integer, and the line number in the rest. Create some handy constants so we can change
    * this size if we want.
    */
-  private transient int sourcePosition;
+  private transient int linenoCharno = -1;
 
   /** The length of the code represented by the node. */
   private transient int length;
@@ -1359,12 +1354,10 @@ public class Node implements Serializable {
   @Nullable private transient PropListItem propListHead;
 
   /**
-   * COLUMN_BITS represents how many of the lower-order bits of
-   * sourcePosition are reserved for storing the column number.
-   * Bits above these store the line number.
-   * This gives us decent position information for everything except
-   * files already passed through a minimizer, where lines might
-   * be longer than 4096 characters.
+   * COLUMN_BITS represents how many of the lower-order bits of linenoCharno are reserved for
+   * storing the column number. Bits above these store the line number. This gives us decent
+   * position information for everything except files already passed through a minimizer, where
+   * lines might be longer than 4096 characters.
    */
   public static final int COLUMN_BITS = 12;
 
@@ -1482,12 +1475,20 @@ public class Node implements Serializable {
   }
 
   public final int getLineno() {
-    return extractLineno(sourcePosition);
+    if (this.linenoCharno == -1) {
+      return -1;
+    } else {
+      return this.linenoCharno >>> COLUMN_BITS;
+    }
   }
 
   // Returns the 0-based column number
   public final int getCharno() {
-    return extractCharno(sourcePosition);
+    if (this.linenoCharno == -1) {
+      return -1;
+    } else {
+      return this.linenoCharno & COLUMN_MASK;
+    }
   }
 
   public final String getLocation() {
@@ -1509,59 +1510,24 @@ public class Node implements Serializable {
 
 
   public final int getSourcePosition() {
-    return sourcePosition;
-  }
-
-  public final void setLineno(int lineno) {
-      int charno = getCharno();
-      if (charno == -1) {
-        charno = 0;
-      }
-      sourcePosition = mergeLineCharNo(lineno, charno);
-  }
-
-  public final void setCharno(int charno) {
-      sourcePosition = mergeLineCharNo(getLineno(), charno);
+    return linenoCharno;
   }
 
   /**
-   * Merges the line number and character number in one integer. The Character
-   * number takes the first 12 bits and the line number takes the rest. If
-   * the character number is greater than <code>2<sup>12</sup>-1</code> it is
-   * adjusted to <code>2<sup>12</sup>-1</code>.
+   * Merges the line number and character number in one integer.
+   *
+   * <p>The charno takes the first 12 bits and the line number takes the rest. If the charno is
+   * greater than (2^12)-1 it is adjusted to (2^12)-1
    */
-  protected static int mergeLineCharNo(int lineno, int charno) {
+  public final void setLinenoCharno(int lineno, int charno) {
     if (lineno < 0 || charno < 0) {
-      return -1;
-    } else if ((charno & ~COLUMN_MASK) != 0) {
-      return lineno << COLUMN_BITS | COLUMN_MASK;
-    } else {
-      return lineno << COLUMN_BITS | (charno & COLUMN_MASK);
+      this.linenoCharno = -1;
     }
-  }
 
-  /**
-   * Extracts the line number and character number from a merged line char
-   * number (see {@link #mergeLineCharNo(int, int)}).
-   */
-  protected static int extractLineno(int lineCharNo) {
-    if (lineCharNo == -1) {
-      return -1;
-    } else {
-      return lineCharNo >>> COLUMN_BITS;
+    if (charno > COLUMN_MASK) {
+      charno = COLUMN_MASK;
     }
-  }
-
-  /**
-   * Extracts the character number and character number from a merged line
-   * char number (see {@link #mergeLineCharNo(int, int)}).
-   */
-  protected static int extractCharno(int lineCharNo) {
-    if (lineCharNo == -1) {
-      return -1;
-    } else {
-      return lineCharNo & COLUMN_MASK;
-    }
+    this.linenoCharno = (lineno << COLUMN_BITS) | charno;
   }
 
   // ==========================================================================
@@ -2205,7 +2171,7 @@ public class Node implements Serializable {
   }
 
   private static void copyBaseNodeFields(Node source, Node dest, boolean cloneTypeExprs) {
-    dest.sourcePosition = source.sourcePosition;
+    dest.linenoCharno = source.linenoCharno;
     dest.length = source.length;
     dest.jstypeOrColor = source.jstypeOrColor;
     dest.originalName = source.originalName;
@@ -2257,7 +2223,7 @@ public class Node implements Serializable {
   public final Node srcref(Node other) {
     setStaticSourceFileFrom(other);
     this.originalName = other.originalName;
-    sourcePosition = other.sourcePosition;
+    linenoCharno = other.linenoCharno;
     length = other.length;
     return this;
   }
@@ -2275,7 +2241,7 @@ public class Node implements Serializable {
   public final Node srcrefIfMissing(Node other) {
     if (getStaticSourceFile() == null) {
       setStaticSourceFileFrom(other);
-      sourcePosition = other.sourcePosition;
+      linenoCharno = other.linenoCharno;
       length = other.length;
     }
 
@@ -3349,7 +3315,7 @@ public class Node implements Serializable {
 
     out.writeByte(token.ordinal());
 
-    writeEncodedInt(out, sourcePosition);
+    writeEncodedInt(out, linenoCharno);
     writeEncodedInt(out, length);
     out.writeObject(this.originalName);
 
@@ -3372,7 +3338,7 @@ public class Node implements Serializable {
     // have a superclass.
 
     token = TOKEN_VALUES[in.readUnsignedByte()];
-    sourcePosition = readEncodedInt(in);
+    linenoCharno = readEncodedInt(in);
     length = readEncodedInt(in);
     this.setOriginalName((String) in.readObject());
 
@@ -3406,21 +3372,19 @@ public class Node implements Serializable {
   /**
    * Encode integers using variable length encoding.
    *
-   * Encodes an integer as a sequence of 7-bit values with a continuation bit. For example the
+   * <p>Encodes an integer as a sequence of 7-bit values with a continuation bit. For example the
    * number 3912 (0111 0100 1000) is encoded in two bytes as follows 0xC80E (1100 1000 0000 1110),
    * i.e. first byte will be the lower 7 bits with a continuation bit set and second byte will
    * consist of the upper 7 bits with the continuation bit unset.
    *
-   * This encoding aims to reduce the serialized footprint for the most common values, reducing the
-   * footprint for all positive values that are smaller than 2^21 (~2000000):
-   *           0 -       127 are encoded in one byte
-   *         128 -     16384 are encoded in two bytes
-   *       16385 -   2097152 are encoded in three bytes
-   *     2097153 - 268435456 are encoded in four bytes.
-   *     values greater than 268435456 and negative values are encoded in 5 bytes.
+   * <p>This encoding aims to reduce the serialized footprint for the most common values, reducing
+   * the footprint for all positive values that are smaller than 2^21 (~2000000): 0 - 127 are
+   * encoded in one byte 128 - 16384 are encoded in two bytes 16385 - 2097152 are encoded in three
+   * bytes 2097153 - 268435456 are encoded in four bytes. values greater than 268435456 and negative
+   * values are encoded in 5 bytes.
    *
-   * Most values for the length field will be encoded with one byte and most values for
-   * sourcePosition will be encoded with 2 or 3 bytes. (Value -1, which is used to mark absence will
+   * <p>Most values for the length field will be encoded with one byte and most values for
+   * linenoCharno will be encoded with 2 or 3 bytes. (Value -1, which is used to mark absence will
    * use 5 bytes, and could be accommodated in the present scheme by an offset of 1 if it leads to
    * size improvements).
    */

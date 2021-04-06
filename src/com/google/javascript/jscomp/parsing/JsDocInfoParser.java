@@ -2221,8 +2221,7 @@ public final class JsDocInfoParser {
 
     // What we're doing by concatenating these tokens is really hacky. We want that to be obvious.
     Node str = newStringNode(typeName.toString());
-    str.setLineno(startLineno);
-    str.setCharno(startCharno);
+    str.setLinenoCharno(startLineno, startCharno);
     str.setLength(endOffset - startOffset);
     return str;
   }

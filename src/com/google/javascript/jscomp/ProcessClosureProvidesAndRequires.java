@@ -921,7 +921,9 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         int firstCharIndex = namespace.lastIndexOf('.') + 1; // If no dots, then 0.
 
         sourceInfoNode = provideStringNode.cloneNode();
-        sourceInfoNode.setCharno(sourceInfoNode.getCharno() + firstCharIndex + 1); // +1 for quote
+        sourceInfoNode.setLinenoCharno(
+            sourceInfoNode.getLineno(),
+            sourceInfoNode.getCharno() + firstCharIndex + 1); // +1 for quote
         sourceInfoNode.setLength(namespace.length() - firstCharIndex);
       }
 
