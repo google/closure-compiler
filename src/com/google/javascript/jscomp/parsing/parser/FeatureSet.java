@@ -51,14 +51,8 @@ public final class FeatureSet implements Serializable {
   /** All ES2015 features, including modules. */
   public static final FeatureSet ES2015_MODULES = ES5.with(LangVersion.ES2015.features());
 
-  /** @deprecated Please use ES2015_MODULES instead. */
-  @Deprecated public static final FeatureSet ES6_MODULES = ES2015_MODULES;
-
   /** The full set of ES2015 features, not including modules. */
   public static final FeatureSet ES2015 = ES2015_MODULES.without(Feature.MODULES);
-
-  /** @deprecated Please use ES2015 instead. */
-  @Deprecated public static final FeatureSet ES6 = ES2015;
 
   public static final FeatureSet ES2016_MODULES =
       ES2015_MODULES.with(LangVersion.ES2016.features());
