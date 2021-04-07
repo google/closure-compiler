@@ -4868,10 +4868,28 @@ chrome.identity.WebAuthFlowDetails;
 chrome.identity.ProfileUserInfo;
 
 /**
- * @param {function(!chrome.identity.ProfileUserInfo):void} callback
+ * @enum {string}
+ * See https://developer.chrome.com/docs/extensions/reference/identity/#type-AccountStatus
+ */
+chrome.identity.AccountStatus = {
+  SYNC: '',
+  ANY: '',
+};
+
+/**
+ * See https://developer.chrome.com/docs/extensions/reference/identity/#type-ProfileDetails
+ * @typedef {{accountStatus: (!chrome.identity.AccountStatus|undefined)}}
+ */
+chrome.identity.ProfileDetails;
+
+/**
+ * @param {!chrome.identity.ProfileDetails|function(!chrome.identity.ProfileUserInfo):void} accountStatusOrCallback
+ *     Either the accountStatus of the primary profile account or the callback
+ * @param {function(!chrome.identity.ProfileUserInfo):void=} opt_callback if
+ *     the accountStatus is provided
  * @return {undefined}
  */
-chrome.identity.getProfileUserInfo = function(callback) {};
+chrome.identity.getProfileUserInfo = function(accountStatusOrCallback, opt_callback) {};
 
 
 
