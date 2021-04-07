@@ -1522,6 +1522,7 @@ public class Node implements Serializable {
   public final void setLinenoCharno(int lineno, int charno) {
     if (lineno < 0 || charno < 0) {
       this.linenoCharno = -1;
+      return;
     }
 
     if (charno > COLUMN_MASK) {
