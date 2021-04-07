@@ -242,6 +242,23 @@ yarn build
 yarn build:all
 ```
 
+### Testing from a terminal
+
+Tests can be executed in a similar way. The following command will run all tests
+in the repo.
+
+```bash
+# bazelisk test //:all
+```
+
+There are hundreds of individual test targets, so it will take a few
+minutes to run all of them. While developing, it's usually better to specify
+the exact tests you're interested in.
+
+```bash
+bazelisk test //:$path_to_test_file
+```
+
 ### Building from an IDE
 
 See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html).
