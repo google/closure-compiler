@@ -242,7 +242,6 @@ public class Node implements Serializable {
   // TODO(sdh): Get rid of these by using accessor methods instead.
   // These export instances of a private type, which is awkward but a side effect is that it
   // prevents anyone from introducing problemmatic uses of the general-purpose accessors.
-  public static final Prop JSDOC_INFO_PROP = Prop.JSDOC_INFO;
   public static final Prop INCRDECR_PROP = Prop.INCRDECR;
   public static final Prop QUOTED_PROP = Prop.QUOTED;
   public static final Prop IS_CONSTANT_NAME = Prop.IS_CONSTANT_NAME;
