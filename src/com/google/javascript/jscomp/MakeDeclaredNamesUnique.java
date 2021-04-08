@@ -121,7 +121,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     if (newName != null) {
       Renamer renamer = renamerStack.peek();
       if (renamer.stripConstIfReplaced()) {
-        n.removeProp(Node.IS_CONSTANT_NAME);
+        n.putBooleanProp(Node.IS_CONSTANT_NAME, false);
         Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(n);
         if (jsDocInfoNode != null && jsDocInfoNode.getJSDocInfo() != null) {
           JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(jsDocInfoNode.getJSDocInfo());

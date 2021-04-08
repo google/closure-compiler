@@ -87,7 +87,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
             /** constructor= */
             null);
     for (MemberDefinition property : properties) {
-      property.name.removeProp(Node.JSDOC_INFO_PROP);
+      property.name.putProp(Node.JSDOC_INFO_PROP, null);
     }
   }
 
@@ -122,7 +122,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
         keyNode != null;
         keyNode = keyNode.getNext()) {
       if (keyNode.getFirstChild().isFunction()) {
-        keyNode.removeProp(Node.JSDOC_INFO_PROP);
+        keyNode.putProp(Node.JSDOC_INFO_PROP, null);
         JSDocInfo.Builder suppressDoc = JSDocInfo.builder().parseDocumentation();
         suppressDoc.addSuppression("checkTypes");
         suppressDoc.addSuppression("globalThis");

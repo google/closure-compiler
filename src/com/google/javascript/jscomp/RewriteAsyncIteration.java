@@ -470,7 +470,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
 
     newActionRecord.srcrefTreeIfMissing(yieldNode);
     yieldNode.addChildToFront(newActionRecord);
-    yieldNode.removeProp(Node.YIELD_ALL);
+    yieldNode.putBooleanProp(Node.YIELD_ALL, false);
   }
 
   /**

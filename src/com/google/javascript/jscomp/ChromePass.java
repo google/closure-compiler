@@ -355,7 +355,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
         if (n.getJSDocInfo() != null) {
           exprResult.getFirstChild().setJSDocInfo(n.getJSDocInfo());
-          clone.removeProp(Node.JSDOC_INFO_PROP);
+          clone.putProp(Node.JSDOC_INFO_PROP, null);
         }
         n.replaceWith(exprResult);
         NodeUtil.markFunctionsDeleted(n, compiler);

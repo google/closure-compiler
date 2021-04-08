@@ -256,7 +256,7 @@ final class PolymerClassRewriter {
     // Remove the original constructor JS docs from the objlit.
     Node ctorKey = cls.constructor.value.getParent();
     if (ctorKey != null) {
-      ctorKey.removeProp(Node.JSDOC_INFO_PROP);
+      ctorKey.putProp(Node.JSDOC_INFO_PROP, null);
     }
 
     // Check for a conflicting definition of PolymerElement
@@ -833,7 +833,7 @@ final class PolymerClassRewriter {
             compiler,
             /** constructor= */
             null)) {
-      prop.name.removeProp(Node.JSDOC_INFO_PROP);
+      prop.name.putProp(Node.JSDOC_INFO_PROP, null);
     }
   }
 

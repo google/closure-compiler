@@ -473,7 +473,7 @@ public class Node implements Serializable {
 
     ObjectPropListItem(byte propType, Object objectValue, @Nullable PropListItem next) {
       super(propType, next);
-      this.objectValue = objectValue;
+      this.objectValue = checkNotNull(objectValue);
     }
 
     @Override
@@ -504,6 +504,7 @@ public class Node implements Serializable {
     IntPropListItem(byte propType, int intValue, @Nullable PropListItem next) {
       super(propType, next);
       this.intValue = intValue;
+      checkState(this.intValue != 0);
     }
 
     @Override
@@ -1049,29 +1050,20 @@ public class Node implements Serializable {
     return this;
   }
 
-  public final void removeProp(Prop propType) {
-    PropListItem result = removeProp(propListHead, (byte) propType.ordinal());
-    this.propListHead = result;
-  }
-
   /**
    * @param item The item to inspect
    * @param propType The property to look for
    * @return The replacement list if the property was removed, or 'item' otherwise.
    */
   @Nullable
-  private final PropListItem removeProp(@Nullable PropListItem item, byte propType) {
+  private static final PropListItem rebuildListWithoutProp(@Nullable PropListItem item, Prop prop) {
     if (item == null) {
       return null;
-    } else if (item.propType == propType) {
+    } else if (item.propType == prop.ordinal()) {
       return item.next;
     } else {
-      PropListItem result = removeProp(item.next, propType);
-      if (result != item.next) {
-        return item.chain(result);
-      } else {
-        return item;
-      }
+      PropListItem result = rebuildListWithoutProp(item.next, prop);
+      return (result == item.next) ? item : item.chain(result);
     }
   }
 
@@ -1097,10 +1089,10 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public final void putProp(Prop propType, @Nullable Object value) {
-    removeProp(propType);
+  public final void putProp(Prop prop, @Nullable Object value) {
+    this.propListHead = rebuildListWithoutProp(this.propListHead, prop);
     if (value != null) {
-      propListHead = createProp((byte) propType.ordinal(), value, propListHead);
+      this.propListHead = new ObjectPropListItem((byte) prop.ordinal(), value, this.propListHead);
     }
   }
 
@@ -1108,10 +1100,10 @@ public class Node implements Serializable {
     putIntProp(propType, value ? 1 : 0);
   }
 
-  public final void putIntProp(Prop propType, int value) {
-    removeProp(propType);
+  public final void putIntProp(Prop prop, int value) {
+    this.propListHead = rebuildListWithoutProp(this.propListHead, prop);
     if (value != 0) {
-      propListHead = createProp((byte) propType.ordinal(), value, propListHead);
+      this.propListHead = new IntPropListItem((byte) prop.ordinal(), value, this.propListHead);
     }
   }
 
@@ -1127,14 +1119,6 @@ public class Node implements Serializable {
   @Nullable
   public final Node getDeclaredTypeExpression() {
     return (Node) getProp(Prop.DECLARED_TYPE_EXPR);
-  }
-
-  final PropListItem createProp(byte propType, Object value, @Nullable PropListItem next) {
-    return new ObjectPropListItem(propType, value, next);
-  }
-
-  final PropListItem createProp(byte propType, int value, @Nullable PropListItem next) {
-    return new IntPropListItem(propType, value, next);
   }
 
   /**

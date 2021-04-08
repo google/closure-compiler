@@ -780,7 +780,7 @@ class ExpressionDecomposer {
     call.addChildToFront(receiverNode);
     call.addChildToFront(
         IR.getprop(functionNameNode, "call").setJSType(fnCallType).srcrefTreeIfMissing(call));
-    call.removeProp(Node.FREE_CALL);
+    call.putBooleanProp(Node.FREE_CALL, false);
   }
 
   private String tempNamePrefix = "JSCompiler_temp";
