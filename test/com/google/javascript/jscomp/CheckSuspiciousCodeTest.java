@@ -303,6 +303,37 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuspiciousLeftArgumentOfLogicalOperator_propAccesses() {
+    enableTypeCheck();
+    // Cases that must not warn as LHS is not always falsy.
+    testNoWarning("/** @type {null|{b:string}} */ let a; if (a?.b && true) {}");
+    testNoWarning("/** @type {null|{b:string}} */ let a; if (a?.[b] && c) {}");
+    testNoWarning("/** @type {{b: (null|string)}} */ let a; if (a?.b && true) {}");
+    testNoWarning("/** @type {{b: (null|string)}} */ let a; if (a?.[b] && true) {}");
+
+    // Cases that could warn but don't, as we assume that GETPROPs and GETELEMs type information is
+    // likely wrong
+    // normal prop access
+    testNoWarning("/** @type {{b:null}} */ let a; if( a[b] && true) {}");
+    testNoWarning("/** @type {{b:null}} */ let a; if( a.b && true) {}");
+    // optChain prop access
+    testNoWarning("/** @type {{b:null}} */ let a; if( a?.[b] && true) {}");
+    testNoWarning("/** @type {{b:null}} */ let a; if( a?.b && true) {}");
+
+    // normal call
+    testWarning(
+        "let a = {}; /** @return {null} */ a.b = function() {}; if (a.b() && c) {}",
+        SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR);
+    // optChain calls
+    testWarning(
+        "let a = {}; /** @return {null} */ a.b = function() {}; if (a?.b() && c) {}",
+        SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR);
+    testWarning(
+        "/** @type {null} */ let a = null; if (a?.b() && c) {}",
+        SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR);
+  }
+
+  @Test
   public void testSuspiciousLeftArgumentOfLogicalOperator_typeBased() {
     enableTypeCheck();
     String prefix =

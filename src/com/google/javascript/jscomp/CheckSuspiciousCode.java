@@ -260,6 +260,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
         return TernaryValue.FALSE;
       case GETPROP:
       case GETELEM:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
         // Assume that type information on getprops and getelems are likely to be wrong.  This
         // prevents spurious warnings from not including undefined in getelem's return value,
         // from existence checks of symbols the externs define as certainly true, or from default
