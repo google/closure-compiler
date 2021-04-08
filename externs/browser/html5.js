@@ -490,6 +490,11 @@ BaseRenderingContext2D.prototype.setTransform = function(
     m11, m12, m21, m22, dx, dy) {};
 
 /**
+ * @return {!DOMMatrixReadOnly}
+ */
+BaseRenderingContext2D.prototype.getTransform = function() {};
+
+/**
  * @param {number} x0
  * @param {number} y0
  * @param {number} x1
