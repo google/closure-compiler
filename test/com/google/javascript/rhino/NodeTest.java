@@ -665,10 +665,9 @@ public class NodeTest {
   @Test
   public void testAddChildToFrontWithLargerTree() {
     Node left = Node.newString("left");
-    Node m1 = Node.newString("m1");
-    Node m2 = Node.newString("m2");
+    Node mid = Node.newString("mid");
     Node right = Node.newString("right");
-    Node root = new Node(Token.SCRIPT, left, m1, m2, right);
+    Node root = new Node(Token.SCRIPT, left, mid, right);
     Node nodeToAdd = new Node(Token.SCRIPT);
 
     root.addChildToFront(nodeToAdd);

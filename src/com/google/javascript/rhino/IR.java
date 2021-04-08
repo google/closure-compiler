@@ -277,7 +277,9 @@ public class IR {
     checkState(mayBeExpressionOrEmpty(cond));
     checkState(mayBeExpressionOrEmpty(incr));
     checkState(body.isBlock());
-    return new Node(Token.FOR, init, cond, incr, body);
+    Node r = new Node(Token.FOR, init, cond, incr);
+    r.addChildToBack(body);
+    return r;
   }
 
   public static Node switchNode(Node cond, Node... cases) {

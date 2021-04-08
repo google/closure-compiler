@@ -527,104 +527,62 @@ public class Node implements Serializable {
     }
   }
 
-  public Node(Token nodeType) {
-    token = nodeType;
-    parent = null;
+  public Node(Token token) {
+    this.token = token;
   }
 
-  public Node(Token nodeType, Node child) {
-    checkArgument(child.parent == null, "new child has existing parent");
-    checkArgument(child.next == null, "new child has existing next sibling");
-    checkArgument(child.previous == null, "new child has existing previous sibling");
+  public Node(Token token, Node child) {
+    this(token);
+    this.first = child;
 
-    token = nodeType;
-    parent = null;
-    first = child;
-    child.next = null;
-    child.previous = first;
+    child.checkDetached();
+    // child.next remains null;
+    child.previous = child;
     child.parent = this;
   }
 
-  public Node(Token nodeType, Node left, Node right) {
-    checkArgument(left.parent == null, "first new child has existing parent");
-    checkArgument(left.next == null, "first new child has existing next sibling");
-    checkArgument(left.previous == null, "first new child has existing previous sibling");
-    checkArgument(right.parent == null, "second new child has existing parent");
-    checkArgument(right.next == null, "second new child has existing next sibling");
-    checkArgument(right.previous == null, "second new child has existing previous sibling");
-    token = nodeType;
-    parent = null;
-    first = left;
+  public Node(Token token, Node left, Node right) {
+    this(token);
+    this.first = left;
+
+    left.checkDetached();
     left.next = right;
     left.previous = right;
     left.parent = this;
-    right.next = null;
+
+    right.checkDetached();
+    // right.next remains null;
     right.previous = left;
     right.parent = this;
   }
 
-  public Node(Token nodeType, Node left, Node mid, Node right) {
-    checkArgument(left.parent == null);
-    checkArgument(left.next == null);
-    checkArgument(left.previous == null);
-    checkArgument(mid.parent == null);
-    checkArgument(mid.next == null);
-    checkArgument(mid.previous == null);
-    checkArgument(right.parent == null);
-    checkArgument(right.next == null);
-    checkArgument(right.previous == null);
-    token = nodeType;
-    parent = null;
-    first = left;
+  public Node(Token token, Node left, Node mid, Node right) {
+    this(token);
+    this.first = left;
+
+    left.checkDetached();
     left.next = mid;
     left.previous = right;
     left.parent = this;
+
+    mid.checkDetached();
     mid.next = right;
     mid.previous = left;
     mid.parent = this;
-    right.next = null;
+
+    right.checkDetached();
+    // right.next remains null;
     right.previous = mid;
     right.parent = this;
   }
 
-  Node(Token nodeType, Node left, Node mid, Node mid2, Node right) {
-    checkArgument(left.parent == null);
-    checkArgument(left.next == null);
-    checkArgument(left.previous == null);
-    checkArgument(mid.parent == null);
-    checkArgument(mid.next == null);
-    checkArgument(mid.previous == null);
-    checkArgument(mid2.parent == null);
-    checkArgument(mid2.next == null);
-    checkArgument(mid2.previous == null);
-    checkArgument(right.parent == null);
-    checkArgument(right.next == null);
-    checkArgument(right.previous == null);
-    token = nodeType;
-    parent = null;
-    first = left;
-    left.next = mid;
-    left.previous = right;
-    left.parent = this;
-    mid.next = mid2;
-    mid.previous = left;
-    mid.parent = this;
-    mid2.next = right;
-    mid2.previous = mid;
-    mid2.parent = this;
-    right.next = null;
-    right.previous = mid2;
-    right.parent = this;
-  }
-
-  public Node(Token nodeType, int lineno, int charno) {
-    token = nodeType;
-    parent = null;
+  public Node(Token token, int lineno, int charno) {
+    this(token);
     this.setLinenoCharno(lineno, charno);
   }
 
-  public Node(Token nodeType, Node child, int lineno, int charno) {
-    this(nodeType, child);
+  public Node(Token token, Node child, int lineno, int charno) {
+    this(token, child);
     this.setLinenoCharno(lineno, charno);
   }
 
