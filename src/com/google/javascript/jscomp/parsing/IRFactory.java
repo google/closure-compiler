@@ -542,17 +542,15 @@ class IRFactory {
 
   Node transformBlock(ParseTree node) {
     Node irNode = transform(node);
-    if (!irNode.isBlock()) {
-      if (irNode.isEmpty()) {
-        irNode.setToken(Token.BLOCK);
-      } else {
-        Node newBlock = newNode(Token.BLOCK, irNode);
-        setSourceInfo(newBlock, irNode);
-        irNode = newBlock;
-      }
-      irNode.setIsAddedBlock(true);
+    if (irNode.isBlock()) {
+      return irNode;
     }
-    return irNode;
+
+    Node newBlock = irNode.isEmpty() ? newNode(Token.BLOCK) : newNode(Token.BLOCK, irNode);
+    setSourceInfo(newBlock, irNode);
+    newBlock.setIsAddedBlock(true);
+
+    return newBlock;
   }
 
   /**
@@ -855,30 +853,6 @@ class IRFactory {
     }
   }
 
-  Node transformNumberAsString(LiteralToken token) {
-    Node irNode;
-    if (token.type == TokenType.BIGINT) {
-      BigInteger value = normalizeBigInt(token);
-      irNode = newStringNode(value.toString());
-    } else { // must be NUMBER
-      double value = normalizeNumber(token);
-      irNode = newStringNode(DToA.numberToString(value));
-    }
-    JSDocInfo jsDocInfo = handleJsDoc(token);
-    if (jsDocInfo != null) {
-      irNode.setJSDocInfo(jsDocInfo);
-    }
-    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      NonJSDocComment nonJSDocComment = handleNonJSDocComments(token);
-      if (nonJSDocComment != null) {
-        nonJSDocComment.setIsInline(true);
-        irNode.setNonJSDocComment(nonJSDocComment);
-      }
-    }
-    setSourceInfo(irNode, token);
-    return irNode;
-  }
-
   static int lineno(ParseTree node) {
     return lineno(node.location.start);
   }
@@ -1050,29 +1024,51 @@ class IRFactory {
   private class TransformDispatcher {
 
     /**
-     * Transforms the given node and then sets its type to Token.STRING if it
-     * was Token.NAME. If its type was already Token.STRING, then quotes it.
-     * Used for properties, as the old AST uses String tokens, while the new one
-     * uses Name tokens for unquoted strings. For example, in
-     * var o = {'a' : 1, b: 2};
-     * the string 'a' is quoted, while the name b is turned into a string, but
-     * unquoted.
+     * Transforms the given object key `input` into a Node with token `output`.
+     *
+     * <p>Depending on `input`, this may add quoting, such as for numerical values. For example, in
+     * `{2: null}`, `2` will be transformed into a quoted string. This adjustment loses some
+     * accuracy about the source code, but simplifies the AST.
      */
-    private Node processObjectLitKeyAsString(
-        com.google.javascript.jscomp.parsing.parser.Token token) {
-      Node ret;
-      if (token == null) {
+    private Node processObjectLitKey(
+        com.google.javascript.jscomp.parsing.parser.Token input, Token output) {
+      if (input == null) {
         return createMissingExpressionNode();
-      } else if (token.type == TokenType.IDENTIFIER) {
-        ret = processName(token.asIdentifier(), true);
-      } else if (token.type == TokenType.NUMBER || token.type == TokenType.BIGINT) {
-        ret = transformNumberAsString(token.asLiteral());
-        ret.putBooleanProp(Node.QUOTED_PROP, true);
-      } else {
-        ret = processString(token.asLiteral());
-        ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
-      checkState(ret.isStringLit());
+
+      if (input.type == TokenType.IDENTIFIER) {
+        return processName(input.asIdentifier(), output);
+      }
+
+      final LiteralToken literal = input.asLiteral();
+      final Node ret;
+      switch (input.type) {
+        case NUMBER:
+          ret = newStringNode(output, DToA.numberToString(normalizeNumber(literal)));
+          break;
+        case BIGINT:
+          ret = newStringNode(output, normalizeBigInt(literal).toString());
+          break;
+        default:
+          ret = newStringNode(output, normalizeString(literal, false));
+          break;
+      }
+
+      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
+        NonJSDocComment nonJSDocComment = handleNonJSDocComments(literal);
+        if (nonJSDocComment != null) {
+          nonJSDocComment.setIsInline(true);
+          ret.setNonJSDocComment(nonJSDocComment);
+        }
+      }
+
+      JSDocInfo jsDocInfo = handleJsDoc(literal);
+      if (jsDocInfo != null) {
+        ret.setJSDocInfo(jsDocInfo);
+      }
+
+      setSourceInfo(ret, literal);
+      ret.putBooleanProp(Node.QUOTED_PROP, true);
       return ret;
     }
 
@@ -1192,8 +1188,7 @@ class IRFactory {
      */
     private Node processObjectPatternPropertyNameAssignment(
         PropertyNameAssignmentTree propertyNameAssignment) {
-      Node key = processObjectLitKeyAsString(propertyNameAssignment.name);
-      key.setToken(Token.STRING_KEY);
+      Node key = processObjectLitKey(propertyNameAssignment.name, Token.STRING_KEY);
       ParseTree targetTree = propertyNameAssignment.value;
       final Node valueNode;
       if (targetTree == null) {
@@ -1449,7 +1444,7 @@ class IRFactory {
         setSourceInfo(n, parent);
         return n;
       }
-      return processName(token);
+      return processName(token, Token.NAME);
     }
 
     Node processFunctionCall(CallExpressionTree callNode) {
@@ -1835,25 +1830,15 @@ class IRFactory {
     }
 
     Node processName(IdentifierExpressionTree nameNode) {
-      return processName(nameNode, false);
+      return processName(nameNode.identifierToken, Token.NAME);
     }
 
-    Node processName(IdentifierExpressionTree nameNode, boolean asString) {
-      return processName(nameNode.identifierToken, asString);
-    }
+    Node processName(IdentifierToken identifierToken, Token output) {
+      Node node = newStringNode(output, identifierToken.value);
 
-    Node processName(IdentifierToken identifierToken) {
-      return processName(identifierToken, false);
-    }
-
-    Node processName(IdentifierToken identifierToken, boolean asString) {
-      Node node;
-      if (asString) {
-        node = newStringNode(Token.STRINGLIT, identifierToken.value);
-      } else {
+      if (output == Token.NAME) {
         JSDocInfo info = handleJsDoc(identifierToken);
         maybeWarnReservedKeyword(identifierToken);
-        node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
           node.setJSDocInfo(info);
         }
@@ -2077,8 +2062,7 @@ class IRFactory {
     }
 
     Node processGetAccessor(GetAccessorTree tree) {
-      Node key = processObjectLitKeyAsString(tree.propertyName);
-      key.setToken(Token.GETTER_DEF);
+      Node key = processObjectLitKey(tree.propertyName, Token.GETTER_DEF);
       Node body = transform(tree.body);
       Node dummyName = newStringNode(Token.NAME, "");
       setSourceInfo(dummyName, tree.body);
@@ -2092,8 +2076,7 @@ class IRFactory {
     }
 
     Node processSetAccessor(SetAccessorTree tree) {
-      Node key = processObjectLitKeyAsString(tree.propertyName);
-      key.setToken(Token.SETTER_DEF);
+      Node key = processObjectLitKey(tree.propertyName, Token.SETTER_DEF);
 
       Node paramList = processFormalParameterList(tree.parameter);
       setSourceInfo(paramList, tree.parameter);
@@ -2112,14 +2095,12 @@ class IRFactory {
     }
 
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
-      Node key = processObjectLitKeyAsString(tree.name);
-      key.setToken(Token.STRING_KEY);
+      Node key = processObjectLitKey(tree.name, Token.STRING_KEY);
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
       } else {
-        Node value = key.cloneNode();
+        Node value = newStringNode(Token.NAME, key.getString()).srcref(key);
         key.setShorthandProperty(true);
-        value.setToken(Token.NAME);
         key.addChildToFront(value);
       }
       return key;
@@ -2724,15 +2705,13 @@ class IRFactory {
     }
 
     Node processExportSpec(ExportSpecifierTree tree) {
-      Node importedName = processName(tree.importedName, true);
-      importedName.setToken(Token.NAME);
+      Node importedName = processName(tree.importedName, Token.NAME);
       Node exportSpec = newNode(Token.EXPORT_SPEC, importedName);
       if (tree.destinationName == null) {
         exportSpec.setShorthandProperty(true);
         exportSpec.addChildToBack(importedName.cloneTree());
       } else {
-        Node destinationName = processName(tree.destinationName, true);
-        destinationName.setToken(Token.NAME);
+        Node destinationName = processName(tree.destinationName, Token.NAME);
         exportSpec.addChildToBack(destinationName);
       }
       return exportSpec;
@@ -2758,14 +2737,13 @@ class IRFactory {
     }
 
     Node processImportSpec(ImportSpecifierTree tree) {
-      Node importedName = processName(tree.importedName, true);
-      importedName.setToken(Token.NAME);
+      Node importedName = processName(tree.importedName, Token.NAME);
       Node importSpec = newNode(Token.IMPORT_SPEC, importedName);
       if (tree.destinationName == null) {
         importSpec.setShorthandProperty(true);
         importSpec.addChildToBack(importedName.cloneTree());
       } else {
-        importSpec.addChildToBack(processName(tree.destinationName));
+        importSpec.addChildToBack(processName(tree.destinationName, Token.NAME));
       }
       return importSpec;
     }
