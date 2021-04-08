@@ -139,12 +139,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       DiagnosticType.error(
           "JSC_MISSING_MODULE_ERROR", "unknown module \"{0}\" specified in entry point spec");
 
-  static final DiagnosticType INCONSISTENT_MODULE_DEFINITIONS =
-      DiagnosticType.error(
-          "JSC_INCONSISTENT_MODULE_DEFINITIONS",
-          "Serialized module definitions are not consistent with the module definitions supplied"
-              + " in the command line");
-
   CompilerOptions options = null;
 
   private PassConfig passes = null;
@@ -3462,21 +3456,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private void renameModules(List<JSModule> newModules, List<JSModule> deserializedModules) {
-    if (newModules == null) {
-      return;
-    }
-    if (newModules.size() != deserializedModules.size()) {
-      report(JSError.make(INCONSISTENT_MODULE_DEFINITIONS));
-      return;
-    }
-    for (int i = 0; i < deserializedModules.size(); i++) {
-      JSModule deserializedModule = deserializedModules.get(i);
-      JSModule newModule = newModules.get(i);
-      deserializedModule.setName(newModule.getName());
-    }
-  }
-
   public void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
     this.inputPathByWebpackId = inputPathByWebpackId;
   }
@@ -3566,13 +3545,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
 
-    // Make a copy of the current module list so we can later reapply their names to the
-    // deserialized modules.
-    List<JSModule> newModules = null;
-    if (getModules() != null) {
-      newModules = ImmutableList.copyOf(getModules());
-    }
-
     class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
       public CompilerObjectInputStream(InputStream in) throws IOException {
         super(in);
@@ -3633,9 +3605,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     annotationMap = checkNotNull(compilerState.annotationMap);
     inputSourceMaps = compilerState.inputSourceMaps;
     changeStamp = compilerState.changeStamp;
-
-    // Reapply module names to deserialized modules
-    renameModules(newModules, ImmutableList.copyOf(getModules()));
 
     if (tracker != null) {
       tracker.updateAfterDeserialize(jsRoot);

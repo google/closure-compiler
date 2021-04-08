@@ -92,19 +92,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "/js/m0")
+            .addChunkWithName("a", "/js/m1")
             .build();
-    original[0].setName("/js/m0");
-    original[1].setName("/js/m1");
 
     JSModule[] expected =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from './m0.js'; a")
+            .addChunkWithName("var a = 1; export {a}", "/js/m0")
+            .addChunkWithName("import {a} from './m0.js'; a", "/js/m1")
             .build();
-    expected[0].setName("/js/m0");
-    expected[1].setName("/js/m1");
 
     test(original, expected);
   }
@@ -114,11 +110,9 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "other/m0")
+            .addChunkWithName("a", "/js/m1")
             .build();
-    original[0].setName("other/m0");
-    original[1].setName("/js/m1");
 
     testError(
         original,
@@ -131,11 +125,9 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "/other/m0")
+            .addChunkWithName("a", "js/m1")
             .build();
-    original[0].setName("/other/m0");
-    original[1].setName("js/m1");
 
     testError(
         original,
@@ -148,19 +140,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "js/m0")
+            .addChunkWithName("a", "js/m1")
             .build();
-    original[0].setName("js/m0");
-    original[1].setName("js/m1");
 
     JSModule[] expected =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from './m0.js'; a")
+            .addChunkWithName("var a = 1; export {a}", "js/m0")
+            .addChunkWithName("import {a} from './m0.js'; a", "js/m1")
             .build();
-    expected[0].setName("js/m0");
-    expected[1].setName("js/m1");
 
     test(original, expected);
   }
@@ -170,19 +158,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "js/m0")
+            .addChunkWithName("a", "m1")
             .build();
-    original[0].setName("js/m0");
-    original[1].setName("m1");
 
     JSModule[] expected =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from './js/m0.js'; a")
+            .addChunkWithName("var a = 1; export {a}", "js/m0")
+            .addChunkWithName("import {a} from './js/m0.js'; a", "m1")
             .build();
-    expected[0].setName("js/m0");
-    expected[1].setName("m1");
 
     test(original, expected);
   }
@@ -192,19 +176,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "m0")
+            .addChunkWithName("a", "js/m1")
             .build();
-    original[0].setName("m0");
-    original[1].setName("js/m1");
 
     JSModule[] expected =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from '../m0.js'; a")
+            .addChunkWithName("var a = 1; export {a}", "m0")
+            .addChunkWithName("import {a} from '../m0.js'; a", "js/m1")
             .build();
-    expected[0].setName("m0");
-    expected[1].setName("js/m1");
 
     test(original, expected);
   }
@@ -214,19 +194,16 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
     ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "js/other/path/one/m0")
+            .addChunkWithName("a", "external/path/m1")
             .build();
-    original[0].setName("js/other/path/one/m0");
-    original[1].setName("external/path/m1");
 
     JSModule[] expected =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from '../../js/other/path/one/m0.js'; a")
+            .addChunkWithName("var a = 1; export {a}", "js/other/path/one/m0")
+            .addChunkWithName(
+                "import {a} from '../../js/other/path/one/m0.js'; a", "external/path/m1")
             .build();
-    expected[0].setName("js/other/path/one/m0");
-    expected[1].setName("external/path/m1");
 
     test(original, expected);
   }
@@ -235,11 +212,9 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   public void testImportPathParentAboveRoot() {
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
+            .addChunkWithName("var a = 1;", "js/m0")
+            .addChunkWithName("a", "../node_modules/m1")
             .build();
-    original[0].setName("js/m0");
-    original[1].setName("../node_modules/m1");
 
     testError(
         original,

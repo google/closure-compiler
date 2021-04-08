@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /** Utility to create various input {@link com.google.javascript.jscomp.JSModule} graphs */
@@ -73,6 +74,9 @@ public final class JSChunkGraphBuilder {
 
   private final GraphType graphType;
   private final ArrayList<String> chunks = new ArrayList<>();
+  // correspondances between chunk indices in `chunks` and specified names. if no name is specified
+  // defaults to "m{i}"
+  private final LinkedHashMap<Integer, String> chunkNames = new LinkedHashMap<>();
   private String filenameFormat = "i%s.js";
 
   private JSChunkGraphBuilder(GraphType graphType) {
@@ -124,6 +128,12 @@ public final class JSChunkGraphBuilder {
     return this;
   }
 
+  public JSChunkGraphBuilder addChunkWithName(String input, String chunkName) {
+    this.chunkNames.put(this.chunks.size(), chunkName);
+    this.chunks.add(input);
+    return this;
+  }
+
   public JSChunkGraphBuilder addChunks(List<String> inputs) {
     this.chunks.addAll(inputs);
     return this;
@@ -147,7 +157,9 @@ public final class JSChunkGraphBuilder {
   public JSModule[] build() {
     JSModule[] chunks = new JSModule[this.chunks.size()];
     for (int i = 0; i < this.chunks.size(); i++) {
-      JSModule chunk = chunks[i] = new JSModule("m" + i);
+      String chunkName = this.chunkNames.getOrDefault(i, "m" + i);
+      JSModule chunk = chunks[i] = new JSModule(chunkName);
+
       chunk.add(
           SourceFile.fromCode(Strings.lenientFormat(this.filenameFormat, i), this.chunks.get(i)));
     }
