@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.UnmodifiableIterator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -137,6 +136,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -225,11 +225,8 @@ class IRFactory {
   // memory footprint associated with these.
   private final Node templateNode;
 
-  private final UnmodifiableIterator<Comment> nextCommentIter;
-  private final UnmodifiableIterator<Comment> nextNonJSDocCommentIter;
-
-  private Comment currentComment;
-  private Comment currentNonJSDocComment;
+  private final CommentTracker jsdocTracker;
+  private final CommentTracker nonJsdocTracker;
 
   private boolean currentFileIsExterns = false;
 
@@ -242,10 +239,8 @@ class IRFactory {
                     ErrorReporter errorReporter,
                     ImmutableList<Comment> comments) {
     this.sourceString = sourceString;
-    this.nextCommentIter = comments.iterator();
-    this.nextNonJSDocCommentIter = comments.iterator();
-    this.currentComment = skipNonJsDoc(nextCommentIter);
-    this.currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
+    this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
+    this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
@@ -271,14 +266,38 @@ class IRFactory {
     }
   }
 
-  private static Comment skipNonJsDoc(UnmodifiableIterator<Comment> comments) {
-    while (comments.hasNext()) {
-      Comment comment = comments.next();
-      if (comment.type == Comment.Type.JSDOC) {
-        return comment;
+  private static final class CommentTracker {
+    private final ImmutableList<Comment> source;
+    private final Predicate<Comment> filter;
+    private int index = -1;
+
+    CommentTracker(ImmutableList<Comment> source, Predicate<Comment> filter) {
+      this.source = source;
+      this.filter = filter;
+
+      this.advance();
+    }
+
+    Comment current() {
+      return (this.index >= this.source.size()) ? null : this.source.get(this.index);
+    }
+
+    void advance() {
+      while (true) {
+        this.index++; // Always advance at least one element.
+
+        Comment c = this.current();
+        if (c == null || this.filter.test(c)) {
+          break;
+        }
       }
     }
-    return null;
+
+    boolean hasPendingCommentBefore(SourcePosition pos) {
+      Comment c = this.current();
+      // The line number matters for trailing comments
+      return c != null && c.location.end.line <= pos.line && c.location.end.offset <= pos.offset;
+    }
   }
 
   // Create a template node to use as a source of common attributes, this allows
@@ -574,9 +593,9 @@ class IRFactory {
 
   private Comment getJsDoc(SourceRange location) {
     Comment closestPreviousComment = null;
-    while (hasPendingCommentBefore(location)) {
-      closestPreviousComment = currentComment;
-      currentComment = skipNonJsDoc(nextCommentIter);
+    while (this.jsdocTracker.hasPendingCommentBefore(location.start)) {
+      closestPreviousComment = this.jsdocTracker.current();
+      this.jsdocTracker.advance();
     }
 
     return closestPreviousComment;
@@ -589,15 +608,6 @@ class IRFactory {
   private Comment getJsDoc(
       com.google.javascript.jscomp.parsing.parser.Token token) {
     return getJsDoc(token.location);
-  }
-
-  private boolean hasPendingCommentBefore(SourceRange location) {
-    return currentComment != null
-        && currentComment.location.end.offset <= location.start.offset;
-  }
-
-  private boolean hasPendingCommentBefore(ParseTree tree) {
-    return hasPendingCommentBefore(tree.location);
   }
 
   private JSDocInfo handleJsDoc(Comment comment) {
@@ -659,7 +669,7 @@ class IRFactory {
    */
   @Nullable
   private NonJSDocComment mergeNonJsDocCommentsBefore(SourcePosition pos, boolean isInline) {
-    if (!hasPendingNonJSDocCommentBefore(pos)) {
+    if (!this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
       return null;
     }
 
@@ -667,8 +677,8 @@ class IRFactory {
     Comment firstComment = null;
     Comment lastComment = null;
 
-    while (hasPendingNonJSDocCommentBefore(pos)) {
-      Comment currentComment = currentNonJSDocComment;
+    while (this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
+      Comment currentComment = this.nonJsdocTracker.current();
 
       if (firstComment == null) {
         firstComment = currentComment;
@@ -683,7 +693,7 @@ class IRFactory {
       result.append(currentComment.value);
 
       lastComment = currentComment;
-      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
+      this.nonJsdocTracker.advance();
     }
     checkState(firstComment != null);
 
@@ -693,23 +703,6 @@ class IRFactory {
     nonJSDocComment.setEndsAsLineComment(lastComment.type == Comment.Type.LINE);
     nonJSDocComment.setIsInline(isInline);
     return nonJSDocComment;
-  }
-
-  private boolean hasPendingNonJSDocCommentBefore(SourcePosition pos) {
-    return currentNonJSDocComment != null
-        // The line number matters for trailing comments
-        && currentNonJSDocComment.location.end.line <= pos.line
-        && currentNonJSDocComment.location.end.offset <= pos.offset;
-  }
-
-  private static Comment skipJsDocComments(UnmodifiableIterator<Comment> comments) {
-    while (comments.hasNext()) {
-      Comment comment = comments.next();
-      if (comment.type == Comment.Type.LINE || comment.type == Comment.Type.BLOCK) {
-        return comment;
-      }
-    }
-    return null;
   }
 
   private static ParseTree findNearestNode(ParseTree tree) {
@@ -1686,7 +1679,7 @@ class IRFactory {
     }
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      if (hasPendingCommentBefore(exprNode.right)) {
+      if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
         if (exprNode.operator.type == TokenType.STAR_STAR
             || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
           maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
