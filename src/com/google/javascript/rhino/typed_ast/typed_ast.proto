@@ -218,7 +218,9 @@ enum NodeKind {
   QUOTED_GETTER_DEF = 629;
   RENAMABLE_SETTER_DEF = 630;
   QUOTED_SETTER_DEF = 631;
-  // Next other: 632
+
+  MODULE_BODY = 632;
+  // Next other: 633
 
   CAST = 800;
 }
@@ -326,4 +328,12 @@ enum NodeProperty {
   // Indicates a trailing comma in an array literal, object literal, parameter
   // list, or argument list
   TRAILING_COMMA = 42;
+  // Whether this variable is inferred to be constant
+  // TODO(b/183734515): it probably doesn't make sense to serialize this at the
+  // library level. delete it.
+  IS_INFERRED_CONSTANT = 43;
+  // Whether this variable is declared to be constant
+  // TODO(b/183734515): it probably doesn't make sense to serialize this at the
+  // library level. delete it.
+  IS_DECLARED_CONSTANT = 44;
 }

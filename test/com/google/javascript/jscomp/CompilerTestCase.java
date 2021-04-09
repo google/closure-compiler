@@ -1842,6 +1842,10 @@ public abstract class CompilerTestCase {
     return parseExpectedJs(ImmutableList.of(SourceFile.fromCode(GENERATED_SRC_NAME, expected)));
   }
 
+  protected Node parseExpectedJs(Expected expected) {
+    return parseExpectedJs(expected.expected);
+  }
+
   /** Parses expected JS inputs and returns the root of the parse tree. */
   protected Node parseExpectedJs(List<SourceFile> inputs) {
     Compiler compiler = createCompiler();

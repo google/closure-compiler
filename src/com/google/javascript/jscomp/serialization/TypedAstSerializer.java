@@ -182,6 +182,12 @@ final class TypedAstSerializer {
     if (n.getBooleanProp(Node.IS_CONSTANT_NAME)) {
       props.add(NodeProperty.IS_CONSTANT_NAME);
     }
+    if ((n.isName() || n.isImportStar()) && n.isDeclaredConstantVar()) {
+      props.add(NodeProperty.IS_DECLARED_CONSTANT);
+    }
+    if ((n.isName() || n.isImportStar()) && n.isInferredConstantVar()) {
+      props.add(NodeProperty.IS_INFERRED_CONSTANT);
+    }
     if (n.getBooleanProp(Node.IS_NAMESPACE)) {
       props.add(NodeProperty.IS_NAMESPACE);
     }
@@ -247,6 +253,7 @@ final class TypedAstSerializer {
       case GETTER_DEF:
       case SETTER_DEF:
       case LABEL_NAME:
+      case IMPORT_STAR:
         builder.setStringValuePointer(this.stringPool.put(n.getString()));
         return;
       case TEMPLATELIT_STRING:
@@ -552,6 +559,8 @@ final class TypedAstSerializer {
         return NodeKind.EXPORT_SPECS;
       case EXPORT_SPEC:
         return NodeKind.EXPORT_SPEC;
+      case MODULE_BODY:
+        return NodeKind.MODULE_BODY;
       case ITER_REST:
         return NodeKind.ITER_REST;
       case ITER_SPREAD:
@@ -563,7 +572,6 @@ final class TypedAstSerializer {
 
         // Explicitly unsupported token types. Not serialized.
       case ROOT:
-      case MODULE_BODY:
         // TS type tokens
       case STRING_TYPE:
       case BOOLEAN_TYPE:

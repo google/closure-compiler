@@ -247,10 +247,19 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule() {
+    testSame(
+        new String[] {
+          "export const x = 0; const y = 1; export {y};",
+          "import {x, y as z} from './testcode0'; import * as input0 from './testcode0'"
+        });
+  }
+
+  @Test
   public void testConvertsNumberTypeToColor() {
     enableTypeCheck();
 
-    TypedAstDeserializer.DeserializedAst result = testAndReturnResult("3", "3");
+    TypedAstDeserializer.DeserializedAst result = testAndReturnResult(srcs("3"), expected("3"));
     Node newScript = result.getRoot().getSecondChild().getFirstChild();
     assertNode(newScript).hasToken(Token.SCRIPT);
     Node three = newScript.getFirstFirstChild();
@@ -264,7 +273,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void testOriginalNamePreserved() {
     Node newRoot =
-        testAndReturnResult("const x = 0;", "const x = 0;")
+        testAndReturnResult(srcs("const x = 0;"), expected("const x = 0;"))
             .getRoot()
             .getSecondChild()
             .getFirstChild();
@@ -283,10 +292,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Node newRoot =
         testAndReturnResult(
-                "goog.module('a.b.c'); const x = 0;",
-                lines(
-                    "/** @const */ var module$exports$a$b$c = {};",
-                    "const module$contents$a$b$c_x = 0;"))
+                srcs("goog.module('a.b.c'); const x = 0;"),
+                expected(
+                    lines(
+                        "/** @const */ var module$exports$a$b$c = {};",
+                        "const module$contents$a$b$c_x = 0;")))
             .getRoot()
             .getSecondChild()
             .getFirstChild();
@@ -305,22 +315,28 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Override
-  public void test(String code, String expected) {
-    testAndReturnResult(code, expected);
+  public void testSame(String[] sources) {
+    this.testAndReturnResult(srcs(sources), expected(sources));
   }
 
-  private DeserializedAst testAndReturnResult(String code, String expected) {
+  @Override
+  public void test(String code, String expected) {
+    this.testAndReturnResult(srcs(code), expected(expected));
+  }
+
+  private DeserializedAst testAndReturnResult(Sources code, Expected expected) {
     TypedAst ast = compile(code);
-    Node expectedRoot = getLastCompiler().parseSyntheticCode(expected);
+    Node expectedRoot = this.parseExpectedJs(expected);
     DeserializedAst result = TypedAstDeserializer.deserialize(ast);
-    Node newRoot = result.getRoot().getLastChild().getFirstChild();
+    Node newRoot = result.getRoot().getLastChild();
     assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
-    new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true).validateScript(newRoot);
+    new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true)
+        .validateRoot(result.getRoot());
     consumer = null;
     return result;
   }
 
-  TypedAst compile(String code) {
+  TypedAst compile(Sources code) {
     TypedAst[] result = new TypedAst[1];
     consumer = ast -> result[0] = ast;
     super.testSame(code);

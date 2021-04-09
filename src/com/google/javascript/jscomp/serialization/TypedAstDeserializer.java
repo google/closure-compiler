@@ -576,11 +576,13 @@ final class TypedAstDeserializer {
       case IMPORT_SPEC:
         return new Node(Token.IMPORT_SPEC);
       case IMPORT_STAR:
-        return new Node(Token.IMPORT_STAR);
+        return Node.newString(Token.IMPORT_STAR, getString(n));
       case EXPORT_SPECS:
         return new Node(Token.EXPORT_SPECS);
       case EXPORT_SPEC:
         return new Node(Token.EXPORT_SPEC);
+      case MODULE_BODY:
+        return new Node(Token.MODULE_BODY);
       case ITER_REST:
         return new Node(Token.ITER_REST);
       case ITER_SPREAD:
@@ -620,6 +622,12 @@ final class TypedAstDeserializer {
           continue;
         case IS_CONSTANT_NAME:
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          continue;
+        case IS_DECLARED_CONSTANT:
+          n.setDeclaredConstantVar(true);
+          continue;
+        case IS_INFERRED_CONSTANT:
+          n.setInferredConstantVar(true);
           continue;
         case IS_NAMESPACE:
           n.putBooleanProp(Node.IS_NAMESPACE, true);
