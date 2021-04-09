@@ -132,10 +132,8 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -644,43 +642,64 @@ class IRFactory {
     }
   }
 
-  /**
-   * Appends every comment associated with this node into one NonJSDocComment. It would be legal to
-   * replace all comments associated with this node with that one string.
-   *
-   * @param comments - list of line or block comments that are sequential in source code
-   * @return complete comment as NonJSDocComment
-   */
-  private static NonJSDocComment combineCommentsIntoSingleComment(ArrayList<Comment> comments) {
-    StringBuilder result = new StringBuilder();
-    Iterator<Comment> itr = comments.iterator();
-    int prevCommentEndLine = Integer.MAX_VALUE;
-    int completeCommentBegin = Integer.MAX_VALUE;
-    int completeCommentEnd = 0;
-    while (itr.hasNext()) {
-      Comment currComment = itr.next();
-      if (currComment.location.start.offset < completeCommentBegin) {
-        completeCommentBegin = currComment.location.start.offset;
-      }
-      if (currComment.location.end.offset > completeCommentEnd) {
-        completeCommentEnd = currComment.location.end.offset;
-      }
-      while (prevCommentEndLine < currComment.location.start.line) {
-        result.append("\n");
-        prevCommentEndLine++;
-      }
-      result.append(currComment.value);
-      if (itr.hasNext()) {
-        prevCommentEndLine = currComment.location.end.line;
-      }
+  @Nullable
+  private NonJSDocComment handleNonJSDocComment(SourceRange range, boolean isInline) {
+    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      return null;
     }
 
-    SourcePosition start = comments.get(0).location.start;
-    SourcePosition end = Iterables.getLast(comments).location.end;
+    return mergeNonJsDocCommentsBefore(range.start, isInline);
+  }
 
-    NonJSDocComment nonJSDocComment = new NonJSDocComment(start, end, result.toString());
-    nonJSDocComment.setEndsAsLineComment(Iterables.getLast(comments).type == Comment.Type.LINE);
+  /**
+   * Creates a single NonJSDocComment from every comment associated with this node; or null if there
+   * are no such comments.
+   *
+   * <p>It would be legal to replace all comments associated with this node with that one string.
+   */
+  @Nullable
+  private NonJSDocComment mergeNonJsDocCommentsBefore(SourcePosition pos, boolean isInline) {
+    if (!hasPendingNonJSDocCommentBefore(pos)) {
+      return null;
+    }
+
+    StringBuilder result = new StringBuilder();
+    Comment firstComment = null;
+    Comment lastComment = null;
+
+    while (hasPendingNonJSDocCommentBefore(pos)) {
+      Comment currentComment = currentNonJSDocComment;
+
+      if (firstComment == null) {
+        firstComment = currentComment;
+      } else {
+        for (int blankCount = currentComment.location.start.line - lastComment.location.end.line;
+            blankCount > 0;
+            blankCount--) {
+          result.append("\n");
+        }
+      }
+
+      result.append(currentComment.value);
+
+      lastComment = currentComment;
+      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
+    }
+    checkState(firstComment != null);
+
+    NonJSDocComment nonJSDocComment =
+        new NonJSDocComment(
+            firstComment.location.start, lastComment.location.end, result.toString());
+    nonJSDocComment.setEndsAsLineComment(lastComment.type == Comment.Type.LINE);
+    nonJSDocComment.setIsInline(isInline);
     return nonJSDocComment;
+  }
+
+  private boolean hasPendingNonJSDocCommentBefore(SourcePosition pos) {
+    return currentNonJSDocComment != null
+        // The line number matters for trailing comments
+        && currentNonJSDocComment.location.end.line <= pos.line
+        && currentNonJSDocComment.location.end.offset <= pos.offset;
   }
 
   private static Comment skipJsDocComments(UnmodifiableIterator<Comment> comments) {
@@ -689,53 +708,6 @@ class IRFactory {
       if (comment.type == Comment.Type.LINE || comment.type == Comment.Type.BLOCK) {
         return comment;
       }
-    }
-    return null;
-  }
-
-  private boolean hasPendingNonJSDocCommentBefore(SourceRange location) {
-    return currentNonJSDocComment != null
-        && currentNonJSDocComment.location.end.offset <= location.start.offset;
-  }
-
-  private boolean hasPendingNonJSDocCommentBefore(SourcePosition pos) {
-    return currentNonJSDocComment != null
-        && currentNonJSDocComment.location.end.line <= pos.line
-        && currentNonJSDocComment.location.end.offset <= pos.offset;
-  }
-
-  private ArrayList<Comment> getNonJSDocComments(SourceRange location) {
-    ArrayList<Comment> previousComments = new ArrayList<>();
-    while (hasPendingNonJSDocCommentBefore(location)) {
-      previousComments.add(currentNonJSDocComment);
-      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
-    }
-    return previousComments;
-  }
-
-  private ArrayList<Comment> getNonJSDocComments(
-      com.google.javascript.jscomp.parsing.parser.Token token) {
-    return getNonJSDocComments(token.location);
-  }
-
-  private ArrayList<Comment> getNonJSDocComments(ParseTree tree) {
-    return getNonJSDocComments(tree.location);
-  }
-
-  private ArrayList<Comment> getNonJSDocCommentsBefore(SourcePosition pos) {
-    ArrayList<Comment> previousComments = new ArrayList<>();
-    while (hasPendingNonJSDocCommentBefore(pos)) {
-      previousComments.add(currentNonJSDocComment);
-      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
-    }
-    return previousComments;
-  }
-
-  private NonJSDocComment handleNonJSDocComments(
-      com.google.javascript.jscomp.parsing.parser.Token token) {
-    ArrayList<Comment> nonJSDocComments = getNonJSDocComments(token);
-    if (!nonJSDocComments.isEmpty()) {
-      return combineCommentsIntoSingleComment(nonJSDocComments);
     }
     return null;
   }
@@ -772,24 +744,17 @@ class IRFactory {
 
   Node transform(ParseTree tree) {
     JSDocInfo info = handleJsDoc(tree);
-    NonJSDocComment associatedNonJSDocComment = null;
-    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
-      if (!nonJSDocComments.isEmpty()) {
-        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
-      }
-    }
+    NonJSDocComment comment = handleNonJSDocComment(tree.location, false);
+
     Node node = transformDispatcher.process(tree);
+
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
       node.setJSDocInfo(info);
     }
-    if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      if (associatedNonJSDocComment != null) {
-        node.setNonJSDocComment(associatedNonJSDocComment);
-      }
+    if (comment != null) {
+      node.setNonJSDocComment(comment);
     }
-
     setSourceInfo(node, tree);
     return node;
   }
@@ -814,22 +779,15 @@ class IRFactory {
    */
   Node transformNodeWithInlineComments(ParseTree tree) {
     JSDocInfo info = handleInlineJsDoc(tree);
-    NonJSDocComment associatedNonJSDocComment = null;
-    if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
-      if (!nonJSDocComments.isEmpty()) {
-        associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
-        associatedNonJSDocComment.setIsInline(true);
-      }
-    }
+    NonJSDocComment comment = handleNonJSDocComment(tree.location, true);
+
     Node node = transformDispatcher.process(tree);
+
     if (info != null) {
       node.setJSDocInfo(info);
     }
-    if (this.config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      if (associatedNonJSDocComment != null) {
-        node.setNonJSDocComment(associatedNonJSDocComment);
-      }
+    if (comment != null) {
+      node.setNonJSDocComment(comment);
     }
     setSourceInfo(node, tree);
     return node;
@@ -1040,36 +998,33 @@ class IRFactory {
         return processName(input.asIdentifier(), output);
       }
 
-      final LiteralToken literal = input.asLiteral();
-      final Node ret;
+      LiteralToken literal = input.asLiteral();
+      JSDocInfo jsDocInfo = handleJsDoc(literal);
+      NonJSDocComment comment = handleNonJSDocComment(literal.location, true);
+
+      final Node node;
       switch (input.type) {
         case NUMBER:
-          ret = newStringNode(output, DToA.numberToString(normalizeNumber(literal)));
+          node = newStringNode(output, DToA.numberToString(normalizeNumber(literal)));
           break;
         case BIGINT:
-          ret = newStringNode(output, normalizeBigInt(literal).toString());
+          node = newStringNode(output, normalizeBigInt(literal).toString());
           break;
         default:
-          ret = newStringNode(output, normalizeString(literal, false));
+          node = newStringNode(output, normalizeString(literal, false));
           break;
       }
 
-      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-        NonJSDocComment nonJSDocComment = handleNonJSDocComments(literal);
-        if (nonJSDocComment != null) {
-          nonJSDocComment.setIsInline(true);
-          ret.setNonJSDocComment(nonJSDocComment);
-        }
-      }
-
-      JSDocInfo jsDocInfo = handleJsDoc(literal);
       if (jsDocInfo != null) {
-        ret.setJSDocInfo(jsDocInfo);
+        node.setJSDocInfo(jsDocInfo);
+      }
+      if (comment != null) {
+        node.setNonJSDocComment(comment);
       }
 
-      setSourceInfo(ret, literal);
-      ret.putBooleanProp(Node.QUOTED_PROP, true);
-      return ret;
+      setSourceInfo(node, literal);
+      node.putBooleanProp(Node.QUOTED_PROP, true);
+      return node;
     }
 
     Node processComprehension(ComprehensionTree tree) {
@@ -1520,18 +1475,18 @@ class IRFactory {
      * @param endZone The end location until which we fetch pending comments for attachment
      */
     void attachPossibleTrailingCommentsForArg(Node paramNode, SourcePosition endZone) {
-      NonJSDocComment trailingComment = null;
-      if (hasPendingNonJSDocCommentBefore(endZone)) {
-        trailingComment = combineCommentsIntoSingleComment(getNonJSDocCommentsBefore(endZone));
-        trailingComment.setIsInline(true);
-        NonJSDocComment nonTrailingComment = paramNode.getNonJSDocComment();
-        if (nonTrailingComment != null) {
-          // This node has both trailing and non-trailing comment
-          nonTrailingComment.appendTrailingCommentToNonTrailing(trailingComment);
-        } else {
-          trailingComment.setIsTrailing(true);
-          paramNode.setNonJSDocComment(trailingComment);
-        }
+      NonJSDocComment trailingComment = mergeNonJsDocCommentsBefore(endZone, true);
+      if (trailingComment == null) {
+        return;
+      }
+
+      NonJSDocComment nonTrailingComment = paramNode.getNonJSDocComment();
+      if (nonTrailingComment != null) {
+        // This node has both trailing and non-trailing comment
+        nonTrailingComment.appendTrailingCommentToNonTrailing(trailingComment);
+      } else {
+        trailingComment.setIsTrailing(true);
+        paramNode.setNonJSDocComment(trailingComment);
       }
     }
 
@@ -1834,21 +1789,21 @@ class IRFactory {
     }
 
     Node processName(IdentifierToken identifierToken, Token output) {
+      NonJSDocComment comment = handleNonJSDocComment(identifierToken.location, true);
+
       Node node = newStringNode(output, identifierToken.value);
 
       if (output == Token.NAME) {
-        JSDocInfo info = handleJsDoc(identifierToken);
         maybeWarnReservedKeyword(identifierToken);
+
+        JSDocInfo info = handleJsDoc(identifierToken);
         if (info != null) {
           node.setJSDocInfo(info);
         }
       }
-      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-        NonJSDocComment nonJSDocComment = handleNonJSDocComments(identifierToken);
-        if (nonJSDocComment != null) {
-          nonJSDocComment.setIsInline(true);
-          node.setNonJSDocComment(nonJSDocComment);
-        }
+
+      if (comment != null) {
+        node.setNonJSDocComment(comment);
       }
       setSourceInfo(node, identifierToken);
       return node;
@@ -1856,13 +1811,12 @@ class IRFactory {
 
     Node processString(LiteralToken token) {
       checkArgument(token.type == TokenType.STRING);
+      NonJSDocComment comment = handleNonJSDocComment(token.location, true);
+
       Node node = newStringNode(Token.STRINGLIT, normalizeString(token, false));
-      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-        NonJSDocComment nonJSDocComment = handleNonJSDocComments(token);
-        if (nonJSDocComment != null) {
-          nonJSDocComment.setIsInline(true);
-          node.setNonJSDocComment(nonJSDocComment);
-        }
+
+      if (comment != null) {
+        node.setNonJSDocComment(comment);
       }
       setSourceInfo(node, token);
       return node;
@@ -1890,22 +1844,16 @@ class IRFactory {
 
     Node processNameWithInlineComments(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
-      NonJSDocComment associatedNonJSDocComment = null;
-      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-        ArrayList<Comment> nonJSDocComments = getNonJSDocComments(identifierToken);
-        if (!nonJSDocComments.isEmpty()) {
-          associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
-        }
-      }
+      NonJSDocComment comment = handleNonJSDocComment(identifierToken.location, false);
+
       maybeWarnReservedKeyword(identifierToken);
       Node node = newStringNode(Token.NAME, identifierToken.value);
+
       if (info != null) {
         node.setJSDocInfo(info);
       }
-      if (config.jsDocParsingMode() == JsDocParsing.INCLUDE_ALL_COMMENTS) {
-        if (associatedNonJSDocComment != null) {
-          node.setNonJSDocComment(associatedNonJSDocComment);
-        }
+      if (comment != null) {
+        node.setNonJSDocComment(comment);
       }
       setSourceInfo(node, identifierToken);
       return node;
