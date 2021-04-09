@@ -547,12 +547,13 @@ class IRFactory {
     }
 
     if (fileOverviewInfo != null) {
-      if ((irNode.getJSDocInfo() != null) &&
-          (irNode.getJSDocInfo().getLicense() != null)) {
+      JSDocInfo jsdoc = irNode.getJSDocInfo();
+      if (jsdoc != null && jsdoc.getLicense() != null) {
         JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(fileOverviewInfo);
-        builder.recordLicense(irNode.getJSDocInfo().getLicense());
+        builder.recordLicense(jsdoc.getLicense());
         fileOverviewInfo = builder.build();
       }
+
       irNode.setJSDocInfo(fileOverviewInfo);
     }
   }
@@ -591,9 +592,9 @@ class IRFactory {
     handlePossibleFileOverviewJsDoc(jsDocParser);
   }
 
-  private Comment getJsDoc(SourceRange location) {
+  private Comment getJSDocCommentAt(SourcePosition pos) {
     Comment closestPreviousComment = null;
-    while (this.jsdocTracker.hasPendingCommentBefore(location.start)) {
+    while (this.jsdocTracker.hasPendingCommentBefore(pos)) {
       closestPreviousComment = this.jsdocTracker.current();
       this.jsdocTracker.advance();
     }
@@ -601,16 +602,7 @@ class IRFactory {
     return closestPreviousComment;
   }
 
-  private Comment getJsDoc(ParseTree tree) {
-    return getJsDoc(tree.location);
-  }
-
-  private Comment getJsDoc(
-      com.google.javascript.jscomp.parsing.parser.Token token) {
-    return getJsDoc(token.location);
-  }
-
-  private JSDocInfo handleJsDoc(Comment comment) {
+  private JSDocInfo parseJSDocInfoFrom(Comment comment) {
     if (comment != null) {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
       parsedComments.add(comment);
@@ -621,44 +613,44 @@ class IRFactory {
     return null;
   }
 
-  private JSDocInfo handleJsDoc(ParseTree node) {
-    if (!shouldAttachJSDocHere(node)) {
-      return null;
-    }
-    return handleJsDoc(getJsDoc(node));
-  }
-
-  JSDocInfo handleJsDoc(com.google.javascript.jscomp.parsing.parser.Token token) {
-    return handleJsDoc(getJsDoc(token));
-  }
-
-  private boolean shouldAttachJSDocHere(ParseTree tree) {
+  private JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
       case LABELLED_STATEMENT:
       case EXPORT_DECLARATION:
       case TEMPLATE_SUBSTITUTION:
-        return false;
+        return null;
+
       case CALL_EXPRESSION:
       case CONDITIONAL_EXPRESSION:
       case BINARY_OPERATOR:
       case MEMBER_EXPRESSION:
       case MEMBER_LOOKUP_EXPRESSION:
       case UPDATE_EXPRESSION:
-        ParseTree nearest = findNearestNode(tree);
-        return nearest.type != ParseTreeType.PAREN_EXPRESSION;
+        {
+          ParseTree nearest = findNearestNode(tree);
+          if (nearest.type == ParseTreeType.PAREN_EXPRESSION) {
+            return null;
+          }
+        }
+        break;
+
       default:
-        return true;
+        break;
     }
+
+    return parseJSDocInfoFrom(getJSDocCommentAt(tree.getStart()));
   }
 
-  @Nullable
-  private NonJSDocComment handleNonJSDocComment(SourceRange range, boolean isInline) {
-    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
-      return null;
-    }
+  JSDocInfo parseJSDocInfoOnToken(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return parseJSDocInfoFrom(getJSDocCommentAt(token.getStart()));
+  }
 
-    return mergeNonJsDocCommentsBefore(range.start, isInline);
+  JSDocInfo parseInlineJSDocAt(SourcePosition pos) {
+    Comment comment = getJSDocCommentAt(pos);
+    return (comment != null && !comment.value.contains("@"))
+        ? parseInlineTypeDoc(comment)
+        : parseJSDocInfoFrom(comment);
   }
 
   /**
@@ -668,34 +660,34 @@ class IRFactory {
    * <p>It would be legal to replace all comments associated with this node with that one string.
    */
   @Nullable
-  private NonJSDocComment mergeNonJsDocCommentsBefore(SourcePosition pos, boolean isInline) {
+  private NonJSDocComment parseNonJSDocCommentAt(SourcePosition pos, boolean isInline) {
+    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      return null;
+    }
+
     if (!this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
       return null;
     }
 
     StringBuilder result = new StringBuilder();
-    Comment firstComment = null;
+    Comment firstComment = this.nonJsdocTracker.current();
     Comment lastComment = null;
 
     while (this.nonJsdocTracker.hasPendingCommentBefore(pos)) {
       Comment currentComment = this.nonJsdocTracker.current();
 
-      if (firstComment == null) {
-        firstComment = currentComment;
-      } else {
+      if (lastComment != null) {
         for (int blankCount = currentComment.location.start.line - lastComment.location.end.line;
             blankCount > 0;
             blankCount--) {
           result.append("\n");
         }
       }
-
       result.append(currentComment.value);
 
       lastComment = currentComment;
       this.nonJsdocTracker.advance();
     }
-    checkState(firstComment != null);
 
     NonJSDocComment nonJSDocComment =
         new NonJSDocComment(
@@ -736,8 +728,8 @@ class IRFactory {
   }
 
   Node transform(ParseTree tree) {
-    JSDocInfo info = handleJsDoc(tree);
-    NonJSDocComment comment = handleNonJSDocComment(tree.location, false);
+    JSDocInfo info = parseJSDocInfoOnTree(tree);
+    NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), false);
 
     Node node = transformDispatcher.process(tree);
 
@@ -771,8 +763,8 @@ class IRFactory {
    *     Comments</a>
    */
   Node transformNodeWithInlineComments(ParseTree tree) {
-    JSDocInfo info = handleInlineJsDoc(tree);
-    NonJSDocComment comment = handleNonJSDocComment(tree.location, true);
+    JSDocInfo info = parseInlineJSDocAt(tree.getStart());
+    NonJSDocComment comment = parseNonJSDocCommentAt(tree.getStart(), true);
 
     Node node = transformDispatcher.process(tree);
 
@@ -784,24 +776,6 @@ class IRFactory {
     }
     setSourceInfo(node, tree);
     return node;
-  }
-
-  JSDocInfo handleInlineJsDoc(ParseTree node) {
-    return handleInlineJsDoc(node.location);
-  }
-
-  JSDocInfo handleInlineJsDoc(
-      com.google.javascript.jscomp.parsing.parser.Token token) {
-    return handleInlineJsDoc(token.location);
-  }
-
-  JSDocInfo handleInlineJsDoc(SourceRange location) {
-    Comment comment = getJsDoc(location);
-    if (comment != null && !comment.value.contains("@")) {
-      return parseInlineTypeDoc(comment);
-    } else {
-      return handleJsDoc(comment);
-    }
   }
 
   static int lineno(ParseTree node) {
@@ -992,8 +966,8 @@ class IRFactory {
       }
 
       LiteralToken literal = input.asLiteral();
-      JSDocInfo jsDocInfo = handleJsDoc(literal);
-      NonJSDocComment comment = handleNonJSDocComment(literal.location, true);
+      JSDocInfo jsDocInfo = parseJSDocInfoOnToken(literal);
+      NonJSDocComment comment = parseNonJSDocCommentAt(literal.getStart(), true);
 
       final Node node;
       switch (input.type) {
@@ -1468,7 +1442,7 @@ class IRFactory {
      * @param endZone The end location until which we fetch pending comments for attachment
      */
     void attachPossibleTrailingCommentsForArg(Node paramNode, SourcePosition endZone) {
-      NonJSDocComment trailingComment = mergeNonJsDocCommentsBefore(endZone, true);
+      NonJSDocComment trailingComment = parseNonJSDocCommentAt(endZone, true);
       if (trailingComment == null) {
         return;
       }
@@ -1782,14 +1756,14 @@ class IRFactory {
     }
 
     Node processName(IdentifierToken identifierToken, Token output) {
-      NonJSDocComment comment = handleNonJSDocComment(identifierToken.location, true);
+      NonJSDocComment comment = parseNonJSDocCommentAt(identifierToken.getStart(), true);
 
       Node node = newStringNode(output, identifierToken.value);
 
       if (output == Token.NAME) {
         maybeWarnReservedKeyword(identifierToken);
 
-        JSDocInfo info = handleJsDoc(identifierToken);
+        JSDocInfo info = parseJSDocInfoOnToken(identifierToken);
         if (info != null) {
           node.setJSDocInfo(info);
         }
@@ -1804,7 +1778,7 @@ class IRFactory {
 
     Node processString(LiteralToken token) {
       checkArgument(token.type == TokenType.STRING);
-      NonJSDocComment comment = handleNonJSDocComment(token.location, true);
+      NonJSDocComment comment = parseNonJSDocCommentAt(token.getStart(), true);
 
       Node node = newStringNode(Token.STRINGLIT, normalizeString(token, false));
 
@@ -1836,8 +1810,8 @@ class IRFactory {
     }
 
     Node processNameWithInlineComments(IdentifierToken identifierToken) {
-      JSDocInfo info = handleInlineJsDoc(identifierToken);
-      NonJSDocComment comment = handleNonJSDocComment(identifierToken.location, false);
+      JSDocInfo info = parseInlineJSDocAt(identifierToken.getStart());
+      NonJSDocComment comment = parseNonJSDocCommentAt(identifierToken.getStart(), false);
 
       maybeWarnReservedKeyword(identifierToken);
       Node node = newStringNode(Token.NAME, identifierToken.value);
