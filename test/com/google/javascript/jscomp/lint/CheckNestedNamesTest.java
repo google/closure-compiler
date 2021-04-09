@@ -33,11 +33,15 @@ import org.junit.runners.JUnit4;
 /** Test case for {@link CheckNestedNames}. */
 @RunWith(JUnit4.class)
 public final class CheckNestedNamesTest extends CompilerTestCase {
+  private static final String CLOSURE_EXTERNS =
+      new TestExternsBuilder().addClosureExterns().build();
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableCreateModuleMap();
+    enableTypeCheck();
   }
 
   @Override
@@ -49,95 +53,100 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
     return options;
   }
 
   @Test
   public void testNoWarningOnNonStaticPropertyAssignment() {
-    testNoWarning("goog.module('a'); class C {}; C.prototype.E = class {};");
-    testNoWarning("goog.module('a'); /** @enum */ C = {}; C.prototype.E = class {};");
-    testNoWarning("goog.module('a'); /** @interface */ C = class {}; C.prototype.E = class {};");
-    testNoWarning("goog.module('a'); /** @typedef {?} */ const C = {}; C.prototype.E = class {};");
+    noWarning("goog.module('a'); class C {}; C.prototype.E = class {};");
+    noWarning("goog.module('a'); /** @interface */ C = class {}; C.prototype.E = class {};");
+
+    disableTypeCheck(); // type checking reports inexistent .prototype access on enum, typedef
+    noWarning("goog.module('a'); /** @enum */ C = {}; C.prototype.E = class {};");
+    noWarning("goog.module('a'); /** @typedef {?} */ let T; T.prototype.E = class {};");
   }
 
   @Test
   public void testNoWarningInScriptScope() {
-    testNoWarning("class C {}; C.E = class {};");
-    testNoWarning("/** @enum */ let C = {}; C.E = class {};");
-    testNoWarning("/** @interface */ let C = {}; C.E = class {};");
-    testNoWarning("/** @typedef {?} */ const C = {};; C.E = class {};");
+    noWarning("class C {}; C.E = class {};");
+    noWarning("/** @enum */ let C = {}; C.E = class {};");
+    noWarning("/** @interface */ let C = function() {}; C.E = class {};");
+    noWarning("/** @typedef {?} */ const C = {}; C.E = class {};");
   }
 
   @Test
   public void testNoWarningInFunctionScope() {
-    testNoWarning("goog.module('a'); function foo() { class C {}; /** @enum */ C.E = {};} foo();");
-    testNoWarning("goog.module('a'); function foo() { let C = {}; /** @enum */ C.E = {};} foo();");
-    testNoWarning(
+    noWarning("goog.module('a'); function foo() { class C {}; /** @enum */ C.E = {};} foo();");
+    noWarning("goog.module('a'); function foo() { let C = {}; /** @enum */ C.E = {};} foo();");
+    noWarning(
         lines(
             "goog.module('a');",
             "/** @param {!Function} x */",
             "function foo(x) {",
             "  /** @enum */ x.E = {};",
             "}",
-            "foo();"));
+            "function y() {}",
+            "foo(y);"));
   }
 
   @Test
   public void testNestedClass() {
-    testWarning("goog.module('a'); class C {}; C.C = class {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning("goog.module('a'); let obj = {}; obj.C = class {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning("goog.module('a'); function F() {}; F.C = class {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); let F = function() {}; F.E = class {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); let F = function() {}; /** something */ F.E = class {};",
-        NESTED_NAME_IN_GOOG_MODULE);
+    nestedNameWarning("goog.module('a'); class C {}; C.C = class {};");
+
+    nestedNameWarning("goog.module('a'); let obj = {}; obj.C = class {};");
+    nestedNameWarning("goog.module('a'); function F() {}; F.C = class {};");
+    nestedNameWarning("goog.module('a'); let F = function() {}; F.E = class {};");
+    nestedNameWarning("goog.module('a'); let F = function() {}; /** something */ F.E = class {};");
   }
 
   @Test
   public void testNestedNames_noRHS() {
-    testNoWarning("goog.module('a'); class C {}; C.E;");
-    testWarning("goog.module('a'); class C {}; /** @interface */ C.E;", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); class C {}; /** @enum {string} */ C.E;", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); class C {}; /** @typedef {{a:2}} */ C.T;", NESTED_NAME_IN_GOOG_MODULE);
+    noWarning("goog.module('a'); class C {}; C.E;");
+
+    disableTypeCheck();
+    // interfaces and enums that do not have rhs get reported in type checking; don't report here.
+    noWarning("goog.module('a'); class C {}; /** @interface */ C.E;");
+    noWarning("goog.module('a'); class C {}; /** @enum {string} */ C.E;");
+
+    enableTypeCheck();
+    nestedNameWarning("goog.module('a'); class C {}; /** @typedef {{a:number}} */ C.T;");
   }
 
   @Test
   public void testNestedEnum() {
-    testWarning(
-        "goog.module('a'); let obj = {}; /** @enum */ obj.E = {};",
-        CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE);
-    testWarning("goog.module('a'); class C {}; /** @enum */ C.E = {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); function F() {}; /** @enum */ F.E = {};", NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); let F = function() {}; /** @enum */ F.E = {};",
-        NESTED_NAME_IN_GOOG_MODULE);
+    nestedNameWarning("goog.module('a'); let obj = {}; /** @enum */ obj.E = {};");
+    nestedNameWarning("goog.module('a'); class C {}; /** @enum */ C.E = {};");
+    nestedNameWarning("goog.module('a'); function F() {}; /** @enum */ F.E = {};");
+    nestedNameWarning("goog.module('a'); let F = function() {}; /** @enum */ F.E = {};");
   }
 
   @Test
   public void testNestedInterfaces() {
-    testWarning(
-        "goog.module('a'); let obj = {}; /** @interface */ obj.I = class {};",
-        NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); class C {}; /** @interface */ C.I = class {};",
-        NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); function F() {}; /** @interface */ F.I = class {};",
-        NESTED_NAME_IN_GOOG_MODULE);
-    testWarning(
-        "goog.module('a'); let F = function() {}; /** @interface */ F.I = class {};",
-        NESTED_NAME_IN_GOOG_MODULE);
+    nestedNameWarning("goog.module('a'); let obj = {}; /** @interface */ obj.I = class {};");
+    nestedNameWarning("goog.module('a'); class C {}; /** @interface */ C.I = class {};");
+    nestedNameWarning("goog.module('a'); function F() {}; /** @interface */ F.I = class {};");
+    nestedNameWarning("goog.module('a'); let F = function() {}; /** @interface */ F.I = class {};");
+  }
+
+  @Test
+  public void testNoAnnotations() {
+    // tests `X.Y = ...` where `X.Y` is missing the @typedef/@interface/@enum annotation
+    nestedNameWarning("goog.module('a'); class C {}; C.C = class {};");
+    nestedNameWarning("goog.module('a'); class C {}; /** @enum */ E = {}; C.E = E;");
+    nestedNameWarning("goog.module('a'); class C {}; /** @interface */ I = class {}; C.I = I;");
+
+    // For the lhs to be a valid typedef, it must be annotated with `@const`.
+    noWarning("goog.module('a'); class C {}; /** @typedef {number} */ let T; C.T = T;");
+    // The `@const` makes JSCompiler infer the lhs as a typedef, and hence we warn on it.
+    nestedNameWarning(
+        "goog.module('a'); class C {}; /** @typedef {number} */ let T; /** @const */ C.T = T;");
   }
 
   @Test
   public void testNestingOnExternNames() {
     testWarning(
-        externs(new TestExternsBuilder().addArray().build()),
+        externs(new TestExternsBuilder().addClosureExterns().addArray().build()),
         srcs("goog.module('a');  Array.C = class {};"),
         warning(NESTED_NAME_IN_GOOG_MODULE));
   }
@@ -145,13 +154,16 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
   @Test
   public void testNestingOnGlobalNames() {
     testWarning(
-        srcs("let GlobalFn = function() {}", "goog.module('a');  GlobalFn.C = class {};"),
+        externs(
+            "let GlobalFn = function() {};" + new TestExternsBuilder().addClosureExterns().build()),
+        srcs("goog.module('a');  GlobalFn.C = class {};"),
         warning(NESTED_NAME_IN_GOOG_MODULE));
   }
 
   @Test
   public void testErrorMessageText() {
     testWarning(
+        externs(new TestExternsBuilder().addClosureExterns().build()),
         srcs("goog.module('a'); class C {}; C.E = class {};"),
         warning(NESTED_NAME_IN_GOOG_MODULE)
             .withMessageContaining(
@@ -165,15 +177,24 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
 
   @Test
   public void testNoWarningOnNestedValues() {
-    testNoWarning("goog.module('a'); class C {}; C.E = '';");
-    testNoWarning("goog.module('a'); class SomeClass {} class C {}; C.E = new SomeClass();");
-    testNoWarning("goog.module('a'); /** @typedef {?} */ let C; C.E = {};");
-    testNoWarning("goog.module('a'); /** @interface {?} */ let C; C.E = {};");
-    testNoWarning("goog.module('a'); let C = {}; C.E = {};");
+    noWarning("goog.module('a'); class C {}; C.E = '';");
+    noWarning("goog.module('a'); class SomeClass {} class C {}; C.E = new SomeClass();");
+    noWarning("goog.module('a'); /** @typedef {?} */ let C; C.E = {};");
+    noWarning("goog.module('a'); /** @interface {?} */ let C = class {}; C.E = {};");
+    noWarning("goog.module('a'); let C = {}; C.E = {};");
   }
 
   @Test
   public void testNoWarningOnNamedExports() {
-    testNoWarning("goog.module('a'); /** @enum */ exports.SomeEnum = { ENUM_CONSTANT: 'value' };");
+    noWarning(
+        "goog.module('a'); /** @enum {string} */ exports.SomeEnum = { ENUM_CONSTANT: 'value' };");
+  }
+
+  private void noWarning(String js) {
+    testNoWarning(externs(CLOSURE_EXTERNS), srcs(js));
+  }
+
+  private void nestedNameWarning(String js) {
+    testWarning(externs(CLOSURE_EXTERNS), srcs(js), warning(NESTED_NAME_IN_GOOG_MODULE));
   }
 }

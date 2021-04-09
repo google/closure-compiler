@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.lint.CheckGoogModuleTypeScriptName;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
-import com.google.javascript.jscomp.lint.CheckNestedNames;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
@@ -98,7 +97,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckPrimitiveAsObject(compiler),
                           new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()),
                           new CheckNullabilityModifiers(compiler),
-                          new CheckNestedNames(compiler),
                           new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
                           new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT),
                           new CheckSideEffects(

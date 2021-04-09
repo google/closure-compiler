@@ -593,7 +593,6 @@ public class DiagnosticGroups {
               CheckInterfaces.MISSING_JSDOC_IN_DECLARATION_STATEMENT,
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
-              CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE,
               CheckNoMutatedEs6Exports.MUTATED_EXPORT,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
@@ -631,7 +630,8 @@ public class DiagnosticGroups {
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           ImplicitNullabilityCheck.IMPLICITLY_NONNULL_JSDOC,
-          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
+          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
+          CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE);
 
   // Similar to the lintChecks group above, but includes things that cannot be done on a single
   // file at a time, for example because they require typechecking. If you enable these as errors

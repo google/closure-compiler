@@ -22,9 +22,8 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * Checks if code has a module-level static property assignment (`X.Y`) inside a `goog.module`. If
@@ -156,19 +155,23 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
     return getProp.isGetProp() && getProp.getString().equals("prototype");
   }
 
-  private static DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
+  private DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
     checkArgument(lhs.isFirstChildOf(parent), lhs);
-    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(lhs);
-    if (jsDocInfo != null) {
-      // JSDoc present: check whether it's an enum, interface or typedef first.
-      if (jsDocInfo.hasEnumParameterType()) {
+    JSType type = lhs.getJSType();
+    if (type != null) {
+      // check whether it's an enum, interface or typedef first.
+      if (type.isEnumType()) {
         return DeclarationKind.ENUM;
-      } else if (jsDocInfo.isInterface()) {
+      } else if (type.isInterface()) {
         return DeclarationKind.INTERFACE;
-      } else if (jsDocInfo.hasTypedefType()) {
-        return DeclarationKind.TYPEDEF;
       }
     }
+
+    // Handle `/** @typedef {...} */` X.Y` or `/** @const */ X.Y = SomeTypeDefName`
+    if (lhs.getTypedefTypeProp() != null) {
+      return DeclarationKind.TYPEDEF;
+    }
+
     if (parent.isAssign()) {
       Node rhs = parent.getLastChild();
       if (rhs.isClass()) {

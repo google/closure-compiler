@@ -1820,7 +1820,6 @@ public final class DefaultPassConfig extends PassConfig {
                         .add(new CheckJSDocStyle(compiler))
                         .add(new CheckMissingSemicolon(compiler))
                         .add(new CheckNullabilityModifiers(compiler))
-                        .add(new CheckNestedNames(compiler))
                         .add(new CheckPrimitiveAsObject(compiler))
                         .add(new CheckPrototypeProperties(compiler))
                         .add(new CheckUnusedLabels(compiler))
@@ -1841,7 +1840,8 @@ public final class DefaultPassConfig extends PassConfig {
                   callbacks
                       .add(new CheckNullableReturn(compiler))
                       .add(new CheckArrayWithGoogObject(compiler))
-                      .add(new ImplicitNullabilityCheck(compiler));
+                      .add(new ImplicitNullabilityCheck(compiler))
+                      .add(new CheckNestedNames(compiler));
                 }
                 // These are grouped together for better execution efficiency.
                 if (options.enables(DiagnosticGroups.UNUSED_PRIVATE_PROPERTY)) {
