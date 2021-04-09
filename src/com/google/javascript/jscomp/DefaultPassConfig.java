@@ -2921,6 +2921,8 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new RewriteDynamicImports(
-                      compiler, compiler.getOptions().getDynamicImportAlias()))
+                      compiler,
+                      compiler.getOptions().getDynamicImportAlias(),
+                      compiler.getOptions().chunkOutputType))
           .build();
 }

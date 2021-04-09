@@ -309,7 +309,9 @@ public final class ModuleLoader {
     if (fromFolder == null && toPath.getParent() == null) {
       return "./" + toUriPath;
     } else if (fromFolder == null
-        && (toUriPath.startsWith(".") || toPath.toString().startsWith("/"))) {
+        && (toUriPath.startsWith(".")
+            || toPath.toString().startsWith("/")
+            || toPath.toString().startsWith("\\"))) {
       return toUriPath;
     } else if (fromFolder == null) {
       throw new IllegalArgumentException("Relative path between URIs cannot be calculated");

@@ -17,13 +17,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,9 +65,17 @@ import java.util.Set;
  * global namespace or polluting the global scope.
  */
 final class ConvertChunksToESModules implements CompilerPass {
+  private enum ImportType {
+    STATIC,
+    DYNAMIC
+  }
+
   private final AbstractCompiler compiler;
   private final Map<JSModule, Set<String>> crossChunkExports = new LinkedHashMap<>();
   private final Map<JSModule, Map<JSModule, Set<String>>> crossChunkImports = new LinkedHashMap<>();
+  private final List<Node> dynamicImportCallbacks = new ArrayList<>();
+
+  static final String DYNAMIC_IMPORT_CALLBACK_FN = "jscomp$DynamicImportCallback";
 
   static final DiagnosticType ASSIGNMENT_TO_IMPORT =
       DiagnosticType.error(
@@ -77,6 +85,11 @@ final class ConvertChunksToESModules implements CompilerPass {
       DiagnosticType.error(
           "JSC_UNABLE_TO_COMPUTE_RELATIVE_PATH",
           "Unable to compute relative import path from \"{0}\" to \"{1}\"");
+
+  static final DiagnosticType UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK =
+      DiagnosticType.error(
+          "JSC_UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK",
+          "Dynamic import callback encountered wih an invalid format.{0}");
 
   /**
    * Constructor for the ConvertChunksToESModules compiler pass.
@@ -107,6 +120,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     convertChunkSourcesToModules();
     addExportStatements();
     addImportStatements();
+    rewriteDynamicImportCallbacks();
   }
 
   /**
@@ -163,9 +177,15 @@ final class ConvertChunksToESModules implements CompilerPass {
         exportSpec.putIntProp(Node.IS_SHORTHAND_PROPERTY, 1);
         exportSpecs.addChildToBack(exportSpec);
       }
-      Node export = IR.export(exportSpecs).srcrefTree(moduleBody);
-      moduleBody.addChildToBack(export);
-      compiler.reportChangeToEnclosingScope(moduleBody);
+      Map<JSModule, Set<String>> importsByChunk = crossChunkImports.get(jsModuleExports.getKey());
+
+      // Force the chunk to parse as a module by adding an empty export spec when no actual
+      // static imports or exports exist
+      if (exportSpecs.hasChildren() || importsByChunk == null || importsByChunk.isEmpty()) {
+        Node export = IR.export(exportSpecs).srcrefTree(moduleBody);
+        moduleBody.addChildToBack(export);
+        compiler.reportChangeToEnclosingScope(moduleBody);
+      }
     }
   }
 
@@ -199,7 +219,9 @@ final class ConvertChunksToESModules implements CompilerPass {
         JSModule exportingChunk = importsByChunk.getKey();
         String importPath = getChunkName(exportingChunk);
         try {
-          importPath = relativePath(getChunkName(importingChunk), getChunkName(exportingChunk));
+          importPath =
+              ModuleLoader.relativePathFrom(
+                  getChunkName(importingChunk), getChunkName(exportingChunk));
         } catch (IllegalArgumentException e) {
           compiler.report(
               JSError.make(
@@ -228,89 +250,182 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
+  private Node getDynamicImportCallbackModuleNamespace(Node call) {
+    checkState(call.isCall());
+    Node callbackFn = NodeUtil.getArgumentForCallOrNew(call, 0);
+    if (callbackFn == null
+        || !callbackFn.isFunction()
+        || NodeUtil.getFunctionParameters(callbackFn).hasChildren()) {
+      compiler.report(
+          JSError.make(
+              call,
+              UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK,
+              " Unable to find valid callback function."));
+      return null;
+    }
+    Node callbackBody = NodeUtil.getFunctionBody(callbackFn);
+
+    // The callback body should have a single statement that returns a name.
+    // Support both standard and arrow function semantics
+    if (callbackBody.isName()) {
+      return callbackBody;
+    } else if (callbackBody.isBlock()
+        && callbackBody.hasOneChild()
+        && callbackBody.getFirstChild().isReturn()
+        && callbackBody.getFirstChild().hasOneChild()
+        && callbackBody.getFirstFirstChild().isName()) {
+      return callbackBody.getFirstFirstChild();
+    }
+    compiler.report(
+        JSError.make(
+            call,
+            UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK,
+            " Unable to find valid namespace reference."));
+    return null;
+  }
+
+  /**
+   * The RewriteDynamicImports pass adds direct references to the original input module namespace
+   * and wraps the callback in a special external function call so that this pass can recognize
+   * them.
+   *
+   * <p>Example:
+   *
+   * <p>import('./chunk0.js').then(jscomp$DynamicImportCallback(() => module$input0));
+   *
+   * <p>We need to remove the special external function call and update the original module
+   * namespace reference to be a property of the chunk namespace.
+   *
+   * <p>import('./chunk0.js').then(($) => $.module$input0);
+   */
+  private void rewriteDynamicImportCallbacks() {
+    AstFactory astFactory = compiler.createAstFactory();
+    for (Node dynamicImportCallback : dynamicImportCallbacks) {
+      checkState(dynamicImportCallback.isCall());
+      Node moduleNamespace = getDynamicImportCallbackModuleNamespace(dynamicImportCallback);
+      if (moduleNamespace == null) {
+        continue;
+      }
+      Node callbackFn = NodeUtil.getArgumentForCallOrNew(dynamicImportCallback, 0);
+      Node callbackParamList = NodeUtil.getFunctionParameters(callbackFn);
+      Node importNamespaceParam =
+          astFactory.createName("$", JSTypeNative.UNKNOWN_TYPE).srcref(moduleNamespace);
+      callbackParamList.addChildToFront(importNamespaceParam);
+      compiler.reportChangeToEnclosingScope(importNamespaceParam);
+
+      Node namespaceGetprop =
+          astFactory.createGetProp(
+              astFactory.createName("$", JSTypeNative.UNKNOWN_TYPE).srcref(moduleNamespace),
+              moduleNamespace.getString());
+
+      moduleNamespace.replaceWith(namespaceGetprop);
+      compiler.reportChangeToEnclosingScope(namespaceGetprop);
+      Node innerCallback = NodeUtil.getArgumentForCallOrNew(dynamicImportCallback, 0).detach();
+      dynamicImportCallback.replaceWith(innerCallback);
+      compiler.reportChangeToEnclosingScope(innerCallback);
+    }
+  }
+
   /** Find names in a module that are defined in a different module. */
-  private class FindCrossChunkReferences extends AbstractPostOrderCallback {
+  private class FindCrossChunkReferences extends AbstractPreOrderCallback {
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (n.isScript()) {
-        JSModule chunk = t.getModule();
-        List<JSModule> chunkDependencies = chunk.getDependencies();
-
-        // Ensure every chunk dependency is explicitly listed with an import
-        // Dependent chunks may have side effects even if there isn't an explicit name reference
-        if (!chunkDependencies.isEmpty()) {
-          Map<JSModule, Set<String>> namesToImportByModule =
-              crossChunkImports.computeIfAbsent(chunk, (JSModule k) -> new LinkedHashMap<>());
-          for (JSModule dependency : chunkDependencies) {
-            namesToImportByModule.computeIfAbsent(
-                dependency, (JSModule k) -> new LinkedHashSet<>());
-          }
-        }
+        visitScript(t, n);
+        return true;
+      } else if (n.isCall()) {
+        return visitCallAndTraverse(t, n);
       } else if (n.isName()) {
-        String name = n.getString();
-        if ("".equals(name)) {
-          return;
-        }
-        Scope s = t.getScope();
-        Var v = s.getVar(name);
-        if (v == null || !v.isGlobal()) {
-          return;
-        }
-        CompilerInput input = v.getInput();
-        if (input == null) {
-          return;
-        }
-        // Compare the chunk where the variable is declared to the current
-        // chunk. If they are different, the variable is used across modules.
-        JSModule definingChunk = input.getModule();
-        JSModule referencingChunk = t.getModule();
-        if (definingChunk != referencingChunk) {
-          if (NodeUtil.isLhsOfAssign(n)) {
-            t.report(n, ASSIGNMENT_TO_IMPORT, n.getString(), getChunkName(referencingChunk));
-          }
+        visitName(t, n, ImportType.STATIC);
+        return true;
+      }
+      return true;
+    }
 
-          // Mark the chunk where the name is declared as needing an export for this name
-          Set<String> namesToExport =
-              crossChunkExports.computeIfAbsent(
-                  definingChunk, (JSModule k) -> new LinkedHashSet<>());
-          namesToExport.add(name);
+    public void visitScript(NodeTraversal t, Node script) {
+      checkState(script.isScript());
+      JSModule chunk = t.getModule();
+      List<JSModule> chunkDependencies = chunk.getDependencies();
 
-          // Add an import for this name to this module from the source module
-          Map<JSModule, Set<String>> namesToImportByModule =
-              crossChunkImports.computeIfAbsent(
-                  referencingChunk, (JSModule k) -> new LinkedHashMap<>());
-          Set<String> importsForModule =
-              namesToImportByModule.computeIfAbsent(
-                  definingChunk, (JSModule k) -> new LinkedHashSet<>());
-          importsForModule.add(name);
+      crossChunkExports.putIfAbsent(chunk, new LinkedHashSet<>());
+
+      // Ensure every chunk dependency is explicitly listed with an import
+      // Dependent chunks may have side effects even if there isn't an explicit name reference
+      if (!chunkDependencies.isEmpty()) {
+        Map<JSModule, Set<String>> namesToImportByModule =
+            crossChunkImports.computeIfAbsent(chunk, (JSModule k) -> new LinkedHashMap<>());
+        for (JSModule dependency : chunkDependencies) {
+          namesToImportByModule.computeIfAbsent(dependency, (JSModule k) -> new LinkedHashSet<>());
         }
       }
     }
   }
 
-  /**
-   * Calculate the relative path between two URI paths. To remain compliant with ES Module loading
-   * restrictions, paths must always begin with a "./", "../" or "/" or they are otherwise treated
-   * as a bare module specifier.
-   *
-   * <p>TODO(ChadKillingsworth): This method likely has use cases beyond this class and should be
-   * moved.
-   */
-  private static String relativePath(String fromUriPath, String toUriPath) {
-    Path fromPath = Paths.get(fromUriPath);
-    Path toPath = Paths.get(toUriPath);
-    Path fromFolder = fromPath.getParent();
-
-    // if the from URIs are simple names without paths, they are in the same folder
-    // example: m0.js
-    if (fromFolder == null) {
-      return "./" + toUriPath;
+  public boolean visitCallAndTraverse(NodeTraversal t, Node call) {
+    checkState(call.isCall());
+    if (!NodeUtil.isCallTo(call, DYNAMIC_IMPORT_CALLBACK_FN)) {
+      return true;
     }
 
-    String calculatedPath = fromFolder.relativize(toPath).toString();
-    if (calculatedPath.startsWith(".") || calculatedPath.startsWith("/")) {
-      return calculatedPath;
+    Node moduleNamespace = getDynamicImportCallbackModuleNamespace(call);
+    if (moduleNamespace == null) {
+      return true;
     }
-    return "./" + calculatedPath;
+    boolean isValidModuleNamespace = visitName(t, moduleNamespace, ImportType.DYNAMIC);
+    if (isValidModuleNamespace) {
+      dynamicImportCallbacks.add(call);
+    } else {
+      compiler.report(
+          JSError.make(
+              call,
+              UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK,
+              " Unable to find valid namespace reference."));
+    }
+    return false;
+  }
+
+  public boolean visitName(NodeTraversal t, Node nameNode, ImportType importType) {
+    checkState(nameNode.isName());
+    String name = nameNode.getString();
+
+    if ("".equals(name)) {
+      return false;
+    }
+
+    Scope s = t.getScope();
+    Var v = s.getVar(name);
+    if (v == null || !v.isGlobal()) {
+      return false;
+    }
+    CompilerInput input = v.getInput();
+    if (input == null) {
+      return false;
+    }
+    JSModule definingChunk = input.getModule();
+    JSModule referencingChunk = t.getModule();
+
+    if (definingChunk != referencingChunk) {
+      if (NodeUtil.isLhsOfAssign(nameNode)) {
+        t.report(
+            nameNode, ASSIGNMENT_TO_IMPORT, nameNode.getString(), getChunkName(referencingChunk));
+      }
+
+      // Mark the chunk where the name is declared as needing an export for this name
+      Set<String> namesToExport =
+          crossChunkExports.computeIfAbsent(definingChunk, (JSModule k) -> new LinkedHashSet<>());
+      namesToExport.add(name);
+
+      // Add an import for this name to this module from the source module
+      Map<JSModule, Set<String>> namesToImportByModule =
+          crossChunkImports.computeIfAbsent(
+              referencingChunk, (JSModule k) -> new LinkedHashMap<>());
+      if (importType == ImportType.STATIC) {
+        Set<String> importsForModule =
+            namesToImportByModule.computeIfAbsent(
+                definingChunk, (JSModule k) -> new LinkedHashSet<>());
+        importsForModule.add(name);
+      }
+    }
+    return true;
   }
 }
