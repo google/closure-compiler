@@ -25,8 +25,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -41,12 +39,12 @@ public final class SerializeTypedAstPass implements CompilerPass {
   private final SerializationOptions serializationOptions;
 
   public SerializeTypedAstPass(
-      AbstractCompiler compiler, SerializationOptions serializationOptions, Path outputPath) {
+      AbstractCompiler compiler, SerializationOptions serializationOptions, OutputStream out) {
     this(
         compiler,
         serializationOptions,
         ast -> {
-          try (OutputStream out = Files.newOutputStream(outputPath)) {
+          try {
             ast.writeTo(out);
           } catch (IOException e) {
             throw new RuntimeException(e);
