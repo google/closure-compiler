@@ -33,6 +33,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +97,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
   private final ModuleImportResolver moduleImportResolver;
+  private final boolean moduleTranspilationBeforeTypeInference;
   // A record is pushed onto this stack during the traversal of each optional chain.
   // Inference of the type at the end of the optional chain requires scope information
   // from traversing the start of the chain. This stack serves as a communication channel
@@ -134,6 +136,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
             compiler, TypedScope.createLatticeBottom(syntacticScope.getRootNode()));
+    this.moduleTranspilationBeforeTypeInference = compiler.getOptions().processCommonJSModules;
   }
 
   @CheckReturnValue
@@ -2619,10 +2622,16 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
     // If the module specifier is a string, attempt to resolve the module
     ModuleMap moduleMap = compiler.getModuleMap();
-    if (dynamicImport.getFirstChild().isStringLit() && moduleMap != null) {
+    Node importSpecifier = dynamicImport.getFirstChild();
+    CompilerInput input = compiler.getInput(NodeUtil.getInputId(dynamicImport));
+    if (importSpecifier.isStringLit() && moduleMap != null && input != null) {
       ModulePath targetPath =
-          compiler.getModuleLoader().resolve(dynamicImport.getFirstChild().getString());
-      Module targetModule = moduleMap.getModule(targetPath);
+          input.getPath().resolveJsModule(
+              importSpecifier.getString(),
+              importSpecifier.getSourceFileName(),
+              importSpecifier.getLineno(),
+              importSpecifier.getCharno());
+      Module targetModule = targetPath != null ? moduleMap.getModule(targetPath) : null;
       if (targetModule != null) {
         // TypedScopeCreator ensures that the MODULE_BODY type is the export namespace type
         Node scriptNode = targetModule.metadata().rootNode();
@@ -2631,6 +2640,14 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
               scriptNode != null ? scriptNode.getOnlyChild().getJSType() : null;
           if (exportNamespaceType != null) {
             templateType = exportNamespaceType;
+          }
+        } else if (moduleTranspilationBeforeTypeInference) {
+          Node moduleName = NodeUtil.findPreorder(
+              scriptNode,
+              (node) -> node.matchesQualifiedName(targetPath.toModuleName()),
+              Predicates.alwaysTrue());
+          if (moduleName != null && moduleName.getJSType() != null) {
+            templateType = moduleName.getJSType();
           }
         }
       }

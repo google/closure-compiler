@@ -112,7 +112,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     // If the module specifier is a string, attempt to resolve the module
     final ModuleMap moduleMap = compiler.getModuleMap();
     final Node importSpecifier = n.getFirstChild();
-    if (importSpecifier.isString() && moduleMap != null) {
+    if (importSpecifier.isStringLit() && moduleMap != null) {
       final ModulePath targetPath =
           t.getInput()
               .getPath()
