@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
@@ -55,7 +56,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CollapseProperties(compiler, propertyCollapseLevel);
+    return new CollapseProperties(
+        compiler,
+        propertyCollapseLevel,
+        compiler.getOptions().chunkOutputType);
   }
 
   @Override
@@ -4202,5 +4206,52 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = p ? x : {b: 1}; a.c = 2;", //
         "var a = p ? x : {b: 1}; var a$c = 2;");
+  }
+
+  @Test
+  public void testModuleDynamicImport() {
+    allowExternsChanges();
+    this.enableDependencyManagement = false;
+    this.setChunkOutputType(ChunkOutputType.ES_MODULES);
+    this.enableModuleRewriting();
+    this.entryPoints = new ArrayList<>();
+    this.entryPoints.add(ModuleIdentifier.forFile("entry.js"));
+
+    JSModule[] inputModules = new JSModule[] { new JSModule("entry"), new JSModule("mod1")};
+    inputModules[0].add(
+        SourceFile.fromCode(
+            "entry.js",
+            "import('./mod1.js').then((ns) => console.log(ns.Foo.bar()));"));
+    inputModules[1].add(
+        SourceFile.fromCode(
+            "mod1.js",
+            lines(
+                "export class Foo {",
+                "  static bar() { return 'bar'; }",
+                "}")));
+    inputModules[1].addDependency(inputModules[0]);
+
+    JSModule[] expectedModules = new JSModule[] { new JSModule("entry"), new JSModule("mod1")};
+    expectedModules[0].add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "import('./mod1.js')",
+                "    .then(jscomp$DynamicImportCallback(() => { return module$mod1;}))",
+                "    .then(ns => {",
+                "      return console.log(ns.Foo.bar());",
+                "    });")));
+    expectedModules[1].add(
+        SourceFile.fromCode(
+            "mod1.js",
+            lines(
+                "class Foo$$module$mod1 {",
+                "  static bar() { return 'bar'; }",
+                "}",
+                "/** @const */ var module$mod1={};",
+                "/** @const */ module$mod1.Foo = Foo$$module$mod1;")));
+    expectedModules[1].addDependency(expectedModules[0]);
+
+    test(inputModules, expectedModules);
   }
 }

@@ -250,7 +250,10 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
-  private Node getDynamicImportCallbackModuleNamespace(Node call) {
+  /**
+   * Find and return the module namespace name node in a dynamic import callback function
+   */
+  public static Node getDynamicImportCallbackModuleNamespace(AbstractCompiler compiler, Node call) {
     checkState(call.isCall());
     Node callbackFn = NodeUtil.getArgumentForCallOrNew(call, 0);
     if (callbackFn == null
@@ -302,7 +305,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     AstFactory astFactory = compiler.createAstFactory();
     for (Node dynamicImportCallback : dynamicImportCallbacks) {
       checkState(dynamicImportCallback.isCall());
-      Node moduleNamespace = getDynamicImportCallbackModuleNamespace(dynamicImportCallback);
+      Node moduleNamespace = getDynamicImportCallbackModuleNamespace(compiler, dynamicImportCallback);
       if (moduleNamespace == null) {
         continue;
       }
@@ -361,13 +364,31 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
-  public boolean visitCallAndTraverse(NodeTraversal t, Node call) {
+  /**
+   * Test if a node is a .then callback as inserted by the RewriteDynamicImports pass
+   * Only finds callbacks when wrapped in the specially named extern function injected
+   * when the chunk output type is ES_MODULES
+   */
+  public static boolean isDynamicImportCallback(Node call) {
+    if (!call.isCall()) {
+      return false;
+    }
+    if (NodeUtil.isCallTo(call, DYNAMIC_IMPORT_CALLBACK_FN)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Test if a node is a .then callback as inserted by the RewriteDynamicImports pass
+   */
+  private boolean visitCallAndTraverse(NodeTraversal t, Node call) {
     checkState(call.isCall());
-    if (!NodeUtil.isCallTo(call, DYNAMIC_IMPORT_CALLBACK_FN)) {
+    if (!isDynamicImportCallback(call)) {
       return true;
     }
 
-    Node moduleNamespace = getDynamicImportCallbackModuleNamespace(call);
+    Node moduleNamespace = getDynamicImportCallbackModuleNamespace(compiler, call);
     if (moduleNamespace == null) {
       return true;
     }

@@ -2146,7 +2146,10 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.COLLAPSE_PROPERTIES)
           .setInternalFactory(
-              (compiler) -> new CollapseProperties(compiler, options.getPropertyCollapseLevel()))
+              (compiler) -> new CollapseProperties(
+                  compiler,
+                  options.getPropertyCollapseLevel(),
+                  options.chunkOutputType))
           .setFeatureSetForOptimizations()
           .build();
 

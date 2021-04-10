@@ -23,10 +23,14 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
+import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -90,6 +94,7 @@ class CollapseProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final PropertyCollapseLevel propertyCollapseLevel;
+  private final ChunkOutputType chunkOutputType;
 
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
@@ -97,14 +102,28 @@ class CollapseProperties implements CompilerPass {
   private final HashSet<String> dynamicallyImportedModules = new HashSet<>();
 
   CollapseProperties(AbstractCompiler compiler, PropertyCollapseLevel propertyCollapseLevel) {
+    this(compiler, propertyCollapseLevel, ChunkOutputType.GLOBAL_NAMESPACE);
+  }
+
+  CollapseProperties(
+      AbstractCompiler compiler,
+      PropertyCollapseLevel propertyCollapseLevel,
+      ChunkOutputType chunkOutputType) {
     this.compiler = compiler;
     this.propertyCollapseLevel = propertyCollapseLevel;
+    this.chunkOutputType = chunkOutputType;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT) {
-      gatherDynamicallyImportedModules();
+    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT ||
+        chunkOutputType == ChunkOutputType.ES_MODULES) {
+      NodeTraversal.traverse(
+          compiler,
+          root,
+          new FindDynamicallyImportedModules(
+              compiler.getOptions().processCommonJSModules,
+              compiler.getOptions().moduleResolutionMode));
     }
 
     GlobalNamespace namespace = new GlobalNamespace(compiler, root);
@@ -157,7 +176,40 @@ class CollapseProperties implements CompilerPass {
    */
   private Set<Name> checkNamespaces() {
     ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
+    HashSet<String> dynamicallyImportedModuleRefs = new HashSet<>(dynamicallyImportedModules);
+    if (!dynamicallyImportedModules.isEmpty()) {
+      // When the output chunk type is ES_MODULES, properties of the module namespace
+      // must not be collapsed as they are referenced off the namespace object. The namespace
+      // objects escape via the dynamic import expression.
+      //
+      // ES Module rewriting creates aliases on the module namespace object. These aliased names
+      // also escape and their properties may not be collapsed.
+      for (Name name : nameMap.values()) {
+        if (dynamicallyImportedModules.contains(name.getFullName())) {
+          escaped.add(name);
+          if (name.props == null) {
+            continue;
+          }
+          for (Name prop : name.props) {
+            Ref propDeclaration = prop.getDeclaration();
+            if (propDeclaration == null) {
+              continue;
+            }
+            if (propDeclaration.getNode() != null) {
+              Node rValue = NodeUtil.getRValueOfLValue(propDeclaration.getNode());
+              if (rValue.isName()) {
+                dynamicallyImportedModuleRefs.add(rValue.getQualifiedName());
+              }
+            }
+          }
+        }
+      }
+    }
+
     for (Name name : nameMap.values()) {
+      if (dynamicallyImportedModuleRefs.contains(name.getFullName())) {
+        escaped.add(name);
+      }
       if (!name.isNamespaceObjectLit()) {
         continue;
       }
@@ -249,13 +301,9 @@ class CollapseProperties implements CompilerPass {
   private void flattenReferencesToCollapsibleDescendantNames(
       Name n, String alias, Set<Name> escaped) {
     if (!n.isSimpleName()) {
-      boolean isAllowedToCollapse =
-          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || n.isModuleExport();
-
-      if (isAllowedToCollapse && n.canCollapse()) {
+      if (n.canCollapse()) {
         flattenReferencesTo(n, alias);
-      } else if (isAllowedToCollapse
-          && n.isSimpleStubDeclaration()
+      } else if (n.isSimpleStubDeclaration()
           && !n.isCollapsingExplicitlyDenied()) {
         flattenSimpleStubDeclaration(n, alias);
       }
@@ -927,9 +975,37 @@ class CollapseProperties implements CompilerPass {
     return result;
   }
 
-  private void gatherDynamicallyImportedModules() {
-    for (CompilerInput input : compiler.getInputsInOrder()) {
-      dynamicallyImportedModules.addAll(input.getDynamicRequires());
+  /**
+   * Find all the module namespace objects which are referenced by a dynamic import
+   */
+  class FindDynamicallyImportedModules extends AbstractPostOrderCallback {
+    private final boolean processCommonJSModules;
+    private final ResolutionMode moduleResolutionMode;
+
+    FindDynamicallyImportedModules(boolean processCommonJSModules, ResolutionMode resolutionMode) {
+      this.processCommonJSModules = processCommonJSModules;
+      this.moduleResolutionMode = resolutionMode;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (processCommonJSModules && ProcessCommonJSModules.isCommonJsDynamicImportCallback(n, moduleResolutionMode)) {
+        String importPath = ProcessCommonJSModules.getCommonJsImportPath(n, moduleResolutionMode);
+        ModuleLoader.ModulePath modulePath =
+            t.getInput()
+                .getPath()
+                .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
+
+        if (modulePath != null) {
+          dynamicallyImportedModules.add(modulePath.toModuleName());
+        }
+      } else if (ConvertChunksToESModules.isDynamicImportCallback(n)) {
+        Node moduleNamespace =
+            ConvertChunksToESModules.getDynamicImportCallbackModuleNamespace(compiler, n);
+        if (moduleNamespace != null) {
+          dynamicallyImportedModules.add(moduleNamespace.getQualifiedName());
+        }
+      }
     }
   }
 }
