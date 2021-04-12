@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Checks that all variables are declared, that file-private variables are accessed only in the file
@@ -80,15 +81,15 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
           "Variable {0} declared more than once. First occurrence: {1}");
 
+  static final DiagnosticType BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR =
+      DiagnosticType.error(
+          "JSC_BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR",
+          "Block-scoped variable {0} declared more than once. First occurrence: {1}");
+
   static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
     DiagnosticType.error(
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
-
-  static final DiagnosticType BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR =
-      DiagnosticType.error(
-          "JSC_BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR",
-          "Duplicate let / const / class / function declaration in the same scope is not allowed.");
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -618,29 +619,42 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {
       Node parent = NodeUtil.getDeclaringParent(n);
-
       Var origVar = s.getVar(name);
       // origNode will be null for `arguments`, since there's no node that declares it.
       Node origNode = origVar.getNode();
       Node origParent = (origNode == null) ? null : NodeUtil.getDeclaringParent(origNode);
-      if (parent.isLet()
-          || parent.isConst()
-          || parent.isClass()
-          || (origParent != null
-              && (origParent.isLet() || origParent.isConst() || origParent.isClass()))) {
-        compiler.report(JSError.make(n, BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR));
-        return;
-      } else if (parent.isFunction()
-          // Redeclarations of functions in global scope are fairly common, so allow them
-          // (at least for now).
-          && !s.isGlobal()
-          && origParent != null
-          && (origParent.isFunction()
-              || origParent.isLet()
-              || origParent.isConst()
-              || origParent.isClass())) {
-        compiler.report(JSError.make(n, BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR));
-        return;
+
+      switch (parent.getToken()) {
+        case CLASS:
+        case CONST:
+        case LET:
+          reportBlockScopedMultipleDeclaration(n, name, origNode);
+          return;
+
+        default:
+          break;
+      }
+
+      if (origParent != null) {
+        switch (origParent.getToken()) {
+          case CLASS:
+          case CONST:
+          case LET:
+            reportBlockScopedMultipleDeclaration(n, name, origNode);
+            return;
+
+          case FUNCTION:
+            // Redeclarations of functions in global scope are fairly common, so allow them
+            // (at least for now).
+            if (!s.isGlobal() && parent.isFunction()) {
+              reportBlockScopedMultipleDeclaration(n, name, origNode);
+              return;
+            }
+            break;
+
+          default:
+            break;
+        }
       }
 
       // Don't allow multiple variables to be declared at the top-level scope
@@ -656,19 +670,13 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           return;
         }
         if (!allowDupe) {
-          compiler.report(
-              JSError.make(
-                  n,
-                  VAR_MULTIPLY_DECLARED_ERROR,
-                  name,
-                  (origVar.getInput() != null ? origVar.getInput().getName() : "??")));
+          reportVarMultiplyDeclared(compiler, n, name, origNode);
         }
       } else if (name.equals(ARGUMENTS)
           && !(NodeUtil.isNameDeclaration(n.getParent()) && n.isName())) {
         // Disallow shadowing "arguments" as we can't handle with our current
         // scope modeling.
-        compiler.report(
-            JSError.make(n, VAR_ARGUMENTS_SHADOWED_ERROR));
+        compiler.report(JSError.make(n, VAR_ARGUMENTS_SHADOWED_ERROR));
       }
     }
 
@@ -681,6 +689,22 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         }
       }
     }
+  }
+
+  static void reportVarMultiplyDeclared(
+      AbstractCompiler compiler, Node current, String name, @Nullable Node original) {
+    compiler.report(JSError.make(current, VAR_MULTIPLY_DECLARED_ERROR, name, locationOf(original)));
+  }
+
+  private void reportBlockScopedMultipleDeclaration(
+      Node current, String name, @Nullable Node original) {
+    compiler.report(
+        JSError.make(
+            current, BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR, name, locationOf(original)));
+  }
+
+  private static String locationOf(@Nullable Node n) {
+    return (n == null) ? "<unknown>" : n.getLocation();
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */
