@@ -1642,7 +1642,7 @@ public class JSDocInfo implements Serializable {
         position.setPositionInformation(lineno, charno, lineno, charno + name.length());
 
         NamePosition nodePos = new NamePosition();
-        Node node = Node.newString(Token.NAME, name, lineno, charno);
+        Node node = Node.newString(Token.NAME, name).setLinenoCharno(lineno, charno);
         node.setLength(name.length());
         if (templateNode != null) {
           node.setStaticSourceFileFrom(templateNode);

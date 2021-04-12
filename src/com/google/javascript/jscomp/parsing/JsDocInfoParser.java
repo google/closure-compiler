@@ -2623,7 +2623,8 @@ public final class JsDocInfoParser {
     }
     String s = stream.getString();
     Node n =
-        Node.newString(Token.STRING_KEY, s, stream.getLineno(), stream.getCharno())
+        Node.newString(Token.STRING_KEY, s)
+            .setLinenoCharno(stream.getLineno(), stream.getCharno())
             .clonePropsFrom(templateNode);
     n.setLength(s.length());
     return n;
@@ -2634,16 +2635,22 @@ public final class JsDocInfoParser {
   }
 
   private Node wrapNode(Token type, Node n, int lineno, int charno) {
-    return n == null ? null : new Node(type, n, lineno, charno).clonePropsFrom(templateNode);
+    return n == null
+        ? null
+        : new Node(type, n).setLinenoCharno(lineno, charno).clonePropsFrom(templateNode);
   }
 
   private Node newNode(Token type) {
-    return new Node(type, stream.getLineno(),
-        stream.getCharno()).clonePropsFrom(templateNode);
+    return new Node(type)
+        .setLinenoCharno(stream.getLineno(), stream.getCharno())
+        .clonePropsFrom(templateNode);
   }
 
   private Node newStringNode(String s) {
-    Node n = Node.newString(s, stream.getLineno(), stream.getCharno()).clonePropsFrom(templateNode);
+    Node n =
+        Node.newString(s)
+            .setLinenoCharno(stream.getLineno(), stream.getCharno())
+            .clonePropsFrom(templateNode);
     n.setLength(s.length());
     return n;
   }

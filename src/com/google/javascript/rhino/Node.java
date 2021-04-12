@@ -285,11 +285,6 @@ public class Node implements Serializable {
       this.number = number;
     }
 
-    public NumberNode(double number, int lineno, int charno) {
-      super(Token.NUMBER, lineno, charno);
-      this.number = number;
-    }
-
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -354,11 +349,6 @@ public class Node implements Serializable {
       setString(str);
     }
 
-    StringNode(Token token, String str, int lineno, int charno) {
-      super(token, lineno, charno);
-      setString(str);
-    }
-
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -398,13 +388,6 @@ public class Node implements Serializable {
 
     TemplateLiteralSubstringNode(@Nullable String cooked, String raw) {
       super(Token.TEMPLATELIT_STRING);
-      setCooked(cooked);
-      setRaw(raw);
-    }
-
-    TemplateLiteralSubstringNode(@Nullable String cooked, String raw,
-        int lineno, int charno) {
-      super(Token.TEMPLATELIT_STRING, lineno, charno);
       setCooked(cooked);
       setRaw(raw);
     }
@@ -576,22 +559,8 @@ public class Node implements Serializable {
     right.parent = this;
   }
 
-  public Node(Token token, int lineno, int charno) {
-    this(token);
-    this.setLinenoCharno(lineno, charno);
-  }
-
-  public Node(Token token, Node child, int lineno, int charno) {
-    this(token, child);
-    this.setLinenoCharno(lineno, charno);
-  }
-
   public static Node newNumber(double number) {
     return new NumberNode(number);
-  }
-
-  public static Node newNumber(double number, int lineno, int charno) {
-    return new NumberNode(number, lineno, charno);
   }
 
   public static Node newBigInt(BigInteger bigint) {
@@ -604,14 +573,6 @@ public class Node implements Serializable {
 
   public static Node newString(Token token, String str) {
     return new StringNode(token, str);
-  }
-
-  public static Node newString(String str, int lineno, int charno) {
-    return new StringNode(Token.STRINGLIT, str, lineno, charno);
-  }
-
-  public static Node newString(Token token, String str, int lineno, int charno) {
-    return new StringNode(token, str, lineno, charno);
   }
 
   public static Node newTemplateLitString(String cooked, String raw) {
@@ -1294,28 +1255,6 @@ public class Node implements Serializable {
    */
   @Nullable private transient PropListItem propListHead;
 
-  /**
-   * COLUMN_BITS represents how many of the lower-order bits of linenoCharno are reserved for
-   * storing the column number. Bits above these store the line number. This gives us decent
-   * position information for everything except files already passed through a minimizer, where
-   * lines might be longer than 4096 characters.
-   */
-  public static final int COLUMN_BITS = 12;
-
-  /**
-   * MAX_COLUMN_NUMBER represents the maximum column number that can
-   * be represented.  JSCompiler's modifications to Rhino cause all
-   * tokens located beyond the maximum column to MAX_COLUMN_NUMBER.
-   */
-  public static final int MAX_COLUMN_NUMBER = (1 << COLUMN_BITS) - 1;
-
-  /**
-   * COLUMN_MASK stores a value where bits storing the column number
-   * are set, and bits storing the line are not set.  It's handy for
-   * separating column number from line number.
-   */
-  public static final int COLUMN_MASK = MAX_COLUMN_NUMBER;
-
   //==========================================================================
   // Source position management
 
@@ -1419,7 +1358,7 @@ public class Node implements Serializable {
     if (this.linenoCharno == -1) {
       return -1;
     } else {
-      return this.linenoCharno >>> COLUMN_BITS;
+      return this.linenoCharno >>> CHARNO_BITS;
     }
   }
 
@@ -1428,7 +1367,7 @@ public class Node implements Serializable {
     if (this.linenoCharno == -1) {
       return -1;
     } else {
-      return this.linenoCharno & COLUMN_MASK;
+      return this.linenoCharno & MAX_COLUMN_NUMBER;
     }
   }
 
@@ -1455,21 +1394,37 @@ public class Node implements Serializable {
   }
 
   /**
+   * CHARNO_BITS represents how many of the lower-order bits of linenoCharno are reserved for
+   * storing the column number. Bits above these store the line number. This gives us decent
+   * position information for everything except files already passed through a minimizer, where
+   * lines might be longer than 4096 characters.
+   */
+  private static final int CHARNO_BITS = 12;
+
+  /**
+   * MAX_COLUMN_NUMBER represents the maximum column number that can be represented. JSCompiler's
+   * modifications to Rhino cause all tokens located beyond the maximum column to MAX_COLUMN_NUMBER.
+   */
+  public static final int MAX_COLUMN_NUMBER = (1 << CHARNO_BITS) - 1;
+
+  /**
    * Merges the line number and character number in one integer.
    *
    * <p>The charno takes the first 12 bits and the line number takes the rest. If the charno is
    * greater than (2^12)-1 it is adjusted to (2^12)-1
    */
-  public final void setLinenoCharno(int lineno, int charno) {
+  public final Node setLinenoCharno(int lineno, int charno) {
     if (lineno < 0 || charno < 0) {
       this.linenoCharno = -1;
-      return;
+      return this;
     }
 
-    if (charno > COLUMN_MASK) {
-      charno = COLUMN_MASK;
+    if (charno > MAX_COLUMN_NUMBER) {
+      charno = MAX_COLUMN_NUMBER;
     }
-    this.linenoCharno = (lineno << COLUMN_BITS) | charno;
+    this.linenoCharno = (lineno << CHARNO_BITS) | charno;
+
+    return this;
   }
 
   // ==========================================================================
