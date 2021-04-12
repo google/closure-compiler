@@ -288,37 +288,29 @@ public final class SourceFileTest {
     assertThat(actualContent).isEqualTo(expectedContent);
   }
 
-  private static class CodeGeneratorHelper implements SourceFile.Generator {
-    int reads = 0;
-
-    @Override
-    public String getCode() {
-      reads++;
-      return "var a;\n";
-    }
-
-    public int numberOfReads() {
-      return reads;
-    }
-  }
-
   @Test
-  public void testGeneratedFile() throws IOException {
-    String expectedContent = "var a;";
-    CodeGeneratorHelper myGenerator = new CodeGeneratorHelper();
-    SourceFile newFile = SourceFile.fromGenerator("file.js", myGenerator);
+  public void testDiskFileWithOriginalPath() throws IOException {
+    String expectedContent = "var c;";
+
+    Path tempFile = folder.newFile("test.js").toPath();
+    MoreFiles.asCharSink(tempFile, UTF_8).write(expectedContent);
+
+    SourceFile newFile =
+        SourceFile.builder()
+            .withOriginalPath("original_test.js")
+            .buildFromFile(tempFile.toString());
     String actualContent;
 
     actualContent = newFile.getLine(1);
     assertThat(actualContent).isEqualTo(expectedContent);
-    assertThat(myGenerator.numberOfReads()).isEqualTo(1);
 
     newFile.clearCachedSource();
-    assertThat(newFile.hasSourceInMemory()).isFalse();
 
+    assertThat(newFile.hasSourceInMemory()).isFalse();
     actualContent = newFile.getLine(1);
     assertThat(actualContent).isEqualTo(expectedContent);
-    assertThat(myGenerator.numberOfReads()).isEqualTo(2);
+
+    assertThat(newFile.getName()).isEqualTo("original_test.js");
   }
 
   @Test

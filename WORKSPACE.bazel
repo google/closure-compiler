@@ -75,6 +75,15 @@ maven_import(
     licenses = ["notice"],
 )
 
+maven_import(
+    # https://github.com/google/jimfs
+    group_id = "com.google.jimfs",
+    artifact_id = "jimfs",
+    version = "1.2",
+    sha256 = "de16d5c8489729a8512f1a02fbd81f58f89249b72066987da4cc5c87ecb9f72d",
+    licenses = ["notice"],
+)
+
 git_repository(
     name = "protobuf_proto_rules",
     commit = "218ffa7dfa5408492dc86c01ee637614f8695c45",
