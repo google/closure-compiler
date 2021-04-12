@@ -17,10 +17,16 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static java.util.stream.Collectors.joining;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Truth;
+import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
@@ -29,9 +35,14 @@ import com.google.javascript.jscomp.serialization.TypePointer.DebugInfo;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -486,8 +497,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             .setPoolOffset(PrimitiveType.NUMBER_TYPE.getNumber())
             .setDebugInfo(DebugInfo.newBuilder().setDescription("NUMBER_TYPE"))
             .build();
+    TypedAst ast = compile("const x = 5;");
+    StringPool stringPool = ast.getStringPool();
 
-    assertThat(compileToAst("const x = 5;"))
+    assertThat(ast.getSourceFileList().get(0).getRoot())
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
@@ -498,7 +511,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(1) // x
+                                .setStringValuePointer(findInStringPool(stringPool, "x"))
                                 .setRelativeColumn(6)
                                 .setType(numberType)
                                 .addChild(
@@ -533,7 +546,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             .setDebugInfo(DebugInfo.newBuilder().setDescription("STRING_TYPE"))
             .build();
 
-    assertThat(compileToAst("let s = 'hello';"))
+    TypedAst ast = compile("let s = 'hello';");
+    StringPool stringPool = ast.getStringPool();
+
+    assertThat(ast.getSourceFileList().get(0).getRoot())
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("relative_column"))
@@ -546,12 +562,13 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(1) // s
+                                .setStringValuePointer(findInStringPool(stringPool, "s"))
                                 .setType(stringType)
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(2) // hello
+                                        .setStringValuePointer(
+                                            findInStringPool(stringPool, "hello"))
                                         .setType(stringType)
                                         .build())
                                 .build())
@@ -561,10 +578,12 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testAst_arrowFunction() {
-    disableTypeCheck();
-    assertThat(compileToAst("() => 'hello';"))
+    TypedAst ast = compile("() => 'hello';");
+
+    assertThat(ast.getSourceFileList().get(0).getRoot())
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
+            AstNode.getDescriptor().findFieldByName("type"),
             AstNode.getDescriptor().findFieldByName("relative_column"))
         .isEqualTo(
             AstNode.newBuilder()
@@ -586,7 +605,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(1) // hello
+                                        .setStringValuePointer(
+                                            findInStringPool(ast.getStringPool(), "hello"))
                                         .build())
                                 .build())
                         .build())
@@ -712,5 +732,51 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
       supertypes.add(typePool.getType(adjustPoolOffset(edge.getSupertype().getPoolOffset())));
     }
     return supertypes;
+  }
+
+  private void generateDiagnosticFiles() {
+    compile(
+        lines(
+            "class Foo0 {",
+            "  w() { }",
+            "}",
+            "class Foo1 extends Foo0 {",
+            "  y() { }",
+            "}",
+            "const ns = {Foo0, Foo1};",
+            "/** @suppress {checkTypes} */",
+            "const /** !Foo1 */ typeMismatch = new Foo0();"));
+  }
+
+  @GwtIncompatible
+  private static String loadFile(Path path) {
+    try (Stream<String> lines = Files.lines(path)) {
+      return lines.collect(joining("\n"));
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  @GwtIncompatible
+  private ImmutableList<Path> debugLogFiles() {
+    try {
+      Path dir =
+          Paths.get(
+              this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
+              SerializeTypesToPointers.class.getSimpleName());
+
+      try (Stream<Path> files = Files.list(dir)) {
+        return files.collect(toImmutableList());
+      }
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static void assertValidJson(String src) {
+    Truth.assertThat(src).isNotEmpty();
+
+    Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
+    new Gson().fromJson(src, clazz); // Throws if invalid
   }
 }

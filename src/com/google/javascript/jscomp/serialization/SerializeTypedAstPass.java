@@ -17,11 +17,9 @@
 package com.google.javascript.jscomp.serialization;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -64,14 +62,8 @@ public final class SerializeTypedAstPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
     TypedAstSerializer serializer =
-        TypedAstSerializer.createFromRegistryWithOptions(
-            registry,
-            serializationOptions,
-            compiler.hasTypeCheckingRun()
-                ? ImmutableList.copyOf(compiler.getTypeMismatches())
-                : ImmutableList.of());
+        TypedAstSerializer.createFromRegistryWithOptions(compiler, serializationOptions);
     TypedAst ast = serializer.serializeRoots(externs, root);
     consumer.accept(ast);
   }
