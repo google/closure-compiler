@@ -181,10 +181,12 @@ class CollapseProperties implements CompilerPass {
       // When the output chunk type is ES_MODULES, properties of the module namespace
       // must not be collapsed as they are referenced off the namespace object. The namespace
       // objects escape via the dynamic import expression.
-      //
-      // ES Module rewriting creates aliases on the module namespace object. These aliased names
-      // also escape and their properties may not be collapsed.
       for (Name name : nameMap.values()) {
+        // Test if the name is a rewritten module namespace variable and if so mark it as escaped
+        // to prevent any property collapsing.
+        //
+        // example:
+        // /** @const */ var module$foo = {};
         if (dynamicallyImportedModules.contains(name.getFullName())) {
           escaped.add(name);
           if (name.props == null) {
@@ -196,6 +198,19 @@ class CollapseProperties implements CompilerPass {
               continue;
             }
             if (propDeclaration.getNode() != null) {
+              // ES Module rewriting creates aliases on the module namespace object. These aliased
+              // names also escape and their properties may not be collapsed.
+              //
+              // example:
+              // class Foo$$module$foo {
+              //   static bar() { return 'bar'; }
+              // }
+              // /** @const */ var module$foo = {};
+              // /** @const */ module$foo.Foo = Foo$$module$foo;
+              //
+              // While module$foo.Foo cannot be collapsed because we marked the module namespace
+              // as escaped, we also need to prevent any property collapsing on the Foo$$module$foo
+              // class itself.
               Node rValue = NodeUtil.getRValueOfLValue(propDeclaration.getNode());
               if (rValue.isName()) {
                 dynamicallyImportedModuleRefs.add(rValue.getQualifiedName());
