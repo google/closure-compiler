@@ -59,7 +59,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     return new CollapseProperties(
         compiler,
         propertyCollapseLevel,
-        compiler.getOptions().chunkOutputType);
+        compiler.getOptions().chunkOutputType,
+        compiler.getOptions().getProcessCommonJSModules(),
+        compiler.getOptions().getModuleResolutionMode());
   }
 
   @Override

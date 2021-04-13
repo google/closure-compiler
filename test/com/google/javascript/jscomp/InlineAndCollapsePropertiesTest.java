@@ -47,7 +47,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     return new CompilerPass() {
       AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
       CollapseProperties collapseProperties =
-          new CollapseProperties(compiler, PropertyCollapseLevel.ALL);
+          new CollapseProperties(
+              compiler,
+              PropertyCollapseLevel.ALL,
+              compiler.getOptions().chunkOutputType,
+              compiler.getOptions().getProcessCommonJSModules(),
+              compiler.getOptions().getModuleResolutionMode());
 
       @Override
       public void process(Node externs, Node root) {

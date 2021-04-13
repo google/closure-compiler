@@ -1076,7 +1076,12 @@ public final class NormalizeTest extends CompilerTestCase {
 
           @Override
           protected CompilerPass getProcessor(Compiler compiler) {
-            return new CollapseProperties(compiler, PropertyCollapseLevel.ALL);
+            return new CollapseProperties(
+                compiler,
+                PropertyCollapseLevel.ALL,
+                compiler.getOptions().chunkOutputType,
+                compiler.getOptions().getProcessCommonJSModules(),
+                compiler.getOptions().getModuleResolutionMode());
           }
         };
 

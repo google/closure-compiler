@@ -95,23 +95,25 @@ class CollapseProperties implements CompilerPass {
   private final AbstractCompiler compiler;
   private final PropertyCollapseLevel propertyCollapseLevel;
   private final ChunkOutputType chunkOutputType;
+  private final boolean haveModulesBeenRewritten;
+  private final ResolutionMode moduleResolutionMode;
 
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
 
   private final HashSet<String> dynamicallyImportedModules = new HashSet<>();
 
-  CollapseProperties(AbstractCompiler compiler, PropertyCollapseLevel propertyCollapseLevel) {
-    this(compiler, propertyCollapseLevel, ChunkOutputType.GLOBAL_NAMESPACE);
-  }
-
   CollapseProperties(
       AbstractCompiler compiler,
       PropertyCollapseLevel propertyCollapseLevel,
-      ChunkOutputType chunkOutputType) {
+      ChunkOutputType chunkOutputType,
+      boolean haveModulesBeenRewritten,
+      ResolutionMode moduleResolutionMode) {
     this.compiler = compiler;
     this.propertyCollapseLevel = propertyCollapseLevel;
     this.chunkOutputType = chunkOutputType;
+    this.haveModulesBeenRewritten = haveModulesBeenRewritten;
+    this.moduleResolutionMode = moduleResolutionMode;
   }
 
   @Override

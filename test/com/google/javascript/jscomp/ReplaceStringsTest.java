@@ -117,7 +117,13 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         if (rename) {
           NodeTraversal.traverse(compiler, js, new Renamer());
         }
-        new CollapseProperties(compiler, PropertyCollapseLevel.ALL).process(externs, js);
+        new CollapseProperties(
+                compiler,
+                PropertyCollapseLevel.ALL,
+                compiler.getOptions().chunkOutputType,
+                compiler.getOptions().getProcessCommonJSModules(),
+                compiler.getOptions().getModuleResolutionMode())
+            .process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia = SourceInformationAnnotator.create();
           NodeTraversal.traverse(compiler, js, sia);

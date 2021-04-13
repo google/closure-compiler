@@ -2149,7 +2149,9 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> new CollapseProperties(
                   compiler,
                   options.getPropertyCollapseLevel(),
-                  options.chunkOutputType))
+                  options.chunkOutputType,
+                  options.getProcessCommonJSModules(),
+                  options.getModuleResolutionMode()))
           .setFeatureSetForOptimizations()
           .build();
 
