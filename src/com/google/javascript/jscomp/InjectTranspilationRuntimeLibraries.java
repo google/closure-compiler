@@ -37,12 +37,9 @@ import com.google.javascript.rhino.Node;
  * RewritePolyfills}.
  */
 public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean getterSetterSupported;
-
-  // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
-  private static final FeatureSet requiredForFeatures = FeatureSet.ES2015.without(FeatureSet.ES5);
 
   public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -57,10 +54,14 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       used = used.with(getScriptFeatures(script));
     }
 
-    FeatureSet mustBeCompiledAway = used.without(compiler.getOptions().getOutputFeatureSet());
+    FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
 
-    // Check for getters/setters
-    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+    // Check for references to global `Symbol` and getters/setters
+    if (!outputFeatures.contains(used)) {
+      NodeTraversal.traverse(compiler, root, this);
+    }
+
+    FeatureSet mustBeCompiledAway = used.without(outputFeatures);
 
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
@@ -118,11 +119,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
   private static FeatureSet getScriptFeatures(Node script) {
     FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
     return features != null ? features : FeatureSet.ES3;
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, requiredForFeatures, this);
   }
 
   @Override

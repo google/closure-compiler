@@ -333,7 +333,7 @@ public class TranspilationPasses {
 
   /** Injects runtime library code needed for transpiled ES2015+ code. */
   static final PassFactory injectTranspilationRuntimeLibraries =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("es6InjectRuntimeLibraries")
           .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
           .setFeatureSet(ES_NEXT_IN)
