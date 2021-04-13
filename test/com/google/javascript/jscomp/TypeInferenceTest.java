@@ -3822,7 +3822,11 @@ public final class TypeInferenceTest {
 
     assertType(getType("foo"))
         .toStringIsEqualTo(
-            "Promise<{\n" + "  Bar: function(): string,\n" + "  default: number\n" + "}>");
+            lines(
+                "Promise<{", //
+                "  Bar: function(): string,",
+                "  default: number",
+                "}>"));
   }
 
   private static void testForAllBigInt(JSType type) {
