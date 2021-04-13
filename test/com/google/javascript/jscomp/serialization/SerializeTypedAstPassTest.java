@@ -25,7 +25,6 @@ import static java.util.stream.Collectors.joining;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.truth.Truth;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -774,7 +773,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   private static void assertValidJson(String src) {
-    Truth.assertThat(src).isNotEmpty();
+    assertThat(src).isNotEmpty();
 
     Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
     new Gson().fromJson(src, clazz); // Throws if invalid
