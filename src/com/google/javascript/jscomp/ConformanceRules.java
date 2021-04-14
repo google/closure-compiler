@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
@@ -2061,6 +2062,87 @@ public final class ConformanceRules {
         return true;
       }
       return false;
+    }
+  }
+
+  /**
+   * Ban {@code Element#setAttribute} with attribute names specified in {@code value} or any dynamic
+   * string.
+   */
+  public static final class BanSetAttribute extends AbstractRule {
+    private final ImmutableList<String> bannedAttrs;
+
+    private static final String SET_ATTRIBUTE = "setAttribute";
+    private static final String SET_ATTRIBUTE_NS = "setAttributeNS";
+    private static final String SET_ATTRIBUTE_NODE = "setAttributeNode";
+    private static final String SET_ATTRIBUTE_NODE_NS = "setAttributeNodeNS";
+    private static final ImmutableSet<String> BANNED_PROPERTIES =
+        ImmutableSet.of(SET_ATTRIBUTE, SET_ATTRIBUTE_NS, SET_ATTRIBUTE_NODE, SET_ATTRIBUTE_NODE_NS);
+
+    /**
+     * Create a custom checker to ban {@code Element#setAttribute} based on conformance a
+     * requirement spec. Names in {@code value} fields indicate the attribute names that should be
+     * blocked. Throws {@link InvalidRequirementSpec} if the requirement is malformed.
+     */
+    public BanSetAttribute(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      bannedAttrs =
+          requirement.getValueList().stream()
+              .map(v -> v.toLowerCase(Locale.ROOT))
+              .collect(toImmutableList());
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      Optional<String> calledProperty = getBannedPropertyName(node);
+      if (!calledProperty.isPresent()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      if (!calledProperty.get().equals(SET_ATTRIBUTE)) {
+        return ConformanceResult.VIOLATION;
+      }
+
+      // If the function is called with less than two arguments it's either a false positive or
+      // uncompilable code.
+      if (node.getChildCount() < 3) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      Node attr = node.getSecondChild();
+      if (!attr.isStringLit()) {
+        return ConformanceResult.VIOLATION;
+      }
+
+      String attrName = attr.getString();
+      if (bannedAttrs.contains(attrName.toLowerCase(Locale.ROOT))) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private Optional<String> getBannedPropertyName(Node node) {
+      if (!node.isCall()) {
+        return Optional.absent();
+      }
+      Node target = node.getFirstChild();
+      if (!target.isGetProp()) {
+        return Optional.absent();
+      }
+      String propertyName = target.getString();
+      if (!BANNED_PROPERTIES.contains(propertyName)) {
+        return Optional.absent();
+      }
+      JSType type = target.getFirstChild().getJSType();
+      if (type == null) {
+        return Optional.absent();
+      }
+      JSType elementType = compiler.getTypeRegistry().getGlobalType("Element");
+      if (type.isSubtypeOf(elementType)) {
+        return Optional.of(propertyName);
+      }
+      return Optional.absent();
     }
   }
 

@@ -3038,6 +3038,46 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBanSetAttribute() {
+    configuration =
+        lines(
+            "requirement: {\n",
+            "  type: CUSTOM\n",
+            "  value: 'src'\n",
+            "  value: 'HREF'\n",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanSetAttribute'\n",
+            "  error_message: 'BanSetAttribute Message'\n",
+            "}");
+
+    String externs =
+        lines(
+            DEFAULT_EXTERNS,
+            "/** @constructor */ function Element() {}",
+            "/** @constructor @extends {Element} */ function HTMLScriptElement() {}\n");
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement).setAttribute('SRc', 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement).setAttribute('href', 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("var attr = 'unknown'; (new HTMLScriptElement).setAttributeNS(null, attr, 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testNoWarning(
+        externs(externs), srcs("(new HTMLScriptElement).setAttribute('data-random', 'xxx')"));
+  }
+
+  @Test
   public void testBanStaticThis() {
     configuration =
         lines(
