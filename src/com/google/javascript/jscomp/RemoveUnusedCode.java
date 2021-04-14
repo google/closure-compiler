@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -45,50 +46,39 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * Garbage collection for variable and function definitions. Basically performs
- * a mark-and-sweep type algorithm over the JavaScript parse tree.
+ * Garbage collection for variable and function definitions. Basically performs a mark-and-sweep
+ * type algorithm over the JavaScript parse tree.
  *
- * For each scope:
- * (1) Scan the variable/function declarations at that scope.
- * (2) Traverse the scope for references, marking all referenced variables.
- *     Unlike other compiler passes, this is a pre-order traversal, not a
- *     post-order traversal.
- * (3) If the traversal encounters an assign without other side-effects,
- *     create a continuation. Continue the continuation iff the assigned
- *     variable is referenced.
- * (4) When the traversal completes, remove all unreferenced variables.
+ * <p>For each scope: (1) Scan the variable/function declarations at that scope. (2) Traverse the
+ * scope for references, marking all referenced variables. Unlike other compiler passes, this is a
+ * pre-order traversal, not a post-order traversal. (3) If the traversal encounters an assign
+ * without other side-effects, create a continuation. Continue the continuation iff the assigned
+ * variable is referenced. (4) When the traversal completes, remove all unreferenced variables.
  *
- * If it makes it easier, you can think of the continuations of the traversal
- * as a reference graph. Each continuation represents a set of edges, where the
- * source node is a known variable, and the destination nodes are lazily
- * evaluated when the continuation is executed.
+ * <p>If it makes it easier, you can think of the continuations of the traversal as a reference
+ * graph. Each continuation represents a set of edges, where the source node is a known variable,
+ * and the destination nodes are lazily evaluated when the continuation is executed.
  *
- * This algorithm is similar to the algorithm used by {@code SmartNameRemoval}.
- * {@code SmartNameRemoval} maintains an explicit graph of dependencies
- * between global symbols. However, {@code SmartNameRemoval} cannot handle
- * non-trivial edges in the reference graph ("A is referenced iff both B and C
- * are referenced"), or local variables. {@code SmartNameRemoval} is also
- * substantially more complicated because it tries to handle namespaces
- * (which is largely unnecessary in the presence of {@code CollapseProperties}.
+ * <p>This algorithm is similar to the algorithm used by {@code SmartNameRemoval}. {@code
+ * SmartNameRemoval} maintains an explicit graph of dependencies between global symbols. However,
+ * {@code SmartNameRemoval} cannot handle non-trivial edges in the reference graph ("A is referenced
+ * iff both B and C are referenced"), or local variables. {@code SmartNameRemoval} is also
+ * substantially more complicated because it tries to handle namespaces (which is largely
+ * unnecessary in the presence of {@code CollapseProperties}.
  *
- * This pass also uses a more complex analysis of assignments, where
- * an assignment to a variable or a property of that variable does not
- * necessarily count as a reference to that variable, unless we can prove
- * that it modifies external state. This is similar to
- * {@code FlowSensitiveInlineVariables}, except that it works for variables
- * used across scopes.
+ * <p>This pass also uses a more complex analysis of assignments, where an assignment to a variable
+ * or a property of that variable does not necessarily count as a reference to that variable, unless
+ * we can prove that it modifies external state. This is similar to {@code
+ * FlowSensitiveInlineVariables}, except that it works for variables used across scopes.
  *
- * Multiple datastructures are used to accumulate nodes, some of which are
- * later removed. Since some nodes encompass a subtree of nodes, the removal
- * can sometimes pre-remove other nodes which are also referenced in these
- * datastructures for later removal. Attempting double-removal violates scope
- * change notification constraints so there is a desire to excise
- * already-removed subtree nodes from these datastructures. But not all of the
- * datastructures are conducive to flexible removal and the ones that are
- * conducive don't necessarily track all flavors of nodes. So instead of
- * updating datastructures on the fly a pre-check is performed to skip
- * already-removed nodes right before the moment an attempt to remove them
- * would otherwise be made.
+ * <p>Multiple datastructures are used to accumulate nodes, some of which are later removed. Since
+ * some nodes encompass a subtree of nodes, the removal can sometimes pre-remove other nodes which
+ * are also referenced in these datastructures for later removal. Attempting double-removal violates
+ * scope change notification constraints so there is a desire to excise already-removed subtree
+ * nodes from these datastructures. But not all of the datastructures are conducive to flexible
+ * removal and the ones that are conducive don't necessarily track all flavors of nodes. So instead
+ * of updating datastructures on the fly a pre-check is performed to skip already-removed nodes
+ * right before the moment an attempt to remove them would otherwise be made.
  */
 class RemoveUnusedCode implements CompilerPass {
 
@@ -109,10 +99,10 @@ class RemoveUnusedCode implements CompilerPass {
   /**
    * Used to hold continuations that need to be invoked.
    *
-   * When we find a subtree of the AST that may not need to be traversed, we create a Continuation
-   * for it. If we later discover that we do need to traverse it, we add it to this worklist
-   * rather than traversing it immediately. If we invoked the traversal immediately, we could
-   * end up modifying a data structure in the traversal as we're iterating over it.
+   * <p>When we find a subtree of the AST that may not need to be traversed, we create a
+   * Continuation for it. If we later discover that we do need to traverse it, we add it to this
+   * worklist rather than traversing it immediately. If we invoked the traversal immediately, we
+   * could end up modifying a data structure in the traversal as we're iterating over it.
    */
   private final Deque<Continuation> worklist = new ArrayDeque<>();
 
@@ -126,9 +116,7 @@ class RemoveUnusedCode implements CompilerPass {
   /** Single value to use for all vars for which we cannot remove anything at all. */
   private final VarInfo canonicalUnremovableVarInfo;
 
-  /**
-   * Keep track of scopes that we've traversed.
-   */
+  /** Keep track of scopes that we've traversed. */
   private final List<Scope> allFunctionParamScopes = new ArrayList<>();
 
   /**
@@ -153,6 +141,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   // Allocated & cleaned up by process()
   private LogFile removalLog;
+  private LogFile keepLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -235,6 +224,51 @@ class RemoveUnusedCode implements CompilerPass {
 
     RemoveUnusedCode build() {
       return new RemoveUnusedCode(this);
+    }
+  }
+
+  /** Supplies the string needed for an entry in the keeper log. */
+  private static class KeepLogRecord implements Supplier<String> {
+    final String varName;
+    final String reason;
+    // Non-null if there's a node that should be considered a reference to the variable.
+    @Nullable final Node referenceNode;
+
+    KeepLogRecord(String varName, String reason, @Nullable Node referenceNode) {
+      this.varName = varName;
+      this.reason = reason;
+      this.referenceNode = referenceNode;
+    }
+
+    @Override
+    public String get() {
+      final String location = referenceNode == null ? "" : referenceNode.getLocation();
+      return SimpleFormat.format("%s\t%s\t%s", varName, location, reason);
+    }
+
+    static KeepLogRecord forVarInfo(VarInfo varInfo, String reason) {
+      return new KeepLogRecord(varInfo.getVarName(), reason, /* referenceNode= */ null);
+    }
+
+    static KeepLogRecord forVar(Var var, String reason) {
+      String varName = var.getName();
+      Node nameNode = var.getNameNode();
+      return new KeepLogRecord(varName, reason, nameNode);
+    }
+
+    static KeepLogRecord forPolyfillReference(PolyfillInfo polyfillInfo, Node referenceNode) {
+      return new KeepLogRecord(
+          polyfillInfo.getName(), "unguarded polyfill reference", referenceNode);
+    }
+
+    static KeepLogRecord forReferenceNode(Node referenceNode) {
+      checkArgument(referenceNode.isName(), referenceNode);
+      return new KeepLogRecord(referenceNode.getString(), "referenced", referenceNode);
+    }
+
+    static KeepLogRecord forReferenceNode(Node referenceNode, String reason) {
+      checkArgument(referenceNode.isName(), referenceNode);
+      return new KeepLogRecord(referenceNode.getString(), reason, referenceNode);
     }
   }
 
@@ -336,19 +370,23 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   /**
-   * Traverses the root, removing all unused variables. Multiple traversals
-   * may occur to ensure all unused variables are removed.
+   * Traverses the root, removing all unused variables. Multiple traversals may occur to ensure all
+   * unused variables are removed.
    */
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     pinnedPropertyNames.addAll(compiler.getExternProperties());
 
-    try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
-      removalLog = logFile; // avoid passing the log file through a bunch of methods
+    try (LogFile removalLogFile =
+            compiler.createOrReopenIndexedLog(this.getClass(), "removals.log");
+        LogFile keepLogFile = compiler.createOrReopenIndexedLog(this.getClass(), "keepers.log")) {
+      removalLog = removalLogFile; // avoid passing the log file through a bunch of methods
+      keepLog = keepLogFile; // avoid passing the log file through a bunch of methods
       traverseAndRemoveUnusedReferences(root);
     } finally {
       removalLog = null;
+      keepLog = null;
     }
   }
 
@@ -395,13 +433,11 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   /**
-   * Traverses everything in the current scope and marks variables that
-   * are referenced.
+   * Traverses everything in the current scope and marks variables that are referenced.
    *
-   * During traversal, we identify subtrees that will only be
-   * referenced if their enclosing variables are referenced. Instead of
-   * traversing those subtrees, we create a continuation for them,
-   * and traverse them lazily.
+   * <p>During traversal, we identify subtrees that will only be referenced if their enclosing
+   * variables are referenced. Instead of traversing those subtrees, we create a continuation for
+   * them, and traverse them lazily.
    */
   private void traverseNode(Node n, Scope scope) {
     Node parent = n.getParent();
@@ -424,6 +460,7 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildFunctionDeclaration(n);
             varInfo.addRemovable(functionDeclaration);
             if (parent.isExport()) {
+              keepLog.log(KeepLogRecord.forVarInfo(varInfo, "exported function"));
               varInfo.setIsExplicitlyNotRemovable();
             }
           } else {
@@ -530,6 +567,7 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
+          keepLog.log(KeepLogRecord.forReferenceNode(n));
           traverseNameNode(n, scope).setIsExplicitlyNotRemovable();
         }
         break;
@@ -575,7 +613,12 @@ class RemoveUnusedCode implements CompilerPass {
 
     if (polyfills.containsKey(propertyName)) {
       for (PolyfillInfo info : polyfills.get(propertyName)) {
-        info.considerPossibleReference(getProp);
+        if (info.isRemovable) {
+          info.considerPossibleReference(getProp);
+          if (!info.isRemovable) {
+            keepLog.log(KeepLogRecord.forPolyfillReference(info, getProp));
+          }
+        }
       }
     }
 
@@ -674,8 +717,8 @@ class RemoveUnusedCode implements CompilerPass {
         traverseNode(valueNode, scope);
       } else if (targetNode.getFirstChild().isThis()
           && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
-      RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
-      traverseRemovableAssignValue(valueNode, builder, scope);
+        RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
+        traverseRemovableAssignValue(valueNode, builder, scope);
         considerForIndependentRemoval(
             builder.buildNamedPropertyAssign(compoundAssignNode, targetNode));
       } else {
@@ -691,7 +734,12 @@ class RemoveUnusedCode implements CompilerPass {
   private VarInfo traverseNameNode(Node n, Scope scope) {
     if (polyfills.containsKey(n.getString())) {
       for (PolyfillInfo info : polyfills.get(n.getString())) {
-        info.considerPossibleReference(n);
+        if (info.isRemovable) {
+          info.considerPossibleReference(n);
+          if (!info.isRemovable) {
+            keepLog.log(KeepLogRecord.forPolyfillReference(info, n));
+          }
+        }
       }
     }
 
@@ -918,6 +966,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (exceptionNameNode.isName()) {
       // exceptionNameNode can be an empty node if not using a binding in 2019.
       VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
+      keepLog.log(KeepLogRecord.forReferenceNode(exceptionNameNode, "catch exception variable"));
       exceptionVarInfo.setIsExplicitlyNotRemovable();
     }
     traverseNode(block, scope);
@@ -933,6 +982,7 @@ class RemoveUnusedCode implements CompilerPass {
       // using previously-declared loop variable. e.g.
       // `for (varName of collection) {}`
       VarInfo varInfo = traverseNameNode(iterationTarget, forScope);
+      keepLog.log(KeepLogRecord.forReferenceNode(iterationTarget, "enhanced for-loop variable"));
       varInfo.setIsExplicitlyNotRemovable();
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
       // loop has const/var/let declaration
@@ -955,6 +1005,7 @@ class RemoveUnusedCode implements CompilerPass {
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
         VarInfo varInfo = traverseNameNode(declNode, forScope);
+        keepLog.log(KeepLogRecord.forReferenceNode(declNode, "enhanced for-loop variable"));
         varInfo.setIsExplicitlyNotRemovable();
       }
     } else {
@@ -998,6 +1049,9 @@ class RemoveUnusedCode implements CompilerPass {
         } else if (astAnalyzer.mayHaveSideEffects(valueNode)) {
           // TODO(bradfordcsmith): Actually allow for removing the variable while keeping the
           // valueNode for its side-effects.
+          keepLog.log(
+              KeepLogRecord.forReferenceNode(
+                  nameNode, "for-loop variable with side effect assignment"));
           varInfo.setIsExplicitlyNotRemovable();
           traverseNode(valueNode, scope);
         } else {
@@ -1252,7 +1306,6 @@ class RemoveUnusedCode implements CompilerPass {
    * Handle a class that is not the RHS child of an assignment or a variable declaration
    * initializer.
    *
-   * <p>For
    * @param classNode
    * @param scope
    */
@@ -1275,6 +1328,7 @@ class RemoveUnusedCode implements CompilerPass {
     VarInfo varInfo = traverseNameNode(classNameNode, scope);
     if (classNode.getParent().isExport()) {
       // Cannot remove an exported class.
+      keepLog.log(KeepLogRecord.forReferenceNode(classNameNode, "exported class"));
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       // Use traverseChildren() here, because we should not consider any properties on the exported
@@ -1282,6 +1336,9 @@ class RemoveUnusedCode implements CompilerPass {
       traverseChildren(classBodyNode, classScope);
     } else if (astAnalyzer.mayHaveSideEffects(baseClassExpression)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
+      keepLog.log(
+          KeepLogRecord.forReferenceNode(
+              classNameNode, "class extends expression with side effects"));
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
@@ -1349,13 +1406,11 @@ class RemoveUnusedCode implements CompilerPass {
   /**
    * Traverses a function
    *
-   * ES6 scopes of a function include the parameter scope and the body scope
-   * of the function.
+   * <p>ES6 scopes of a function include the parameter scope and the body scope of the function.
    *
-   * Note that CATCH blocks also create a new scope, but only for the
-   * catch variable. Declarations within the block actually belong to the
-   * enclosing scope. Because we don't remove catch variables, there's
-   * no need to treat CATCH blocks differently like we do functions.
+   * <p>Note that CATCH blocks also create a new scope, but only for the catch variable.
+   * Declarations within the block actually belong to the enclosing scope. Because we don't remove
+   * catch variables, there's no need to treat CATCH blocks differently like we do functions.
    */
   private void traverseFunction(Node function, Scope parentScope) {
     checkState(function.hasXChildren(3), function);
@@ -1601,6 +1656,8 @@ class RemoveUnusedCode implements CompilerPass {
           continue;
         }
 
+        keepLog.log(
+            KeepLogRecord.forReferenceNode(lValue, "parameter of function using `arguments`"));
         getVarInfo(getVarForNameNode(lValue, functionScope)).setIsExplicitlyNotRemovable();
       }
       // `arguments` is never removable.
@@ -1635,6 +1692,7 @@ class RemoveUnusedCode implements CompilerPass {
    * Get the right {@link VarInfo} object to use for the given {@link Var}.
    *
    * <p>This method is responsible for managing the entries in {@link #varInfoMap}.
+   *
    * <p>Note: Several {@link Var}s may share the same {@link VarInfo} when they should be treated
    * the same way.
    */
@@ -1642,22 +1700,28 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
+      keepLog.log(KeepLogRecord.forVar(var, "extern definition"));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
+      keepLog.log(KeepLogRecord.forVar(var, "exported by coding convention"));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       return canonicalUnremovableVarInfo;
     } else {
       VarInfo varInfo = varInfoMap.get(var);
       if (varInfo == null) {
-        varInfo = new RealVarInfo();
+        varInfo = new RealVarInfo(var.getName());
         if (var.getParentNode().isParamList()) {
           varInfo.setHasNonLocalOrNonLiteralValue();
         }
-        if (isGlobal ? !removeGlobals : !removeLocalVars) {
-          // Cannot use canonicalUnremovableVarInfo here, because each varInfo
-          // needs to track what value is assigned to it for the purpose of
-          // correctly allowing or preventing removal of properties set on it.
+        // Cannot use canonicalUnremovableVarInfo for the 2 non-removable cases below, because each
+        // varInfo needs to track what value is assigned to it for the purpose of correctly allowing
+        // or preventing removal of properties set on it.
+        if (!removeGlobals && isGlobal) {
+          keepLog.log(KeepLogRecord.forVar(var, "not removing globals"));
+          varInfo.setIsExplicitlyNotRemovable();
+        } else if (!removeLocalVars && !isGlobal) {
+          keepLog.log(KeepLogRecord.forVar(var, "not removing locals"));
           varInfo.setIsExplicitlyNotRemovable();
         }
         varInfoMap.put(var, varInfo);
@@ -1722,9 +1786,8 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   /**
-   * Our progress in a traversal can be expressed completely as the
-   * current node and scope. The continuation lets us save that
-   * information so that we can continue the traversal later.
+   * Our progress in a traversal can be expressed completely as the current node and scope. The
+   * continuation lets us save that information so that we can continue the traversal later.
    */
   private class Continuation {
     private final Node node;
@@ -2034,8 +2097,8 @@ class RemoveUnusedCode implements CompilerPass {
   /**
    * Represents `something instanceof varName`.
    *
-   * <p>If `varName` is removed, this expression can be replaced with `false` or
-   * `(something, false)` to preserve side effects.
+   * <p>If `varName` is removed, this expression can be replaced with `false` or `(something,
+   * false)` to preserve side effects.
    */
   private class InstanceofName extends Removable {
     final Node instanceofNode;
@@ -2791,6 +2854,8 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private interface VarInfo {
 
+    String getVarName();
+
     /**
      * Add a Removable representing code that must be removed if this variable is removed.
      *
@@ -2840,6 +2905,13 @@ class RemoveUnusedCode implements CompilerPass {
   private final class CanonicalUnremovableVarInfo implements VarInfo {
 
     @Override
+    public String getVarName() {
+      // Logging of the decision to keep these should be done when the canonicalUnremovableVarInfo
+      // is selected to represent the Var, not later on when the connection to the name is gone.
+      throw new UnsupportedOperationException("CanonicalUnremovableVarInfo has no recorded name");
+    }
+
+    @Override
     public void addRemovable(Removable removable) {
       // Immediately pass the argument off for potential independent removal.
       considerForIndependentRemoval(removable);
@@ -2876,12 +2948,13 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** Tracks the removable code and other state related to variables we may be able to remove. */
   private final class RealVarInfo implements VarInfo {
+    final String varName;
     /**
-     * Objects that represent variable declarations, assignments, or class setup calls that can
-     * be removed.
+     * Objects that represent variable declarations, assignments, or class setup calls that can be
+     * removed.
      *
-     * NOTE: Once we realize that we cannot remove the variable, this list will be cleared and
-     * no more will be added.
+     * <p>NOTE: Once we realize that we cannot remove the variable, this list will be cleared and no
+     * more will be added.
      */
     final List<Removable> removables = new ArrayList<>();
 
@@ -2902,6 +2975,15 @@ class RemoveUnusedCode implements CompilerPass {
     // At least one assignment to the variable is a function or class literal.
     boolean hasFunctionOrClassLiteralValue = false;
     boolean requiresLocalLiteralValueForRemoval = false;
+
+    public RealVarInfo(String varName) {
+      this.varName = varName;
+    }
+
+    @Override
+    public String getVarName() {
+      return varName;
+    }
 
     @Override
     public void addRemovable(Removable removable) {
@@ -2930,6 +3012,7 @@ class RemoveUnusedCode implements CompilerPass {
         requiresLocalLiteralValueForRemoval = true;
       }
       if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
+        keepLog.log(KeepLogRecord.forVarInfo(this, "has non-local or non-literal value"));
         setIsExplicitlyNotRemovable();
       }
 
@@ -2975,7 +3058,6 @@ class RemoveUnusedCode implements CompilerPass {
       }
       removables.clear();
     }
-
   }
 
   /**
