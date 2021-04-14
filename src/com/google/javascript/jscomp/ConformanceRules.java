@@ -173,15 +173,23 @@ public final class ConformanceRules {
      * Returns true if the given path matches one of the prefixes or regexps, and false otherwise
      */
     boolean matches(String path) {
+      // If the path ends with .closure.js, it is probably a tsickle-generated file, and there may
+      // be entries in the allow list for the TypeScript path
+      String tsPath =
+          path.endsWith(".closure.js")
+              ? path.substring(0, path.length() - ".closure.js".length()) + ".ts"
+              : null;
       if (prefixes != null) {
         for (String prefix : prefixes) {
-          if (!path.isEmpty() && path.startsWith(prefix)) {
+          if (!path.isEmpty()
+              && (path.startsWith(prefix) || (tsPath != null && tsPath.startsWith(prefix)))) {
             return true;
           }
         }
       }
 
-      return regexp != null && regexp.matcher(path).find();
+      return regexp != null
+          && (regexp.matcher(path).find() || (tsPath != null && regexp.matcher(tsPath).find()));
     }
   }
 

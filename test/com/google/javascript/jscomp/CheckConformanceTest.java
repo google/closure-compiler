@@ -366,6 +366,19 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testViolationAllowlisted2Ts() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  allowlist_regexp: 'file.ts$'\n "
+            + "}";
+
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("file.closure.js", "eval()")));
+  }
+
+  @Test
   public void testViolationWhitelistedIgnoresRegex() {
     configuration =
         "requirement: {\n"
@@ -397,6 +410,27 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(
         ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
     testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
+  }
+
+  @Test
+  public void testViolationAllowlistedIgnoresRegexTs() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  allowlist: 'file.ts'\n "
+            + "}";
+
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("file.closure.js", "eval()")));
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file.closure.js", "eval()")));
+    testNoWarning(
+        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file.closure.js", "eval()")));
+    testNoWarning(
+        ImmutableList.of(
+            SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.closure.js", "eval()")));
+    testNoWarning(
+        ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.closure.js", "eval()")));
   }
 
   @Test
@@ -522,6 +556,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFileOnOnlyApplyToIsCheckedTs() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  only_apply_to: 'foo.ts'\n "
+            + "}";
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(SourceFile.fromCode("foo.closure.js", "eval()"));
+    testWarning(inputs, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+  }
+
+  @Test
   public void testFileNotOnOnlyApplyToIsNotChecked() {
     configuration =
         "requirement: {\n"
@@ -544,6 +592,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
     ImmutableList<SourceFile> input =
         ImmutableList.of(SourceFile.fromCode("foo_test.js", "eval()"));
+    testWarning(input, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+  }
+
+  @Test
+  public void testFileOnOnlyApplyToRegexpIsCheckedTs() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  only_apply_to_regexp: 'test.ts$'\n "
+            + "}";
+    ImmutableList<SourceFile> input =
+        ImmutableList.of(SourceFile.fromCode("foo_test.closure.js", "eval()"));
     testWarning(input, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
   }
 
@@ -769,6 +831,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning("anything;");
   }
+
 
   @Test
   public void testReportLooseTypeViolations() {
