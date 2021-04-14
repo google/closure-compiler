@@ -3808,7 +3808,6 @@ public final class TypeInferenceTest {
 
   @Test
   public void testDynamicImportAfterModuleRewriting() {
-    compiler.getOptions().setProcessCommonJSModules(true);
     withModules(
         ImmutableList.of(
             lines(

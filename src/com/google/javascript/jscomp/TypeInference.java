@@ -97,7 +97,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
   private final ModuleImportResolver moduleImportResolver;
-  private final boolean moduleTranspilationBeforeTypeInference;
   // A record is pushed onto this stack during the traversal of each optional chain.
   // Inference of the type at the end of the optional chain requires scope information
   // from traversing the start of the chain. This stack serves as a communication channel
@@ -136,7 +135,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
             compiler, TypedScope.createLatticeBottom(syntacticScope.getRootNode()));
-    this.moduleTranspilationBeforeTypeInference = compiler.getOptions().processCommonJSModules;
   }
 
   @CheckReturnValue
@@ -2641,7 +2639,10 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
           if (exportNamespaceType != null) {
             templateType = exportNamespaceType;
           }
-        } else if (moduleTranspilationBeforeTypeInference) {
+        } else {
+          // Module transpilation has occurred before type inference so a MODULE_BODY node
+          // no longer exists. Traverse the script to locate the module namespace variable
+          // and retrieve the type from it.
           Node moduleName = NodeUtil.findPreorder(
               scriptNode,
               (node) -> node.matchesQualifiedName(targetPath.toModuleName()),
