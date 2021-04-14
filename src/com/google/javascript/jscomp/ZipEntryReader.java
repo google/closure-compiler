@@ -42,7 +42,7 @@ import java.util.zip.ZipFile;
  * time by re-reading the zip for each entry.
  */
 @GwtIncompatible("java.util.zip.ZipFile")
-final class ZipEntryReader implements Serializable {
+public final class ZipEntryReader implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -124,5 +124,13 @@ final class ZipEntryReader implements Serializable {
   public String read(Charset charset) throws IOException {
     CachedZipFile zipFile = zipFileCache.getUnchecked(zipPath);
     return CharStreams.toString(zipFile.getReader(entryName, charset));
+  }
+
+  String getZipPath() {
+    return this.zipPath;
+  }
+
+  String getEntryName() {
+    return this.entryName;
   }
 }

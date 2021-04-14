@@ -22,9 +22,11 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceInformationAnnotator;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.RhinoStringPool;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.ArrayList;
@@ -88,10 +90,20 @@ final class TypedAstSerializer {
 
   private JavascriptFile serializeScriptNode(Node script) {
     checkState(script.isScript());
-    String filename = checkNotNull(script.getSourceFileName());
+    StaticSourceFile sourceFile = checkNotNull(script.getStaticSourceFile());
+    String filename = checkNotNull(sourceFile.getName());
     previousLine = previousColumn = 0;
     AstNode root = visit(script);
-    return JavascriptFile.newBuilder().setFilename(filename).setRoot(root).build();
+    checkState(
+        sourceFile instanceof SourceFile,
+        "Unexpected SourceFile %s for node %s",
+        sourceFile,
+        script);
+    return JavascriptFile.newBuilder()
+        .setFilename(filename)
+        .setRoot(root)
+        .setCodeLocation(((SourceFile) sourceFile).getCodeLocationProto())
+        .build();
   }
 
   private AstNode.Builder createWithPositionInfo(Node n) {

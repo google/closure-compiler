@@ -26,6 +26,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
+import com.google.javascript.jscomp.serialization.JavascriptFile.CodeLocation;
+import com.google.javascript.jscomp.serialization.JavascriptFile.FileOnDisk;
+import com.google.javascript.jscomp.serialization.JavascriptFile.ZipEntryOnDisk;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.File;
 import java.io.FileInputStream;
@@ -653,6 +656,12 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return null;
     }
 
+    /**
+     * Returns a representation of this loader that can be serialized/deserialized to reconstruct
+     * this SourceFile
+     */
+    abstract CodeLocation toProtoLocation(String fileName);
+
     static final class Preloaded extends CodeLoader {
       private static final long serialVersionUID = 2L;
       private final String preloadedCode;
@@ -665,6 +674,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       @Override
       String loadUncachedCode() {
         return this.preloadedCode;
+      }
+
+      @Override
+      CodeLocation toProtoLocation(String fileName) {
+        return CodeLocation.newBuilder().setPreloadedContents(this.preloadedCode).build();
       }
     }
 
@@ -711,6 +725,20 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       private Charset getCharset() {
         return Charset.forName(this.serializableCharset);
       }
+
+      @Override
+      CodeLocation toProtoLocation(String fileName) {
+        String actualPath = this.relativePath.toString();
+        return CodeLocation.newBuilder()
+            .setFileOnDisk(
+                FileOnDisk.newBuilder()
+                    .setActualPath(
+                        // to save space, don't serialize the path if equal to the fileName.
+                        fileName.equals(actualPath) ? "" : actualPath)
+                    // save space by not serializing UTF_8 (the default charset)
+                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset))
+            .build();
+      }
     }
 
     @GwtIncompatible("java.io.File")
@@ -737,6 +765,19 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
       private Charset getCharset() {
         return Charset.forName(this.serializableCharset);
+      }
+
+      @Override
+      CodeLocation toProtoLocation(String fileName) {
+        return CodeLocation.newBuilder()
+            .setZipEntry(
+                ZipEntryOnDisk.newBuilder()
+                    .setEntryName(this.zipEntryReader.getEntryName())
+                    .setZipPath(this.zipEntryReader.getZipPath())
+                    // save space by not serializing UTF_8 (the default charset)
+                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset)
+                    .build())
+            .build();
       }
     }
   }
@@ -807,5 +848,9 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
 
     this.lineOffsets = lineOffsets;
+  }
+
+  public CodeLocation getCodeLocationProto() {
+    return this.loader.toProtoLocation(this.getName());
   }
 }

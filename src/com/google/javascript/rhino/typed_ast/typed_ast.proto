@@ -27,9 +27,38 @@ message StringPool {
 
 message JavascriptFile {
   // required
+  // does not need to correspond to a path on disk
   string filename = 1;
   // required
   AstNode root = 2;
+  // required
+  CodeLocation code_location = 3;
+
+  message CodeLocation {
+    // how to read the file contents
+    oneof loader {
+      string preloaded_contents = 1;
+      FileOnDisk file_on_disk = 2;
+      ZipEntryOnDisk zip_entry = 3;
+    }
+  }
+
+  message FileOnDisk {
+    // optional; if empty then JavascriptFile::filename is the default path
+    string actual_path = 1;
+    // charset name as defined by java.nio.charset.CharSet
+    // optional; if empty than UTF_8 is the charset
+    string charset = 2;
+  }
+
+  message ZipEntryOnDisk {
+    // path to zip file on disk
+    string zip_path = 1;
+    // entry in zip file
+    string entry_name = 2;
+    // charset name as defined by java.nio.charset.CharSet
+    string charset = 3;
+  }
 }
 
 message AstNode {

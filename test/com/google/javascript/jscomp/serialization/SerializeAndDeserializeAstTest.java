@@ -16,21 +16,36 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static java.nio.charset.StandardCharsets.UTF_16;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -309,6 +324,76 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertNode(globalizedXName).hasOriginalNameThat().isEqualTo("x");
   }
 
+  @Test
+  public void serializesFileWithPreloadedCode() throws IOException {
+    SourceFile a = SourceFile.fromCode("a.js", "const a = 0;");
+    SourceFile b = SourceFile.fromCode("b.js", "const b = a;");
+
+    DeserializedAst result =
+        this.testAndReturnResult(srcs(ImmutableList.of(a, b)), expected(ImmutableList.of(a, b)));
+    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+    Node scriptB = result.getRoot().getSecondChild().getSecondChild();
+
+    assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
+    assertThat(scriptB.getStaticSourceFile()).isInstanceOf(SourceFile.class);
+
+    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;");
+    assertThat(((SourceFile) scriptB.getStaticSourceFile()).getCode()).isEqualTo("const b = a;");
+  }
+
+  @Test
+  public void serializeAndDeserializeFileOnDiskWithUTF16() throws IOException {
+    Path pathA = Files.createTempFile("tmp", "a.js");
+    Files.write(pathA, ImmutableList.of("const ಠ_ಠ = 0;"), UTF_16);
+
+    SourceFile a = SourceFile.fromFile(pathA.toString(), UTF_16);
+
+    DeserializedAst result =
+        this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
+    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+
+    assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
+    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode())
+        .isEqualTo("const ಠ_ಠ = 0;\n");
+  }
+
+  @Test
+  public void serializeAndDeserializeFileOnDiskWithOriginalName() throws IOException {
+    Path pathA = Files.createTempFile("tmp", "a.js");
+    Files.write(pathA, ImmutableList.of("const a = 0;"));
+
+    SourceFile a =
+        SourceFile.builder().withOriginalPath("original_a.js").buildFromFile(pathA.toString());
+
+    DeserializedAst result =
+        this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
+    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+
+    assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
+    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;\n");
+    assertThat(scriptA.getSourceFileName()).isEqualTo("original_a.js");
+  }
+
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
+
+  @Test
+  public void serializesZipEntries() throws IOException {
+    // Setup environment.
+    String expectedContent = "const a = 0;";
+    Path jsZipPath = folder.newFile("test.js.zip").toPath();
+    createZipWithContent(jsZipPath, expectedContent);
+
+    SourceFile a = SourceFile.fromFile(jsZipPath + "!/a.js", UTF_8);
+
+    DeserializedAst result =
+        this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
+    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+
+    assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
+    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;");
+    assertThat(((SourceFile) scriptA.getStaticSourceFile()).getName()).isEqualTo(a.getName());
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);
@@ -325,7 +410,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   private DeserializedAst testAndReturnResult(Sources code, Expected expected) {
-    TypedAst ast = compile(code);
+    return this.testAndReturnResult(externs(ImmutableList.of()), code, expected);
+  }
+
+  private DeserializedAst testAndReturnResult(Externs externs, Sources code, Expected expected) {
+    TypedAst ast = compile(externs, code);
     Node expectedRoot = this.parseExpectedJs(expected);
     DeserializedAst result = TypedAstDeserializer.deserialize(ast);
     Node newRoot = result.getRoot().getLastChild();
@@ -336,15 +425,32 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     return result;
   }
 
-  TypedAst compile(Sources code) {
+  TypedAst compile(Externs externs, Sources code) {
     TypedAst[] result = new TypedAst[1];
     consumer = ast -> result[0] = ast;
-    super.testSame(code);
+    super.testSame(externs, code);
     byte[] serialized = result[0].toByteArray();
     try {
       return TypedAst.parseFrom(serialized);
     } catch (InvalidProtocolBufferException e) {
       throw new AssertionError(e);
     }
+  }
+
+  private static void createZipWithContent(Path zipFile, String content) throws IOException {
+    Instant lastModified = Instant.now();
+    if (zipFile.toFile().exists()) {
+      // Ensure that file modified date is updated, otherwise could cause flakiness (b/123962282).
+      lastModified = Files.getLastModifiedTime(zipFile).toInstant().plusSeconds(1);
+      zipFile.toFile().delete();
+    }
+
+    zipFile.toFile().createNewFile();
+    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
+      zos.putNextEntry(new ZipEntry("a.js"));
+      zos.write(content.getBytes(UTF_8));
+      zos.closeEntry();
+    }
+    Files.setLastModifiedTime(zipFile, FileTime.from(lastModified));
   }
 }
