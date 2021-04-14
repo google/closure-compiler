@@ -123,9 +123,7 @@ class CollapseProperties implements CompilerPass {
       NodeTraversal.traverse(
           compiler,
           root,
-          new FindDynamicallyImportedModules(
-              compiler.getOptions().processCommonJSModules,
-              compiler.getOptions().moduleResolutionMode));
+          new FindDynamicallyImportedModules(haveModulesBeenRewritten, moduleResolutionMode));
     }
 
     GlobalNamespace namespace = new GlobalNamespace(compiler, root);
