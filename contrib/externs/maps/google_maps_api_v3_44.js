@@ -1861,7 +1861,8 @@ google.maps.DirectionsService = function() {};
  * Issue a directions search request. <aside class="note">Note: <strong>For the
  * beta release, <code>v=beta</code>, the callback is optional and a Promise is
  * returned</strong>. More information is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.DirectionsRequest} request
  * @param {(function(?google.maps.DirectionsResult,
  *     !google.maps.DirectionsStatus): void)=} callback
@@ -2222,7 +2223,8 @@ google.maps.DistanceMatrixService = function() {};
  * Issues a distance matrix request. <aside class="note">Note: <strong>For the
  * beta release, <code>v=beta</code>, the callback is optional and a Promise is
  * returned</strong>. More information is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.DistanceMatrixRequest} request
  * @param {(function(?google.maps.DistanceMatrixResponse,
  *     !google.maps.DistanceMatrixStatus): void)=} callback
@@ -2357,7 +2359,8 @@ google.maps.ElevationService = function() {};
  * returned as distance-based samples along that path. <aside class="note">Note:
  * <strong>A Promise is only returned for the beta release,
  * <code>v=beta</code></strong>. More information is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.PathElevationRequest} request
  * @param {(function(?Array<!google.maps.ElevationResult>,
  *     !google.maps.ElevationStatus): void)=} callback
@@ -2370,7 +2373,8 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(
  * Makes an elevation request for a list of discrete locations. <aside
  * class="note">Note: <strong>For the beta release, <code>v=beta</code>, the
  * callback is optional and a Promise is returned</strong>. More information is
- * available in the <a href="/maps/documentation/javascript/promises">Promises
+ * available in the <a
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
  * guide</a>.</aside>
  * @param {!google.maps.LocationElevationRequest} request
  * @param {(function(?Array<!google.maps.ElevationResult>,
@@ -2446,7 +2450,8 @@ google.maps.Geocoder = function() {};
  * Geocode a request. <aside class="note">Note: <strong>A Promise is only
  * returned for the beta release, <code>v=beta</code></strong>. More information
  * is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.GeocoderRequest} request
  * @param {?(function(?Array<!google.maps.GeocoderResult>,
  *     !google.maps.GeocoderStatus): void)} callback
@@ -5106,7 +5111,7 @@ google.maps.MarkerLabel = function() {};
  * <code>MarkerLabel</code>. CSS classes should not be used to change the
  * position nor orientation of the label (e.g. using translations and rotations)
  * if also using <a
- * href="/maps/documentation/javascript/examples/marker-collision-management">marker
+ * href="https://developers.google.com/maps/documentation/javascript/examples/marker-collision-management">marker
  * collision management</a>.
  * @type {string|undefined}
  */
@@ -5344,7 +5349,8 @@ google.maps.MaxZoomService = function() {};
  * <code>MaxZoomResult</code>.<aside class="note">Note: <strong>For the beta
  * release, <code>v=beta</code>, the callback is optional and a Promise is
  * returned</strong>. More information is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
  * @param {(function(!google.maps.MaxZoomResult): void)=} callback
  * @return {?Promise<!google.maps.MaxZoomResult>}
@@ -6955,7 +6961,8 @@ google.maps.StreetViewService = function() {};
  * <aside class="note">Note: <strong>For the beta release, <code>v=beta</code>,
  * the callback is optional and a Promise is returned</strong>. More information
  * is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.StreetViewLocationRequest|!google.maps.StreetViewPanoRequest}
  *     request
  * @param {(function(?google.maps.StreetViewPanoramaData,
@@ -8780,9 +8787,9 @@ google.maps.places.AutocompleteOptions.prototype.componentRestrictions;
 /**
  * Fields to be included for the Place in the details response when the details
  * are successfully retrieved, <a
- * href="/maps/billing/understanding-cost-of-use#places-product">which will be
- * billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all available
- * fields will be returned and billed for (this is not recommended for
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
  * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
@@ -8910,7 +8917,8 @@ google.maps.places.AutocompleteService = function() {};
  * request. <aside class="note">Note: <strong>For the beta release,
  * <code>v=beta</code>, the callback is optional and a Promise is
  * returned</strong>. More information is available in the <a
- * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
+ * href="https://developers.google.com/maps/documentation/javascript/promises">Promises
+ * guide</a>.</aside>
  * @param {!google.maps.places.AutocompletionRequest} request
  * @param {(function(?Array<!google.maps.places.AutocompletePrediction>,
  *     !google.maps.places.PlacesServiceStatus): void)=} callback
@@ -9066,9 +9074,9 @@ google.maps.places.FindPlaceFromPhoneNumberRequest = function() {};
 
 /**
  * Fields to be included in the response, <a
- * href="/maps/billing/understanding-cost-of-use#places-product">which will be
- * billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all available
- * fields will be returned and billed for (this is not recommended for
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
  * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
@@ -9099,9 +9107,9 @@ google.maps.places.FindPlaceFromQueryRequest = function() {};
 
 /**
  * Fields to be included in the response, <a
- * href="/maps/billing/understanding-cost-of-use#places-product">which will be
- * billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all available
- * fields will be returned and billed for (this is not recommended for
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
+ * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
  * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
@@ -9178,12 +9186,13 @@ google.maps.places.PlaceDetailsRequest = function() {};
 
 /**
  * Fields to be included in the details response, <a
- * href="/maps/billing/understanding-cost-of-use#places-product">which will be
- * billed for</a>. If no fields are specified or <code>[&#39;ALL&#39;]</code> is
- * passed in, all available fields will be returned and billed for (this is not
- * recommended for production deployments). For a list of fields see {@link
- * google.maps.places.PlaceResult}. Nested fields can be specified with
- * dot-paths (for example, <code>"geometry.location"</code>).
+ * href="https://developers.google.com/maps/billing/understanding-cost-of-use#places-product">which
+ * will be billed for</a>. If no fields are specified or
+ * <code>[&#39;ALL&#39;]</code> is passed in, all available fields will be
+ * returned and billed for (this is not recommended for production deployments).
+ * For a list of fields see {@link google.maps.places.PlaceResult}. Nested
+ * fields can be specified with dot-paths (for example,
+ * <code>"geometry.location"</code>).
  * @type {!Array<string>|undefined}
  */
 google.maps.places.PlaceDetailsRequest.prototype.fields;
