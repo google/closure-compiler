@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +42,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableCreateModuleMap();
     enableTypeCheck();
   }
 
@@ -164,6 +166,47 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
         "/** @const */ a.b = {};",
         "/** @constructor */ a.b.Foo = function() {};",
         "/** @type Array<!a.b.Foo> */ var foos = [];"));
+
+    // in goog.module
+    test(
+        externs(new TestExternsBuilder().addClosureExterns().build()),
+        srcs(
+            lines(
+                "goog.module('ns');",
+                "/** @const */ var a = {};",
+                "/** @const */ a.b = {};",
+                "/** @constructor */ a.b.Foo = function() {};",
+                "/** @type Array<!a.b.Foo> */ var foos = [];",
+                "exports = {a}; ")),
+        warning(ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC));
+
+    // in goog.module with a goog.require
+    test(
+        externs(new TestExternsBuilder().addClosureExterns().build()),
+        srcs(
+            lines(
+                "goog.module('ns');",
+                "/** @const */ var a = {};",
+                "/** @const */ a.b = {};",
+                "exports = {a};"),
+            lines(
+                "goog.module('ns2');",
+                "const {a} = goog.require('ns');",
+                "/** @constructor */ a.b.Foo = function() {};",
+                "/** @type Array<!a.b.Foo> */ var foos = [];",
+                "exports = {foos}; ")),
+        warning(ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC));
+
+    // in goog.provide
+    test(
+        externs(new TestExternsBuilder().addClosureExterns().build()),
+        srcs(
+            lines(
+                "goog.provide('ns.a');",
+                "/** @const */ ns.a.b = {};",
+                "/** @constructor */ ns.a.b.Foo = function() {};",
+                "/** @type Array<!ns.a.b.Foo> */ var foos = [];")),
+        warning(ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC));
   }
 
   private void warnImplicitlyNullable(String js) {

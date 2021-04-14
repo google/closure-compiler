@@ -381,6 +381,11 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // Analyzer checks must be run after typechecking but before module rewriting.
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
+      checks.add(analyzerChecks);
+    }
+
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
@@ -430,11 +435,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkConsts);
-
-    // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
-      checks.add(analyzerChecks);
-    }
 
     if (options.checkGlobalNamesLevel.isOn()) {
       checks.add(checkGlobalNames);
