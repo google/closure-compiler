@@ -52,6 +52,7 @@ public final class TypedAstDeserializer {
   private final TypedAst typedAst;
   private final ColorDeserializer colorDeserializer;
   private final LinkedHashMap<InputId, CompilerInput> inputsById = new LinkedHashMap<>();
+  private final Wtf8.Decoder wtf8Decoder;
   private FeatureSet currentFileFeatures = null;
   private Node currentTemplateNode = null; // use as template for source file information
   private int previousLine;
@@ -60,6 +61,7 @@ public final class TypedAstDeserializer {
   private TypedAstDeserializer(TypedAst typedAst, ColorDeserializer colorDeserializer) {
     this.typedAst = typedAst;
     this.colorDeserializer = colorDeserializer;
+    this.wtf8Decoder = Wtf8.decoder(typedAst.getStringPool().getMaxLength());
   }
 
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
@@ -156,7 +158,7 @@ public final class TypedAstDeserializer {
     scriptNode.setStaticSourceFile(sourceFile);
     JsAst ast = new JsAst(scriptNode);
     CompilerInput input = new CompilerInput(ast);
-    InputId inputId = new InputId(sourceFile.getName());
+    InputId inputId = input.getInputId();
     this.inputsById.put(inputId, input);
     scriptNode.setInputId(inputId);
     scriptNode.putProp(Node.FEATURE_SET, currentFileFeatures);
@@ -355,7 +357,7 @@ public final class TypedAstDeserializer {
         "Found pointer <%s> that points outside of string pool. Pool contents:\n%s",
         pointer,
         stringPool);
-    return Wtf8Encoder.decodeFromWtf8(stringPool.get(pointer));
+    return this.wtf8Decoder.decode(stringPool.get(pointer));
   }
 
   private String getString(AstNode n) {

@@ -156,6 +156,7 @@ public class ColorDeserializerTest {
         StringPool.newBuilder()
             .addStrings(ByteString.copyFromUtf8("x"))
             .addStrings(ByteString.copyFromUtf8("y"))
+            .setMaxLength(1)
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
 

@@ -18,15 +18,23 @@ package com.google.javascript.jscomp.serialization;
 import com.google.protobuf.ByteString;
 
 /** no-op j2cl replacement */
-final class Wtf8Encoder {
+final class Wtf8 {
 
-  private Wtf8Encoder() {}
+  private Wtf8() {}
 
   static ByteString encodeToWtf8(String s) {
     return ByteString.copyFromUtf8(s);
   }
 
-  static String decodeFromWtf8(ByteString serialized) {
-    return serialized.toStringUtf8();
+  static Decoder decoder(int maxLength) {
+    return new Decoder();
+  }
+
+  static class Decoder {
+    private Decoder() {}
+
+    String decode(ByteString serialized) {
+      return serialized.toStringUtf8();
+    }
   }
 }

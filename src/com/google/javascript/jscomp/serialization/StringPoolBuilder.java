@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
  */
 final class StringPoolBuilder {
   private final LinkedHashMap<String, Integer> stringPool = new LinkedHashMap<>();
+  private int maxLength = 0;
 
   StringPoolBuilder() {
     this.put("");
@@ -39,14 +40,17 @@ final class StringPoolBuilder {
   /** Inserts the given string into the string pool if not present and returns its index */
   int put(String string) {
     checkNotNull(string);
+
+    if (string.length() > this.maxLength) {
+      this.maxLength = string.length();
+    }
+
     return this.stringPool.computeIfAbsent(string, (unused) -> this.stringPool.size());
   }
 
   StringPool build() {
-    StringPool.Builder builder = StringPool.newBuilder();
-    this.stringPool.keySet().stream()
-        .map(Wtf8Encoder::encodeToWtf8)
-        .forEachOrdered(builder::addStrings);
+    StringPool.Builder builder = StringPool.newBuilder().setMaxLength(this.maxLength);
+    this.stringPool.keySet().stream().map(Wtf8::encodeToWtf8).forEachOrdered(builder::addStrings);
     return builder.build();
   }
 }

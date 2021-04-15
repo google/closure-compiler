@@ -23,6 +23,9 @@ message StringPool {
   // the "0th" index must always be the empty string so "0" may be used as a
   // default for "no string"
   repeated bytes strings = 1;
+
+  // The number of codepoints in the longest pool entry.
+  int32 max_length = 2;
 }
 
 message JavascriptFile {
