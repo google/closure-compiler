@@ -81,16 +81,18 @@ public final class SourceFileTest {
 
   @Test
   public void testLineOffset_serialization() {
-    testLineOffsetHelper((code) -> serializeRoundTrip(SourceFile.fromCode("test.js", code)));
+    testLineOffsetHelper(
+        (code) -> serializeRoundTrip(SourceFile.fromCode("test.js", code, SourceKind.NON_CODE)));
   }
 
   @Test
   public void testLineOffset_serialization_noReloadingSource() {
     testLineOffsetHelper(
         (code) -> {
-          SourceFile inMemory = SourceFile.fromCode("test.js", code);
+          SourceFile inMemory = SourceFile.fromCode("test.js", code, SourceKind.NON_CODE);
           assertThat(inMemory.getLineOfOffset(0)).isEqualTo(1); // Trigger line offset generation
-          SourceFile fakeOnDisk = SourceFile.fromFile("fake_on_disk.js");
+          SourceFile fakeOnDisk =
+              SourceFile.fromFile("fake_on_disk.js", UTF_8, SourceKind.NON_CODE);
 
           fakeOnDisk.restoreFrom(inMemory);
           assertThat(fakeOnDisk.getLineOfOffset(0)).isEqualTo(1);
@@ -314,8 +316,27 @@ public final class SourceFileTest {
   }
 
   @Test
+  public void testCanOnlySerializeNonCode() throws IOException, ClassNotFoundException {
+    SourceFile strong = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.STRONG);
+    SourceFile weak = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.WEAK);
+    SourceFile extern = SourceFile.fromCode("file.js", "var i;", SourceKind.EXTERN);
+    SourceFile nonCode = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.NON_CODE);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+    // Files representing JS sources must be serialized via TypedAstSerializer.
+    assertThrows(Exception.class, () -> oos.writeObject(strong));
+    assertThrows(Exception.class, () -> oos.writeObject(weak));
+    assertThrows(Exception.class, () -> oos.writeObject(extern));
+
+    oos.writeObject(nonCode);
+    oos.close();
+  }
+
+  @Test
   public void testFromCodeSerialization() throws IOException, ClassNotFoundException {
-    SourceFile sourceFile = SourceFile.fromCode("file.js", "var i = 0;");
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "var i = 0;", SourceKind.NON_CODE);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     oos.writeObject(sourceFile);

@@ -28,7 +28,6 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
  * An AST generated totally by the compiler.
  */
 public final class SyntheticAst implements SourceAst {
-  private static final long serialVersionUID = 1L;
 
   private final InputId inputId;
   private final SourceFile sourceFile;
@@ -44,9 +43,17 @@ public final class SyntheticAst implements SourceAst {
     this(sourceName, SourceKind.STRONG);
   }
 
+  SyntheticAst(InputId inputId) {
+    this(inputId, SourceKind.STRONG);
+  }
+
   SyntheticAst(String sourceName, SourceKind kind) {
-    this.inputId = new InputId(sourceName);
-    this.sourceFile = SourceFile.fromCode(sourceName, "", kind);
+    this(new InputId(sourceName), kind);
+  }
+
+  SyntheticAst(InputId inputId, SourceKind kind) {
+    this.inputId = inputId;
+    this.sourceFile = SourceFile.fromCode(inputId.getIdName(), "", kind);
     clearAst();
   }
 

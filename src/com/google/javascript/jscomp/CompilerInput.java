@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -55,8 +54,8 @@ public class CompilerInput extends DependencyInfo.Base {
   private JSModule module;
   private final InputId id;
 
-  // The AST. Transient so we don't accidentally serialize RecoverableJsAst instances.
-  private transient SourceAst ast;
+  // The AST.
+  private final SourceAst ast;
 
   // DependencyInfo to delegate to.
   private DependencyInfo dependencyInfo;
@@ -68,9 +67,8 @@ public class CompilerInput extends DependencyInfo.Base {
   private ModuleType jsModuleType = ModuleType.NONE;
 
   // An AbstractCompiler for doing parsing.
-  // We do not want to persist this across serialized state.
-  private transient AbstractCompiler compiler;
-  private transient ModulePath modulePath;
+  private AbstractCompiler compiler;
+  private ModulePath modulePath;
 
   // TODO(tjgq): Whether a CompilerInput is an externs file is determined by the `isExtern`
   // constructor argument and the `setIsExtern` method. Both are necessary because, while externs
@@ -355,22 +353,6 @@ public class CompilerInput extends DependencyInfo.Base {
           .setHasNoCompileAnnotation(info != null && info.isNoCompile())
           .build();
     }
-  }
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(java.io.ObjectOutputStream oos) throws IOException {
-    oos.defaultWriteObject();
-    SourceAst unwrappedAst = ast;
-    if (unwrappedAst instanceof RecoverableJsAst) {
-      unwrappedAst = ((RecoverableJsAst) unwrappedAst).unwrapRealSourceAst();
-    }
-    oos.writeObject(unwrappedAst);
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-    in.defaultReadObject();
-    ast = (SourceAst) in.readObject();
   }
 
   private static class DepsFinder {

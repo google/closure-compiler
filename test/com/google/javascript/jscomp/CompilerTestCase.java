@@ -841,6 +841,8 @@ public abstract class CompilerTestCase {
   protected final void enableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
+    // passes in stage 2 never have acesses to a script's feature set.
+    scriptFeatureValidationEnabled = false;
   }
 
   /** Run using singlestage compilation. */
@@ -903,7 +905,7 @@ public abstract class CompilerTestCase {
   protected final void enableNormalize() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.normalizeEnabled = true;
-    this.multistageCompilation = true;
+    this.enableMultistageCompilation();
   }
 
   /** Perform AST transpilation before running the test pass. */
@@ -1524,9 +1526,8 @@ public abstract class CompilerTestCase {
         // Only run multistage compilation once, if asked.
         boolean runMultistageCompilation = multistageCompilation && i == 0;
 
-        // Run type -> color replacement whenever multistage compilation is requested as that pass
-        // always runs at the end of stage 1.
-        if ((replaceTypesWithColors && i == 0) || runMultistageCompilation) {
+        // Multistage compilation already converts types to colors so don't run the pass twice.
+        if ((replaceTypesWithColors && i == 0) && !multistageCompilation) {
           new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
               .process(externsRoot, mainRoot);
         }

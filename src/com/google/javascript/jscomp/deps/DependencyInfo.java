@@ -26,21 +26,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.Immutable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A data structure for JS dependency information for a single .js file.
- */
-public interface DependencyInfo extends Serializable {
+/** A data structure for JS dependency information for a single .js file. */
+public interface DependencyInfo {
 
   /** A dependency link between two files, e.g. goog.require('namespace'), import 'file'; */
   @AutoValue
   @Immutable
-  abstract class Require implements Serializable {
+  abstract class Require {
     public static final Require BASE = googRequireSymbol("goog");
 
     public enum Type {
