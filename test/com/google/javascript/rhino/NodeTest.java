@@ -147,6 +147,19 @@ public class NodeTest {
   }
 
   @Test
+  public void testIsEquivalentTo_considersDifferentEsModuleExports() {
+    Node exportAllFrom = new Node(Token.EXPORT); // export * from './other/module'
+    exportAllFrom.putBooleanProp(Node.EXPORT_ALL_FROM, true);
+    Node exportDefault = new Node(Token.EXPORT); // export default function foo() {
+    exportDefault.putBooleanProp(Node.EXPORT_DEFAULT, true);
+    Node simpleExport = new Node(Token.EXPORT); // export {x} or export const x = 0;
+
+    assertThat(exportAllFrom.isEquivalentTo(exportDefault)).isFalse();
+    assertThat(exportAllFrom.isEquivalentTo(simpleExport)).isFalse();
+    assertThat(exportDefault.isEquivalentTo(simpleExport)).isFalse();
+  }
+
+  @Test
   public void testIsEquivalentTo_withSlashV_isDifferent() {
     Node node1 = Node.newString("\u000B");
     node1.putBooleanProp(Node.SLASH_V, true);

@@ -1772,6 +1772,8 @@ public class Node {
           Node::isOptionalChainStart,
           Node::isStaticMember,
           Node::isYieldAll,
+          (n) -> n.getIntProp(Prop.EXPORT_DEFAULT),
+          (n) -> n.getIntProp(Prop.EXPORT_ALL_FROM),
           (n) -> n.getIntProp(Prop.SLASH_V),
           (n) -> n.getIntProp(Prop.INCRDECR),
           (n) -> n.getIntProp(Prop.QUOTED),
