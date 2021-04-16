@@ -576,6 +576,40 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAst_numberInCast() {
+    TypePointer unknownType =
+        TypePointer.newBuilder()
+            .setPoolOffset(PrimitiveType.UNKNOWN_TYPE.getNumber())
+            .setDebugInfo(DebugInfo.newBuilder().setDescription("UNKNOWN_TYPE"))
+            .build();
+
+    assertThat(compileToAst("/** @type {?} */ (1);"))
+        .ignoringFieldDescriptors(
+            AstNode.getDescriptor().findFieldByName("relative_line"),
+            AstNode.getDescriptor().findFieldByName("relative_column"))
+        .isEqualTo(
+            AstNode.newBuilder()
+                .setKind(NodeKind.SOURCE_FILE)
+                .addChild(
+                    AstNode.newBuilder()
+                        .setKind(NodeKind.EXPRESSION_STATEMENT)
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.CAST)
+                                .setType(unknownType)
+                                .addChild(
+                                    AstNode.newBuilder()
+                                        .setKind(NodeKind.NUMBER_LITERAL)
+                                        .addBooleanProperty(NodeProperty.IS_PARENTHESIZED)
+                                        .addBooleanProperty(NodeProperty.COLOR_FROM_CAST)
+                                        .setDoubleValue(1)
+                                        .setType(unknownType)
+                                        .build())
+                                .build()))
+                .build());
+  }
+
+  @Test
   public void testAst_arrowFunction() {
     TypedAst ast = compile("() => 'hello';");
 

@@ -175,7 +175,7 @@ final class TypedAstSerializer {
     if (n.isGeneratorSafe()) {
       props.add(NodeProperty.IS_GENERATOR_SAFE);
     }
-    if (n.isColorFromTypeCast()) {
+    if (n.getJSTypeBeforeCast() != null) {
       props.add(NodeProperty.COLOR_FROM_CAST);
     }
     if (!n.isIndexable()) {

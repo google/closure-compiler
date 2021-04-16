@@ -181,6 +181,9 @@ public final class TypedAstDeserializer {
     int currentColumn = previousColumn + astNode.getRelativeColumn();
     Node n = deserializeSingleNode(astNode);
     n.setStaticSourceFileFrom(this.currentTemplateNode);
+    if (astNode.hasType()) {
+      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
+    }
     deserializeProperties(n, astNode);
     n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc()));
     n.setLinenoCharno(currentLine, currentColumn);
@@ -193,9 +196,6 @@ public final class TypedAstDeserializer {
       // context-dependent, and we need to know the parent and/or grandparent.
       recordScriptFeatures(parent, n, deserializedChild);
       setOriginalNameIfPresent(child, deserializedChild);
-    }
-    if (astNode.hasType()) {
-      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
     }
     return n;
   }
