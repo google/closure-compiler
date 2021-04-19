@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -223,7 +224,7 @@ public final class ColorDeserializer {
       ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
       SingletonColorFields.Builder builder =
           SingletonColorFields.builder()
-              .setId(serialized.getUuid())
+              .setId(ColorId.fromAscii(serialized.getUuid()))
               .setClosureAssert(serialized.getClosureAssert())
               .setInvalidating(serialized.getIsInvalidating())
               .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())

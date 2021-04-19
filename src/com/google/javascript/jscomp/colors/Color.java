@@ -163,7 +163,7 @@ public abstract class Color implements Serializable {
     throw new AssertionError();
   }
 
-  public final ImmutableSet<String> getId() {
+  public final ImmutableSet<ColorId> getId() {
     return collect(this, SingletonColorFields::getId);
   }
 
