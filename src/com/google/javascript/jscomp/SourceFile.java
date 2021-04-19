@@ -790,11 +790,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(ObjectOutputStream os) throws Exception {
-    checkState(
-        this.getKind().equals(SourceKind.NON_CODE),
-        "JS SourceFiles must not be serialized and are reconstructed by TypedAstDeserializer. "
-            + "\nHit on:  %s",
-        this);
     os.defaultWriteObject();
     this.serializeLineOffsetsToVarintDeltas(os);
   }

@@ -53,6 +53,10 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,7 +71,10 @@ import javax.annotation.Nullable;
  * This class implements the root of the intermediate representation.
  *
  */
-public class Node {
+
+public class Node implements Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   private enum Prop {
     // Is this Node within parentheses
@@ -356,6 +363,13 @@ public class Node {
       clone.str = this.str;
       return clone;
     }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+
+      this.str = RhinoStringPool.addOrGet(this.str);
+    }
   }
 
   private static final class TemplateLiteralSubstringNode extends Node {
@@ -411,9 +425,17 @@ public class Node {
       clone.cooked = cooked;
       return clone;
     }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+
+      setCooked(this.cooked);
+      setRaw(this.raw);
+    }
   }
 
-  private abstract static class PropListItem {
+  private abstract static class PropListItem implements Serializable {
     final @Nullable PropListItem next;
     final byte propType;
 
@@ -3175,5 +3197,116 @@ public class Node {
 
   public final boolean isYield() {
     return this.token == Token.YIELD;
+  }
+
+  private static final Token[] TOKEN_VALUES = createTokenValues();
+
+  private static Token[] createTokenValues() {
+    Token[] values = Token.values();
+    checkState(values.length < Byte.MAX_VALUE - Byte.MIN_VALUE);
+    return values;
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+    // Do not call out.defaultWriteObject() as all the fields are transient and this class does not
+    // have a superclass.
+
+    out.writeByte(token.ordinal());
+
+    writeEncodedInt(out, linenoCharno);
+    writeEncodedInt(out, length);
+    out.writeObject(this.originalName);
+
+    // Serialize the embedded children linked list here to limit the depth of recursion (and avoid
+    // serializing redundant information like the previous reference)
+    Node currentChild = first;
+    while (currentChild != null) {
+      out.writeObject(currentChild);
+      currentChild = currentChild.next;
+    }
+    // Null marks the end of the children.
+    out.writeObject(null);
+    out.writeObject(propListHead);
+    out.writeObject((Color) this.jstypeOrColor);
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws Exception {
+    // Do not call in.defaultReadObject() as all the fields are transient and this class does not
+    // have a superclass.
+
+    token = TOKEN_VALUES[in.readUnsignedByte()];
+    linenoCharno = readEncodedInt(in);
+    length = readEncodedInt(in);
+    this.setOriginalName((String) in.readObject());
+
+    // Deserialize the children list restoring the value of the previous reference.
+    first = (Node) in.readObject();
+    if (first != null) {
+      checkState(first.parent == null);
+      first.parent = this;
+
+      Node currentChild;
+      Node lastChild = first;
+      while ((currentChild = (Node) in.readObject()) != null) {
+        checkState(currentChild.parent == null);
+        currentChild.parent = this;
+        // previous is never null, either it points to the previous sibling or if it is the first
+        // sibling it points to the last one.
+        checkState(currentChild.previous == null);
+        currentChild.previous = lastChild;
+        checkState(lastChild.next == null);
+        lastChild.next = currentChild;
+        lastChild = currentChild;
+      }
+      // Close the reverse circular list.
+      checkState(first.previous == null);
+      first.previous = lastChild;
+    }
+    propListHead = (PropListItem) in.readObject();
+    this.jstypeOrColor = (Color) in.readObject();
+  }
+
+  /**
+   * Encode integers using variable length encoding.
+   *
+   * <p>Encodes an integer as a sequence of 7-bit values with a continuation bit. For example the
+   * number 3912 (0111 0100 1000) is encoded in two bytes as follows 0xC80E (1100 1000 0000 1110),
+   * i.e. first byte will be the lower 7 bits with a continuation bit set and second byte will
+   * consist of the upper 7 bits with the continuation bit unset.
+   *
+   * <p>This encoding aims to reduce the serialized footprint for the most common values, reducing
+   * the footprint for all positive values that are smaller than 2^21 (~2000000): 0 - 127 are
+   * encoded in one byte 128 - 16384 are encoded in two bytes 16385 - 2097152 are encoded in three
+   * bytes 2097153 - 268435456 are encoded in four bytes. values greater than 268435456 and negative
+   * values are encoded in 5 bytes.
+   *
+   * <p>Most values for the length field will be encoded with one byte and most values for
+   * linenoCharno will be encoded with 2 or 3 bytes. (Value -1, which is used to mark absence will
+   * use 5 bytes, and could be accommodated in the present scheme by an offset of 1 if it leads to
+   * size improvements).
+   */
+  @GwtIncompatible("ObjectOutput")
+  private void writeEncodedInt(ObjectOutput out, int value) throws IOException {
+    while (value > 0X7f || value < 0) {
+      out.writeByte(((value & 0X7f) | 0x80));
+      value >>>= 7;
+    }
+    out.writeByte(value);
+  }
+
+  @GwtIncompatible("ObjectInput")
+  private int readEncodedInt(ObjectInput in) throws IOException {
+    int value = 0;
+    int shift = 0;
+    byte current;
+
+    while ((current = in.readByte()) < 0) {
+      value |= (current & 0x7f) << shift;
+      shift += 7;
+    }
+    value |= current << shift;
+    return value;
   }
 }

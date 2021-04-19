@@ -20,15 +20,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.Es6SortedDependencies;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -59,9 +56,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   private final String name;
 
   /** Source code inputs */
-  // non-final for deserilaization
-  // CompilerInputs must be explicitly added to the JSModule again after deserialization
-  private transient List<CompilerInput> inputs = new ArrayList<>();
+  private final List<CompilerInput> inputs = new ArrayList<>();
 
   /** Modules that this module depends on */
   private final List<JSModule> deps = new ArrayList<>();
@@ -341,11 +336,5 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
 
   public int getIndex() {
     return index;
-  }
-
-  @GwtIncompatible("ObjectinputStream")
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    in.defaultReadObject();
-    this.inputs = new ArrayList<>();
   }
 }

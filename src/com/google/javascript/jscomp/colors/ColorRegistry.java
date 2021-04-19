@@ -20,10 +20,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableMap;
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 
 /** Memoizes all native color instances */
-public final class ColorRegistry {
+public final class ColorRegistry implements Serializable {
   ImmutableMap<NativeColorId, Color> nativeColors;
 
   private ColorRegistry(ImmutableMap<NativeColorId, Color> nativeColors) {

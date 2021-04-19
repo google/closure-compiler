@@ -50,11 +50,9 @@ public class NoninjectingCompiler extends Compiler {
   @Override
   @GwtIncompatible
   public final void saveState(OutputStream outputStream) throws IOException {
+    super.saveState(outputStream);
     ObjectOutputStream out = new ObjectOutputStream(outputStream);
     out.writeObject(injected);
-    // call the super method only after writing 'injected' to avoid issues deserializing a Java
-    // object after TypedAST proto deserialization
-    super.saveState(outputStream);
   }
 
   @SuppressWarnings("unchecked")
@@ -62,10 +60,10 @@ public class NoninjectingCompiler extends Compiler {
   @GwtIncompatible
   public final void restoreState(InputStream inputStream)
       throws IOException, ClassNotFoundException {
+    super.restoreState(inputStream);
     ObjectInputStream in = new ObjectInputStream(inputStream);
     injected.clear();
     injected.addAll((Set<String>) in.readObject());
-    super.restoreState(inputStream);
   }
 
   public final ImmutableSet<String> getInjected() {

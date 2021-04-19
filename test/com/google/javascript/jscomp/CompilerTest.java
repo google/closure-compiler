@@ -46,6 +46,10 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -1166,6 +1170,17 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testInputSerialization() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    CompilerInput input = new CompilerInput(SourceFile.fromCode(
+          "tmp", "function foo() {}"));
+    Node ast = input.getAstRoot(compiler);
+    CompilerInput newInput = (CompilerInput) deserialize(compiler, serialize(input));
+    assertThat(ast.isEquivalentTo(newInput.getAstRoot(compiler))).isTrue();
+  }
+
+  @Test
   public void testExternsDependencySorting() {
     List<SourceFile> inputs =
         ImmutableList.of(
@@ -1882,6 +1897,34 @@ public final class CompilerTest {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setEmitUseStrict(false);
     return options;
+  }
+
+  private static byte[] serialize(Object obj) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (ObjectOutputStream out = new ObjectOutputStream(baos)) {
+      out.writeObject(obj);
+    }
+    return baos.toByteArray();
+  }
+
+  private static Object deserialize(final Compiler compiler, byte[] bytes)
+      throws IOException, ClassNotFoundException {
+
+    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
+      public CompilerObjectInputStream(InputStream in) throws IOException {
+        super(in);
+      }
+
+      @Override
+      public AbstractCompiler getCompiler() {
+        return compiler;
+      }
+    }
+
+    ObjectInputStream in = new CompilerObjectInputStream(new ByteArrayInputStream(bytes));
+    Object obj = in.readObject();
+    in.close();
+    return obj;
   }
 
   @Test
