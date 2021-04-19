@@ -24,9 +24,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
+import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -36,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Flattens global objects/namespaces by replacing each '.' with '$' in their names.
@@ -96,6 +100,14 @@ class CollapseProperties implements CompilerPass {
 
   private final HashSet<String> dynamicallyImportedModules = new HashSet<>();
 
+  /**
+   * Records decisions made by this class.
+   *
+   * <p>This field is allocated and cleaned up by process(). It's a class field to avoid having to
+   * pass it as an extra argument through a lot of methods.
+   */
+  private LogFile decisionsLog = null;
+
   CollapseProperties(AbstractCompiler compiler, PropertyCollapseLevel propertyCollapseLevel) {
     this.compiler = compiler;
     this.propertyCollapseLevel = propertyCollapseLevel;
@@ -103,37 +115,54 @@ class CollapseProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT) {
-      gatherDynamicallyImportedModules();
-    }
+    try (LogFile decisionsLog =
+        compiler.createOrReopenIndexedLog(this.getClass(), "decisions.log")) {
+      // NOTE: decisionsLog will be a do-nothing proxy object unless the compiler
+      // was given an option telling it to generate log files and where to put them.
+      this.decisionsLog = decisionsLog;
+      if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT) {
+        gatherDynamicallyImportedModules();
+      }
 
-    GlobalNamespace namespace = new GlobalNamespace(compiler, root);
-    nameMap = namespace.getNameIndex();
-    List<Name> globalNames = namespace.getNameForest();
-    Set<Name> escaped = checkNamespaces();
-    for (Name name : globalNames) {
-      flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
-      // We collapse property definitions after collapsing property references
-      // because this step can alter the parse tree above property references,
-      // invalidating the node ancestry stored with each reference.
-      collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
-    }
+      GlobalNamespace namespace = new GlobalNamespace(decisionsLog, compiler, root);
+      nameMap = namespace.getNameIndex();
+      List<Name> globalNames = namespace.getNameForest();
+      Set<Name> escaped = checkNamespaces();
+      for (Name name : globalNames) {
+        flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
+        // We collapse property definitions after collapsing property references
+        // because this step can alter the parse tree above property references,
+        // invalidating the node ancestry stored with each reference.
+        collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
+      }
 
-    // This shouldn't be necessary, this pass should already be setting new constants as constant.
-    // TODO(b/64256754): Investigate.
-    new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
+      // This shouldn't be necessary, this pass should already be setting new constants as constant.
+      // TODO(b/64256754): Investigate.
+      new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
+    } finally {
+      decisionsLog = null;
+    }
   }
 
   private boolean canCollapse(Name name) {
-    if (!name.canCollapse()) {
+    final Inlinability inlinability = name.canCollapseOrInline();
+    if (!inlinability.canCollapse()) {
+      logDecisionForName(name, inlinability, "canCollapse() returns false");
       return false;
     }
 
-    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT
-        && (!name.isModuleExport() || dynamicallyImportedModules.contains(name.getBaseName()))) {
-      return false;
+    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT) {
+      if (!name.isModuleExport()) {
+        logDecisionForName(name, inlinability, "module export: canCollapse() returns false");
+        return false;
+      } else if (dynamicallyImportedModules.contains(name.getBaseName())) {
+        logDecisionForName(
+            name, inlinability, "dynamic module export: canCollapse() returns false");
+        return false;
+      }
     }
 
+    logDecisionForName(name, inlinability, "canCollapse() returns true");
     return true;
   }
 
@@ -184,6 +213,7 @@ class CollapseProperties implements CompilerPass {
           initialized = true;
         } else if (ref.type == Ref.Type.ALIASING_GET) {
           warnAboutNamespaceAliasing(name, ref);
+          logDecisionForName(name, "escapes");
           escaped.add(name);
           break;
         }
@@ -207,10 +237,8 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Gets the parent node of the value for any assignment to a Name.
-   * For example, in the assignment
-   * {@code var x = 3;}
-   * the parent would be the NAME node.
+   * Gets the parent node of the value for any assignment to a Name. For example, in the assignment
+   * {@code var x = 3;} the parent would be the NAME node.
    */
   private static Node getValueParent(Ref ref) {
     // there are four types of declarations: VARs, LETs, CONSTs, and ASSIGNs
@@ -248,33 +276,60 @@ class CollapseProperties implements CompilerPass {
    */
   private void flattenReferencesToCollapsibleDescendantNames(
       Name n, String alias, Set<Name> escaped) {
-    if (!n.isSimpleName()) {
-      boolean isAllowedToCollapse =
-          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || n.isModuleExport();
-
-      if (isAllowedToCollapse && n.canCollapse()) {
-        flattenReferencesTo(n, alias);
-      } else if (isAllowedToCollapse
-          && n.isSimpleStubDeclaration()
-          && !n.isCollapsingExplicitlyDenied()) {
-        flattenSimpleStubDeclaration(n, alias);
-      }
+    if (n.props == null) {
+      return;
     }
-
-    if (n.props == null || n.isCollapsingExplicitlyDenied() || escaped.contains(n)) {
+    if (n.isCollapsingExplicitlyDenied()) {
+      logDecisionForName(n, "@nocollapse: will not flatten descendant name references");
+      return;
+    }
+    if (escaped.contains(n)) {
+      logDecisionForName(n, "escapes: will not flatten descendant name references");
       return;
     }
 
     for (Name p : n.props) {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
+
+      boolean isAllowedToCollapse =
+          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
+
+      if (isAllowedToCollapse) {
+        final Inlinability inlinability = p.canCollapseOrInline();
+        if (inlinability.canCollapse()) {
+          logDecisionForName(p, inlinability, "will flatten references");
+          flattenReferencesTo(p, propAlias);
+        } else if (p.isCollapsingExplicitlyDenied()) {
+          logDecisionForName(p, "@nocollapse: will not flatten references");
+        } else if (p.isSimpleStubDeclaration()) {
+          logDecisionForName(p, "simple stub declaration: will flatten references");
+          flattenSimpleStubDeclaration(p, propAlias);
+        } else {
+          logDecisionForName(p, inlinability, "will not flatten references");
+        }
+      } else {
+        logDecisionForName(p, "not a module export: will not flatten references");
+      }
+
       flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
     }
   }
 
-  /**
-   * Flattens a stub declaration.
-   * This is mostly a hack to support legacy users.
-   */
+  private void logDecisionForName(Name name, Inlinability inlinability, String message) {
+    logDecisionForName(
+        name, () -> SimpleFormat.format("inlinability %s: %s", inlinability, message));
+  }
+
+  private void logDecisionForName(Name name, String message) {
+    decisionsLog.log(() -> SimpleFormat.format("%s: %s", name.getFullName(), message));
+  }
+
+  private void logDecisionForName(Name name, Supplier<String> messageSupplier) {
+    decisionsLog.log(
+        () -> SimpleFormat.format("%s: %s", name.getFullName(), messageSupplier.get()));
+  }
+
+  /** Flattens a stub declaration. This is mostly a hack to support legacy users. */
   private void flattenSimpleStubDeclaration(Name name, String alias) {
     Ref ref = Iterables.getOnlyElement(name.getRefs());
     Node nameNode = NodeUtil.newName(compiler, alias, ref.getNode(), name.getFullName());
@@ -287,8 +342,8 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Flattens all references to a collapsible property of a global name except
-   * its initial definition.
+   * Flattens all references to a collapsible property of a global name except its initial
+   * definition.
    *
    * @param n A global property name (e.g. "a.b" or "a.b.c.d")
    * @param alias The flattened name (e.g. "a$b" or "a$b$c$d")
@@ -327,13 +382,11 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Flattens all occurrences of a name as a prefix of subnames beginning
-   * with a particular subname.
+   * Flattens all occurrences of a name as a prefix of subnames beginning with a particular subname.
    *
    * @param n A global property name (e.g. "a.b.c.d")
    * @param alias A flattened prefix name (e.g. "a$b")
-   * @param depth The difference in depth between the property name and
-   *    the prefix name (e.g. 2)
+   * @param depth The difference in depth between the property name and the prefix name (e.g. 2)
    */
   private void flattenPrefixes(String alias, Name n, int depth) {
     // Only flatten the prefix of a name declaration if the name being
@@ -369,12 +422,10 @@ class CollapseProperties implements CompilerPass {
    *
    * @param alias A flattened prefix name (e.g. "a$b")
    * @param n The node corresponding to a subproperty name (e.g. "a.b.c.d")
-   * @param depth The difference in depth between the property name and
-   *    the prefix name (e.g. 2)
+   * @param depth The difference in depth between the property name and the prefix name (e.g. 2)
    * @param originalName String version of the property name.
    */
-  private void flattenNameRefAtDepth(String alias, Node n, int depth,
-      String originalName) {
+  private void flattenNameRefAtDepth(String alias, Node n, int depth, String originalName) {
     // This method has to work for both GETPROP chains and, in rare cases,
     // OBJLIT keys, possibly nested. That's why we check for children before
     // proceeding. In the OBJLIT case, we don't need to do anything.
@@ -400,8 +451,7 @@ class CollapseProperties implements CompilerPass {
    * @param parent {@code n}'s parent
    * @param originalName String version of the property name.
    */
-  private void flattenNameRef(String alias, Node n, Node parent,
-      String originalName) {
+  private void flattenNameRef(String alias, Node n, Node parent, String originalName) {
     Preconditions.checkArgument(
         n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
 
@@ -433,16 +483,33 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name for {@code n}
    */
   private void collapseDeclarationOfNameAndDescendants(Name n, String alias, Set<Name> escaped) {
-    boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames() && !escaped.contains(n);
+    final Inlinability childNameInlinability = n.canCollapseOrInlineChildNames();
+    final boolean canCollapseChildNames;
+    if (!childNameInlinability.canCollapse()) {
+      logDecisionForName(
+          n,
+          () ->
+              SimpleFormat.format(
+                  "child name inlinability: %s: will not collapse child names",
+                  childNameInlinability));
+      canCollapseChildNames = false;
+    } else if (escaped.contains(n)) {
+      logDecisionForName(n, "escapes: will not collapse child names");
+      canCollapseChildNames = false;
+    } else {
+      canCollapseChildNames = true;
+    }
 
     // Handle this name first so that nested object literals get unrolled.
     if (canCollapse(n)) {
+      logDecisionForName(n, "collapsing");
       updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
     }
 
     if (n.props == null || escaped.contains(n)) {
       return;
     }
+    logDecisionForName(n, "collapsing descendants");
     for (Name p : n.props) {
       collapseDeclarationOfNameAndDescendants(
           p, appendPropForAlias(alias, p.getBaseName()), escaped);
@@ -450,10 +517,10 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Updates the initial assignment to a collapsible property at global scope
-   * by adding a VAR stub and collapsing the property. e.g. c = a.b = 1; => var a$b; c = a$b = 1;
-   * This specifically handles "twinned" assignments, which are those where the assignment is also
-   * used as a reference and which need special handling.
+   * Updates the initial assignment to a collapsible property at global scope by adding a VAR stub
+   * and collapsing the property. e.g. c = a.b = 1; => var a$b; c = a$b = 1; This specifically
+   * handles "twinned" assignments, which are those where the assignment is also used as a reference
+   * and which need special handling.
    *
    * @param alias The flattened property name (e.g. "a$b")
    * @param refName The name for the reference being updated.
@@ -501,61 +568,67 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Updates the first initialization (a.k.a "declaration") of a global name.
-   * This involves flattening the global name (if it's not just a global
-   * variable name already), collapsing object literal keys into global
-   * variables, declaring stub global variables for properties added later
+   * Updates the first initialization (a.k.a "declaration") of a global name. This involves
+   * flattening the global name (if it's not just a global variable name already), collapsing object
+   * literal keys into global variables, declaring stub global variables for properties added later
    * in a local scope.
    *
-   * It may seem odd that this function also takes care of declaring stubs
-   * for direct children. The ultimate goal of this function is to eliminate
-   * the global name entirely (when possible), so that "middlemen" namespaces
-   * disappear, and to do that we need to make sure that all the direct children
-   * will be collapsed as well.
+   * <p>It may seem odd that this function also takes care of declaring stubs for direct children.
+   * The ultimate goal of this function is to eliminate the global name entirely (when possible), so
+   * that "middlemen" namespaces disappear, and to do that we need to make sure that all the direct
+   * children will be collapsed as well.
    *
    * @param n An object representing a global name (e.g. "a", "a.b.c")
    * @param alias The flattened name for {@code n} (e.g. "a", "a$b$c")
-   * @param canCollapseChildNames Whether it's possible to collapse children of
-   *     this name. (This is mostly passed for convenience; it's equivalent to
-   *     n.canCollapseChildNames()).
+   * @param canCollapseChildNames Whether it's possible to collapse children of this name. (This is
+   *     mostly passed for convenience; it's equivalent to n.canCollapseChildNames()).
    */
-  private void updateGlobalNameDeclaration(
-      Name n, String alias, boolean canCollapseChildNames) {
+  private void updateGlobalNameDeclaration(Name n, String alias, boolean canCollapseChildNames) {
     Ref decl = n.getDeclaration();
     if (decl == null) {
       // Some names do not have declarations, because they
       // are only defined in local scopes.
+      logDecisionForName(n, "no global declaration found");
       return;
     }
 
-    switch (decl.getNode().getParent().getToken()) {
+    final Node declNode = decl.getNode();
+    switch (declNode.getParent().getToken()) {
       case ASSIGN:
-        updateGlobalNameDeclarationAtAssignNode(
-            n, alias, canCollapseChildNames);
+        logDeclarationAction(n, declNode, "updating assignment");
+        updateGlobalNameDeclarationAtAssignNode(n, alias, canCollapseChildNames);
         break;
       case VAR:
       case LET:
       case CONST:
+        logDeclarationAction(n, declNode, "updating variable declaration");
         updateGlobalNameDeclarationAtVariableNode(n, canCollapseChildNames);
         break;
       case FUNCTION:
+        logDeclarationAction(n, declNode, "updating function declaration");
         updateGlobalNameDeclarationAtFunctionNode(n, canCollapseChildNames);
         break;
       case CLASS:
+        logDeclarationAction(n, declNode, "updating class declaration");
         updateGlobalNameDeclarationAtClassNode(n, canCollapseChildNames);
         break;
       case CLASS_MEMBERS:
+        logDeclarationAction(n, declNode, "updating static member declaration");
         updateGlobalNameDeclarationAtStaticMemberNode(n, alias, canCollapseChildNames);
         break;
       default:
+        logDeclarationAction(n, declNode, "not updating an unsupported type of declaration node");
         break;
     }
   }
 
+  private void logDeclarationAction(Name name, Node declarationNode, String message) {
+    logDecisionForName(name, () -> SimpleFormat.format("%s: %s", declarationNode, message));
+  }
+
   /**
-   * Updates the first initialization (a.k.a "declaration") of a global name
-   * that occurs at an ASSIGN node. See comment for
-   * {@link #updateGlobalNameDeclaration}.
+   * Updates the first initialization (a.k.a "declaration") of a global name that occurs at an
+   * ASSIGN node. See comment for {@link #updateGlobalNameDeclaration}.
    *
    * @param n An object representing a global name (e.g. "a", "a.b.c")
    * @param alias The flattened name for {@code n} (e.g. "a", "a$b$c")
@@ -670,9 +743,9 @@ class CollapseProperties implements CompilerPass {
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateGlobalNameDeclarationAtVariableNode(
-      Name n, boolean canCollapseChildNames) {
+  private void updateGlobalNameDeclarationAtVariableNode(Name n, boolean canCollapseChildNames) {
     if (!canCollapseChildNames) {
+      logDecisionForName(n, "cannot collapse child names: skipping");
       return;
     }
 
@@ -704,14 +777,12 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Updates the first initialization (a.k.a "declaration") of a global name
-   * that occurs at a FUNCTION node. See comment for
-   * {@link #updateGlobalNameDeclaration}.
+   * Updates the first initialization (a.k.a "declaration") of a global name that occurs at a
+   * FUNCTION node. See comment for {@link #updateGlobalNameDeclaration}.
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateGlobalNameDeclarationAtFunctionNode(
-      Name n, boolean canCollapseChildNames) {
+  private void updateGlobalNameDeclarationAtFunctionNode(Name n, boolean canCollapseChildNames) {
     if (!canCollapseChildNames || !canCollapse(n)) {
       return;
     }
@@ -789,8 +860,7 @@ class CollapseProperties implements CompilerPass {
     int arbitraryNameCounter = 0;
     boolean discardKeys = !objlitName.shouldKeepKeys();
 
-    for (Node key = objlit.getFirstChild(), nextKey; key != null;
-         key = nextKey) {
+    for (Node key = objlit.getFirstChild(), nextKey; key != null; key = nextKey) {
       Node value = key.getFirstChild();
       nextKey = key.getNext();
 
