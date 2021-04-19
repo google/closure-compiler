@@ -2147,7 +2147,7 @@ public final class ConformanceRules {
         return Optional.absent();
       }
       JSType elementType = compiler.getTypeRegistry().getGlobalType("Element");
-      if (type.isSubtypeOf(elementType)) {
+      if (elementType != null && type.isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
       return Optional.absent();
