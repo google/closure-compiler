@@ -19,7 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,9 +52,9 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           new CollapseProperties(
               compiler,
               PropertyCollapseLevel.ALL,
-              compiler.getOptions().chunkOutputType,
-              compiler.getOptions().getProcessCommonJSModules(),
-              compiler.getOptions().getModuleResolutionMode());
+              ChunkOutputType.GLOBAL_NAMESPACE,
+              /* haveModulesBeenRewritten */ false,
+              ResolutionMode.BROWSER);
 
       @Override
       public void process(Node externs, Node root) {
