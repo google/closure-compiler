@@ -1636,6 +1636,39 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     addChangeHandler(tracker.getCodeChangeHandler());
   }
 
+  void initializeModuleLoader() {
+    ModuleResolverFactory moduleResolverFactory = null;
+
+    switch (options.getModuleResolutionMode()) {
+      case BROWSER:
+        moduleResolverFactory = BrowserModuleResolver.FACTORY;
+        break;
+      case NODE:
+        // processJsonInputs requires a module loader to already be defined
+        // so we redefine it afterwards with the package.json inputs
+        moduleResolverFactory =
+            new NodeModuleResolver.Factory(processJsonInputs(moduleGraph.getAllInputs()));
+        break;
+      case WEBPACK:
+        moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
+        break;
+      case BROWSER_WITH_TRANSFORMED_PREFIXES:
+        moduleResolverFactory =
+            new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                options.getBrowserResolverPrefixReplacements());
+        break;
+    }
+
+    this.moduleLoader =
+        new ModuleLoader(
+            null,
+            options.moduleRoots,
+            moduleGraph.getAllInputs(),
+            moduleResolverFactory,
+            PathResolver.RELATIVE,
+            options.getPathEscaper());
+  }
+
   // ------------------------------------------------------------------------
   // Parsing
   // ------------------------------------------------------------------------
@@ -1677,37 +1710,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
       if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)
           || options.processCommonJSModules) {
-
-        ModuleResolverFactory moduleResolverFactory = null;
-
-        switch (options.getModuleResolutionMode()) {
-          case BROWSER:
-            moduleResolverFactory = BrowserModuleResolver.FACTORY;
-            break;
-          case NODE:
-            // processJsonInputs requires a module loader to already be defined
-            // so we redefine it afterwards with the package.json inputs
-            moduleResolverFactory =
-                new NodeModuleResolver.Factory(processJsonInputs(moduleGraph.getAllInputs()));
-            break;
-          case WEBPACK:
-            moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
-            break;
-          case BROWSER_WITH_TRANSFORMED_PREFIXES:
-            moduleResolverFactory =
-                new BrowserWithTransformedPrefixesModuleResolver.Factory(
-                    options.getBrowserResolverPrefixReplacements());
-            break;
-        }
-
-        this.moduleLoader =
-            new ModuleLoader(
-                null,
-                options.moduleRoots,
-                moduleGraph.getAllInputs(),
-                moduleResolverFactory,
-                PathResolver.RELATIVE,
-                options.getPathEscaper());
+        initializeModuleLoader();
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;

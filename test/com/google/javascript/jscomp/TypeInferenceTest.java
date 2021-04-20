@@ -75,6 +75,7 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.TypeSubject;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -166,6 +167,13 @@ public final class TypeInferenceTest {
 
   private void withModules(ImmutableList<String> js) {
     Node script = compiler.parseTestCode(js);
+    JSModule module = new JSModule("entry");
+    Collection<CompilerInput> inputs = compiler.getInputsById().values();
+    for (CompilerInput input : inputs) {
+      module.add(input.getSourceFile());
+    }
+    compiler.initModules(ImmutableList.of(), ImmutableList.of(module), compiler.getOptions());
+    compiler.initializeModuleLoader();
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
         .isEqualTo(0);
@@ -3796,6 +3804,28 @@ public final class TypeInferenceTest {
     assertType(getType("foo"))
         .toStringIsEqualTo(
             "Promise<{\n" + "  Bar: function(): string,\n" + "  default: number\n" + "}>");
+  }
+
+  @Test
+  public void testDynamicImportAfterModuleRewriting() {
+    withModules(
+        ImmutableList.of(
+            lines(
+                "const module$testcode0 = {};",
+                "/** @const */ module$testcode0.default = 1;",
+                "/** @return {string} */ function Bar() { return 'bar'; };",
+                "/** @const */ module$testcode0.Bar = Bar;"),
+            // modules are named of the format `testcode#` based off their index.
+            // testcode0 refers the first module.
+            "const foo = import('./testcode0');"));
+
+    assertType(getType("foo"))
+        .toStringIsEqualTo(
+            lines(
+                "Promise<{", //
+                "  Bar: function(): string,",
+                "  default: number",
+                "}>"));
   }
 
   private static void testForAllBigInt(JSType type) {
