@@ -211,7 +211,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     Node oldBlockNode = argListNode.getNext();
     checkNode(oldBlockNode, Token.BLOCK);
 
-    Iterator<CharSequence> iterator = message.parts().iterator();
+    Iterator<CharSequence> iterator = message.getParts().iterator();
     Node valueNode = constructAddOrStringNode(iterator, argListNode);
     Node newBlockNode = IR.block(IR.returnNode(valueNode));
 
