@@ -23,6 +23,8 @@ public abstract class Hasher {
 
   public abstract Hasher putInt(int i);
 
+  public abstract Hasher putLong(long x);
+
   public abstract Hasher putString(CharSequence charSequence, Charset charset);
 
   public abstract HashCode hash();

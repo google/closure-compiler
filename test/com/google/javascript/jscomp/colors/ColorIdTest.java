@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.colors;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
+import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -26,19 +27,26 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ColorIdTest {
 
+  private static final ColorId A = ColorId.fromAscii("a");
+  private static final ColorId B = ColorId.fromAscii("b");
+  private static final ColorId C = ColorId.fromAscii("c");
+
+  private static final ColorId ZERO = ColorId.fromAscii("\0");
+  private static final ColorId ONE = ColorId.fromAscii("\1");
+
   @Test
   public void equals_sameInputTrue() {
-    assertEqualsAndRelatedMethods(ColorId.fromAscii("a"), ColorId.fromAscii("a"));
+    assertEqualsAndRelatedMethods(A, ColorId.fromAscii("a"));
   }
 
   @Test
   public void equals_differentInputFalse() {
-    assertNotEqualsAndRelatedMethods(ColorId.fromAscii("a"), ColorId.fromAscii("b"));
+    assertNotEqualsAndRelatedMethods(A, B);
   }
 
   @Test
   public void equals_leadingZerosIgnored() {
-    assertEqualsAndRelatedMethods(ColorId.fromAscii("a"), ColorId.fromAscii("\0a"));
+    assertEqualsAndRelatedMethods(A, ColorId.fromAscii("\0a"));
   }
 
   @Test
@@ -50,6 +58,34 @@ public final class ColorIdTest {
   public void maxSize64Bits() {
     ColorId.fromAscii("12345678"); // Max size is OK.
     assertThrows(Exception.class, () -> ColorId.fromAscii("123456789"));
+  }
+
+  @Test
+  public void union_commutativity() {
+    ColorId abc = ColorId.union(ImmutableSet.of(A, B, C));
+    ColorId acb = ColorId.union(ImmutableSet.of(A, C, B));
+    ColorId cab = ColorId.union(ImmutableSet.of(C, B, A));
+
+    assertEqualsAndRelatedMethods(abc, acb);
+    assertEqualsAndRelatedMethods(abc, cab);
+    assertEqualsAndRelatedMethods(acb, cab);
+  }
+
+  @Test
+  public void union_identity() {
+    assertThrows(Exception.class, () -> ColorId.union(ImmutableSet.of(A)));
+  }
+
+  @Test
+  public void union_zeroAffectsResult() {
+    assertNotEqualsAndRelatedMethods(
+        ColorId.union(ImmutableSet.of(A, B)), ColorId.union(ImmutableSet.of(A, B, ZERO)));
+  }
+
+  @Test
+  public void union_oneAffectsResult() {
+    assertNotEqualsAndRelatedMethods(
+        ColorId.union(ImmutableSet.of(A, B)), ColorId.union(ImmutableSet.of(A, B, ONE)));
   }
 
   private void assertEqualsAndRelatedMethods(ColorId actual, ColorId expected) {

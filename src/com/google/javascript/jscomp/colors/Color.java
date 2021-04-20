@@ -163,8 +163,14 @@ public abstract class Color implements Serializable {
     throw new AssertionError();
   }
 
-  public final ImmutableSet<ColorId> getId() {
-    return collect(this, SingletonColorFields::getId);
+  public final ColorId getId() {
+    switch (kind()) {
+      case SINGLETON:
+        return this.singleton().getId();
+      case UNION:
+        return ColorId.union(collect(this, SingletonColorFields::getId));
+    }
+    throw new AssertionError();
   }
 
   public final ImmutableSet<DebugInfo> getDebugInfo() {

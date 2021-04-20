@@ -183,7 +183,7 @@ public class ColorDeserializerTest {
 
     assertThat(deserializer.pointerToColor(poolPointer(0))).isInvalidating();
     assertThat(deserializer.pointerToColor(poolPointer(0)).getId())
-        .containsExactly(ColorId.fromAscii("Foo"));
+        .isEqualTo(ColorId.fromAscii("Foo"));
   }
 
   @Test
@@ -199,7 +199,7 @@ public class ColorDeserializerTest {
 
     assertThat(deserializer.pointerToColor(poolPointer(0))).isClosureAssert();
     assertThat(deserializer.pointerToColor(poolPointer(0)).getId())
-        .containsExactly(ColorId.fromAscii("Foo"));
+        .isEqualTo(ColorId.fromAscii("Foo"));
   }
 
   @Test

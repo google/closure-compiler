@@ -38,7 +38,6 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.disambiguate.ColorGraphNode.PropAssociation;
@@ -270,7 +269,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static final class TypeNodeJson {
     final int id;
     final boolean invalidating;
-    final ImmutableSortedSet<String> colorUuid;
+    final String colorUuid;
     final ImmutableSortedSet<TypeEdgeJson> edges;
     final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
 
@@ -278,10 +277,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
       ColorGraphNode t = n.getValue();
 
       this.id = t.getId();
-      this.colorUuid =
-          t.getColor().getId().stream()
-              .map(ColorId::toString)
-              .collect(toImmutableSortedSet(naturalOrder()));
+      this.colorUuid = t.getColor().getId().toString();
       this.invalidating = t.getColor().isInvalidating();
       this.edges =
           n.getOutEdges().stream()

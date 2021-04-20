@@ -19,8 +19,13 @@ package com.google.javascript.jscomp.colors;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.errorprone.annotations.Immutable;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Set;
 
 /**
  * A probablistically unique ID for a Color.
@@ -58,6 +63,43 @@ public final class ColorId implements Serializable {
     return new ColorId(rightAligned);
   }
 
+  /**
+   * Defines how IDs for unions are combined.
+   *
+   * <p>Ideally, this function would preserve the algebraic properties of the union operation.
+   * However, doing so is difficult (impossible?) while also providing good hashing. Those
+   * properties are summarized below.
+   *
+   * <p>This method must never be passed IDs of existing unions. Lack of associativity means the
+   * result will not be the same as unioning all the IDs simultaneously.
+   *
+   * <pre>
+   * | name          | has   | example                       | note                        |
+   * |---------------|-------|-------------------------------|-----------------------------|
+   * | associativity | false | f(x, f(y, z)) = f(f(x, y), z) |                             |
+   * | commutativity | true  |       f(x, y) = f(y, x)       |                             |
+   * | idempotence   | true  |    f(x, x, y) = f(x, y)       | `ids` is a Set              |
+   * | identity      | true  |          f(x) = x             | singleton unions are banned |
+   * </pre>
+   */
+  public static ColorId union(Set<ColorId> ids) {
+    checkState(ids.size() > 1, ids);
+
+    int index = 0;
+    long[] sorted = new long[ids.size()];
+    for (ColorId id : ids) {
+      sorted[index++] = id.rightAligned;
+    }
+    Arrays.sort(sorted);
+
+    Hasher hasher = FARM_64.newHasher();
+    for (int i = 0; i < sorted.length; i++) {
+      hasher.putLong(sorted[i]);
+    }
+
+    return new ColorId(hasher.hash().asLong());
+  }
+
   static ColorId forNative(NativeColorId nat) {
     checkState(nat.getId() == null);
     // TODO(b/185519307): Do some kind of hashing here so that native IDs are spread over more bits.
@@ -88,4 +130,6 @@ public final class ColorId implements Serializable {
     // Use hex encoding so there are no ambiguous trailing chars like Base64 would have.
     return Long.toHexString(this.rightAligned);
   }
+
+  private static final HashFunction FARM_64 = Hashing.farmHashFingerprint64();
 }

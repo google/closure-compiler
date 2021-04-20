@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
 import static com.google.common.collect.Streams.stream;
 import static java.util.Comparator.naturalOrder;
-import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +30,8 @@ import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeMismatch;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -133,12 +135,12 @@ final class SerializeTypesToPointers {
     final String foundUuid;
     final String requiredUuid;
 
-    TypeMismatchJson(TypeMismatch x, String foundUuid, String requiredUuid) {
+    TypeMismatchJson(TypeMismatch x, ColorId foundUuid, ColorId requiredUuid) {
       this.found = x.getFound().toString();
       this.required = x.getRequired().toString();
       this.location = x.getLocation().getLocation();
-      this.foundUuid = foundUuid;
-      this.requiredUuid = requiredUuid;
+      this.foundUuid = foundUuid.toString();
+      this.requiredUuid = requiredUuid.toString();
     }
 
     static TypeMismatchJson create(TypeMismatch x, JSTypeSerializer serializer, TypePool typePool) {
@@ -156,11 +158,10 @@ final class SerializeTypesToPointers {
      * all types reachable from the AST, while a TypeMismatch may contain a type in dead code no
      * longer reachable from the AST.
      */
-    private static String typePointerToId(TypePointer typePointer, TypePool typePool) {
+    private static ColorId typePointerToId(TypePointer typePointer, TypePool typePool) {
       int poolOffset = typePointer.getPoolOffset();
       if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-        // TODO(b/169090854): standardize the PrimitiveType UUIDs between here and ColorRegistry
-        return "<native type>: " + PrimitiveType.forNumber(poolOffset);
+        return NativeColorId.values()[poolOffset].getId();
       }
 
       int adjustedOffset = typePointer.getPoolOffset() - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
@@ -168,12 +169,12 @@ final class SerializeTypesToPointers {
       TypeProto typeProto = typePool.getTypeList().get(adjustedOffset);
       switch (typeProto.getKindCase()) {
         case UNION:
-          return typeProto.getUnion().getUnionMemberList().stream()
-              .map(pointer -> typePointerToId(pointer, typePool))
-              .distinct()
-              .collect(joining(","));
+          return ColorId.union(
+              typeProto.getUnion().getUnionMemberList().stream()
+                  .map(pointer -> typePointerToId(pointer, typePool))
+                  .collect(toImmutableSet()));
         case OBJECT:
-          return typeProto.getObject().getUuid();
+          return ColorId.fromAscii(typeProto.getObject().getUuid());
         case KIND_NOT_SET:
           break;
       }
