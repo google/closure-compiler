@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.serialization.TypePointer.DebugInfo;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.nio.file.Files;

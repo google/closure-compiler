@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.function.Consumer;

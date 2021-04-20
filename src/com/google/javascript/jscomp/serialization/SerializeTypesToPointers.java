@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.IdentityHashMap;
 
 /** Grab a TypePointer for each JSType on the AST and log information about the pointers. */

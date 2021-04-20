@@ -42,7 +42,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;

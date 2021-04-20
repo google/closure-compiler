@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.FileOutputStream;
 import java.io.IOException;

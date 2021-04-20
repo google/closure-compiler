@@ -28,7 +28,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.RhinoStringPool;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
 
