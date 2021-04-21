@@ -66,6 +66,15 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceSimpleMessageDefinedWithAdd() {
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
+
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg('abcd' + 'efgh');",
+        "/** @desc d */\n var MSG_A='Hi\\nthere'");
+  }
+
+  @Test
   public void testMissingAlternateMessage() {
     test(
         "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
@@ -422,6 +431,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         "Message parse tree malformed. "
             + "Empty placeholder value map for a translated message "
             + "with placeholders.");
+  }
+
+  @Test
+  public void testLegacyStyleNoPlaceholdersVarSyntaxConcat() {
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
+    style = Style.LEGACY;
+    test("var MSG_A = 'abc' + 'def';", "var MSG_A='Hi\\nthere'");
   }
 
   @Test
