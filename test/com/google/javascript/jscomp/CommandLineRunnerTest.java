@@ -1887,12 +1887,6 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testTransformAMD() {
-    args.add("--transform_amd_modules");
-    test("define({test: 1})", "module.exports = {test: 1}");
-  }
-
-  @Test
   public void testProcessCJS() {
     useStringComparison = true;
     args.add("--process_common_js_modules");
@@ -2231,27 +2225,13 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testTransformAMDAndProcessCJS() {
-    args.add("--transform_amd_modules");
-    args.add("--process_common_js_modules");
-    args.add("--entry_point=foo/bar");
-    setFilename(0, "foo/bar.js");
-    test(
-        "define({foo: 1})",
-        LINE_JOINER.join(
-            "/** @const */ var module$foo$bar = {/** @const */ default: {}};",
-            "module$foo$bar.default.foo = 1;"));
-  }
-
-  @Test
   public void testModuleJSON() {
-    args.add("--transform_amd_modules");
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
     args.add("--output_chunk_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test(
-        "define({foo: 1})",
+        "module.exports = {foo: 1};",
         LINE_JOINER.join(
             "/** @const */ var module$foo$bar = {/** @const */ default: {}};",
             "module$foo$bar.default.foo = 1;"));
