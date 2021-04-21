@@ -386,6 +386,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(analyzerChecks);
     }
 
+    if (options.isCheckingMissingOverrideTypes()) {
+      checks.add(checkMissingOverrideTypes);
+    }
+
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
@@ -1719,6 +1723,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
+  private final PassFactory checkMissingOverrideTypes =
+      PassFactory.builder()
+          .setName("checkMissingOverrideTypes")
+          .setInternalFactory(CheckMissingOverrideTypes::new)
+          .setFeatureSetForChecks()
+          .build();
+
   private final PassFactory inferJsDocInfo =
       PassFactory.builderForHotSwap()
           .setName("inferJsDocInfo")
@@ -2926,3 +2937,4 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getOptions().chunkOutputType))
           .build();
 }
+

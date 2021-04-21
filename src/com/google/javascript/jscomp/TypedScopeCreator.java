@@ -1363,6 +1363,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (isGoogModuleExports(lvalue)) {
         return syntacticLvalueName.replace("exports", module.closureNamespace());
       }
+      if (compiler.getOptions().isCheckingMissingOverrideTypes()
+          && module != null
+          && module.closureNamespace() != null) {
+        // When fixing missing override types, we want to generate a fully
+        // qualified type name for this `syntacticLValueName` in the JSDoc.
+        if (!syntacticLvalueName.contains(module.closureNamespace() + ".")) {
+          return module.closureNamespace() + "." + syntacticLvalueName;
+        }
+      }
       return syntacticLvalueName;
     }
 
@@ -1845,9 +1854,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         contents.recordNonEmptyReturn();
       }
 
+      String bestTypeName = getBestTypeName(lvalueNode, name);
       FunctionTypeBuilder builder =
-          new FunctionTypeBuilder(
-                  getBestTypeName(lvalueNode, name), compiler, errorRoot, currentScope)
+          new FunctionTypeBuilder(bestTypeName, compiler, errorRoot, currentScope)
               .setSyntacticFunctionName(name)
               .setContents(contents)
               .setDeclarationScope(

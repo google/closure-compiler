@@ -244,6 +244,21 @@ public class CompilerOptions implements Serializable {
   private boolean preserveNonJSDocComments = false;
   private boolean continueAfterErrors = false;
 
+  private boolean checkMissingOverrideTypes = false;
+
+  /**
+   * This option runs JSCompiler in a fix mode to fix missing {@code @param} and {@code @return}
+   * types in override methods. It is intended for use temporarily and only in developer mode.
+   * TODO(b/178107524): Delete this option.
+   */
+  public void setCheckMissingOverrideTypes(boolean value) {
+    this.checkMissingOverrideTypes = value;
+  }
+
+  public boolean isCheckingMissingOverrideTypes() {
+    return this.checkMissingOverrideTypes;
+  }
+
   public enum IncrementalCheckMode {
     /** Normal mode */
     OFF,
