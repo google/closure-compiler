@@ -2149,7 +2149,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> new CollapseProperties(
                   compiler,
                   options.getPropertyCollapseLevel(),
-                  options.chunkOutputType,
+                  options.getChunkOutputType(),
                   options.getProcessCommonJSModules(),
                   options.getModuleResolutionMode()))
           .setFeatureSetForOptimizations()
@@ -2928,6 +2928,6 @@ public final class DefaultPassConfig extends PassConfig {
                   new RewriteDynamicImports(
                       compiler,
                       compiler.getOptions().getDynamicImportAlias(),
-                      compiler.getOptions().chunkOutputType))
+                      compiler.getOptions().getChunkOutputType()))
           .build();
 }

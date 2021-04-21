@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   private boolean enableDependencyManagement = false;
   private List<ModuleIdentifier> entryPoints = null;
+  private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
+  private boolean modulesRewritingEnabled = false;
+  private ResolutionMode moduleResolutionMode = ResolutionMode.BROWSER;
 
   public CollapsePropertiesTest() {
     super(EXTERNS);
@@ -59,9 +63,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     return new CollapseProperties(
         compiler,
         propertyCollapseLevel,
-        compiler.getOptions().chunkOutputType,
-        compiler.getOptions().getProcessCommonJSModules(),
-        compiler.getOptions().getModuleResolutionMode());
+        chunkOutputType,
+        modulesRewritingEnabled,
+        moduleResolutionMode);
   }
 
   @Override
@@ -4213,9 +4217,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testModuleDynamicImport() {
     allowExternsChanges();
+    modulesRewritingEnabled = true;
+    chunkOutputType = ChunkOutputType.ES_MODULES;
     this.enableDependencyManagement = false;
-    this.setChunkOutputType(ChunkOutputType.ES_MODULES);
-    this.enableModuleRewriting();
+    this.enableModuleRewriting(); // implies a ChunkOutputType of ES_MODULES
     this.entryPoints = new ArrayList<>();
     this.entryPoints.add(ModuleIdentifier.forFile("entry.js"));
 

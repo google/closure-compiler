@@ -211,8 +211,6 @@ public abstract class CompilerTestCase {
   /** Whether the transpilation passes run before the pass being tested. */
   private boolean moduleRewritingEnabled;
 
-  private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
-
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
 
   private final Map<String, String> webpackModulesById = new HashMap<>();
@@ -686,7 +684,6 @@ public abstract class CompilerTestCase {
     }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
-    options.chunkOutputType = chunkOutputType;
     CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
 
     return options;
@@ -1037,11 +1034,6 @@ public abstract class CompilerTestCase {
   protected final void enableModuleRewriting() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     moduleRewritingEnabled = true;
-  }
-
-  protected final void setChunkOutputType(ChunkOutputType outputType) {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    chunkOutputType = outputType;
   }
 
   /** Returns a newly created TypeCheck. */
@@ -1850,7 +1842,7 @@ public abstract class CompilerTestCase {
                     new RewriteDynamicImports(
                         compiler,
                         compiler.getOptions().getDynamicImportAlias(),
-                        compiler.getOptions().chunkOutputType))
+                        ChunkOutputType.ES_MODULES))
             .build());
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
