@@ -22,6 +22,8 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -57,6 +59,30 @@ public final class SerializeTypedAstPass implements CompilerPass {
     this.compiler = compiler;
     this.consumer = astConsumer;
     this.serializationOptions = serializationOptions;
+  }
+
+  public static SerializeTypedAstPass createFromOutputStream(AbstractCompiler c, OutputStream out) {
+    Consumer<TypedAst> toOutputStream =
+        ast -> {
+          try {
+            ast.writeTo(out);
+          } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot write to stream", e);
+          }
+        };
+    return new SerializeTypedAstPass(c, SerializationOptions.SKIP_DEBUG_INFO, toOutputStream);
+  }
+
+  public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
+    Consumer<TypedAst> toPath =
+        ast -> {
+          try (OutputStream out = Files.newOutputStream(outputPath)) {
+            ast.writeTo(out);
+          } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot create TypedAst output file", e);
+          }
+        };
+    return new SerializeTypedAstPass(compiler, SerializationOptions.SKIP_DEBUG_INFO, toPath);
   }
 
   @Override
