@@ -169,34 +169,24 @@ public final class ClosureBundler {
   }
 
   /** Append the contents of the string to the supplied appendable. */
-  public static void appendInput(
-      Appendable out,
-      DependencyInfo info,
-      String contents) throws IOException {
+  public static void appendInput(Appendable out, DependencyInfo info, String contents)
+      throws IOException {
     new ClosureBundler().appendTo(out, info, contents);
   }
 
   /** Append the contents of the string to the supplied appendable. */
-  public void appendTo(
-      Appendable out,
-      DependencyInfo info,
-      String content) throws IOException {
+  public void appendTo(Appendable out, DependencyInfo info, String content) throws IOException {
     appendTo(out, info, CharSource.wrap(content));
   }
 
   /** Append the contents of the file to the supplied appendable. */
-  public void appendTo(
-      Appendable out,
-      DependencyInfo info,
-      File content, Charset contentCharset) throws IOException {
+  public void appendTo(Appendable out, DependencyInfo info, File content, Charset contentCharset)
+      throws IOException {
     appendTo(out, info, Files.asCharSource(content, contentCharset));
   }
 
   /** Append the contents of the CharSource to the supplied appendable. */
-  public void appendTo(
-      Appendable out,
-      DependencyInfo info,
-      CharSource content) throws IOException {
+  public void appendTo(Appendable out, DependencyInfo info, CharSource content) throws IOException {
     String code = content.read();
     if (info.isModule()) {
       mode.appendGoogModule(transpile(code), out, sourceUrl);
@@ -293,14 +283,12 @@ public final class ClosureBundler {
       @Override
       void appendGoogModule(String s, Appendable out, String sourceUrl) throws IOException {
         // add the prefix on the first line so the line numbers aren't affected.
-        out.append(
-            "goog.loadModule(function(exports) {"
-            + "'use strict';");
+        out.append("goog.loadModule(function(exports) {" + "'use strict';");
         EscapeMode.NORMAL.append(s, out);
         out.append(
             "\n" // terminate any trailing single line comment.
-            + ";" // terminate any trailing expression.
-            + "return exports;});\n");
+                + ";" // terminate any trailing expression.
+                + "return exports;});\n");
         appendSourceUrl(out, EscapeMode.NORMAL, sourceUrl);
       }
     };
@@ -312,12 +300,14 @@ public final class ClosureBundler {
 
   private enum EscapeMode {
     ESCAPED {
-      @Override void append(String s, Appendable out) throws IOException {
+      @Override
+      void append(String s, Appendable out) throws IOException {
         SourceCodeEscapers.appendWithJavascriptEscaper(s, out);
       }
     },
     NORMAL {
-      @Override void append(String s, Appendable out) throws IOException {
+      @Override
+      void append(String s, Appendable out) throws IOException {
         out.append(s);
       }
     };
