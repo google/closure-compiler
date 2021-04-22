@@ -253,9 +253,6 @@ class CollapseProperties implements CompilerPass {
     }
 
     for (Name name : nameMap.values()) {
-      if (dynamicallyImportedModuleRefs.contains(name.getFullName())) {
-        escaped.add(name);
-      }
       if (!name.isNamespaceObjectLit()) {
         continue;
       }
