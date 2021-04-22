@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -83,6 +85,14 @@ class GlobalNamespace
   private SourceKind sourceKind;
   private Scope externsScope;
   private boolean generated = false;
+
+  /**
+   * Records decisions made by this class.
+   *
+   * <p>Since this class is a utility used by others, the creating class may provide the log file.
+   */
+  @Nullable private final LogFile decisionsLog;
+
   private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
 
   enum SourceKind {
@@ -122,8 +132,18 @@ class GlobalNamespace
    * @param compiler The AbstractCompiler, for reporting code changes
    * @param root The root of the rest of the code to build a namespace for.
    */
+  GlobalNamespace(LogFile decisionsLog, AbstractCompiler compiler, Node root) {
+    this(decisionsLog, compiler, null, root);
+  }
+
+  /**
+   * Creates an instance that may emit warnings when building the namespace.
+   *
+   * @param compiler The AbstractCompiler, for reporting code changes
+   * @param root The root of the rest of the code to build a namespace for.
+   */
   GlobalNamespace(AbstractCompiler compiler, Node root) {
-    this(compiler, null, root);
+    this(/* decisionsLog = */ null, compiler, null, root);
   }
 
   /**
@@ -137,6 +157,22 @@ class GlobalNamespace
    * @param root The root of the rest of the code to build a namespace for.
    */
   GlobalNamespace(AbstractCompiler compiler, Node externsRoot, Node root) {
+    this(null, compiler, externsRoot, root);
+  }
+
+  /**
+   * Creates an instance that may emit warnings when building the namespace.
+   *
+   * @param decisionsLog where to log decisions made by this instance
+   * @param compiler The AbstractCompiler, for reporting code changes
+   * @param externsRoot The root of the externs to build a namespace for. If this is null, externs
+   *     and properties defined on extern types will not be included in the global namespace. If
+   *     non-null, it allows user-defined function on extern types to be included in the global
+   *     namespace. E.g. String.foo.
+   * @param root The root of the rest of the code to build a namespace for.
+   */
+  GlobalNamespace(LogFile decisionsLog, AbstractCompiler compiler, Node externsRoot, Node root) {
+    this.decisionsLog = decisionsLog;
     this.compiler = compiler;
     this.externsRoot = externsRoot;
     this.root = root;
@@ -1770,11 +1806,11 @@ class GlobalNamespace
     }
 
     /**
-     * Returns whether to treat this alias as completely inlinable or to keep the aliasing
+     * Returns whether to treat this alias as completely inlineable or to keep the aliasing
      * assignment
      *
      * <p>This method used to only return true/false, but now returns an enum in order to track more
-     * information about "unsafely" inlinable names.
+     * information about "unsafely" inlineable names.
      *
      * <p>CollapseProperties will flatten `@constructor` properties even if they are potentially
      * accessed by a reference other than their fully qualified name, which breaks those other refs.
@@ -1783,12 +1819,12 @@ class GlobalNamespace
      * determinable where these dependencies are.
      *
      * <p>However, AggressiveInlineAliases must not also remove the initializtion of an alias if it
-     * is not safely inlinable. (i.e. if Inlinability#shouldRemoveDeclaration()). It's possible that
-     * a third name aliases the alias - we might later inline the third name (as an alias of the
-     * original alias) and don't want to set the third name to null.
+     * is not safely inlineable. (i.e. if Inlinability#shouldRemoveDeclaration()). It's possible
+     * that a third name aliases the alias - we might later inline the third name (as an alias of
+     * the original alias) and don't want to set the third name to null.
      */
     Inlinability calculateInlinability() {
-      // Only simple aliases with direct usage are inlinable.
+      // Only simple aliases with direct usage are inlineable.
       if (inExterns() || globalSets != 1 || localSets != 0) {
         return Inlinability.DO_NOT_INLINE;
       }
@@ -1852,22 +1888,26 @@ class GlobalNamespace
      * <p>In AggressiveInlineAliases we want to do some partial backoff if (a) and (b) are false for
      * at-constructor or at-enum names, which is why we return an enum value instead of a boolean.
      */
-    private Inlinability canCollapseOrInline() {
+    Inlinability canCollapseOrInline() {
       if (inExterns()) {
         // condition (d)
+        logDecision(Inlinability.DO_NOT_INLINE, "declared in externs");
         return Inlinability.DO_NOT_INLINE;
       }
       if (isGetOrSetDefinition()) {
         // condition (e)
+        logDecision(Inlinability.DO_NOT_INLINE, "getter / setter");
         return Inlinability.DO_NOT_INLINE;
       }
       if (isCollapsingExplicitlyDenied()) {
         // condition (c)
+        logDecision(Inlinability.DO_NOT_INLINE, "@nocollapse");
         return Inlinability.DO_NOT_INLINE;
       }
 
       if (referencesSuperOrInnerClassName()) {
         // condition (f)
+        logDecision(Inlinability.DO_NOT_INLINE, "references super or inner class name");
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -1877,11 +1917,13 @@ class GlobalNamespace
           if (declarationHasFollowingObjectSpreadSibling(declaration)) {
             // Case: `var x = {a: 0, ...b, c: 2}` where declaration is `a` but not `c`.
             // Following spreads may overwrite the declaration.
+            logDecision(Inlinability.DO_NOT_INLINE, "obj lit property followed by spread");
             return Inlinability.DO_NOT_INLINE;
           }
           Node grandparent = declaration.getGrandparent();
           if (grandparent.isOr() || grandparent.isHook()) {
             // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}`.
+            logDecision(Inlinability.DO_NOT_INLINE, "conditional definition");
             return Inlinability.DO_NOT_INLINE;
           }
         }
@@ -1899,11 +1941,17 @@ class GlobalNamespace
       switch (parentInlinability) {
         case INLINE_COMPLETELY:
           if (isUnchangedThroughFullName) {
+            logDecision(
+                Inlinability.INLINE_COMPLETELY, "parent inlineable: unchanged through full name");
             return Inlinability.INLINE_COMPLETELY;
+          } else {
+            // maybe inline usages of this name, but only if a declared type. non-declared-types
+            // just
+            // back off and don't inline at all
+            final Inlinability unsafeInlinablility = getUnsafeInlinabilityBasedOnDeclaredType();
+            logDecision(unsafeInlinablility, "parent inlineable: changed through full name");
+            return unsafeInlinablility;
           }
-          // maybe inline usages of this name, but only if a declared type. non-declared-types just
-          // back off and don't inline at all
-          return getUnsafeInlinabilityBasedOnDeclaredType();
 
         case INLINE_BUT_KEEP_DECLARATION_CLASS:
         case INLINE_BUT_KEEP_DECLARATION_ENUM:
@@ -1912,19 +1960,39 @@ class GlobalNamespace
           // if it's a declared type, we should still partially inline it and completely collapse it
           // if not a declared type we should partially inline it iff the other conditions hold
           if (isDeclaredType()) {
-            return getUnsafeInlinabilityBasedOnDeclaredType();
+            final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+            logDecision(unsafeInlinability, "parent unsafely inlineable & is declared type");
+            return unsafeInlinability;
+          } else if (isUnchangedThroughFullName) {
+            logDecision(
+                parentInlinability, "parent unsafely inlineable & unchanged through full name");
+            return parentInlinability;
+          } else {
+            // Not a declared type. We may still 'partially' inline it because it must be a property
+            // on an @enum or @constructor, but only if it actually matches conditions (a) and (b)
+            logDecision(
+                Inlinability.DO_NOT_INLINE,
+                "parent unsafely inlineable & changed through full name");
+            return Inlinability.DO_NOT_INLINE;
           }
-          // Not a declared type. We may still 'partially' inline it because it must be a property
-          // on an @enum or @constructor, but only if it actually matches conditions (a) and (b)
-          return isUnchangedThroughFullName ? parentInlinability : Inlinability.DO_NOT_INLINE;
 
         case DO_NOT_INLINE:
-          // If the parent is unsafely to collapse/inline, we will still inline it if it's on
-          // a declaredType (i.e. @constructor or @enum), but we propagate the information that
-          // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
-          return getUnsafeInlinabilityBasedOnDeclaredType();
+          {
+            // If the parent is unsafely to collapse/inline, we will still inline it if it's on
+            // a declaredType (i.e. @constructor or @enum), but we propagate the information that
+            // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
+            final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+            logDecision(unsafeInlinability, "parent cannot be inlined");
+            return unsafeInlinability;
+          }
       }
       throw new IllegalStateException("unknown enum value " + parentInlinability);
+    }
+
+    private void logDecision(Inlinability inlinability, String reason) {
+      if (decisionsLog != null) {
+        decisionsLog.log("%s: %s: %s", getFullName(), inlinability, reason);
+      }
     }
 
     private Inlinability getUnsafeInlinabilityBasedOnDeclaredType() {
@@ -1993,7 +2061,7 @@ class GlobalNamespace
     }
 
     /**
-     * Returns whether to assume that child properties of this name are collapsible/inlinable
+     * Returns whether to assume that child properties of this name are collapsible/inlineable
      *
      * <p>For legacy reasons, both CollapseProperties and AggressiveInlineAliases share the same
      * logic when deciding whether to inline properties or to collapse them.
@@ -2014,13 +2082,28 @@ class GlobalNamespace
      * of these conditions in order to more aggressively collapse `@constructor`s used in
      * goog.provide namespace chains.
      */
-    private Inlinability canCollapseOrInlineChildNames() {
-      if (type == NameType.OTHER
-          || isGetOrSetDefinition()
-          || globalSets != 1
-          || localSets != 0
-          || deleteProps != 0) {
-        // condition (a) and (b)
+    Inlinability canCollapseOrInlineChildNames() {
+      // condition (a) and (b)
+      if (type == NameType.OTHER) {
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "NameType.OTHER");
+        return Inlinability.DO_NOT_INLINE;
+      } else if (isGetOrSetDefinition()) {
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "getter/setter");
+        return Inlinability.DO_NOT_INLINE;
+      } else if (globalSets != 1) {
+        logChildNamesDecision(
+            Inlinability.DO_NOT_INLINE,
+            () -> SimpleFormat.format("set %d times globally", globalSets));
+        return Inlinability.DO_NOT_INLINE;
+      } else if (localSets != 0) {
+        logChildNamesDecision(
+            Inlinability.DO_NOT_INLINE,
+            () -> SimpleFormat.format("set %d times locally", localSets));
+        return Inlinability.DO_NOT_INLINE;
+      } else if (deleteProps != 0) {
+        logChildNamesDecision(
+            Inlinability.DO_NOT_INLINE,
+            () -> SimpleFormat.format("properties are deleted %d times", deleteProps));
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -2029,26 +2112,31 @@ class GlobalNamespace
       // it's probably not worth the effort.
       checkNotNull(declaration);
       if (declaration.getTwin() != null) {
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "twinned declaration");
         return Inlinability.DO_NOT_INLINE;
       }
 
       if (isCollapsingExplicitlyDenied()) {
         // condition (d)
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "@nocollapse");
         return Inlinability.DO_NOT_INLINE;
       }
 
       if (isSetInLoop()) {
         // condition (a)
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "set in a loop");
         return Inlinability.DO_NOT_INLINE;
       }
 
       if (usedHasOwnProperty) {
         // condition (b)
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "hasOwnProperty() call exists");
         return Inlinability.DO_NOT_INLINE;
       }
 
       if (valueImplicitlySupportsAliasing()) {
         // condition (f)
+        logChildNamesDecision(Inlinability.DO_NOT_INLINE, "value implicitly supports aliasing");
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -2056,18 +2144,24 @@ class GlobalNamespace
       // later. So we won't be able to collapse its properties.
       // condition (b)
       if (parent != null && parent.shouldKeepKeys()) {
-        return getUnsafeInlinabilityBasedOnDeclaredType();
+        final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+        logChildNamesDecision(unsafeInlinability, "parent.shouldKeepKeys()");
+        return unsafeInlinability;
       }
 
       // If this is aliased, then its properties can't be collapsed either. but we may do so anyway
       // if it's a declared type.
       // condition (b)
       if (aliasingGets > 0) {
-        return getUnsafeInlinabilityBasedOnDeclaredType();
+        final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+        logChildNamesDecision(
+            unsafeInlinability, () -> SimpleFormat.format("%d aliasing gets exist", aliasingGets));
+        return unsafeInlinability;
       }
 
       if (parent == null) {
         // this is completely safe to inline! yay
+        logChildNamesDecision(Inlinability.INLINE_COMPLETELY, "no reason not to inline");
         return Inlinability.INLINE_COMPLETELY;
       }
 
@@ -2080,9 +2174,27 @@ class GlobalNamespace
       if (parentInlinability == Inlinability.DO_NOT_INLINE) {
         // the parent name is used in a way making this unsafe to inline, but we might want to
         // inline usages of this name
-        return getUnsafeInlinabilityBasedOnDeclaredType();
+        final Inlinability unsafeInlinability = getUnsafeInlinabilityBasedOnDeclaredType();
+        logChildNamesDecision(unsafeInlinability, "parent is not inlineable");
+        return unsafeInlinability;
       }
+      logChildNamesDecision(parentInlinability, "inherited from parent");
       return parentInlinability;
+    }
+
+    private void logChildNamesDecision(Inlinability inlinability, String reason) {
+      if (decisionsLog != null) {
+        decisionsLog.log("%s: children: %s: %s", getFullName(), inlinability, reason);
+      }
+    }
+
+    private void logChildNamesDecision(Inlinability inlinability, Supplier<String> reasonSupplier) {
+      if (decisionsLog != null) {
+        decisionsLog.log(
+            () ->
+                SimpleFormat.format(
+                    "%s: children: %s: %s", getFullName(), inlinability, reasonSupplier.get()));
+      }
     }
 
     private boolean valueImplicitlySupportsAliasing() {

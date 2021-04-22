@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
@@ -49,7 +49,8 @@ public class SourceMapResolver {
     if (parseInlineSourceMaps && sourceMapURL.startsWith(BASE64_URL_PREFIX)) {
       String extractedString = extractBase64String(sourceMapURL);
       if (extractedString != null) {
-        return SourceFile.fromCode(jsFile.getName() + ".inline.map", extractedString);
+        return SourceFile.fromCode(
+            jsFile.getName() + ".inline.map", extractedString, SourceKind.NON_CODE);
       }
       return null;
     }
@@ -82,7 +83,6 @@ public class SourceMapResolver {
     return null;
   }
 
-  @VisibleForTesting
   private static boolean isAbsolute(String url) {
     try {
       return new URI(url).isAbsolute() || url.startsWith("/");
@@ -100,6 +100,7 @@ public class SourceMapResolver {
   static SourceFile getRelativePath(String baseFilePath, String relativePath) {
     return SourceFile.fromPath(
         FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize(),
-        UTF_8);
+        UTF_8,
+        SourceKind.NON_CODE);
   }
 }

@@ -59,7 +59,7 @@ public final class ColorRegistry implements Serializable {
     SingletonColorFields fields =
         SingletonColorFields.builder()
             .setNativeColorId(nativeColorId)
-            .setId("__nativeColor__" + nativeColorId.name())
+            .setId(nativeColorId.getId())
             .setDebugInfo(DebugInfo.builder().setClassName(nativeColorId.name()).build())
             .setInvalidating(nativeColorId.alwaysInvalidating())
             .build();

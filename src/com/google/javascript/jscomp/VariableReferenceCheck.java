@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Checks variables to see if they are referenced before their declaration, or
@@ -398,11 +399,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             }
           }
           compiler.report(
-              JSError.make(
-                  warningNode,
-                  diagnosticType,
-                  v.getName(),
-                  v.getInput() != null ? v.getInput().getName() : "??"));
+              JSError.make(warningNode, diagnosticType, v.getName(), locationOf(v.getNode())));
           return true;
         }
       }
@@ -414,6 +411,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       return true;
     }
     return false;
+  }
+
+  private static String locationOf(@Nullable Node n) {
+    return (n == null) ? "<unknown>" : n.getLocation();
   }
 
   /**

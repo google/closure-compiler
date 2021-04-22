@@ -74,4 +74,18 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
         warning(MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE)
             .withMessageContaining(lines("The correct namespace is: \"google3.gws.js.test\"")));
   }
+
+  // MOE::begin_strip
+  @Test
+  public void testWarningWithFullSourceName() {
+    test(
+        srcs(
+            ImmutableList.of(
+                SourceFile.fromCode(
+                    "/google/src/cloud/someuser/someworkspace/google3/gws/js/test.js",
+                    "goog.module('test');\nalert(1);"))),
+        warning(MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE)
+            .withMessageContaining(lines("The correct namespace is: \"google3.gws.js.test\"")));
+  }
+  // MOE::end_strip
 }

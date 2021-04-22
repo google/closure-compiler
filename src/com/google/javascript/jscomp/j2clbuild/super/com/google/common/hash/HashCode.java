@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Closure Compiler Authors.
+ * Copyright 2015 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp.serialization;
 
-import com.google.protobuf.ByteString;
+package com.google.common.hash;
 
-/** no-op j2cl replacement */
-final class Wtf8Encoder {
+/** No-op J2CL impl */
+public abstract class HashCode {
 
-  private Wtf8Encoder() {}
+  public abstract long asLong();
 
-  static ByteString encodeToWtf8(String s) {
-    return ByteString.copyFromUtf8(s);
-  }
-
-  static String decodeFromWtf8(ByteString serialized) {
-    return serialized.toStringUtf8();
-  }
+  private HashCode() {}
 }

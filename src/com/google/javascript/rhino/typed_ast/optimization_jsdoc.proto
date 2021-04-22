@@ -60,4 +60,7 @@ enum JsdocTag {
 
   // Used by CrossChunkCodeMotion
   JSDOC_PURE_OR_BREAK_MY_CODE = 24;
+
+  // Used by GlobalNamespace, CollapseProperties, and AggressiveInlineAliases
+  JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE = 25;
 }

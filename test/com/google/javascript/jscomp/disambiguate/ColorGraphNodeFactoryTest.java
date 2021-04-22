@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.colors.ColorId.fromAscii;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Correspondence;
@@ -103,7 +104,8 @@ public final class ColorGraphNodeFactoryTest {
     // Given
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
-    Color fooType = Color.createSingleton(SingletonColorFields.builder().setId("Foo").build());
+    Color fooType =
+        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build());
     ColorGraphNode flatFoo = factory.createNode(fooType);
 
     // When
@@ -121,8 +123,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             colorRegistry.get(NativeColorId.NUMBER),
-            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
-            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build()),
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build()));
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -142,8 +144,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             colorRegistry.get(NativeColorId.NUMBER),
-            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
-            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build()),
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build()));
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -177,8 +179,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             colorRegistry.get(NativeColorId.NUMBER),
-            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
-            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build()),
+            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build()));
 
     return sampleTypes.stream().map(factory::createNode).collect(toImmutableSet());
   }

@@ -18,13 +18,19 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Correspondence;
-import com.google.javascript.jscomp.SourceFile.Generator;
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,10 +41,18 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class RecoverableJsAstTest {
-  private String srcCode = "";
+  private Path tempFile;
+  private FileSystem fs;
+
+  @Before
+  public void setup() throws IOException {
+    FileSystem fs = Jimfs.newFileSystem();
+    this.tempFile = fs.getPath("/test.js");
+    Files.createFile(this.tempFile);
+  }
 
   @Test
-  public void testSimple() {
+  public void testSimple() throws IOException {
     setSourceCode("var a;");
     SourceAst realAst = createRealAst();
 
@@ -67,7 +81,7 @@ public class RecoverableJsAstTest {
   }
 
   @Test
-  public void testWarningReplay() {
+  public void testWarningReplay() throws IOException {
     setSourceCode("var f() = a;");
     SourceAst realAst = createRealAst();
 
@@ -91,21 +105,14 @@ public class RecoverableJsAstTest {
     return new RecoverableJsAst(ast, true);
   }
 
-  private String getSourceCode() {
-    return srcCode;
-  }
-
-  private void setSourceCode(String code) {
-    srcCode = code;
+  private void setSourceCode(String code) throws IOException {
+    Files.write(tempFile, code.getBytes(UTF_8));
   }
 
   private SourceAst createRealAst() {
-    SourceFile file = SourceFile.fromGenerator("tests.js", new Generator() {
-      @Override
-      public String getCode() {
-        return getSourceCode();
-      }
-    });
+    // use SourceFile.fromPath instead of a preloaded SourceFile.fromCode so that test cases may
+    // modify the contents of the SourceFile via changing the underlying file.
+    SourceFile file = SourceFile.fromPath(tempFile, UTF_8);
     return new JsAst(file);
   }
 

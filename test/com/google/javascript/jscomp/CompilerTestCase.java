@@ -41,11 +41,11 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
+import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -201,6 +201,9 @@ public abstract class CompilerTestCase {
    * it, and not present for those that shouldn't have it.
    */
   private boolean typeInfoValidationEnabled;
+
+  /** Whether we should verify that all type annotations are present on override methods. */
+  private boolean checkMissingOverrideTypes;
 
   /**
    * Whether we should verify that for every SCRIPT node, all features present in its AST are also
@@ -614,6 +617,7 @@ public abstract class CompilerTestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
+    this.checkMissingOverrideTypes = false;
     this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
@@ -681,6 +685,9 @@ public abstract class CompilerTestCase {
     if (!ignoredWarnings.isEmpty()) {
       options.setWarningLevel(
           new DiagnosticGroup(ignoredWarnings.toArray(new DiagnosticType[0])), CheckLevel.OFF);
+    }
+    if (checkMissingOverrideTypes) {
+      options.setCheckMissingOverrideTypes(true);
     }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
@@ -987,6 +994,12 @@ public abstract class CompilerTestCase {
   protected final void disableTypeInfoValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeInfoValidationEnabled = false;
+  }
+
+  /** Enable fixing missing override types */
+  protected final void enableFixMissingOverrideTypes() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkMissingOverrideTypes = true;
   }
 
   /** Enable validating script featuresets after each run of the pass. */

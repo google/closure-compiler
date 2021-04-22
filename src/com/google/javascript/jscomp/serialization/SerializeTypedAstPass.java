@@ -17,14 +17,13 @@
 package com.google.javascript.jscomp.serialization;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -62,16 +61,34 @@ public final class SerializeTypedAstPass implements CompilerPass {
     this.serializationOptions = serializationOptions;
   }
 
+  public static SerializeTypedAstPass createFromOutputStream(AbstractCompiler c, OutputStream out) {
+    Consumer<TypedAst> toOutputStream =
+        ast -> {
+          try {
+            ast.writeTo(out);
+          } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot write to stream", e);
+          }
+        };
+    return new SerializeTypedAstPass(c, SerializationOptions.SKIP_DEBUG_INFO, toOutputStream);
+  }
+
+  public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
+    Consumer<TypedAst> toPath =
+        ast -> {
+          try (OutputStream out = Files.newOutputStream(outputPath)) {
+            ast.writeTo(out);
+          } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot create TypedAst output file", e);
+          }
+        };
+    return new SerializeTypedAstPass(compiler, SerializationOptions.SKIP_DEBUG_INFO, toPath);
+  }
+
   @Override
   public void process(Node externs, Node root) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
     TypedAstSerializer serializer =
-        TypedAstSerializer.createFromRegistryWithOptions(
-            registry,
-            serializationOptions,
-            compiler.hasTypeCheckingRun()
-                ? ImmutableList.copyOf(compiler.getTypeMismatches())
-                : ImmutableList.of());
+        TypedAstSerializer.createFromRegistryWithOptions(compiler, serializationOptions);
     TypedAst ast = serializer.serializeRoots(externs, root);
     consumer.accept(ast);
   }

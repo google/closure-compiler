@@ -98,6 +98,7 @@ public enum NativeColorId {
       /* alwaysInvalidating= */ true,
       /* isTypesystemPrimitive= */ true);
 
+  private final ColorId id;
   private final boolean isJsPrimitive;
   private final NativeColorId boxed;
   private final boolean alwaysInvalidating;
@@ -108,10 +109,15 @@ public enum NativeColorId {
       NativeColorId boxed,
       boolean alwaysInvalidating,
       boolean isTypesystemPrimitive) {
+    this.id = ColorId.forNative(this);
     this.isJsPrimitive = isJsPrimitive;
     this.boxed = boxed;
     this.alwaysInvalidating = alwaysInvalidating;
     this.isTypesystemPrimitive = isTypesystemPrimitive;
+  }
+
+  public final ColorId getId() {
+    return this.id;
   }
 
   /** Whether this is some JavaScript primitive type like number or string */

@@ -1636,6 +1636,7 @@ var RTCIceServer;
 /**
  * @typedef {{
  *   iceServers: !Array<!RTCIceServer>,
+ *   iceTransportPolicy: (string|undefined),
  *   sdpSemantics: (string|undefined)
  * }}
  * @private
@@ -1652,6 +1653,13 @@ function RTCConfigurationInterface_() {}
  * @type {!Array<!RTCIceServer>}
  */
 RTCConfigurationInterface_.prototype.iceServers;
+
+/**
+ * Allows specifying the ICE transport policy. Valid values are "all" and
+ * "relay", with "all" being the default.
+ * @type {string|undefined}
+ */
+RTCConfigurationInterface_.prototype.iceTransportPolicy;
 
 /**
  * Allows specifying the SDP semantics. Valid values are "plan-b" and

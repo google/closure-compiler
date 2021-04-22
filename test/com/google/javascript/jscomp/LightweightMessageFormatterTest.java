@@ -84,7 +84,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testFormatErrorSpaces() {
-    Node n = Node.newString("foobar", 5, 8);
+    Node n = Node.newString("foobar").setLinenoCharno(5, 8);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
@@ -98,7 +98,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testFormatErrorTabs() {
-    Node n = Node.newString("foobar", 5, 6);
+    Node n = Node.newString("foobar").setLinenoCharno(5, 6);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
@@ -136,7 +136,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testFormatErrorOriginalSource() {
-    Node n = Node.newString("foobar", 5, 8);
+    Node n = Node.newString("foobar").setLinenoCharno(5, 8);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
@@ -153,7 +153,7 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testMultiline_oneLineErrorMessage() {
-    Node n = Node.newString("foobar", 5, 8);
+    Node n = Node.newString("foobar").setLinenoCharno(5, 8);
     n.setLength("foobar".length());
     n.setSourceFileForTesting("javascript/complex.js");
     JSError error = JSError.make(n, FOO_TYPE);
@@ -212,9 +212,9 @@ public final class LightweightMessageFormatterTest {
 
   @Test
   public void testMultiline_nodeLengthOutOfBounds() {
-    Node foobar = Node.newString("foobar", 5, 2);
+    Node foobar = Node.newString("foobar").setLinenoCharno(5, 2);
     foobar.setLength("foobar".length());
-    Node baz = Node.newString("baz", 6, 6);
+    Node baz = Node.newString("baz").setLinenoCharno(6, 6);
     baz.setLength("baz".length());
     Node orNode = IR.or(foobar, baz);
     orNode.setLinenoCharno(5, 4);

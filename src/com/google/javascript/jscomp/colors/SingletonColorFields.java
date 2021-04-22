@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 @Immutable
 public abstract class SingletonColorFields implements Serializable {
 
-  abstract String getId();
+  abstract ColorId getId();
 
   abstract DebugInfo getDebugInfo();
 
@@ -72,7 +72,7 @@ public abstract class SingletonColorFields implements Serializable {
    */
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Builder setId(String value);
+    public abstract Builder setId(ColorId value);
 
     public abstract Builder setInvalidating(boolean value);
 

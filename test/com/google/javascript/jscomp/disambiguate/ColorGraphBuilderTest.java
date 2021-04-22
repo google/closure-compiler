@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.SingletonColorFields;
@@ -576,9 +577,9 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   }
 
   private static SingletonColorFields.Builder createWithUniqueName(String name) {
-    SingletonColorFields.Builder builder = SingletonColorFields.builder().setId(name);
-    builder.setDebugInfo(DebugInfo.builder().setClassName(name).build());
-    return builder;
+    return SingletonColorFields.builder()
+        .setId(ColorId.fromAscii(name))
+        .setDebugInfo(DebugInfo.builder().setClassName(name).build());
   }
 
   private static final Correspondence<DiGraphNode<ColorGraphNode, Object>, String>

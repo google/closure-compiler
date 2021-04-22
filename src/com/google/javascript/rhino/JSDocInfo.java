@@ -328,6 +328,7 @@ public class JSDocInfo implements Serializable {
     RECORD,
     ABSTRACT,
     PURE_OR_BREAK_MY_CODE,
+    COLLAPSIBLE_OR_BREAK_MY_CODE,
 
     NG_INJECT,
     WIZ_ACTION,
@@ -831,6 +832,14 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @noinline} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoInline() {
     return checkBit(Bit.NOINLINE);
+  }
+
+  /**
+   * Returns whether the {@code @collapsibleOrBreakMyCode} annotation is present on this {@link
+   * JSDocInfo}.
+   */
+  public boolean isCollapsibleOrBreakMyCode() {
+    return checkBit(Bit.COLLAPSIBLE_OR_BREAK_MY_CODE);
   }
 
   /**
@@ -1642,7 +1651,7 @@ public class JSDocInfo implements Serializable {
         position.setPositionInformation(lineno, charno, lineno, charno + name.length());
 
         NamePosition nodePos = new NamePosition();
-        Node node = Node.newString(Token.NAME, name, lineno, charno);
+        Node node = Node.newString(Token.NAME, name).setLinenoCharno(lineno, charno);
         node.setLength(name.length());
         if (templateNode != null) {
           node.setStaticSourceFileFrom(templateNode);
@@ -2146,6 +2155,17 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordPureOrBreakMyCode() {
       return populateBit(Bit.PURE_OR_BREAK_MY_CODE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isCollapsibleOrBreakMyCode()} flag set to {@code true}.
+     *
+     * @return {@code true} if the no collapsibleOrBreakMyCode flag was recorded and {@code false}
+     *     if it was already recorded
+     */
+    public boolean recordCollapsibleOrBreakMyCode() {
+      return populateBit(Bit.COLLAPSIBLE_OR_BREAK_MY_CODE, true);
     }
 
     /**

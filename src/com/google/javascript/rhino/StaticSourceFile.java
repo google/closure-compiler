@@ -52,7 +52,9 @@ public interface StaticSourceFile {
     /** A file whose contents are necessary for type checking only. */
     WEAK,
     /** A file whose contents are extern declarations. */
-    EXTERN
+    EXTERN,
+    /** A file that is not part of the compilation unit and is not strong, weak, or an extern */
+    NON_CODE,
   }
 
   /**

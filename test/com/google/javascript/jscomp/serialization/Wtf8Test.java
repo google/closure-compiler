@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class Wtf8EncoderTest {
+public final class Wtf8Test {
 
   @Test
   public void testAscii() {
@@ -71,9 +71,11 @@ public final class Wtf8EncoderTest {
     roundtrip("💅🏽");
   }
 
+  private final Wtf8.Decoder decoder = Wtf8.decoder(256);
+
   private void roundtrip(String s) {
-    byte[] serialized = Wtf8Encoder.encodeToWtf8(s).toByteArray();
-    String roundtripped = Wtf8Encoder.decodeFromWtf8(ByteString.copyFrom(serialized));
+    byte[] serialized = Wtf8.encodeToWtf8(s).toByteArray();
+    String roundtripped = this.decoder.decode(ByteString.copyFrom(serialized));
     assertThat(roundtripped).isEqualTo(s);
   }
 }

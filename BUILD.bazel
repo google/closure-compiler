@@ -201,6 +201,7 @@ gen_java_tests(
         "@com_google_guava_failureaccess//jar",
         "@com_google_guava_guava//jar",
         "@com_google_guava_guava_testlib//jar",
+        "@com_google_jimfs_jimfs",
         "@com_google_protobuf//:protobuf_java",
         "@com_google_re2j_re2j",
         "@com_google_truth_extensions_truth_liteproto_extension",

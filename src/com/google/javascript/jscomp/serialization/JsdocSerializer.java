@@ -62,6 +62,9 @@ public final class JsdocSerializer {
     if (jsdoc.isPureOrBreakMyCode()) {
       builder.addKind(JsdocTag.JSDOC_PURE_OR_BREAK_MY_CODE);
     }
+    if (jsdoc.isCollapsibleOrBreakMyCode()) {
+      builder.addKind(JsdocTag.JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE);
+    }
     if (jsdoc.hasThisType()) {
       builder.addKind(JsdocTag.JSDOC_THIS);
     }
@@ -217,6 +220,9 @@ public final class JsdocSerializer {
           continue;
         case JSDOC_PURE_OR_BREAK_MY_CODE:
           builder.recordPureOrBreakMyCode();
+          continue;
+        case JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE:
+          builder.recordCollapsibleOrBreakMyCode();
           continue;
         case JSDOC_DEFINE:
           builder.recordDefineType(placeholderType);

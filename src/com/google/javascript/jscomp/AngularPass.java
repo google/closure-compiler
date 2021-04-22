@@ -124,16 +124,13 @@ class AngularPass extends AbstractPostOrderCallback
       if (dependencies.isEmpty()) {
         continue;
       }
-      Node dependenciesArray = IR.arraylit(dependencies.toArray(new Node[0]));
+      Node dependenciesArray = IR.arraylit(dependencies);
       // creates `something.$inject = ['param1', 'param2']` node.
-      Node statement = IR.exprResult(
-          IR.assign(
-              IR.getelem(
-                  NodeUtil.newQName(compiler, name),
-                  IR.string(INJECT_PROPERTY_NAME)),
-              dependenciesArray
-          )
-      );
+      Node statement =
+          IR.exprResult(
+              IR.assign(
+                  IR.getelem(NodeUtil.newQName(compiler, name), IR.string(INJECT_PROPERTY_NAME)),
+                  dependenciesArray));
       statement.srcrefTree(entry.getNode());
       statement.setOriginalName(name);
       // Set the visibility of the newly created property.

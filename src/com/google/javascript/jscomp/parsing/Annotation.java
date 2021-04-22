@@ -19,15 +19,14 @@ package com.google.javascript.jscomp.parsing;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
-/**
- * All natively recognized JSDoc annotations.
- */
+/** All natively recognized JSDoc annotations. */
 enum Annotation {
   NG_INJECT,
   ABSTRACT,
   ALTERNATE_MESSAGE_ID,
   AUTHOR,
   CLOSURE_PRIMITIVE,
+  COLLAPSIBLE_OR_BREAK_MY_CODE,
   CONSTANT,
   CONSTRUCTOR,
   CUSTOM_ELEMENT,
@@ -93,6 +92,7 @@ enum Annotation {
           .put("author", Annotation.AUTHOR)
           .put("closurePrimitive", Annotation.CLOSURE_PRIMITIVE)
           .put("const", Annotation.CONSTANT)
+          .put("collapsibleOrBreakMyCode", Annotation.COLLAPSIBLE_OR_BREAK_MY_CODE)
           .put("constant", Annotation.CONSTANT)
           .put("constructor", Annotation.CONSTRUCTOR)
           .put("customElement", Annotation.CUSTOM_ELEMENT)

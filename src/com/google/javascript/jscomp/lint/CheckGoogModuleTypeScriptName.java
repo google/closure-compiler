@@ -81,8 +81,11 @@ public final class CheckGoogModuleTypeScriptName implements NodeTraversal.Callba
       return;
     }
     // MOE::begin_strip
-    if (!sourceName.startsWith("google3/")) {
+    int google3Index = sourceName.indexOf("google3");
+    if (google3Index == -1) {
       sourceName = "google3/" + sourceName;
+    } else if (google3Index != 0) {
+      sourceName = sourceName.substring(google3Index);
     }
     // MOE::end_strip
     String replacementNamespace =

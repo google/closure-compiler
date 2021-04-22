@@ -85,8 +85,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
-    optimizer.addOneTimePass(
-        makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
+    optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
     return optimizer;
@@ -275,9 +274,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   @Test
   public void testClassWithDictJsDoc() {
-    test(
-        "/** @dict */ class C { }",
-        "/** @constructor @dict */ let C = function() {};");
+    test("/** @dict */ class C { }", "/** @constructor @dict */ let C = function() {};");
   }
 
   @Test
@@ -448,7 +445,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @constructor",
-
             " */",
             "let C = function() {};",
             "",
@@ -1956,11 +1952,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  value: {",
             "    configurable: true,",
             "    enumerable: true,",
-
             "    set: function(val) {",
             "      this.internalVal = val;",
             "    },",
-
             "    get: function() {",
             "      return this.internalVal;",
             "    }",

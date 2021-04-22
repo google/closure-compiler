@@ -20,50 +20,60 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceInformationAnnotator;
-import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.RhinoStringPool;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.serialization.SerializationOptions;
-import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.IdentityHashMap;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 final class TypedAstSerializer {
 
-  private final JSTypeSerializer jsTypeSerializer;
+  private final AbstractCompiler compiler;
+  private final SerializationOptions serializationMode;
   private final StringPoolBuilder stringPool;
   private int previousLine;
   private int previousColumn;
 
+  private IdentityHashMap<JSType, TypePointer> typesToPointers = null;
+
   private TypedAstSerializer(
-      JSTypeSerializer jsTypeSerializer, StringPoolBuilder stringPoolBuilder) {
-    this.jsTypeSerializer = jsTypeSerializer;
+      AbstractCompiler compiler,
+      SerializationOptions serializationMode,
+      StringPoolBuilder stringPoolBuilder) {
+    this.compiler = compiler;
+    this.serializationMode = serializationMode;
     this.stringPool = stringPoolBuilder;
   }
 
   static TypedAstSerializer createFromRegistryWithOptions(
-      JSTypeRegistry registry,
-      SerializationOptions serializationMode,
-      ImmutableList<TypeMismatch> mismatches) {
+      AbstractCompiler compiler, SerializationOptions serializationMode) {
     StringPoolBuilder stringPoolBuilder = new StringPoolBuilder();
-    JSTypeSerializer jsTypeSerializer =
-        JSTypeSerializer.create(
-            registry,
-            new InvalidatingTypes.Builder(registry).addAllTypeMismatches(mismatches).build(),
-            stringPoolBuilder,
-            serializationMode);
-    return new TypedAstSerializer(jsTypeSerializer, stringPoolBuilder);
+    return new TypedAstSerializer(compiler, serializationMode, stringPoolBuilder);
   }
 
   /** Transforms the given compiler AST root nodes into into a serialized TypedAst object */
   TypedAst serializeRoots(Node externsRoot, Node jsRoot) {
     checkArgument(externsRoot.isRoot());
     checkArgument(jsRoot.isRoot());
+
+    final TypePool typePool;
+    if (this.compiler.hasTypeCheckingRun()) {
+      SerializeTypesToPointers typeSerializer =
+          SerializeTypesToPointers.create(this.compiler, this.stringPool, this.serializationMode);
+      typeSerializer.gatherTypesOnAst(jsRoot.getParent());
+      this.typesToPointers = typeSerializer.getTypePointersByJstype();
+      typePool = typeSerializer.getTypePool();
+    } else {
+      this.typesToPointers = new IdentityHashMap<>();
+      typePool = TypePool.getDefaultInstance();
+    }
+
     TypedAst.Builder builder = TypedAst.newBuilder();
     for (Node script = externsRoot.getFirstChild(); script != null; script = script.getNext()) {
       if (NodeUtil.isFromTypeSummary(script)) {
@@ -74,18 +84,25 @@ final class TypedAstSerializer {
     for (Node script = jsRoot.getFirstChild(); script != null; script = script.getNext()) {
       builder.addSourceFile(serializeScriptNode(script));
     }
-    return builder
-        .setTypePool(jsTypeSerializer.generateTypePool())
-        .setStringPool(this.stringPool.build())
-        .build();
+    return builder.setTypePool(typePool).setStringPool(this.stringPool.build()).build();
   }
 
   private JavascriptFile serializeScriptNode(Node script) {
     checkState(script.isScript());
-    String filename = checkNotNull(script.getSourceFileName());
+    StaticSourceFile sourceFile = checkNotNull(script.getStaticSourceFile());
+    String filename = checkNotNull(sourceFile.getName());
     previousLine = previousColumn = 0;
     AstNode root = visit(script);
-    return JavascriptFile.newBuilder().setFilename(filename).setRoot(root).build();
+    checkState(
+        sourceFile instanceof SourceFile,
+        "Unexpected SourceFile %s for node %s",
+        sourceFile,
+        script);
+    return JavascriptFile.newBuilder()
+        .setFilename(filename)
+        .setRoot(root)
+        .setCodeLocation(((SourceFile) sourceFile).getCodeLocationProto())
+        .build();
   }
 
   private AstNode.Builder createWithPositionInfo(Node n) {
@@ -104,8 +121,8 @@ final class TypedAstSerializer {
   private AstNode visit(Node n) {
     AstNode.Builder builder = createWithPositionInfo(n);
     JSType type = n.getJSType();
-    if (type != null && jsTypeSerializer != null) {
-      builder.setType(jsTypeSerializer.serializeType(type));
+    if (type != null) {
+      builder.setType(this.typesToPointers.get(type));
     }
     OptimizationJsdoc serializedJsdoc = JsdocSerializer.serializeJsdoc(n.getJSDocInfo());
     if (serializedJsdoc != null) {
@@ -122,8 +139,8 @@ final class TypedAstSerializer {
     return builder.build();
   }
 
-  private ArrayList<NodeProperty> booleanPropTranslator(Node n) {
-    ArrayList<NodeProperty> props = new ArrayList<>();
+  private EnumSet<NodeProperty> booleanPropTranslator(Node n) {
+    EnumSet<NodeProperty> props = EnumSet.noneOf(NodeProperty.class);
     if (n.isArrowFunction()) {
       props.add(NodeProperty.ARROW_FN);
     }
@@ -157,7 +174,7 @@ final class TypedAstSerializer {
     if (n.isGeneratorSafe()) {
       props.add(NodeProperty.IS_GENERATOR_SAFE);
     }
-    if (n.isColorFromTypeCast()) {
+    if (n.getJSTypeBeforeCast() != null) {
       props.add(NodeProperty.COLOR_FROM_CAST);
     }
     if (!n.isIndexable()) {

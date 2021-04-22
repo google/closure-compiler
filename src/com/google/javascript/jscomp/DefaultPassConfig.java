@@ -68,9 +68,9 @@ import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
+import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -381,6 +381,15 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // Analyzer checks must be run after typechecking but before module rewriting.
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
+      checks.add(analyzerChecks);
+    }
+
+    if (options.isCheckingMissingOverrideTypes()) {
+      checks.add(checkMissingOverrideTypes);
+    }
+
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
@@ -430,11 +439,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkConsts);
-
-    // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
-      checks.add(analyzerChecks);
-    }
 
     if (options.checkGlobalNamesLevel.isOn()) {
       checks.add(checkGlobalNames);
@@ -1719,6 +1723,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
+  private final PassFactory checkMissingOverrideTypes =
+      PassFactory.builder()
+          .setName("checkMissingOverrideTypes")
+          .setInternalFactory(CheckMissingOverrideTypes::new)
+          .setFeatureSetForChecks()
+          .build();
+
   private final PassFactory inferJsDocInfo =
       PassFactory.builderForHotSwap()
           .setName("inferJsDocInfo")
@@ -2931,3 +2942,4 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getOptions().getChunkOutputType()))
           .build();
 }
+

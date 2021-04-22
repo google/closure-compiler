@@ -71,7 +71,6 @@ import javax.annotation.Nullable;
  * This class implements the root of the intermediate representation.
  *
  */
-
 public class Node implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -285,11 +284,6 @@ public class Node implements Serializable {
       this.number = number;
     }
 
-    public NumberNode(double number, int lineno, int charno) {
-      super(Token.NUMBER, lineno, charno);
-      this.number = number;
-    }
-
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -354,11 +348,6 @@ public class Node implements Serializable {
       setString(str);
     }
 
-    StringNode(Token token, String str, int lineno, int charno) {
-      super(token, lineno, charno);
-      setString(str);
-    }
-
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
@@ -386,8 +375,7 @@ public class Node implements Serializable {
 
     private static final long serialVersionUID = 1L;
     // The "cooked" version of the template literal substring. May be null.
-    @Nullable
-    private String cooked;
+    @Nullable private String cooked;
     // The raw version of the template literal substring, is not null
     private String raw;
 
@@ -398,13 +386,6 @@ public class Node implements Serializable {
 
     TemplateLiteralSubstringNode(@Nullable String cooked, String raw) {
       super(Token.TEMPLATELIT_STRING);
-      setCooked(cooked);
-      setRaw(raw);
-    }
-
-    TemplateLiteralSubstringNode(@Nullable String cooked, String raw,
-        int lineno, int charno) {
-      super(Token.TEMPLATELIT_STRING, lineno, charno);
       setCooked(cooked);
       setRaw(raw);
     }
@@ -462,7 +443,9 @@ public class Node implements Serializable {
     }
 
     public abstract int getIntValue();
+
     public abstract Object getObjectValue();
+
     public abstract PropListItem chain(@Nullable PropListItem next);
   }
 
@@ -576,22 +559,8 @@ public class Node implements Serializable {
     right.parent = this;
   }
 
-  public Node(Token token, int lineno, int charno) {
-    this(token);
-    this.setLinenoCharno(lineno, charno);
-  }
-
-  public Node(Token token, Node child, int lineno, int charno) {
-    this(token, child);
-    this.setLinenoCharno(lineno, charno);
-  }
-
   public static Node newNumber(double number) {
     return new NumberNode(number);
-  }
-
-  public static Node newNumber(double number, int lineno, int charno) {
-    return new NumberNode(number, lineno, charno);
   }
 
   public static Node newBigInt(BigInteger bigint) {
@@ -604,14 +573,6 @@ public class Node implements Serializable {
 
   public static Node newString(Token token, String str) {
     return new StringNode(token, str);
-  }
-
-  public static Node newString(String str, int lineno, int charno) {
-    return new StringNode(Token.STRINGLIT, str, lineno, charno);
-  }
-
-  public static Node newString(Token token, String str, int lineno, int charno) {
-    return new StringNode(token, str, lineno, charno);
   }
 
   public static Node newTemplateLitString(String cooked, String raw) {
@@ -728,7 +689,9 @@ public class Node implements Serializable {
     checkArgument(
         child.parent == null,
         "Cannot add already-owned child node.\nChild: %s\nExisting parent: %s\nNew parent: %s",
-        child, child.parent, this);
+        child,
+        child.parent,
+        this);
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
 
@@ -750,10 +713,9 @@ public class Node implements Serializable {
   /**
    * Add all children to the front of this node.
    *
-   * @param children first of a list of sibling nodes who have no parent.
-   *    NOTE: Usually you would get this argument from a removeChildren() call.
-   *    A single detached node will not work because its sibling pointers will not be
-   *    correctly initialized.
+   * @param children first of a list of sibling nodes who have no parent. NOTE: Usually you would
+   *     get this argument from a removeChildren() call. A single detached node will not work
+   *     because its sibling pointers will not be correctly initialized.
    */
   public final void addChildrenToFront(@Nullable Node children) {
     if (children == null) {
@@ -828,10 +790,9 @@ public class Node implements Serializable {
   /**
    * Add all children after 'node'. If 'node' is null, add them to the front of this node.
    *
-   * @param children first of a list of sibling nodes who have no parent.
-   *    NOTE: Usually you would get this argument from a removeChildren() call.
-   *    A single detached node will not work because its sibling pointers will not be
-   *    correctly initialized.
+   * @param children first of a list of sibling nodes who have no parent. NOTE: Usually you would
+   *     get this argument from a removeChildren() call. A single detached node will not work
+   *     because its sibling pointers will not be correctly initialized.
    */
   public final void addChildrenAfter(@Nullable Node children, @Nullable Node node) {
     if (children == null) {
@@ -995,9 +956,9 @@ public class Node implements Serializable {
   }
 
   /**
-   * Clone the properties from the provided node without copying
-   * the property object.  The receiving node may not have any
-   * existing properties.
+   * Clone the properties from the provided node without copying the property object. The receiving
+   * node may not have any existing properties.
+   *
    * @param other The node to clone properties from.
    * @return this node.
    */
@@ -1078,9 +1039,7 @@ public class Node implements Serializable {
     return (Node) getProp(Prop.DECLARED_TYPE_EXPR);
   }
 
-  /**
-   * Sets the type of this node before casting.
-   */
+  /** Sets the type of this node before casting. */
   public final void setJSTypeBeforeCast(JSType type) {
     putProp(Prop.TYPE_BEFORE_CAST, type);
   }
@@ -1165,20 +1124,14 @@ public class Node implements Serializable {
     return toString(true, true, true);
   }
 
-  public final String toString(
-      boolean printSource,
-      boolean printAnnotations,
-      boolean printType) {
+  public final String toString(boolean printSource, boolean printAnnotations, boolean printType) {
     StringBuilder sb = new StringBuilder();
     toString(sb, printSource, printAnnotations, printType);
     return sb.toString();
   }
 
   private void toString(
-      StringBuilder sb,
-      boolean printSource,
-      boolean printAnnotations,
-      boolean printType) {
+      StringBuilder sb, boolean printSource, boolean printAnnotations, boolean printType) {
     sb.append(token);
     if (this instanceof StringNode) {
       sb.append(' ');
@@ -1254,8 +1207,7 @@ public class Node implements Serializable {
     toStringTreeHelper(this, 0, appendable);
   }
 
-  private static void toStringTreeHelper(Node n, int level, Appendable sb)
-      throws IOException {
+  private static void toStringTreeHelper(Node n, int level, Appendable sb) throws IOException {
     for (int i = 0; i != level; ++i) {
       sb.append("    ");
     }
@@ -1294,29 +1246,7 @@ public class Node implements Serializable {
    */
   @Nullable private transient PropListItem propListHead;
 
-  /**
-   * COLUMN_BITS represents how many of the lower-order bits of linenoCharno are reserved for
-   * storing the column number. Bits above these store the line number. This gives us decent
-   * position information for everything except files already passed through a minimizer, where
-   * lines might be longer than 4096 characters.
-   */
-  public static final int COLUMN_BITS = 12;
-
-  /**
-   * MAX_COLUMN_NUMBER represents the maximum column number that can
-   * be represented.  JSCompiler's modifications to Rhino cause all
-   * tokens located beyond the maximum column to MAX_COLUMN_NUMBER.
-   */
-  public static final int MAX_COLUMN_NUMBER = (1 << COLUMN_BITS) - 1;
-
-  /**
-   * COLUMN_MASK stores a value where bits storing the column number
-   * are set, and bits storing the line are not set.  It's handy for
-   * separating column number from line number.
-   */
-  public static final int COLUMN_MASK = MAX_COLUMN_NUMBER;
-
-  //==========================================================================
+  // ==========================================================================
   // Source position management
 
   public final void setStaticSourceFileFrom(Node other) {
@@ -1324,7 +1254,7 @@ public class Node implements Serializable {
     if (other.propListHead != null
         && (this.propListHead == null
             || (this.propListHead.propType == Prop.SOURCE_FILE.ordinal()
-               && this.propListHead.next == null))) {
+                && this.propListHead.next == null))) {
       // Either the node has only Prop.SOURCE_FILE as a property or has not properties.
       PropListItem tail = other.propListHead;
       while (tail.next != null) {
@@ -1361,9 +1291,7 @@ public class Node implements Serializable {
     return ((StaticSourceFile) this.getProp(Prop.SOURCE_FILE));
   }
 
-  /**
-   * @param inputId
-   */
+  /** @param inputId */
   public void setInputId(InputId inputId) {
     this.putProp(Prop.INPUT_ID, inputId);
   }
@@ -1384,9 +1312,7 @@ public class Node implements Serializable {
     this.originalName = (s == null) ? null : RhinoStringPool.addOrGet(s);
   }
 
-  /**
-   * Whether this node should be indexed by static analysis / code indexing tools.
-   */
+  /** Whether this node should be indexed by static analysis / code indexing tools. */
   public final boolean isIndexable() {
     return !this.getBooleanProp(Prop.NON_INDEXABLE);
   }
@@ -1419,7 +1345,7 @@ public class Node implements Serializable {
     if (this.linenoCharno == -1) {
       return -1;
     } else {
-      return this.linenoCharno >>> COLUMN_BITS;
+      return this.linenoCharno >>> CHARNO_BITS;
     }
   }
 
@@ -1428,7 +1354,7 @@ public class Node implements Serializable {
     if (this.linenoCharno == -1) {
       return -1;
     } else {
-      return this.linenoCharno & COLUMN_MASK;
+      return this.linenoCharno & MAX_COLUMN_NUMBER;
     }
   }
 
@@ -1449,10 +1375,23 @@ public class Node implements Serializable {
     return file.getLineOffset(lineno) + getCharno();
   }
 
-
   public final int getSourcePosition() {
     return linenoCharno;
   }
+
+  /**
+   * CHARNO_BITS represents how many of the lower-order bits of linenoCharno are reserved for
+   * storing the column number. Bits above these store the line number. This gives us decent
+   * position information for everything except files already passed through a minimizer, where
+   * lines might be longer than 4096 characters.
+   */
+  private static final int CHARNO_BITS = 12;
+
+  /**
+   * MAX_COLUMN_NUMBER represents the maximum column number that can be represented. JSCompiler's
+   * modifications to Rhino cause all tokens located beyond the maximum column to MAX_COLUMN_NUMBER.
+   */
+  public static final int MAX_COLUMN_NUMBER = (1 << CHARNO_BITS) - 1;
 
   /**
    * Merges the line number and character number in one integer.
@@ -1460,16 +1399,18 @@ public class Node implements Serializable {
    * <p>The charno takes the first 12 bits and the line number takes the rest. If the charno is
    * greater than (2^12)-1 it is adjusted to (2^12)-1
    */
-  public final void setLinenoCharno(int lineno, int charno) {
+  public final Node setLinenoCharno(int lineno, int charno) {
     if (lineno < 0 || charno < 0) {
       this.linenoCharno = -1;
-      return;
+      return this;
     }
 
-    if (charno > COLUMN_MASK) {
-      charno = COLUMN_MASK;
+    if (charno > MAX_COLUMN_NUMBER) {
+      charno = MAX_COLUMN_NUMBER;
     }
-    this.linenoCharno = (lineno << COLUMN_BITS) | charno;
+    this.linenoCharno = (lineno << CHARNO_BITS) | charno;
+
+    return this;
   }
 
   // ==========================================================================
@@ -1493,24 +1434,21 @@ public class Node implements Serializable {
     }
   }
 
-  /**
-   * @see Node#siblings()
-   */
+  /** @see Node#siblings() */
   private static final class SiblingNodeIterable implements Iterable<Node> {
     private final Node start;
 
     SiblingNodeIterable(Node start) {
       this.start = start;
     }
+
     @Override
     public Iterator<Node> iterator() {
       return new SiblingNodeIterator(start);
     }
   }
 
-  /**
-   * @see Node#siblings()
-   */
+  /** @see Node#siblings() */
   private static final class SiblingNodeIterator implements Iterator<Node> {
     @Nullable private Node current;
 
@@ -1604,16 +1542,12 @@ public class Node implements Serializable {
     return previousNode != null && previousNode.isFirstChildOf(possibleParent);
   }
 
-  /**
-   * Iterates all of the node's ancestors excluding itself.
-   */
+  /** Iterates all of the node's ancestors excluding itself. */
   public final AncestorIterable getAncestors() {
     return new AncestorIterable(this.getParent());
   }
 
-  /**
-   * Iterator to go up the ancestor tree.
-   */
+  /** Iterator to go up the ancestor tree. */
   public static final class AncestorIterable implements Iterable<Node> {
     @Nullable private Node cur;
 
@@ -1649,8 +1583,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Check for one child more efficiently than by iterating over all the
-   * children as is done with Node.getChildCount().
+   * Check for one child more efficiently than by iterating over all the children as is done with
+   * Node.getChildCount().
    *
    * @return Whether the node has exactly one child.
    */
@@ -1668,8 +1602,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Check for zero or one child more efficiently than by iterating over all the
-   * children as is done with Node.getChildCount().
+   * Check for zero or one child more efficiently than by iterating over all the children as is done
+   * with Node.getChildCount().
    *
    * @return Whether the node has no children or exactly one child.
    */
@@ -1678,8 +1612,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Check for more than one child more efficiently than by iterating over all
-   * the children as is done with Node.getChildCount().
+   * Check for more than one child more efficiently than by iterating over all the children as is
+   * done with Node.getChildCount().
    *
    * @return Whether the node more than one child.
    */
@@ -1758,8 +1692,8 @@ public class Node implements Serializable {
 
   /**
    * @param compareType Whether to compare the JSTypes of the nodes.
-   * @param recurse Whether to compare the children of the current node. If not, only the count
-   *     of the children are compared.
+   * @param recurse Whether to compare the children of the current node. If not, only the count of
+   *     the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @param sideEffect Whether to check that the side-effect flags of the nodes are equivalent.
    * @return Whether this node is equivalent semantically to the provided node.
@@ -1807,9 +1741,7 @@ public class Node implements Serializable {
     }
 
     if (recurse) {
-      for (Node n = first, n2 = node.first;
-           n != null;
-           n = n.next, n2 = n2.next) {
+      for (Node n = first, n2 = node.first; n != null; n = n.next, n2 = n2.next) {
         if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc, sideEffect)) {
           return false;
         }
@@ -1839,6 +1771,8 @@ public class Node implements Serializable {
           Node::isOptionalChainStart,
           Node::isStaticMember,
           Node::isYieldAll,
+          (n) -> n.getIntProp(Prop.EXPORT_DEFAULT),
+          (n) -> n.getIntProp(Prop.EXPORT_ALL_FROM),
           (n) -> n.getIntProp(Prop.SLASH_V),
           (n) -> n.getIntProp(Prop.INCRDECR),
           (n) -> n.getIntProp(Prop.QUOTED),
@@ -1945,10 +1879,9 @@ public class Node implements Serializable {
     }
   }
 
-
   /**
-   * Returns whether a node corresponds to a simple or a qualified name, such as
-   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   * Returns whether a node corresponds to a simple or a qualified name, such as <code>x</code> or
+   * <code>a.b.c</code> or <code>this.a</code>.
    */
   public final boolean isQualifiedName() {
     switch (this.getToken()) {
@@ -1968,8 +1901,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Returns whether a node matches a simple name, such as
-   * <code>x</code>, returns false if this is not a NAME node.
+   * Returns whether a node matches a simple name, such as <code>x</code>, returns false if this is
+   * not a NAME node.
    */
   public final boolean matchesName(String name) {
     if (token != Token.NAME) {
@@ -1980,9 +1913,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Check that if two NAME node match, returns false if either node is
-   * not a NAME node. As a empty string is not considered a
-   * valid Name (it is an AST placeholder), empty strings are never
+   * Check that if two NAME node match, returns false if either node is not a NAME node. As a empty
+   * string is not considered a valid Name (it is an AST placeholder), empty strings are never
    * considered to be matches.
    */
   public final boolean matchesName(Node n) {
@@ -1997,16 +1929,16 @@ public class Node implements Serializable {
   }
 
   /**
-   * Returns whether a node matches a simple or a qualified name, such as
-   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
+   * a.b.c</code> or <code>this.a</code>.
    */
   public final boolean matchesQualifiedName(String name) {
     return matchesQualifiedName(name, name.length());
   }
 
   /**
-   * Returns whether a node matches a simple or a qualified name, such as
-   * <code>x</code> or <code>a.b.c</code> or <code>this.a</code>.
+   * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
+   * a.b.c</code> or <code>this.a</code>.
    */
   private boolean matchesQualifiedName(String qname, int endIndex) {
     int start = qname.lastIndexOf('.', endIndex - 1) + 1;
@@ -2061,9 +1993,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Returns whether a node corresponds to a simple or a qualified name without
-   * a "this" reference, such as <code>a.b.c</code>, but not <code>this.a</code>
-   * .
+   * Returns whether a node corresponds to a simple or a qualified name without a "this" reference,
+   * such as <code>a.b.c</code>, but not <code>this.a</code> .
    */
   public final boolean isUnscopedQualifiedName() {
     switch (this.getToken()) {
@@ -2096,9 +2027,7 @@ public class Node implements Serializable {
     throw new UnsupportedOperationException("Did you mean cloneNode?");
   }
 
-  /**
-   * @return A detached clone of the Node, specifically excluding its children.
-   */
+  /** @return A detached clone of the Node, specifically excluding its children. */
   @CheckReturnValue
   public final Node cloneNode() {
     return cloneNode(false);
@@ -2128,9 +2057,7 @@ public class Node implements Serializable {
     }
   }
 
-  /**
-   * @return A detached clone of the Node and all its children.
-   */
+  /** @return A detached clone of the Node and all its children. */
   @CheckReturnValue
   public final Node cloneTree() {
     return cloneTree(false);
@@ -2263,9 +2190,7 @@ public class Node implements Serializable {
     return (JSDocInfo) getProp(Prop.JSDOC_INFO);
   }
 
-  /**
-   * Sets the {@link JSDocInfo} attached to this node.
-   */
+  /** Sets the {@link JSDocInfo} attached to this node. */
   public final Node setJSDocInfo(JSDocInfo info) {
     putProp(Prop.JSDOC_INFO, info);
     return this;
@@ -2304,9 +2229,7 @@ public class Node implements Serializable {
     putBooleanProp(Prop.IS_UNUSED_PARAMETER, unused);
   }
 
-  /**
-   * @return Whether a parameter was function to be unused. Set by RemoveUnusedVars
-   */
+  /** @return Whether a parameter was function to be unused. Set by RemoveUnusedVars */
   public final boolean isUnusedParameter() {
     return getBooleanProp(Prop.IS_UNUSED_PARAMETER);
   }
@@ -2321,25 +2244,19 @@ public class Node implements Serializable {
     return getBooleanProp(Prop.IS_SHORTHAND_PROPERTY);
   }
 
-  /**
-   * Returns whether this node is an optional node in the ES6 Typed syntax.
-   */
+  /** Returns whether this node is an optional node in the ES6 Typed syntax. */
   public final boolean isOptionalEs6Typed() {
     return getBooleanProp(Prop.OPT_ES6_TYPED);
   }
 
-  /**
-   * Sets whether this is a synthetic block that should not be considered
-   * a real source block.
-   */
+  /** Sets whether this is a synthetic block that should not be considered a real source block. */
   public final void setIsSyntheticBlock(boolean val) {
     checkState(token == Token.BLOCK);
     putBooleanProp(Prop.SYNTHETIC, val);
   }
 
   /**
-   * Returns whether this is a synthetic block that should not be considered
-   * a real source block.
+   * Returns whether this is a synthetic block that should not be considered a real source block.
    */
   public final boolean isSyntheticBlock() {
     return getBooleanProp(Prop.SYNTHETIC);
@@ -2356,54 +2273,45 @@ public class Node implements Serializable {
   }
 
   /**
-   * Sets whether this is an added block that should not be considered
-   * a real source block. Eg: In "if (true) x;", the "x;" is put under an added
-   * block in the AST.
+   * Sets whether this is an added block that should not be considered a real source block. Eg: In
+   * "if (true) x;", the "x;" is put under an added block in the AST.
    */
   public final void setIsAddedBlock(boolean val) {
     putBooleanProp(Prop.ADDED_BLOCK, val);
   }
 
-  /**
-   * Returns whether this is an added block that should not be considered
-   * a real source block.
-   */
+  /** Returns whether this is an added block that should not be considered a real source block. */
   public final boolean isAddedBlock() {
     return getBooleanProp(Prop.ADDED_BLOCK);
   }
 
   /**
-   * Sets whether this node is a static member node. This
-   * method is meaningful only on {@link Token#GETTER_DEF},
-   * {@link Token#SETTER_DEF} or {@link Token#MEMBER_FUNCTION_DEF} nodes contained
-   * within {@link Token#CLASS}.
+   * Sets whether this node is a static member node. This method is meaningful only on {@link
+   * Token#GETTER_DEF}, {@link Token#SETTER_DEF} or {@link Token#MEMBER_FUNCTION_DEF} nodes
+   * contained within {@link Token#CLASS}.
    */
   public final void setStaticMember(boolean isStatic) {
     putBooleanProp(Prop.STATIC_MEMBER, isStatic);
   }
 
   /**
-   * Returns whether this node is a static member node. This
-   * method is meaningful only on {@link Token#GETTER_DEF},
-   * {@link Token#SETTER_DEF} or {@link Token#MEMBER_FUNCTION_DEF} nodes contained
-   * within {@link Token#CLASS}.
+   * Returns whether this node is a static member node. This method is meaningful only on {@link
+   * Token#GETTER_DEF}, {@link Token#SETTER_DEF} or {@link Token#MEMBER_FUNCTION_DEF} nodes
+   * contained within {@link Token#CLASS}.
    */
   public final boolean isStaticMember() {
     return getBooleanProp(Prop.STATIC_MEMBER);
   }
 
   /**
-   * Sets whether this node is a generator node. This
-   * method is meaningful only on {@link Token#FUNCTION} or
-   * {@link Token#MEMBER_FUNCTION_DEF} nodes.
+   * Sets whether this node is a generator node. This method is meaningful only on {@link
+   * Token#FUNCTION} or {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final void setIsGeneratorFunction(boolean isGenerator) {
     putBooleanProp(Prop.GENERATOR_FN, isGenerator);
   }
 
-  /**
-   * Returns whether this node is a generator function node.
-   */
+  /** Returns whether this node is a generator function node. */
   public final boolean isGeneratorFunction() {
     return getBooleanProp(Prop.GENERATOR_FN);
   }
@@ -2411,7 +2319,7 @@ public class Node implements Serializable {
   /**
    * Sets whether this node subtree contains YIELD nodes.
    *
-   * <p> It's used in the translation of generators.
+   * <p>It's used in the translation of generators.
    */
   public final void setGeneratorMarker(boolean isGeneratorMarker) {
     putBooleanProp(Prop.IS_GENERATOR_MARKER, isGeneratorMarker);
@@ -2420,23 +2328,20 @@ public class Node implements Serializable {
   /**
    * Returns whether this node was marked as containing YIELD nodes.
    *
-   * <p> It's used in the translation of generators.
+   * <p>It's used in the translation of generators.
    */
   public final boolean isGeneratorMarker() {
     return getBooleanProp(Prop.IS_GENERATOR_MARKER);
   }
 
-  /**
-   * @see #isGeneratorSafe()
-   */
+  /** @see #isGeneratorSafe() */
   public final void setGeneratorSafe(boolean isGeneratorSafe) {
     putBooleanProp(Prop.IS_GENERATOR_SAFE, isGeneratorSafe);
   }
 
   /**
-   * Used when translating ES6 generators. If this returns true, this Node
-   * was generated by the compiler, and it is safe to copy this node to the
-   * transpiled output with no further changes.
+   * Used when translating ES6 generators. If this returns true, this Node was generated by the
+   * compiler, and it is safe to copy this node to the transpiled output with no further changes.
    */
   public final boolean isGeneratorSafe() {
     return getBooleanProp(Prop.IS_GENERATOR_SAFE);
@@ -2453,41 +2358,35 @@ public class Node implements Serializable {
     putBooleanProp(Prop.START_OF_OPT_CHAIN, isOptionalChainStart);
   }
 
-  /**
-   * Returns whether this node is an optional chaining node.
-   */
+  /** Returns whether this node is an optional chaining node. */
   public final boolean isOptionalChainStart() {
     return getBooleanProp(Prop.START_OF_OPT_CHAIN);
   }
 
   /**
-   * Sets whether this node is a arrow function node. This
-   * method is meaningful only on {@link Token#FUNCTION}
+   * Sets whether this node is a arrow function node. This method is meaningful only on {@link
+   * Token#FUNCTION}
    */
   public final void setIsArrowFunction(boolean isArrow) {
     checkState(isFunction());
     putBooleanProp(Prop.ARROW_FN, isArrow);
   }
 
-  /**
-   * Returns whether this node is a arrow function node.
-   */
+  /** Returns whether this node is a arrow function node. */
   public final boolean isArrowFunction() {
     return isFunction() && getBooleanProp(Prop.ARROW_FN);
   }
 
   /**
-   * Sets whether this node is an async function node. This
-   * method is meaningful only on {@link Token#FUNCTION}
+   * Sets whether this node is an async function node. This method is meaningful only on {@link
+   * Token#FUNCTION}
    */
   public void setIsAsyncFunction(boolean isAsync) {
     checkState(isFunction());
     putBooleanProp(Prop.ASYNC_FN, isAsync);
   }
 
-  /**
-   * Returns whether this is an async function node.
-   */
+  /** Returns whether this is an async function node. */
   public final boolean isAsyncFunction() {
     return isFunction() && getBooleanProp(Prop.ASYNC_FN);
   }
@@ -2498,18 +2397,16 @@ public class Node implements Serializable {
   }
 
   /**
-   * Sets whether this node is a generator node. This
-   * method is meaningful only on {@link Token#FUNCTION} or
-   * {@link Token#MEMBER_FUNCTION_DEF} nodes.
+   * Sets whether this node is a generator node. This method is meaningful only on {@link
+   * Token#FUNCTION} or {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final void setYieldAll(boolean isGenerator) {
     putBooleanProp(Prop.YIELD_ALL, isGenerator);
   }
 
   /**
-   * Returns whether this node is a generator node. This
-   * method is meaningful only on {@link Token#FUNCTION} or
-   * {@link Token#MEMBER_FUNCTION_DEF} nodes.
+   * Returns whether this node is a generator node. This method is meaningful only on {@link
+   * Token#FUNCTION} or {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
   public final boolean isYieldAll() {
     return getBooleanProp(Prop.YIELD_ALL);
@@ -2526,9 +2423,8 @@ public class Node implements Serializable {
   }
 
   /**
-   * Marks this function or constructor call's side effect flags.
-   * This property is only meaningful for {@link Token#CALL} and
-   * {@link Token#NEW} nodes.
+   * Marks this function or constructor call's side effect flags. This property is only meaningful
+   * for {@link Token#CALL} and {@link Token#NEW} nodes.
    */
   public final void setSideEffectFlags(int flags) {
     checkState(
@@ -2548,9 +2444,7 @@ public class Node implements Serializable {
     setSideEffectFlags(flags.valueOf());
   }
 
-  /**
-   * Returns the side effects flags for this node.
-   */
+  /** Returns the side effects flags for this node. */
   public final int getSideEffectFlags() {
     // Int props default to 0, but we want the default for side-effect flags to be all 1s.
     // Therefore, we invert the value returned here. This is correct for non-defaults because we
@@ -2587,8 +2481,7 @@ public class Node implements Serializable {
     // A value of 0 means "no side effects"
     private int value = ALL_SIDE_EFFECTS;
 
-    public SideEffectFlags() {
-    }
+    public SideEffectFlags() {}
 
     public SideEffectFlags(int value) {
       this.value = value;
@@ -2670,10 +2563,7 @@ public class Node implements Serializable {
     return sideEffectsBesidesMutatesArguments == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
-  /**
-   * Returns true if this node is a function or constructor call that
-   * has no side effects.
-   */
+  /** Returns true if this node is a function or constructor call that has no side effects. */
   public final boolean isNoSideEffectsCall() {
     return getSideEffectFlags() == SideEffectFlags.NO_SIDE_EFFECTS;
   }
@@ -2810,7 +2700,6 @@ public class Node implements Serializable {
     checkState(this instanceof StringNode, this);
     this.putBooleanProp(Prop.QUOTED, true);
   }
-
 
   /*** AST type check methods ***/
 

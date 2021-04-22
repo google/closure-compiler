@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -25,6 +26,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
+import com.google.javascript.jscomp.serialization.JavascriptFile.CodeLocation;
+import com.google.javascript.jscomp.serialization.JavascriptFile.FileOnDisk;
+import com.google.javascript.jscomp.serialization.JavascriptFile.ZipEntryOnDisk;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,15 +91,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
   private SourceKind kind;
 
-  /**
-   * The fileName may not always identify the original file.
-   *
-   * <p>For example, supersourced Java inputs, or Java inputs that come from Jar files. This is an
-   * optional field that the creator of an AST or SourceFile can set. It could be a path to the
-   * original file, or in case this SourceFile came from a Jar, it could be the path to the Jar.
-   */
-  private final String originalPath;
-
   private final CodeLoader loader;
 
   // Source Line Information
@@ -103,7 +98,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
   private transient volatile String code = null;
 
-  private SourceFile(CodeLoader loader, String fileName, String originalPath, SourceKind kind) {
+  private SourceFile(CodeLoader loader, String fileName, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
       throw new IllegalArgumentException("a source must have a name");
     }
@@ -114,7 +109,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
     this.loader = loader;
     this.fileName = fileName;
-    this.originalPath = originalPath;
     this.kind = kind;
   }
 
@@ -216,8 +210,10 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
+  /** @deprecated alias of {@link #getName()}. Use that instead */
+  @Deprecated
   public String getOriginalPath() {
-    return originalPath != null ? originalPath : fileName;
+    return this.getName();
   }
 
   /**
@@ -234,7 +230,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return code != null;
   }
 
-  /** Returns a unique name for the source file. */
+  /**
+   * Returns a unique name for the source file.
+   *
+   * <p>This name is not required to be an actual file path on disk.
+   */
   @Override
   public String getName() {
     return fileName;
@@ -544,11 +544,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return builder().buildFromReader(fileName, r);
   }
 
-  public static SourceFile fromGenerator(String fileName,
-      Generator generator) {
-    return builder().buildFromGenerator(fileName, generator);
-  }
-
   /** Create a new builder for source files. */
   public static Builder builder() {
     return new Builder();
@@ -579,6 +574,18 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
+    /**
+     * Sets a name for this source file that does not need to correspond to a path on disk.
+     *
+     * <p>Allow passing a reasonable human-readable name in cases like for zip files and for
+     * generated files with unstable artifact prefixes.
+     *
+     * <p>The name must still be unique.
+     *
+     * <p>Required for `buildFromZipEntry`. Optional for `buildFromFile` and `buildFromPath`.
+     * Forbidden for `buildFromInputStream`, `buildFromReader`, and `buildFromCode`, as those
+     * methods already take a source name that does not need to correspond to anything on disk.
+     */
     public Builder withOriginalPath(String originalPath) {
       this.originalPath = originalPath;
       return this;
@@ -597,19 +604,23 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         return fromZipEntry(path.toString(), charset, kind);
       }
       return new SourceFile(
-          new CodeLoader.OnDisk(path, charset), path.toString(), originalPath, kind);
+          new CodeLoader.OnDisk(path, charset),
+          originalPath != null ? originalPath : path.toString(),
+          kind);
     }
 
     @GwtIncompatible("java.io.File")
     public SourceFile buildFromZipEntry(ZipEntryReader zipEntryReader) {
       checkNotNull(zipEntryReader);
       checkNotNull(charset);
-      return new SourceFile(
-          new CodeLoader.AtZip(zipEntryReader, charset), originalPath, originalPath, kind);
+      return new SourceFile(new CodeLoader.AtZip(zipEntryReader, charset), originalPath, kind);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
-      return new SourceFile(new CodeLoader.Preloaded(code), fileName, originalPath, kind);
+      checkState(
+          originalPath == null,
+          "originalPath argument is ignored in favor of fileName for buildFromCode");
+      return new SourceFile(new CodeLoader.Preloaded(code), fileName, kind);
     }
 
     @GwtIncompatible("java.io.InputStream")
@@ -620,10 +631,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     @GwtIncompatible("java.io.Reader")
     public SourceFile buildFromReader(String fileName, Reader r) throws IOException {
       return buildFromCode(fileName, CharStreams.toString(r));
-    }
-
-    public SourceFile buildFromGenerator(String fileName, Generator generator) {
-      return new SourceFile(new CodeLoader.Generated(generator), fileName, originalPath, kind);
     }
   }
 
@@ -649,7 +656,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return null;
     }
 
-    void restoreFrom(CodeLoader other) {}
+    /**
+     * Returns a representation of this loader that can be serialized/deserialized to reconstruct
+     * this SourceFile
+     */
+    abstract CodeLocation toProtoLocation(String fileName);
 
     static final class Preloaded extends CodeLoader {
       private static final long serialVersionUID = 2L;
@@ -664,28 +675,10 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       String loadUncachedCode() {
         return this.preloadedCode;
       }
-    }
-
-    static final class Generated extends CodeLoader {
-      // Avoid serializing generator and remove the burden to make classes that implement
-      // Generator serializable. There should be no need to obtain generated source in the
-      // second stage of compilation. Making the generator transient relies on not clearing the
-      // code cache for these classes up serialization which might be quite wasteful.
-      private transient Generator generator;
-
-      Generated(Generator generator) {
-        super();
-        this.generator = generator;
-      }
 
       @Override
-      String loadUncachedCode() throws IOException {
-        return generator.getCode();
-      }
-
-      @Override
-      void restoreFrom(CodeLoader other) {
-        this.generator = ((Generated) other).generator;
+      CodeLocation toProtoLocation(String fileName) {
+        return CodeLocation.newBuilder().setPreloadedContents(this.preloadedCode).build();
       }
     }
 
@@ -732,6 +725,20 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       private Charset getCharset() {
         return Charset.forName(this.serializableCharset);
       }
+
+      @Override
+      CodeLocation toProtoLocation(String fileName) {
+        String actualPath = this.relativePath.toString();
+        return CodeLocation.newBuilder()
+            .setFileOnDisk(
+                FileOnDisk.newBuilder()
+                    .setActualPath(
+                        // to save space, don't serialize the path if equal to the fileName.
+                        fileName.equals(actualPath) ? "" : actualPath)
+                    // save space by not serializing UTF_8 (the default charset)
+                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset))
+            .build();
+      }
     }
 
     @GwtIncompatible("java.io.File")
@@ -759,13 +766,26 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       private Charset getCharset() {
         return Charset.forName(this.serializableCharset);
       }
+
+      @Override
+      CodeLocation toProtoLocation(String fileName) {
+        return CodeLocation.newBuilder()
+            .setZipEntry(
+                ZipEntryOnDisk.newBuilder()
+                    .setEntryName(this.zipEntryReader.getEntryName())
+                    .setZipPath(this.zipEntryReader.getZipPath())
+                    // save space by not serializing UTF_8 (the default charset)
+                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset)
+                    .build())
+            .build();
+      }
     }
   }
 
   public void restoreFrom(SourceFile other) {
+    // TODO(b/181147184): determine if this method is necessary after moving to TypedAST
     this.code = other.code;
     this.lineOffsets = other.lineOffsets;
-    this.loader.restoreFrom(other.loader);
   }
 
   @GwtIncompatible("ObjectOutputStream")
@@ -828,5 +848,9 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
 
     this.lineOffsets = lineOffsets;
+  }
+
+  public CodeLocation getCodeLocationProto() {
+    return this.loader.toProtoLocation(this.getName());
   }
 }

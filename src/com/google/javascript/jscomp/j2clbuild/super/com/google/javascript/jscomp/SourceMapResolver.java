@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.io.BaseEncoding;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
@@ -37,7 +38,7 @@ public class SourceMapResolver {
       byte[] data =
           BaseEncoding.base64().decode(sourceMapURL.substring(BASE64_URL_PREFIX.length()));
       String source = new String(data, StandardCharsets.UTF_8);
-      return SourceFile.fromCode(jsFile.getName() + ".inline.map", source);
+      return SourceFile.fromCode(jsFile.getName() + ".inline.map", source, SourceKind.NON_CODE);
     }
     return null;
   }

@@ -269,7 +269,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static final class TypeNodeJson {
     final int id;
     final boolean invalidating;
-    final ImmutableSortedSet<String> colorUuid;
+    final String colorUuid;
     final ImmutableSortedSet<TypeEdgeJson> edges;
     final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
 
@@ -277,7 +277,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
       ColorGraphNode t = n.getValue();
 
       this.id = t.getId();
-      this.colorUuid = ImmutableSortedSet.copyOf(naturalOrder(), t.getColor().getId());
+      this.colorUuid = t.getColor().getId().toString();
       this.invalidating = t.getColor().isInvalidating();
       this.edges =
           n.getOutEdges().stream()

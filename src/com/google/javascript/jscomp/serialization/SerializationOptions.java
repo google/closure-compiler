@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.rhino.serialization;
+package com.google.javascript.jscomp.serialization;
 
 /**
  * Congiguration options for serialization time.

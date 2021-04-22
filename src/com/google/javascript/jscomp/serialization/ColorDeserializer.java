@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -143,6 +144,7 @@ public final class ColorDeserializer {
     private final TypePool typePool;
     private final StringPool stringPool;
     private final ImmutableMap<PrimitiveType, Color> nativeToColor;
+    private final Wtf8.Decoder wtf8Decoder;
 
     private ColorPoolBuilder(
         TypePool typePool,
@@ -155,6 +157,7 @@ public final class ColorDeserializer {
       this.disambiguationEdges = disambiguationEdges;
       this.colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
       this.nativeToColor = nativeToColor;
+      this.wtf8Decoder = Wtf8.decoder(stringPool.getMaxLength());
     }
 
     private ImmutableList<Color> build() {
@@ -221,7 +224,7 @@ public final class ColorDeserializer {
       ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
       SingletonColorFields.Builder builder =
           SingletonColorFields.builder()
-              .setId(serialized.getUuid())
+              .setId(ColorId.fromAscii(serialized.getUuid()))
               .setClosureAssert(serialized.getClosureAssert())
               .setInvalidating(serialized.getIsInvalidating())
               .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
@@ -235,7 +238,7 @@ public final class ColorDeserializer {
               .setOwnProperties(
                   serialized.getOwnPropertyList().stream()
                       .map(stringOffset -> this.stringPool.getStringsList().get(stringOffset))
-                      .map(Wtf8Encoder::decodeFromWtf8)
+                      .map(this.wtf8Decoder::decode)
                       .collect(toImmutableSet()));
       if (serialized.hasPrototype()) {
         builder.setPrototype(this.pointerToColor(serialized.getPrototype()));

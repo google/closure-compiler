@@ -17,20 +17,28 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerInput;
+import com.google.javascript.jscomp.JsAst;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceInformationAnnotator;
+import com.google.javascript.jscomp.ZipEntryReader;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -38,25 +46,32 @@ import java.util.List;
  *
  * <p>NOTE: This is a work in progress, and incomplete.
  */
-final class TypedAstDeserializer {
+@GwtIncompatible("protobuf.lite")
+public final class TypedAstDeserializer {
 
   private final TypedAst typedAst;
   private final ColorDeserializer colorDeserializer;
+  private final LinkedHashMap<InputId, CompilerInput> inputsById = new LinkedHashMap<>();
+  private final Wtf8.Decoder wtf8Decoder;
   private FeatureSet currentFileFeatures = null;
+  private Node currentTemplateNode = null; // use as template for source file information
   private int previousLine;
   private int previousColumn;
 
   private TypedAstDeserializer(TypedAst typedAst, ColorDeserializer colorDeserializer) {
     this.typedAst = typedAst;
     this.colorDeserializer = colorDeserializer;
+    this.wtf8Decoder = Wtf8.decoder(typedAst.getStringPool().getMaxLength());
   }
 
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
-  static DeserializedAst deserialize(TypedAst typedAst) {
+  public static DeserializedAst deserialize(TypedAst typedAst) {
     ColorDeserializer colorDeserializer =
         ColorDeserializer.buildFromTypePool(typedAst.getTypePool(), typedAst.getStringPool());
-    Node root = new TypedAstDeserializer(typedAst, colorDeserializer).deserializeToScriptNodes();
-    return DeserializedAst.create(root, colorDeserializer.getRegistry());
+    TypedAstDeserializer deserializer = new TypedAstDeserializer(typedAst, colorDeserializer);
+    Node root = deserializer.deserializeToScriptNodes();
+    return DeserializedAst.create(
+        root, colorDeserializer.getRegistry(), ImmutableMap.copyOf(deserializer.inputsById));
   }
 
   /** The result of deserializing a given TypedAst object */
@@ -66,8 +81,11 @@ final class TypedAstDeserializer {
 
     public abstract ColorRegistry getColorRegistry();
 
-    private static DeserializedAst create(Node root, ColorRegistry colorRegistry) {
-      return new AutoValue_TypedAstDeserializer_DeserializedAst(root, colorRegistry);
+    public abstract ImmutableMap<InputId, CompilerInput> getInputsById();
+
+    private static DeserializedAst create(
+        Node root, ColorRegistry colorRegistry, ImmutableMap<InputId, CompilerInput> inputsById) {
+      return new AutoValue_TypedAstDeserializer_DeserializedAst(root, colorRegistry, inputsById);
     }
   }
 
@@ -77,12 +95,50 @@ final class TypedAstDeserializer {
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
     for (JavascriptFile file : typedAst.getExternFileList()) {
-      externRoot.addChildToBack(deserializeScriptNode(file, externRoot));
+      SourceFile sourceFile = createSourceFile(file, SourceKind.EXTERN);
+      externRoot.addChildToBack(deserializeScriptNode(file, sourceFile, externRoot));
     }
     for (JavascriptFile file : typedAst.getSourceFileList()) {
-      codeRoot.addChildToBack(deserializeScriptNode(file, codeRoot));
+      SourceFile sourceFile = createSourceFile(file, SourceKind.STRONG);
+      codeRoot.addChildToBack(deserializeScriptNode(file, sourceFile, codeRoot));
     }
     return IR.root(externRoot, codeRoot);
+  }
+
+  private static SourceFile createSourceFile(JavascriptFile file, SourceKind sourceKind) {
+    JavascriptFile.CodeLocation location = file.getCodeLocation();
+    switch (location.getLoaderCase()) {
+      case PRELOADED_CONTENTS:
+        return SourceFile.fromCode(file.getFilename(), location.getPreloadedContents(), sourceKind);
+      case FILE_ON_DISK:
+        String pathOnDisk =
+            location.getFileOnDisk().getActualPath().isEmpty()
+                ? file.getFilename()
+                : location.getFileOnDisk().getActualPath();
+        return SourceFile.builder()
+            .withCharset(toCharset(location.getFileOnDisk().getCharset()))
+            .withOriginalPath(file.getFilename())
+            .withKind(sourceKind)
+            .buildFromFile(pathOnDisk);
+      case ZIP_ENTRY:
+        return SourceFile.builder()
+            .withKind(sourceKind)
+            .withCharset(toCharset(location.getZipEntry().getCharset()))
+            .withOriginalPath(file.getFilename())
+            .buildFromZipEntry(
+                new ZipEntryReader(
+                    location.getZipEntry().getZipPath(), location.getZipEntry().getEntryName()));
+      case LOADER_NOT_SET:
+        break;
+    }
+    throw new AssertionError();
+  }
+
+  private static Charset toCharset(String protoCharset) {
+    if (protoCharset.isEmpty()) {
+      return UTF_8;
+    }
+    return Charset.forName(protoCharset);
   }
 
   private void doValidation() {
@@ -92,22 +148,42 @@ final class TypedAstDeserializer {
         this.getStringByPointer(0));
   }
 
-  private Node deserializeScriptNode(JavascriptFile file, Node root) {
+  private Node deserializeScriptNode(JavascriptFile file, SourceFile sourceFile, Node root) {
+    this.currentTemplateNode = createTemplateNode(sourceFile);
+
     currentFileFeatures = FeatureSet.BARE_MINIMUM;
     previousLine = previousColumn = 0;
     Node scriptNode = visit(file.getRoot(), root);
-    SimpleSourceFile sourceFile = new SimpleSourceFile(file.getFilename(), SourceKind.STRONG);
+
     scriptNode.setStaticSourceFile(sourceFile);
-    scriptNode.setInputId(new InputId(sourceFile.getName()));
+    JsAst ast = new JsAst(scriptNode);
+    CompilerInput input = new CompilerInput(ast);
+    InputId inputId = input.getInputId();
+    this.inputsById.put(inputId, input);
+    scriptNode.setInputId(inputId);
     scriptNode.putProp(Node.FEATURE_SET, currentFileFeatures);
     currentFileFeatures = null;
     return scriptNode;
+  }
+
+  // Create a template node to use as a source of common attributes, this allows
+  // the prop structure to be shared among all the node from this source file.
+  // This reduces the cost of these properties to O(nodes) to O(files).
+  private Node createTemplateNode(SourceFile sourceFile) {
+    // The Node type choice is arbitrary.
+    Node templateNode = new Node(Token.SCRIPT);
+    templateNode.setStaticSourceFile(sourceFile);
+    return templateNode;
   }
 
   private Node visit(AstNode astNode, Node parent) {
     int currentLine = previousLine + astNode.getRelativeLine();
     int currentColumn = previousColumn + astNode.getRelativeColumn();
     Node n = deserializeSingleNode(astNode);
+    n.setStaticSourceFileFrom(this.currentTemplateNode);
+    if (astNode.hasType()) {
+      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
+    }
     deserializeProperties(n, astNode);
     n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc()));
     n.setLinenoCharno(currentLine, currentColumn);
@@ -120,9 +196,6 @@ final class TypedAstDeserializer {
       // context-dependent, and we need to know the parent and/or grandparent.
       recordScriptFeatures(parent, n, deserializedChild);
       setOriginalNameIfPresent(child, deserializedChild);
-    }
-    if (astNode.hasType()) {
-      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
     }
     return n;
   }
@@ -284,7 +357,7 @@ final class TypedAstDeserializer {
         "Found pointer <%s> that points outside of string pool. Pool contents:\n%s",
         pointer,
         stringPool);
-    return Wtf8Encoder.decodeFromWtf8(stringPool.get(pointer));
+    return this.wtf8Decoder.decode(stringPool.get(pointer));
   }
 
   private String getString(AstNode n) {

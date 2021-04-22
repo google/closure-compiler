@@ -274,6 +274,18 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMessagesPointToFirstOccurance() {
+    test(
+        srcs("var x = 1; var x = 2;"),
+        error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR)
+            .withMessageContaining("First occurrence: testcode:1:4"));
+    test(
+        srcs("var x; class x{ }"),
+        error(BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR)
+            .withMessageContaining("First occurrence: testcode:1:4"));
+  }
+
+  @Test
   public void testNamedClass() {
     testSame("class x {}");
     testSame("var x = class x {};");
