@@ -34,7 +34,6 @@ import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
-import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -210,9 +209,6 @@ public abstract class CompilerTestCase {
    * present in its FeatureSet property.
    */
   private boolean scriptFeatureValidationEnabled;
-
-  /** Whether the transpilation passes run before the pass being tested. */
-  private boolean moduleRewritingEnabled;
 
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
 
@@ -634,7 +630,6 @@ public abstract class CompilerTestCase {
     this.inferConsts = false;
     this.languageOut = LanguageMode.NO_TRANSPILE;
     this.multistageCompilation = false;
-    this.moduleRewritingEnabled = false;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
@@ -1041,12 +1036,6 @@ public abstract class CompilerTestCase {
   protected final void setWebpackModulesById(Map<String, String> webpackModulesById) {
     this.webpackModulesById.clear();
     this.webpackModulesById.putAll(webpackModulesById);
-  }
-
-  /** Perform module rewriting when transpilation is not enabled */
-  protected final void enableModuleRewriting() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    moduleRewritingEnabled = true;
   }
 
   /** Returns a newly created TypeCheck. */
@@ -1541,12 +1530,6 @@ public abstract class CompilerTestCase {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
-        if (!transpileEnabled && moduleRewritingEnabled) {
-          recentChange.reset();
-          rewriteModules(compiler, externsRoot, mainRoot);
-          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        }
-
         if (gatherExternPropertiesEnabled && i == 0) {
           new GatherExternProperties(compiler).process(externsRoot, mainRoot);
         }
@@ -1818,45 +1801,6 @@ public abstract class CompilerTestCase {
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
     TranspilationPasses.addPostCheckTranspilationPasses(factories, options);
     TranspilationPasses.addRewritePolyfillPass(factories);
-    for (PassFactory factory : factories) {
-      factory.create(compiler).process(externsRoot, codeRoot);
-    }
-  }
-
-  private static void rewriteModules(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
-    List<PassFactory> factories = new ArrayList<>();
-    CompilerOptions options = compiler.getOptions();
-    GatherModuleMetadata gatherModuleMetadata =
-        new GatherModuleMetadata(
-            compiler, options.processCommonJSModules, options.moduleResolutionMode);
-    factories.add(
-        PassFactory.builder()
-            .setName(PassNames.GATHER_MODULE_METADATA)
-            .setRunInFixedPointLoop(true)
-            .setInternalFactory((x) -> gatherModuleMetadata)
-            .setFeatureSetForChecks()
-            .build());
-    factories.add(
-        PassFactory.builder()
-            .setName(PassNames.CREATE_MODULE_MAP)
-            .setRunInFixedPointLoop(true)
-            .setInternalFactory(
-                (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
-            .setFeatureSetForChecks()
-            .build());
-    TranspilationPasses.addEs6ModulePass(
-        factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-    factories.add(
-        PassFactory.builder()
-            .setName("REWRITE_DYNAMIC_IMPORT")
-            .setFeatureSetForChecks()
-            .setInternalFactory(
-                (x) ->
-                    new RewriteDynamicImports(
-                        compiler,
-                        compiler.getOptions().getDynamicImportAlias(),
-                        ChunkOutputType.ES_MODULES))
-            .build());
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
