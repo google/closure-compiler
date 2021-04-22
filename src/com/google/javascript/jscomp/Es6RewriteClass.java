@@ -36,9 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * Converts ES6 classes to valid ES5 or ES3 code.
- */
+/** Converts ES6 classes to valid ES5 or ES3 code. */
 public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
   private static final FeatureSet features =
       FeatureSet.BARE_MINIMUM.with(
@@ -48,9 +46,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
           Feature.NEW_TARGET,
           Feature.SUPER);
 
-  static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
-      "JSC_DYNAMIC_EXTENDS_TYPE",
-      "The class in an extends clause must be a qualified name.");
+  static final DiagnosticType DYNAMIC_EXTENDS_TYPE =
+      DiagnosticType.error(
+          "JSC_DYNAMIC_EXTENDS_TYPE", "The class in an extends clause must be a qualified name.");
 
   // This function is defined in js/es6/util/inherits.js
   static final String INHERITS = "$jscomp.inherits";
@@ -129,6 +127,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   /**
    * Classes are processed in 3 phases:
+   *
    * <ol>
    *   <li>The class name is extracted.
    *   <li>Class members are processed and rewritten.
@@ -143,7 +142,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     if (metadata == null) {
       throw new IllegalStateException(
           "Can only convert classes that are declarations or the right hand"
-          + " side of a simple assignment: " + classNode);
+              + " side of a simple assignment: "
+              + classNode);
     }
     if (metadata.hasSuperClass() && !metadata.getSuperClassNameNode().isQualifiedName()) {
       compiler.report(JSError.make(metadata.getSuperClassNameNode(), DYNAMIC_EXTENDS_TYPE));
@@ -176,10 +176,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       } else if (member.isEmpty()) {
         // Do nothing.
       } else {
-        Preconditions.checkState(member.isMemberFunctionDef() || member.isComputedProp(),
-            "Unexpected class member:", member);
-        Preconditions.checkState(!member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
-            "Member variables should have been transpiled earlier:", member);
+        Preconditions.checkState(
+            member.isMemberFunctionDef() || member.isComputedProp(),
+            "Unexpected class member:",
+            member);
+        Preconditions.checkState(
+            !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
+            "Member variables should have been transpiled earlier:",
+            member);
         visitMethod(member, metadata);
       }
       member = next;
