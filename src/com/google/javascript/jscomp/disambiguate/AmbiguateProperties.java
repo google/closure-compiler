@@ -158,7 +158,7 @@ public class AmbiguateProperties implements CompilerPass {
     graphBuilder.addAll(graphNodeFactory.getAllKnownTypes());
     DiGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
     for (ColorGraphNode node : graphNodeFactory.getAllKnownTypes()) {
-      node.getSubtypeIds().set(node.getId()); // Init subtyping as reflexive.
+      node.getSubtypeIndices().set(node.getIndex()); // Init subtyping as reflexive.
     }
 
     FixedPointGraphTraversal.<ColorGraphNode, Object>newReverseTraversal(
@@ -173,14 +173,14 @@ public class AmbiguateProperties implements CompilerPass {
                * <p>We're guaranteed to converge because the sizes will be euqal after the OR
                * operation.
                */
-              if (subtype.getSubtypeIds().size() > supertype.getSubtypeIds().size()) {
-                supertype.getSubtypeIds().or(subtype.getSubtypeIds());
+              if (subtype.getSubtypeIndices().size() > supertype.getSubtypeIndices().size()) {
+                supertype.getSubtypeIndices().or(subtype.getSubtypeIndices());
                 return true;
               }
 
-              int startSize = supertype.getSubtypeIds().cardinality();
-              supertype.getSubtypeIds().or(subtype.getSubtypeIds());
-              return supertype.getSubtypeIds().cardinality() > startSize;
+              int startSize = supertype.getSubtypeIndices().cardinality();
+              supertype.getSubtypeIndices().or(subtype.getSubtypeIndices());
+              return supertype.getSubtypeIndices().cardinality() > startSize;
             })
         .computeFixedPoint(colorGraph);
 
@@ -190,7 +190,7 @@ public class AmbiguateProperties implements CompilerPass {
         continue;
       }
       for (ColorGraphNode color : prop.relatedColorsSeeds.keySet()) {
-        prop.relatedColors.or(color.getSubtypeIds());
+        prop.relatedColors.or(color.getSubtypeIndices());
       }
       prop.relatedColorsSeeds = null;
     }

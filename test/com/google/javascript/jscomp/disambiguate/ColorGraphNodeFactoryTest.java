@@ -136,7 +136,7 @@ public final class ColorGraphNodeFactoryTest {
   }
 
   @Test
-  public void colorGraphNodeIds_areUnique() {
+  public void colorGraphNodeIndices_areUnique() {
     // Given
 
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
@@ -152,12 +152,12 @@ public final class ColorGraphNodeFactoryTest {
         sampleTypes.stream().map(factory::createNode).collect(toImmutableSet());
 
     // Then
-    assertThat(flatSamples.stream().map(ColorGraphNode::getId).collect(toImmutableSet()))
+    assertThat(flatSamples.stream().map(ColorGraphNode::getIndex).collect(toImmutableSet()))
         .containsNoDuplicates();
   }
 
   @Test
-  public void colorGraphNodeIds_areDeterministic() {
+  public void colorGraphNodeIndices_areDeterministic() {
     // Given
     ImmutableSet<ColorGraphNode> sampleA = this.createSampleColorGraphNodesForDeterminismTest();
     ImmutableSet<ColorGraphNode> sampleB = this.createSampleColorGraphNodesForDeterminismTest();
@@ -186,5 +186,6 @@ public final class ColorGraphNodeFactoryTest {
   }
 
   private static final Correspondence<ColorGraphNode, ColorGraphNode> ID_MATCH =
-      Correspondence.transforming(ColorGraphNode::getId, ColorGraphNode::getId, "has same ID as");
+      Correspondence.transforming(
+          ColorGraphNode::getIndex, ColorGraphNode::getIndex, "has same index as");
 }

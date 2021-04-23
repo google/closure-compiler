@@ -42,9 +42,9 @@ final class ColorGraphNode {
   private final LinkedHashMap<PropertyClustering, PropAssociation> associatedProps =
       new LinkedHashMap<>();
 
-  private final int id;
+  private final int index;
 
-  private final BitSet subtypeIds = new BitSet();
+  private final BitSet subtypeIndices = new BitSet();
 
   /**
    * Reasons a property name became associated with a type.
@@ -52,29 +52,31 @@ final class ColorGraphNode {
    * <p>This information is only used for debugging. It doesn't affect the behaviour of the pass.
    */
   enum PropAssociation {
-    AST, // a property associated with a FlatType because of an AST access flatType.prop
-    TYPE_SYSTEM, // a property associated with a FlatType because the type system recorded such an
-    // association, despite no association being found in the AST
-    SUPERTYPE // a property inherited from a supertype in the type graph
+    /** Because of an access in the AST (e.g. foo.prop) */
+    AST,
+    /**
+     * Because the type system recorded such an association, without any reason visible in the AST.
+     * Usually this means the relevant AST segment has been optimized away by an earlier pass.
+     */
+    TYPE_SYSTEM,
+    /** Because it was inherited from a supertype in the type graph */
+    SUPERTYPE
   }
 
-  static ColorGraphNode create(Color single, int id) {
+  static ColorGraphNode create(Color single, int index) {
     checkNotNull(single);
-
-    checkArgument(id >= 0);
-
-    return new ColorGraphNode(single, id);
+    checkArgument(index >= 0);
+    return new ColorGraphNode(single, index);
   }
 
   @VisibleForTesting
-  static ColorGraphNode createForTesting(int id) {
-    checkArgument(id < 0); // All test nodes have negative ids to differentiate them.
-
-    return new ColorGraphNode(null, id);
+  static ColorGraphNode createForTesting(int index) {
+    checkArgument(index < 0); // All test nodes have negative indexs to differentiate them.
+    return new ColorGraphNode(null, index);
   }
 
-  private ColorGraphNode(Color single, int id) {
-    this.id = id;
+  private ColorGraphNode(Color single, int index) {
+    this.index = index;
     this.color = single;
   }
 
@@ -86,8 +88,8 @@ final class ColorGraphNode {
    * An ID used to efficiently construct a unique name for any cluster this node becomes the
    * represenative of.
    */
-  int getId() {
-    return this.id;
+  int getIndex() {
+    return this.index;
   }
 
   /** The set of properties that that might be accessed from this type. */
@@ -96,13 +98,16 @@ final class ColorGraphNode {
   }
 
   /** The IDs of other ColorGraphNodes that have been found to be subtypes of this type. */
-  BitSet getSubtypeIds() {
-    return this.subtypeIds;
+  BitSet getSubtypeIndices() {
+    return this.subtypeIndices;
   }
 
   @Override
   @DoNotCall // For debugging only.
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("id", this.id).add("color", this.color).toString();
+    return MoreObjects.toStringHelper(this)
+        .add("index", this.index)
+        .add("color", this.color)
+        .toString();
   }
 }

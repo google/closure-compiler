@@ -124,7 +124,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
         () ->
             graph.getNodes().stream()
                 .map(TypeNodeJson::new)
-                .sorted(comparingInt((x) -> x.id))
+                .sorted(comparingInt((x) -> x.index))
                 .collect(toImmutableList()));
 
     // Ensure this step happens after logging PropertyReferenceIndexJson. Invalidating a property
@@ -176,7 +176,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     for (ColorGraphNode type : flattener.getAllKnownTypes()) {
       if (type.getColor().isInvalidating()) {
         for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
-          prop.invalidate(Invalidation.invalidatingType(type.getId()));
+          prop.invalidate(Invalidation.invalidatingType(type.getIndex()));
         }
       } else {
         invalidateNonDeclaredPropertyAccesses(type);
@@ -200,7 +200,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
       }
 
       if (!color.mayHaveProperty(prop.getName())) {
-        prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getId()));
+        prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getIndex()));
       }
     }
   }
@@ -254,7 +254,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     PropertyReferenceJson(Node location, ColorGraphNode receiver) {
       this.location = location.getLocation();
-      this.receiver = receiver.getId();
+      this.receiver = receiver.getIndex();
     }
 
     @Override
@@ -267,7 +267,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   }
 
   private static final class TypeNodeJson {
-    final int id;
+    final int index;
     final boolean invalidating;
     final String colorUuid;
     final ImmutableSortedSet<TypeEdgeJson> edges;
@@ -276,7 +276,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     TypeNodeJson(DiGraphNode<ColorGraphNode, Object> n) {
       ColorGraphNode t = n.getValue();
 
-      this.id = t.getId();
+      this.index = t.getIndex();
       this.colorUuid = t.getColor().getId().toString();
       this.invalidating = t.getColor().isInvalidating();
       this.edges =
@@ -296,7 +296,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     final Object value;
 
     TypeEdgeJson(DiGraphEdge<ColorGraphNode, Object> e) {
-      this.dest = e.getDestination().getValue().getId();
+      this.dest = e.getDestination().getValue().getIndex();
       this.value = e.getValue();
     }
 

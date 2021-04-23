@@ -107,7 +107,7 @@ final class UseSiteRenamer {
       return prop.getName();
     }
 
-    return "JSC$" + rep.getId() + "_" + prop.getName();
+    return "JSC$" + rep.getIndex() + "_" + prop.getName();
   }
 
   private static JSError createInvalidationError(String name) {
