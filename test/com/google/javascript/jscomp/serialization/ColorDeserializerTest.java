@@ -336,19 +336,13 @@ public class ColorDeserializerTest {
                     .setUnion(
                         UnionTypeProto.newBuilder()
                             .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
-                            .addUnionMember(
-                                poolPointerBuilder(1)
-                                    .setDebugInfo(
-                                        TypePointer.DebugInfo.newBuilder().setDescription("U1")))))
+                            .addUnionMember(poolPointer(1))))
             .addType(
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
                             .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
-                            .addUnionMember(
-                                poolPointerBuilder(0)
-                                    .setDebugInfo(
-                                        TypePointer.DebugInfo.newBuilder().setDescription("U0")))))
+                            .addUnionMember(poolPointer(0))))
             .build();
 
     // Eventually we may need to support this case, but for now throwing an explicit exception is
@@ -431,10 +425,8 @@ public class ColorDeserializerTest {
   }
 
   private static TypePointer poolPointer(int offset) {
-    return poolPointerBuilder(offset).build();
-  }
-
-  private static TypePointer.Builder poolPointerBuilder(int offset) {
-    return TypePointer.newBuilder().setPoolOffset(offset + JSTypeSerializer.PRIMITIVE_POOL_SIZE);
+    return TypePointer.newBuilder()
+        .setPoolOffset(offset + JSTypeSerializer.PRIMITIVE_POOL_SIZE)
+        .build();
   }
 }

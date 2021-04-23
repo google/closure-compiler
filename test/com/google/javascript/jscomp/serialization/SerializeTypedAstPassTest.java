@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.serialization.TypePointer.DebugInfo;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.nio.file.Files;
@@ -54,9 +53,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   private ImmutableSet<String> typesToForwardDeclare = null;
 
   // Proto fields commonly ignored in tests because hardcoding their values is brittle
-  private static final ImmutableList<FieldDescriptor> COMMONLY_IGNORED_FIELDS =
+  private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
       ImmutableList.of(
-          TypePointer.getDescriptor().findFieldByName("pool_offset"),
           ObjectTypeProto.getDescriptor().findFieldByName("uuid"),
           ObjectTypeProto.getDescriptor().findFieldByName("own_property"));
 
@@ -88,31 +86,31 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testNativeTypesAreNotSerialized() {
     assertThat(compileToTypes("const /** bigint */ x = 1n;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** boolean */ x = false;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** number */ x = 5;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** string */ x = '';"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** symbol */ x = Symbol('x');"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** null */ x = null;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** undefined */ x = void 0;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** ? */ x = /** @type {?} */ (0);"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
     assertThat(compileToTypes("const /** * */ x = /** @type {?} */ (0);"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
   }
 
@@ -121,29 +119,14 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypePool typePool = compileToTypePool("");
 
     assertThat(typePool.getNativeObjectTable())
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .isEqualTo(
             NativeObjectTable.newBuilder()
-                .setBigintObject(
-                    TypePointer.newBuilder()
-                        .setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription("BigInt"))
-                        .build())
-                .setBooleanObject(
-                    TypePointer.newBuilder()
-                        .setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription("Boolean"))
-                        .build())
-                .setNumberObject(
-                    TypePointer.newBuilder()
-                        .setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription("Number"))
-                        .build())
-                .setStringObject(
-                    TypePointer.newBuilder()
-                        .setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription("String"))
-                        .build())
-                .setSymbolObject(
-                    TypePointer.newBuilder()
-                        .setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription("Symbol"))
-                        .build())
+                .setBigintObject(pointerForType("BigInt", typePool))
+                .setBooleanObject(pointerForType("Boolean", typePool))
+                .setNumberObject(pointerForType("Number", typePool))
+                .setStringObject(pointerForType("String", typePool))
+                .setSymbolObject(pointerForType("Symbol", typePool))
                 .build());
   }
 
@@ -154,7 +137,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypePointer booleanObject = typePool.getNativeObjectTable().getBooleanObject();
 
     assertThat(typePool.getTypeList().get(adjustPoolOffset(booleanObject.getPoolOffset())))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .isEqualTo(
             TypeProto.newBuilder()
                 .setObject(
@@ -170,23 +153,16 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testObjectTypeSerializationFormat() {
     TypedAst typedAst = compile("class Foo { m() {} } new Foo().m();");
-    assertThat(typedAst.getTypePool().getTypeList())
-        .ignoringFieldDescriptors(
-            TypePointer.getDescriptor().findFieldByName("pool_offset"),
-            ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
+    List<TypeProto> typePool = typedAst.getTypePool().getTypeList();
+
+    assertThat(typePool)
+        .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .setPrototype(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder()
-                                        .setDescription("Foo.prototype")))
-                        .setInstanceType(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder().setDescription("Foo")))
+                        .setPrototype(pointerForType("Foo.prototype", typePool))
+                        .setInstanceType(pointerForType("Foo", typePool))
                         .setMarkedConstructor(true)
                         .addOwnProperty(findInStringPool(typedAst.getStringPool(), "prototype")))
                 .build(),
@@ -207,7 +183,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypePool typePool = compileToTypePool("class Foo { m() {} } new Foo().m();");
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
   }
 
@@ -216,7 +192,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypePool typePool = compileToTypePool("class Foo {} class Bar extends Foo {}");
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "(typeof Bar)"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             ObjectTypeProto.getDescriptor().findFieldByName("prototype"),
             ObjectTypeProto.getDescriptor().findFieldByName("instance_type"))
@@ -241,7 +217,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testSerializedInstanceTypeHasClassName() {
     assertThat(compileToTypes("/** @constructor */ function Foo() {} new Foo;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build());
   }
 
@@ -249,7 +225,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testEnumElementSerializesToPrimitive() {
     // Serialize E but treat E.A as a number
     assertThat(compileToTypes("/** @enum {number} */ const E = {A: 0, B: 1}; E.A;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .contains(
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("enum{E}").setPropertiesKeepOriginalName(true))
@@ -260,7 +236,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testBoxableScalarTypesKeepOriginalName() {
     // Serialize E but treat E.A as a number
     assertThat(compileToTypes("/** @enum {number} */ const E = {A: 0, B: 1}; E.A;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .contains(
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("enum{E}").setPropertiesKeepOriginalName(true))
@@ -277,7 +253,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                     "",
                     "/** @closurePrimitive {asserts.fail} */",
                     "function fail() { throw new Error(); }")))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
@@ -317,20 +293,13 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 "  constructor() { /** @type {T} */ this.x; }",
                 "}"));
     assertThat(typePool)
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .setPrototype(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder()
-                                        .setDescription("Foo.prototype")))
-                        .setInstanceType(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder().setDescription("Foo"))))
+                        .setPrototype(pointerForType("Foo.prototype", typePool))
+                        .setInstanceType(pointerForType("Foo", typePool)))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
@@ -347,7 +316,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                     "const ns = {};", //
                     "ns.f = x => x;",
                     "ns.f = (/** number */ x) => x;")))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
         .containsAtLeast(
             TypeProto.newBuilder()
@@ -367,7 +336,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                     "ns.f = x => x;",
                     "ns.f = (/** number */ x) => x;",
                     "ns.f = (/** string */ x) => x;")))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
         .containsAtLeast(
             TypeProto.newBuilder()
@@ -383,27 +352,22 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void discardsDifferentTemplatizationsOfObject() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "/** @interface @template T */",
-                    "class Foo {}",
-                    "var /** !Foo<string> */ fooString;",
-                    "var /** !Foo<number> */ fooNumber;")))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "/** @interface @template T */",
+                "class Foo {}",
+                "var /** !Foo<string> */ fooString;",
+                "var /** !Foo<number> */ fooNumber;"));
+
+    assertThat(typePool)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .setPrototype(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder()
-                                        .setDescription("Foo.prototype")))
-                        .setInstanceType(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(
-                                    TypePointer.DebugInfo.newBuilder().setDescription("Foo"))))
+                        .setPrototype(pointerForType("Foo.prototype", typePool))
+                        .setInstanceType(pointerForType("Foo", typePool)))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
@@ -411,25 +375,21 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void doesntCrashOnFunctionWithNonObjectThisType() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "var /** function(new: AllType) */ x = function() {};",
-                    "/** @typedef {*} */ let AllType;")))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "var /** function(new: AllType) */ x = function() {};",
+                "/** @typedef {*} */ let AllType;"));
+
+    assertThat(typePool)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .contains(
             TypeProto.newBuilder()
                 .setObject(
                     ObjectTypeProto.newBuilder()
                         .setIsInvalidating(true)
-                        .setPrototype(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(DebugInfo.newBuilder().setDescription("UNKNOWN_TYPE"))
-                                .build())
-                        .setInstanceType(
-                            TypePointer.newBuilder()
-                                .setDebugInfo(DebugInfo.newBuilder().setDescription("UNKNOWN_TYPE"))
-                                .build())
+                        .setPrototype(pointerForType(PrimitiveType.UNKNOWN_TYPE))
+                        .setInstanceType(pointerForType(PrimitiveType.UNKNOWN_TYPE))
                         .setMarkedConstructor(true)
                         .build())
                 .build());
@@ -455,7 +415,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypePool typePool = compileToTypePool(source);
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "Baz"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactly(
             TypeProto.newBuilder()
                 .setObject(ObjectTypeProto.newBuilder().setIsInvalidating(true))
@@ -468,7 +428,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void doesntSerializeNullOrUndefinedUnion() {
     assertThat(compileToTypes("var /** null|undefined */ x;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
   }
 
@@ -476,7 +436,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void doesntSerializeForwardDeclaredType() {
     this.typesToForwardDeclare = ImmutableSet.of("forward.declared.TypeProto");
     assertThat(compileToTypes("var /** !forward.declared.TypeProto */ x;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
   }
 
@@ -484,21 +444,18 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void doesntSerializeMissingType() {
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     assertThat(compileToTypes("var /** !missing.TypeProto */ x;"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
   }
 
   @Test
   public void testAst_constNumber() {
-    TypePointer numberType =
-        TypePointer.newBuilder()
-            .setPoolOffset(PrimitiveType.NUMBER_TYPE.getNumber())
-            .setDebugInfo(DebugInfo.newBuilder().setDescription("NUMBER_TYPE"))
-            .build();
+    TypePointer numberType = pointerForType(PrimitiveType.NUMBER_TYPE);
     TypedAst ast = compile("const x = 5;");
     StringPool stringPool = ast.getStringPool();
 
     assertThat(ast.getSourceFileList().get(0).getRoot())
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
@@ -538,16 +495,12 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testAst_letString() {
-    TypePointer stringType =
-        TypePointer.newBuilder()
-            .setPoolOffset(PrimitiveType.STRING_TYPE.getNumber())
-            .setDebugInfo(DebugInfo.newBuilder().setDescription("STRING_TYPE"))
-            .build();
-
+    TypePointer stringType = pointerForType(PrimitiveType.STRING_TYPE);
     TypedAst ast = compile("let s = 'hello';");
     StringPool stringPool = ast.getStringPool();
 
     assertThat(ast.getSourceFileList().get(0).getRoot())
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("relative_column"))
@@ -576,13 +529,9 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testAst_numberInCast() {
-    TypePointer unknownType =
-        TypePointer.newBuilder()
-            .setPoolOffset(PrimitiveType.UNKNOWN_TYPE.getNumber())
-            .setDebugInfo(DebugInfo.newBuilder().setDescription("UNKNOWN_TYPE"))
-            .build();
-
+    TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
     assertThat(compileToAst("/** @type {?} */ (1);"))
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("relative_column"))
@@ -726,6 +675,25 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     astConsumer = (ast) -> resultAst[0] = ast;
     testNoWarning(source);
     return resultAst[0];
+  }
+
+  private static TypePointer pointerForType(PrimitiveType primitive) {
+    return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
+  }
+
+  private static TypePointer pointerForType(String className, List<TypeProto> pool) {
+    for (int i = 0; i < pool.size(); i++) {
+      if (pool.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
+        return TypePointer.newBuilder()
+            .setPoolOffset(i + JSTypeSerializer.PRIMITIVE_POOL_SIZE)
+            .build();
+      }
+    }
+    throw new AssertionError("Unable to find type '" + className + "' in " + pool);
+  }
+
+  private static TypePointer pointerForType(String className, TypePool pool) {
+    return pointerForType(className, pool.getTypeList());
   }
 
   /** Returns the types that are serialized for every compilation, even given an empty source */

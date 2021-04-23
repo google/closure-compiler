@@ -142,15 +142,9 @@ final class JSTypeSerializer {
 
     checkState(State.COLLECTING_TYPES == this.state || State.GENERATING_POOL == this.state);
 
-    TypePointer.Builder pointer =
-        TypePointer.newBuilder().setPoolOffset(this.seenSerializableTypes.size());
-    if (this.serializationMode.includeDebugInfo()) {
-
-      pointer.setDebugInfo(
-          TypePointer.DebugInfo.newBuilder().setDescription(getDebugDescription(type)));
-    }
-
-    SeenTypeRecord record = new SeenTypeRecord(pointer.build());
+    TypePointer pointer =
+        TypePointer.newBuilder().setPoolOffset(this.seenSerializableTypes.size()).build();
+    SeenTypeRecord record = new SeenTypeRecord(pointer);
     this.seenSerializableTypes.put(type, record);
     // Serialize after the pointer is in the pool in case serialization requires a pool lookup.
     record.type = typeToProto(type, record.pointer);
@@ -419,13 +413,8 @@ final class JSTypeSerializer {
           "Expected all PrimitiveTypes to be added in order; %s added at index %s.",
           primitive,
           seenSerializableTypes.size());
-      TypePointer.Builder pointer = TypePointer.newBuilder().setPoolOffset(primitive.getNumber());
-
-      if (this.serializationMode.includeDebugInfo()) {
-        pointer.setDebugInfo(
-            TypePointer.DebugInfo.newBuilder().setDescription(primitive.toString()));
-      }
-      SeenTypeRecord record = new SeenTypeRecord(pointer.build());
+      TypePointer pointer = TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
+      SeenTypeRecord record = new SeenTypeRecord(pointer);
       JSTypeNative jsTypeNative = canonicalizePrimitive(primitive);
       SimplifiedType simplified =
           SimplifiedType.ofJSType(this.registry.getNativeType(jsTypeNative));

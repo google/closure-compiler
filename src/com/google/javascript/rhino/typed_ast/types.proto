@@ -26,12 +26,6 @@ message TypePointer {
   // If the offset is < # NativeTypes, points to the corresponding NativeType,
   // otherwise to the type pool subtract # Native Types
   int32 pool_offset = 1;
-
-  // Optional, doesn't contribute to type equality
-  DebugInfo debug_info = 3;
-  message DebugInfo {
-    string description = 1;
-  }
 }
 
 message SubtypingEdge {
