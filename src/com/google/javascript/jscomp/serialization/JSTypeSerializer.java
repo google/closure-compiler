@@ -25,14 +25,15 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoOneOf;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.serialization.JSTypeSerializer.SimplifiedType.Kind;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
@@ -42,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.protobuf.ByteString;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -326,8 +328,19 @@ final class JSTypeSerializer {
         // can be consistent across compilation units. For now, using a sequential integers for each
         // type depends on the invariant that we serialize each distinct type exactly once and from
         // a single compilation unit.
-        .setUuid(Integer.toHexString(idGenerator.newId()))
+        .setUuid(toByteString(idGenerator.newId() + JSTypeSerializer.PRIMITIVE_POOL_SIZE))
         .build();
+  }
+
+  // Reuse a single buffer rather than allocating and trashing a new one for every UUID.
+  private final byte[] uuidBuffer = new byte[4];
+
+  private ByteString toByteString(int x) {
+    for (int i = 0; i < 4; i++) {
+      int shift = (3 - i) * 8;
+      this.uuidBuffer[i] = (byte) (x >> shift);
+    }
+    return ByteString.copyFrom(this.uuidBuffer);
   }
 
   private static ObjectTypeProto.DebugInfo instanceDebugInfo(
@@ -487,14 +500,15 @@ final class JSTypeSerializer {
    *
    * <p>Only intended to be used for debug logging.
    */
-  ImmutableMap<String, String> getObjectUuidMapForDebugging() {
-    ImmutableMap.Builder<String, String> uuidToType = ImmutableMap.builder();
+  ImmutableSortedMap<String, String> getObjectUuidMapForDebugging() {
+    ImmutableSortedMap.Builder<String, String> uuidToType = ImmutableSortedMap.naturalOrder();
     for (Map.Entry<SimplifiedType, SeenTypeRecord> entry : this.seenSerializableTypes.entrySet()) {
       if (entry.getKey().getKind().equals(Kind.SINGLE)
           && entry.getValue().type != null
           && entry.getValue().type.hasObject()) {
         uuidToType.put(
-            entry.getValue().type.getObject().getUuid(), entry.getKey().single().toString());
+            ColorId.fromBytes(entry.getValue().type.getObject().getUuid()).toString(),
+            entry.getKey().single().toString());
       }
     }
     return uuidToType.build();

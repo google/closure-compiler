@@ -43,7 +43,7 @@ message ObjectTypeProto {
   // If true, type-based property optimizations will back off optimizations on
   // properties related to this type.
   bool is_invalidating = 2;
-  string uuid = 3;
+  bytes uuid = 3;
   // If true, type-based property optimizations will treat this type as if it
   // were an extern and never rename its properties. Unlike "is_invalidating"
   // types, optimizations may still rename other references to properties

@@ -71,11 +71,14 @@ public class ColorDeserializerTest {
             .addType(
                 TypeProto.newBuilder()
                     .setObject(
-                        ObjectTypeProto.newBuilder().setUuid("Number").setIsInvalidating(true))
+                        ObjectTypeProto.newBuilder()
+                            .setUuid(ByteString.copyFromUtf8("Number"))
+                            .setIsInvalidating(true))
                     .build())
             .addType(
                 TypeProto.newBuilder()
-                    .setObject(ObjectTypeProto.newBuilder().setUuid("Num.pro"))
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Num.pro")))
                     .build())
             .setNativeObjectTable(NativeObjectTable.newBuilder().setNumberObject(poolPointer(0)))
             .addDisambiguationEdges(
@@ -96,7 +99,10 @@ public class ColorDeserializerTest {
   public void deserializesSimpleObject() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
             .build();
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
@@ -111,14 +117,18 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo.pro")))
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo.pro"))))
             .addType(
-                TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo.ins")))
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo.ins"))))
             .addType(
                 TypeProto.newBuilder()
                     .setObject(
                         ObjectTypeProto.newBuilder()
-                            .setUuid("Foo")
+                            .setUuid(ByteString.copyFromUtf8("Foo"))
                             .setPrototype(poolPointer(0))
                             .setInstanceType(poolPointer(1))
                             .setMarkedConstructor(true)))
@@ -149,7 +159,7 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setObject(
                         ObjectTypeProto.newBuilder()
-                            .setUuid("Foo")
+                            .setUuid(ByteString.copyFromUtf8("Foo"))
                             .addOwnProperty(0)
                             .addOwnProperty(1)))
             .build();
@@ -176,7 +186,10 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             .addType(
                 TypeProto.newBuilder()
-                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").setIsInvalidating(true)))
+                    .setObject(
+                        ObjectTypeProto.newBuilder()
+                            .setUuid(ByteString.copyFromUtf8("Foo"))
+                            .setIsInvalidating(true)))
             .build();
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
@@ -192,7 +205,10 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             .addType(
                 TypeProto.newBuilder()
-                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").setClosureAssert(true)))
+                    .setObject(
+                        ObjectTypeProto.newBuilder()
+                            .setUuid(ByteString.copyFromUtf8("Foo"))
+                            .setClosureAssert(true)))
             .build();
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
@@ -206,8 +222,14 @@ public class ColorDeserializerTest {
   public void addsSingleSupertypeToDirectSupertypesField() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Bar")))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Bar"))))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
@@ -224,9 +246,18 @@ public class ColorDeserializerTest {
   public void addsMultipleSupertypesToDirectSupertypesField() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Bar")))
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Baz")))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Bar"))))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Baz"))))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
@@ -247,7 +278,10 @@ public class ColorDeserializerTest {
   public void throwsErrorIfDisambiguationEdgesContainsInvalidId() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
             .build();
@@ -390,7 +424,10 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             .addType(
                 TypeProto.newBuilder()
-                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").addOwnProperty(1001)))
+                    .setObject(
+                        ObjectTypeProto.newBuilder()
+                            .setUuid(ByteString.copyFromUtf8("Foo"))
+                            .addOwnProperty(1001)))
             .build();
     assertThrows(
         IndexOutOfBoundsException.class,

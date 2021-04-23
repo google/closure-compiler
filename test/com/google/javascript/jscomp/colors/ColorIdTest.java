@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -31,8 +32,8 @@ public final class ColorIdTest {
   private static final ColorId B = ColorId.fromAscii("b");
   private static final ColorId C = ColorId.fromAscii("c");
 
-  private static final ColorId ZERO = ColorId.fromAscii("\0");
-  private static final ColorId ONE = ColorId.fromAscii("\1");
+  private static final ColorId ZERO = ColorId.fromBytes(new byte[] {0});
+  private static final ColorId ONE = ColorId.fromBytes(new byte[] {1});
 
   @Test
   public void equals_sameInputTrue() {
@@ -46,7 +47,26 @@ public final class ColorIdTest {
 
   @Test
   public void equals_leadingZerosIgnored() {
-    assertEqualsAndRelatedMethods(A, ColorId.fromAscii("\0a"));
+    assertEqualsAndRelatedMethods(
+        ColorId.fromBytes(bytes(0, 0, 13)), //
+        ColorId.fromBytes(bytes(13)));
+  }
+
+  @Test
+  public void equals_leadingZerosIgnored_negativeBytes() {
+    assertEqualsAndRelatedMethods(
+        ColorId.fromBytes(bytes(0, 0, -13)), //
+        ColorId.fromBytes(bytes(-13)));
+  }
+
+  @Test
+  public void equals_fromByteArrayVsFromAscii() {
+    assertEqualsAndRelatedMethods(A, ColorId.fromBytes(bytes(97)));
+  }
+
+  @Test
+  public void equals_fromByteStringVsFromAscii() {
+    assertEqualsAndRelatedMethods(A, ColorId.fromBytes(ByteString.copyFrom(bytes(97))));
   }
 
   @Test
@@ -97,5 +117,13 @@ public final class ColorIdTest {
   private void assertNotEqualsAndRelatedMethods(ColorId actual, ColorId expected) {
     assertThat(actual).isNotEqualTo(expected);
     assertThat(actual.toString()).isNotEqualTo(expected.toString());
+  }
+
+  private byte[] bytes(int... in) {
+    byte[] out = new byte[in.length];
+    for (int i = 0; i < in.length; i++) {
+      out[i] = (byte) in[i];
+    }
+    return out;
   }
 }

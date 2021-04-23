@@ -173,7 +173,7 @@ final class SerializeTypesToPointers {
                   .map(pointer -> typePointerToId(pointer, typePool))
                   .collect(toImmutableSet()));
         case OBJECT:
-          return ColorId.fromAscii(typeProto.getObject().getUuid());
+          return ColorId.fromBytes(typeProto.getObject().getUuid());
         case KIND_NOT_SET:
           break;
       }

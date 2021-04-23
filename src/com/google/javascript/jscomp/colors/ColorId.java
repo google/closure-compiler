@@ -23,6 +23,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.errorprone.annotations.Immutable;
+import com.google.protobuf.ByteString;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Set;
@@ -47,17 +48,26 @@ public final class ColorId implements Serializable {
   // Assume for now that we have at most 8 bytes.
   private final long rightAligned;
 
+  public static ColorId fromBytes(ByteString bytes) {
+    return fromBytesAt(bytes, bytes.size(), BYTESTRING_AT);
+  }
+
+  public static ColorId fromBytes(byte[] bytes) {
+    return fromBytesAt(bytes, bytes.length, BYTEARRAY_AT);
+  }
+
   @VisibleForTesting
   public static ColorId fromAscii(String str) {
-    final int length = str.length();
+    return fromBytesAt(str, str.length(), ASCII_AT);
+  }
+
+  private static <T> ColorId fromBytesAt(T source, int length, ByteAt<T> byteAt) {
     checkState(length <= 8, length);
 
     long rightAligned = 0;
     for (int i = 0; i < length; i++) {
-      int c = str.codePointAt(i);
-      checkState(0 <= c && c < 128, c);
       rightAligned <<= 8;
-      rightAligned |= c;
+      rightAligned |= ((long) byteAt.get(source, i)) & 0xFF;
     }
 
     return new ColorId(rightAligned);
@@ -132,4 +142,19 @@ public final class ColorId implements Serializable {
   }
 
   private static final HashFunction FARM_64 = Hashing.farmHashFingerprint64();
+
+  private interface ByteAt<T> {
+    byte get(T source, int index);
+  }
+
+  private static final ByteAt<ByteString> BYTESTRING_AT = (s, i) -> s.byteAt(i);
+
+  private static final ByteAt<byte[]> BYTEARRAY_AT = (s, i) -> s[i];
+
+  private static final ByteAt<String> ASCII_AT =
+      (s, i) -> {
+        int c = s.codePointAt(i);
+        checkState(0 <= c && c < 128, c);
+        return (byte) c;
+      };
 }

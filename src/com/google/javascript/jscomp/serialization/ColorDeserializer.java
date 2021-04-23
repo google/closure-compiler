@@ -224,7 +224,7 @@ public final class ColorDeserializer {
       ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
       SingletonColorFields.Builder builder =
           SingletonColorFields.builder()
-              .setId(ColorId.fromAscii(serialized.getUuid()))
+              .setId(ColorId.fromBytes(serialized.getUuid()))
               .setClosureAssert(serialized.getClosureAssert())
               .setInvalidating(serialized.getIsInvalidating())
               .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
