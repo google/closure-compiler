@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -64,6 +65,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return new SerializeTypedAstPass(
         compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS, consumer);
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableSourceInformationAnnotator();
   }
 
   @Test

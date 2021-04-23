@@ -23,9 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.SourceInformationAnnotator;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.RhinoStringPool;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.EnumSet;
@@ -295,13 +293,6 @@ final class TypedAstSerializer {
   private void setOriginalName(AstNode.Builder builder, Node n) {
     String originalName = n.getOriginalName();
     if (originalName == null) {
-      builder.setOriginalNamePointer(0); // equivalent to 'not set'
-      return;
-    }
-
-    if (SourceInformationAnnotator.isStringNodeRequiringOriginalName(n)
-        && RhinoStringPool.uncheckedEquals(n.getString(), originalName)) {
-      // space optimization - TypedAstDeserializer will set the original name to n.getString().
       builder.setOriginalNamePointer(0); // equivalent to 'not set'
       return;
     }

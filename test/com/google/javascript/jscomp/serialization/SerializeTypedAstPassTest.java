@@ -64,6 +64,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     this.typesToForwardDeclare = ImmutableSet.of();
+    enableSourceInformationAnnotator();
   }
 
   @Override
@@ -467,6 +468,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
                                 .setStringValuePointer(findInStringPool(stringPool, "x"))
+                                .setOriginalNamePointer(findInStringPool(stringPool, "x"))
                                 .setRelativeColumn(6)
                                 .setType(numberType)
                                 .addChild(
@@ -514,6 +516,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
                                 .setStringValuePointer(findInStringPool(stringPool, "s"))
+                                .setOriginalNamePointer(findInStringPool(stringPool, "s"))
                                 .setType(stringType)
                                 .addChild(
                                     AstNode.newBuilder()
@@ -627,6 +630,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.FUNCTION_LITERAL)
+                        .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f"))
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
@@ -642,8 +646,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                                         .setKind(NodeKind.IDENTIFIER)
                                         .setStringValuePointer(
                                             findInStringPool(ast.getStringPool(), "x"))
-                                        // note: no originalNamePointer, as the original name ===
-                                        // the string value
+                                        .setOriginalNamePointer(
+                                            findInStringPool(ast.getStringPool(), "x"))
                                         .build()))
                         .addChild(AstNode.newBuilder().setKind(NodeKind.BLOCK)))
                 .build());

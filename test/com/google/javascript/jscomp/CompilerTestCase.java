@@ -168,6 +168,9 @@ public abstract class CompilerTestCase {
   /** Whether the PureFunctionIdentifier pass runs before the pass being tested */
   private boolean computeSideEffects;
 
+  /** Whether the SourceInformationAnnotator pass runs after parsing */
+  private boolean annotateSourceInfo;
+
   /**
    * The set of accessors declared to exist "somewhere" in the test program.
    *
@@ -624,6 +627,7 @@ public abstract class CompilerTestCase {
     this.compareJsDoc = true;
     this.compareSyntheticCode = true;
     this.computeSideEffects = false;
+    this.annotateSourceInfo = false;
     this.expectParseWarningsThisTest = false;
     this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
@@ -947,6 +951,11 @@ public abstract class CompilerTestCase {
   protected final void disableComputeSideEffects() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     computeSideEffects = false;
+  }
+
+  protected final void enableSourceInformationAnnotator() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.annotateSourceInfo = true;
   }
 
   /**
@@ -1440,6 +1449,10 @@ public abstract class CompilerTestCase {
     }
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
+
+    if (annotateSourceInfo) {
+      NodeTraversal.traverse(compiler, mainRoot, SourceInformationAnnotator.create());
+    }
 
     if (createModuleMap) {
       new GatherModuleMetadata(

@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.SourceInformationAnnotator;
 import com.google.javascript.jscomp.ZipEntryReader;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -341,12 +340,6 @@ public final class TypedAstDeserializer {
   private void setOriginalNameIfPresent(AstNode astNode, Node n) {
     if (astNode.getOriginalNamePointer() != 0) {
       n.setOriginalName(getStringByPointer(astNode.getOriginalNamePointer()));
-    } else if (SourceInformationAnnotator.isStringNodeRequiringOriginalName(n)) {
-      // This step will give new original names to nodes synthesized in stage1 without an original
-      // name, as we don't verify that this string node had an original name prior to serialization.
-      // This is probably fine: names from new stage 1 nodes should be generally  readable enough to
-      // include in source maps.
-      n.setOriginalName(getStringByPointer(astNode.getStringValuePointer()));
     }
   }
 
