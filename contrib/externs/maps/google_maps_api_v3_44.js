@@ -3118,8 +3118,8 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * <code>pixelOffset</code> (see InfoWindowOptions). The
  * <code>anchorPoint</code> is the offset from the anchor&#39;s position to the
  * tip of the InfoWindow.
- * @param {(google.maps.Map|google.maps.StreetViewPanorama)=} map
- * @param {google.maps.MVCObject=} anchor
+ * @param {(?google.maps.Map|?google.maps.StreetViewPanorama)=} map
+ * @param {?google.maps.MVCObject=} anchor
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.open = function(map, anchor) {};
