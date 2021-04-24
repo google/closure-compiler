@@ -183,8 +183,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final Map<String, Node> scriptNodeByFilename = new ConcurrentHashMap<>();
 
-  private transient IncrementalScopeCreator scopeCreator = null;
-
   private ImmutableMap<String, String> inputPathByWebpackId;
 
   /**
@@ -1527,16 +1525,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Only used by jsdev
   public TypedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
-  }
-
-  @Override
-  IncrementalScopeCreator getScopeCreator() {
-    return this.scopeCreator;
-  }
-
-  @Override
-  void putScopeCreator(IncrementalScopeCreator creator) {
-    this.scopeCreator = creator;
   }
 
   DefaultPassConfig ensureDefaultPassConfig() {

@@ -22,16 +22,37 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.Node;
 
 /**
- * Scope contains information about a variable scope in JavaScript.
- * Scopes can be nested, a scope points back to its parent scope.
- * A Scope contains information about variables defined in that scope.
+ * Scope contains information about a variable scope in JavaScript. Scopes can be nested, a scope
+ * points back to its parent scope. A Scope contains information about variables defined in that
+ * scope.
  *
  * @see NodeTraversal
  */
-public abstract class Scope extends AbstractScope<Scope, Var> {
+public final class Scope extends AbstractScope<Scope, Var> {
 
-  Scope(Node rootNode) {
+  private final Scope parent;
+  private final int depth;
+
+  static Scope createGlobalScope(Node rootNode) {
+    return new Scope(rootNode);
+  }
+
+  static Scope createChildScope(Scope parent, Node rootNode) {
+    return new Scope(parent, rootNode);
+  }
+
+  private Scope(Scope parent, Node rootNode) {
     super(rootNode);
+    checkChildScope(parent);
+    this.parent = parent;
+    this.depth = parent.getDepth() + 1;
+  }
+
+  private Scope(Node rootNode) {
+    super(rootNode);
+    checkRootScope();
+    this.parent = null;
+    this.depth = 0;
   }
 
   @Override
@@ -39,12 +60,14 @@ public abstract class Scope extends AbstractScope<Scope, Var> {
     return this;
   }
 
-  static Scope createGlobalScope(Node rootNode) {
-    return new Scope.Simple(rootNode);
+  @Override
+  public int getDepth() {
+    return depth;
   }
 
-  static Scope createChildScope(Scope parent, Node rootNode) {
-    return new Scope.Simple(parent, rootNode);
+  @Override
+  public Scope getParent() {
+    return parent;
   }
 
   /**
@@ -67,34 +90,5 @@ public abstract class Scope extends AbstractScope<Scope, Var> {
   @Override
   Var makeImplicitVar(ImplicitVar var) {
     return new Var(var.name, null /* nameNode */, this, -1 /* index */, null /* input */);
-  }
-
-  private static final class Simple extends Scope {
-    final Scope parent;
-    final int depth;
-
-    Simple(Scope parent, Node rootNode) {
-      super(rootNode);
-      checkChildScope(parent);
-      this.parent = parent;
-      this.depth = parent.getDepth() + 1;
-    }
-
-    Simple(Node rootNode) {
-      super(rootNode);
-      checkRootScope();
-      this.parent = null;
-      this.depth = 0;
-    }
-
-    @Override
-    public int getDepth() {
-      return depth;
-    }
-
-    @Override
-    public Scope getParent() {
-      return parent;
-    }
   }
 }

@@ -30,10 +30,9 @@ import javax.annotation.Nullable;
  *
  * <p>This implementation is not thread-safe.
  */
-public class SyntacticScopeCreator implements ScopeCreator {
+public final class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private final RedeclarationHandler redeclarationHandler;
-  private final ScopeFactory scopeFactory;
 
   // The arguments variable is special, in that it's declared for every function,
   // but not explicitly declared.
@@ -46,40 +45,18 @@ public class SyntacticScopeCreator implements ScopeCreator {
     this(compiler, DEFAULT_REDECLARATION_HANDLER);
   }
 
-  public SyntacticScopeCreator(AbstractCompiler compiler, ScopeFactory scopeFactory) {
-    this(compiler, DEFAULT_REDECLARATION_HANDLER, scopeFactory);
-  }
-
   SyntacticScopeCreator(AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
-    this(compiler, redeclarationHandler, new DefaultScopeFactory());
-  }
-
-  SyntacticScopeCreator(
-      AbstractCompiler compiler,
-      RedeclarationHandler redeclarationHandler,
-      ScopeFactory scopeFactory) {
     this.compiler = compiler;
     this.redeclarationHandler = redeclarationHandler;
-    this.scopeFactory = scopeFactory;
-  }
-
-  /** A simple API for injecting the use of alternative Scope classes */
-  public interface ScopeFactory {
-    Scope create(Scope parent, Node n);
-  }
-
-  private static class DefaultScopeFactory implements ScopeFactory {
-    @Override
-    public Scope create(Scope parent, Node n) {
-      return (parent == null)
-        ? Scope.createGlobalScope(n)
-        : Scope.createChildScope(parent, n);
-    }
   }
 
   @Override
   public Scope createScope(Node n, AbstractScope<?, ?> parent) {
-    Scope scope = scopeFactory.create((Scope) parent, n);
+    return this.createScope(n, (Scope) parent);
+  }
+
+  public Scope createScope(Node n, Scope parent) {
+    Scope scope = (parent == null) ? Scope.createGlobalScope(n) : Scope.createChildScope(parent, n);
     new ScopeScanner(compiler, redeclarationHandler, scope, null).populate();
     return scope;
   }

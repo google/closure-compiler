@@ -173,18 +173,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Gets the top scope. */
   public abstract TypedScope getTopScope();
 
-  /**
-   * Gets a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continuously recreating the entire scope.
-   */
-  abstract IncrementalScopeCreator getScopeCreator();
-
-  /**
-   * Stores a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continuously recreating the entire scope.
-   */
-  abstract void putScopeCreator(IncrementalScopeCreator creator);
-
   /** Report an error or warning. */
   public abstract void report(JSError error);
 
