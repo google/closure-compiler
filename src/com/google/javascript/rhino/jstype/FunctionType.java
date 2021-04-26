@@ -1373,14 +1373,7 @@ public class FunctionType extends PrototypeObjectType {
     return new Builder(registry);
   }
 
-  /**
-   * A builder class for function and arrow types.
-   *
-   * <p>If you need to build an interface constructor, use {@link
-   * JSTypeRegistry#createInterfaceType}.
-   *
-   * @author nicksantos@google.com (Nick Santos)
-   */
+  /** A builder class for function and arrow types. */
   public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
     private Node sourceNode = null;
@@ -1460,6 +1453,10 @@ public class FunctionType extends PrototypeObjectType {
 
     /** Set the template name. */
     public Builder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
+      if (templateKeys == null) {
+        templateKeys = ImmutableList.of();
+      }
+
       return this.setTemplateTypeMap(
               registry
                   .getEmptyTemplateTypeMap()

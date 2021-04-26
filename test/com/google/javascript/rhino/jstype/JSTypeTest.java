@@ -128,10 +128,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
       subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
-      interfaceType = registry.createInterfaceType("Interface", null, null, false);
+      interfaceType = FunctionType.builder(registry).forInterface().withName("Interface").build();
       interfaceInstType = interfaceType.getInstanceType();
 
-      subInterfaceType = registry.createInterfaceType("SubInterface", null, null, false);
+      subInterfaceType =
+          FunctionType.builder(registry).forInterface().withName("SubInterfacce").build();
       subInterfaceType.setExtendedInterfaces(Lists.<ObjectType>newArrayList(interfaceInstType));
       subInterfaceInstType = subInterfaceType.getInstanceType();
 
@@ -189,12 +190,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             googBar,
             googSubBar,
             forwardDeclaredNamedType);
-  }
-
-  private <T> T withOpenRegistry(Supplier<T> cb) {
-    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
-      return cb.get();
-    }
   }
 
   /** Tests the behavior of the top constructor type. */
@@ -6413,7 +6408,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // /** @type {number} */
     // Foo.prototype.x;
     FunctionType secondTypeConstructor =
-        registry.createInterfaceType("Foo", null, ImmutableList.of(), false);
+        FunctionType.builder(registry).forInterface().withName("Foo").build();
 
     secondTypeConstructor.getPrototype().defineProperty("x", NUMBER_TYPE, false, null);
     secondTypeConstructor.setImplicitMatch(true);
@@ -6441,5 +6436,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // is structural.
     assertType(firstType).isNotSubtypeOf(secondType);
     assertType(secondType).isSubtypeOf(firstType);
+  }
+
+  private <T> T withOpenRegistry(Supplier<T> cb) {
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      return cb.get();
+    }
   }
 }

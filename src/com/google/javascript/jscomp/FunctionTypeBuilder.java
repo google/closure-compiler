@@ -1086,8 +1086,16 @@ final class FunctionTypeBuilder {
 
     if (fnType == null) {
       fnType =
-          typeRegistry.createInterfaceType(
-              fnName, contents.getSourceNode(), templateTypeNames, makesStructs);
+          FunctionType.builder(typeRegistry)
+              .forInterface()
+              .withName(fnName)
+              .withSourceNode(contents.getSourceNode())
+              .withParameters()
+              .withTemplateKeys(templateTypeNames)
+              .build();
+      if (makesStructs) {
+        fnType.setStruct();
+      }
       if (!fnName.isEmpty()) {
         typeRegistry.declareTypeForExactScope(
             declarationScope, syntacticFnName, fnType.getInstanceType());

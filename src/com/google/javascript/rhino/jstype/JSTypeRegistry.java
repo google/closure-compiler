@@ -1816,33 +1816,9 @@ public class JSTypeRegistry {
         .withSourceNode(source)
         .withParameters(parameters)
         .withReturnType(returnType)
-        .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
+        .withTemplateKeys(templateKeys)
         .withIsAbstract(isAbstract)
         .build();
-  }
-
-  /**
-   * Creates an interface function type.
-   *
-   * @param name the function's name
-   * @param source the node defining this function. Its type ({@link Node#getToken()}) must be
-   *     {@link Token#FUNCTION}.
-   * @param templateKeys the templatized types for the interface.
-   */
-  public FunctionType createInterfaceType(
-      String name, Node source, ImmutableList<TemplateType> templateKeys, boolean struct) {
-    FunctionType fn =
-        FunctionType.builder(this)
-            .forInterface()
-            .withName(name)
-            .withSourceNode(source)
-            .withParameters()
-            .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
-            .build();
-    if (struct) {
-      fn.setStruct();
-    }
-    return fn;
   }
 
   public TemplateType createTemplateType(String name) {

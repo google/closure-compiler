@@ -197,8 +197,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testSubtypeWithInterfaceThisType() {
-    FunctionType iface = registry.createInterfaceType("I", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType iface = this.createInterfaceType("I", ImmutableList.of(), false);
     FunctionType ifaceReturnBoolean =
         FunctionType.builder(registry)
             .withParameters(registry.createParameters())
@@ -338,8 +337,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInterfacePrototypeChain1() {
-    FunctionType iface = registry.createInterfaceType("I", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType iface = this.createInterfaceType("I", ImmutableList.of(), false);
     assertTypeEquals(
         iface.getPrototype(),
         iface.getInstanceType().getImplicitPrototype());
@@ -350,13 +348,11 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInterfacePrototypeChain2() {
-    FunctionType iface = registry.createInterfaceType("I", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType iface = this.createInterfaceType("I", ImmutableList.of(), false);
     iface.getPrototype().defineDeclaredProperty(
         "numberProp", NUMBER_TYPE, null);
 
-    FunctionType subIface = registry.createInterfaceType("SubI", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType subIface = this.createInterfaceType("SubI", ImmutableList.of(), false);
     subIface.setExtendedInterfaces(
         Lists.<ObjectType>newArrayList(iface.getInstanceType()));
     assertTypeEquals(
@@ -375,13 +371,11 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testInterfacePrototypeChain3() {
     TemplateType templateT = registry.createTemplateType("T");
-    FunctionType iface = registry.createInterfaceType("I", null,
-        ImmutableList.of(templateT), false);
+    FunctionType iface = this.createInterfaceType("I", ImmutableList.of(templateT), false);
     iface.getPrototype().defineDeclaredProperty(
         "genericProp", templateT, null);
 
-    FunctionType subIface = registry.createInterfaceType("SubI", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType subIface = this.createInterfaceType("SubI", ImmutableList.of(), false);
     subIface.setExtendedInterfaces(
         Lists.<ObjectType>newArrayList(iface.getInstanceType()));
     assertTypeEquals(
@@ -516,7 +510,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn =
         FunctionType.builder(registry)
             .withTypeOfThis(template)
-            .withTemplateKeys(ImmutableList.of(template))
+            .withTemplateKeys(template)
             .withReturnType(BOOLEAN_TYPE)
             .build();
 
@@ -582,12 +576,25 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testSetImplementsOnInterface() {
-    FunctionType iface = registry.createInterfaceType("I", null,
-        ImmutableList.<TemplateType>of(), false);
-    FunctionType subIface = registry.createInterfaceType("SubI", null,
-        ImmutableList.<TemplateType>of(), false);
+    FunctionType iface = this.createInterfaceType("I", ImmutableList.of(), false);
+    FunctionType subIface = this.createInterfaceType("SubI", ImmutableList.of(), false);
     assertThrows(
         Exception.class,
         () -> subIface.setImplementedInterfaces(ImmutableList.of(iface.getInstanceType())));
+  }
+
+  private FunctionType createInterfaceType(
+      String name, ImmutableList<TemplateType> templateKeys, boolean struct) {
+    FunctionType fn =
+        FunctionType.builder(registry)
+            .forInterface()
+            .withName(name)
+            .withParameters()
+            .withTemplateKeys(templateKeys)
+            .build();
+    if (struct) {
+      fn.setStruct();
+    }
+    return fn;
   }
 }
