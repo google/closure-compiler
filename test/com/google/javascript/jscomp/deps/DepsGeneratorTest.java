@@ -63,12 +63,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
     String output = depsGenerator.computeDependencyCalls();
 
     assertWarnings(
@@ -101,12 +102,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
     String output = depsGenerator.computeDependencyCalls();
 
     assertNoWarnings();
@@ -144,12 +146,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
     String output = depsGenerator.computeDependencyCalls();
 
     assertNoWarnings();
@@ -187,12 +190,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             PathUtil.makeAbsolute("/base/javascript/closure"),
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("."),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("."))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -290,12 +294,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -311,12 +316,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String expectedWithDepsAsSources =
         LINE_JOINER.join(
@@ -367,12 +373,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             PathUtil.makeAbsolute("/base/javascript/closure"),
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/" + "/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/" + "/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -392,12 +399,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
     String output = depsGenerator.computeDependencyCalls();
 
     assertNoWarnings();
@@ -456,12 +464,13 @@ public final class DepsGeneratorTest {
             mergeStrategy,
             PathUtil.makeAbsolute("/base/javascript/closure"),
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("/base/"),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("/base/"))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String output = depsGenerator.computeDependencyCalls();
 
@@ -482,12 +491,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/javascript/closure",
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of(""),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of(""))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
     String output = depsGenerator.computeDependencyCalls();
 
     if (fatal) {
@@ -550,12 +560,13 @@ public final class DepsGeneratorTest {
             DepsGenerator.InclusionStrategy.ALWAYS,
             PathUtil.makeAbsolute("./path/to/closure"),
             errorManager,
-            new ModuleLoader(
-                null,
-                ImmutableList.of("."),
-                ImmutableList.of(),
-                BrowserModuleResolver.FACTORY,
-                ModuleLoader.PathResolver.ABSOLUTE));
+            ModuleLoader.builder()
+                .setErrorHandler(null)
+                .setModuleRoots(ImmutableList.of("."))
+                .setInputs(ImmutableList.of())
+                .setFactory(BrowserModuleResolver.FACTORY)
+                .setPathResolver(ModuleLoader.PathResolver.ABSOLUTE)
+                .build());
 
     String output = worker.computeDependencyCalls();
 

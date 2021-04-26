@@ -1648,13 +1648,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     this.moduleLoader =
-        new ModuleLoader(
-            null,
-            options.moduleRoots,
-            moduleGraph.getAllInputs(),
-            moduleResolverFactory,
-            PathResolver.RELATIVE,
-            options.getPathEscaper());
+        ModuleLoader.builder()
+            .setModuleRoots(options.moduleRoots)
+            .setInputs(moduleGraph.getAllInputs())
+            .setFactory(moduleResolverFactory)
+            .setPathResolver(PathResolver.RELATIVE)
+            .setPathEscaper(options.getPathEscaper())
+            .build();
   }
 
   // ------------------------------------------------------------------------

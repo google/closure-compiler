@@ -274,11 +274,11 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseEs6Module4() {
     ModuleLoader loader =
-        new ModuleLoader(
-            null,
-            ImmutableList.of("/foo"),
-            ImmutableList.of(),
-            BrowserModuleResolver.FACTORY);
+        ModuleLoader.builder()
+            .setModuleRoots(ImmutableList.of("/foo"))
+            .setInputs(ImmutableList.of())
+            .setFactory(BrowserModuleResolver.FACTORY)
+            .build();
 
     String contents = ""
         + "import './a';\n"
@@ -314,11 +314,11 @@ public final class JsFileRegexParserTest {
   @Test
   public void testParseEs6ModuleWithGoogProvide() {
     ModuleLoader loader =
-        new ModuleLoader(
-            null,
-            ImmutableList.of("/foo"),
-            ImmutableList.of(),
-            BrowserModuleResolver.FACTORY);
+        ModuleLoader.builder()
+            .setModuleRoots(ImmutableList.of("/foo"))
+            .setInputs(ImmutableList.of())
+            .setFactory(BrowserModuleResolver.FACTORY)
+            .build();
 
     String contents = "goog.provide('my.namespace');\nexport {};";
 
@@ -341,8 +341,11 @@ public final class JsFileRegexParserTest {
   @Test
   public void testEs6ModuleWithDeclareModuleId() {
     ModuleLoader loader =
-        new ModuleLoader(
-            null, ImmutableList.of("/foo"), ImmutableList.of(), BrowserModuleResolver.FACTORY);
+        ModuleLoader.builder()
+            .setModuleRoots(ImmutableList.of("/foo"))
+            .setInputs(ImmutableList.of())
+            .setFactory(BrowserModuleResolver.FACTORY)
+            .build();
 
     String contents = "goog.declareModuleId('my.namespace');\nexport {};";
 
@@ -361,12 +364,13 @@ public final class JsFileRegexParserTest {
   @Test
   public void testEs6ModuleWithBrowserTransformedPrefixResolver() {
     ModuleLoader loader =
-        new ModuleLoader(
-            null,
-            ImmutableList.of(),
-            ImmutableList.of(),
-            new BrowserWithTransformedPrefixesModuleResolver.Factory(
-                ImmutableMap.of("@root/", "/path/to/project/")));
+        ModuleLoader.builder()
+            .setModuleRoots(ImmutableList.of())
+            .setInputs(ImmutableList.of())
+            .setFactory(
+                new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                    ImmutableMap.of("@root/", "/path/to/project/")))
+            .build();
 
     String contents = "import '@root/my/file.js';";
 

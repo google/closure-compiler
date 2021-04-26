@@ -17,14 +17,18 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableMultiset.toImmutableMultiset;
+import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
+import static com.google.common.collect.Streams.stream;
 import static java.util.Comparator.naturalOrder;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
@@ -32,10 +36,7 @@ import com.google.javascript.jscomp.JSError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -78,55 +79,77 @@ public final class ModuleLoader {
 
   private final ModuleResolver moduleResolver;
 
-  /**
-   * Creates an instance of the module loader which can be used to locate ES6 and CommonJS modules.
-   *
-   * @param moduleRoots path prefixes to strip from module paths
-   * @param inputs all inputs to the compilation process. Used to ensure that resolved paths
-   *     references an valid input.
-   * @param factory creates a module resolver, which determines how module identifiers are resolved
-   * @param pathResolver determines how to sanitize paths before resolving
-   * @param pathEscaper determines if / how paths should be escaped
-   */
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs,
-      ModuleResolverFactory factory,
-      PathResolver pathResolver,
-      PathEscaper pathEscaper) {
-    checkNotNull(moduleRoots);
-    checkNotNull(inputs);
-    checkNotNull(pathResolver);
-    checkNotNull(pathEscaper);
-    this.pathResolver = pathResolver;
-    this.pathEscaper = pathEscaper;
-    this.errorHandler = errorHandler == null ? new NoopErrorHandler() : errorHandler;
-    this.moduleRootPaths = createRootPaths(moduleRoots, pathResolver, pathEscaper);
-    ImmutableSet<String> modulePaths =
-        resolvePaths(
-            Iterables.transform(Iterables.transform(inputs, DependencyInfo::getName), pathResolver),
-            moduleRootPaths,
-            pathEscaper);
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Builder */
+  public static final class Builder {
+    private ErrorHandler errorHandler = NOOP_ERROR_HANDER;
+    private Iterable<String> moduleRoots;
+    private Iterable<? extends DependencyInfo> inputs;
+    private ModuleResolverFactory factory;
+    private PathResolver pathResolver = PathResolver.RELATIVE;
+    private PathEscaper pathEscaper = PathEscaper.ESCAPE;
+
+    private Builder() {}
+
+    public Builder setErrorHandler(ErrorHandler x) {
+      if (x != null) {
+        this.errorHandler = x;
+      }
+      return this;
+    }
+
+    /** Path prefixes to strip from module paths */
+    public Builder setModuleRoots(Iterable<String> x) {
+      this.moduleRoots = x;
+      return this;
+    }
+
+    /**
+     * All inputs to the compilation process.
+     *
+     * <p>Used to ensure that resolved paths references a valid input.
+     */
+    public Builder setInputs(Iterable<? extends DependencyInfo> x) {
+      this.inputs = x;
+      return this;
+    }
+
+    /** Creates a module resolver, which determines how module identifiers are resolved */
+    public Builder setFactory(ModuleResolverFactory x) {
+      this.factory = x;
+      return this;
+    }
+
+    /** Determines how to sanitize paths before resolving */
+    public Builder setPathResolver(PathResolver x) {
+      this.pathResolver = x;
+      return this;
+    }
+
+    /** Determines if / how paths should be escaped */
+    public Builder setPathEscaper(PathEscaper x) {
+      this.pathEscaper = x;
+      return this;
+    }
+
+    public ModuleLoader build() {
+      return new ModuleLoader(this);
+    }
+  }
+
+  private ModuleLoader(Builder builder) {
+    this.errorHandler = checkNotNull(builder.errorHandler);
+    this.pathResolver = checkNotNull(builder.pathResolver);
+    this.pathEscaper = checkNotNull(builder.pathEscaper);
+    this.moduleRootPaths = this.createRootPaths(checkNotNull(builder.moduleRoots));
+
+    ImmutableSet<String> modulePaths = this.resolvePaths(checkNotNull(builder.inputs));
     this.moduleResolver =
-        factory.create(modulePaths, this.moduleRootPaths, this.errorHandler, this.pathEscaper);
-  }
-
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs,
-      ModuleResolverFactory factory,
-      PathResolver pathResolver) {
-    this(errorHandler, moduleRoots, inputs, factory, pathResolver, PathEscaper.ESCAPE);
-  }
-
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs,
-      ModuleResolverFactory factory) {
-    this(errorHandler, moduleRoots, inputs, factory, PathResolver.RELATIVE, PathEscaper.ESCAPE);
+        builder.factory.create(
+            modulePaths, this.moduleRootPaths, this.errorHandler, this.pathEscaper);
   }
 
   @VisibleForTesting
@@ -226,44 +249,33 @@ public final class ModuleLoader {
    * Normalizes the given root paths, which are path prefixes to be removed from a module path when
    * resolved.
    */
-  private static ImmutableList<String> createRootPaths(
-      Iterable<String> roots, PathResolver resolver, PathEscaper escaper) {
-    // Sort longest length to shortest so that paths are applied most specific to least.
-    Set<String> builder =
-        new TreeSet<>(
-            Comparator.comparingInt(String::length).thenComparing(naturalOrder()).reversed());
-    for (String root : roots) {
-      String rootModuleName = escaper.escape(resolver.apply(root));
-      if (isAmbiguousIdentifier(rootModuleName)) {
-        rootModuleName = MODULE_SLASH + rootModuleName;
-      }
-      builder.add(rootModuleName);
-    }
-    return ImmutableList.copyOf(builder);
+  private ImmutableList<String> createRootPaths(Iterable<String> roots) {
+    return stream(roots)
+        .map(this.pathResolver)
+        .map(this.pathEscaper::escape)
+        .map((n) -> isAmbiguousIdentifier(n) ? (MODULE_SLASH + n) : n)
+        .collect(toImmutableSortedSet(BEST_MATCH_PATH_ORDERING))
+        .asList();
   }
 
-  /**
-   * @param modulePaths List of modules. Modules can be relative to the compilation root or absolute
-   *     file system paths (or even absolute paths from the compilation root).
-   * @param roots List of module roots which anchor absolute path references.
-   * @return List of normalized modules which always have a leading slash
-   */
-  private static ImmutableSet<String> resolvePaths(
-      Iterable<String> modulePaths, Iterable<String> roots, PathEscaper escaper) {
-    ImmutableSet.Builder<String> resolved = ImmutableSet.builder();
-    Set<String> knownPaths = new HashSet<>();
-    for (String name : modulePaths) {
-      String canonicalizedPath = escaper.escape(name);
-      if (!knownPaths.add(normalize(canonicalizedPath, roots))) {
-        // Having root paths "a" and "b" and source files "a/f.js" and "b/f.js" is ambiguous.
-        throw new IllegalArgumentException("Duplicate module path after resolving: " + name);
-      }
-      if (isAmbiguousIdentifier(canonicalizedPath)) {
-        canonicalizedPath = MODULE_SLASH + canonicalizedPath;
-      }
-      resolved.add(canonicalizedPath);
-    }
-    return resolved.build();
+  /** @return List of normalized modules which always have a leading slash */
+  private ImmutableSet<String> resolvePaths(Iterable<? extends DependencyInfo> inputs) {
+    ImmutableMultiset<String> dupeModulePaths =
+        stream(inputs)
+            .map(DependencyInfo::getName)
+            .map(this.pathResolver)
+            .map(this.pathEscaper::escape)
+            .map((p) -> normalize(p, this.moduleRootPaths))
+            .map((n) -> isAmbiguousIdentifier(n) ? (MODULE_SLASH + n) : n)
+            .sorted(BEST_MATCH_PATH_ORDERING) // Sort so that this errors are easier to read.
+            .collect(toImmutableMultiset());
+
+    checkState(
+        dupeModulePaths.size() == dupeModulePaths.elementSet().size(),
+        "Duplicate module paths after resolving: %s",
+        dupeModulePaths);
+
+    return dupeModulePaths.elementSet();
   }
 
   /** Normalizes the name and resolves it against the module roots. */
@@ -315,7 +327,7 @@ public final class ModuleLoader {
 
   public void setErrorHandler(ErrorHandler errorHandler) {
     if (errorHandler == null) {
-      this.errorHandler = new NoopErrorHandler();
+      this.errorHandler = NOOP_ERROR_HANDER;
     } else {
       this.errorHandler = errorHandler;
     }
@@ -381,13 +393,19 @@ public final class ModuleLoader {
         PathEscaper pathEscaper);
   }
 
+  // Sort longest length to shortest so that paths are applied most specific to least.
+  private static final Comparator<String> BEST_MATCH_PATH_ORDERING =
+      Comparator.comparingInt(String::length).reversed().thenComparing(naturalOrder());
+
+  private static final ErrorHandler NOOP_ERROR_HANDER = (CheckLevel level, JSError error) -> {};
+
   /** A trivial module loader with no roots. */
   public static final ModuleLoader EMPTY =
-      new ModuleLoader(
-          /* errorHandler= */ null,
-          ImmutableList.of(),
-          ImmutableList.of(),
-          BrowserModuleResolver.FACTORY);
+      ModuleLoader.builder()
+          .setModuleRoots(ImmutableList.of())
+          .setInputs(ImmutableList.of())
+          .setFactory(BrowserModuleResolver.FACTORY)
+          .build();
 
   /** Standard path base resolution algorithms that are accepted as a command line flag. */
   public enum ResolutionMode {
@@ -420,10 +438,5 @@ public final class ModuleLoader {
      * Uses a lookup map provided by webpack to locate modules from a numeric id used during import
      */
     WEBPACK,
-  }
-
-  private static final class NoopErrorHandler implements ErrorHandler {
-    @Override
-    public void report(CheckLevel level, JSError error) {}
   }
 }
