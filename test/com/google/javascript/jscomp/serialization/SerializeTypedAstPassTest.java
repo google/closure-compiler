@@ -30,8 +30,10 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -146,7 +148,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .setDebugInfo(
                             ObjectTypeProto.DebugInfo.newBuilder()
                                 .setClassName("Boolean")
-                                .setFilename("")
+                                .setFilename("externs")
                                 .build()))
                 .build());
   }
@@ -455,11 +457,12 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypedAst ast = compile("const x = 5;");
     StringPool stringPool = ast.getStringPool();
 
-    assertThat(ast.getSourceFileList().get(0).getRoot())
+    assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
+                .setSourceFile(2)
                 .setRelativeLine(1)
                 .addChild(
                     AstNode.newBuilder()
@@ -501,7 +504,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     TypedAst ast = compile("let s = 'hello';");
     StringPool stringPool = ast.getStringPool();
 
-    assertThat(ast.getSourceFileList().get(0).getRoot())
+    assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
@@ -509,6 +512,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
+                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.LET_DECLARATION)
@@ -541,6 +545,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
+                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.EXPRESSION_STATEMENT)
@@ -564,7 +569,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testAst_arrowFunction() {
     TypedAst ast = compile("() => 'hello';");
 
-    assertThat(ast.getSourceFileList().get(0).getRoot())
+    assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("type"),
@@ -572,6 +577,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
+                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.EXPRESSION_STATEMENT)
@@ -602,7 +608,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     enableRewriteClosureCode();
 
     TypedAst ast = compile("goog.module('a.b.c'); function f(x) {}");
-    assertThat(ast.getSourceFileList().get(0).getRoot())
+    assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("relative_column"),
@@ -610,6 +616,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
+                .setSourceFile(2)
                 .addBooleanProperty(NodeProperty.GOOG_MODULE)
                 // `/** @const */ var module$exports$a$b$c = {};`
                 .addChild(
@@ -622,9 +629,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                                 .setKind(NodeKind.IDENTIFIER)
                                 .setStringValuePointer(
                                     findInStringPool(ast.getStringPool(), "module$exports$a$b$c"))
-
-                                // note: no originalNamePointer, as the node is synthetic with no
-                                // original name
                                 .addChild(AstNode.newBuilder().setKind(NodeKind.OBJECT_LITERAL))))
                 // `function module$contents$a$b$c_f(x) {}`
                 .addChild(
@@ -653,6 +657,53 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 .build());
   }
 
+  @Test
+  public void serializesExternsFile() throws IOException {
+    ensureLibraryInjected("base");
+
+    TypedAst ast =
+        compileWithExterns(
+            new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
+
+    AstNode externs = ast.getExternFileList().get(0);
+    assertThat(
+            ast.getSourceFilePool()
+                .getSourceFileList()
+                .get(externs.getSourceFile() - 1)
+                .getFilename())
+        .isEqualTo("externs");
+  }
+
+  @Test
+  public void serializesSourceOfSyntheticCode() throws IOException {
+    ensureLibraryInjected("base");
+
+    TypedAst ast =
+        compileWithExterns(
+            new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
+
+    AstNode script = ast.getCodeFileList().get(0);
+    assertThat(
+            ast.getSourceFilePool()
+                .getSourceFileList()
+                .get(script.getSourceFile() - 1)
+                .getFilename())
+        .isEqualTo("testcode");
+
+    // 'base' is loaded at the beginning of the first script
+    AstNode baseLibraryStart = script.getChild(0);
+    assertThat(
+            ast.getSourceFilePool()
+                .getSourceFileList()
+                .get(baseLibraryStart.getSourceFile() - 1)
+                .getFilename())
+        .isEqualTo(" [synthetic:base] ");
+    // children of the synthetic subtree default to the root's file [synthetic:base]
+    assertThat(baseLibraryStart.getChild(0).getSourceFile()).isEqualTo(0);
+    // "let s = 'hello'" defaults to the parent's file 'testcode'
+    assertThat(script.getChild(script.getChildCount() - 1).getSourceFile()).isEqualTo(0);
+  }
+
   private ObjectTypeProto.Builder namedObjectBuilder(String className) {
     return ObjectTypeProto.newBuilder()
         .setDebugInfo(
@@ -671,13 +722,17 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   private AstNode compileToAst(String source) {
-    return compile(source).getSourceFileList().get(0).getRoot();
+    return compile(source).getCodeFileList().get(0);
   }
 
   private TypedAst compile(String source) {
+    return compileWithExterns(DEFAULT_EXTERNS, source);
+  }
+
+  private TypedAst compileWithExterns(String externs, String source) {
     TypedAst[] resultAst = new TypedAst[1];
     astConsumer = (ast) -> resultAst[0] = ast;
-    testNoWarning(source);
+    testNoWarning(externs(externs), srcs(source));
     return resultAst[0];
   }
 

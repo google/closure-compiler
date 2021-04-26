@@ -748,6 +748,22 @@ public class TestExternsBuilder {
           " * @nosideeffects",
           " */",
           "Math.random = function() {};",
+          "",
+          "/**",
+          " * @param {number} a",
+          " * @param {number} b",
+          " * @return {number}",
+          " * @nosideeffects",
+          " */",
+          "Math.max = function(a, b) {};",
+          "",
+          "/**",
+          " * @param {number} a",
+          " * @param {number} b",
+          " * @return {number}",
+          " * @nosideeffects",
+          " */",
+          "Math.min = function(a, b) {};",
           "");
 
   private boolean includeBigIntExterns = false;

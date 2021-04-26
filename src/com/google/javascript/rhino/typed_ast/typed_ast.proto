@@ -3,6 +3,7 @@ syntax = "proto3";
 package jscomp;
 
 import "src/com/google/javascript/rhino/typed_ast/optimization_jsdoc.proto";
+import "src/com/google/javascript/rhino/typed_ast/source_file.proto";
 import "src/com/google/javascript/rhino/typed_ast/types.proto";
 
 option java_package = "com.google.javascript.jscomp.serialization";
@@ -15,8 +16,10 @@ message TypedAst {
   // required
   StringPool string_pool = 2;
 
-  repeated JavascriptFile extern_file = 3;
-  repeated JavascriptFile source_file = 4;
+  repeated AstNode extern_file = 3;
+  repeated AstNode code_file = 4;
+
+  SourceFilePool source_file_pool = 5;
 }
 
 message StringPool {
@@ -26,42 +29,6 @@ message StringPool {
 
   // The number of codepoints in the longest pool entry.
   int32 max_length = 2;
-}
-
-message JavascriptFile {
-  // required
-  // does not need to correspond to a path on disk
-  string filename = 1;
-  // required
-  AstNode root = 2;
-  // required
-  CodeLocation code_location = 3;
-
-  message CodeLocation {
-    // how to read the file contents
-    oneof loader {
-      string preloaded_contents = 1;
-      FileOnDisk file_on_disk = 2;
-      ZipEntryOnDisk zip_entry = 3;
-    }
-  }
-
-  message FileOnDisk {
-    // optional; if empty then JavascriptFile::filename is the default path
-    string actual_path = 1;
-    // charset name as defined by java.nio.charset.CharSet
-    // optional; if empty than UTF_8 is the charset
-    string charset = 2;
-  }
-
-  message ZipEntryOnDisk {
-    // path to zip file on disk
-    string zip_path = 1;
-    // entry in zip file
-    string entry_name = 2;
-    // charset name as defined by java.nio.charset.CharSet
-    string charset = 3;
-  }
 }
 
 message AstNode {
@@ -87,6 +54,13 @@ message AstNode {
 
   repeated NodeProperty boolean_property = 14;
   TypePointer type = 15;
+
+  // pointer into the TypedAst's SourceFilePool
+  // 0 is equivalent to 'not set' and assumed to be equal to the source_file of
+  // the parent node. Other pointer indices are 1-based.
+  // TODO(b/186431141): for library-level TypedAST, try to enforce that all
+  // nodes in a JavascriptFile have the same associated code location.
+  uint32 source_file = 16;
 }
 
 message TemplateStringValue {

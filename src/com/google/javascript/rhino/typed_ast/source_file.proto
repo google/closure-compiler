@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package jscomp;
+
+option java_package = "com.google.javascript.jscomp.serialization";
+option java_multiple_files = true;
+
+message SourceFilePool {
+  // pool of all locations for AstNodes. Needed because some AstNodes may have
+  // a location not equal to their parent if synthesized by JSCompiler.
+  repeated SourceFileProto source_file = 1;
+}
+
+message SourceFileProto {
+  // required
+  // does not need to correspond to a path on disk
+  string filename = 1;
+
+  // how to read the file contents
+  oneof loader {
+    string preloaded_contents = 2;
+    FileOnDisk file_on_disk = 3;
+    ZipEntryOnDisk zip_entry = 4;
+  }
+
+  // required
+  SourceKind source_kind = 5;
+
+  message FileOnDisk {
+    // optional; if empty then JavascriptFile::filename is the default path
+    string actual_path = 1;
+    // charset name as defined by java.nio.charset.CharSet
+    // optional; if empty than UTF_8 is the charset
+    string charset = 2;
+  }
+
+  message ZipEntryOnDisk {
+    // path to zip file on disk
+    string zip_path = 1;
+    // entry in zip file
+    string entry_name = 2;
+    // charset name as defined by java.nio.charset.CharSet
+    string charset = 3;
+  }
+
+  enum SourceKind {
+    NOT_SPECIFIED = 0;
+    EXTERN = 1;
+    CODE = 2;
+  }
+}

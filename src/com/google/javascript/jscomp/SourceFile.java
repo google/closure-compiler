@@ -26,9 +26,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
-import com.google.javascript.jscomp.serialization.JavascriptFile.CodeLocation;
-import com.google.javascript.jscomp.serialization.JavascriptFile.FileOnDisk;
-import com.google.javascript.jscomp.serialization.JavascriptFile.ZipEntryOnDisk;
+import com.google.javascript.jscomp.serialization.SourceFileProto;
+import com.google.javascript.jscomp.serialization.SourceFileProto.FileOnDisk;
+import com.google.javascript.jscomp.serialization.SourceFileProto.ZipEntryOnDisk;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.File;
 import java.io.FileInputStream;
@@ -544,6 +544,58 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return builder().buildFromReader(fileName, r);
   }
 
+  @GwtIncompatible("java.io.Reader")
+  public static SourceFile fromProto(SourceFileProto protoSourceFile) {
+    SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
+    switch (protoSourceFile.getLoaderCase()) {
+      case PRELOADED_CONTENTS:
+        return SourceFile.fromCode(
+            protoSourceFile.getFilename(), protoSourceFile.getPreloadedContents(), sourceKind);
+      case FILE_ON_DISK:
+        String pathOnDisk =
+            protoSourceFile.getFileOnDisk().getActualPath().isEmpty()
+                ? protoSourceFile.getFilename()
+                : protoSourceFile.getFileOnDisk().getActualPath();
+        return SourceFile.builder()
+            .withCharset(toCharset(protoSourceFile.getFileOnDisk().getCharset()))
+            .withOriginalPath(protoSourceFile.getFilename())
+            .withKind(sourceKind)
+            .buildFromFile(pathOnDisk);
+      case ZIP_ENTRY:
+        return SourceFile.builder()
+            .withKind(sourceKind)
+            .withCharset(toCharset(protoSourceFile.getZipEntry().getCharset()))
+            .withOriginalPath(protoSourceFile.getFilename())
+            .buildFromZipEntry(
+                new ZipEntryReader(
+                    protoSourceFile.getZipEntry().getZipPath(),
+                    protoSourceFile.getZipEntry().getEntryName()));
+      case LOADER_NOT_SET:
+        break;
+    }
+    throw new AssertionError();
+  }
+
+  private static SourceKind getSourceKindFromProto(SourceFileProto protoSourceFile) {
+    switch (protoSourceFile.getSourceKind()) {
+      case EXTERN:
+        return SourceKind.EXTERN;
+      case CODE:
+        return SourceKind.STRONG;
+      case NOT_SPECIFIED:
+      case UNRECOGNIZED:
+        break;
+    }
+    throw new AssertionError();
+  }
+
+  private static Charset toCharset(String protoCharset) {
+    if (protoCharset.isEmpty()) {
+      return UTF_8;
+    }
+    return Charset.forName(protoCharset);
+  }
+
   /** Create a new builder for source files. */
   public static Builder builder() {
     return new Builder();
@@ -660,7 +712,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
      * Returns a representation of this loader that can be serialized/deserialized to reconstruct
      * this SourceFile
      */
-    abstract CodeLocation toProtoLocation(String fileName);
+    abstract SourceFileProto.Builder toProtoLocationBuilder(String fileName);
 
     static final class Preloaded extends CodeLoader {
       private static final long serialVersionUID = 2L;
@@ -677,8 +729,8 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      CodeLocation toProtoLocation(String fileName) {
-        return CodeLocation.newBuilder().setPreloadedContents(this.preloadedCode).build();
+      SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
+        return SourceFileProto.newBuilder().setPreloadedContents(this.preloadedCode);
       }
     }
 
@@ -727,17 +779,16 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      CodeLocation toProtoLocation(String fileName) {
+      SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
         String actualPath = this.relativePath.toString();
-        return CodeLocation.newBuilder()
+        return SourceFileProto.newBuilder()
             .setFileOnDisk(
                 FileOnDisk.newBuilder()
                     .setActualPath(
                         // to save space, don't serialize the path if equal to the fileName.
                         fileName.equals(actualPath) ? "" : actualPath)
                     // save space by not serializing UTF_8 (the default charset)
-                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset))
-            .build();
+                    .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset));
       }
     }
 
@@ -768,16 +819,16 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      CodeLocation toProtoLocation(String fileName) {
-        return CodeLocation.newBuilder()
+      SourceFileProto.Builder toProtoLocationBuilder(String fileName) {
+        return SourceFileProto.newBuilder()
+            .setFilename(fileName)
             .setZipEntry(
                 ZipEntryOnDisk.newBuilder()
                     .setEntryName(this.zipEntryReader.getEntryName())
                     .setZipPath(this.zipEntryReader.getZipPath())
                     // save space by not serializing UTF_8 (the default charset)
                     .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset)
-                    .build())
-            .build();
+                    .build());
       }
     }
   }
@@ -850,7 +901,24 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     this.lineOffsets = lineOffsets;
   }
 
-  public CodeLocation getCodeLocationProto() {
-    return this.loader.toProtoLocation(this.getName());
+  public SourceFileProto getProto() {
+    return this.loader
+        .toProtoLocationBuilder(this.getName())
+        .setFilename(this.getName())
+        .setSourceKind(sourceKindToProto(this.getKind()))
+        .build();
+  }
+
+  private static SourceFileProto.SourceKind sourceKindToProto(SourceKind sourceKind) {
+    switch (sourceKind) {
+      case EXTERN:
+        return SourceFileProto.SourceKind.EXTERN;
+      case STRONG:
+      case WEAK:
+        return SourceFileProto.SourceKind.CODE;
+      case NON_CODE:
+        break;
+    }
+    throw new AssertionError();
   }
 }

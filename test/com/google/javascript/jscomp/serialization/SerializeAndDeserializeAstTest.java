@@ -401,6 +401,36 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(((SourceFile) scriptA.getStaticSourceFile()).getName()).isEqualTo(a.getName());
   }
 
+  @Test
+  public void setsSourceFileOfSyntheticCode() throws IOException {
+    ensureLibraryInjected("base");
+    disableCompareSyntheticCode();
+
+    DeserializedAst ast =
+        this.testAndReturnResult(
+            srcs("0;"),
+            // the injected "base" library is merged into the first file's script. ensure that
+            // SourceFiles are wired up correctly.
+            expected(
+                lines(
+                    "/** @const */ var $jscomp = $jscomp || {};",
+                    "/** @const */",
+                    "$jscomp.scope = {};",
+                    "0;")));
+
+    Node script = ast.getRoot().getSecondChild().getFirstChild();
+    assertNode(script).hasToken(Token.SCRIPT);
+    assertThat(script.getSourceFileName()).isEqualTo("testcode");
+
+    Node jscompDeclaration = script.getFirstChild();
+    assertThat(jscompDeclaration.getSourceFileName()).isEqualTo(" [synthetic:base] ");
+    assertThat(jscompDeclaration.getFirstChild().getSourceFileName())
+        .isEqualTo(" [synthetic:base] ");
+
+    Node number = script.getLastChild();
+    assertThat(number.getSourceFileName()).isEqualTo("testcode");
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);

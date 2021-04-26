@@ -17,17 +17,18 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 final class TypedAstSerializer {
@@ -37,6 +38,8 @@ final class TypedAstSerializer {
   private final StringPoolBuilder stringPool;
   private int previousLine;
   private int previousColumn;
+  private final ArrayDeque<SourceFile> subtreeSourceFiles = new ArrayDeque<>();
+  private final LinkedHashMap<SourceFile, Integer> sourceFilePointers = new LinkedHashMap<>();
 
   private IdentityHashMap<JSType, TypePointer> typesToPointers = null;
 
@@ -80,27 +83,28 @@ final class TypedAstSerializer {
       builder.addExternFile(serializeScriptNode(script));
     }
     for (Node script = jsRoot.getFirstChild(); script != null; script = script.getNext()) {
-      builder.addSourceFile(serializeScriptNode(script));
+      builder.addCodeFile(serializeScriptNode(script));
     }
-    return builder.setTypePool(typePool).setStringPool(this.stringPool.build()).build();
+
+    SourceFilePool sourceFiles =
+        SourceFilePool.newBuilder()
+            .addAllSourceFile(
+                this.sourceFilePointers.keySet().stream()
+                    .map(SourceFile::getProto)
+                    .collect(toImmutableList()))
+            .build();
+    return builder
+        .setTypePool(typePool)
+        .setStringPool(this.stringPool.build())
+        .setSourceFilePool(sourceFiles)
+        .build();
   }
 
-  private JavascriptFile serializeScriptNode(Node script) {
+  private AstNode serializeScriptNode(Node script) {
     checkState(script.isScript());
-    StaticSourceFile sourceFile = checkNotNull(script.getStaticSourceFile());
-    String filename = checkNotNull(sourceFile.getName());
     previousLine = previousColumn = 0;
-    AstNode root = visit(script);
-    checkState(
-        sourceFile instanceof SourceFile,
-        "Unexpected SourceFile %s for node %s",
-        sourceFile,
-        script);
-    return JavascriptFile.newBuilder()
-        .setFilename(filename)
-        .setRoot(root)
-        .setCodeLocation(((SourceFile) sourceFile).getCodeLocationProto())
-        .build();
+
+    return visit(script);
   }
 
   private AstNode.Builder createWithPositionInfo(Node n) {
@@ -129,12 +133,39 @@ final class TypedAstSerializer {
     builder.setKind(kindTranslator(n));
     valueTranslator(builder, n);
     builder.addAllBooleanProperty(booleanPropTranslator(n));
+    int sourceFile = getSourceFilePointer(n);
+    builder.setSourceFile(sourceFile);
+
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       builder.addChild(visit(child));
+    }
+
+    if (sourceFile != 0) {
+      subtreeSourceFiles.removeLast();
     }
     setOriginalName(builder, n);
 
     return builder.build();
+  }
+
+  private int getSourceFilePointer(Node n) {
+    SourceFile sourceFile = (SourceFile) n.getStaticSourceFile();
+    if (sourceFile == null) {
+      // TODO(b/186056977): enforce that SourceFile is not null in externs as well as code.
+      checkState(
+          subtreeSourceFiles.peekLast().isExtern(), "Unexpected null SourceFile for node %s", n);
+      return 0; // not set
+    }
+
+    if (sourceFile.equals(subtreeSourceFiles.peekLast())) {
+      // To save space, only serialize a SourceFile for a node if it is different than the parent's
+      // source.
+      return 0; // not set
+    }
+
+    subtreeSourceFiles.addLast(sourceFile);
+    return this.sourceFilePointers.computeIfAbsent(
+        sourceFile, (f) -> 1 + this.sourceFilePointers.size());
   }
 
   private EnumSet<NodeProperty> booleanPropTranslator(Node n) {
