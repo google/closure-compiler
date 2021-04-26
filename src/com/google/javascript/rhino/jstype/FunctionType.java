@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This derived type provides extended information about a function, including its return type and
@@ -127,6 +128,9 @@ public class FunctionType extends PrototypeObjectType {
   /** The function node which this type represents. It may be {@code null}. */
   private Node source;
 
+  /** The ID of the goog.module in which this function was declared. */
+  @Nullable private final String googModuleId;
+
   /** if this is an interface, indicate whether or not it supports structural interface matching */
   private boolean isStructuralInterface;
 
@@ -166,6 +170,7 @@ public class FunctionType extends PrototypeObjectType {
     Node source = builder.sourceNode;
     checkArgument(source == null || source.isFunction() || source.isClass());
     this.source = source;
+    this.googModuleId = builder.googModuleId;
     this.kind = builder.kind;
 
     if (builder.typeOfThis != null) {
@@ -1030,6 +1035,11 @@ public class FunctionType extends PrototypeObjectType {
     return source;
   }
 
+  @Nullable
+  public String getGoogModuleId() {
+    return this.googModuleId;
+  }
+
   /** Sets the source node. */
   public final void setSource(Node source) {
     if (prototypeSlot != null) {
@@ -1377,6 +1387,7 @@ public class FunctionType extends PrototypeObjectType {
   public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
     private Node sourceNode = null;
+    private String googModuleId = null;
     private List<Parameter> parameters = null;
     private JSType returnType = null;
     private JSType typeOfThis = null;
@@ -1404,6 +1415,12 @@ public class FunctionType extends PrototypeObjectType {
     /** Set the source node of the function type. */
     public Builder withSourceNode(Node sourceNode) {
       this.sourceNode = sourceNode;
+      return this;
+    }
+
+    /** The ID of the goog.module in which this enum was declared. */
+    public Builder setGoogModuleId(String x) {
+      this.googModuleId = x;
       return this;
     }
 

@@ -944,20 +944,17 @@ final class FunctionTypeBuilder {
           "All Function types must have params and a return type");
     }
 
-    FunctionType fnType;
+    final FunctionType fnType;
     if (isConstructor) {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
       fnType = getOrCreateInterface();
     } else {
       fnType =
-          FunctionType.builder(typeRegistry)
-              .withName(fnName)
-              .withSourceNode(contents.getSourceNode())
+          this.createDefaultBuilder()
               .withParameters(parameters)
               .withReturnType(returnType, returnTypeInferred)
               .withTypeOfThis(thisType)
-              .withTemplateKeys(templateTypeNames)
               .withIsAbstract(isAbstract)
               .withClosurePrimitiveId(closurePrimitiveId)
               .build();
@@ -988,6 +985,14 @@ final class FunctionTypeBuilder {
     fnType.getInstanceType().mergeSupertypeTemplateTypes(baseType);
   }
 
+  private FunctionType.Builder createDefaultBuilder() {
+    return FunctionType.builder(this.typeRegistry)
+        .withName(this.fnName)
+        .withSourceNode(this.contents.getSourceNode())
+        .withTemplateKeys(this.templateTypeNames)
+        .setGoogModuleId(TypedScopeCreator.containingGoogModuleIdOf(this.declarationScope));
+  }
+
   /**
    * Returns a constructor function either by returning it from the
    * registry if it exists or creating and registering a new type. If
@@ -1003,13 +1008,10 @@ final class FunctionTypeBuilder {
    */
   private FunctionType getOrCreateConstructor() {
     FunctionType fnType =
-        FunctionType.builder(typeRegistry)
+        this.createDefaultBuilder()
             .forConstructor()
-            .withName(fnName)
-            .withSourceNode(contents.getSourceNode())
             .withParameters(parameters)
             .withReturnType(returnType)
-            .withTemplateKeys(templateTypeNames)
             .withConstructorTemplateKeys(constructorTemplateTypeNames)
             .withIsAbstract(isAbstract)
             .build();
@@ -1085,14 +1087,7 @@ final class FunctionTypeBuilder {
     }
 
     if (fnType == null) {
-      fnType =
-          FunctionType.builder(typeRegistry)
-              .forInterface()
-              .withName(fnName)
-              .withSourceNode(contents.getSourceNode())
-              .withParameters()
-              .withTemplateKeys(templateTypeNames)
-              .build();
+      fnType = this.createDefaultBuilder().forInterface().withParameters().build();
       if (makesStructs) {
         fnType.setStruct();
       }

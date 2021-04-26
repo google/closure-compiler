@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
@@ -54,6 +55,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
 
   private final TypedScope parent;
   private final int depth;
+  @Nullable private final Module module;
 
   /** Whether this is a bottom scope for the purposes of type inference. */
   private final boolean isBottom;
@@ -64,7 +66,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   // We haven't added it here because it's unused by the passes that need typed scopes.
 
   TypedScope(TypedScope parent, Node rootNode) {
-    this(parent, rootNode, new HashSet<>());
+    this(parent, rootNode, new HashSet<>(), null);
   }
 
   /**
@@ -74,13 +76,14 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
    * @param rootNode Can be any node that creates a scope.
    * @param reservedNames set of simple names that will eventually be declared in this scope.
    */
-  TypedScope(TypedScope parent, Node rootNode, Set<String> reservedNames) {
+  TypedScope(TypedScope parent, Node rootNode, Set<String> reservedNames, @Nullable Module module) {
     super(rootNode);
     checkChildScope(parent);
     this.parent = parent;
     this.depth = parent.depth + 1;
     this.isBottom = false;
     this.reservedNames = reservedNames;
+    this.module = module;
   }
 
   /**
@@ -96,6 +99,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     this.depth = 0;
     this.isBottom = isBottom;
     this.reservedNames = new HashSet<>();
+    this.module = null;
   }
 
   static TypedScope createGlobalScope(Node rootNode) {
@@ -123,6 +127,11 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   /** Whether this is the bottom of the lattice. */
   boolean isBottom() {
     return isBottom;
+  }
+
+  @Nullable
+  Module getModule() {
+    return this.module;
   }
 
   @Override

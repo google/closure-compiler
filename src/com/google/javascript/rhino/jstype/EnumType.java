@@ -47,6 +47,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * An enum type representing a branded collection of elements. Each element
@@ -61,6 +62,7 @@ public class EnumType extends PrototypeObjectType {
   private final Set<String> elements = new HashSet<>();
   // the node representing rhs of the enum
   private final Node source;
+  private final String googModuleId;
 
   public static Builder builder(JSTypeRegistry registry) {
     return new Builder(registry);
@@ -71,6 +73,7 @@ public class EnumType extends PrototypeObjectType {
 
     private String elementName;
     private Node source;
+    private String googModuleId;
     private JSType elementType;
 
     private Builder(JSTypeRegistry registry) {
@@ -87,6 +90,12 @@ public class EnumType extends PrototypeObjectType {
     /** The object literal that creates the enum, a reference to another enum, or null. */
     public Builder setSource(Node x) {
       this.source = x;
+      return this;
+    }
+
+    /** The ID of the goog.module in which this enum was declared. */
+    public Builder setGoogModuleId(String x) {
+      this.googModuleId = x;
       return this;
     }
 
@@ -107,6 +116,7 @@ public class EnumType extends PrototypeObjectType {
     this.elementType =
         new EnumElementType(builder.registry, builder.elementType, builder.elementName, this);
     this.source = builder.source;
+    this.googModuleId = builder.googModuleId;
 
     registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
@@ -207,6 +217,11 @@ public class EnumType extends PrototypeObjectType {
 
   public final Node getSource() {
     return source;
+  }
+
+  @Nullable
+  public String getGoogModuleId() {
+    return this.googModuleId;
   }
 
   @Override
