@@ -174,17 +174,6 @@ public final class ModuleLoader {
      * @return The normalized module URI, or {@code null} if not found.
      */
     @Nullable
-    public ModulePath resolveJsModule(String moduleAddress) {
-      return resolveJsModule(moduleAddress, null, -1, -1);
-    }
-
-    /**
-     * Find a JS module {@code requireName}. See
-     * https://nodejs.org/api/modules.html#modules_all_together
-     *
-     * @return The normalized module URI, or {@code null} if not found.
-     */
-    @Nullable
     public ModulePath resolveJsModule(
         String moduleAddress, String sourcename, int lineno, int colno) {
       String loadAddress =
