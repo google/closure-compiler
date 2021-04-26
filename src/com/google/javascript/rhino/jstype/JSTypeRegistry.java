@@ -1575,15 +1575,6 @@ public class JSTypeRegistry {
     return builder.build();
   }
 
-  /**
-   * Creates an enum type.
-   *
-   * @param name The human-readable name associated with the enum, or null if unknown.
-   */
-  public EnumType createEnumType(String name, Node source, JSType elementsType) {
-    return new EnumType(this, name, source, elementsType);
-  }
-
   /** Creates an empty parameter list node. */
   Node createEmptyParams() {
     return new Node(Token.PARAM_LIST);

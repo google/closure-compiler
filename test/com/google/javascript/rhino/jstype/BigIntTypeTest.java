@@ -66,7 +66,7 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
       functionType = FunctionType.builder(registry).withReturnType(NUMBER_TYPE).build();
       errorReporter.expectAllWarnings("Bad type annotation. Unknown type not.resolved.named.type");
       unresolvedNamedType = registry.createNamedType(scope, "not.resolved.named.type", "", -1, -1);
-      enumType = new EnumType(registry, "Enum", null, BIGINT_TYPE);
+      enumType = EnumType.builder(registry).setName("Enum").setElementType(BIGINT_TYPE).build();
       elementsType = enumType.getElementsType();
     }
   }
@@ -164,14 +164,18 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
     assertType(NO_TYPE).isNotOnlyBigInt();
     assertType(createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE)).isNotOnlyBigInt();
     assertType(BIGINT_NUMBER).isNotOnlyBigInt();
-    assertType(registry.createEnumType("Enum", null, BIGINT_TYPE).getElementsType())
-        .isNotOnlyBigInt();
-    assertType(registry.createEnumType("Enum", null, NUMBER_TYPE).getElementsType())
-        .isNotOnlyBigInt();
-    assertType(registry.createEnumType("Enum", null, BIGINT_NUMBER).getElementsType())
-        .isNotOnlyBigInt();
-    assertType(registry.createEnumType("Enum", null, NUMBER_STRING).getElementsType())
-        .isNotOnlyBigInt();
+    assertType(this.enumElementFor(BIGINT_TYPE)).isNotOnlyBigInt();
+    assertType(this.enumElementFor(NUMBER_TYPE)).isNotOnlyBigInt();
+    assertType(this.enumElementFor(BIGINT_NUMBER)).isNotOnlyBigInt();
+    assertType(this.enumElementFor(NUMBER_STRING)).isNotOnlyBigInt();
+  }
+
+  private EnumElementType enumElementFor(JSType type) {
+    return EnumType.builder(registry)
+        .setName("Enum")
+        .setElementType(type)
+        .build()
+        .getElementsType();
   }
 
   @Test

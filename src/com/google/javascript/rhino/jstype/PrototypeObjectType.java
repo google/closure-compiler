@@ -144,7 +144,7 @@ public class PrototypeObjectType extends ObjectType {
       this.templateTypeMap = registry.getEmptyTemplateTypeMap();
     }
 
-    final T setName(String x) {
+    T setName(String x) {
       this.className = x;
       return castThis();
     }

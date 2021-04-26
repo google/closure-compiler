@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -309,10 +310,8 @@ public final class TypeInferenceTest {
     Node node = checkNotNull(declaration.getNode(), declaration);
 
     assertNode(node).hasType(Token.NAME);
-    stream(node.getAncestors())
-        .filter(Node::isParamList)
-        .findFirst()
-        .orElseThrow(AssertionError::new);
+    assertThat(stream(node.getAncestors()).filter(Node::isParamList).collect(toImmutableList()))
+        .isNotEmpty();
 
     return node;
   }
@@ -351,7 +350,7 @@ public final class TypeInferenceTest {
   }
 
   private EnumType createEnumType(String name, JSType elemType) {
-    return registry.createEnumType(name, null, elemType);
+    return EnumType.builder(registry).setName(name).setElementType(elemType).build();
   }
 
   private JSType createUndefinableType(JSTypeNative type) {

@@ -56,23 +56,57 @@ public class EnumType extends PrototypeObjectType {
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM;
 
   // the type of the individual elements
-  private EnumElementType elementsType;
+  private EnumElementType elementType;
   // the elements' names (they all have the same type)
   private final Set<String> elements = new HashSet<>();
   // the node representing rhs of the enum
   private final Node source;
 
-  /**
-   * Creates an enum type.
-   *
-   * @param name the enum's name
-   * @param source the object literal that creates the enum, a reference to another enum, or null.
-   * @param elementsType the base type of the individual elements
-   */
-  EnumType(JSTypeRegistry registry, String name, Node source, JSType elementsType) {
-    super(PrototypeObjectType.builder(registry).setName("enum{" + name + "}"));
-    this.elementsType = new EnumElementType(registry, elementsType, name, this);
-    this.source = source;
+  public static Builder builder(JSTypeRegistry registry) {
+    return new Builder(registry);
+  }
+
+  /** Builder */
+  public static final class Builder extends PrototypeObjectType.Builder<Builder> {
+
+    private String elementName;
+    private Node source;
+    private JSType elementType;
+
+    private Builder(JSTypeRegistry registry) {
+      super(registry);
+    }
+
+    @Override
+    public Builder setName(String x) {
+      super.setName("enum{" + x + "}");
+      this.elementName = x;
+      return this;
+    }
+
+    /** The object literal that creates the enum, a reference to another enum, or null. */
+    public Builder setSource(Node x) {
+      this.source = x;
+      return this;
+    }
+
+    /** The base type of the individual elements. */
+    public Builder setElementType(JSType x) {
+      this.elementType = x;
+      return this;
+    }
+
+    @Override
+    public EnumType build() {
+      return new EnumType(this);
+    }
+  }
+
+  private EnumType(Builder builder) {
+    super(builder);
+    this.elementType =
+        new EnumElementType(builder.registry, builder.elementType, builder.elementName, this);
+    this.source = builder.source;
 
     registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
@@ -109,18 +143,18 @@ public class EnumType extends PrototypeObjectType {
    */
   public boolean defineElement(String name, Node definingNode) {
     elements.add(name);
-    return defineDeclaredProperty(name, elementsType, definingNode);
+    return defineDeclaredProperty(name, elementType, definingNode);
   }
 
   /** Gets the elements' type, which is a subtype of the enumerated type. */
   public EnumElementType getElementsType() {
-    return elementsType;
+    return elementType;
   }
 
   /** Gets the enumerated type. */
   @Override
   public JSType getEnumeratedTypeOfEnumObject() {
-    return elementsType.getPrimitiveType();
+    return elementType.getPrimitiveType();
   }
 
   @Override
@@ -139,7 +173,7 @@ public class EnumType extends PrototypeObjectType {
 
   @Override
   public String getDisplayName() {
-    return elementsType.getDisplayName();
+    return elementType.getDisplayName();
   }
 
   @Override
@@ -177,7 +211,7 @@ public class EnumType extends PrototypeObjectType {
 
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
-    elementsType = (EnumElementType) elementsType.resolve(reporter);
+    elementType = (EnumElementType) elementType.resolve(reporter);
     return super.resolveInternal(reporter);
   }
 }

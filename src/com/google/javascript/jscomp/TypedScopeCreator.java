@@ -2021,8 +2021,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (enumType == null) {
-        JSType elementsType = info.getEnumParameterType().evaluate(currentScope, typeRegistry);
-        enumType = typeRegistry.createEnumType(getBestTypeName(lValue, name), rValue, elementsType);
+        enumType =
+            EnumType.builder(typeRegistry)
+                .setName(getBestTypeName(lValue, name))
+                .setSource(rValue)
+                .setElementType(info.getEnumParameterType().evaluate(currentScope, typeRegistry))
+                .build();
 
         if (rValue != null && rValue.isObjectLit()) {
           // collect enum elements
