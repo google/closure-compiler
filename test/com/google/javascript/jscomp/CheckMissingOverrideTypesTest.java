@@ -52,6 +52,174 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
     };
   }
 
+  // Test missing `*` param type in JSDoc
+  @Test
+  public void testMissingParamTypesOnOverride_starParamType() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @param {*} argFoo */",
+                "  method(argFoo) {}",
+                "}",
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @param {*} arg
+                "  method(argBar) {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @param {*} argBar", // generates @param {*} with `argBar` name
+                    " * @override",
+                    " */")));
+  }
+
+  // Test missing `?` param type in JSDoc
+  @Test
+  public void testMissingParamTypesOnOverride_qMarkParamType() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @param {?} argFoo */",
+                "  method(argFoo) {}",
+                "}",
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @param {?} arg
+                "  method(argBar) {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @param {?} argBar", // generates @param {?} with `argBar` name
+                    " * @override",
+                    " */")));
+  }
+
+  // Test missing TTL's NoneType type in JSDoc
+  @Test
+  public void testMissingParamTypesOnOverride_noneType() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /**",
+                "   * @return {T}",
+                "   * @template T := none() =:",
+                "   */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @return {?} arg
+                "  method() {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @return {T}", // generates @return {T}
+                    " * @override",
+                    " */")));
+  }
+
+  // If the extending class fixes the base class's template type T with a concrete primitive type
+  // (e.g. bigint), the overidden method's type gets inferred as the concrete type bigint (no
+  // explicit nullability).
+  @Test
+  public void testMissingParamTypesOnOverride_classTemplateType_fixed1() {
+    test(
+        srcs(
+            lines(
+                "/** @template T */",
+                "class Foo {",
+                "  /**",
+                "   * @return {T} argFoo",
+                "   */",
+                "  method() {}",
+                "}",
+                "/** @extends Foo<{X:(?bigint)}> */", // fixes the template type T of base class
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @return {?bigint} arg
+                "  method() {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @return {{X:(bigint|null)}}", // generates fixed type {{X:(bigint|null)}}
+                    " * @override",
+                    " */")));
+  }
+
+  // If the extending class fixes the base class's template type T with a concrete type (e.g.
+  // enumT), the overidden method's type gets inferred as the concrete type enumT (with explicit
+  // nullability).
+  @Test
+  public void testMissingParamTypesOnOverride_classTemplateType_fixed2() {
+    test(
+        srcs(
+            lines(
+                "/** @enum {string} */ const enumT = { A:'a'};",
+                "/** @template T */",
+                "class Foo {",
+                "  /**",
+                "   * @return {T} argFoo",
+                "   */",
+                "  method() {}",
+                "}",
+                "/** @extends Foo<!enumT> */", // fixes the template type T of base class
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @return {?} arg
+                "  method() {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @return {!enumT}", // preserves explicit nullability
+                    " * @override",
+                    " */")));
+  }
+
+  // If the extending class propagates the base class's template type T with another template type
+  // U, the overidden method's type gets inferred as the template type `U`.
+  @Test
+  public void testMissingParamTypesOnOverride_classTemplateType_propagated() {
+    test(
+        srcs(
+            lines(
+                "/** @template T */",
+                "class Foo {",
+                "  /**",
+                "   * @return {T} argFoo",
+                "   */",
+                "  method() {}",
+                "}",
+                "/** ",
+                " * @template U",
+                " * @extends Foo<U> ", // propagates the template type of base class
+                " */",
+                "class Bar extends Foo {",
+                "  /** @override */", // missing @return {U} arg
+                "  method() {",
+                "  }",
+                "}")),
+        error(OVERRIDE_WITHOUT_ALL_TYPES)
+            .withMessageContaining(
+                lines(
+                    "/**",
+                    " * @return {U}", // generates @return {U}
+                    " * @override",
+                    " */")));
+  }
+
   // Test missing param types in JSDoc
   @Test
   public void testMissingParamTypesOnOverride_primitiveParamType() {
@@ -198,7 +366,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {Array} arg", // generates @param
+                    " * @param {!Array} arg", // generates @param
                     " * @override",
                     " */")));
   }
@@ -222,7 +390,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {enumT} arg", // generates @param
+                    " * @param {!enumT} arg", // generates @param
                     " * @override",
                     " */")));
   }
@@ -271,7 +439,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**", //
-                    " * @return {RetT}",
+                    " * @return {!RetT}",
                     " * @override",
                     " */")));
   }
@@ -303,7 +471,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
                 lines(
                     "/**",
                     " * @param {!enumT} x",
-                    " * @return {enumT}", // creates @return type
+                    " * @return {!enumT}", // creates @return type
                     " * @override",
                     " */")));
   }
@@ -472,7 +640,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {a.objT} arg", // reports fully qualified type `a.objT`
+                    " * @param {!a.objT} arg", // reports fully qualified type `a.objT`
                     " * @override",
                     " */")));
   }
@@ -505,7 +673,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {a.objT} arg", // reports inferred enum element type.
+                    " * @param {!a.objT} arg", // reports inferred enum element type.
                     " * @override",
                     " */")));
   }
@@ -538,7 +706,8 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {a.objT} arg", // reports inferred enum element type even if the enum
+                    " * @param {!a.objT} arg", // reports inferred enum element type even if the
+                    // enum
                     // is exported with a differnt name.
                     " * @override",
                     " */")));
@@ -569,7 +738,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {a.classT} arg", // ERROR - generates local class name classT
+                    " * @param {!a.classT} arg", // ERROR - generates local class name classT
                     // instead of
                     // the exported class name.
                     " * @override",
@@ -594,7 +763,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {Object=} objectParam", // generates
+                    " * @param {!Object=} objectParam", // generates
                     // `PLACEHOLDER_OBJ_PARAM_NAME`
                     " * @override",
                     " */")));
@@ -618,7 +787,7 @@ public final class CheckMissingOverrideTypesTest extends CompilerTestCase {
             .withMessageContaining(
                 lines(
                     "/**",
-                    " * @param {Array=} objectParam", // generates
+                    " * @param {!Array=} objectParam", // generates
                     // `PLACEHOLDER_OBJ_PARAM_NAME`
                     " * @override",
                     " */")));

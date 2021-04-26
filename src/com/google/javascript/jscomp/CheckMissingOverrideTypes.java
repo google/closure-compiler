@@ -215,11 +215,36 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
         new JSTypeExpression(typeToTypeAst(fnType.getReturnType()), JSDOC_FILE_NAME));
   }
 
+  private static boolean omitExplicitNullability(JSType type) {
+    return type.isBooleanValueType()
+        || type.isNumberValueType()
+        || type.isStringValueType()
+        || type.isAllType()
+        || type.isUnknownType()
+        || type.isOnlyBigInt()
+        || type.isNullType()
+        || type.isSymbolValueType()
+        || type.isVoidType()
+        || type.isTemplateType();
+  }
+
   private static Node typeToTypeAst(JSType type) {
-    return JsDocInfoParser.parseTypeString(
-        type.hasDisplayName()
-            ? type.getDisplayName()
-            : type.toAnnotationString(Nullability.EXPLICIT));
+    if (omitExplicitNullability(type)) {
+      // Display name e.g. `<Any Type>` or `<unknown>` does not parse as a node; simply use `*` or
+      // `?`.
+      return JsDocInfoParser.parseTypeString(type.toString());
+    }
+
+    final String typeName;
+    if (type.hasDisplayName()) {
+      // use display name for e.g. `!ns.enumNum` instead of `number`
+      String explicitNullability = type.isNullable() ? "?" : "!";
+      typeName = explicitNullability + type.getDisplayName();
+    } else {
+      // e.g. `{{X:!ns.Local}}`
+      typeName = type.toAnnotationString(Nullability.EXPLICIT);
+    }
+    return JsDocInfoParser.parseTypeString(typeName);
   }
 
   /**
