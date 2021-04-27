@@ -2989,8 +2989,12 @@ Element.prototype.outerHTML;
 /**
  * AttributionSourceParams is a dictionary which contains the same attributes
  * used by attribution source anchor tags as seen in the link below.
+ * NOTE: Ideally this record would be defined in a separate file, because this
+ * API is not official yet, however, part of the proposed change is a
+ * modification to the `Window.prototype.open` method to allow it to accept one
+ * of these objects.
  * @record
- * @see https://github.com/WICG/conversion-measurement-api
+ * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
  */
 function AttributionSourceParams() {}
 
@@ -2999,30 +3003,30 @@ function AttributionSourceParams() {}
  * bits of information but the value can vary for browsers that want a higher
  * level of privacy.
  * @type {string}
- * @see https://github.com/WICG/conversion-measurement-api
+ * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.attributionSourceEventId;
+AttributionSourceParams.prototype.impressionData;
 
 /**
  * The eTLD+1 where attribution will be triggered for this source.
  * @type {string}
- * @see https://github.com/WICG/conversion-measurement-api
+ * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.attributeOn;
+AttributionSourceParams.prototype.conversionDestination;
 
 /**
  * The desired endpoint that the attribution report for this source should go
  * to. Default is the top level origin of the page.
  * @type {string|undefined}
- * @see https://github.com/WICG/conversion-measurement-api
+ * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.attributionReportTo;
+AttributionSourceParams.prototype.reportingOrigin;
 
 /**
  * Expiry in milliseconds for when the source should be deleted. Default is 30
  * days, with a maximum value of 30 days. The maximum expiry can also vary
  * between browsers.
  * @type {number|undefined}
- * @see https://github.com/WICG/conversion-measurement-api
+ * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.attributionExpiry;
+AttributionSourceParams.prototype.impressionExpiry;
