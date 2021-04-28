@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,13 +39,6 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
 
   public ExportTestFunctionsTest() {
     super(EXTERNS);
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    disableLineNumberCheck();
   }
 
   @Override

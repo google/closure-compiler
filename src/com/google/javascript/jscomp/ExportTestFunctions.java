@@ -149,7 +149,7 @@ public class ExportTestFunctions implements CompilerPass {
             call.addChildToBack(
                 NodeUtil.newQName(compiler, functionRef, maybeMemberFunctionDef, functionRef));
 
-            Node expression = IR.exprResult(call);
+            Node expression = IR.exprResult(call).srcrefTreeIfMissing(maybeMemberFunctionDef);
 
             expression.insertAfter(addAfter);
             compiler.reportChangeToEnclosingScope(expression);
@@ -232,7 +232,7 @@ public class ExportTestFunctions implements CompilerPass {
     call.addChildToBack(NodeUtil.newQName(compiler,
         testFunctionName, node, testFunctionName));
 
-    Node expression = IR.exprResult(call);
+    Node expression = IR.exprResult(call).srcrefTreeIfMissing(node);
 
     expression.insertAfter(node);
     compiler.reportChangeToEnclosingScope(expression);
