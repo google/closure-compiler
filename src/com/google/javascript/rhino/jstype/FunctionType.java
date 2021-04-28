@@ -72,7 +72,7 @@ import javax.annotation.Nullable;
  * containing the parsed argument list (annotated with JSDOC_TYPE_PROP's for the compile-time type
  * of each argument.
  */
-public class FunctionType extends PrototypeObjectType {
+public class FunctionType extends PrototypeObjectType implements JSType.WithSourceRef {
 
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.FUNCTION;
 

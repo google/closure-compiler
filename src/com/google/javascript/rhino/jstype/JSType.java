@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import javax.annotation.Nullable;
@@ -1582,6 +1583,18 @@ public abstract class JSType {
       this.typeA = typeA;
       this.typeB = typeB;
     }
+  }
+
+  /** A type with source information. */
+  public interface WithSourceRef {
+
+    /** The node representing the declaration of this type. */
+    @Nullable
+    Node getSource();
+
+    /** The ID of the goog.module in which this type was declared. */
+    @Nullable
+    String getGoogModuleId();
   }
 
   /**
