@@ -107,13 +107,21 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
-    t.traverseRoots(externs, root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseRoots(externs, root);
   }
 
   public void process(Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
-    t.traverse(root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverse(root);
   }
 
   /**
@@ -125,7 +133,12 @@ public final class ReferenceCollectingCallback
     if (shouldAddToBlockStack) {
       blockStack.add(new BasicBlock(null, scope.getRootNode()));
     }
-    (new NodeTraversal(compiler, this, scopeCreator)).traverseAtScope(scope);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseAtScope(scope);
     if (shouldAddToBlockStack) {
       pop(blockStack);
     }
@@ -229,7 +242,12 @@ public final class ReferenceCollectingCallback
     List<BasicBlock> oldBlockStack = blockStack;
     blockStack = newBlockStack;
 
-    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this, scopeCreator);
+    NodeTraversal outOfBandTraversal =
+        NodeTraversal.builder()
+            .setCompiler(compiler)
+            .setCallback(this)
+            .setScopeCreator(scopeCreator)
+            .build();
     outOfBandTraversal.traverseFunctionOutOfBand(fnNode, containingScope);
 
     blockStack = oldBlockStack;

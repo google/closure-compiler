@@ -210,8 +210,9 @@ public final class TypeInferenceTest {
       // Create the scope with the assumptions.
       // Also populate a map allowing us to look up labeled statements later.
       labeledStatementMap = new HashMap<>();
-      new NodeTraversal(
-              compiler,
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(
               new AbstractPostOrderCallback() {
                 @Override
                 public void visit(NodeTraversal t, Node n, Node parent) {
@@ -227,8 +228,9 @@ public final class TypeInferenceTest {
                     labeledStatementMap.put(labelName, new LabeledStatement(n, scope));
                   }
                 }
-              },
-              scopeCreator)
+              })
+          .setScopeCreator(scopeCreator)
+          .build()
           .traverse(root);
       assumedScope = scopeCreator.createScope(cfgRoot);
       for (Map.Entry<String, JSType> entry : assumptions.entrySet()) {

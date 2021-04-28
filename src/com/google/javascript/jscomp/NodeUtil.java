@@ -5682,7 +5682,12 @@ public final class NodeUtil {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {}
         };
-    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
+    NodeTraversal t =
+        NodeTraversal.builder()
+            .setCompiler(compiler)
+            .setCallback(finder)
+            .setScopeCreator(scopeCreator)
+            .build();
     t.traverseWithScope(moduleNode, globalScope);
   }
 
@@ -5730,8 +5735,12 @@ public final class NodeUtil {
           public void visit(NodeTraversal t, Node n, Node parent) {}
         };
 
-    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
-    t.traverseAtScope(scope);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(finder)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseAtScope(scope);
   }
 
   /** Returns true if the node is a property of an object literal. */

@@ -744,11 +744,12 @@ class Normalize implements CompilerPass {
    * Remove duplicate VAR declarations.
    */
   private void removeDuplicateDeclarations(Node externs, Node root) {
-    Callback tickler = new ScopeTicklingCallback();
-    ScopeCreator scopeCreator =
-        new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler());
-    NodeTraversal t = new NodeTraversal(compiler, tickler, scopeCreator);
-    t.traverseRoots(externs, root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new ScopeTicklingCallback())
+        .setScopeCreator(new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler()))
+        .build()
+        .traverseRoots(externs, root);
   }
 
   /** ScopeCreator duplicate declaration handler. */

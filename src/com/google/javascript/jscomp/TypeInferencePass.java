@@ -100,13 +100,21 @@ class TypeInferencePass {
         scopeCreator.patchGlobalScope(this.topScope, inferenceRoot);
       }
 
-      new NodeTraversal(compiler, new FirstScopeBuildingCallback(), scopeCreator)
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(new FirstScopeBuildingCallback())
+          .setScopeCreator(scopeCreator)
+          .build()
           .traverseWithScope(inferenceRoot, this.topScope);
       scopeCreator.resolveWeakImportsPreResolution();
     }
     scopeCreator.undoTypeAliasChains();
 
-    new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new SecondScopeBuildingCallback())
+        .setScopeCreator(scopeCreator)
+        .build()
         .traverseWithScope(inferenceRoot, this.topScope);
 
     // Normalize TypedVars to have the '?' type instead of null after inference is complete. This

@@ -753,7 +753,12 @@ class ScopedAliases implements HotSwapCompilerPass {
               }
             }
           };
-      (new NodeTraversal(compiler, cb, t.getScopeCreator())).traverseAtScope(t.getScope());
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(cb)
+          .setScopeCreator(t.getScopeCreator())
+          .build()
+          .traverseAtScope(t.getScope());
       fnName.setString(name + "$jscomp$scopedAliases$" + suffix);
     }
 

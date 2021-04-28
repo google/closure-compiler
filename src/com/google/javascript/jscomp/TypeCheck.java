@@ -484,10 +484,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   void check(Node node, boolean externs) {
     checkNotNull(node);
-
-    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     inExterns = externs;
-    t.traverseWithScope(node, topScope);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseWithScope(node, topScope);
     if (externs) {
       inferJSDocInfo.process(node, null);
     } else {

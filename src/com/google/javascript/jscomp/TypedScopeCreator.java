@@ -612,13 +612,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     MemoizedScopeCreator scopeCreator =
         new MemoizedScopeCreator(new SyntacticScopeCreator(compiler));
 
-    new NodeTraversal(compiler, new FirstOrderFunctionAnalyzer(), scopeCreator)
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new FirstOrderFunctionAnalyzer())
+        .setScopeCreator(scopeCreator)
+        .build()
         .traverseRoots(root.getFirstChild(), root.getLastChild());
 
-    new NodeTraversal(
-            compiler,
-            new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention),
-            scopeCreator)
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention))
+        .setScopeCreator(scopeCreator)
+        .build()
         .traverse(root);
 
     TypedScope s = TypedScope.createGlobalScope(root);
@@ -794,7 +799,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void build() {
       initializeModuleScope(currentScope.getRootNode());
 
-      new NodeTraversal(compiler, this, ScopeCreator.ASSERT_NO_SCOPES_CREATED)
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(this)
+          .setScopeCreator(ScopeCreator.ASSERT_NO_SCOPES_CREATED)
+          .build()
           .traverseAtScope(currentScope);
 
       finishDeclaringGoogModule();

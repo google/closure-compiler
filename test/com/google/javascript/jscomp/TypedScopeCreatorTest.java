@@ -151,7 +151,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
       TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
       new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
           .inferAllScopes(root.getParent());
-      new NodeTraversal(compiler, new ScopeFinder(), scopeCreator).traverseRoots(externs, root);
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(new ScopeFinder())
+          .setScopeCreator(scopeCreator)
+          .build()
+          .traverseRoots(externs, root);
     };
   }
 

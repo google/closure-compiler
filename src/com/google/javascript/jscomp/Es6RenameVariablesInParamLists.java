@@ -78,8 +78,10 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
             oldName, oldName + "$" + compiler.getUniqueNameIdSupplier().get());
       }
     }
-    new NodeTraversal(
-            compiler, new Es6RenameReferences(renameTable), new SyntacticScopeCreator(compiler))
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(new Es6RenameReferences(renameTable))
+        .build()
         .traverseInnerNode(block, block.getParent(), fScope);
   }
 

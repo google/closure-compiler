@@ -268,7 +268,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
-    (new NodeTraversal(compiler, this, new SyntacticScopeCreator(compiler)))
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .build()
         .traverseRoots(externs, root);
   }
 

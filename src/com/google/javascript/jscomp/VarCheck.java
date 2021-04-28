@@ -164,13 +164,20 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     // remove duplicate VAR declarations, which will make
     // externs look like they have assigns.
     if (!validityCheck) {
-      NodeTraversal traversal = new NodeTraversal(
-          compiler, new NameRefInExternsCheck(), scopeCreator);
-      traversal.traverse(externs);
+      NodeTraversal.builder()
+          .setCompiler(compiler)
+          .setCallback(new NameRefInExternsCheck())
+          .setScopeCreator(scopeCreator)
+          .build()
+          .traverse(externs);
     }
 
-    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
-    t.traverseRoots(externs, root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseRoots(externs, root);
 
     for (String varName : varsToDeclareInExterns) {
       createSynthesizedExternVar(compiler, varName);
@@ -190,12 +197,17 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
       gatherImplicitVars(compiler.getRoot());
     }
 
-    SyntacticScopeCreator scopeCreator = createScopeCreator();
-    NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
-    // Note we use the global scope to prevent wrong "undefined-var errors" on
+    // We use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other JS files.
+    SyntacticScopeCreator scopeCreator = createScopeCreator();
     Scope topScope = scopeCreator.createScope(compiler.getRoot(), null);
-    t.traverseWithScope(scriptRoot, topScope);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseWithScope(scriptRoot, topScope);
+
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
   }
 

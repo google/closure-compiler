@@ -135,7 +135,12 @@ final class ReachingUseDefTester {
 
   // Run `LabelFinder` to find the `D:` and `U:` labels and save the def and uses of `x`
   void extractDefAndUsesFromInputLabels() {
-    new NodeTraversal(compiler, labelFinder, scopeCreator).traverse(root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(labelFinder)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverse(root);
     assertWithMessage("Code should have an instruction labeled D")
         .that(labelFinder.extractedDef)
         .isNotNull();

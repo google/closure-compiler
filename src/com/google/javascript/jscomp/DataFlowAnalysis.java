@@ -558,8 +558,12 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           }
         };
 
-    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
-    t.traverseAtScope(jsScope);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(finder)
+        .setScopeCreator(scopeCreator)
+        .build()
+        .traverseAtScope(jsScope);
 
     // TODO (simranarora) catch variables should not be considered escaped in ES6. Getting rid of
     // the catch check is causing breakages however
