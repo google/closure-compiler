@@ -1282,10 +1282,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       if (!compiler.hasErrors()) {
         compiler.stage1Passes();
       }
-      if (!compiler.hasErrors() && !compiler.getOptions().checksOnly) {
-        // avoid serializing state in checksOnly mode. Generally it makes no sense to combine
-        // stage 1 serialization and checksOnly, but sometimes multistage projects want to
-        // run in checksOnly mode for a subset of their builds.
+      if (!compiler.hasErrors()) {
         compiler.saveState(serializedOutputStream);
       }
       compiler.performPostCompilationTasks();
