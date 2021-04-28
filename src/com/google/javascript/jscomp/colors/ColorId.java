@@ -48,6 +48,10 @@ public final class ColorId implements Serializable {
   // Assume for now that we have at most 8 bytes.
   private final long rightAligned;
 
+  public static ColorId fromLong(long rightAligned) {
+    return new ColorId(rightAligned);
+  }
+
   public static ColorId fromBytes(ByteString bytes) {
     return fromBytesAt(bytes, bytes.size(), BYTESTRING_AT);
   }
