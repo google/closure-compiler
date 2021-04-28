@@ -82,7 +82,6 @@ public final class AstValidatorTest extends CompilerTestCase {
     super.setUp();
     disableAstValidation();
     disableNormalize();
-    disableLineNumberCheck();
     enableTypeCheck();
   }
 

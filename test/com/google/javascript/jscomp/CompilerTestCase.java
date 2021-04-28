@@ -153,9 +153,6 @@ public abstract class CompilerTestCase {
   /** Whether we run CheckAccessControls after the pass being tested. */
   private boolean checkAccessControls;
 
-  /** Whether to check that all line number information is preserved. */
-  private boolean checkLineNumbers;
-
   /** Whether to check that changed scopes are marked as changed */
   private boolean checkAstChangeMarking;
 
@@ -620,7 +617,6 @@ public abstract class CompilerTestCase {
     this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
-    this.checkLineNumbers = true;
     this.closurePassEnabled = false;
     this.closurePassEnabledForExpected = false;
     this.compareAsTree = true;
@@ -860,12 +856,6 @@ public abstract class CompilerTestCase {
   protected final void disableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = false;
-  }
-
-  /** Disable checking to make sure that line numbers were preserved. */
-  protected final void disableLineNumberCheck() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    checkLineNumbers = false;
   }
 
   /** Disable validating AST change marking. */
@@ -1618,9 +1608,7 @@ public abstract class CompilerTestCase {
               .setTypeValidationEnabled(typeInfoValidationEnabled)
               .validateRoot(root);
         }
-        if (checkLineNumbers) {
-          new SourceInfoCheck(compiler).process(externsRoot, mainRoot);
-        }
+        new SourceInfoCheck(compiler).process(externsRoot, mainRoot);
 
         if (checkAccessControls) {
           (new CheckAccessControls(compiler)).process(externsRoot, mainRoot);

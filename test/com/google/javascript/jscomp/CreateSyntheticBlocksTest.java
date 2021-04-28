@@ -36,7 +36,6 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
     super.setUp();
     // Can't use compare as a tree because of the added synthetic blocks.
     disableCompareAsTree();
-    disableLineNumberCheck();
   }
 
   @Override

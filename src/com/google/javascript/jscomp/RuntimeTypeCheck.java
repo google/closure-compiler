@@ -123,11 +123,12 @@ class RuntimeTypeCheck implements CompilerPass {
           }
 
           visitPossibleClassDeclaration(
-              funType, findNodeToInsertAfter(node), this::addMarkerToFunction);
+              funType, findNodeToInsertAfter(node), this::addMarkerToFunction, node);
           break;
 
         case CLASS:
-          visitPossibleClassDeclaration(funType, node.getChildAtIndex(2), this::addMarkerToClass);
+          visitPossibleClassDeclaration(
+              funType, node.getChildAtIndex(2), this::addMarkerToClass, node);
           break;
 
         default:
@@ -136,11 +137,11 @@ class RuntimeTypeCheck implements CompilerPass {
     }
 
     private interface MarkerInserter {
-      Node insert(String markerName, @Nullable String className, Node insertionPoint);
+      Node insert(String markerName, @Nullable String className, Node insertionPoint, Node srcref);
     }
 
     private void visitPossibleClassDeclaration(
-        @Nullable FunctionType funType, Node insertionPoint, MarkerInserter inserter) {
+        @Nullable FunctionType funType, Node insertionPoint, MarkerInserter inserter, Node srcref) {
       // Validate the class type.
       if (funType == null || funType.getSource() == null || !funType.isConstructor()) {
         return;
@@ -162,7 +163,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
       // Insert the markers.
       for (String markerName : markerNames) {
-        insertionPoint = inserter.insert(markerName, className, insertionPoint);
+        insertionPoint = inserter.insert(markerName, className, insertionPoint, srcref);
       }
     }
 
@@ -175,9 +176,10 @@ class RuntimeTypeCheck implements CompilerPass {
      * }
      * }</pre>
      */
-    private Node addMarkerToClass(String markerName, @Nullable String unused, Node classMembers) {
+    private Node addMarkerToClass(
+        String markerName, @Nullable String unused, Node classMembers, Node srcref) {
       Node function = IR.function(IR.name(""), IR.paramList(), IR.block());
-      Node member = IR.computedProp(IR.string(markerName), function);
+      Node member = IR.computedProp(IR.string(markerName), function).srcrefTree(srcref);
       member.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
       classMembers.addChildToBack(member);
 
@@ -199,7 +201,7 @@ class RuntimeTypeCheck implements CompilerPass {
      * }</pre>
      */
     private Node addMarkerToFunction(
-        String markerName, @Nullable String className, Node nodeToInsertAfter) {
+        String markerName, @Nullable String className, Node nodeToInsertAfter, Node srcref) {
       if (className == null) {
         // This can happen with anonymous classes declared with the type `Function`.
         return nodeToInsertAfter;
@@ -208,9 +210,10 @@ class RuntimeTypeCheck implements CompilerPass {
       Node classNode = NodeUtil.newQName(compiler, className);
       Node assign =
           IR.exprResult(
-              IR.assign(
-                  IR.getelem(IR.getprop(classNode, "prototype"), IR.string(markerName)),
-                  IR.trueNode()));
+                  IR.assign(
+                      IR.getelem(IR.getprop(classNode, "prototype"), IR.string(markerName)),
+                      IR.trueNode()))
+              .srcrefTree(srcref);
 
       assign.insertAfter(nodeToInsertAfter);
       compiler.reportChangeToEnclosingScope(assign);
@@ -304,7 +307,7 @@ class RuntimeTypeCheck implements CompilerPass {
           continue;
         }
 
-        checkNode = IR.exprResult(checkNode);
+        checkNode = IR.exprResult(checkNode).srcrefTreeIfMissing(paramName);
         if (insertionPoint == null) {
           block.addChildToFront(checkNode);
         } else {
@@ -348,7 +351,7 @@ class RuntimeTypeCheck implements CompilerPass {
         return;
       }
 
-      retValue.replaceWith(checkNode);
+      retValue.replaceWith(checkNode.srcrefTreeIfMissing(retValue));
       t.reportCodeChange();
     }
 
@@ -453,9 +456,10 @@ class RuntimeTypeCheck implements CompilerPass {
         logFunction);
     Node logOverride =
         IR.exprResult(
-            IR.assign(
-                NodeUtil.newQName(compiler, "$jscomp.typecheck.log"),
-                NodeUtil.newQName(compiler, logFunction)));
+                IR.assign(
+                    NodeUtil.newQName(compiler, "$jscomp.typecheck.log"),
+                    NodeUtil.newQName(compiler, logFunction)))
+            .srcrefTree(node);
     checkState(node.getParent().isScript(), node.getParent());
     logOverride.insertAfter(node);
     compiler.reportChangeToEnclosingScope(node);

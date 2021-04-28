@@ -145,12 +145,11 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
     //     END
     // This prevents the start or end markers from mingling with the code in the block body.
 
-
-    Node outerBlock = IR.block();
+    Node outerBlock = IR.block().srcref(marker.startMarker);
     outerBlock.setIsSyntheticBlock(true);
     outerBlock.insertBefore(marker.startMarker);
 
-    Node innerBlock = IR.block();
+    Node innerBlock = IR.block().srcref(marker.startMarker);
     innerBlock.setIsSyntheticBlock(true);
     // Move everything after the start Node up to the end Node into the inner block.
     moveSiblingExclusive(innerBlock, marker.startMarker, marker.endMarker);

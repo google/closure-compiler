@@ -412,8 +412,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
-    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
-    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -453,8 +451,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
-    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
-    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -494,8 +490,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
-    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
-    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -1313,8 +1307,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnum() {
-    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
-    disableLineNumberCheck();
     testSame(
         lines(
             "/** @enum {string} */ var Foo = {X: 'y'};",
