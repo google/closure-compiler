@@ -34,6 +34,7 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
@@ -253,6 +254,9 @@ public class CompilerOptions implements Serializable {
    */
   public void setCheckMissingOverrideTypes(boolean value) {
     this.checkMissingOverrideTypes = value;
+    // this allows us to generate syntactically better replacement JSDoc that preserves existing
+    // description.
+    this.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
   }
 
   public boolean isCheckingMissingOverrideTypes() {
