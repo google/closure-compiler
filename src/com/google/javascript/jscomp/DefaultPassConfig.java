@@ -505,7 +505,6 @@ public final class DefaultPassConfig extends PassConfig {
       // Gather property names in externs so they can be queried by the optimizing passes.
       // See b/180424427 for why this runs in stage 1 and not stage 2.
       checks.add(gatherExternProperties);
-      checks.add(typesToColors);
     }
 
     assertAllOneTimePasses(checks);
@@ -523,6 +522,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.skipNonTranspilationPasses) {
       return passes;
     }
+
+    passes.add(typesToColors);
 
     // i18n
     // If you want to customize the compiler to use a different i18n pass,

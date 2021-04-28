@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.Immutable;
-import java.io.Serializable;
 
 /**
  * Useful debugging info for Color objects that may or may not be populated, and thus should not
@@ -26,7 +25,7 @@ import java.io.Serializable;
  */
 @AutoValue
 @Immutable
-public abstract class DebugInfo implements Serializable {
+public abstract class DebugInfo {
   /**
    * Since null and non-null objects would unequal, DebugInfo fields should never be null. Instead,
    * we suggest using this unintersting empty instance to signal absence of meaningful debug info.

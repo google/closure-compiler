@@ -95,6 +95,13 @@ public final class ConvertTypesToColors implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    if (compiler.hasOptimizationColors()) {
+      // Pass is a no-op if we already have optimization colors, either because
+      //  a) this pass already ran or
+      //  b) TypedAST serialization/deserilaization converted JSTypes to colors
+      return;
+    }
+
     Node externsAndJsRoot = root.getParent();
 
     if (!compiler.hasTypeCheckingRun()) {

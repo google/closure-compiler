@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
-import java.io.Serializable;
 import javax.annotation.Nullable;
 
 /**
@@ -34,7 +33,7 @@ import javax.annotation.Nullable;
  */
 @AutoValue
 @Immutable
-public abstract class SingletonColorFields implements Serializable {
+public abstract class SingletonColorFields {
 
   abstract ColorId getId();
 

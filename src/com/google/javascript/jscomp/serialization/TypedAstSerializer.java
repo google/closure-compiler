@@ -122,10 +122,7 @@ final class TypedAstSerializer {
 
   private AstNode visit(Node n) {
     AstNode.Builder builder = createWithPositionInfo(n);
-    JSType type = n.getJSType();
-    if (type != null) {
-      builder.setType(this.typesToPointers.get(type));
-    }
+    addType(n, builder);
     OptimizationJsdoc serializedJsdoc = JsdocSerializer.serializeJsdoc(n.getJSDocInfo());
     if (serializedJsdoc != null) {
       builder.setJsdoc(serializedJsdoc);
@@ -153,7 +150,10 @@ final class TypedAstSerializer {
     if (sourceFile == null) {
       // TODO(b/186056977): enforce that SourceFile is not null in externs as well as code.
       checkState(
-          subtreeSourceFiles.peekLast().isExtern(), "Unexpected null SourceFile for node %s", n);
+          subtreeSourceFiles.peekLast().isExtern(),
+          "Unexpected null SourceFile for node %s with parent %s",
+          n.toStringTree(),
+          n.getParent());
       return 0; // not set
     }
 
@@ -166,6 +166,19 @@ final class TypedAstSerializer {
     subtreeSourceFiles.addLast(sourceFile);
     return this.sourceFilePointers.computeIfAbsent(
         sourceFile, (f) -> 1 + this.sourceFilePointers.size());
+  }
+
+  private void addType(Node n, AstNode.Builder builder) {
+    if (!compiler.hasTypeCheckingRun()) {
+      // early return because some Nodes have non-null JSTypes even when typechecking has not run
+      // TODO(b/185918953): enforce that nodes only have types after typechecking.
+      return;
+    }
+
+    JSType type = n.getJSType();
+    if (type != null) {
+      builder.setType(this.typesToPointers.get(type));
+    }
   }
 
   private EnumSet<NodeProperty> booleanPropTranslator(Node n) {

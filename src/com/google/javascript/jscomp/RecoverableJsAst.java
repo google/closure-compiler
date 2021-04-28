@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.JsAst.ParseResult;
 import com.google.javascript.jscomp.JsAst.RhinoError;
 import com.google.javascript.rhino.ErrorReporter;
@@ -26,17 +25,13 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
 /**
- * An implementation of {@link SourceAst} that avoids re-creating the AST
- * unless it was manually cleared.  This creates a single defensive copy of the
- * AST; however, it is not safe for multiple compilations to use this
- * simultaneously, as all compilations mutate this.  Since this class copies
- * the tree, you instead should create a central RecoverableJsAst that does the
- * caching across compilations, and create new RecoverableJsAst's that act as
- * copying proxies around the original.
+ * An implementation of {@link SourceAst} that avoids re-creating the AST unless it was manually
+ * cleared. This creates a single defensive copy of the AST; however, it is not safe for multiple
+ * compilations to use this simultaneously, as all compilations mutate this. Since this class copies
+ * the tree, you instead should create a central RecoverableJsAst that does the caching across
+ * compilations, and create new RecoverableJsAst's that act as copying proxies around the original.
  */
 public class RecoverableJsAst implements SourceAst {
-
-  private static final long serialVersionUID = 1L;
 
   // The AST copy that will be kept around.
   private Node root = null;
@@ -46,10 +41,7 @@ public class RecoverableJsAst implements SourceAst {
 
   private final boolean reportParseErrors;
 
-  /**
-   * Wraps around an existing SourceAst that provides caching between
-   * compilations.
-   */
+  /** Wraps around an existing SourceAst that provides caching between compilations. */
   public RecoverableJsAst(SourceAst realSource, boolean reportParseErrors) {
     checkNotNull(realSource);
     this.realSource = realSource;
@@ -72,19 +64,6 @@ public class RecoverableJsAst implements SourceAst {
       }
     }
     return checkNotNull(root);
-  }
-
-  public SourceAst unwrapRealSourceAst() {
-    if (root == null) {
-      // If the AST root for this SourceAst hasn't been accessed, then all important data is already
-      // in the realSource. We can return it directly without losing data.
-      return realSource;
-    }
-    if (realSource instanceof JsAst) {
-      return ((JsAst) realSource).cloneWithRoot(root);
-    }
-    // Fail loudly if we cannot preserve the root node while returning the real source.
-    throw new UnsupportedOperationException();
   }
 
   private void replay(AbstractCompiler compiler, ParseResult result) {
@@ -121,13 +100,6 @@ public class RecoverableJsAst implements SourceAst {
   public void setSourceFile(SourceFile file) {
     // Explicitly forbid this operation through this interface; this
     // RecoverableJsAst is a proxy view only.
-    throw new UnsupportedOperationException();
-  }
-
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(java.io.ObjectOutputStream oos) {
-    // Explicitly forbid this operation through this interface; serialization should use the "real"
-    // AST instead.
     throw new UnsupportedOperationException();
   }
 }
