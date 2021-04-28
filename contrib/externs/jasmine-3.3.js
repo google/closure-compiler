@@ -350,6 +350,7 @@ jasmine.Spec.prototype.getFullName;
 /**
  * @constructor
  * @extends {Function}
+ * @template T
  */
 jasmine.Spy = function() {};
 
