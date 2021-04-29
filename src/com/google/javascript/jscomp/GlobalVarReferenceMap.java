@@ -31,12 +31,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * An implementation for {@code ReferenceMap} that is specific to global scope
- * and can be used in different passes. In other words instead of relying on
- * Var object it relies on the name of the variable. It also supports hot-swap
- * update of reference map for a specific script.
+ * An implementation for {@code ReferenceMap} that is specific to global scope and can be used in
+ * different passes. In other words instead of relying on Var object it relies on the name of the
+ * variable. It also supports hot-swap update of reference map for a specific script.
  *
- * @see ReferenceCollectingCallback#exitScope(NodeTraversal)
+ * @see ReferenceCollector#exitScope(NodeTraversal)
  */
 class GlobalVarReferenceMap implements ReferenceMap {
 
@@ -69,11 +68,10 @@ class GlobalVarReferenceMap implements ReferenceMap {
   /**
    * Resets global var reference map with the new provide map.
    *
-   * @param globalRefMap The reference map result of a
-   *     {@link ReferenceCollectingCallback} pass collected from the whole AST.
+   * @param globalRefMap The reference map result of a {@link ReferenceCollector} pass collected
+   *     from the whole AST.
    */
-  private void resetGlobalVarReferences(
-      Map<Var, ReferenceCollection> globalRefMap) {
+  private void resetGlobalVarReferences(Map<Var, ReferenceCollection> globalRefMap) {
     refMap = new LinkedHashMap<>();
     for (Entry<Var, ReferenceCollection> entry : globalRefMap.entrySet()) {
       Var var = entry.getKey();
@@ -84,18 +82,15 @@ class GlobalVarReferenceMap implements ReferenceMap {
   }
 
   /**
-   * Updates the internal reference map based on the provided parameters. If
-   * {@code scriptRoot} is not SCRIPT, it basically replaces the internal map
-   * with the new one, otherwise it replaces all the information associated to
-   * the given script.
+   * Updates the internal reference map based on the provided parameters. If {@code scriptRoot} is
+   * not SCRIPT, it basically replaces the internal map with the new one, otherwise it replaces all
+   * the information associated to the given script.
    *
-   * @param refMapPatch The reference map result of a
-   *     {@link ReferenceCollectingCallback} pass which might be collected from
-   *     the whole AST or just a sub-tree associated to a SCRIPT node.
+   * @param refMapPatch The reference map result of a {@link ReferenceCollector} pass which might be
+   *     collected from the whole AST or just a sub-tree associated to a SCRIPT node.
    * @param root AST sub-tree root on which reference collection was done.
    */
-  void updateGlobalVarReferences(Map<Var, ReferenceCollection>
-      refMapPatch, Node root) {
+  void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch, Node root) {
     if (refMap == null || !root.isScript()) {
       resetGlobalVarReferences(refMapPatch);
       return;
@@ -135,8 +130,8 @@ class GlobalVarReferenceMap implements ReferenceMap {
     }
   }
 
-  private void replaceReferences(String varName, InputId inputId,
-      ReferenceCollection newSourceCollection) {
+  private void replaceReferences(
+      String varName, InputId inputId, ReferenceCollection newSourceCollection) {
     ReferenceCollection combined = new ReferenceCollection();
     List<Reference> combinedRefs = combined.references;
     ReferenceCollection oldCollection = refMap.get(varName);
@@ -146,20 +141,18 @@ class GlobalVarReferenceMap implements ReferenceMap {
       return;
     }
     // otherwise replace previous references that are from sourceName
-    SourceRefRange range = findSourceRefRange(oldCollection.references,
-      inputId);
+    SourceRefRange range = findSourceRefRange(oldCollection.references, inputId);
     combinedRefs.addAll(range.refsBefore());
     combinedRefs.addAll(newSourceCollection.references);
     combinedRefs.addAll(range.refsAfter());
   }
 
   /**
-   * Finds the range of references associated to {@code sourceName}. Note that
-   * even if there is no sourceName references the returned information can be
-   * used to decide where to insert new sourceName refs.
+   * Finds the range of references associated to {@code sourceName}. Note that even if there is no
+   * sourceName references the returned information can be used to decide where to insert new
+   * sourceName refs.
    */
-  private SourceRefRange findSourceRefRange(List<Reference> refList,
-      InputId inputId) {
+  private SourceRefRange findSourceRefRange(List<Reference> refList, InputId inputId) {
     checkNotNull(inputId);
 
     // TODO(bashir): We can do binary search here, but since this is fast enough
@@ -189,8 +182,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
     private final int firstAfter;
     private final List<Reference> refList;
 
-    SourceRefRange(List<Reference> refList, int lastBefore,
-        int firstAfter) {
+    SourceRefRange(List<Reference> refList, int lastBefore, int firstAfter) {
       this.lastBefore = max(lastBefore, -1);
       this.firstAfter = min(firstAfter, refList.size());
       this.refList = refList;
@@ -207,10 +199,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
     }
   }
 
-  /**
-   * @param globalScope a new Global Scope to replace the scope of references
-   *        with.
-   */
+  /** @param globalScope a new Global Scope to replace the scope of references with. */
   public void updateReferencesWithGlobalScope(Scope globalScope) {
     for (ReferenceCollection collection : refMap.values()) {
       List<Reference> newRefs = new ArrayList<>(collection.references.size());
@@ -228,9 +217,8 @@ class GlobalVarReferenceMap implements ReferenceMap {
   }
 
   /**
-   * A CleanupPass implementation that will replace references to old Syntactic
-   * Global Scopes generated in previous compile runs with references to the
-   * Global Typed Scope.
+   * A CleanupPass implementation that will replace references to old Syntactic Global Scopes
+   * generated in previous compile runs with references to the Global Typed Scope.
    */
   static class GlobalVarRefCleanupPass implements HotSwapCompilerPass {
 

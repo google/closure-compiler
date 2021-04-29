@@ -41,11 +41,9 @@ class InferConsts implements CompilerPass {
 
   @Override
   public void process(Node externs, Node js) {
-    ReferenceCollectingCallback collector =
-        new ReferenceCollectingCallback(
-            compiler,
-            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            new SyntacticScopeCreator(compiler));
+    ReferenceCollector collector =
+        new ReferenceCollector(
+            compiler, ReferenceCollector.DO_NOTHING_BEHAVIOR, new SyntacticScopeCreator(compiler));
     collector.process(js);
 
     for (Var v : collector.getAllSymbols()) {

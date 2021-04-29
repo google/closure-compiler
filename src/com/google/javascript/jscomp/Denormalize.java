@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.alwaysTrue;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -56,8 +56,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
     NodeTraversal.traverse(compiler, root, this);
     // Don't inline the VAR declaration if this compilation involves old-style ctemplates.
     if (compiler.getOptions().syntheticBlockStartMarker == null) {
-      (new ReferenceCollectingCallback(compiler, this, new SyntacticScopeCreator(compiler)))
-          .process(root);
+      (new ReferenceCollector(compiler, this, new SyntacticScopeCreator(compiler))).process(root);
     }
   }
 

@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
@@ -78,8 +78,8 @@ class InlineVariables implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    ReferenceCollectingCallback callback =
-        new ReferenceCollectingCallback(
+    ReferenceCollector callback =
+        new ReferenceCollector(
             compiler,
             new InliningBehavior(),
             new SyntacticScopeCreator(compiler),

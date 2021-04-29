@@ -257,7 +257,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   /**
    * Undefined vars are added to {@code VarCheck.SYNTHETIC_VARS_DECLAR} and previously this input
    * was not properly added to list of externs which was causing an NPE in hot-swap mode of {@code
-   * ReferenceCollectingCallback}.
+   * ReferenceCollector}.
    */
   @Test
   public void testAccessToUndefinedVar() {

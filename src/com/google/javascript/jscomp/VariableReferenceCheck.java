@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractScope.ImplicitVar;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -119,7 +119,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     if (shouldProcess(root)) {
-      new ReferenceCollectingCallback(
+      new ReferenceCollector(
               compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
           .process(externs, root);
     }
@@ -130,7 +130,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (!forTranspileOnly
         || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015)
             && TranspilationPasses.isScriptEs6OrHigher(scriptRoot))) {
-      new ReferenceCollectingCallback(
+      new ReferenceCollector(
               compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
           .hotSwapScript(scriptRoot, originalRoot);
     }
@@ -154,7 +154,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       if (t.inGlobalScope()) {
         // Update global scope reference lists when we are done with it.
         compiler.updateGlobalVarReferences(
-            ((ReferenceCollectingCallback.ReferenceMapWrapper) referenceMap).getRawReferenceMap(),
+            ((ReferenceCollector.ReferenceMapWrapper) referenceMap).getRawReferenceMap(),
             t.getScopeRoot());
         referenceMap = compiler.getGlobalVarReferences();
       }

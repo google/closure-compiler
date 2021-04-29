@@ -284,10 +284,10 @@ class AggressiveInlineAliases implements CompilerPass {
     final Scope innerScope =
         syntacticScopeCreator.createScope(valueNode, globalNameDeclaration.scope);
     final Var innerNameVar = checkNotNull(innerScope.getVar(innerName));
-    final ReferenceCollectingCallback collector =
-        new ReferenceCollectingCallback(
+    final ReferenceCollector collector =
+        new ReferenceCollector(
             compiler,
-            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+            ReferenceCollector.DO_NOTHING_BEHAVIOR,
             syntacticScopeCreator,
             Predicates.equalTo(innerNameVar));
     collector.processScope(innerScope);
@@ -497,10 +497,10 @@ class AggressiveInlineAliases implements CompilerPass {
 
       Var aliasVar = alias.scope.getVar(aliasVarName);
       checkState(aliasVar != null, "Expected variable to be defined in scope", aliasVarName);
-      ReferenceCollectingCallback collector =
-          new ReferenceCollectingCallback(
+      ReferenceCollector collector =
+          new ReferenceCollector(
               compiler,
-              ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+              ReferenceCollector.DO_NOTHING_BEHAVIOR,
               new SyntacticScopeCreator(compiler),
               Predicates.equalTo(aliasVar));
       Scope aliasScope = aliasVar.getScope();

@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.truth.Correspondence;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
+public final class ReferenceCollectorTest extends CompilerTestCase {
   private Behavior behavior;
 
   @Override
@@ -44,7 +44,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   protected int getNumRepetitions() {
     // Default behavior for CompilerTestCase.test*() methods is to do the whole test twice,
     // because passes that modify the AST need to be idempotent.
-    // Since ReferenceCollectingCallback() just gathers information, it doesn't make sense to
+    // Since ReferenceCollector() just gathers information, it doesn't make sense to
     // run it twice, and doing so just complicates debugging test cases.
     return 1;
   }
@@ -52,7 +52,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
-    return new ReferenceCollectingCallback(
+    return new ReferenceCollector(
         compiler,
         this.behavior,
         scopeCreator);
@@ -470,11 +470,11 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   @Test
   public void testProcessScopeThatsNotABasicBlock() {
     // Tests the case where the scope we pass in is not really a basic block, but we create a new
-    // basic block anyway because ReferenceCollectingCallback expects all nodes to be in a block.
+    // basic block anyway because ReferenceCollector expects all nodes to be in a block.
     Compiler compiler = createCompiler();
     SyntacticScopeCreator syntacticScopeCreator = new SyntacticScopeCreator(compiler);
-    ReferenceCollectingCallback referenceCollectingCallback =
-        new ReferenceCollectingCallback(
+    ReferenceCollector referenceCollectingCallback =
+        new ReferenceCollector(
             compiler,
             new Behavior() {
               @Override

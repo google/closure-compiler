@@ -5508,11 +5508,9 @@ public final class NodeUtil {
 
   public static ImmutableSet<String> collectExternVariableNames(
       AbstractCompiler compiler, Node externs) {
-    ReferenceCollectingCallback externsRefs =
-        new ReferenceCollectingCallback(
-            compiler,
-            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            new SyntacticScopeCreator(compiler));
+    ReferenceCollector externsRefs =
+        new ReferenceCollector(
+            compiler, ReferenceCollector.DO_NOTHING_BEHAVIOR, new SyntacticScopeCreator(compiler));
     externsRefs.process(externs);
     ImmutableSet.Builder<String> externsNames = ImmutableSet.builder();
     for (Var v : externsRefs.getAllSymbols()) {

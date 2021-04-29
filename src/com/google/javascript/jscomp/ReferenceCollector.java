@@ -38,8 +38,8 @@ import java.util.Set;
  * inlining, reordering, or generating warnings. Callers do this by providing {@link Behavior} and
  * then calling {@link #process(Node, Node)}.
  */
-public final class ReferenceCollectingCallback
-    implements ScopedCallback, HotSwapCompilerPass, StaticSymbolTable<Var, Reference> {
+public final class ReferenceCollector
+    implements HotSwapCompilerPass, StaticSymbolTable<Var, Reference> {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -71,6 +71,8 @@ public final class ReferenceCollectingCallback
    */
   private final Predicate<Var> varFilter;
 
+  private final CollectorCallback callback = new CollectorCallback();
+
   /**
    * Traverse hoisted functions where they're referenced, not
    * where they're declared.
@@ -79,21 +81,21 @@ public final class ReferenceCollectingCallback
   private final Set<Var> finishedFunctionTraverse = new HashSet<>();
   private Scope narrowScope;
 
-  /**
-   * Constructor initializes block stack.
-   */
-  public ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior,
-      ScopeCreator creator) {
+  /** Constructor initializes block stack. */
+  public ReferenceCollector(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator) {
     this(compiler, behavior, creator, Predicates.alwaysTrue());
   }
 
   /**
    * Constructor only collects references that match the given variable.
    *
-   * The test for Var equality uses reference equality, so it's necessary to
-   * inject a scope when you traverse.
+   * <p>The test for Var equality uses reference equality, so it's necessary to inject a scope when
+   * you traverse.
    */
-  ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator,
+  ReferenceCollector(
+      AbstractCompiler compiler,
+      Behavior behavior,
+      ScopeCreator creator,
       Predicate<Var> varFilter) {
     this.compiler = compiler;
     this.behavior = behavior;
@@ -141,7 +143,7 @@ public final class ReferenceCollectingCallback
   private NodeTraversal createTraversal() {
     return NodeTraversal.builder()
         .setCompiler(compiler)
-        .setCallback(this)
+        .setCallback(this.callback)
         .setScopeCreator(scopeCreator)
         .setObeyDestructuringAndDefaultValueExecutionOrder(true)
         .build();
@@ -166,41 +168,6 @@ public final class ReferenceCollectingCallback
   @Override
   public ReferenceCollection getReferences(Var v) {
     return referenceMap.get(v);
-  }
-
-  /**
-   * For each node, update the block stack and reference collection
-   * as appropriate.
-   */
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || n.isImportStar()) {
-      if ((parent.isImportSpec() && n != parent.getLastChild())
-          || (parent.isExportSpec() && n != parent.getFirstChild())) {
-        // The n in `import {n as x}` or `export {x as n}` are not references, even though
-        // they are represented in the AST as NAME nodes.
-        return;
-      }
-
-      Var v = t.getScope().getVar(n.getString());
-
-      if (v != null) {
-        if (varFilter.apply(v)) {
-          addReference(v, new Reference(n, t, peek(blockStack)));
-        }
-
-        if (v.getParentNode() != null
-            && NodeUtil.isHoistedFunctionDeclaration(v.getParentNode())
-            // If we're only traversing a narrow scope, do not try to climb outside.
-            && (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
-          outOfBandTraversal(v);
-        }
-      }
-    }
-
-    if (isBlockBoundary(n, parent)) {
-      pop(blockStack);
-    }
   }
 
   private void outOfBandTraversal(Var v) {
@@ -242,58 +209,86 @@ public final class ReferenceCollectingCallback
     finishedFunctionTraverse.add(v);
   }
 
-  /**
-   * Updates block stack and invokes any additional behavior.
-   */
-  @Override
-  public void enterScope(NodeTraversal t) {
-    Node n = t.getScopeRoot();
-    BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
-    // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
-    // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
-    // are added in shouldTraverse() or processScope() and removed in visit().
-    if (t.isHoistScope()) {
-      blockStack.add(new BasicBlock(parent, n));
-    }
-  }
-
-  /**
-   * Updates block stack and invokes any additional behavior.
-   */
-  @Override
-  public void exitScope(NodeTraversal t) {
-    if (t.isHoistScope()) {
-      pop(blockStack);
-    }
-    behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
-  }
-
-  /**
-   * Updates block stack.
-   */
-  @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    // We automatically traverse a hoisted function body when that function
-    // is first referenced, so that the reference lists are in the right order.
-    //
-    // TODO(nicksantos): Maybe generalize this to a continuation mechanism
-    // like in RemoveUnusedCode.
-    if (NodeUtil.isHoistedFunctionDeclaration(n)) {
-      Node nameNode = n.getFirstChild();
-      Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());
-      checkNotNull(functionVar);
-      if (finishedFunctionTraverse.contains(functionVar)) {
-        return false;
+  private final class CollectorCallback implements ScopedCallback {
+    /** Updates block stack and invokes any additional behavior. */
+    @Override
+    public void enterScope(NodeTraversal t) {
+      Node n = t.getScopeRoot();
+      BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
+      // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
+      // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
+      // are added in shouldTraverse() or processScope() and removed in visit().
+      if (t.isHoistScope()) {
+        blockStack.add(new BasicBlock(parent, n));
       }
-      startedFunctionTraverse.add(functionVar);
     }
 
-    // If node is a new basic block, put on basic block stack
-    if (isBlockBoundary(n, parent)) {
-      blockStack.add(new BasicBlock(peek(blockStack), n));
+    /** Updates block stack and invokes any additional behavior. */
+    @Override
+    public void exitScope(NodeTraversal t) {
+      if (t.isHoistScope()) {
+        pop(blockStack);
+      }
+      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
     }
 
-    return true;
+    /** Updates block stack. */
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      // We automatically traverse a hoisted function body when that function
+      // is first referenced, so that the reference lists are in the right order.
+      //
+      // TODO(nicksantos): Maybe generalize this to a continuation mechanism
+      // like in RemoveUnusedCode.
+      if (NodeUtil.isHoistedFunctionDeclaration(n)) {
+        Node nameNode = n.getFirstChild();
+        Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());
+        checkNotNull(functionVar);
+        if (finishedFunctionTraverse.contains(functionVar)) {
+          return false;
+        }
+        startedFunctionTraverse.add(functionVar);
+      }
+
+      // If node is a new basic block, put on basic block stack
+      if (isBlockBoundary(n, parent)) {
+        blockStack.add(new BasicBlock(peek(blockStack), n));
+      }
+
+      return true;
+    }
+
+    /** For each node, update the block stack and reference collection as appropriate. */
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() || n.isImportStar()) {
+        if ((parent.isImportSpec() && n != parent.getLastChild())
+            || (parent.isExportSpec() && n != parent.getFirstChild())) {
+          // The n in `import {n as x}` or `export {x as n}` are not references, even though
+          // they are represented in the AST as NAME nodes.
+          return;
+        }
+
+        Var v = t.getScope().getVar(n.getString());
+
+        if (v != null) {
+          if (varFilter.apply(v)) {
+            addReference(v, new Reference(n, t, peek(blockStack)));
+          }
+
+          if (v.getParentNode() != null
+              && NodeUtil.isHoistedFunctionDeclaration(v.getParentNode())
+              // If we're only traversing a narrow scope, do not try to climb outside.
+              && (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
+            outOfBandTraversal(v);
+          }
+        }
+      }
+
+      if (isBlockBoundary(n, parent)) {
+        pop(blockStack);
+      }
+    }
   }
 
   private static <T> T pop(List<T> list) {
