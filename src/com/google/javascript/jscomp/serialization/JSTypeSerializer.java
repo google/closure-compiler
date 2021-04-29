@@ -21,17 +21,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoOneOf;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
-import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.serialization.JSTypeSerializer.SimplifiedType.Kind;
@@ -43,9 +43,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.protobuf.ByteString;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 final class JSTypeSerializer {
@@ -61,7 +59,7 @@ final class JSTypeSerializer {
 
   private final InvalidatingTypes invalidatingTypes;
   private final StringPool.Builder stringPoolBuilder;
-  private final IdGenerator idGenerator;
+  private final JSTypeColorIdHasher hasher = new JSTypeColorIdHasher();
   private final SerializationOptions serializationMode;
   private final LinkedHashMap<SimplifiedType, SeenTypeRecord> seenSerializableTypes =
       new LinkedHashMap<>();
@@ -96,7 +94,6 @@ final class JSTypeSerializer {
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
       StringPool.Builder stringPoolBuilder,
-      IdGenerator idGenerator,
       SerializationOptions serializationMode) {
     this.unknownType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
     this.topObjectType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
@@ -106,7 +103,6 @@ final class JSTypeSerializer {
     this.nullType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.NULL_TYPE));
     this.invalidatingTypes = invalidatingTypes;
     this.stringPoolBuilder = stringPoolBuilder;
-    this.idGenerator = idGenerator;
     this.serializationMode = serializationMode;
   }
 
@@ -115,11 +111,8 @@ final class JSTypeSerializer {
       InvalidatingTypes invalidatingTypes,
       StringPool.Builder stringPoolBuilder,
       SerializationOptions serializationMode) {
-    IdGenerator idGenerator = new IdGenerator();
-
     JSTypeSerializer serializer =
-        new JSTypeSerializer(
-            registry, invalidatingTypes, stringPoolBuilder, idGenerator, serializationMode);
+        new JSTypeSerializer(registry, invalidatingTypes, stringPoolBuilder, serializationMode);
 
     serializer.addPrimitiveTypePointers();
     serializer.checkValid();
@@ -324,23 +317,8 @@ final class JSTypeSerializer {
         // (e.g. 'A' in '/** @enum */ const E = {A: 0}`). In
         // theory this would be safe to remove if we clean up code depending on the lack of renaming
         .setPropertiesKeepOriginalName(type.isEnumType())
-        // NOTE: We need a better format than sequential integers in order to have an id that
-        // can be consistent across compilation units. For now, using a sequential integers for each
-        // type depends on the invariant that we serialize each distinct type exactly once and from
-        // a single compilation unit.
-        .setUuid(toByteString(idGenerator.newId() + JSTypeSerializer.PRIMITIVE_POOL_SIZE))
+        .setUuid(this.hasher.hashObjectType(type).asByteString())
         .build();
-  }
-
-  // Reuse a single buffer rather than allocating and trashing a new one for every UUID.
-  private final byte[] uuidBuffer = new byte[4];
-
-  private ByteString toByteString(int x) {
-    for (int i = 0; i < 4; i++) {
-      int shift = (3 - i) * 8;
-      this.uuidBuffer[i] = (byte) (x >> shift);
-    }
-    return ByteString.copyFrom(this.uuidBuffer);
   }
 
   private static ObjectTypeProto.DebugInfo instanceDebugInfo(
@@ -500,17 +478,17 @@ final class JSTypeSerializer {
    *
    * <p>Only intended to be used for debug logging.
    */
-  ImmutableSortedMap<String, String> getObjectUuidMapForDebugging() {
-    ImmutableSortedMap.Builder<String, String> uuidToType = ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<SimplifiedType, SeenTypeRecord> entry : this.seenSerializableTypes.entrySet()) {
-      if (entry.getKey().getKind().equals(Kind.SINGLE)
-          && entry.getValue().type != null
-          && entry.getValue().type.hasObject()) {
-        uuidToType.put(
-            ColorId.fromBytes(entry.getValue().type.getObject().getUuid()).toString(),
-            entry.getKey().single().toString());
-      }
-    }
+  ImmutableMultimap<String, String> getColorIdToJSTypeMapForDebugging() {
+    ImmutableMultimap.Builder<String, String> uuidToType = ImmutableMultimap.builder();
+    uuidToType.orderKeysBy(naturalOrder()).orderValuesBy(naturalOrder());
+    this.seenSerializableTypes.forEach(
+        (s, r) -> {
+          TypeProto p = r.type;
+          if (s.getKind().equals(Kind.SINGLE) && p != null && p.hasObject()) {
+            uuidToType.put(
+                ColorId.fromBytes(p.getObject().getUuid()).toString(), s.single().toString());
+          }
+        });
     return uuidToType.build();
   }
 

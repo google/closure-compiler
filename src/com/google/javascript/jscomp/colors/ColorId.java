@@ -139,6 +139,16 @@ public final class ColorId implements Serializable {
     return (int) this.rightAligned;
   }
 
+  public ByteString asByteString() {
+    long copy = this.rightAligned;
+    byte[] out = new byte[8];
+    for (int i = 7; i >= 0; i--) {
+      out[i] = (byte) copy;
+      copy >>>= 8;
+    }
+    return ByteString.copyFrom(out);
+  }
+
   @Override
   public String toString() {
     // Use hex encoding so there are no ambiguous trailing chars like Base64 would have.

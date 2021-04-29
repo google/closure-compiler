@@ -104,7 +104,7 @@ final class SerializeTypesToPointers {
     // Log information about how the JSTypes correspond to the colors. This may be useful later on
     // in optimizations.
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
-      log.log(() -> GSON.toJson(serializer.getObjectUuidMapForDebugging()));
+      log.log(() -> GSON.toJson(serializer.getColorIdToJSTypeMapForDebugging().asMap()));
     }
 
     // Log type mismatches, which contribute to the definition of an "invalidating" type
