@@ -14,7 +14,7 @@ message TypedAst {
   // required
   TypePool type_pool = 1;
   // required
-  StringPool string_pool = 2;
+  StringPoolProto string_pool = 2;
 
   repeated AstNode extern_file = 3;
   repeated AstNode code_file = 4;
@@ -22,7 +22,7 @@ message TypedAst {
   SourceFilePool source_file_pool = 5;
 }
 
-message StringPool {
+message StringPoolProto {
   // the "0th" index must always be the empty string so "0" may be used as a
   // default for "no string"
   repeated bytes strings = 1;

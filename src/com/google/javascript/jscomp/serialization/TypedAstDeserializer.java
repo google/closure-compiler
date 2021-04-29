@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.value.AutoValue;
@@ -33,11 +32,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 /**
  * Class that deserializes a TypedAst proto into the JSCompiler AST structure.
@@ -49,11 +46,11 @@ public final class TypedAstDeserializer {
 
   private final TypedAst typedAst;
   private final ColorDeserializer colorDeserializer;
+  private final StringPool stringPool;
   private final LinkedHashMap<InputId, CompilerInput> inputsById = new LinkedHashMap<>();
   // indices into this list correspond to AstNode::getSourceFile() - 1, as '0' is reserved for an
   // unset file and ImmutableLists don't accept null.
   private final ImmutableList<SourceFile> sourceFiles;
-  private final Wtf8.Decoder wtf8Decoder;
   private FeatureSet currentFileFeatures = null;
   // use as template for source file information. stack-based.
   private final ArrayDeque<Node> currentTemplateNode = new ArrayDeque<>();
@@ -62,24 +59,26 @@ public final class TypedAstDeserializer {
 
   private TypedAstDeserializer(
       TypedAst typedAst,
+      StringPool stringPool,
       ColorDeserializer colorDeserializer,
       ImmutableList<SourceFile> sourceFiles) {
     this.typedAst = typedAst;
     this.colorDeserializer = colorDeserializer;
+    this.stringPool = stringPool;
     this.sourceFiles = sourceFiles;
-    this.wtf8Decoder = Wtf8.decoder(typedAst.getStringPool().getMaxLength());
   }
 
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
   public static DeserializedAst deserialize(TypedAst typedAst) {
+    StringPool stringPool = StringPool.fromProto(typedAst.getStringPool());
     ColorDeserializer colorDeserializer =
-        ColorDeserializer.buildFromTypePool(typedAst.getTypePool(), typedAst.getStringPool());
+        ColorDeserializer.buildFromTypePool(typedAst.getTypePool(), stringPool);
     ImmutableList<SourceFile> sourceFiles =
         typedAst.getSourceFilePool().getSourceFileList().stream()
             .map(SourceFile::fromProto)
             .collect(toImmutableList());
     TypedAstDeserializer deserializer =
-        new TypedAstDeserializer(typedAst, colorDeserializer, sourceFiles);
+        new TypedAstDeserializer(typedAst, stringPool, colorDeserializer, sourceFiles);
     Node root = deserializer.deserializeToScriptNodes();
     return DeserializedAst.create(
         root, colorDeserializer.getRegistry(), ImmutableMap.copyOf(deserializer.inputsById));
@@ -101,8 +100,6 @@ public final class TypedAstDeserializer {
   }
 
   private Node deserializeToScriptNodes() {
-    doValidation();
-
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
     for (AstNode script : typedAst.getExternFileList()) {
@@ -112,13 +109,6 @@ public final class TypedAstDeserializer {
       codeRoot.addChildToBack(deserializeScriptNode(script, codeRoot));
     }
     return IR.root(externRoot, codeRoot);
-  }
-
-  private void doValidation() {
-    checkState(
-        this.getStringByPointer(0).isEmpty(),
-        "First StringPool element must be the empty string, found %s",
-        this.getStringByPointer(0));
   }
 
   private Node deserializeScriptNode(AstNode script, Node root) {
@@ -319,23 +309,13 @@ public final class TypedAstDeserializer {
 
   private void setOriginalNameIfPresent(AstNode astNode, Node n) {
     if (astNode.getOriginalNamePointer() != 0) {
-      n.setOriginalName(getStringByPointer(astNode.getOriginalNamePointer()));
+      n.setOriginalName(this.stringPool.get(astNode.getOriginalNamePointer()));
     }
-  }
-
-  private String getStringByPointer(int pointer) {
-    List<ByteString> stringPool = typedAst.getStringPool().getStringsList();
-    checkState(
-        stringPool.size() > pointer,
-        "Found pointer <%s> that points outside of string pool. Pool contents:\n%s",
-        pointer,
-        stringPool);
-    return this.wtf8Decoder.decode(stringPool.get(pointer));
   }
 
   private String getString(AstNode n) {
     int pointer = n.getStringValuePointer();
-    return getStringByPointer(pointer);
+    return this.stringPool.get(pointer);
   }
 
   private Node deserializeSingleNode(AstNode n) {
@@ -494,8 +474,8 @@ public final class TypedAstDeserializer {
         return new Node(Token.TEMPLATELIT_SUB);
       case TEMPLATELIT_STRING:
         TemplateStringValue templateStringValue = n.getTemplateStringValue();
-        String rawString = getStringByPointer(templateStringValue.getRawStringPointer());
-        String cookedString = getStringByPointer(templateStringValue.getCookedStringPointer());
+        String rawString = this.stringPool.get(templateStringValue.getRawStringPointer());
+        String cookedString = this.stringPool.get(templateStringValue.getCookedStringPointer());
         return Node.newTemplateLitString(cookedString, rawString);
       case NEW_TARGET:
         return new Node(Token.NEW_TARGET);

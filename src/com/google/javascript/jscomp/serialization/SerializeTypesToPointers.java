@@ -53,7 +53,7 @@ final class SerializeTypesToPointers {
 
   static SerializeTypesToPointers create(
       AbstractCompiler compiler,
-      StringPoolBuilder stringPoolBuilder,
+      StringPool.Builder stringPoolBuilder,
       SerializationOptions serializationOptions) {
     InvalidatingTypes invalidatingTypes =
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())

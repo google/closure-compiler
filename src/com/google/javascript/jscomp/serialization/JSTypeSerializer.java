@@ -60,7 +60,7 @@ final class JSTypeSerializer {
   private final ImmutableSet<JSType> topObjectLikeTypes;
 
   private final InvalidatingTypes invalidatingTypes;
-  private final StringPoolBuilder stringPoolBuilder;
+  private final StringPool.Builder stringPoolBuilder;
   private final IdGenerator idGenerator;
   private final SerializationOptions serializationMode;
   private final LinkedHashMap<SimplifiedType, SeenTypeRecord> seenSerializableTypes =
@@ -95,7 +95,7 @@ final class JSTypeSerializer {
   private JSTypeSerializer(
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
-      StringPoolBuilder stringPoolBuilder,
+      StringPool.Builder stringPoolBuilder,
       IdGenerator idGenerator,
       SerializationOptions serializationMode) {
     this.unknownType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
@@ -113,7 +113,7 @@ final class JSTypeSerializer {
   public static JSTypeSerializer create(
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
-      StringPoolBuilder stringPoolBuilder,
+      StringPool.Builder stringPoolBuilder,
       SerializationOptions serializationMode) {
     IdGenerator idGenerator = new IdGenerator();
 

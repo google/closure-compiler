@@ -144,7 +144,6 @@ public final class ColorDeserializer {
     private final TypePool typePool;
     private final StringPool stringPool;
     private final ImmutableMap<PrimitiveType, Color> nativeToColor;
-    private final Wtf8.Decoder wtf8Decoder;
 
     private ColorPoolBuilder(
         TypePool typePool,
@@ -157,7 +156,6 @@ public final class ColorDeserializer {
       this.disambiguationEdges = disambiguationEdges;
       this.colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
       this.nativeToColor = nativeToColor;
-      this.wtf8Decoder = Wtf8.decoder(stringPool.getMaxLength());
     }
 
     private ImmutableList<Color> build() {
@@ -237,8 +235,7 @@ public final class ColorDeserializer {
               .setConstructor(serialized.getMarkedConstructor())
               .setOwnProperties(
                   serialized.getOwnPropertyList().stream()
-                      .map(stringOffset -> this.stringPool.getStringsList().get(stringOffset))
-                      .map(this.wtf8Decoder::decode)
+                      .map(this.stringPool::get)
                       .collect(toImmutableSet()));
       if (serialized.hasPrototype()) {
         builder.setPrototype(this.pointerToColor(serialized.getPrototype()));

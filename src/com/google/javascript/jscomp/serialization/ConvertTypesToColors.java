@@ -110,7 +110,7 @@ public final class ConvertTypesToColors implements CompilerPass {
       return;
     }
 
-    StringPoolBuilder stringPoolBuilder = new StringPoolBuilder();
+    StringPool.Builder stringPoolBuilder = StringPool.builder();
     SerializeTypesToPointers serializeJstypes =
         SerializeTypesToPointers.create(compiler, stringPoolBuilder, this.serializationOptions);
     serializeJstypes.gatherTypesOnAst(externsAndJsRoot);

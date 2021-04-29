@@ -455,7 +455,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testAst_constNumber() {
     TypePointer numberType = pointerForType(PrimitiveType.NUMBER_TYPE);
     TypedAst ast = compile("const x = 5;");
-    StringPool stringPool = ast.getStringPool();
+    StringPoolProto stringPool = ast.getStringPool();
 
     assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -502,7 +502,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testAst_letString() {
     TypePointer stringType = pointerForType(PrimitiveType.STRING_TYPE);
     TypedAst ast = compile("let s = 'hello';");
-    StringPool stringPool = ast.getStringPool();
+    StringPoolProto stringPool = ast.getStringPool();
 
     assertThat(ast.getCodeFileList().get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
@@ -763,7 +763,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   /**
    * Returns the offset of the given string in the given pool, throwing an exception if not present
    */
-  private static int findInStringPool(StringPool stringPool, String str) {
+  private static int findInStringPool(StringPoolProto stringPool, String str) {
     int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str));
     checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
     return offset;

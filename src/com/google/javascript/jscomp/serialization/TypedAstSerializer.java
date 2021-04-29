@@ -35,7 +35,7 @@ final class TypedAstSerializer {
 
   private final AbstractCompiler compiler;
   private final SerializationOptions serializationMode;
-  private final StringPoolBuilder stringPool;
+  private final StringPool.Builder stringPool;
   private int previousLine;
   private int previousColumn;
   private final ArrayDeque<SourceFile> subtreeSourceFiles = new ArrayDeque<>();
@@ -46,7 +46,7 @@ final class TypedAstSerializer {
   private TypedAstSerializer(
       AbstractCompiler compiler,
       SerializationOptions serializationMode,
-      StringPoolBuilder stringPoolBuilder) {
+      StringPool.Builder stringPoolBuilder) {
     this.compiler = compiler;
     this.serializationMode = serializationMode;
     this.stringPool = stringPoolBuilder;
@@ -54,7 +54,7 @@ final class TypedAstSerializer {
 
   static TypedAstSerializer createFromRegistryWithOptions(
       AbstractCompiler compiler, SerializationOptions serializationMode) {
-    StringPoolBuilder stringPoolBuilder = new StringPoolBuilder();
+    StringPool.Builder stringPoolBuilder = StringPool.builder();
     return new TypedAstSerializer(compiler, serializationMode, stringPoolBuilder);
   }
 
@@ -95,7 +95,7 @@ final class TypedAstSerializer {
             .build();
     return builder
         .setTypePool(typePool)
-        .setStringPool(this.stringPool.build())
+        .setStringPool(this.stringPool.build().toProto())
         .setSourceFilePool(sourceFiles)
         .build();
   }
