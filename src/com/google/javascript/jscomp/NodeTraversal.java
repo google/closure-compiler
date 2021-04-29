@@ -40,6 +40,7 @@ public class NodeTraversal {
   private final Callback callback;
   private final ScopedCallback scopeCallback;
   private final ScopeCreator scopeCreator;
+  private final boolean obeyDestructuringAndDefaultValueExecutionOrder;
 
   /** Contains the current node */
   private Node currentNode;
@@ -360,6 +361,7 @@ public class NodeTraversal {
     private Callback callback;
     private AbstractCompiler compiler;
     private ScopeCreator scopeCreator;
+    private boolean obeyDestructuringAndDefaultValueExecutionOrder = false;
 
     private Builder() {}
 
@@ -378,6 +380,11 @@ public class NodeTraversal {
       return this;
     }
 
+    public Builder setObeyDestructuringAndDefaultValueExecutionOrder(boolean x) {
+      this.obeyDestructuringAndDefaultValueExecutionOrder = x;
+      return this;
+    }
+
     public NodeTraversal build() {
       return new NodeTraversal(this);
     }
@@ -392,6 +399,8 @@ public class NodeTraversal {
         (builder.scopeCreator == null)
             ? new SyntacticScopeCreator(this.compiler)
             : builder.scopeCreator;
+    this.obeyDestructuringAndDefaultValueExecutionOrder =
+        builder.obeyDestructuringAndDefaultValueExecutionOrder;
   }
 
   private void throwUnexpectedException(Throwable unexpectedException) {
@@ -888,6 +897,23 @@ public class NodeTraversal {
     popScope();
   }
 
+  private void handleDestructuringOrDefaultValue(Node n, Node parent) {
+    currentNode = n;
+    if (callback.shouldTraverse(this, n, parent)) {
+      Node first = n.getFirstChild();
+      Node second = first.getNext();
+
+      if (second != null) {
+        checkState(second.getNext() == null, second);
+        traverseBranch(second, n);
+      }
+      traverseBranch(first, n);
+
+      currentNode = n;
+      callback.visit(this, n, parent);
+    }
+  }
+
   /** Traverses a branch. */
   private void traverseBranch(Node n, Node parent) {
     switch (n.getToken()) {
@@ -906,6 +932,14 @@ public class NodeTraversal {
       case CLASS_MEMBERS:
         handleClassMembers(n, parent);
         return;
+      case DEFAULT_VALUE:
+      case DESTRUCTURING_LHS:
+        // TODO(nickreid): Handle ASSIGN with destructuring target.
+        if (this.obeyDestructuringAndDefaultValueExecutionOrder) {
+          handleDestructuringOrDefaultValue(n, parent);
+          return;
+        }
+        break;
       default:
         break;
     }
