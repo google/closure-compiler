@@ -93,7 +93,12 @@ public final class ColorIdTest {
 
   @Test
   public void union_identity() {
-    assertThrows(Exception.class, () -> ColorId.union(ImmutableSet.of(A)));
+    assertThat(ColorId.union(ImmutableSet.of(A))).isSameInstanceAs(A);
+  }
+
+  @Test
+  public void union_empty() {
+    assertThrows(Exception.class, () -> ColorId.union(ImmutableSet.of()));
   }
 
   @Test

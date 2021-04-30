@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.colors;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -97,7 +98,9 @@ public final class ColorId implements Serializable {
    * </pre>
    */
   public static ColorId union(Set<ColorId> ids) {
-    checkState(ids.size() > 1, ids);
+    if (ids.size() <= 1) {
+      return Iterables.getOnlyElement(ids);
+    }
 
     int index = 0;
     long[] sorted = new long[ids.size()];
