@@ -360,24 +360,42 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
   /** Handles a candidate definition for a goog.provided name. */
   private void handleCandidateProvideDefinition(NodeTraversal t, Node n, Node parent) {
-    if (t.inGlobalHoistScope()) {
-      String name = null;
-      if (n.isName() && NodeUtil.isNameDeclaration(parent)) {
-        name = n.getString();
-      } else if (n.isAssign() && parent.isExprResult()) {
-        name = n.getFirstChild().getQualifiedName();
-      }
-
-      if (name != null) {
-        if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
-          // TODO(b/128361464): stop including goog.module exports in this case.
-          processProvideFromPreviousPass(t, name, parent);
-        } else {
-          ProvidedName pn = providedNames.get(name);
-          if (pn != null) {
-            pn.addDefinition(parent, t.getModule());
-          }
+    if (!t.inGlobalHoistScope()) {
+      return;
+    }
+    String name = null;
+    switch (n.getParent().getToken()) {
+      case LET:
+      case CONST:
+        if (!t.inGlobalScope()) {
+          // let/const in the global hoist scope but not the global scope are not globals
+          return;
         }
+        // fall through
+      case VAR:
+        name = n.getString();
+        break;
+      case EXPR_RESULT:
+        if (n.isAssign()) {
+          name = n.getFirstChild().getQualifiedName();
+        }
+        break;
+      case CLASS: // Class and function provides are forbidden; see ProcessClosurePrimitives's
+      case FUNCTION: // CLASS_NAMESPACE_ERROR and FUNCTION_NAMESPACE_ERROR.
+      default:
+        break;
+    }
+
+    if (name == null) {
+      return;
+    }
+    if (parent.getBooleanProp(Node.IS_NAMESPACE)) {
+      // TODO(b/128361464): stop including goog.module exports in this case.
+      processProvideFromPreviousPass(t, name, parent);
+    } else {
+      ProvidedName pn = providedNames.get(name);
+      if (pn != null) {
+        pn.addDefinition(parent, t.getModule());
       }
     }
   }

@@ -5604,6 +5604,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogProvide_ignoresBlockScopedShadow() {
+    processClosurePrimitives = true;
+    testSame(srcs(CLOSURE_GLOBALS, "goog.provide('foo'); if (true) { const foo = 3; }"));
+
+    TypedVar fooVar = globalScope.getVar("foo");
+    assertThat(fooVar).hasJSTypeThat().toStringIsEqualTo("{}");
+    assertThat(fooVar).isNotInferred();
+  }
+
+  @Test
   public void testGoogRequire_ofProvide_usedInEs6ExtendsClause() {
     testSame(
         srcs(
