@@ -46,18 +46,8 @@ public class ColorTest {
   }
 
   @Test
-  public void unionOfPrimitivesSaysIsPrimitive() {
-    assertThat(numberOrString).isPrimitive();
-  }
-
-  @Test
-  public void unionOfObjectAndPrimitiveIsNotPrimitive() {
-    Color foo =
-        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build());
-    assertThat(
-            Color.createUnion(ImmutableSet.of(foo, colorRegistry.get(NativeColorId.NUMBER)))
-                .isPrimitive())
-        .isFalse();
+  public void unionsThrowWhenAskedIsPrimitive() {
+    assertThrows(Exception.class, numberOrString::isPrimitive);
   }
 
   @Test

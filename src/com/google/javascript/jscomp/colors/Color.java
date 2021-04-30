@@ -52,21 +52,18 @@ public abstract class Color {
   public abstract ImmutableCollection<Color> union();
 
   /**
-   * Whether this corresponds to a single JavaScript primitive like number or symbol or to a union
-   * of such primitives
+   * Whether this corresponds to a single JavaScript primitive like number or symbol.
    *
    * <p>Note that the boxed versions of primitives (String, Number, etc.) are /not/ considered
    * "primitive" by this method.
    */
   public final boolean isPrimitive() {
-    switch (kind()) {
-      case SINGLETON:
-        return singleton().getNativeColorId() != null
-            && singleton().getNativeColorId().isPrimitive();
-      case UNION:
-        return union().stream().allMatch(Color::isPrimitive);
-    }
-    throw new AssertionError();
+    /**
+     * Avoid the design headache about whether unions are primitives. The union *color* isn't
+     * primitive, but the *value* held by a union reference may be.
+     */
+    checkState(!this.isUnion(), this);
+    return singleton().getNativeColorId() != null && singleton().getNativeColorId().isPrimitive();
   }
 
   /**
