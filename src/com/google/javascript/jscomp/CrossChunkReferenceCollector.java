@@ -80,19 +80,16 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         .setCompiler(compiler)
         .setCallback(this)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseRoots(externs, root);
   }
 
   public void process(Node root) {
     checkState(topLevelStatements.isEmpty(), "process() called more than once");
-    NodeTraversal t =
-        NodeTraversal.builder()
-            .setCompiler(compiler)
-            .setCallback(this)
-            .setScopeCreator(scopeCreator)
-            .build();
-    t.traverse(root);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(scopeCreator)
+        .traverse(root);
   }
 
   /**

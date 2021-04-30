@@ -271,7 +271,6 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(this)
-        .build()
         .traverseRoots(externs, root);
   }
 

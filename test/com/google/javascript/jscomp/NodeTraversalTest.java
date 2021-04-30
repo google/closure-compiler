@@ -43,12 +43,14 @@ public final class NodeTraversalTest {
   @Test
   public void testReport() {
     final List<JSError> errors = new ArrayList<>();
+    DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
 
     NodeTraversal.Callback callback =
         new NodeTraversal.Callback() {
           @Override
           public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-            throw new AssertionError();
+            t.report(n, dt, "Foo", "Bar", "Hello");
+            return false;
           }
 
           @Override
@@ -71,13 +73,10 @@ public final class NodeTraversalTest {
     });
     compiler.initCompilerOptionsIfTesting();
 
-    DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
-
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(callback)
-        .build()
-        .report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
+        .traverse(new Node(Token.EMPTY));
 
     assertThat(errors).hasSize(1);
     assertThat(errors.get(0).getDescription()).isEqualTo("Foo, Bar - Hello");
@@ -370,12 +369,11 @@ public final class NodeTraversalTest {
     Compiler compiler = new Compiler();
     ScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     String code = lines(
         "var a;",
@@ -412,12 +410,11 @@ public final class NodeTraversalTest {
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     String code = lines(
         "function foo() {",
@@ -448,12 +445,11 @@ public final class NodeTraversalTest {
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     String code =
         lines(
@@ -489,12 +485,11 @@ public final class NodeTraversalTest {
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     String code =
         lines(
@@ -529,12 +524,11 @@ public final class NodeTraversalTest {
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     String code = lines(
         "goog.module('example.module');",
@@ -560,12 +554,11 @@ public final class NodeTraversalTest {
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     AccessibleCallback callback = new AccessibleCallback();
-    NodeTraversal t =
+    NodeTraversal.Builder t =
         NodeTraversal.builder()
             .setCompiler(compiler)
             .setCallback(callback)
-            .setScopeCreator(creator)
-            .build();
+            .setScopeCreator(creator);
 
     // variables are hoisted to their enclosing scope
     String code =

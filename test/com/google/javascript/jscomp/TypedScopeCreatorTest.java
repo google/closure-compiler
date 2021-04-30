@@ -155,7 +155,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
           .setCompiler(compiler)
           .setCallback(new ScopeFinder())
           .setScopeCreator(scopeCreator)
-          .build()
           .traverseRoots(externs, root);
     };
   }

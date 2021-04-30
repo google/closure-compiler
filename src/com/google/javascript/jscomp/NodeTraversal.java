@@ -388,6 +388,38 @@ public class NodeTraversal {
     public NodeTraversal build() {
       return new NodeTraversal(this);
     }
+
+    public void traverse(Node root) {
+      this.build().traverse(root);
+    }
+
+    void traverseAtScope(AbstractScope<?, ?> scope) {
+      this.build().traverseAtScope(scope);
+    }
+
+    void traverseFunction(Node n, Node parent) {
+      this.build().traverseFunction(n, parent);
+    }
+
+    public void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
+      this.build().traverseFunctionOutOfBand(node, scope);
+    }
+
+    void traverseInnerNode(Node node, Node parent, AbstractScope<?, ?> refinedScope) {
+      this.build().traverseInnerNode(node, parent, refinedScope);
+    }
+
+    void traverseRoots(Node externs, Node root) {
+      this.build().traverseRoots(externs, root);
+    }
+
+    private void traverseScopeRoot(Node scopeRoot) {
+      this.build().traverseScopeRoot(scopeRoot);
+    }
+
+    void traverseWithScope(Node root, AbstractScope<?, ?> s) {
+      this.build().traverseWithScope(root, s);
+    }
   }
 
   private NodeTraversal(Builder builder) {
@@ -429,7 +461,7 @@ public class NodeTraversal {
   }
 
   /** Traverses a parse tree recursively. */
-  public void traverse(Node root) {
+  private void traverse(Node root) {
     try {
       initTraversal(root);
       currentNode = root;
@@ -444,8 +476,7 @@ public class NodeTraversal {
 
   /** Traverses using the SyntacticScopeCreator */
   public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = NodeTraversal.builder().setCompiler(compiler).setCallback(cb).build();
-    t.traverse(root);
+    NodeTraversal.builder().setCompiler(compiler).setCallback(cb).traverse(root);
   }
 
   /** Traverses in post order. */
@@ -454,7 +485,7 @@ public class NodeTraversal {
     traverse(compiler, root, makePostOrderCallback(cb));
   }
 
-  void traverseRoots(Node externs, Node root) {
+  private void traverseRoots(Node externs, Node root) {
     try {
       Node scopeRoot = externs.getParent();
       checkNotNull(scopeRoot);
@@ -475,8 +506,7 @@ public class NodeTraversal {
 
   public static void traverseRoots(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = NodeTraversal.builder().setCompiler(compiler).setCallback(cb).build();
-    t.traverseRoots(externs, root);
+    NodeTraversal.builder().setCompiler(compiler).setCallback(cb).traverseRoots(externs, root);
   }
 
   private static final String MISSING_SOURCE = "[source unknown]";
@@ -500,7 +530,7 @@ public class NodeTraversal {
    * Traverses a parse tree recursively with a scope, starting with the given root. This should only
    * be used in the global scope or module scopes. Otherwise, use {@link #traverseAtScope}.
    */
-  void traverseWithScope(Node root, AbstractScope<?, ?> s) {
+  private void traverseWithScope(Node root, AbstractScope<?, ?> s) {
     checkState(s.isGlobal() || s.isModuleScope(), s);
     try {
       initTraversal(root);
@@ -518,7 +548,7 @@ public class NodeTraversal {
    * of the scope root that are traversed in the outer scope (specifically, non-bleeding function
    * and class name nodes, class extends clauses, and computed property keys).
    */
-  void traverseAtScope(AbstractScope<?, ?> s) {
+  private void traverseAtScope(AbstractScope<?, ?> s) {
     Node n = s.getRootNode();
     initTraversal(n);
     currentNode = n;
@@ -709,13 +739,11 @@ public class NodeTraversal {
           }
         };
 
-    NodeTraversal t =
-        NodeTraversal.builder()
-            .setCompiler(compiler)
-            .setCallback(scb)
-            .setScopeCreator(scopeCreator)
-            .build();
-    t.traverseScopeRoot(scopeNode);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(scb)
+        .setScopeCreator(scopeCreator)
+        .traverseScopeRoot(scopeNode);
   }
 
   /**
@@ -725,7 +753,7 @@ public class NodeTraversal {
    * @param scope The scope the function is contained in. Does not fire enter/exit callback events
    *     for this scope.
    */
-  public void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
+  private void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
     checkNotNull(scope);
     checkState(node.isFunction(), node);
     checkNotNull(scope.getRootNode());
@@ -745,7 +773,7 @@ public class NodeTraversal {
    * @param refinedScope the refined scope of the scope currently at the top of the scope stack or
    *     in trivial cases that very scope or {@code null}
    */
-  void traverseInnerNode(Node node, Node parent, AbstractScope<?, ?> refinedScope) {
+  private void traverseInnerNode(Node node, Node parent, AbstractScope<?, ?> refinedScope) {
     checkNotNull(parent);
     initTraversal(node);
     if (refinedScope != null && getAbstractScope() != refinedScope) {

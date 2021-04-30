@@ -168,7 +168,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           .setCompiler(compiler)
           .setCallback(new NameRefInExternsCheck())
           .setScopeCreator(scopeCreator)
-          .build()
           .traverse(externs);
     }
 
@@ -176,7 +175,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         .setCompiler(compiler)
         .setCallback(this)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseRoots(externs, root);
 
     for (String varName : varsToDeclareInExterns) {
@@ -205,7 +203,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         .setCompiler(compiler)
         .setCallback(this)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseWithScope(scriptRoot, topScope);
 
     // TODO(bashir) Check if we need to createSynthesizedExternVar like process.

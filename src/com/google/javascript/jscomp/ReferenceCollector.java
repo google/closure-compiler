@@ -109,11 +109,11 @@ public final class ReferenceCollector
    */
   @Override
   public void process(Node externs, Node root) {
-    this.createTraversal().traverseRoots(externs, root);
+    this.createTraversalBuilder().traverseRoots(externs, root);
   }
 
   public void process(Node root) {
-    this.createTraversal().traverse(root);
+    this.createTraversalBuilder().traverse(root);
   }
 
   /**
@@ -125,7 +125,7 @@ public final class ReferenceCollector
     if (shouldAddToBlockStack) {
       blockStack.add(new BasicBlock(null, scope.getRootNode()));
     }
-    this.createTraversal().traverseAtScope(scope);
+    this.createTraversalBuilder().traverseAtScope(scope);
     if (shouldAddToBlockStack) {
       pop(blockStack);
     }
@@ -137,16 +137,15 @@ public final class ReferenceCollector
    */
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    this.createTraversal().traverse(scriptRoot);
+    this.createTraversalBuilder().traverse(scriptRoot);
   }
 
-  private NodeTraversal createTraversal() {
+  private NodeTraversal.Builder createTraversalBuilder() {
     return NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(this.callback)
         .setScopeCreator(scopeCreator)
-        .setObeyDestructuringAndDefaultValueExecutionOrder(true)
-        .build();
+        .setObeyDestructuringAndDefaultValueExecutionOrder(true);
   }
 
   /**
@@ -203,7 +202,7 @@ public final class ReferenceCollector
     List<BasicBlock> oldBlockStack = blockStack;
     blockStack = newBlockStack;
 
-    this.createTraversal().traverseFunctionOutOfBand(fnNode, containingScope);
+    this.createTraversalBuilder().traverseFunctionOutOfBand(fnNode, containingScope);
 
     blockStack = oldBlockStack;
     finishedFunctionTraverse.add(v);

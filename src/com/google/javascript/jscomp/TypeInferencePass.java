@@ -104,7 +104,6 @@ class TypeInferencePass {
           .setCompiler(compiler)
           .setCallback(new FirstScopeBuildingCallback())
           .setScopeCreator(scopeCreator)
-          .build()
           .traverseWithScope(inferenceRoot, this.topScope);
       scopeCreator.resolveWeakImportsPreResolution();
     }
@@ -114,7 +113,6 @@ class TypeInferencePass {
         .setCompiler(compiler)
         .setCallback(new SecondScopeBuildingCallback())
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseWithScope(inferenceRoot, this.topScope);
 
     // Normalize TypedVars to have the '?' type instead of null after inference is complete. This

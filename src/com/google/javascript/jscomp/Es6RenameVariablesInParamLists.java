@@ -81,7 +81,6 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(new Es6RenameReferences(renameTable))
-        .build()
         .traverseInnerNode(block, block.getParent(), fScope);
   }
 

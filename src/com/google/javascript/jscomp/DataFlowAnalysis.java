@@ -562,7 +562,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         .setCompiler(compiler)
         .setCallback(finder)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseAtScope(jsScope);
 
     // TODO (simranarora) catch variables should not be considered escaped in ES6. Getting rid of

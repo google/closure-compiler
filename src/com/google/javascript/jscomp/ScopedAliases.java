@@ -757,7 +757,6 @@ class ScopedAliases implements HotSwapCompilerPass {
           .setCompiler(compiler)
           .setCallback(cb)
           .setScopeCreator(t.getScopeCreator())
-          .build()
           .traverseAtScope(t.getScope());
       fnName.setString(name + "$jscomp$scopedAliases$" + suffix);
     }

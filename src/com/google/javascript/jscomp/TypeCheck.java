@@ -489,7 +489,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         .setCompiler(compiler)
         .setCallback(this)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseWithScope(node, topScope);
     if (externs) {
       inferJSDocInfo.process(node, null);

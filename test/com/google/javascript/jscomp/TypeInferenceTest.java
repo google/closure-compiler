@@ -230,7 +230,6 @@ public final class TypeInferenceTest {
                 }
               })
           .setScopeCreator(scopeCreator)
-          .build()
           .traverse(root);
       assumedScope = scopeCreator.createScope(cfgRoot);
       for (Map.Entry<String, JSType> entry : assumptions.entrySet()) {

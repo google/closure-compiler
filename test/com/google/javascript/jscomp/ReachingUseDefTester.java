@@ -139,7 +139,6 @@ final class ReachingUseDefTester {
         .setCompiler(compiler)
         .setCallback(labelFinder)
         .setScopeCreator(scopeCreator)
-        .build()
         .traverse(root);
     assertWithMessage("Code should have an instruction labeled D")
         .that(labelFinder.extractedDef)

@@ -616,14 +616,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         .setCompiler(compiler)
         .setCallback(new FirstOrderFunctionAnalyzer())
         .setScopeCreator(scopeCreator)
-        .build()
         .traverseRoots(root.getFirstChild(), root.getLastChild());
 
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(new IdentifyEnumsAndTypedefsAsNonNullable(typeRegistry, codingConvention))
         .setScopeCreator(scopeCreator)
-        .build()
         .traverse(root);
 
     TypedScope s = TypedScope.createGlobalScope(root);
@@ -803,7 +801,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           .setCompiler(compiler)
           .setCallback(this)
           .setScopeCreator(ScopeCreator.ASSERT_NO_SCOPES_CREATED)
-          .build()
           .traverseAtScope(currentScope);
 
       finishDeclaringGoogModule();

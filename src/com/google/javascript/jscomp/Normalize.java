@@ -748,7 +748,6 @@ class Normalize implements CompilerPass {
         .setCompiler(compiler)
         .setCallback(new ScopeTicklingCallback())
         .setScopeCreator(new SyntacticScopeCreator(compiler, new DuplicateDeclarationHandler()))
-        .build()
         .traverseRoots(externs, root);
   }
 
