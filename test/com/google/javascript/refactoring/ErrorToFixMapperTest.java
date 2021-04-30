@@ -1180,6 +1180,13 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testFixRequires_singleDestructure_shorthandProperty() {
+    assertChanges(
+        fileWithImports("const {b: b} = goog.require('a');", useInCode("b")),
+        fileWithImports("const {b} = goog.require('a');", useInCode("b")));
+  }
+
+  @Test
   public void testFixRequires_preserveJsDoc_whenMergingDestructures_single() {
     assertChanges(
         fileWithImports(

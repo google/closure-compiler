@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.lint;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.value.AutoValue;
@@ -45,7 +46,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
       DiagnosticType.warning(
           "JSC_REQUIRES_NOT_SORTED",
-          "goog.require() and goog.requireType() statements are not sorted."
+          "goog.require() and goog.requireType() statements are not in recommended format."
               + " The correct order is:\n\n{0}\n");
 
   /** Operation modes. */
@@ -110,8 +111,13 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
 
     abstract String localName();
 
-    static DestructuringBinding of(String exportedName, String localName) {
-      return new AutoValue_CheckRequiresSorted_DestructuringBinding(exportedName, localName);
+    abstract boolean isShorthandProperty();
+
+    static DestructuringBinding of(
+        String exportedName, String localName, boolean isShorthandProperty) {
+      checkArgument(!isShorthandProperty || exportedName.equals(localName));
+      return new AutoValue_CheckRequiresSorted_DestructuringBinding(
+          exportedName, localName, isShorthandProperty);
     }
 
     /** Compares two bindings according to the style guide sort order. */
@@ -121,6 +127,30 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
           .compare(this.exportedName(), other.exportedName())
           .compare(this.localName(), other.localName())
           .result();
+    }
+
+    /**
+     * Returns true if the destructuring binding is not canonical.
+     *
+     * <p>For example:
+     * <li>`{Foo}` is canonical
+     * <li>`{Foo: Bar}` is canonical
+     * <li>`{Foo: Foo}` is not canonical
+     */
+    private boolean isCanonical() {
+      return !this.exportedName().equals(this.localName()) || this.isShorthandProperty();
+    }
+
+    /**
+     * Canonicalizes the destructuring to a shorthand property when applicable.
+     *
+     * <p>In practice, `{Foo: Foo}` gets simplified to `{Foo}`.
+     */
+    public DestructuringBinding canonicalizeShorthandProperties() {
+      return this.isCanonical()
+          ? this
+          : DestructuringBinding.of(
+              this.exportedName(), this.localName(), /* isShorthandProperty= */ true);
     }
   }
 
@@ -231,7 +261,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
       if (!isStandalone()) {
         sb.append(" = ");
       }
-      sb.append(primitive().toString());
+      sb.append(primitive());
       sb.append("('");
       sb.append(namespace());
       sb.append("');");
@@ -380,7 +410,10 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     for (Node name = parent.getFirstFirstChild(); name != null; name = name.getNext()) {
       String exportedName = name.getString();
       String localName = name.getFirstChild().getString();
-      destructures.add(DestructuringBinding.of(exportedName, localName));
+      // {a: a} and {a: b} both yield false
+      // {a} yields true
+      boolean isShorthandProperty = name.isShorthandProperty();
+      destructures.add(DestructuringBinding.of(exportedName, localName, isShorthandProperty));
     }
     return ImportStatement.of(
         ImmutableList.of(grandparent),
@@ -442,6 +475,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
           allImports.stream()
               .filter(ImportStatement::isDestructuring)
               .flatMap(i -> i.destructures().stream())
+              .map(DestructuringBinding::canonicalizeShorthandProperties)
               .distinct()
               .sorted()
               .collect(toImmutableList());
