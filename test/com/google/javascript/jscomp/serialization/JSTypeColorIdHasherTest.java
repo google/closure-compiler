@@ -99,9 +99,8 @@ public final class JSTypeColorIdHasherTest extends CompilerTestCase {
     labelToColorId = new LinkedHashMap<>();
     colorIdToJSTypes = LinkedHashMultimap.create();
 
-    return (Node externs, Node root) -> {
-      NodeTraversal.traverseRoots(compiler, new LabeledTypeFinder(), externs, root);
-    };
+    return (Node externs, Node root) ->
+        NodeTraversal.traverseRoots(compiler, new LabeledTypeFinder(), externs, root);
   }
 
   @Test
