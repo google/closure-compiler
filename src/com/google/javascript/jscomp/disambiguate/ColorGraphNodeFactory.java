@@ -16,11 +16,10 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -78,7 +77,7 @@ class ColorGraphNodeFactory {
       type = type.subtractNullOrVoid();
       return type.isUnion()
           ? Color.createUnion(
-              type.union().stream().map(this::simplifyColor).collect(toImmutableSet()))
+              type.getUnionElements().stream().map(this::simplifyColor).collect(toImmutableSet()))
           : simplifyColor(type);
     } else if (type.isPrimitive()) {
       return flattenSingletonPrimitive(type);
@@ -88,13 +87,7 @@ class ColorGraphNodeFactory {
   }
 
   private Color flattenSingletonPrimitive(Color type) {
-    ImmutableSet<NativeColorId> natives = type.getNativeColorIds();
-    checkState(
-        natives.size() == 1,
-        "Expected primitive %s to correspond to a single native color, found %s",
-        type,
-        natives);
-    NativeColorId nativeColorId = Iterables.getOnlyElement(natives);
+    NativeColorId nativeColorId = checkNotNull(type.getNativeColorId());
     if (NativeColorId.NULL_OR_VOID.equals(nativeColorId)) {
       return this.registry.get(NativeColorId.UNKNOWN);
     }

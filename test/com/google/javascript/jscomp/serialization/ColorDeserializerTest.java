@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.NativeColorId;
-import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
@@ -58,8 +57,8 @@ public class ColorDeserializerTest {
     Color object = deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.TOP_OBJECT));
     assertThat(object).isInvalidating();
     assertThat(object.getDisambiguationSupertypes()).isEmpty();
-    assertThat(object.getInstanceColor()).isEmpty();
-    assertThat(object.getPrototype()).isEmpty();
+    assertThat(object.getInstanceColors()).isEmpty();
+    assertThat(object.getPrototypes()).isEmpty();
   }
 
   @Test
@@ -106,8 +105,7 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
-        .isEqualTo(
-            Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build()));
+        .isEqualTo(Color.singleBuilder().setId(fromAscii("Foo")).build());
   }
 
   @Test
@@ -136,17 +134,12 @@ public class ColorDeserializerTest {
 
     assertThat(deserializer.pointerToColor(poolPointer(2)))
         .isEqualTo(
-            Color.createSingleton(
-                createObjectColorBuilder()
-                    .setId(fromAscii("Foo"))
-                    .setInstanceColor(
-                        Color.createSingleton(
-                            createObjectColorBuilder().setId(fromAscii("Foo.ins")).build()))
-                    .setPrototype(
-                        Color.createSingleton(
-                            createObjectColorBuilder().setId(fromAscii("Foo.pro")).build()))
-                    .setConstructor(true)
-                    .build()));
+            createObjectColorBuilder()
+                .setId(fromAscii("Foo"))
+                .setInstanceColor(createObjectColorBuilder().setId(fromAscii("Foo.ins")).build())
+                .setPrototype(createObjectColorBuilder().setId(fromAscii("Foo.pro")).build())
+                .setConstructor(true)
+                .build());
   }
 
   @Test
@@ -166,11 +159,10 @@ public class ColorDeserializerTest {
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
         .isEqualTo(
-            Color.createSingleton(
-                createObjectColorBuilder()
-                    .setId(fromAscii("Foo"))
-                    .setOwnProperties(ImmutableSet.of("x", "y"))
-                    .build()));
+            createObjectColorBuilder()
+                .setId(fromAscii("Foo"))
+                .setOwnProperties(ImmutableSet.of("x", "y"))
+                .build());
   }
 
   @Test
@@ -231,8 +223,7 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
     assertThat(deserializer.pointerToColor(poolPointer(1)))
-        .hasDisambiguationSupertypes(
-            Color.createSingleton(createObjectColorBuilder().setId(fromAscii("Foo")).build()));
+        .hasDisambiguationSupertypes(createObjectColorBuilder().setId(fromAscii("Foo")).build());
   }
 
   @Test
@@ -263,8 +254,8 @@ public class ColorDeserializerTest {
 
     assertThat(deserializer.pointerToColor(poolPointer(1)))
         .hasDisambiguationSupertypes(
-            Color.createSingleton(createObjectColorBuilder().setId(fromAscii("Foo")).build()),
-            Color.createSingleton(createObjectColorBuilder().setId(fromAscii("Baz")).build()));
+            createObjectColorBuilder().setId(fromAscii("Foo")).build(),
+            createObjectColorBuilder().setId(fromAscii("Baz")).build());
   }
 
   @Test
@@ -427,8 +418,8 @@ public class ColorDeserializerTest {
         () -> ColorDeserializer.buildFromTypePool(typePool, StringPool.empty()));
   }
 
-  private static SingletonColorFields.Builder createObjectColorBuilder() {
-    return SingletonColorFields.builder().setId(fromAscii(""));
+  private static Color.Builder createObjectColorBuilder() {
+    return Color.singleBuilder().setId(fromAscii(""));
   }
 
   @Test

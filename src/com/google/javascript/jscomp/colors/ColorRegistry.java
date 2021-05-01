@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashMap;
 
 /** Memoizes all native color instances */
@@ -55,14 +56,15 @@ public final class ColorRegistry {
   }
 
   private static Color createDefaultNativeColor(NativeColorId nativeColorId) {
-    SingletonColorFields fields =
-        SingletonColorFields.builder()
-            .setNativeColorId(nativeColorId)
-            .setId(nativeColorId.getId())
-            .setDebugInfo(DebugInfo.builder().setClassName(nativeColorId.name()).build())
-            .setInvalidating(nativeColorId.alwaysInvalidating())
-            .build();
-    return Color.createSingleton(fields);
+    return Color.singleBuilder()
+        .setId(nativeColorId.getId())
+        .setNativeColorId(nativeColorId)
+        .setDebugInfo(DebugInfo.builder().setClassName(nativeColorId.name()).build())
+        .setInvalidating(nativeColorId.alwaysInvalidating())
+        .setPrototype(null)
+        .setInstanceColor(null)
+        .setOwnProperties(ImmutableSet.of())
+        .build();
   }
 
   public final Color get(NativeColorId nativeColorId) {

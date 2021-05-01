@@ -16,40 +16,133 @@
 
 package com.google.javascript.jscomp.colors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.auto.value.AutoOneOf;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
+import com.google.auto.value.AutoValue;
+import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.errorprone.annotations.Immutable;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
-@AutoOneOf(Color.Kind.class)
-@Immutable
+@AutoValue
 public abstract class Color {
 
-  // Colors are implemented so that internally, they are either a singleton or a set of other colors
-  // In practice this is partially opaque to callers. Callers can access the elements of a color
-  // that is a union, but otherwise the API does not distinguish between singletons and unions.
-  enum Kind {
-    SINGLETON,
-    UNION
+  public abstract ColorId getId();
+
+  public abstract DebugInfo getDebugInfo();
+
+  /** Given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise. */
+  public abstract ImmutableSet<Color> getPrototypes();
+
+  public abstract ImmutableSet<Color> getInstanceColors();
+
+  /**
+   * List of other colors directly above this in the subtyping graph for the purposes of property
+   * (dis)ambiguation.
+   */
+  public abstract ImmutableSet<Color> getDisambiguationSupertypes();
+
+  public abstract boolean isInvalidating();
+
+  public abstract boolean getPropertiesKeepOriginalName();
+
+  public abstract boolean isConstructor();
+
+  /**
+   * Property names 'declared' on an object (as opposed to being conceptually inherited from some
+   * supertype).
+   */
+  public abstract ImmutableSet<String> getOwnProperties();
+
+  @Nullable
+  public abstract NativeColorId getNativeColorId();
+
+  /**
+   * Whether this type is some Closure assertion function removable by Closure-specific
+   * optimizations.
+   */
+  public abstract boolean isClosureAssert();
+
+  public abstract ImmutableSet<Color> getUnionElements();
+
+  public static Builder singleBuilder() {
+    return new AutoValue_Color.Builder()
+        .setClosureAssert(false)
+        .setConstructor(false)
+        .setDebugInfo(DebugInfo.EMPTY)
+        .setDisambiguationSupertypes(ImmutableSet.of())
+        .setInstanceColors(ImmutableSet.of())
+        .setInvalidating(false)
+        .setOwnProperties(ImmutableSet.of())
+        .setPropertiesKeepOriginalName(false)
+        .setPrototypes(ImmutableSet.of())
+        .setUnionElements(ImmutableSet.of());
   }
 
-  abstract Kind kind();
+  public static Color createUnion(Set<Color> elements) {
+    switch (elements.size()) {
+      case 0:
+        throw new IllegalStateException();
+      case 1:
+        return Iterables.getOnlyElement(elements);
+      default:
+        break;
+    }
 
-  abstract SingletonColorFields singleton();
+    ImmutableSet.Builder<Color> disambiguationSupertypes = ImmutableSet.builder();
+    ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
+    ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
+    ImmutableSet.Builder<Color> newElements = ImmutableSet.builder();
+    ImmutableSet.Builder<ColorId> ids = ImmutableSet.builder();
+    ImmutableSet.Builder<String> ownProperties = ImmutableSet.builder();
+    boolean isClosureAssert = true;
+    boolean isConstructor = true;
+    boolean isInvalidating = false;
+    boolean propertiesKeepOriginalName = false;
 
-  public abstract ImmutableCollection<Color> union();
+    for (Color element : elements) {
+      if (element.isUnion()) {
+        for (Color nestedElement : element.getUnionElements()) {
+          newElements.add(nestedElement);
+          ids.add(nestedElement.getId());
+        }
+      } else {
+        newElements.add(element);
+        ids.add(element.getId());
+      }
+
+      disambiguationSupertypes.addAll(element.getDisambiguationSupertypes());
+      instanceColors.addAll(element.getInstanceColors());
+      isClosureAssert &= element.isClosureAssert();
+      isConstructor &= element.isConstructor();
+      isInvalidating |= element.isInvalidating();
+      ownProperties.addAll(element.getOwnProperties()); // Are these actually the "own props"?
+      propertiesKeepOriginalName |= element.getPropertiesKeepOriginalName();
+      prototypes.addAll(element.getPrototypes());
+    }
+
+    return new AutoValue_Color.Builder()
+        .setClosureAssert(isClosureAssert)
+        .setConstructor(isConstructor)
+        .setDebugInfo(DebugInfo.EMPTY)
+        .setDisambiguationSupertypes(disambiguationSupertypes.build())
+        .setId(ColorId.union(ids.build()))
+        .setInstanceColors(instanceColors.build())
+        .setInvalidating(isInvalidating)
+        .setOwnProperties(ownProperties.build())
+        .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
+        .setPrototypes(prototypes.build())
+        .setUnionElements(newElements.build())
+        .buildUnion();
+  }
+
+  Color() {
+    // No public constructor.
+  }
 
   /**
    * Whether this corresponds to a single JavaScript primitive like number or symbol.
@@ -63,77 +156,17 @@ public abstract class Color {
      * primitive, but the *value* held by a union reference may be.
      */
     checkState(!this.isUnion(), this);
-    return singleton().getNativeColorId() != null && singleton().getNativeColorId().isPrimitive();
-  }
-
-  /**
-   * Whether this type is some Closure assertion function removable by Closure-specific
-   * optimizations.
-   */
-  public final boolean isClosureAssert() {
-    switch (kind()) {
-      case SINGLETON:
-        return this.singleton().isClosureAssert();
-      case UNION:
-        return union().stream().allMatch(Color::isClosureAssert);
-    }
-    throw new AssertionError();
+    return this.getNativeColorId() != null && this.getNativeColorId().isPrimitive();
   }
 
   public final boolean isUnion() {
-    return kind().equals(Kind.UNION);
+    // Single element sets are banned in the builder.
+    return !this.getUnionElements().isEmpty();
   }
 
-  public final boolean isInvalidating() {
-    switch (kind()) {
-      case SINGLETON:
-        return singleton().isInvalidating();
-      case UNION:
-        return union().stream().anyMatch(Color::isInvalidating);
-    }
-    throw new AssertionError();
-  }
-
-  public final boolean propertiesKeepOriginalName() {
-    switch (kind()) {
-      case SINGLETON:
-        return singleton().getPropertiesKeepOriginalName();
-      case UNION:
-        return union().stream().anyMatch(Color::propertiesKeepOriginalName);
-    }
-    throw new AssertionError();
-  }
-
-  /** Whether this is exactly the given native color (and not a union containing that color */
+  /** Whether this is exactly the given native color (and not a union containing that color). */
   public final boolean is(NativeColorId color) {
-    switch (kind()) {
-      case SINGLETON:
-        return color.equals(this.singleton().getNativeColorId());
-      case UNION:
-        return false;
-    }
-    throw new AssertionError();
-  }
-
-  /**
-   * Whether this is a constructor (a type that TypeScript or Closure allows calling with 'new'
-   *
-   * <p>For unions, returns true if and only if all alternates in the union are constructors
-   */
-  public final boolean isConstructor() {
-    switch (kind()) {
-      case SINGLETON:
-        return this.singleton().isConstructor();
-      case UNION:
-        return this.union().stream().allMatch(Color::isConstructor);
-    }
-    throw new AssertionError();
-  }
-
-  public ImmutableSet<String> getOwnProperties() {
-    return collect(this, SingletonColorFields::getOwnProperties).stream()
-        .flatMap(Set::stream)
-        .collect(toImmutableSet());
+    return this.getNativeColorId() == color;
   }
 
   /**
@@ -144,118 +177,90 @@ public abstract class Color {
    * <p>TODO(b/177695515): delete this method
    */
   public boolean mayHaveProperty(String propertyName) {
-    // implementation note: we're not caching the results of this call at all. That's because the
-    // type graph is generally shallow and so this isn't expected to be time-consuming.
-    switch (kind()) {
-      case SINGLETON:
-        if (this.singleton().getOwnProperties().contains(propertyName)) {
-          return true;
-        }
-        return this.singleton().getDisambiguationSupertypes().stream()
-            .anyMatch(element -> element.mayHaveProperty(propertyName));
-      case UNION:
-        return this.union().stream().anyMatch(element -> element.mayHaveProperty(propertyName));
+    if (this.isUnion()) {
+      return this.getUnionElements().stream()
+          .anyMatch(element -> element.mayHaveProperty(propertyName));
     }
-    throw new AssertionError();
-  }
 
-  public final ColorId getId() {
-    switch (kind()) {
-      case SINGLETON:
-        return this.singleton().getId();
-      case UNION:
-        return ColorId.union(collect(this, SingletonColorFields::getId));
+    if (this.getOwnProperties().contains(propertyName)) {
+      return true;
     }
-    throw new AssertionError();
+    return this.getDisambiguationSupertypes().stream()
+        .anyMatch(element -> element.mayHaveProperty(propertyName));
   }
 
-  public final ImmutableSet<DebugInfo> getDebugInfo() {
-    return collect(this, SingletonColorFields::getDebugInfo);
-  }
-
-  // given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise.
-  public final ImmutableSet<Color> getPrototype() {
-    return collect(this, SingletonColorFields::getPrototype);
-  }
-
-  public final ImmutableSet<Color> getInstanceColor() {
-    return collect(this, SingletonColorFields::getInstanceColor);
-  }
-
-  // List of other colors directly above this in the subtyping graph for the purposes of property
-  // (dis)ambiguation.
-  public final ImmutableList<Color> getDisambiguationSupertypes() {
-    return collect(this, SingletonColorFields::getDisambiguationSupertypes).stream()
-        .flatMap(List::stream)
-        .collect(toImmutableList());
-  }
-
-  public final ImmutableSet<NativeColorId> getNativeColorIds() {
-    return collect(this, SingletonColorFields::getNativeColorId);
-  }
-
-  // Abstracts the operation of collecting all fields into a single immutable set.
-  private static <T> ImmutableSet<T> collect(
-      Color color, Function<SingletonColorFields, T> accessor) {
-    switch (color.kind()) {
-      case SINGLETON:
-        T singletonField = accessor.apply(color.singleton());
-        return singletonField != null ? ImmutableSet.of(singletonField) : ImmutableSet.of();
-      case UNION:
-        ImmutableSet.Builder<T> allFields = ImmutableSet.builder();
-        for (Color alt : color.union()) {
-          T alternateField = accessor.apply(alt.singleton());
-          if (alternateField != null) {
-            allFields.add(alternateField);
-          }
-        }
-        return allFields.build();
-    }
-    throw new AssertionError();
-  }
-
-  public static Color createSingleton(SingletonColorFields fields) {
-    return AutoOneOf_Color.singleton(checkNotNull(fields));
-  }
-
-  public static Color createUnion(ImmutableSet<Color> alternates) {
-    checkArgument(
-        !alternates.isEmpty(), "Cannot create a union of zero elements, found %s", alternates);
-    if (alternates.size() == 1) {
-      return Iterables.getOnlyElement(alternates);
-    }
-    // Flatten nested unions
-    ImmutableSet.Builder<Color> flatAlternates = ImmutableSet.builder();
-    for (Color alternate : alternates) {
-      switch (alternate.kind()) {
-        case SINGLETON:
-          flatAlternates.add(alternate);
-          continue;
-        case UNION:
-          flatAlternates.addAll(alternate.union());
-          continue;
-      }
-      throw new AssertionError();
-    }
-    return AutoOneOf_Color.union(flatAlternates.build());
-  }
-
-  public final Color subtractNullOrVoid() {
-    // Forbid calling this on non-unions to avoid defining what NULL_OR_VOID.subtract(NULL_OR_VOID)
-    // is.
-    checkState(this.isUnion(), "Cannot remove null_or_void from non-unions");
-
-    ImmutableSet<Color> alternates =
-        union().stream()
+  @Memoized
+  public Color subtractNullOrVoid() {
+    /**
+     * Forbid calling this on non-unions to avoid defining what NULL_OR_VOID.subtract(NULL_OR_VOID)
+     * is.
+     */
+    ImmutableSet<Color> elements =
+        this.getUnionElements().stream()
             .filter(alt -> !alt.is(NativeColorId.NULL_OR_VOID))
             .collect(toImmutableSet());
-    switch (alternates.size()) {
-      case 0:
-        throw new AssertionError(); // can never happen unless there are multiple NULL_OR_VOIDs
-      case 1:
-        return alternates.iterator().next();
-      default:
-        return Color.createUnion(alternates);
+    return (elements.size() == this.getUnionElements().size()) ? this : createUnion(elements);
+  }
+
+  /**
+   * Builder for a singleton color. Should be passed to {@link
+   * Color#createSingleton(SingletonColorFields)} after building and before using
+   */
+  @AutoValue.Builder
+  public abstract static class Builder {
+
+    public abstract Builder setId(ColorId x);
+
+    public abstract Builder setInvalidating(boolean x);
+
+    public abstract Builder setPropertiesKeepOriginalName(boolean x);
+
+    public abstract Builder setDisambiguationSupertypes(ImmutableSet<Color> x);
+
+    public abstract Builder setConstructor(boolean x);
+
+    public abstract Builder setOwnProperties(ImmutableSet<String> x);
+
+    public abstract Builder setDebugInfo(DebugInfo x);
+
+    public abstract Builder setClosureAssert(boolean x);
+
+    abstract Builder setNativeColorId(@Nullable NativeColorId x);
+
+    abstract Builder setPrototypes(ImmutableSet<Color> x);
+
+    abstract Builder setInstanceColors(ImmutableSet<Color> x);
+
+    abstract Builder setUnionElements(ImmutableSet<Color> x);
+
+    @VisibleForTesting
+    public Builder setDebugName(String x) {
+      return this.setDebugInfo(DebugInfo.builder().setClassName(x).build());
+    }
+
+    public Builder setPrototype(Color x) {
+      return this.setPrototypes((x == null) ? ImmutableSet.of() : ImmutableSet.of(x));
+    }
+
+    public Builder setInstanceColor(Color x) {
+      return this.setInstanceColors((x == null) ? ImmutableSet.of() : ImmutableSet.of(x));
+    }
+
+    abstract Color buildInternal();
+
+    public final Color build() {
+      Color result = this.buildInternal();
+      checkState(result.getUnionElements().isEmpty(), result);
+      return result;
+    }
+
+    @SuppressWarnings("ReferenceEquality")
+    private final Color buildUnion() {
+      Color result = this.buildInternal();
+      checkState(result.getUnionElements().size() > 1, result);
+      checkState(result.getDebugInfo() == DebugInfo.EMPTY, result);
+      checkState(result.getNativeColorId() == null, result);
+      return result;
     }
   }
 }

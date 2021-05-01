@@ -128,7 +128,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     Color classType = classNode.getColor();
     ImmutableSet<Color> classPrototypeType =
         // the class type may not be a function type if it was in a cast, so treat it as unknown
-        classType.getPrototype();
+        classType.getPrototypes();
 
     this.traverseObjectlitLike(
         NodeUtil.getClassMembers(classNode),
@@ -142,7 +142,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     // via a superclass or implemented interface.
     // e.g. `const /** !FooInterface */ x = new Foo(); x.method();`
     Color fnType = fnNode.getColor();
-    if (fnType != null && !fnType.getInstanceColor().isEmpty()) {
+    if (fnType != null && !fnType.getInstanceColors().isEmpty()) {
       this.colorGraphNodeFactory.createNode(fnType);
     }
   }
@@ -221,7 +221,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
 
     // Track the cluster of types whose properties must keep their original name after
     // disambiguation. Note: an "enum type" is the type of an enum object like "{STOP: 0, GO: 1}".
-    if (site.isFromExterns() || (owner != null && owner.propertiesKeepOriginalName())) {
+    if (site.isFromExterns() || (owner != null && owner.getPropertiesKeepOriginalName())) {
       prop.registerOriginalNameType(flatOwner);
     }
   }

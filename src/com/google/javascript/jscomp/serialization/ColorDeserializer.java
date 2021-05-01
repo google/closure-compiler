@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.util.Arrays.stream;
@@ -31,7 +30,6 @@ import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.NativeColorId;
-import com.google.javascript.jscomp.colors.SingletonColorFields;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -215,13 +213,13 @@ public final class ColorDeserializer {
     }
 
     private Color createObjectColor(int offset, ObjectTypeProto serialized) {
-      ImmutableList<Color> directSupertypes =
+      ImmutableSet<Color> directSupertypes =
           this.disambiguationEdges.get(offset).stream()
               .map(this::pointerToColor)
-              .collect(toImmutableList());
+              .collect(toImmutableSet());
       ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
-      SingletonColorFields.Builder builder =
-          SingletonColorFields.builder()
+      Color.Builder builder =
+          Color.singleBuilder()
               .setId(ColorId.fromBytes(serialized.getUuid()))
               .setClosureAssert(serialized.getClosureAssert())
               .setInvalidating(serialized.getIsInvalidating())
@@ -243,7 +241,7 @@ public final class ColorDeserializer {
       if (serialized.hasInstanceType()) {
         builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
       }
-      return Color.createSingleton(builder.build());
+      return builder.build();
     }
 
     private Color createUnionColor(UnionTypeProto serialized) {

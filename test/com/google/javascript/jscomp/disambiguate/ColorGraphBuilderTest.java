@@ -24,10 +24,8 @@ import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeRe
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Iterables;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.TableSubject;
 import com.google.javascript.jscomp.Compiler;
@@ -39,7 +37,6 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
-import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -280,12 +277,9 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     // Given
     ColorGraphBuilder builder = this.createBuilder(null);
 
-    Color parent = Color.createSingleton(createWithUniqueName("Parent").build());
+    Color parent = colorWithName("Parent").build();
     Color child =
-        Color.createSingleton(
-            createWithUniqueName("Child")
-                .setDisambiguationSupertypes(ImmutableList.of(parent))
-                .build());
+        colorWithName("Child").setDisambiguationSupertypes(ImmutableSet.of(parent)).build();
 
     builder.add(graphNodeFactory.createNode(child));
 
@@ -332,9 +326,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
             .addStub(ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "Kif"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
-    ColorGraphNode flatKif =
-        this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif").build()));
+    ColorGraphNode flatKif = this.graphNodeFactory.createNode(colorWithName("Kif").build());
     builder.add(flatKif);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -364,14 +356,10 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 ImmutableSet.of("(Bar|Foo|Qux)", "Kif", "Lop"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
-    ColorGraphNode flatKif =
-        this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif").build()));
+    ColorGraphNode flatKif = this.graphNodeFactory.createNode(colorWithName("Kif").build());
     builder.add(flatKif);
 
-    ColorGraphNode flatLop =
-        this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Lop").build()));
+    ColorGraphNode flatLop = this.graphNodeFactory.createNode(colorWithName("Lop").build());
     builder.add(flatLop);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -402,9 +390,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
             .addStub(ImmutableSet.of("Foo", "Bar"), ImmutableSet.of("(Bar|Foo)", "(Bar|Foo|Qux)"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
-    ColorGraphNode flatKif =
-        this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif").build()));
+    ColorGraphNode flatKif = this.graphNodeFactory.createNode(colorWithName("Kif").build());
     builder.add(flatKif);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -569,15 +555,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   private static String nameOf(Color color) {
     if (color.isUnion()) {
       return "("
-          + color.union().stream().map(ColorGraphBuilderTest::nameOf).sorted().collect(joining("|"))
+          + color.getUnionElements().stream()
+              .map(ColorGraphBuilderTest::nameOf)
+              .sorted()
+              .collect(joining("|"))
           + ")";
     } else {
-      return Iterables.getOnlyElement(color.getDebugInfo()).getClassName();
+      return color.getDebugInfo().getClassName();
     }
   }
 
-  private static SingletonColorFields.Builder createWithUniqueName(String name) {
-    return SingletonColorFields.builder()
+  private static Color.Builder colorWithName(String name) {
+    return Color.singleBuilder()
         .setId(ColorId.fromAscii(name))
         .setDebugInfo(DebugInfo.builder().setClassName(name).build());
   }

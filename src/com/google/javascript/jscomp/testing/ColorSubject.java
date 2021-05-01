@@ -75,7 +75,9 @@ public final class ColorSubject extends Subject {
   }
 
   public void propertiesKeepOriginalName() {
-    check("propertiesKeepOriginalName").that(actualNonNull().propertiesKeepOriginalName()).isTrue();
+    check("propertiesKeepOriginalName")
+        .that(actualNonNull().getPropertiesKeepOriginalName())
+        .isTrue();
   }
 
   public IterableSubject withOwnPropertiesSetThat() {
@@ -93,7 +95,7 @@ public final class ColorSubject extends Subject {
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")
-        .that(actualNonNull().union())
+        .that(actualNonNull().getUnionElements())
         // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
         .containsExactly((Object[]) alternates);
   }

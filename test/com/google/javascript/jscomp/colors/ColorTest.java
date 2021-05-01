@@ -21,8 +21,8 @@ import static com.google.javascript.jscomp.colors.ColorId.fromAscii;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.BiFunction;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -59,8 +59,7 @@ public class ColorTest {
 
   @Test
   public void objectsReportIsObjectButNotUnionOrPrimitive() {
-    Color foo =
-        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build());
+    Color foo = Color.singleBuilder().setId(fromAscii("Bar")).build();
     assertThat(foo.isPrimitive()).isFalse();
     assertThat(foo.isUnion()).isFalse();
   }
@@ -100,7 +99,7 @@ public class ColorTest {
 
   @Test
   public void createUnionAllowsSingleAlternate() {
-    assertThrows(IllegalArgumentException.class, () -> Color.createUnion(ImmutableSet.of()));
+    assertThrows(Exception.class, () -> Color.createUnion(ImmutableSet.of()));
     assertThat(
             Color.createUnion(ImmutableSet.of(this.colorRegistry.get(NativeColorId.NUMBER)))
                 .isUnion())
@@ -119,13 +118,12 @@ public class ColorTest {
                 this.colorRegistry.get(NativeColorId.STRING)));
 
     assertThat(union).isUnion();
-    assertThat(union.union()).hasSize(2);
+    assertThat(union.getUnionElements()).hasSize(2);
   }
 
   @Test
   public void nullableUnionDoesNotInvalidate() {
-    Color nonInvalidatingObject =
-        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build());
+    Color nonInvalidatingObject = Color.singleBuilder().setId(fromAscii("Bar")).build();
     Color objects =
         Color.createUnion(
             ImmutableSet.of(
@@ -135,46 +133,50 @@ public class ColorTest {
   }
 
   @Test
-  public void notInvalidatingIfOnlyValidObjects() {
-    SingletonColorFields nonInvalidatingObjectFoo =
-        SingletonColorFields.builder().setId(fromAscii("Foo")).build();
-    SingletonColorFields nonInvalidatingObjectBar =
-        SingletonColorFields.builder().setId(fromAscii("Bar")).build();
-    Color objects =
-        Color.createUnion(
-            ImmutableSet.of(
-                Color.createSingleton(nonInvalidatingObjectFoo),
-                Color.createSingleton(nonInvalidatingObjectBar)));
+  public void union_isInvalidating_ored() {
+    Color a = this.createUnionSettingBoolProps(Color.Builder::setInvalidating, true, false);
+    assertThat(a.isInvalidating()).isTrue();
 
-    assertThat(objects).isNotInvalidating();
+    Color b = this.createUnionSettingBoolProps(Color.Builder::setInvalidating, false, false);
+    assertThat(b.isInvalidating()).isFalse();
   }
 
   @Test
-  public void invalidatingIfContainsInvalidatingObject() {
-    SingletonColorFields invalidatingObject =
-        SingletonColorFields.builder().setId(fromAscii("Foo")).setInvalidating(true).build();
-    SingletonColorFields nonInvalidatingObject =
-        SingletonColorFields.builder().setId(fromAscii("Bar")).build();
-    Color objects =
-        Color.createUnion(
-            ImmutableSet.of(
-                Color.createSingleton(invalidatingObject),
-                Color.createSingleton(nonInvalidatingObject)));
+  public void union_propertiesKeepOriginalName_ored() {
+    Color a =
+        this.createUnionSettingBoolProps(Color.Builder::setPropertiesKeepOriginalName, true, false);
+    assertThat(a.getPropertiesKeepOriginalName()).isTrue();
 
-    assertThat(objects).isInvalidating();
+    Color b =
+        this.createUnionSettingBoolProps(
+            Color.Builder::setPropertiesKeepOriginalName, false, false);
+    assertThat(b.getPropertiesKeepOriginalName()).isFalse();
   }
 
   @Test
-  public void invalidatingIfContainsInvalidatingNativeColor() {
-    ColorRegistry registry = ColorRegistry.createForTesting();
+  public void union_isClosureAssert_anded() {
+    Color a = this.createUnionSettingBoolProps(Color.Builder::setClosureAssert, true, true);
+    assertThat(a.isClosureAssert()).isTrue();
 
-    Color nonInvalidatingObject =
-        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Bar")).build());
-    Color objects =
-        Color.createUnion(
-            ImmutableSet.of(registry.get(NativeColorId.UNKNOWN), nonInvalidatingObject));
+    Color b = this.createUnionSettingBoolProps(Color.Builder::setClosureAssert, true, false);
+    assertThat(b.isClosureAssert()).isFalse();
+  }
 
-    assertThat(objects).isInvalidating();
+  @Test
+  public void union_isConstructor_anded() {
+    Color a = this.createUnionSettingBoolProps(Color.Builder::setConstructor, true, true);
+    assertThat(a.isConstructor()).isTrue();
+
+    Color b = this.createUnionSettingBoolProps(Color.Builder::setConstructor, true, false);
+    assertThat(b.isConstructor()).isFalse();
+  }
+
+  private Color createUnionSettingBoolProps(
+      BiFunction<Color.Builder, Boolean, Color.Builder> setter, boolean first, boolean second) {
+    return Color.createUnion(
+        ImmutableSet.of(
+            setter.apply(Color.singleBuilder().setId(fromAscii("Foo")), first).build(),
+            setter.apply(Color.singleBuilder().setId(fromAscii("Bar")), second).build()));
   }
 
   @Test
@@ -189,24 +191,23 @@ public class ColorTest {
 
   @Test
   public void objectEqualityBasedOnClassAndFileName() {
-    assertThat(SingletonColorFields.builder().setId(fromAscii("Foo")).build())
-        .isEqualTo(SingletonColorFields.builder().setId(fromAscii("Foo")).build());
+    assertThat(Color.singleBuilder().setId(fromAscii("Foo")).build())
+        .isEqualTo(Color.singleBuilder().setId(fromAscii("Foo")).build());
   }
 
   @Test
   public void objectEqualityFalseIfInvalidatingMismatch() {
-    assertThat(SingletonColorFields.builder().setId(fromAscii("Foo")).setInvalidating(true).build())
-        .isNotEqualTo(SingletonColorFields.builder().setId(fromAscii("Foo")).build());
+    assertThat(Color.singleBuilder().setId(fromAscii("Foo")).setInvalidating(true).build())
+        .isNotEqualTo(Color.singleBuilder().setId(fromAscii("Foo")).build());
   }
 
   @Test
   public void mayHaveProperty_looksAtSingletonProperty() {
     Color bar =
-        Color.createSingleton(
-            SingletonColorFields.builder()
-                .setId(fromAscii("Bar"))
-                .setOwnProperties(ImmutableSet.of("barProperty"))
-                .build());
+        Color.singleBuilder()
+            .setId(fromAscii("Bar"))
+            .setOwnProperties(ImmutableSet.of("barProperty"))
+            .build();
 
     assertThat(bar).mayHaveProperty("barProperty");
     assertThat(bar).doesNotHaveProperty("z");
@@ -215,13 +216,11 @@ public class ColorTest {
   @Test
   public void mayHaveProperty_checksForAnyUnionAlternateWithProperty() {
     Color bar =
-        Color.createSingleton(
-            SingletonColorFields.builder()
-                .setId(fromAscii("Bar"))
-                .setOwnProperties(ImmutableSet.of("barProperty"))
-                .build());
-    Color foo =
-        Color.createSingleton(SingletonColorFields.builder().setId(fromAscii("Foo")).build());
+        Color.singleBuilder()
+            .setId(fromAscii("Bar"))
+            .setOwnProperties(ImmutableSet.of("barProperty"))
+            .build();
+    Color foo = Color.singleBuilder().setId(fromAscii("Foo")).build();
     Color fooBar = Color.createUnion(ImmutableSet.of(foo, bar));
 
     assertThat(fooBar).mayHaveProperty("barProperty");
@@ -231,19 +230,17 @@ public class ColorTest {
   @Test
   public void mayHaveProperty_checksForDisambiguationSupertypeWithProperty() {
     Color bar =
-        Color.createSingleton(
-            SingletonColorFields.builder()
-                .setId(fromAscii("Bar"))
-                .setOwnProperties(ImmutableSet.of("barProperty"))
-                .build());
+        Color.singleBuilder()
+            .setId(fromAscii("Bar"))
+            .setOwnProperties(ImmutableSet.of("barProperty"))
+            .build();
 
     Color subBar =
-        Color.createSingleton(
-            SingletonColorFields.builder()
-                .setId(fromAscii("SubBar"))
-                .setOwnProperties(ImmutableSet.of("subBarProperty"))
-                .setDisambiguationSupertypes(ImmutableList.of(bar))
-                .build());
+        Color.singleBuilder()
+            .setId(fromAscii("SubBar"))
+            .setOwnProperties(ImmutableSet.of("subBarProperty"))
+            .setDisambiguationSupertypes(ImmutableSet.of(bar))
+            .build();
 
     assertThat(subBar).mayHaveProperty("barProperty");
     assertThat(subBar).mayHaveProperty("subBarProperty");

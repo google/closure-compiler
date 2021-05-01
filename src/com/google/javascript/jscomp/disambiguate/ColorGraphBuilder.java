@@ -123,7 +123,7 @@ final class ColorGraphBuilder {
      */
     checkState(!unionNode.getOutEdges().isEmpty());
     ImmutableSet<ColorGraphNode> graphNodes =
-        flatUnion.getColor().union().stream()
+        flatUnion.getColor().getUnionElements().stream()
             .map(this.nodeFactory::createNode)
             .collect(toImmutableSet());
     for (ColorGraphNode lca : this.lcaFinder.findAll(graphNodes)) {
@@ -146,7 +146,7 @@ final class ColorGraphBuilder {
     flatNode = this.colorHoldsInstanceGraph.createNode(node);
 
     if (node.getColor().isUnion()) {
-      for (Color alt : node.getColor().union()) {
+      for (Color alt : node.getColor().getUnionElements()) {
         this.connectSourceToDest(flatNode, EdgeReason.ALGEBRAIC, this.addInternal(alt));
       }
       return flatNode;
@@ -169,10 +169,10 @@ final class ColorGraphBuilder {
      * to some function expecting `function(new:Parent)`. See {@link
      * AmbiguatePropertiesTest#testImplementsAndExtends_respectsUndeclaredProperties()}
      */
-    for (Color prototype : color.getPrototype()) {
+    for (Color prototype : color.getPrototypes()) {
       this.addInternal(prototype);
     }
-    for (Color instanceColor : color.getInstanceColor()) {
+    for (Color instanceColor : color.getInstanceColors()) {
       this.addInternal(instanceColor);
     }
     return flatNode;

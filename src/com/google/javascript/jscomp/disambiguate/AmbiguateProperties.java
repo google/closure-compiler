@@ -503,7 +503,7 @@ public class AmbiguateProperties implements CompilerPass {
       // In theory all CLASS colors should be a function with a known prototype, but in
       // practice typecasts mean that this is not always the case.
 
-      ImmutableSet<Color> possiblePrototypes = classConstructorType.getPrototype();
+      ImmutableSet<Color> possiblePrototypes = classConstructorType.getPrototypes();
       Color classPrototype =
           possiblePrototypes.isEmpty()
               ? colorRegistry.get(NativeColorId.UNKNOWN)
@@ -598,7 +598,7 @@ public class AmbiguateProperties implements CompilerPass {
 
       ++numOccurrences;
 
-      if (color.isInvalidating() || color.propertiesKeepOriginalName()) {
+      if (color.isInvalidating() || color.getPropertiesKeepOriginalName()) {
         skipAmbiguating = true;
         return;
       }
