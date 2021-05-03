@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.integration;
 
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+
 import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -30,67 +32,39 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase {
 
-  private static final String RENAME_FN_DEFINITION = LINE_JOINER.join(
-      "/** @const */ var goog = {};",
-      "/** @const */ goog.reflect = {};",
-      "/**",
-      " * @param {string} propName",
-      " * @param {Object} type",
-      " * @return {string}",
-      " */",
-      "goog.reflect.objectProperty = function(propName, type) {",
-      "  return propName;",
-      "};"
-  );
+  private static final String RENAME_FN_DEFINITION =
+      lines(
+          "/** @const */ var goog = {};",
+          "/** @const */ goog.reflect = {};",
+          "/**",
+          " * @param {string} propName",
+          " * @param {Object} type",
+          " * @return {string}",
+          " */",
+          "goog.reflect.objectProperty = function(propName, type) {",
+          "  return propName;",
+          "};");
 
-  private static final String EXTERNS = LINE_JOINER.join(
-      "/**",
-      " * @fileoverview",
-      " * @externs",
-      " */",
-      "/** @constructor */ function Console() {}",
-      "/** @param {*} input */ Console.prototype.log = function(input) {};",
-      "/** @type {Console} */ var console;");
+  private static final String EXTERNS =
+      lines(
+          "/**",
+          " * @fileoverview",
+          " * @externs",
+          " */",
+          "/** @constructor */ function Console() {}",
+          "/** @param {*} input */ Console.prototype.log = function(input) {};",
+          "/** @type {Console} */ var console;");
 
   private boolean useSimpleMode = false;
 
   @Test
   public void testPrototypePropRename() {
-    test(createCompilerOptions(),
-        new String[] {
-            EXTERNS,
-            RENAME_FN_DEFINITION,
-            LINE_JOINER.join(
-                "/** @constructor */ function Foo() {}",
-                "window['Foo'] = Foo;",
-                "Foo.prototype.log = function(input) { console.log(input) };",
-                "Foo.prototype['log'] = Foo.prototype.log;",
-                "var foo = new Foo;",
-                "console.log(goog.reflect.objectProperty('log', foo));",
-                "foo.log('foobar');")},
-        new String[] {
-            "",
-            "",
-            LINE_JOINER.join(
-                "function a() {}",
-                "window.Foo = a;",
-                "a.prototype.a = function(b) { console.log(b) };",
-                "a.prototype.log = a.prototype.a;",
-                "var c = new a;",
-                "console.log('a');",
-                "c.a('foobar');")}
-    );
-  }
-
-  @Test
-  public void testPrototypePropRenameSimple() {
-    useSimpleMode = true;
     test(
         createCompilerOptions(),
         new String[] {
           EXTERNS,
           RENAME_FN_DEFINITION,
-          LINE_JOINER.join(
+          lines(
               "/** @constructor */ function Foo() {}",
               "window['Foo'] = Foo;",
               "Foo.prototype.log = function(input) { console.log(input) };",
@@ -101,10 +75,41 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         },
         new String[] {
           "",
-          LINE_JOINER.join(
+          "",
+          lines(
+              "function a() {}",
+              "window.Foo = a;",
+              "a.prototype.a = function(b) { console.log(b) };",
+              "a.prototype.log = a.prototype.a;",
+              "var c = new a;",
+              "console.log('a');",
+              "c.a('foobar');")
+        });
+  }
+
+  @Test
+  public void testPrototypePropRenameSimple() {
+    useSimpleMode = true;
+    test(
+        createCompilerOptions(),
+        new String[] {
+          EXTERNS,
+          RENAME_FN_DEFINITION,
+          lines(
+              "/** @constructor */ function Foo() {}",
+              "window['Foo'] = Foo;",
+              "Foo.prototype.log = function(input) { console.log(input) };",
+              "Foo.prototype['log'] = Foo.prototype.log;",
+              "var foo = new Foo;",
+              "console.log(goog.reflect.objectProperty('log', foo));",
+              "foo.log('foobar');")
+        },
+        new String[] {
+          "",
+          lines(
               "var goog= { reflect: {} };",
               "goog.reflect.objectProperty = function(a,b) { return a; };"),
-          LINE_JOINER.join(
+          lines(
               "function Foo() {}",
               "window.Foo = Foo;",
               "Foo.prototype.log = function(a) { console.log(a); };",
@@ -117,17 +122,15 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
 
   @Test
   public void testStaticPropRename() {
-    test(createCompilerOptions(),
-        LINE_JOINER.join(
+    test(
+        createCompilerOptions(),
+        lines(
             RENAME_FN_DEFINITION,
             "/** @const */ var foo = {};",
             "foo.log = function(input) { alert(input) };",
             "alert(goog.reflect.objectProperty('log', foo));",
             "foo.log('foobar');"),
-        LINE_JOINER.join(
-            "var b = { a: function(a) { alert(a); } };",
-            "alert('a');",
-            "b.a('foobar');"));
+        lines("var b = { a: function(a) { alert(a); } };", "alert('a');", "b.a('foobar');"));
   }
 
   @Test
@@ -135,13 +138,13 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
     useSimpleMode = true;
     test(
         createCompilerOptions(),
-        LINE_JOINER.join(
+        lines(
             RENAME_FN_DEFINITION,
             "/** @const */ var foo = {};",
             "foo.log = function(input) { alert(input) };",
             "alert(goog.reflect.objectProperty('log', foo));",
             "foo.log('foobar');"),
-        LINE_JOINER.join(
+        lines(
             "var goog= { reflect: {} };",
             "goog.reflect.objectProperty = function(a,b) { return a; };",
             "var foo = {",

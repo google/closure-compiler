@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_ALL_COMMENTS;
 
 import com.google.auto.value.AutoValue;
@@ -2345,9 +2346,5 @@ public class ErrorToFixMapperTest {
 
   private ImmutableMap<String, String> getInputMap(String originalCode) {
     return ImmutableMap.of("preexistingCode", preexistingCode, "test", originalCode);
-  }
-
-  private String lines(String... lines) {
-    return String.join("\n", lines);
   }
 }

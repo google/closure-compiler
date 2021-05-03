@@ -17,11 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -43,17 +43,12 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 @SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public class AstFactoryTest {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler compiler;
 
   @Before
   public void setUp() throws Exception {
     compiler = new Compiler();
-  }
-
-  private static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
   }
 
   private JSTypeRegistry getRegistry() {

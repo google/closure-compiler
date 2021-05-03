@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
@@ -428,7 +429,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "(function() {",
             "  /** @constructor} */",
             "  function Bar() {}",
@@ -587,7 +588,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "for (var x of []);", // Force injection of es6_runtime.js
             "var /** number */ y = window;"),
         DiagnosticGroups.CHECK_TYPES);
@@ -650,7 +651,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.exportSymbol = function(path, symbol) {};",
             "",
@@ -675,7 +676,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     useNoninjectingCompiler = true;
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             // hack replacement for compiler injected code
             "var $jscomp = { global: window };",
             // hack replacement for closure library code
@@ -686,7 +687,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  /** @export @param {number} x */ static set exportedName(x) {}",
             "};",
             "C.exportedName = 0;"),
-        LINE_JOINER.join(
+        lines(
             "var a = window;",
             "function b() {}",
             "b.exportedName;",
@@ -707,7 +708,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  var a = x + 1;",
             "  var b = x + 1;",
@@ -725,7 +726,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     options.setCheckTypes(false);
     String code =
-        LINE_JOINER.join(
+        lines(
             "isFunction = function(functionToCheck) {",
             "  var getType = {};",
             "  return functionToCheck && ",
@@ -1262,7 +1263,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testES6StaticsAreRemoved1() {
     testES6StaticsAreRemoved(
-        LINE_JOINER.join(
+        lines(
             "class Base {",
             "  static called() { alert('I am called'); }",
             "  static notCalled() { alert('No one ever calls me'); }",
@@ -1277,7 +1278,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testES6StaticsAreRemoved2() {
     testES6StaticsAreRemoved(
-        LINE_JOINER.join(
+        lines(
             "class Base {",
             "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
             "}",
@@ -1321,7 +1322,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // unreferenced property not removed due to export.
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var X = function() {",
             "  /** @export */ this.abc = 1;",
             "};",
@@ -1366,7 +1367,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var x = '';",
             "  x += '1';",
@@ -1390,7 +1391,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckSymbols(false);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var exit;",
             "switch ('a') {",
             "  case 'a':",
@@ -1414,7 +1415,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var goog = {}",
             "goog.inherits = function(childCtor, parentCtor) {",
             "  childCtor.superClass_ = parentCtor.prototype;",
@@ -1439,7 +1440,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  Bar.base(this, 'resize', width);",
             "};",
             "(new Bar).resize(100, 200);"),
-        LINE_JOINER.join(
+        lines(
             "function a(){}a.prototype.a=function(b,e){window.c=b*e};",
             "function d(){}d.b=a.prototype;d.prototype.a=function(b){d.b.a.call(this,b)};",
             "(new d).a(100, 200);"));
@@ -1452,7 +1453,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {",
             "    var x = element['_customData'];",
             "    x[dataName] = dataValue;",
@@ -1548,7 +1549,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (...args) => args[0];",
             "  return f(8);",
@@ -1565,7 +1566,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (...args) => args[0];",
             "  return f(8);",
@@ -1582,7 +1583,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function foo(a, b = {foo: 5}) {",
             "  return a + b.foo;",
             "}",
@@ -1598,7 +1599,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function foo(a, b = {foo: 5}) {",
             "  return a + b.foo;",
             "}",
@@ -1615,12 +1616,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function countArgs(x, ...{length}) {",
             "  return length;",
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
-        LINE_JOINER.join(
+        lines(
             "alert(function (c,d) {",
             "  for(var b=[], a=1; a < arguments.length; ++a)",
             "    b[a-1] = arguments[a];",
@@ -1638,7 +1639,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function countArgs(x, ...{length}) {",
             "  return length;",
             "}",

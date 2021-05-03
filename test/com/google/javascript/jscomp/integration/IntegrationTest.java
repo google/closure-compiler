@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -128,7 +129,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCoalesceVariableNames(true);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f(param) {",
             "  if (true) {",
             "    const b1 = [];",
@@ -141,7 +142,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    }",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f(param) {",
             "  if (true) {",
             "    param = [];",
@@ -164,7 +165,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCoalesceVariableNames(true);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f(param) {",
             "  if (true) {",
             "    const b1 = [];",
@@ -177,7 +178,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    }",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f(b1_b2_key2_param) {",
             "  if (true) {",
             "    b1_b2_key2_param = [];",
@@ -199,7 +200,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCoalesceVariableNames(true);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f(obj) {",
             "  {",
             "    const {foo} = obj;",
@@ -210,7 +211,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    alert(bar);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f(obj) {",
             "  {",
             "    const {foo} = obj;",
@@ -244,38 +245,28 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
-    String before = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "    let x = 1;",
-        "  case 1:",
-        "    x = 2;",
-        "}");
-    String after = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "    var x = 1;",
-        "  case 1:",
-        "    x = 2;",
-        "}");
+    String before =
+        lines(
+            "var a = 0;",
+            "switch (a) {",
+            "  case 0:",
+            "    let x = 1;",
+            "  case 1:",
+            "    x = 2;",
+            "}");
+    String after =
+        lines(
+            "var a = 0;",
+            "switch (a) {",
+            "  case 0:",
+            "    var x = 1;",
+            "  case 1:",
+            "    x = 2;",
+            "}");
     test(options, before, after);
 
-    before = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "  default:",
-        "    let x = 1;",
-        "}");
-    after = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "  default:",
-        "    var x = 1;",
-        "}");
+    before = lines("var a = 0;", "switch (a) {", "  case 0:", "  default:", "    let x = 1;", "}");
+    after = lines("var a = 0;", "switch (a) {", "  case 0:", "  default:", "    var x = 1;", "}");
     test(options, before, after);
   }
 
@@ -284,22 +275,24 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
-    String before = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "    { const x = 3; break; }",
-        "  case 1:",
-        "    { const x = 5; break; }",
-        "}");
-    String after = LINE_JOINER.join(
-        "var a = 0;",
-        "switch (a) {",
-        "  case 0:",
-        "    { var x = 3; break; }",
-        "  case 1:",
-        "    { var x$0 = 5; break; }",
-        "}");
+    String before =
+        lines(
+            "var a = 0;",
+            "switch (a) {",
+            "  case 0:",
+            "    { const x = 3; break; }",
+            "  case 1:",
+            "    { const x = 5; break; }",
+            "}");
+    String after =
+        lines(
+            "var a = 0;",
+            "switch (a) {",
+            "  case 0:",
+            "    { var x = 3; break; }",
+            "  case 1:",
+            "    { var x$0 = 5; break; }",
+            "}");
     test(options, before, after);
   }
 
@@ -310,7 +303,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "class A { static z() {} }",
             "const B = {};",
             " B.A = A;",
@@ -319,7 +312,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "const D = {};",
             " D.A = C.A;",
             " D.A.z();"),
-        LINE_JOINER.join(
+        lines(
             "var A = function(){};",
             "var A$z = function(){};",
             "var B$A = null;",
@@ -363,7 +356,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setInlineFunctions(Reach.ALL);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  x = x || 1",
             "  var x;",
@@ -372,7 +365,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "for (var _ in [1]) {",
             "  f();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "for(var _ in[1]) {",
             "  {",
             "     var x$jscomp$inline_0 = void 0;",
@@ -406,7 +399,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "var cr = {}; cr.define('my.namespace', function() { class X {} return {X: X}; });",
-        LINE_JOINER.join(
+        lines(
             "var cr = {},",
             "    my = my || {};",
             "my.namespace = my.namespace || {};",
@@ -424,7 +417,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "cr.define('my.namespace', function() { class X {} return {X: X}; });",
-        LINE_JOINER.join(
+        lines(
             "var my = my || {};",
             "my.namespace = my.namespace || {};",
             "cr.define('my.namespace', function() {",
@@ -538,20 +531,21 @@ public final class IntegrationTest extends IntegrationTestCase {
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setGeneratePseudoNames(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(options,
+    test(
+        options,
         new String[] {
-            LINE_JOINER.join(
-                "var goog = {};",
-                "goog.provide('goog.testing.testSuite');",
-                "goog.testing.testSuite = function(a) {};"),
-            LINE_JOINER.join(
-                "goog.module('testing');",
-                "var testSuite = goog.require('goog.testing.testSuite');",
-                "testSuite({testMethod:function(){}});")
+          lines(
+              "var goog = {};",
+              "goog.provide('goog.testing.testSuite');",
+              "goog.testing.testSuite = function(a) {};"),
+          lines(
+              "goog.module('testing');",
+              "var testSuite = goog.require('goog.testing.testSuite');",
+              "testSuite({testMethod:function(){}});")
         },
         new String[] {
-            "var $goog$testing$testSuite$$ = function($a$$) {};",
-            "$goog$testing$testSuite$$({'testMethod':function(){}})"
+          "var $goog$testing$testSuite$$ = function($a$$) {};",
+          "$goog$testing$testSuite$$({'testMethod':function(){}})"
         });
   }
 
@@ -623,17 +617,19 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testNoTypeWarningForDupExternNamespace() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    externs = ImmutableList.of(SourceFile.fromCode(
-        "externs",
-        LINE_JOINER.join(
-            "/** @const */",
-            "var ns = {};",
-            "/** @type {number} */",
-            "ns.prop1;",
-            "/** @const */",
-            "var ns = {};",
-            "/** @type {number} */",
-            "ns.prop2;")));
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "externs",
+                lines(
+                    "/** @const */",
+                    "var ns = {};",
+                    "/** @type {number} */",
+                    "ns.prop1;",
+                    "/** @const */",
+                    "var ns = {};",
+                    "/** @type {number} */",
+                    "ns.prop2;")));
     testSame(options, "");
   }
 
@@ -1233,7 +1229,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var JSCompiler_object_inline_FOO_0 = 5;",
             "  var JSCompiler_object_inline_bar_1 = 3;",
@@ -1710,19 +1706,20 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
 
-    String code = LINE_JOINER.join(
-        "/** @constructor @template T */",
-        "function F() {}",
-        "",
-        "/** @return {?T} */",
-        "F.prototype.foo = function() {",
-        "  return null;",
-        "}",
-        "",
-        "/** @type {F<string>} */",
-        "var f = new F;",
-        "/** @type {string} */",
-        "var s = f.foo(); // Type error: f.foo() has type {?string}.");
+    String code =
+        lines(
+            "/** @constructor @template T */",
+            "function F() {}",
+            "",
+            "/** @return {?T} */",
+            "F.prototype.foo = function() {",
+            "  return null;",
+            "}",
+            "",
+            "/** @type {F<string>} */",
+            "var f = new F;",
+            "/** @type {string} */",
+            "var s = f.foo(); // Type error: f.foo() has type {?string}.");
 
     test(options, code, DiagnosticGroups.CHECK_TYPES);
   }
@@ -1732,18 +1729,20 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
 
-    String code = LINE_JOINER.join("/** @constructor @template T */",
-        "function F() {}",
-        "",
-        "/** @param {T} t */",
-        "F.prototype.foo = function(t) {",
-        "}",
-        "",
-        "/** @type {F<string>} */",
-        "var f = new F;",
-        "/** @type {?string} */",
-        "var s = null;",
-        "f.foo(s); // Type error: f.foo() takes a {string}, not a {?string}");
+    String code =
+        lines(
+            "/** @constructor @template T */",
+            "function F() {}",
+            "",
+            "/** @param {T} t */",
+            "F.prototype.foo = function(t) {",
+            "}",
+            "",
+            "/** @type {F<string>} */",
+            "var f = new F;",
+            "/** @type {?string} */",
+            "var s = null;",
+            "f.foo(s); // Type error: f.foo() takes a {string}, not a {?string}");
 
     test(options, code, DiagnosticGroups.CHECK_TYPES);
   }
@@ -1767,15 +1766,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     // looks for that exact suffix, and IntegrationTestCase adds an input
     // id number between prefix and suffix.
     inputFileNameSuffix = "vmbootstrap/Arrays.impl.java.js";
-    String code = LINE_JOINER.join(
-        "/** @constructor */",
-        "var Arrays = function() {};",
-        "Arrays.$create = function() { return {}; }",
-        "/** @constructor */",
-        "function Foo() { this.myprop = 1; }",
-        "/** @constructor */",
-        "function Bar() { this.myprop = 2; }",
-        "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
+    String code =
+        lines(
+            "/** @constructor */",
+            "var Arrays = function() {};",
+            "Arrays.$create = function() { return {}; }",
+            "/** @constructor */",
+            "function Foo() { this.myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.myprop = 2; }",
+            "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
 
     CompilerOptions options = new CompilerOptions();
     options.setCheckTypes(true);
@@ -1784,7 +1784,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Arrays = function() {};",
             "Arrays.$create = function() { return {}; }",
@@ -1797,21 +1797,22 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testInliningLocalVarsPreservesCasts() {
-    String code = LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() { this.myprop = 1; }",
-        "/** @constructor */",
-        "function Bar() { this.myprop = 2; }",
-        "/** @return {Object} */",
-        "function getSomething() {",
-        "  var x = new Bar();",
-        "  return new Foo();",
-        "}",
-        "(function someMethod() {",
-        "  var x = getSomething();",
-        "  var y = /** @type {Foo} */ (x).myprop;",
-        "  return 1 != y;",
-        "})()");
+    String code =
+        lines(
+            "/** @constructor */",
+            "function Foo() { this.myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.myprop = 2; }",
+            "/** @return {Object} */",
+            "function getSomething() {",
+            "  var x = new Bar();",
+            "  return new Foo();",
+            "}",
+            "(function someMethod() {",
+            "  var x = getSomething();",
+            "  var y = /** @type {Foo} */ (x).myprop;",
+            "  return 1 != y;",
+            "})()");
 
     CompilerOptions options = new CompilerOptions();
     options.setCheckTypes(true);
@@ -1825,7 +1826,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() { this.JSC$39_myprop = 1; }",
             "/** @constructor */",
@@ -1846,23 +1847,24 @@ public final class IntegrationTest extends IntegrationTestCase {
    */
   @Test
   public void testInliningLocalVarsPreservesCastsNullable() {
-    String code = LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() { this.myprop = 1; }",
-        "/** @constructor */",
-        "function Bar() { this.myprop = 2; }",
-        // Note that this method return a non-nullable type.
-        "/** @return {!Object} */",
-        "function getSomething() {",
-        "  var x = new Bar();",
-        "  return new Foo();",
-        "}",
-        "(function someMethod() {",
-        "  var x = getSomething();",
-        // Note that this casts from !Object to ?Foo.
-        "  var y = /** @type {Foo} */ (x).myprop;",
-        "  return 1 != y;",
-        "})()");
+    String code =
+        lines(
+            "/** @constructor */",
+            "function Foo() { this.myprop = 1; }",
+            "/** @constructor */",
+            "function Bar() { this.myprop = 2; }",
+            // Note that this method return a non-nullable type.
+            "/** @return {!Object} */",
+            "function getSomething() {",
+            "  var x = new Bar();",
+            "  return new Foo();",
+            "}",
+            "(function someMethod() {",
+            "  var x = getSomething();",
+            // Note that this casts from !Object to ?Foo.
+            "  var y = /** @type {Foo} */ (x).myprop;",
+            "  return 1 != y;",
+            "})()");
 
     CompilerOptions options = new CompilerOptions();
     options.setCheckTypes(true);
@@ -1876,7 +1878,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() { this.JSC$39_myprop = 1; }",
             "/** @constructor */",
@@ -2253,7 +2255,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "(function() {",
             "  try {",
             "    x = 2;",
@@ -2261,7 +2263,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    var x = 1;",
             "  }",
             "})();"),
-      LINE_JOINER.join(
+        lines(
             "{ try {",
             "    x$jscomp$inline_0=2",
             "  } catch(e) {",
@@ -2278,7 +2280,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     testSame(
         options,
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var msg;",
             "}",
@@ -3305,31 +3307,32 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = LINE_JOINER.join(
-        "function some_function() {",
-        "  var fn1;",
-        "  var fn2;",
-        "",
-        "  if (any_expression) {",
-        "    fn2 = external_ref;",
-        "    fn1 = function (content) {",
-        "      return fn2();",
-        "    }",
-        "  }",
-        "",
-        "  return {",
-        "    method1: function () {",
-        "      if (fn1) fn1();",
-        "      return true;",
-        "    },",
-        "    method2: function () {",
-        "      return false;",
-        "    }",
-        "  }",
-        "}");
+    String code =
+        lines(
+            "function some_function() {",
+            "  var fn1;",
+            "  var fn2;",
+            "",
+            "  if (any_expression) {",
+            "    fn2 = external_ref;",
+            "    fn1 = function (content) {",
+            "      return fn2();",
+            "    }",
+            "  }",
+            "",
+            "  return {",
+            "    method1: function () {",
+            "      if (fn1) fn1();",
+            "      return true;",
+            "    },",
+            "    method2: function () {",
+            "      return false;",
+            "    }",
+            "  }",
+            "}");
 
     String result =
-        LINE_JOINER.join(
+        lines(
             "function some_function() {",
             "  if (any_expression) {",
             "    var b = external_ref;",
@@ -3444,14 +3447,14 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     testNoWarnings(
         options,
-        LINE_JOINER.join(
-          "/** @typeSummary */",
-          "const ns = {}",
-          "/** @enum {number} */ ns.ENUM = {A:1};",
-          "const {ENUM} = ns;",
-          "/** @type {ENUM} */ let x = ENUM.A;",
-          "/** @type {ns.ENUM} */ let y = ENUM.A;",
-          ""));
+        lines(
+            "/** @typeSummary */",
+            "const ns = {}",
+            "/** @enum {number} */ ns.ENUM = {A:1};",
+            "const {ENUM} = ns;",
+            "/** @type {ENUM} */ let x = ENUM.A;",
+            "/** @type {ns.ENUM} */ let y = ENUM.A;",
+            ""));
   }
 
   @Test
@@ -3465,7 +3468,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "/** @typeSummary */",
               "goog.module('a.b.Foo');",
               "goog.module.declareLegacyNamespace();",
@@ -3476,7 +3479,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "Foo.num;",
               "",
               "exports = Foo;"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('x.y.z');",
               "",
               "const Foo = goog.require('a.b.Foo');",
@@ -3496,11 +3499,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setUseTypesForLocalOptimization(true);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "if (/** @type {Array|undefined} */ (window['c']) === null) {",
             "  window['d'] = 12;",
             "}"),
-            "null===window['c']&&(window['d']=12)");
+        "null===window['c']&&(window['d']=12)");
   }
 
   @Test
@@ -3600,7 +3603,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  static doSomething(i) { alert(i); }",
             "}",
@@ -3608,7 +3611,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  A.doSomething(await 3);",
             "}",
             "foo();"),
-        LINE_JOINER.join(
+        lines(
             "var A = function() {};",
             "var A$doSomething = function(i) {",
             "  alert(i);",

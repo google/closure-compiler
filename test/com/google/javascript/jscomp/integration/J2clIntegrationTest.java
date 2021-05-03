@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.integration;
 
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import org.junit.Before;
@@ -27,7 +29,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
   @Test
   public void testStripNoSideEffectsClinit() {
     String source =
-        LINE_JOINER.join(
+        lines(
             "class Preconditions {",
             "  static $clinit() {",
             "    Preconditions.$clinit = function() {};",
@@ -53,7 +55,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
   @Test
   public void testFoldJ2clClinits() {
     String code =
-        LINE_JOINER.join(
+        lines(
             "function InternalWidget(){}",
             "InternalWidget.$clinit = function () {",
             "  InternalWidget.$clinit = function() {};",

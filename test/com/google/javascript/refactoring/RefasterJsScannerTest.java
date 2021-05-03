@@ -17,6 +17,7 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
@@ -1015,9 +1016,5 @@ public class RefasterJsScannerTest {
             .collect(Collectors.toList());
 
     assertThat(outputChoices).containsExactlyElementsIn(expectedChoices).inOrder();
-  }
-
-  private String lines(String... lines) {
-    return String.join("\n", lines);
   }
 }

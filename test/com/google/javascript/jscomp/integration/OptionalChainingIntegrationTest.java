@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.integration;
 
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;

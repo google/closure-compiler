@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -41,16 +42,7 @@ import org.junit.Before;
 
 /** Framework for end-to-end test cases. */
 abstract class IntegrationTestCase {
-  protected static final Joiner LINE_JOINER = Joiner.on('\n');
   protected static final Joiner EMPTY_JOINER = Joiner.on("");
-
-  protected static String lines(String line) {
-    return line;
-  }
-
-  protected static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
-  }
 
   /** Externs for the test */
   protected static final ImmutableList<SourceFile> DEFAULT_EXTERNS =
