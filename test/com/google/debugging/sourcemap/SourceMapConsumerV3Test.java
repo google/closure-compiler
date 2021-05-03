@@ -19,6 +19,8 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -133,5 +135,57 @@ public final class SourceMapConsumerV3Test {
     assertThat(exts).doesNotContainKey("org_int");
     assertThat(((JsonElement) exts.get("x_org_int")).getAsInt()).isEqualTo(2);
     assertThat((JsonArray) exts.get("x_org_array")).isEmpty();
+  }
+
+  @Test
+  public void testSourceMappingExactMatch() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setLineCount(1)
+                .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                .setSources("testcode")
+                .setNames("__BASIC__")
+                .build()));
+
+    OriginalMapping mapping = consumer.getMappingForLine(1, 1);
+
+    assertThat(mapping).isNotNull();
+    assertThat(mapping.getLineNumber()).isEqualTo(1);
+    assertThat(mapping.getPrecision()).isEqualTo(Precision.EXACT);
+  }
+
+  @Test
+  public void testSourceMappingApproximatedLine() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setMappings(
+                    ";;;;;;;;;;;;;;;;;;IAAMA,K,GACL,eAAaC,EAAb,EAAiB;AAAA;;AAAA;;AAChB,OAAKA,EAAL,GAAUA,EAAV;AACA,C;;IAEIC,S;;;;;;;AACL,qBAAYD,EAAZ,EAAgB;AAAA;;AAAA,6BACTA,EADS;AAEf;;;EAHsBD,K;;AAKxB,IAAIG,CAAC,GAAG,IAAID,SAAJ,CAAc,UAAd,CAAR")
+                .setSourcesContent(
+                    "class Shape {\n"
+                        + "\tconstructor (id) {\n"
+                        + "\t\tthis.id = id;\n"
+                        + "\t}\n"
+                        + "}\n"
+                        + "class Rectangle extends Shape {\n"
+                        + "\tconstructor(id) {\n"
+                        + "\t\tsuper(id);\n"
+                        + "\t}\n"
+                        + "}\n"
+                        + "var s = new Rectangle(\"Shape ID\");")
+                .setSources("testcode")
+                .setNames("Shape", "id", "Rectangle", "s")
+                .build()));
+
+    OriginalMapping mapping = consumer.getMappingForLine(40, 10);
+
+    assertThat(mapping).isNotNull();
+    // The Previous line mapping was retrieved, and thus it is "approximated"
+    assertThat(mapping.getLineNumber()).isEqualTo(9);
+    assertThat(mapping.getPrecision()).isEqualTo(Precision.APPROXIMATE_LINE);
   }
 }

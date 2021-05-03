@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -172,7 +173,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
 
     int index = search(entries, column, 0, entries.size() - 1);
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
-    return getOriginalMappingForEntry(entries.get(index));
+    return getOriginalMappingForEntry(entries.get(index), Precision.EXACT);
   }
 
   @Override
@@ -431,21 +432,21 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       lineNumber--;
     } while (lines.get(lineNumber) == null);
     ArrayList<Entry> entries = lines.get(lineNumber);
-    return getOriginalMappingForEntry(Iterables.getLast(entries));
+    return getOriginalMappingForEntry(Iterables.getLast(entries), Precision.APPROXIMATE_LINE);
   }
 
-  /**
-   * Creates an "OriginalMapping" object for the given entry object.
-   */
-  private OriginalMapping getOriginalMappingForEntry(Entry entry) {
+  /** Creates an "OriginalMapping" object for the given entry object. */
+  private OriginalMapping getOriginalMappingForEntry(Entry entry, Precision precision) {
     if (entry.getSourceFileId() == UNMAPPED) {
       return null;
     } else {
       // Adjust the line/column here to be start at 1.
-      Builder x = OriginalMapping.newBuilder()
-        .setOriginalFile(sources[entry.getSourceFileId()])
-        .setLineNumber(entry.getSourceLine() + 1)
-        .setColumnPosition(entry.getSourceColumn() + 1);
+      Builder x =
+          OriginalMapping.newBuilder()
+              .setOriginalFile(sources[entry.getSourceFileId()])
+              .setLineNumber(entry.getSourceLine() + 1)
+              .setColumnPosition(entry.getSourceColumn() + 1)
+              .setPrecision(precision);
       if (entry.getNameId() != UNMAPPED) {
         x.setIdentifier(names[entry.getNameId()]);
       }

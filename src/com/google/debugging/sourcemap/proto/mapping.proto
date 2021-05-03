@@ -22,4 +22,13 @@ message OriginalMapping {
 
   // The original name of the identifier.
   optional string identifier = 4;
+
+  enum Precision {
+    UNKNOWN_PRECISION = 0;
+    EXACT = 1;
+    APPROXIMATE_LINE = 2;
+  }
+
+  // The type of retrieval performed to get this mapping
+  optional Precision precision = 5 [default = UNKNOWN_PRECISION];
 }
