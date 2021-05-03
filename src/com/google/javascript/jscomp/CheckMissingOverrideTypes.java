@@ -32,6 +32,7 @@ import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Checks if the @override methods are missing type annotations. If they are, then this generates
@@ -42,13 +43,15 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
   private static final String PLACEHOLDER_OBJ_PARAM_NAME = "objectParam";
+  private static final String JSDOC_FILE_NAME = "<testFile>";
+  private static final String NON_NULLABLE_OBJECT_TYPE = "!Object";
 
   public static final DiagnosticType OVERRIDE_WITHOUT_ALL_TYPES =
       DiagnosticType.error(
           "JSC_OVERRIDE_WITHOUT_ALL_TYPES",
-          "The @override functions must have param and return types specified. Here is the"
-              + " replacement JSDoc for this function \n"
-              + "{0} for function at location {1}");
+          "The @override functions/properties must have param and return types specified. Here is"
+              + " the replacement JSDoc for this function/property \n"
+              + "{0}");
 
   public CheckMissingOverrideTypes(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -62,12 +65,11 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case GETPROP:
+        visitPropDeclaration(n);
+        break;
       case FUNCTION:
-        JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-        if (jsDoc == null || !jsDoc.isOverride()) {
-          break;
-        }
-        visitFunction(n, jsDoc);
+        visitFunction(n);
         break;
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
@@ -76,12 +78,43 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
         // visited.
         break;
       default:
-        // non-Function
         break;
     }
   }
 
-  private void visitFunction(Node function, JSDocInfo jsDoc) {
+  @Nullable
+  private JSDocInfo getOverrideJSDoc(Node n) {
+    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+    return (jsDoc != null && jsDoc.isOverride()) ? jsDoc : null;
+  }
+
+  private void visitPropDeclaration(Node n) {
+    JSDocInfo jsDoc = this.getOverrideJSDoc(n);
+    if (jsDoc == null || jsDoc.containsTypeDeclaration()) {
+      return; // type related annotation exists in overridden property
+    }
+
+    JSType type = n.getJSType();
+    if (type == null) {
+      return;
+    }
+
+    Node target = n.getFirstChild();
+    if (!target.isThis()) {
+      return; // e.g. `/** @override */ this.x;`
+    }
+
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(jsDoc);
+    builder.recordType(new JSTypeExpression(typeToTypeAst(type), JSDOC_FILE_NAME));
+    reportMissingOverrideTypes(n, builder.build());
+  }
+
+  private void visitFunction(Node function) {
+    JSDocInfo jsDoc = this.getOverrideJSDoc(function);
+    if (jsDoc == null) {
+      return;
+    }
+
     FunctionType fnType =
         function.getJSType() != null ? function.getJSType().toMaybeFunctionType() : null;
     if (fnType == null) {
@@ -90,7 +123,9 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
     boolean missingParam = hasMissingParams(function, jsDoc);
     boolean missingReturn = hasMissingReturn(function, jsDoc);
     if (missingParam || missingReturn) {
-      reportMissingOverrideTypes(function, missingParam, missingReturn, jsDoc);
+      JSDocInfo completeJSDocInfo =
+          createCompleteJSDocInfoForFunction(function, missingParam, missingReturn, jsDoc);
+      reportMissingOverrideTypes(function, completeJSDocInfo);
     }
   }
 
@@ -150,20 +185,20 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
     return !returnType.isVoidType();
   }
 
-  public void reportMissingOverrideTypes(
-      Node fnNode, boolean missingParam, boolean missingReturn, JSDocInfo jsDocInfo) {
-    JSDocInfo completeJSDocInfo =
-        createCompleteJSDocInfo(fnNode, missingParam, missingReturn, jsDocInfo);
+  /**
+   * Emits error for a function or property declaration node with the replacement (complete) JSDoc.
+   */
+  public void reportMissingOverrideTypes(Node node, JSDocInfo completeJSDocInfo) {
     compiler.report(
         JSError.make(
-            fnNode,
+            node,
             OVERRIDE_WITHOUT_ALL_TYPES,
             new JSDocInfoPrinter(/* useOriginalName */ false, /* printDesc */ true)
-                .print(completeJSDocInfo),
-            fnNode.getLocation()));
+                .print(completeJSDocInfo)));
   }
 
-  private JSDocInfo createCompleteJSDocInfo(
+  /** Creates complete JSDocInfo for the given function node using its inferred FunctionType. */
+  private JSDocInfo createCompleteJSDocInfoForFunction(
       Node fnNode, boolean missingParam, boolean missingReturn, JSDocInfo jsDocInfo) {
     checkArgument(jsDocInfo == null || jsDocInfo.isOverride(), jsDocInfo);
     JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(jsDocInfo);
@@ -235,6 +270,12 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
       return JsDocInfoParser.parseTypeString(type.toString());
     }
 
+    if (type.isLiteralObject() && type.toMaybeObjectType().getOwnPropertyNames().isEmpty()) {
+      // The overridden property is inferred as an `{}` object literal type.
+      // `{}` crashes JSDocInfoPrinter when printed in an annotation.
+      return JsDocInfoParser.parseTypeString(NON_NULLABLE_OBJECT_TYPE);
+    }
+
     final String typeName;
     if (type.hasDisplayName()) {
       // use display name for e.g. `!ns.enumNum` instead of `number`
@@ -270,5 +311,4 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
     return paramNames;
   }
 
-  private static final String JSDOC_FILE_NAME = "<testParam>";
 }

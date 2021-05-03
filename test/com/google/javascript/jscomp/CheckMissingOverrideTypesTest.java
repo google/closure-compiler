@@ -250,32 +250,6 @@ public final class CheckMissingOverrideTypesTest {
     }
 
     @Test
-    public void testErrorLocationPrinted() {
-      test(
-          srcs(
-              lines(
-                  "class Foo {",
-                  "  /** @param {string} argFoo */",
-                  "  method(argFoo) {}",
-                  "}",
-                  "class Bar extends Foo {",
-                  "  /** @override */", // missing @param {string} arg
-                  "  method(argBar) {",
-                  "  }",
-                  "}")),
-          error(OVERRIDE_WITHOUT_ALL_TYPES)
-              .withMessageContaining(
-                  lines(
-                      "/**",
-                      " * @param {string} argBar",
-                      " * @override",
-                      " */",
-                      " for function at location testcode:7:2"
-                      // generates <filename>:<line>:<offset>
-                      )));
-    }
-
-    @Test
     public void testMultipleMissingParams() {
       test(
           srcs(
@@ -465,7 +439,7 @@ public final class CheckMissingOverrideTypesTest {
                   "}",
                   "class Bar extends Foo {",
                   "  /**",
-                  "    * @param {!enumT} x", // missing @return {number}
+                  "    * @param {!enumT} x", // missing @return {enumT}
                   "    * @override",
                   "    */",
                   "  method(x) {",
@@ -796,6 +770,120 @@ public final class CheckMissingOverrideTypesTest {
                       // `PLACEHOLDER_OBJ_PARAM_NAME`
                       " * @override",
                       " */")));
+    }
+
+    @Test
+    public void testOverridenProperty_regular() {
+      test(
+          srcs(
+              lines(
+                  "class Foo {",
+                  "   constructor() {",
+                  "    /** @type {string} */",
+                  "    this.x = '';",
+                  "  }",
+                  "}",
+                  "class Bar extends Foo {",
+                  "   constructor() {",
+                  "      super();",
+                  "      /** @override */", // inferred as string type
+                  "      this.x = '';",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(lines("/** @override @type {string} */")));
+    }
+
+    @Test
+    public void testOverridenProperty_inferredAsEmptyObjectLiteralType() {
+      test(
+          srcs(
+              lines(
+                  "/** @enum {string} */ const enumT = { A:'a'};",
+                  "class Foo {",
+                  "   constructor() {",
+                  "    /** @type {!enumT} */",
+                  "    this.x = {};",
+                  "  }",
+                  "}",
+                  "class Bar extends Foo {",
+                  "   constructor() {",
+                  "      super();",
+                  "      /** @override */", // `this.x` gets inferred as the `{}` type
+                  "      this.x = {};",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(lines("/** @override @type {!Object} */")));
+    }
+
+    @Test
+    public void testOverridenProperty_objectLiteralTypeWithOwnProperty() {
+      test(
+          srcs(
+              lines(
+                  "/** @enum {string} */ const enumT = { A:'a'};",
+                  "class Foo {",
+                  "   constructor() {",
+                  "    /** @type {!enumT} */",
+                  "    this.x = {};",
+                  "  }",
+                  "}",
+                  "class Bar extends Foo {",
+                  "   constructor() {",
+                  "      super();",
+                  "      /** @override */", // `this.x` gets inferred as the `{b:number}` type
+                  "      this.x = {b:3};",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(lines("/** @override @type {{b:number}} */")));
+    }
+
+    @Test
+    public void testOverridenProperty_inferredAsEmptyObjectLiteralType2() {
+      test(
+          srcs(
+              lines(
+                  "class Foo {",
+                  "   constructor() {",
+                  "    /** @enum {string} */",
+                  "    this.x = {};",
+                  "  }",
+                  "}",
+                  "class Bar extends Foo {",
+                  "   constructor() {",
+                  "      super();",
+                  "      /** @override */",
+                  "      this.x = {};", // `this.x` gets inferred as the `{}` object literal type
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(lines("/** @override @type {!Object} */")));
+    }
+
+    @Test
+    public void testOverridenProperty_typedef() {
+      test(
+          srcs(
+              lines(
+                  "class Foo {",
+                  "   constructor() {",
+                  "    /** @typedef {string} */",
+                  "    this.x;",
+                  "  }",
+                  "}",
+                  "class Bar extends Foo {",
+                  "   constructor() {",
+                  "      super();",
+                  "      /** @override */",
+                  "      this.x;",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(
+                  lines("/** @override @type {?} */"))); // typedef does not propagate through
+      // override
     }
   }
 
