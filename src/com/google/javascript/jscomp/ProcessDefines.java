@@ -470,25 +470,26 @@ class ProcessDefines implements CompilerPass {
      *
      * <p>We don't check the externs because they can't contain local vars.
      */
-    NodeTraversal.traversePostOrder(
-        this.compiler,
-        root,
-        (t, n, parent) -> {
-          JSDocInfo jsdoc = n.getJSDocInfo();
-          if (jsdoc != null && jsdoc.isDefine() && this.knownDefineJsdocs.add(jsdoc)) {
-            compiler.report(JSError.make(n, INVALID_DEFINE_LOCATION));
-          }
+    NodeTraversal.builder()
+        .setCompiler(this.compiler)
+        .setCallback(
+            (t, n, parent) -> {
+              JSDocInfo jsdoc = n.getJSDocInfo();
+              if (jsdoc != null && jsdoc.isDefine() && this.knownDefineJsdocs.add(jsdoc)) {
+                compiler.report(JSError.make(n, INVALID_DEFINE_LOCATION));
+              }
 
-          if (isGoogDefineCall(n) && this.knownGoogDefineCalls.add(n)) {
-            verifyGoogDefine(n);
-          }
+              if (isGoogDefineCall(n) && this.knownGoogDefineCalls.add(n)) {
+                verifyGoogDefine(n);
+              }
 
-          if (n.matchesName("CLOSURE_DEFINES")
-              && NodeUtil.isNameDeclaration(parent)
-              && !NodeUtil.getEnclosingScopeRoot(n).isRoot()) {
-            compiler.report(JSError.make(n, NON_GLOBAL_CLOSURE_DEFINES_ERROR));
-          }
-        });
+              if (n.matchesName("CLOSURE_DEFINES")
+                  && NodeUtil.isNameDeclaration(parent)
+                  && !NodeUtil.getEnclosingScopeRoot(n).isRoot()) {
+                compiler.report(JSError.make(n, NON_GLOBAL_CLOSURE_DEFINES_ERROR));
+              }
+            })
+        .traverse(root);
   }
 
   private void collectClosureDefinesValues(Name closureDefines) {

@@ -702,44 +702,46 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
   }
 
   private void rewriteRequires(Node script) {
-    NodeTraversal.traversePostOrder(
-        compiler,
-        script,
-        (NodeTraversal t, Node n, Node parent) -> {
-          if (n.isCall()) {
-            Node fn = n.getFirstChild();
-            if (fn.matchesQualifiedName("goog.require")
-                || fn.matchesQualifiedName("goog.requireType")) {
-              // TODO(tjgq): This will rewrite both type references and code references. For
-              // goog.requireType, the latter are potentially broken because the symbols aren't
-              // guaranteed to be available at run time. A separate pass needs to be added to
-              // detect these incorrect uses of goog.requireType.
-              visitRequireOrGet(t, n, parent, /* isRequire= */ true);
-            } else if (fn.matchesQualifiedName("goog.module.get")) {
-              visitGoogModuleGet(t, n, parent);
-            }
-          }
-        });
-    NodeTraversal.traversePostOrder(
-        compiler,
-        script,
-        (NodeTraversal t, Node n, Node parent) -> {
-          JSDocInfo info = n.getJSDocInfo();
-          if (info != null) {
-            for (Node typeNode : info.getTypeNodes()) {
-              inlineAliasedTypes(t, typeNode);
-            }
-          }
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              if (n.isCall()) {
+                Node fn = n.getFirstChild();
+                if (fn.matchesQualifiedName("goog.require")
+                    || fn.matchesQualifiedName("goog.requireType")) {
+                  // TODO(tjgq): This will rewrite both type references and code references. For
+                  // goog.requireType, the latter are potentially broken because the symbols aren't
+                  // guaranteed to be available at run time. A separate pass needs to be added to
+                  // detect these incorrect uses of goog.requireType.
+                  visitRequireOrGet(t, n, parent, /* isRequire= */ true);
+                } else if (fn.matchesQualifiedName("goog.module.get")) {
+                  visitGoogModuleGet(t, n, parent);
+                }
+              }
+            })
+        .traverse(script);
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(
+            (NodeTraversal t, Node n, Node parent) -> {
+              JSDocInfo info = n.getJSDocInfo();
+              if (info != null) {
+                for (Node typeNode : info.getTypeNodes()) {
+                  inlineAliasedTypes(t, typeNode);
+                }
+              }
 
-          if (n.isName() && namesToInlineByAlias.containsKey(n.getString())) {
-            Var v = t.getScope().getVar(n.getString());
-            if (v == null || v.getNameNode() != n) {
-              GlobalizedModuleName replacementName = namesToInlineByAlias.get(n.getString());
-              Node replacement = replacementName.toQname(astFactory).srcrefTree(n);
-              n.replaceWith(replacement);
-            }
-          }
-        });
+              if (n.isName() && namesToInlineByAlias.containsKey(n.getString())) {
+                Var v = t.getScope().getVar(n.getString());
+                if (v == null || v.getNameNode() != n) {
+                  GlobalizedModuleName replacementName = namesToInlineByAlias.get(n.getString());
+                  Node replacement = replacementName.toQname(astFactory).srcrefTree(n);
+                  n.replaceWith(replacement);
+                }
+              }
+            })
+        .traverse(script);
   }
 
   private void inlineAliasedTypes(NodeTraversal t, Node typeNode) {

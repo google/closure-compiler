@@ -1046,14 +1046,15 @@ public final class NormalizeTest extends CompilerTestCase {
   private Set<Node> findNodesWithProperty(Node root, Predicate<Node> prop) {
     final Set<Node> set = new HashSet<>();
 
-    NodeTraversal.traversePostOrder(
-        getLastCompiler(),
-        root,
-        (NodeTraversal t, Node node, Node parent) -> {
-          if (prop.test(node)) {
-            set.add(node);
-          }
-        });
+    NodeTraversal.builder()
+        .setCompiler(getLastCompiler())
+        .setCallback(
+            (NodeTraversal t, Node node, Node parent) -> {
+              if (prop.test(node)) {
+                set.add(node);
+              }
+            })
+        .traverse(root);
     return set;
   }
 

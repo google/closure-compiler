@@ -165,20 +165,6 @@ public class NodeTraversal {
     void visit(NodeTraversal t, Node n, Node parent);
   }
 
-  private static Callback makePostOrderCallback(AbstractPostOrderCallbackInterface lambda) {
-    return new Callback() {
-      @Override
-      public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-        return true;
-      }
-
-      @Override
-      public final void visit(NodeTraversal t, Node n, Node parent) {
-        lambda.visit(t, n, parent);
-      }
-    };
-  }
-
   /** Abstract callback to visit all nodes in preorder. */
   public abstract static class AbstractPreOrderCallback implements Callback {
     @Override
@@ -370,6 +356,17 @@ public class NodeTraversal {
       return this;
     }
 
+    public Builder setCallback(AbstractPostOrderCallbackInterface x) {
+      this.callback =
+          new AbstractPostOrderCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              x.visit(t, n, parent);
+            }
+          };
+      return this;
+    }
+
     public Builder setCompiler(AbstractCompiler x) {
       this.compiler = x;
       return this;
@@ -477,12 +474,6 @@ public class NodeTraversal {
   /** Traverses using the SyntacticScopeCreator */
   public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal.builder().setCompiler(compiler).setCallback(cb).traverse(root);
-  }
-
-  /** Traverses in post order. */
-  public static void traversePostOrder(
-      AbstractCompiler compiler, Node root, AbstractPostOrderCallbackInterface cb) {
-    traverse(compiler, root, makePostOrderCallback(cb));
   }
 
   private void traverseRoots(Node externs, Node root) {

@@ -45,21 +45,22 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
     final Multimap<String, Node> fieldAssignments = ArrayListMultimap.create();
     final Set<Node> hoistableFunctions = new HashSet<>();
-    NodeTraversal.traversePostOrder(
-        compiler,
-        root,
-        (NodeTraversal t, Node node, Node parent) -> {
-          // TODO(stalcup): don't gather assignments ourselves, switch to a persistent
-          // DefinitionUseSiteFinder instead.
-          if (parent != null && NodeUtil.isLValue(node)) {
-            fieldAssignments.put(node.getQualifiedName(), parent);
-          }
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(
+            (NodeTraversal t, Node node, Node parent) -> {
+              // TODO(stalcup): don't gather assignments ourselves, switch to a persistent
+              // DefinitionUseSiteFinder instead.
+              if (parent != null && NodeUtil.isLValue(node)) {
+                fieldAssignments.put(node.getQualifiedName(), parent);
+              }
 
-          // TODO(stalcup): convert to a persistent index of hoistable functions.
-          if (isHoistableFunction(t, node)) {
-            hoistableFunctions.add(node);
-          }
-        });
+              // TODO(stalcup): convert to a persistent index of hoistable functions.
+              if (isHoistableFunction(t, node)) {
+                hoistableFunctions.add(node);
+              }
+            })
+        .traverse(root);
 
     for (Collection<Node> assignments : fieldAssignments.asMap().values()) {
       maybeHoistClassField(assignments, hoistableFunctions);

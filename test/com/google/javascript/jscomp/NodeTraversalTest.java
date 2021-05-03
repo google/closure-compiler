@@ -97,7 +97,7 @@ public final class NodeTraversalTest {
     try {
       String code = "function foo() {}";
       Node tree = parse(compiler, code);
-      NodeTraversal.traversePostOrder(compiler, tree, cb);
+      NodeTraversal.builder().setCompiler(compiler).setCallback(cb).traverse(tree);
       assertWithMessage("Expected RuntimeException").fail();
     } catch (RuntimeException e) {
       assertThat(e)
@@ -773,14 +773,14 @@ public final class NodeTraversalTest {
     AbstractPostOrderCallbackInterface countingCallback =
         (NodeTraversal t, Node n, Node parent) -> counter.incrementAndGet();
 
-    NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
+    NodeTraversal.builder().setCompiler(compiler).setCallback(countingCallback).traverse(tree);
     assertThat(counter.get()).isEqualTo(3);
 
     counter.set(0);
     Thread.currentThread().interrupt();
 
     try {
-      NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
+      NodeTraversal.builder().setCompiler(compiler).setCallback(countingCallback).traverse(tree);
       assertWithMessage("Expected a RuntimeException;").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
