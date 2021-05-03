@@ -41,8 +41,8 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
+
+import com.google.javascript.jscomp.base.Tri;
 
 /**
  * Symbol type.
@@ -60,17 +60,17 @@ public final class SymbolType extends ValueType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = super.testForEquality(that);
+  public Tri testForEquality(JSType that) {
+    Tri result = super.testForEquality(that);
     if (result != null) {
       return result;
     }
 
     if (that.canCastTo(getNativeType(SYMBOL_TYPE))
         || that.canCastTo(getNativeType(SYMBOL_OBJECT_TYPE))) {
-      return UNKNOWN;
+      return Tri.UNKNOWN;
     }
-    return FALSE;
+    return Tri.FALSE;
   }
 
   @Override

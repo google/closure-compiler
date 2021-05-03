@@ -39,9 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
+import com.google.javascript.jscomp.base.Tri;
 
 /**
  * Null type.
@@ -93,18 +91,18 @@ public final class NullType extends ValueType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = super.testForEquality(that);
+  public Tri testForEquality(JSType that) {
+    Tri result = super.testForEquality(that);
     if (result != null) {
       return result;
     }
     if (that.isNullType() || that.isVoidType()) {
-      return TRUE;
+      return Tri.TRUE;
     }
     if (that.isUnknownType() || that.isNullable()) {
-      return UNKNOWN;
+      return Tri.UNKNOWN;
     }
-    return FALSE;
+    return Tri.FALSE;
   }
 
   @Override

@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.jscomp.base.Tri;
+
 /**
  * A set in the domain {true,false}.
  * There are four possible sets: {}, {true}, {false}, {true,false}.
@@ -95,13 +97,13 @@ public enum BooleanLiteralSet {
     return literalValue ? TRUE : FALSE;
   }
 
-  /** Converts to a TernaryValue. */
-  public TernaryValue toTernaryValue() {
+  /** Converts to a Tri. */
+  public Tri toTri() {
     if (this == TRUE) {
-      return TernaryValue.TRUE;
+      return Tri.TRUE;
     } else if (this == FALSE) {
-      return TernaryValue.FALSE;
+      return Tri.FALSE;
     }
-    return TernaryValue.UNKNOWN;
+    return Tri.UNKNOWN;
   }
 }

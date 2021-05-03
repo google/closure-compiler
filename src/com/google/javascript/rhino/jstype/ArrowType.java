@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import java.util.List;
@@ -113,7 +114,7 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
+  public Tri testForEquality(JSType that) {
     throw new UnsupportedOperationException();
   }
 

@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -34,7 +35,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -555,9 +555,9 @@ class ProcessDefines implements CompilerPass {
    *
    * @param val The value being assigned.
    */
-  private TernaryValue isValidDefineValue(@Nullable Node val) {
+  private Tri isValidDefineValue(@Nullable Node val) {
     if (val == null) {
-      return TernaryValue.FALSE;
+      return Tri.FALSE;
     }
 
     switch (val.getToken()) {
@@ -565,7 +565,7 @@ class ProcessDefines implements CompilerPass {
       case NUMBER:
       case TRUE:
       case FALSE:
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
 
         // Binary operators are only valid if both children are valid.
       case AND:
@@ -608,27 +608,25 @@ class ProcessDefines implements CompilerPass {
       case NAME:
       case GETPROP:
         if (val.isQualifiedName()) {
-          return this.validDefineValueExpressions.contains(val)
-              ? TernaryValue.TRUE
-              : TernaryValue.UNKNOWN;
+          return this.validDefineValueExpressions.contains(val) ? Tri.TRUE : Tri.UNKNOWN;
         }
         break;
 
         // Allow goog.define('XYZ', <val>) calls if and only if <val> is valid.
       case CALL:
         if (!isGoogDefineCall(val)) {
-          return TernaryValue.FALSE;
+          return Tri.FALSE;
         }
         if (!val.hasXChildren(3)) {
           // goog.define call with wrong arg count. Warn elsewhere and treat this call as valid.
-          return TernaryValue.TRUE;
+          return Tri.TRUE;
         }
         return isValidDefineValue(val.getChildAtIndex(2));
       default:
         break;
     }
 
-    return TernaryValue.FALSE;
+    return Tri.FALSE;
   }
 
   /**

@@ -16,7 +16,7 @@
 
 package com.google.javascript.rhino;
 
-import com.google.javascript.rhino.jstype.TernaryValue;
+import com.google.javascript.jscomp.base.Tri;
 import elemental2.core.JsRegExp;
 import jsinterop.base.Js;
 
@@ -42,10 +42,10 @@ public class TokenUtil {
     return WHITE_SPACE_REGEX.test(Js.uncheckedCast(c));
   };
 
-  public static TernaryValue isStrWhiteSpaceChar(int c) {
+  public static Tri isStrWhiteSpaceChar(int c) {
     switch (c) {
       case '\u000B': // <VT>
-        return TernaryValue.UNKNOWN;  // Legacy IE says "no", ECMAScript says "yes"
+        return Tri.UNKNOWN; // Legacy IE says "no", ECMAScript says "yes"
       case ' ': // <SP>
       case '\n': // <LF>
       case '\r': // <CR>
@@ -55,9 +55,9 @@ public class TokenUtil {
       case '\u2028': // <LS>
       case '\u2029': // <PS>
       case '\uFEFF': // <BOM>
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
       default:
-        return TernaryValue.FALSE; // TODO(moz): Correct this.
+        return Tri.FALSE; // TODO(moz): Correct this.
     }
   }
 }

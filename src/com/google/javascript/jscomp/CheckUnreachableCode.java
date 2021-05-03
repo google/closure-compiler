@@ -20,11 +20,11 @@ import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
 import com.google.javascript.jscomp.graph.GraphReachability.EdgeTuple;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Use {@link ControlFlowGraph} and {@link GraphReachability} to inform user
@@ -92,8 +92,8 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
         // TODO(user): Handle more complicated expression like true == true,
         // etc....
         if (condition != null) {
-          TernaryValue val = NodeUtil.getBooleanValue(condition);
-          if (val != TernaryValue.UNKNOWN) {
+          Tri val = NodeUtil.getBooleanValue(condition);
+          if (val != Tri.UNKNOWN) {
             return val.toBoolean(true) == (branch == Branch.ON_TRUE);
           }
         }

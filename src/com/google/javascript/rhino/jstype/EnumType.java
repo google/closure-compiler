@@ -39,9 +39,10 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
+import static com.google.javascript.jscomp.base.Tri.FALSE;
+import static com.google.javascript.jscomp.base.Tri.TRUE;
 
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import java.util.Collections;
@@ -168,8 +169,8 @@ public class EnumType extends PrototypeObjectType implements JSType.WithSourceRe
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = super.testForEquality(that);
+  public Tri testForEquality(JSType that) {
+    Tri result = super.testForEquality(that);
     if (result != null) {
       return result;
     }

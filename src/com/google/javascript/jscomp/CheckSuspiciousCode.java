@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Checks for common errors, such as misplaced semicolons:
@@ -181,9 +181,9 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   private void checkLeftOperandOfLogicalOperator(NodeTraversal t, Node n) {
     if (n.isOr() || n.isAnd()) {
       String operator = n.isOr() ? "||" : "&&";
-      TernaryValue v = getBooleanValueWithTypes(n.getFirstChild());
-      if (v != TernaryValue.UNKNOWN) {
-        String result = v == TernaryValue.TRUE ? "truthy" : "falsy";
+      Tri v = getBooleanValueWithTypes(n.getFirstChild());
+      if (v != Tri.UNKNOWN) {
+        String result = v == Tri.TRUE ? "truthy" : "falsy";
         t.report(n, SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR, operator, result);
       }
     }
@@ -229,7 +229,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
    * back off from always-falsy function call results, since it provides a valuable check and lies
    * in this direction are much less common.
    */
-  private TernaryValue getBooleanValueWithTypes(Node n) {
+  private Tri getBooleanValueWithTypes(Node n) {
     switch (n.getToken()) {
       case ASSIGN:
       case COMMA:
@@ -239,25 +239,25 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       case AND:
         // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
         // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
-        return TernaryValue.UNKNOWN.and(getBooleanValueWithTypes(n.getLastChild()));
+        return Tri.UNKNOWN.and(getBooleanValueWithTypes(n.getLastChild()));
       case OR:
         // Assume the left-hand side is unknown. If it's not then we'll report it elsewhere. This
         // prevents revisiting deeper nodes repeatedly, which would result in O(n^2) performance.
-        return TernaryValue.UNKNOWN.or(getBooleanValueWithTypes(n.getLastChild()));
+        return Tri.UNKNOWN.or(getBooleanValueWithTypes(n.getLastChild()));
       case HOOK:
         {
-          TernaryValue trueValue = getBooleanValueWithTypes(n.getSecondChild());
-          TernaryValue falseValue = getBooleanValueWithTypes(n.getLastChild());
-          return trueValue.equals(falseValue) ? trueValue : TernaryValue.UNKNOWN;
+          Tri trueValue = getBooleanValueWithTypes(n.getSecondChild());
+          Tri falseValue = getBooleanValueWithTypes(n.getLastChild());
+          return trueValue.equals(falseValue) ? trueValue : Tri.UNKNOWN;
         }
       case FUNCTION:
       case CLASS:
       case NEW:
       case ARRAYLIT:
       case OBJECTLIT:
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
       case VOID:
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       case GETPROP:
       case GETELEM:
       case OPTCHAIN_GETELEM:
@@ -266,7 +266,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
         // prevents spurious warnings from not including undefined in getelem's return value,
         // from existence checks of symbols the externs define as certainly true, or from default
         // initialization of globals ({@code x.y = x.y || {}}).
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
       default:
     }
     // If we reach this point then all the composite structures that we can decompose have
@@ -279,8 +279,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     // (2) it propagates our unique amalgam of syntax-based and type-based checks to work when more
     // deeply nested (i.e. recursively).  These differences rely on assumptions that are very
     // specific to this use case, so it does not make sense to upstream them.
-    TernaryValue literalValue = NodeUtil.getBooleanValue(n);
-    if (literalValue != TernaryValue.UNKNOWN || n.isName()) {
+    Tri literalValue = NodeUtil.getBooleanValue(n);
+    if (literalValue != Tri.UNKNOWN || n.isName()) {
       // If the truthiness is determinstic from the syntax then return that immediately.
       // Alternatively, NAME nodes also get a pass since we don't trust the type information.
       return literalValue;
@@ -291,8 +291,8 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       // of function calls (e.g. Map.prototype.get), so it's still important to check.  But
       // always-falsy values are a little more obviously wrong and there should be no reason for
       // those type annotations to be lies.  ANDing with UNKNOWN ensures we never return TRUE.
-      return TernaryValue.UNKNOWN.and(type.getPossibleToBooleanOutcomes().toTernaryValue());
+      return Tri.UNKNOWN.and(type.getPossibleToBooleanOutcomes().toTri());
     }
-    return TernaryValue.UNKNOWN;
+    return Tri.UNKNOWN;
   }
 }

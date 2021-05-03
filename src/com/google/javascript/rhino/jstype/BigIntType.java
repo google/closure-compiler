@@ -39,8 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
+import com.google.javascript.jscomp.base.Tri;
 
 /** BigInt type. */
 public class BigIntType extends ValueType {
@@ -54,8 +53,8 @@ public class BigIntType extends ValueType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = super.testForEquality(that);
+  public Tri testForEquality(JSType that) {
+    Tri result = super.testForEquality(that);
     if (result != null) {
       return result;
     }
@@ -65,9 +64,9 @@ public class BigIntType extends ValueType {
         || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))) {
-      return UNKNOWN;
+      return Tri.UNKNOWN;
     }
-    return FALSE;
+    return Tri.FALSE;
   }
 
   @Override

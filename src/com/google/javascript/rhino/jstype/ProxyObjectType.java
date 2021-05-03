@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -259,7 +260,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final TernaryValue testForEquality(JSType that) {
+  public final Tri testForEquality(JSType that) {
     return referencedType.testForEquality(that);
   }
 

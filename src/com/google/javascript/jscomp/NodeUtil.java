@@ -32,6 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.parsing.ParsingUtil;
@@ -49,7 +50,6 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -87,19 +87,19 @@ public final class NodeUtil {
   private NodeUtil() {}
 
   /**
-   * Gets the boolean value of a node that represents an expression, or {@code TernaryValue.UNKNOWN}
-   * if no such value can be determined by static analysis.
+   * Gets the boolean value of a node that represents an expression, or {@code Tri.UNKNOWN} if no
+   * such value can be determined by static analysis.
    *
    * <p>This method does not consider whether the node may have side-effects.
    */
-  static TernaryValue getBooleanValue(Node n) {
+  static Tri getBooleanValue(Node n) {
     // This switch consists of cases that are not supported by getLiteralBooleanValue(),
     // which we will call if none of these match.
     switch (n.getToken()) {
       case NULL:
       case FALSE:
       case VOID:
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
 
       case TRUE:
       case REGEXP:
@@ -108,26 +108,26 @@ public final class NodeUtil {
       case NEW:
       case ARRAYLIT:
       case OBJECTLIT:
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
 
       case TEMPLATELIT:
         if (n.hasOneChild()) {
           Node templateLitString = n.getOnlyChild();
           checkState(templateLitString.isTemplateLitString(), templateLitString);
           String cookedString = templateLitString.getCookedString();
-          return TernaryValue.forBoolean(cookedString != null && !cookedString.isEmpty());
+          return Tri.forBoolean(cookedString != null && !cookedString.isEmpty());
         } else {
-          return TernaryValue.UNKNOWN;
+          return Tri.UNKNOWN;
         }
 
       case STRINGLIT:
-        return TernaryValue.forBoolean(n.getString().length() > 0);
+        return Tri.forBoolean(n.getString().length() > 0);
 
       case NUMBER:
-        return TernaryValue.forBoolean(n.getDouble() != 0);
+        return Tri.forBoolean(n.getDouble() != 0);
 
       case BIGINT:
-        return TernaryValue.forBoolean(!n.getBigInt().equals(BigInteger.ZERO));
+        return Tri.forBoolean(!n.getBigInt().equals(BigInteger.ZERO));
 
       case NOT:
         return getBooleanValue(n.getLastChild()).not();
@@ -137,11 +137,11 @@ public final class NodeUtil {
         if ("undefined".equals(name) || "NaN".equals(name)) {
           // We assume here that programs don't change the value of the keyword
           // undefined to something other than the value undefined.
-          return TernaryValue.FALSE;
+          return Tri.FALSE;
         } else if ("Infinity".equals(name)) {
-          return TernaryValue.TRUE;
+          return Tri.TRUE;
         } else {
-          return TernaryValue.UNKNOWN;
+          return Tri.UNKNOWN;
         }
 
       case ASSIGN:
@@ -151,38 +151,38 @@ public final class NodeUtil {
 
       case AND:
         {
-          TernaryValue lhs = getBooleanValue(n.getFirstChild());
-          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          Tri lhs = getBooleanValue(n.getFirstChild());
+          Tri rhs = getBooleanValue(n.getLastChild());
           return lhs.and(rhs);
         }
       case OR:
         {
-          TernaryValue lhs = getBooleanValue(n.getFirstChild());
-          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          Tri lhs = getBooleanValue(n.getFirstChild());
+          Tri rhs = getBooleanValue(n.getLastChild());
           return lhs.or(rhs);
         }
       case HOOK:
         {
-          TernaryValue trueValue = getBooleanValue(n.getSecondChild());
-          TernaryValue falseValue = getBooleanValue(n.getLastChild());
+          Tri trueValue = getBooleanValue(n.getSecondChild());
+          Tri falseValue = getBooleanValue(n.getLastChild());
           if (trueValue.equals(falseValue)) {
             return trueValue;
           } else {
-            return TernaryValue.UNKNOWN;
+            return Tri.UNKNOWN;
           }
         }
       case COALESCE:
         {
-          TernaryValue lhs = getBooleanValue(n.getFirstChild());
-          TernaryValue rhs = getBooleanValue(n.getLastChild());
-          if (lhs.equals(TernaryValue.TRUE) || lhs.equals(rhs)) {
+          Tri lhs = getBooleanValue(n.getFirstChild());
+          Tri rhs = getBooleanValue(n.getLastChild());
+          if (lhs.equals(Tri.TRUE) || lhs.equals(rhs)) {
             return lhs;
           } else {
-            return TernaryValue.UNKNOWN;
+            return Tri.UNKNOWN;
           }
         }
       default:
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
     }
   }
 
@@ -246,8 +246,8 @@ public final class NodeUtil {
         return "undefined";
 
       case NOT:
-        TernaryValue child = getBooleanValue(n.getFirstChild());
-        if (child != TernaryValue.UNKNOWN) {
+        Tri child = getBooleanValue(n.getFirstChild());
+        if (child != Tri.UNKNOWN) {
           return child.toBoolean(true) ? "false" : "true"; // reversed.
         }
         break;
@@ -346,8 +346,8 @@ public final class NodeUtil {
         return null;
 
       case NOT:
-        TernaryValue child = getBooleanValue(n.getFirstChild());
-        if (child != TernaryValue.UNKNOWN) {
+        Tri child = getBooleanValue(n.getFirstChild());
+        if (child != Tri.UNKNOWN) {
           return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
         }
         break;
@@ -441,8 +441,8 @@ public final class NodeUtil {
         return n.getBigInt();
 
       case NOT:
-        TernaryValue child = getBooleanValue(n.getFirstChild());
-        if (child != TernaryValue.UNKNOWN) {
+        Tri child = getBooleanValue(n.getFirstChild());
+        if (child != Tri.UNKNOWN) {
           return child.toBoolean(true) ? BigInteger.ZERO : BigInteger.ONE; // reversed.
         }
         return null;
@@ -519,10 +519,10 @@ public final class NodeUtil {
   static String trimJsWhiteSpace(String s) {
     int start = 0;
     int end = s.length();
-    while (end > 0 && TokenUtil.isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
+    while (end > 0 && TokenUtil.isStrWhiteSpaceChar(s.charAt(end - 1)) == Tri.TRUE) {
       end--;
     }
-    while (start < end && TokenUtil.isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
+    while (start < end && TokenUtil.isStrWhiteSpaceChar(s.charAt(start)) == Tri.TRUE) {
       start++;
     }
     return s.substring(start, end);

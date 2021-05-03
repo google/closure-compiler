@@ -20,12 +20,12 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import javax.annotation.Nullable;
 
 /**
@@ -58,8 +58,8 @@ class CheckMissingReturn implements ScopedCallback {
               // type system that can evaluate some impressions' boolean value but
               // for now we will keep this pass lightweight.
               if (condition != null) {
-                TernaryValue val = NodeUtil.getBooleanValue(condition);
-                if (val != TernaryValue.UNKNOWN) {
+                Tri val = NodeUtil.getBooleanValue(condition);
+                if (val != Tri.UNKNOWN) {
                   return val.toBoolean(true) == (Branch.ON_TRUE == branch);
                 }
               }

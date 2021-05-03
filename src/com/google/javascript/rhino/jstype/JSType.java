@@ -46,6 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -906,41 +907,41 @@ public abstract class JSType {
    * Algorithm (11.9.3, page 55&ndash;56) of the ECMA-262 specification.<p>
    */
   public final boolean canTestForEqualityWith(JSType that) {
-    return testForEquality(that).equals(TernaryValue.UNKNOWN);
+    return testForEquality(that).equals(Tri.UNKNOWN);
   }
 
   /**
    * Compares {@code this} and {@code that}.
-   * @return <ul>
-   * <li>{@link TernaryValue#TRUE} if the comparison of values of
-   *   {@code this} type and {@code that} always succeed (such as
-   *   {@code undefined} compared to {@code null})</li>
-   * <li>{@link TernaryValue#FALSE} if the comparison of values of
-   *   {@code this} type and {@code that} always fails (such as
-   *   {@code undefined} compared to {@code number})</li>
-   * <li>{@link TernaryValue#UNKNOWN} if the comparison can succeed or
-   *   fail depending on the concrete values</li>
-   * </ul>
+   *
+   * @return
+   *     <ul>
+   *       <li>{@link Tri#TRUE} if the comparison of values of {@code this} type and {@code that}
+   *           always succeed (such as {@code undefined} compared to {@code null})
+   *       <li>{@link Tri#FALSE} if the comparison of values of {@code this} type and {@code that}
+   *           always fails (such as {@code undefined} compared to {@code number})
+   *       <li>{@link Tri#UNKNOWN} if the comparison can succeed or fail depending on the concrete
+   *           values
+   *     </ul>
    */
-  public TernaryValue testForEquality(JSType that) {
+  public Tri testForEquality(JSType that) {
     return testForEqualityHelper(this, that);
   }
 
-  final TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
+  final Tri testForEqualityHelper(JSType aType, JSType bType) {
     if (bType.isAllType() || bType.isUnknownType() ||
         bType.isNoResolvedType() ||
         aType.isAllType() || aType.isUnknownType() ||
         aType.isNoResolvedType()) {
-      return TernaryValue.UNKNOWN;
+      return Tri.UNKNOWN;
     }
 
     boolean aIsEmpty = aType.isEmptyType();
     boolean bIsEmpty = bType.isEmptyType();
     if (aIsEmpty || bIsEmpty) {
       if (aIsEmpty && bIsEmpty) {
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
       } else {
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
       }
     }
 
@@ -949,7 +950,7 @@ public abstract class JSType {
 
       // TODO(johnlenz): tighten function type comparisons in general.
       if (otherType.isSymbol()) {
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       }
 
       // In theory, functions are comparable to anything except
@@ -961,9 +962,9 @@ public abstract class JSType {
       JSType greatestSubtype =
           otherType.getGreatestSubtype(getNativeType(JSTypeNative.OBJECT_TYPE));
       if (greatestSubtype.isNoType() || greatestSubtype.isNoObjectType()) {
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       } else {
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
       }
     }
 
@@ -975,15 +976,15 @@ public abstract class JSType {
     if (aType.isSymbol()) {
       return bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_TYPE))
               || bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE))
-          ? TernaryValue.UNKNOWN
-          : TernaryValue.FALSE;
+          ? Tri.UNKNOWN
+          : Tri.FALSE;
     }
 
     if (bType.isSymbol()) {
       return aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_TYPE))
               || aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE))
-          ? TernaryValue.UNKNOWN
-          : TernaryValue.FALSE;
+          ? Tri.UNKNOWN
+          : Tri.FALSE;
     }
 
     return null;

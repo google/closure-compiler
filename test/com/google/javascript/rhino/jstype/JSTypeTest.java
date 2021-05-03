@@ -40,9 +40,9 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
+import static com.google.javascript.jscomp.base.Tri.FALSE;
+import static com.google.javascript.jscomp.base.Tri.TRUE;
+import static com.google.javascript.jscomp.base.Tri.UNKNOWN;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Supplier;
@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Outcome;
@@ -4147,7 +4148,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     compare(TRUE, NO_TYPE, NO_TYPE);
   }
 
-  private void compare(TernaryValue r, JSType t1, JSType t2) {
+  private void compare(Tri r, JSType t1, JSType t2) {
     assertThat(t1.testForEquality(t2)).isEqualTo(r);
     assertThat(t2.testForEquality(t1)).isEqualTo(r);
   }
@@ -4531,8 +4532,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     List<JSType> listB = getTypesToTestForSymmetry();
     for (JSType typeA : listA) {
       for (JSType typeB : listB) {
-        TernaryValue aOnB = typeA.testForEquality(typeB);
-        TernaryValue bOnA = typeB.testForEquality(typeA);
+        Tri aOnB = typeA.testForEquality(typeB);
+        Tri bOnA = typeB.testForEquality(typeA);
         assertWithMessage(
                 lines(
                     "testForEquality not symmetrical:",

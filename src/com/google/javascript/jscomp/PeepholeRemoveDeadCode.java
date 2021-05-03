@@ -21,10 +21,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayDeque;
 import javax.annotation.Nullable;
 
@@ -561,21 +561,21 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       // Optimize switches with constant condition
       if (NodeUtil.isLiteralValue(cond, false)) {
         Node caseLabel;
-        TernaryValue caseMatches = TernaryValue.TRUE;
+        Tri caseMatches = Tri.TRUE;
         // Remove cases until you find one that may match
         for (cur = cond.getNext(); cur != null; cur = next) {
           next = cur.getNext();
           caseLabel = cur.getFirstChild();
           caseMatches = PeepholeFoldConstants.evaluateComparison(this, Token.SHEQ, cond, caseLabel);
-          if (caseMatches == TernaryValue.TRUE) {
+          if (caseMatches == Tri.TRUE) {
             break;
-          } else if (caseMatches == TernaryValue.UNKNOWN) {
+          } else if (caseMatches == Tri.UNKNOWN) {
             break;
           } else {
             removeCase(n, cur);
           }
         }
-        if (cur != null && caseMatches == TernaryValue.TRUE) {
+        if (cur != null && caseMatches == Tri.TRUE) {
           // Skip cases until you find one whose last stm is a removable break
           Node matchingCase = cur;
           Node matchingCaseBlock = matchingCase.getLastChild();
@@ -843,8 +843,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (lhsAssign.isName() && condition.isName()
           && lhsAssign.getString().equals(condition.getString())) {
         Node rhsAssign = getSimpleAssignmentValue(n);
-        TernaryValue value = NodeUtil.getBooleanValue(rhsAssign);
-        if (value != TernaryValue.UNKNOWN) {
+        Tri value = NodeUtil.getBooleanValue(rhsAssign);
+        if (value != Tri.UNKNOWN) {
           Node replacementConditionNode =
               NodeUtil.booleanNode(value.toBoolean(true));
           condition.replaceWith(replacementConditionNode);
@@ -980,14 +980,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Try transforms that apply to both IF and HOOK.
-    TernaryValue condValue = NodeUtil.getBooleanValue(cond);
-    if (condValue == TernaryValue.UNKNOWN) {
+    Tri condValue = NodeUtil.getBooleanValue(cond);
+    if (condValue == Tri.UNKNOWN) {
       return n;  // We can't remove branches otherwise!
     }
 
     if (mayHaveSideEffects(cond)) {
       // Transform "if (a = 2) {x =2}" into "if (true) {a=2;x=2}"
-      boolean newConditionValue = condValue == TernaryValue.TRUE;
+      boolean newConditionValue = condValue == Tri.TRUE;
       // Add an elseBody if it is needed.
       if (!newConditionValue && elseBody == null) {
         elseBody = IR.block().srcref(n);
@@ -1048,8 +1048,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node thenBody = cond.getNext();
     Node elseBody = thenBody.getNext();
 
-    TernaryValue condValue = NodeUtil.getBooleanValue(cond);
-    if (condValue == TernaryValue.UNKNOWN) {
+    Tri condValue = NodeUtil.getBooleanValue(cond);
+    if (condValue == Tri.UNKNOWN) {
       // If the result nodes are equivalent, then one of the nodes can be
       // removed and it doesn't matter which.
       if (!areNodesEqualForInlining(thenBody, elseBody)) {
@@ -1117,7 +1117,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getBooleanValue(cond) != Tri.FALSE) {
       return n;
     }
 
@@ -1148,7 +1148,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     checkArgument(n.isDo());
 
     Node cond = NodeUtil.getConditionExpression(n);
-    if (NodeUtil.getBooleanValue(cond) != TernaryValue.FALSE) {
+    if (NodeUtil.getBooleanValue(cond) != Tri.FALSE) {
       return n;
     }
 
@@ -1279,7 +1279,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Remove always true loop conditions.
    */
   private void tryFoldForCondition(Node forCondition) {
-    if (getSideEffectFreeBooleanValue(forCondition) == TernaryValue.TRUE) {
+    if (getSideEffectFreeBooleanValue(forCondition) == Tri.TRUE) {
       reportChangeToEnclosingScope(forCondition);
       forCondition.replaceWith(IR.empty());
     }

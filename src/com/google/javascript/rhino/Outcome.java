@@ -38,7 +38,7 @@
 
 package com.google.javascript.rhino;
 
-import com.google.javascript.rhino.jstype.TernaryValue;
+import com.google.javascript.jscomp.base.Tri;
 
 /**
  * An enum for representing truthiness and nullishness of outcomes. The values are TRUE, FALSE,
@@ -55,8 +55,8 @@ public enum Outcome {
     }
 
     @Override
-    public TernaryValue isNullish() {
-      return TernaryValue.FALSE;
+    public Tri isNullish() {
+      return Tri.FALSE;
     }
 
     @Override
@@ -73,8 +73,8 @@ public enum Outcome {
     }
 
     @Override
-    public TernaryValue isNullish() {
-      return TernaryValue.UNKNOWN;
+    public Tri isNullish() {
+      return Tri.UNKNOWN;
     }
 
     @Override
@@ -90,8 +90,8 @@ public enum Outcome {
     }
 
     @Override
-    public TernaryValue isNullish() {
-      return TernaryValue.FALSE;
+    public Tri isNullish() {
+      return Tri.FALSE;
     }
 
     @Override
@@ -107,8 +107,8 @@ public enum Outcome {
     }
 
     @Override
-    public TernaryValue isNullish() {
-      return TernaryValue.TRUE;
+    public Tri isNullish() {
+      return Tri.TRUE;
     }
 
     @Override
@@ -121,10 +121,10 @@ public enum Outcome {
   public abstract boolean isTruthy();
 
   /**
-   * Determines whether an Outcome enum value is nullish. Using TernaryValue instead of a boolean
-   * because 0 is Outcome.FALSE but not nullish so sometimes it is unclear.
+   * Determines whether an Outcome enum value is nullish. Using Tri instead of a boolean because 0
+   * is Outcome.FALSE but not nullish so sometimes it is unclear.
    */
-  public abstract TernaryValue isNullish();
+  public abstract Tri isNullish();
 
   /** Gets the {@code not} of {@code this}. */
   public abstract Outcome not();

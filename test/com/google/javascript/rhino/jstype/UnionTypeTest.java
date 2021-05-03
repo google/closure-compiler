@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -333,7 +334,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertThat(stringOrNumber.getLeastSupertype(stringOrBoolean).toString())
         .isEqualTo("(boolean|number|string)");
     assertThat(stringOrNumber.getGreatestSubtype(stringOrBoolean).toString()).isEqualTo("string");
-    assertThat(stringOrNumber.testForEquality(stringOrBoolean)).isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(stringOrNumber.testForEquality(stringOrBoolean)).isEqualTo(Tri.UNKNOWN);
     assertThat(stringOrNumber.getTypesUnderEquality(stringOrBoolean).typeA.toString())
         .isEqualTo("(number|string)");
     assertThat(stringOrNumber.getTypesUnderShallowEquality(stringOrBoolean).typeA.toString())
@@ -351,8 +352,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
         .isEqualTo("(boolean|number|string)");
     assertThat(stringOrNumberProxy.getGreatestSubtype(stringOrBooleanProxy).toString())
         .isEqualTo("string");
-    assertThat(stringOrNumberProxy.testForEquality(stringOrBooleanProxy))
-        .isEqualTo(TernaryValue.UNKNOWN);
+    assertThat(stringOrNumberProxy.testForEquality(stringOrBooleanProxy)).isEqualTo(Tri.UNKNOWN);
     assertThat(stringOrNumberProxy.getTypesUnderEquality(stringOrBooleanProxy).typeA.toString())
         .isEqualTo("(number|string)");
     assertThat(

@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -64,7 +65,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -231,87 +231,87 @@ public final class NodeUtilTest {
 
     /** Expected result of NodeUtil.getBooleanValue() */
     @Parameter(1)
-    public TernaryValue expectedResult;
+    public Tri expectedResult;
 
     @Parameters(name = "getBooleanValue(\"{0}\") => {1}")
     public static Iterable<Object[]> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
             // truly literal, side-effect free values are always known
-            {"true", TernaryValue.TRUE},
-            {"10", TernaryValue.TRUE},
-            {"1n", TernaryValue.TRUE},
-            {"'0'", TernaryValue.TRUE},
-            {"/a/", TernaryValue.TRUE},
-            {"{}", TernaryValue.TRUE},
-            {"[]", TernaryValue.TRUE},
-            {"false", TernaryValue.FALSE},
-            {"null", TernaryValue.FALSE},
-            {"0", TernaryValue.FALSE},
-            {"0n", TernaryValue.FALSE},
-            {"''", TernaryValue.FALSE},
-            {"undefined", TernaryValue.FALSE},
+            {"true", Tri.TRUE},
+            {"10", Tri.TRUE},
+            {"1n", Tri.TRUE},
+            {"'0'", Tri.TRUE},
+            {"/a/", Tri.TRUE},
+            {"{}", Tri.TRUE},
+            {"[]", Tri.TRUE},
+            {"false", Tri.FALSE},
+            {"null", Tri.FALSE},
+            {"0", Tri.FALSE},
+            {"0n", Tri.FALSE},
+            {"''", Tri.FALSE},
+            {"undefined", Tri.FALSE},
 
             // literals that have side-effects aren't pure
-            {"{a:foo()}", TernaryValue.TRUE},
-            {"[foo()]", TernaryValue.TRUE},
+            {"{a:foo()}", Tri.TRUE},
+            {"[foo()]", Tri.TRUE},
 
             // not really literals, but we pretend they are for our purposes
-            {"void 0", TernaryValue.FALSE},
+            {"void 0", Tri.FALSE},
             // side-effect keeps this one from being pure
-            {"void foo()", TernaryValue.FALSE},
-            {"!true", TernaryValue.FALSE},
-            {"!false", TernaryValue.TRUE},
-            {"!''", TernaryValue.TRUE},
-            {"class Klass {}", TernaryValue.TRUE},
-            {"new Date()", TernaryValue.TRUE},
-            {"b", TernaryValue.UNKNOWN},
-            {"-'0.0'", TernaryValue.UNKNOWN},
+            {"void foo()", Tri.FALSE},
+            {"!true", Tri.FALSE},
+            {"!false", Tri.TRUE},
+            {"!''", Tri.TRUE},
+            {"class Klass {}", Tri.TRUE},
+            {"new Date()", Tri.TRUE},
+            {"b", Tri.UNKNOWN},
+            {"-'0.0'", Tri.UNKNOWN},
 
             // template literals
-            {"``", TernaryValue.FALSE},
-            {"`definiteLength`", TernaryValue.TRUE},
-            {"`${some}str`", TernaryValue.UNKNOWN},
+            {"``", Tri.FALSE},
+            {"`definiteLength`", Tri.TRUE},
+            {"`${some}str`", Tri.UNKNOWN},
 
             // non-literal expressions
-            {"a=true", TernaryValue.TRUE},
-            {"a=false", TernaryValue.FALSE},
-            {"a=(false,true)", TernaryValue.TRUE},
-            {"a=(true,false)", TernaryValue.FALSE},
-            {"a=(false || true)", TernaryValue.TRUE},
-            {"a=(true && false)", TernaryValue.FALSE},
-            {"a=!(true && false)", TernaryValue.TRUE},
-            {"a,true", TernaryValue.TRUE},
-            {"a,false", TernaryValue.FALSE},
-            {"true||false", TernaryValue.TRUE},
-            {"false||false", TernaryValue.FALSE},
-            {"true&&true", TernaryValue.TRUE},
-            {"true&&false", TernaryValue.FALSE},
+            {"a=true", Tri.TRUE},
+            {"a=false", Tri.FALSE},
+            {"a=(false,true)", Tri.TRUE},
+            {"a=(true,false)", Tri.FALSE},
+            {"a=(false || true)", Tri.TRUE},
+            {"a=(true && false)", Tri.FALSE},
+            {"a=!(true && false)", Tri.TRUE},
+            {"a,true", Tri.TRUE},
+            {"a,false", Tri.FALSE},
+            {"true||false", Tri.TRUE},
+            {"false||false", Tri.FALSE},
+            {"true&&true", Tri.TRUE},
+            {"true&&false", Tri.FALSE},
 
             // Assignment ops other than ASSIGN are unknown.
-            {"a *= 2", TernaryValue.UNKNOWN},
+            {"a *= 2", Tri.UNKNOWN},
 
             // Complex expressions that contain anything other then "=", ",", or "!" are
             // unknown.
-            {"2 + 2", TernaryValue.UNKNOWN},
+            {"2 + 2", Tri.UNKNOWN},
 
             // assignment values are the RHS
-            {"a=1", TernaryValue.TRUE},
-            {"a=/a/", TernaryValue.TRUE},
-            {"a={}", TernaryValue.TRUE},
+            {"a=1", Tri.TRUE},
+            {"a=/a/", Tri.TRUE},
+            {"a={}", Tri.TRUE},
 
             // hooks have impure boolean value if both cases have same impure boolean value
-            {"a?true:true", TernaryValue.TRUE},
-            {"a?false:false", TernaryValue.FALSE},
-            {"a?true:false", TernaryValue.UNKNOWN},
-            {"a?true:foo()", TernaryValue.UNKNOWN},
+            {"a?true:true", Tri.TRUE},
+            {"a?false:false", Tri.FALSE},
+            {"a?true:false", Tri.UNKNOWN},
+            {"a?true:foo()", Tri.UNKNOWN},
 
             // coalesce returns LHS if LHS is truthy or if LHS and RHS have same boolean value
-            {"null??false", TernaryValue.FALSE}, // both false
-            {"2??[]", TernaryValue.TRUE}, // both true
-            {"{}??false", TernaryValue.TRUE}, // LHS is true
-            {"undefined??[]", TernaryValue.UNKNOWN},
-            {"foo()??true", TernaryValue.UNKNOWN},
+            {"null??false", Tri.FALSE}, // both false
+            {"2??[]", Tri.TRUE}, // both true
+            {"{}??false", Tri.TRUE}, // LHS is true
+            {"undefined??[]", Tri.UNKNOWN},
+            {"foo()??true", Tri.UNKNOWN},
           });
     }
 

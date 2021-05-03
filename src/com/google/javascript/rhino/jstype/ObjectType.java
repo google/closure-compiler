@@ -41,8 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
@@ -255,9 +254,9 @@ public abstract class ObjectType extends JSType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
+  public Tri testForEquality(JSType that) {
     // super
-    TernaryValue result = super.testForEquality(that);
+    Tri result = super.testForEquality(that);
     if (result != null) {
       return result;
     }
@@ -273,9 +272,9 @@ public abstract class ObjectType extends JSType {
         || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))) {
-      return UNKNOWN;
+      return Tri.UNKNOWN;
     }
-    return FALSE;
+    return Tri.FALSE;
   }
 
   /**

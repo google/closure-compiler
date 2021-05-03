@@ -20,11 +20,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeUtil.ValueType;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.math.BigInteger;
 
 /**
@@ -356,8 +356,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    TernaryValue leftVal = getSideEffectFreeBooleanValue(left);
-    if (leftVal == TernaryValue.UNKNOWN) {
+    Tri leftVal = getSideEffectFreeBooleanValue(left);
+    if (leftVal == Tri.UNKNOWN) {
       return n;
     }
 
@@ -587,9 +587,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Token type = n.getToken();
 
-    TernaryValue leftVal = NodeUtil.getBooleanValue(left);
+    Tri leftVal = NodeUtil.getBooleanValue(left);
 
-    if (leftVal != TernaryValue.UNKNOWN) {
+    if (leftVal != Tri.UNKNOWN) {
       boolean lval = leftVal.toBoolean(true);
 
       // (TRUE || x) => TRUE (also, (3 || x) => 3)
@@ -613,10 +613,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         dropped = null;
       }
     } else if (parent.getToken() == type && n == parent.getFirstChild()) {
-      TernaryValue rightValue = NodeUtil.getBooleanValue(right);
+      Tri rightValue = NodeUtil.getBooleanValue(right);
       if (!mayHaveSideEffects(right)) {
-        if ((rightValue == TernaryValue.FALSE && type == Token.OR)
-            || (rightValue == TernaryValue.TRUE && type == Token.AND)) {
+        if ((rightValue == Tri.FALSE && type == Token.OR)
+            || (rightValue == Tri.TRUE && type == Token.AND)) {
           result = left;
           dropped = right;
         }
@@ -646,9 +646,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node result = null;
     Node dropped = null;
 
-    TernaryValue leftVal = NodeUtil.getBooleanValue(left);
+    Tri leftVal = NodeUtil.getBooleanValue(left);
 
-    if (leftVal != TernaryValue.UNKNOWN) {
+    if (leftVal != Tri.UNKNOWN) {
       if (NodeUtil.isNullOrUndefined(left)) {
         result = right;
         dropped = left;
@@ -1158,8 +1158,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold comparison nodes, e.g ==
    */
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    TernaryValue result = evaluateComparison(this, n.getToken(), left, right);
-    if (result == TernaryValue.UNKNOWN) {
+    Tri result = evaluateComparison(this, n.getToken(), left, right);
+    if (result == Tri.UNKNOWN) {
       return n;
     }
 
@@ -1172,7 +1172,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
-  private static TernaryValue tryAbstractRelationalComparison(
+  private static Tri tryAbstractRelationalComparison(
       AbstractPeepholeOptimization peepholeOptimization,
       Node left,
       Node right,
@@ -1186,9 +1186,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (lvStr != null && rvStr != null) {
         // In JS, browsers parse \v differently. So do not compare strings if one contains \v.
         if (lvStr.indexOf('\u000B') != -1 || rvStr.indexOf('\u000B') != -1) {
-          return TernaryValue.UNKNOWN;
+          return Tri.UNKNOWN;
         } else {
-          return TernaryValue.forBoolean(lvStr.compareTo(rvStr) < 0);
+          return Tri.forBoolean(lvStr.compareTo(rvStr) < 0);
         }
       } else if (left.isTypeOf()
           && right.isTypeOf()
@@ -1196,7 +1196,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           && right.getFirstChild().isName()
           && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
         // Special case: `typeof a < typeof a` is always false.
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       }
     }
 
@@ -1204,7 +1204,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     BigInteger lvBig = peepholeOptimization.getSideEffectFreeBigIntValue(left);
     BigInteger rvBig = peepholeOptimization.getSideEffectFreeBigIntValue(right);
     if (lvBig != null && rvBig != null) {
-      return TernaryValue.forBoolean(lvBig.compareTo(rvBig) < 0);
+      return Tri.forBoolean(lvBig.compareTo(rvBig) < 0);
     }
 
     // Then, try comparing as Numbers.
@@ -1212,9 +1212,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Double rvNum = peepholeOptimization.getSideEffectFreeNumberValue(right);
     if (lvNum != null && rvNum != null) {
       if (Double.isNaN(lvNum) || Double.isNaN(rvNum)) {
-        return TernaryValue.forBoolean(willNegate);
+        return Tri.forBoolean(willNegate);
       } else {
-        return TernaryValue.forBoolean(lvNum.doubleValue() < rvNum.doubleValue());
+        return Tri.forBoolean(lvNum.doubleValue() < rvNum.doubleValue());
       }
     }
 
@@ -1231,35 +1231,35 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // LE and GE. We should use type information if available here.
     if (!willNegate && left.isName() && right.isName()) {
       if (left.getString().equals(right.getString())) {
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       }
     }
 
-    return TernaryValue.UNKNOWN;
+    return Tri.UNKNOWN;
   }
 
-  private static TernaryValue compareBigIntAndNumber(
+  private static Tri compareBigIntAndNumber(
       BigInteger bigint, double number, boolean invert, boolean willNegate) {
     // if invert is false, then the number is on the right in tryAbstractRelationalComparison
     // if it's true, then the number is on the left
     if (Double.isNaN(number)) {
-      return TernaryValue.forBoolean(willNegate);
+      return Tri.forBoolean(willNegate);
     } else if (number == Double.POSITIVE_INFINITY) {
-      return invert ? TernaryValue.FALSE : TernaryValue.TRUE;
+      return invert ? Tri.FALSE : Tri.TRUE;
     } else if (number == Double.NEGATIVE_INFINITY) {
-      return invert ? TernaryValue.TRUE : TernaryValue.FALSE;
+      return invert ? Tri.TRUE : Tri.FALSE;
     } else {
       BigInteger numberAsBigInt = BigInteger.valueOf((long) number);
       int comparison = invert ? numberAsBigInt.compareTo(bigint) : bigint.compareTo(numberAsBigInt);
       switch (comparison) {
         case -1:
-          return TernaryValue.TRUE;
+          return Tri.TRUE;
         case 1:
-          return TernaryValue.FALSE;
+          return Tri.FALSE;
         case 0:
           // Even if the number has a decimal it can still be compared to a bigint
           double remainder = (invert ? -number : number) % 1;
-          return TernaryValue.forBoolean(remainder > 0);
+          return Tri.forBoolean(remainder > 0);
         default:
           throw new AssertionError("compareTo returned an unexpected value: " + comparison);
       }
@@ -1267,7 +1267,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-equality-comparison */
-  private static TernaryValue tryAbstractEqualityComparison(
+  private static Tri tryAbstractEqualityComparison(
       AbstractPeepholeOptimization peepholeOptimization, Node left, Node right) {
     // Evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
@@ -1280,21 +1280,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       if ((leftValueType == ValueType.NULL && rightValueType == ValueType.VOID)
           || (leftValueType == ValueType.VOID && rightValueType == ValueType.NULL)) {
-        return TernaryValue.TRUE;
+        return Tri.TRUE;
       }
 
       if ((leftValueType == ValueType.NUMBER && rightValueType == ValueType.STRING)
           || rightValueType == ValueType.BOOLEAN) {
         Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
         return rv == null
-            ? TernaryValue.UNKNOWN
+            ? Tri.UNKNOWN
             : tryAbstractEqualityComparison(peepholeOptimization, left, IR.number(rv));
       }
       if ((leftValueType == ValueType.STRING && rightValueType == ValueType.NUMBER)
           || leftValueType == ValueType.BOOLEAN) {
         Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
         return lv == null
-            ? TernaryValue.UNKNOWN
+            ? Tri.UNKNOWN
             : tryAbstractEqualityComparison(peepholeOptimization, IR.number(lv), right);
       }
 
@@ -1302,27 +1302,27 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
         BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
         if (lv != null && rv != null) {
-          return TernaryValue.forBoolean(lv.equals(rv));
+          return Tri.forBoolean(lv.equals(rv));
         }
       }
 
       if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)
           && rightValueType == ValueType.OBJECT) {
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
       }
       if (leftValueType == ValueType.OBJECT
           && (rightValueType == ValueType.STRING || rightValueType == ValueType.NUMBER)) {
-        return TernaryValue.UNKNOWN;
+        return Tri.UNKNOWN;
       }
 
-      return TernaryValue.FALSE;
+      return Tri.FALSE;
     }
     // In general, the rest of the cases cannot be folded.
-    return TernaryValue.UNKNOWN;
+    return Tri.UNKNOWN;
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison */
-  private static TernaryValue tryStrictEqualityComparison(
+  private static Tri tryStrictEqualityComparison(
       AbstractPeepholeOptimization peepholeOptimization, Node left, Node right) {
     // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
@@ -1330,24 +1330,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
       // Strict equality can only be true for values of the same type.
       if (leftValueType != rightValueType) {
-        return TernaryValue.FALSE;
+        return Tri.FALSE;
       }
       switch (leftValueType) {
         case VOID:
         case NULL:
-          return TernaryValue.TRUE;
+          return Tri.TRUE;
         case NUMBER:
           {
             if (NodeUtil.isNaN(left)) {
-              return TernaryValue.FALSE;
+              return Tri.FALSE;
             }
             if (NodeUtil.isNaN(right)) {
-              return TernaryValue.FALSE;
+              return Tri.FALSE;
             }
             Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
             Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
             if (lv != null && rv != null) {
-              return TernaryValue.forBoolean(lv.doubleValue() == rv.doubleValue());
+              return Tri.forBoolean(lv.doubleValue() == rv.doubleValue());
             }
             break;
           }
@@ -1359,9 +1359,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
               // In JS, browsers parse \v differently. So do not consider strings
               // equal if one contains \v.
               if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
-                return TernaryValue.UNKNOWN;
+                return Tri.UNKNOWN;
               } else {
-                return lv.equals(rv) ? TernaryValue.TRUE : TernaryValue.FALSE;
+                return lv.equals(rv) ? Tri.TRUE : Tri.FALSE;
               }
             } else if (left.isTypeOf()
                 && right.isTypeOf()
@@ -1369,41 +1369,41 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
                 && right.getFirstChild().isName()
                 && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
               // Special case, typeof a == typeof a is always true.
-              return TernaryValue.TRUE;
+              return Tri.TRUE;
             }
             break;
           }
         case BOOLEAN:
           {
-            TernaryValue lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
-            TernaryValue rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
+            Tri lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
+            Tri rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
             return lv.and(rv).or(lv.not().and(rv.not()));
           }
         case BIGINT:
           {
             BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
             BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
-            return TernaryValue.forBoolean(lv.equals(rv));
+            return Tri.forBoolean(lv.equals(rv));
           }
         default: // Symbol and Object cannot be folded in the general case.
-          return TernaryValue.UNKNOWN;
+          return Tri.UNKNOWN;
       }
     }
 
     // Then, try to evaluate based on the value of the node. There's only one special case:
     // Any strict equality comparison against NaN returns false.
     if (NodeUtil.isNaN(left) || NodeUtil.isNaN(right)) {
-      return TernaryValue.FALSE;
+      return Tri.FALSE;
     }
-    return TernaryValue.UNKNOWN;
+    return Tri.UNKNOWN;
   }
 
-  static TernaryValue evaluateComparison(
+  static Tri evaluateComparison(
       AbstractPeepholeOptimization peepholeOptimization, Token op, Node left, Node right) {
     // Don't try to minimize side-effects here.
     if (peepholeOptimization.mayHaveSideEffects(left)
         || peepholeOptimization.mayHaveSideEffects(right)) {
-      return TernaryValue.UNKNOWN;
+      return Tri.UNKNOWN;
     }
 
     switch (op) {

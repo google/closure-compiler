@@ -18,10 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import javax.annotation.Nullable;
 
 /**
@@ -49,7 +49,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
-        if (getSideEffectFreeBooleanValue(cond) == TernaryValue.FALSE) {
+        if (getSideEffectFreeBooleanValue(cond) == Tri.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
           // but as we know the condition will always be false, we can treat them
           // as we would a CONTINUE.

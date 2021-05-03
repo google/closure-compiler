@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
@@ -127,7 +128,7 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
+  public Tri testForEquality(JSType that) {
     return primitiveType.testForEquality(that);
   }
 

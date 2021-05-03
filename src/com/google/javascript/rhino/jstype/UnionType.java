@@ -49,9 +49,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Outcome;
 import java.util.ArrayList;
@@ -251,15 +251,15 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = null;
+  public Tri testForEquality(JSType that) {
+    Tri result = null;
     for (int i = 0; i < alternates.size(); i++) {
       JSType t = alternates.get(i);
-      TernaryValue test = t.testForEquality(that);
+      Tri test = t.testForEquality(that);
       if (result == null) {
         result = test;
       } else if (!result.equals(test)) {
-        return UNKNOWN;
+        return Tri.UNKNOWN;
       }
     }
     return result;

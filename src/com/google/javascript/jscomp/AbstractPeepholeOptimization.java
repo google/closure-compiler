@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.math.BigInteger;
 
 /**
@@ -151,17 +151,17 @@ abstract class AbstractPeepholeOptimization {
   /**
    * Calculate the known boolean value for a node if possible and if it has no side effects.
    *
-   * <p>Returns {@link TernaryValue#UNKNOWN} if the node has side effects or its value cannot be
-   * statically determined.
+   * <p>Returns {@link Tri#UNKNOWN} if the node has side effects or its value cannot be statically
+   * determined.
    */
-  protected TernaryValue getSideEffectFreeBooleanValue(Node n) {
-    TernaryValue value = NodeUtil.getBooleanValue(n);
+  protected Tri getSideEffectFreeBooleanValue(Node n) {
+    Tri value = NodeUtil.getBooleanValue(n);
     // Calculating the boolean value, if any, is likely to be faster than calculating side effects,
     // and there are only a very few cases where we can compute a boolean value, but there could
     // also be side effects. e.g. `void doSomething()` has value `false`, regardless of the
     // behavior of `doSomething()`
-    if (value != TernaryValue.UNKNOWN && astAnalyzer.mayHaveSideEffects(n)) {
-      value = TernaryValue.UNKNOWN;
+    if (value != Tri.UNKNOWN && astAnalyzer.mayHaveSideEffects(n)) {
+      value = Tri.UNKNOWN;
     }
     return value;
   }

@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -63,7 +64,6 @@ import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
-import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -744,7 +744,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
           JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
 
-          TernaryValue result = TernaryValue.UNKNOWN;
+          Tri result = Tri.UNKNOWN;
           if (n.getToken() == Token.EQ || n.isNE()) {
             result = leftTypeRestricted.testForEquality(rightTypeRestricted);
             if (n.isNE()) {
@@ -753,11 +753,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           } else {
             // SHEQ or SHNE
             if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
-              result = n.getToken() == Token.SHEQ ? TernaryValue.FALSE : TernaryValue.TRUE;
+              result = n.getToken() == Token.SHEQ ? Tri.FALSE : Tri.TRUE;
             }
           }
 
-          if (result != TernaryValue.UNKNOWN) {
+          if (result != Tri.UNKNOWN) {
             report(
                 n,
                 DETERMINISTIC_TEST,

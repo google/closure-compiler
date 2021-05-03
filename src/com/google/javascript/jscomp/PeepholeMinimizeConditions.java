@@ -23,10 +23,10 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.MinimizedCondition.MeasuredNode;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * A peephole optimization that minimizes conditional expressions
@@ -1037,8 +1037,8 @@ class PeepholeMinimizeConditions
           // In the last two cases, code size may increase slightly (adding
           // some parens because the comma operator has a low precedence) but
           // the new AST is easier for other passes to handle.
-          TernaryValue rightVal = getSideEffectFreeBooleanValue(right);
-          if (getSideEffectFreeBooleanValue(right) != TernaryValue.UNKNOWN) {
+          Tri rightVal = getSideEffectFreeBooleanValue(right);
+          if (getSideEffectFreeBooleanValue(right) != Tri.UNKNOWN) {
             Token type = n.getToken();
             Node replacement = null;
             boolean rval = rightVal.toBoolean(true);
@@ -1087,21 +1087,21 @@ class PeepholeMinimizeConditions
           //   Only when x is NAME, hence x does not have side effects
           //   x ? x : y        --> x || y
           Node replacement = null;
-          TernaryValue trueNodeVal = getSideEffectFreeBooleanValue(trueNode);
-          TernaryValue falseNodeVal = getSideEffectFreeBooleanValue(falseNode);
-          if (trueNodeVal == TernaryValue.TRUE && falseNodeVal == TernaryValue.FALSE) {
+          Tri trueNodeVal = getSideEffectFreeBooleanValue(trueNode);
+          Tri falseNodeVal = getSideEffectFreeBooleanValue(falseNode);
+          if (trueNodeVal == Tri.TRUE && falseNodeVal == Tri.FALSE) {
             // Remove useless conditionals, keep the condition
             condition.detach();
             replacement = condition;
-          } else if (trueNodeVal == TernaryValue.FALSE && falseNodeVal == TernaryValue.TRUE) {
+          } else if (trueNodeVal == Tri.FALSE && falseNodeVal == Tri.TRUE) {
             // Remove useless conditionals, keep the condition
             condition.detach();
             replacement = IR.not(condition);
-          } else if (trueNodeVal == TernaryValue.TRUE) {
+          } else if (trueNodeVal == Tri.TRUE) {
             // Remove useless true case.
             n.detachChildren();
             replacement = IR.or(condition, falseNode);
-          } else if (falseNodeVal == TernaryValue.FALSE) {
+          } else if (falseNodeVal == Tri.FALSE) {
             // Remove useless false case
             n.detachChildren();
             replacement = IR.and(condition, trueNode);
@@ -1124,8 +1124,8 @@ class PeepholeMinimizeConditions
 
       default:
         // while(true) --> while(1)
-        TernaryValue nVal = getSideEffectFreeBooleanValue(n);
-        if (nVal != TernaryValue.UNKNOWN) {
+        Tri nVal = getSideEffectFreeBooleanValue(n);
+        if (nVal != Tri.UNKNOWN) {
           boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;
           return maybeReplaceChildWithNumber(n, equivalentResult);

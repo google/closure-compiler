@@ -39,8 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
-
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
@@ -98,8 +97,8 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    return UNKNOWN;
+  public Tri testForEquality(JSType that) {
+    return Tri.UNKNOWN;
   }
 
   @Override
