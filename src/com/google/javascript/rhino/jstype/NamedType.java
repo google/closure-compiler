@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -377,14 +378,14 @@ public final class NamedType extends ProxyObjectType {
   private void checkEnumElementCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
     if (referencedType instanceof EnumElementType
-        && areIdentical(this, ((EnumElementType) referencedType).getPrimitiveType())) {
+        && identical(this, ((EnumElementType) referencedType).getPrimitiveType())) {
       handleTypeCycle(reporter);
     }
   }
 
   private void checkProtoCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
-    if (areIdentical(referencedType, this)) {
+    if (identical(referencedType, this)) {
       handleTypeCycle(reporter);
     }
   }

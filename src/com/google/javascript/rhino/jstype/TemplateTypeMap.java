@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -212,7 +213,7 @@ public class TemplateTypeMap {
   public boolean hasTemplateKey(TemplateType templateKey) {
     // Note: match by identity, not equality
     for (TemplateType entry : templateKeys) {
-      if (JSType.areIdentical(templateKey, entry)) {
+      if (identical(templateKey, entry)) {
         return true;
       }
     }
@@ -223,7 +224,7 @@ public class TemplateTypeMap {
   int getTemplateKeyCountThisShouldAlwaysBeOneOrZeroButIsnt(TemplateType templateKey) {
     int count = 0;
     for (TemplateType entry : templateKeys) {
-      if (JSType.areIdentical(templateKey, entry)) {
+      if (identical(templateKey, entry)) {
         count++;
       }
     }
@@ -265,7 +266,7 @@ public class TemplateTypeMap {
   private int getTemplateTypeIndex(TemplateType key) {
     int maxIndex = Math.min(templateKeys.size(), templateValues.size());
     for (int i = maxIndex - 1; i >= 0; i--) {
-      if (JSType.areIdentical(templateKeys.get(i), key)) {
+      if (identical(templateKeys.get(i), key)) {
         return i;
       }
     }

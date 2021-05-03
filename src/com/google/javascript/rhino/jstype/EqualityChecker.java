@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
@@ -126,7 +127,7 @@ final class EqualityChecker {
   boolean checkParameters(ArrowType left, ArrowType right) {
     this.checkHasNotRun();
     this.hasRun = true;
-    return JSType.areIdentical(left, right) || this.areArrowParameterEqual(left, right);
+    return identical(left, right) || this.areArrowParameterEqual(left, right);
   }
 
   private boolean areEqualCaching(JSType left, JSType right) {
@@ -165,7 +166,7 @@ final class EqualityChecker {
   }
 
   private boolean areEqualInternal(JSType left, JSType right) {
-    if (JSType.areIdentical(left, right)) {
+    if (identical(left, right)) {
       return true;
     } else if (left == null || right == null) {
       return false;
@@ -233,7 +234,7 @@ final class EqualityChecker {
 
       checkState(leftUnwrapped.isNominalType() && rightUnwrapped.isNominalType());
       if (left.isResolved() && right.isResolved()) {
-        return JSType.areIdentical(leftUnwrapped, rightUnwrapped);
+        return identical(leftUnwrapped, rightUnwrapped);
       } else {
         // TODO(b/140763807): this is not valid across scopes pre-resolution.
         String nameOfleft = checkNotNull(leftUnwrapped.getReferenceName());
@@ -294,7 +295,7 @@ final class EqualityChecker {
    * interfaces are equal if their names match.
    */
   private boolean areFunctionEqual(FunctionType left, FunctionType right) {
-    if (JSType.areIdentical(left, right)) {
+    if (identical(left, right)) {
       // Identity needs to be re-checked in case a proxy was unwrapped when entering this case.
       return true;
     }
@@ -407,7 +408,7 @@ final class EqualityChecker {
         // Cross-compare every key-value pair in this TemplateTypeMap with
         // those in that TemplateTypeMap. Update the Equivalence match for both
         // key-value pairs involved.
-        if (!JSType.areIdentical(leftKey, rightKey)) {
+        if (!identical(leftKey, rightKey)) {
           continue inner;
         }
 
@@ -435,14 +436,13 @@ final class EqualityChecker {
     @Override
     @SuppressWarnings({
       "ShortCircuitBoolean",
-      "ReferenceEquality",
       "EqualsBrokenForNull",
       "EqualsUnsafeCast"
     })
     public boolean equals(Object other) {
       // Calling left with `null` or not a `Key` should cause a crash.
       CacheKey right = (CacheKey) other;
-      if (this == other) {
+      if (identical(this, other)) {
         return true;
       }
 
@@ -452,8 +452,8 @@ final class EqualityChecker {
       //
       // Use non-short circuiting operators to eliminate branches. Equality checks are
       // side-effect-free and less expensive than branches.
-      return ((this.left == right.left) & (this.right == right.right))
-          | ((this.left == right.right) & (this.right == right.left));
+      return (identical(this.left, right.left) & identical(this.right, right.right))
+          | (identical(this.left, right.right) & identical(this.right, right.left));
     }
 
     CacheKey(JSType left, JSType right) {

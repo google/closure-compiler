@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -281,7 +282,7 @@ public class PrototypeObjectType extends ObjectType {
             ? registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE)
             : registry.getNativeObjectType(JSTypeNative.OBJECT_PROTOTYPE);
     JSType nativePropertyType = nativeType.getPropertyType(propertyName);
-    return !JSType.areIdentical(propertyType, nativePropertyType);
+    return !identical(propertyType, nativePropertyType);
   }
 
   @Override

@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -215,7 +216,6 @@ public final class TemplatizedType extends ProxyObjectType {
     return getReferencedObjTypeInternal();
   }
 
-  @SuppressWarnings("ReferenceEquality")
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
     JSType baseTypeBefore = getReferencedType();
@@ -225,7 +225,7 @@ public final class TemplatizedType extends ProxyObjectType {
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (JSType type : templateTypes) {
       JSType resolved = type.resolve(reporter);
-      rebuild |= resolved != type;
+      rebuild |= !identical(resolved, type);
       builder.add(resolved);
     }
 

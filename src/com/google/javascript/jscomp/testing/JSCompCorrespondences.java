@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.base.JSCompObjects;
 import com.google.javascript.rhino.Node;
 
 /** Well known {@link Correspondence} instances for use in tests. */
@@ -52,9 +53,8 @@ public final class JSCompCorrespondences {
     return (Correspondence<A, B>) REFERENCE_EQUALITY;
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private static final Correspondence<?, ?> REFERENCE_EQUALITY =
-      Correspondence.from((a, b) -> a == b, "is same instance as");
+      Correspondence.from(JSCompObjects::identical, "is same instance as");
 
   /** A compiler for parsing snippets of code into AST as leniently as possible. */
   private static final Compiler COMPILER_FOR_PARSING = new Compiler();

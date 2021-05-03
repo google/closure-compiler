@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 
 import com.google.auto.value.AutoValue;
@@ -250,7 +251,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   @Override
   public final boolean isInstanceType() {
     // Only `Function` is both a function type and the intance type of a nominal constructor.
-    return JSType.areIdentical(this, this.registry.getNativeType(JSTypeNative.FUNCTION_TYPE));
+    return identical(this, this.registry.getNativeType(JSTypeNative.FUNCTION_TYPE));
   }
 
   @Override
@@ -517,7 +518,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       return false;
     }
     // getInstanceType fails if the function is not a constructor
-    if (isConstructor() && JSType.areIdentical(prototype, getInstanceType())) {
+    if (isConstructor() && identical(prototype, getInstanceType())) {
       return false;
     }
     return setPrototypeNoCheck(prototype, propertyNode);
@@ -920,8 +921,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    */
   @Override
   void appendTo(TypeStringBuilder sb) {
-    if (!isPrettyPrint()
-        || JSType.areIdentical(this, registry.getNativeType(JSTypeNative.FUNCTION_TYPE))) {
+    if (!isPrettyPrint() || identical(this, registry.getNativeType(JSTypeNative.FUNCTION_TYPE))) {
       sb.append(sb.isForAnnotations() ? "!Function" : "Function");
       return;
     }
@@ -1141,7 +1141,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
       }
       ObjectType resolved = rt.toObjectType();
       resolvedList.add(resolved);
-      changed |= !JSType.areIdentical(resolved, type);
+      changed |= !identical(resolved, type);
     }
     return changed ? resolvedList.build() : null;
   }
@@ -1243,7 +1243,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
           // A -> B -> C -> D -> C, will be pruned into:
           // c -> D -> C
           path.add(superConstructor);
-          while (!JSType.areIdentical(path.get(0), superConstructor)) {
+          while (!identical(path.get(0), superConstructor)) {
             path.remove(0);
           }
           return path;

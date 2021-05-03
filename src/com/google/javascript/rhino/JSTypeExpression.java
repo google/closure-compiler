@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
@@ -198,9 +200,8 @@ public final class JSTypeExpression implements Serializable {
   }
 
   /** Whether this expression is an explicit unknown template bound. */
-  @SuppressWarnings("ReferenceEquality")
   public boolean isExplicitUnknownTemplateBound() {
-    return root.getToken() == Token.QMARK
+    return identical(root.getToken(), Token.QMARK)
         && !root.hasChildren()
         && !sourceName.equals(IMPLICIT_TEMPLATE_BOUND_SOURCE);
   }

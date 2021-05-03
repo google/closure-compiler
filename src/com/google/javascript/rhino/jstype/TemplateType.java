@@ -45,6 +45,8 @@
  */
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
+
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
 
@@ -91,7 +93,7 @@ public final class TemplateType extends ProxyObjectType {
 
   @Override
   void appendTo(TypeStringBuilder sb) {
-    if (JSType.areIdentical(bound, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))) {
+    if (identical(bound, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE))) {
       // This is an unbound template, don't print it's bound
       sb.append(this.name);
     } else {

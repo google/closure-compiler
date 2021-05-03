@@ -40,7 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.rhino.jstype.JSType.areIdentical;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.errorprone.annotations.MustBeClosed;
 import java.util.ArrayDeque;
@@ -143,7 +143,7 @@ public final class JSTypeResolver {
     }
 
     JSType expected = this.captureStack.removeLast();
-    checkState(areIdentical(captured, expected), "Captured %s; Expected %s", captured, expected);
+    checkState(identical(captured, expected), "Captured %s; Expected %s", captured, expected);
 
     switch (this.state) {
       case CLOSED:

@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -70,11 +71,6 @@ import javax.annotation.Nullable;
  */
 public abstract class JSType {
   private static final long serialVersionUID = 1L;
-
-  @SuppressWarnings("ReferenceEquality")
-  public static final boolean areIdentical(JSType a, JSType b) {
-    return a == b;
-  }
 
   private JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
@@ -201,7 +197,7 @@ public abstract class JSType {
     return isNoType()
         || isNoObjectType()
         || isNoResolvedType()
-        || areIdentical(this, registry.getNativeFunctionType(JSTypeNative.LEAST_FUNCTION_TYPE));
+        || identical(this, registry.getNativeFunctionType(JSTypeNative.LEAST_FUNCTION_TYPE));
   }
 
   public boolean isNumberObjectType() {
@@ -402,7 +398,7 @@ public abstract class JSType {
 
   /** Returns true if this is a global this type. */
   public final boolean isGlobalThisType() {
-    return areIdentical(this, registry.getNativeType(JSTypeNative.GLOBAL_THIS));
+    return identical(this, registry.getNativeType(JSTypeNative.GLOBAL_THIS));
   }
 
   /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
@@ -1012,7 +1008,7 @@ public abstract class JSType {
         // Let's just say it's always ok to compare two functions.
         // Once the TODO in FunctionType is fixed, we should be able to
         // remove this.
-        areIdentical(inf, registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE));
+        identical(inf, registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE));
   }
 
   /**
@@ -1060,7 +1056,7 @@ public abstract class JSType {
    */
   @SuppressWarnings("AmbiguousMethodReference")
   public JSType getLeastSupertype(JSType that) {
-    if (areIdentical(this, that)) {
+    if (identical(this, that)) {
       return this;
     }
 
@@ -1228,7 +1224,7 @@ public abstract class JSType {
    */
   public JSType getRestrictedTypeGivenOutcome(
       Outcome outcome) {
-    if (outcome.isTruthy() && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
+    if (outcome.isTruthy() && identical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
       return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
     }
 
@@ -1236,8 +1232,8 @@ public abstract class JSType {
     // so the result for any other non-union type must be NO_TYPE.
     // Note that the UnionType class is responsible for handling the union case.
     if (outcome.isNullish().toBoolean(false)) {
-      if (areIdentical(this, getNativeType(JSTypeNative.VOID_TYPE))
-          || areIdentical(this, getNativeType(JSTypeNative.NULL_TYPE))) {
+      if (identical(this, getNativeType(JSTypeNative.VOID_TYPE))
+          || identical(this, getNativeType(JSTypeNative.NULL_TYPE))) {
         return this;
       } else {
         return getNativeType(JSTypeNative.NO_TYPE);
@@ -1363,7 +1359,7 @@ public abstract class JSType {
     // Other types.
     // There are only two types whose shallow inequality is deterministically
     // true -- null and undefined. We can just enumerate them.
-    if (areIdentical(this, that) && this.isNullTypeOrVoidType()) {
+    if (identical(this, that) && this.isNullTypeOrVoidType()) {
       return new TypePair(null, null);
     }
     // Since unions have already been removed, if this and that don't have the same

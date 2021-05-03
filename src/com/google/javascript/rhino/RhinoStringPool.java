@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
+
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
@@ -69,9 +71,8 @@ public final class RhinoStringPool {
    * undermine performance. This also needs to be ergonomic enough that callers don't resort to
    * using `==` directly.
    */
-  @SuppressWarnings("ReferenceEquality")
   public static boolean uncheckedEquals(String a, String b) {
-    return a == b;
+    return identical(a, b);
   }
 
   static String addOrGet(String s) {

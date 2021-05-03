@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
+
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
 import java.util.Set;
@@ -69,7 +71,7 @@ final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<R
       return Result.ABSENT;
     }
 
-    return JSType.areIdentical(type, this.target) ? Result.PRESENT : Result.ABSENT;
+    return identical(type, this.target) ? Result.PRESENT : Result.ABSENT;
   }
 
   @Override
@@ -89,7 +91,7 @@ final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<R
 
   @Override
   public Result caseUnionType(UnionType type) {
-    if (JSType.areIdentical(type, target)) {
+    if (identical(type, target)) {
       return Result.PRESENT;
     }
 
@@ -104,7 +106,7 @@ final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<R
   }
 
   private Result caseForwardingType(JSType type, JSType reference) {
-    if (JSType.areIdentical(type, target)) {
+    if (identical(type, target)) {
       return Result.PRESENT;
     } else if (seen.contains(type)) {
       return Result.CYCLE;

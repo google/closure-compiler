@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.mapTypes;
@@ -705,7 +706,7 @@ public class UnionType extends JSType {
       // JSType operations like equality and subtyping are not reliable pre-resolution.
       if (!alternate.isResolved()) {
         for (JSType current : alternates) {
-          if (JSType.areIdentical(current, alternate)) {
+          if (identical(current, alternate)) {
             return this;
           }
         }

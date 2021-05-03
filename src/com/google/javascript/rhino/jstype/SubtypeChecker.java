@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 
@@ -207,7 +208,7 @@ final class SubtypeChecker {
 
   private boolean isSubtypeHelper(JSType subtype, JSType supertype) {
     // Axiomatic cases.
-    if (JSType.areIdentical(subtype, supertype)
+    if (identical(subtype, supertype)
         || supertype.isUnknownType()
         || supertype.isAllType()
         || subtype.isUnknownType()
@@ -517,8 +518,7 @@ final class SubtypeChecker {
     // TODO(b/136298690): stop creating such a 'meet' and remove this logic.
     // ** start hack **
     if (supertype.isEnumElementType()
-        && JSType.areIdentical(
-            subtype.getEnumType(), supertype.toMaybeEnumElementType().getEnumType())) {
+        && identical(subtype.getEnumType(), supertype.toMaybeEnumElementType().getEnumType())) {
       // This can happen if, e.g., we have the 'meet' of enum elements Foo<number> and Bar<number>,
       // which is Foo<Bar<number>>; and are comparing it to Foo<number>.
       return this.isSubtypeCaching(
@@ -725,7 +725,7 @@ final class SubtypeChecker {
     INVARIANT;
   }
 
-  private final class CacheKey {
+  private static final class CacheKey {
     final JSType left;
     final JSType right;
     final int hashCode; // Cache this calculation because it is made often.
@@ -736,11 +736,11 @@ final class SubtypeChecker {
     }
 
     @Override
-    @SuppressWarnings({"ReferenceEquality", "EqualsBrokenForNull", "EqualsUnsafeCast"})
+    @SuppressWarnings({"EqualsBrokenForNull", "EqualsUnsafeCast"})
     public boolean equals(Object other) {
       // Calling this with `null` or not a `Key` should never happen, so it's fine to crash.
       CacheKey that = (CacheKey) other;
-      if (this.left == that.left && this.right == that.right) {
+      if (identical(this.left, that.left) && identical(this.right, that.right)) {
         return true;
       }
 

@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -618,7 +619,7 @@ public abstract class ObjectType extends JSType {
       // NOTE: the use of "==" here rather than equals is deliberate.  This method
       // is very hot in the type checker and relying on identity improves performance of both
       // type checking/type inferrence and property disambiguation.
-      if (JSType.areIdentical(unwrappedThis, other)) {
+      if (identical(unwrappedThis, other)) {
         return true;
       }
     }

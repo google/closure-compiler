@@ -737,7 +737,6 @@ public final class SymbolTable {
     }
   }
 
-  @SuppressWarnings("ReferenceEquality")
   void fillPropertyScopes() {
     // Collect all object symbols.
     // All symbols that came from goog.module are collected separately because they will have to
@@ -1015,7 +1014,6 @@ public final class SymbolTable {
    * and weird things will happen.
    */
   // This function uses == to compare types to be exact same instances.
-  @SuppressWarnings("ReferenceEquality")
   private void createPropertyScopeFor(Symbol s) {
     // In order to build a property scope for s, we will need to build
     // a property scope for all its implicit prototypes first. This means

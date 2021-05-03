@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.type;
 
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
@@ -408,7 +409,7 @@ public final class SemanticReverseAbstractInterpreter
   @CheckReturnValue
   private FlowScope maybeRestrictName(
       FlowScope blindScope, Node node, JSType originalType, JSType restrictedType) {
-    if (restrictedType != null && !JSType.areIdentical(restrictedType, originalType)) {
+    if (restrictedType != null && !identical(restrictedType, originalType)) {
       return declareNameInScope(blindScope, node, restrictedType);
     }
     return blindScope;
@@ -425,9 +426,9 @@ public final class SemanticReverseAbstractInterpreter
       JSType originalRightType,
       JSType restrictedRightType) {
     boolean shouldRefineLeft =
-        restrictedLeftType != null && !JSType.areIdentical(restrictedLeftType, originalLeftType);
+        restrictedLeftType != null && !identical(restrictedLeftType, originalLeftType);
     boolean shouldRefineRight =
-        restrictedRightType != null && !JSType.areIdentical(restrictedRightType, originalRightType);
+        restrictedRightType != null && !identical(restrictedRightType, originalRightType);
     if (shouldRefineLeft || shouldRefineRight) {
       FlowScope informed = blindScope;
       if (shouldRefineLeft) {

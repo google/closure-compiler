@@ -41,6 +41,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -156,7 +157,6 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return guardAgainstCycles(type, this::caseFunctionTypeUnguarded);
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private JSType caseFunctionTypeUnguarded(FunctionType type) {
     if (isNativeFunctionType(type)) {
       return type;
@@ -176,7 +176,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
     JSType beforeReturn = type.getReturnType();
     JSType afterReturn = beforeReturn.visit(this);
-    if (beforeReturn != afterReturn) {
+    if (!identical(beforeReturn, afterReturn)) {
       changed = true;
     }
 
@@ -222,7 +222,6 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return guardAgainstCycles(objType, this::caseObjectTypeUnguarded);
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private JSType caseObjectTypeUnguarded(ObjectType objType) {
     if (!visitProperties
         || objType.isNominalType()
@@ -237,7 +236,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       Node propertyNode = objType.getPropertyNode(prop);
       JSType beforeType = objType.getPropertyType(prop);
       JSType afterType = beforeType.visit(this);
-      if (beforeType != afterType) {
+      if (!identical(beforeType, afterType)) {
         changed = true;
       }
       builder.addProperty(prop, afterType, propertyNode);
@@ -255,19 +254,18 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return guardAgainstCycles(type, this::caseTemplatizedTypeUnguarded);
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private JSType caseTemplatizedTypeUnguarded(TemplatizedType type) {
     boolean changed = false;
     ObjectType beforeBaseType = type.getReferencedType();
     ObjectType afterBaseType = ObjectType.cast(beforeBaseType.visit(this));
-    if (beforeBaseType != afterBaseType) {
+    if (!identical(beforeBaseType, afterBaseType)) {
       changed = true;
     }
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (JSType beforeTemplateType : type.getTemplateTypes()) {
       JSType afterTemplateType = beforeTemplateType.visit(this);
-      if (beforeTemplateType != afterTemplateType) {
+      if (!identical(beforeTemplateType, afterTemplateType)) {
         changed = true;
       }
       builder.add(afterTemplateType);
@@ -319,13 +317,12 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return guardAgainstCycles(type, this::caseUnionTypeUnguarded);
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private JSType caseUnionTypeUnguarded(UnionType type) {
     boolean changed = false;
     List<JSType> results = new ArrayList<>();
     for (JSType alternative : type.getAlternates()) {
       JSType replacement = alternative.visit(this);
-      if (replacement != alternative) {
+      if (!identical(replacement, alternative)) {
         changed = true;
       }
       results.add(replacement);
@@ -339,7 +336,6 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
-  @SuppressWarnings("ReferenceEquality")
   public JSType caseTemplateType(TemplateType type) {
     this.hasMadeReplacement = true;
 
@@ -367,7 +363,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       seenTypes.remove(type);
 
       Preconditions.checkState(
-          visitedReplacement != keyType, "Trying to replace key %s with the same value", keyType);
+          !identical(visitedReplacement, keyType),
+          "Trying to replace key %s with the same value",
+          keyType);
       return visitedReplacement;
     }
   }
@@ -391,12 +389,11 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return guardAgainstCycles(type, this::caseProxyObjectTypeUnguarded);
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private JSType caseProxyObjectTypeUnguarded(ProxyObjectType type) {
     // Be careful not to unwrap a type unless it has changed.
     JSType beforeType = type.getReferencedTypeInternal();
     JSType replacement = beforeType.visit(this);
-    if (replacement != beforeType) {
+    if (!identical(replacement, beforeType)) {
       return replacement;
     }
     return type;
@@ -428,10 +425,9 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     return false;
   }
 
-  @SuppressWarnings("ReferenceEquality")
   private boolean isSameType(TemplateType currentType, TemplateType replacementType) {
-    return currentType == replacementType
-        || currentType == bindings.getUnresolvedOriginalTemplateType(replacementType);
+    return identical(currentType, replacementType)
+        || identical(currentType, bindings.getUnresolvedOriginalTemplateType(replacementType));
   }
 
   private <T extends JSType> JSType guardAgainstCycles(T type, Function<T, JSType> mapper) {

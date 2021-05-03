@@ -156,7 +156,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   /** Infers all of a function's parameters if their types aren't declared. */
-  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope inferParameters(FlowScope entryFlowScope) {
     Node functionNode = containerScope.getRootNode();
     if (!functionNode.isFunction()) {
@@ -258,7 +257,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
    * </ul>
    */
   @CheckReturnValue
-  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope updateDestructuringParameter(
       Node pattern, JSType inferredType, FlowScope entryFlowScope) {
     // look through all expressions and lvalues in the pattern.
@@ -307,7 +305,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
    * </ul>
    */
   @CheckReturnValue
-  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private FlowScope updateNamedParameter(
       Node paramName, boolean hasDefaultValue, JSType inferredType, FlowScope entryFlowScope) {
     TypedVar var = containerScope.getVar(paramName.getString());
