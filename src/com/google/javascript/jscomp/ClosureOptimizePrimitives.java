@@ -59,14 +59,18 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node fn = n.getFirstChild();
+        // TODO(user): Once goog.object becomes a goog.module, remove "goog$object$create" and
+        // related checks.
         if (compiler
             .getCodingConvention()
             .isPropertyRenameFunction(fn.getOriginalQualifiedName())) {
           processRenamePropertyCall(n);
         } else if (fn.matchesName("goog$object$create")
+            || fn.matchesName("module$contents$goog$object_create")
             || fn.matchesQualifiedName("goog.object.create")) {
           processObjectCreateCall(n);
         } else if (fn.matchesName("goog$object$createSet")
+            || fn.matchesName("module$contents$goog$object_createSet")
             || fn.matchesQualifiedName("goog.object.createSet")) {
           processObjectCreateSetCall(n);
         }
