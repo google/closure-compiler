@@ -2158,7 +2158,13 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.COLLAPSE_PROPERTIES)
           .setInternalFactory(
-              (compiler) -> new CollapseProperties(compiler, options.getPropertyCollapseLevel()))
+              (compiler) ->
+                  new CollapseProperties(
+                      compiler,
+                      options.getPropertyCollapseLevel(),
+                      options.getChunkOutputType(),
+                      options.getProcessCommonJSModules(),
+                      options.getModuleResolutionMode()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2494,9 +2500,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new AliasStrings(
-                      compiler,
-                      compiler.getModuleGraph(),
-                      options.outputJsStringUsage))
+                      compiler, compiler.getModuleGraph(), options.outputJsStringUsage))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2935,7 +2939,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new RewriteDynamicImports(
                       compiler,
                       compiler.getOptions().getDynamicImportAlias(),
-                      compiler.getOptions().chunkOutputType))
+                      compiler.getOptions().getChunkOutputType()))
           .build();
 }
 

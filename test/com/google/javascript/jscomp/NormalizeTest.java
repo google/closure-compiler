@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -963,7 +965,12 @@ public final class NormalizeTest extends CompilerTestCase {
 
           @Override
           protected CompilerPass getProcessor(Compiler compiler) {
-            return new CollapseProperties(compiler, PropertyCollapseLevel.ALL);
+            return new CollapseProperties(
+                compiler,
+                PropertyCollapseLevel.ALL,
+                ChunkOutputType.GLOBAL_NAMESPACE,
+                false,
+                ResolutionMode.BROWSER);
           }
         };
 

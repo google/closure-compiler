@@ -2653,6 +2653,14 @@ public class CompilerOptions implements Serializable {
     this.optimizationLoopMaxIterations = maxIterations;
   }
 
+  public ChunkOutputType getChunkOutputType() {
+    return chunkOutputType;
+  }
+
+  public void setChunkOutputType(ChunkOutputType chunkOutputType) {
+    this.chunkOutputType = chunkOutputType;
+  }
+
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {

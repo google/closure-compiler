@@ -23,11 +23,15 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
+import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
@@ -94,6 +98,9 @@ class CollapseProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final PropertyCollapseLevel propertyCollapseLevel;
+  private final ChunkOutputType chunkOutputType;
+  private final boolean haveModulesBeenRewritten;
+  private final ResolutionMode moduleResolutionMode;
 
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
@@ -108,9 +115,17 @@ class CollapseProperties implements CompilerPass {
    */
   private LogFile decisionsLog = null;
 
-  CollapseProperties(AbstractCompiler compiler, PropertyCollapseLevel propertyCollapseLevel) {
+  CollapseProperties(
+      AbstractCompiler compiler,
+      PropertyCollapseLevel propertyCollapseLevel,
+      ChunkOutputType chunkOutputType,
+      boolean haveModulesBeenRewritten,
+      ResolutionMode moduleResolutionMode) {
     this.compiler = compiler;
     this.propertyCollapseLevel = propertyCollapseLevel;
+    this.chunkOutputType = chunkOutputType;
+    this.haveModulesBeenRewritten = haveModulesBeenRewritten;
+    this.moduleResolutionMode = moduleResolutionMode;
   }
 
   @Override
@@ -120,8 +135,12 @@ class CollapseProperties implements CompilerPass {
       // NOTE: decisionsLog will be a do-nothing proxy object unless the compiler
       // was given an option telling it to generate log files and where to put them.
       this.decisionsLog = decisionsLog;
-      if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT) {
-        gatherDynamicallyImportedModules();
+      if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT
+          || chunkOutputType == ChunkOutputType.ES_MODULES) {
+        NodeTraversal.traverse(
+            compiler,
+            root,
+            new FindDynamicallyImportedModules(haveModulesBeenRewritten, moduleResolutionMode));
       }
 
       GlobalNamespace namespace = new GlobalNamespace(decisionsLog, compiler, root);
@@ -186,7 +205,58 @@ class CollapseProperties implements CompilerPass {
    */
   private Set<Name> checkNamespaces() {
     ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
+    HashSet<String> dynamicallyImportedModuleRefs = new HashSet<>(dynamicallyImportedModules);
+    if (!dynamicallyImportedModules.isEmpty()) {
+      // When the output chunk type is ES_MODULES, properties of the module namespace
+      // must not be collapsed as they are referenced off the namespace object. The namespace
+      // objects escape via the dynamic import expression.
+      for (Name name : nameMap.values()) {
+        // Test if the name is a rewritten module namespace variable and if so mark it as escaped
+        // to prevent any property collapsing.
+        //
+        // example:
+        // /** @const */ var module$foo = {};
+        if (dynamicallyImportedModules.contains(name.getFullName())) {
+          logDecisionForName(name, "escapes - dynamically imported module namespace");
+          escaped.add(name);
+          if (name.props == null) {
+            continue;
+          }
+          for (Name prop : name.props) {
+            Ref propDeclaration = prop.getDeclaration();
+            if (propDeclaration == null) {
+              continue;
+            }
+            if (propDeclaration.getNode() != null) {
+              // ES Module rewriting creates aliases on the module namespace object. These aliased
+              // names also escape and their properties may not be collapsed.
+              //
+              // example:
+              // class Foo$$module$foo {
+              //   static bar() { return 'bar'; }
+              // }
+              // /** @const */ var module$foo = {};
+              // /** @const */ module$foo.Foo = Foo$$module$foo;
+              //
+              // While module$foo.Foo cannot be collapsed because we marked the module namespace
+              // as escaped, we also need to prevent any property collapsing on the Foo$$module$foo
+              // class itself.
+              Node rValue = NodeUtil.getRValueOfLValue(propDeclaration.getNode());
+              if (rValue.isName()) {
+                logDecisionForName(
+                    name, "escapes - dynamically imported module namespace property alias");
+                dynamicallyImportedModuleRefs.add(rValue.getQualifiedName());
+              }
+            }
+          }
+        }
+      }
+    }
+
     for (Name name : nameMap.values()) {
+      if (dynamicallyImportedModuleRefs.contains(name.getFullName())) {
+        escaped.add(name);
+      }
       if (!name.isNamespaceObjectLit()) {
         continue;
       }
@@ -291,24 +361,17 @@ class CollapseProperties implements CompilerPass {
     for (Name p : n.props) {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
 
-      boolean isAllowedToCollapse =
-          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
-
-      if (isAllowedToCollapse) {
-        final Inlinability inlinability = p.canCollapseOrInline();
-        if (inlinability.canCollapse()) {
-          logDecisionForName(p, inlinability, "will flatten references");
-          flattenReferencesTo(p, propAlias);
-        } else if (p.isCollapsingExplicitlyDenied()) {
-          logDecisionForName(p, "@nocollapse: will not flatten references");
-        } else if (p.isSimpleStubDeclaration()) {
-          logDecisionForName(p, "simple stub declaration: will flatten references");
-          flattenSimpleStubDeclaration(p, propAlias);
-        } else {
-          logDecisionForName(p, inlinability, "will not flatten references");
-        }
+      final Inlinability inlinability = p.canCollapseOrInline();
+      if (inlinability.canCollapse()) {
+        logDecisionForName(p, inlinability, "will flatten references");
+        flattenReferencesTo(p, propAlias);
+      } else if (p.isCollapsingExplicitlyDenied()) {
+        logDecisionForName(p, "@nocollapse: will not flatten references");
+      } else if (p.isSimpleStubDeclaration()) {
+        logDecisionForName(p, "simple stub declaration: will flatten references");
+        flattenSimpleStubDeclaration(p, propAlias);
       } else {
-        logDecisionForName(p, "not a module export: will not flatten references");
+        logDecisionForName(p, inlinability, "will not flatten references");
       }
 
       flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
@@ -997,9 +1060,36 @@ class CollapseProperties implements CompilerPass {
     return result;
   }
 
-  private void gatherDynamicallyImportedModules() {
-    for (CompilerInput input : compiler.getInputsInOrder()) {
-      dynamicallyImportedModules.addAll(input.getDynamicRequires());
+  /** Find all the module namespace objects which are referenced by a dynamic import */
+  class FindDynamicallyImportedModules extends AbstractPostOrderCallback {
+    private final boolean processCommonJSModules;
+    private final ResolutionMode moduleResolutionMode;
+
+    FindDynamicallyImportedModules(boolean processCommonJSModules, ResolutionMode resolutionMode) {
+      this.processCommonJSModules = processCommonJSModules;
+      this.moduleResolutionMode = resolutionMode;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (processCommonJSModules
+          && ProcessCommonJSModules.isCommonJsDynamicImportCallback(n, moduleResolutionMode)) {
+        String importPath = ProcessCommonJSModules.getCommonJsImportPath(n, moduleResolutionMode);
+        ModuleLoader.ModulePath modulePath =
+            t.getInput()
+                .getPath()
+                .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
+
+        if (modulePath != null) {
+          dynamicallyImportedModules.add(modulePath.toModuleName());
+        }
+      } else if (ConvertChunksToESModules.isDynamicImportCallback(n)) {
+        Node moduleNamespace =
+            ConvertChunksToESModules.getDynamicImportCallbackModuleNamespace(compiler, n);
+        if (moduleNamespace != null) {
+          dynamicallyImportedModules.add(moduleNamespace.getQualifiedName());
+        }
+      }
     }
   }
 }

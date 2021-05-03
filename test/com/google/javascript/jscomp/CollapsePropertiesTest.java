@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
@@ -55,7 +56,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CollapseProperties(compiler, propertyCollapseLevel);
+    return new CollapseProperties(
+        compiler,
+        propertyCollapseLevel,
+        ChunkOutputType.GLOBAL_NAMESPACE,
+        false,
+        ResolutionMode.BROWSER);
   }
 
   @Override
