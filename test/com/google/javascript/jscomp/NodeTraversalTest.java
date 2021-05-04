@@ -24,7 +24,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
-import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -700,37 +699,12 @@ public final class NodeTraversalTest {
   }
 
   @Test
-  public void testTraverseEs6ScopeRoots_callsEnterFunction() {
-    Compiler compiler = new Compiler();
-    EnterFunctionAccumulator callback = new EnterFunctionAccumulator();
-
-    String code = lines(
-        "function foo() {}",
-        "function bar() {}",
-        "function baz() {}");
-
-    Node tree = parse(compiler, code);
-    Node fooFunction = tree.getFirstChild();
-    Node barFunction = fooFunction.getNext();
-    Node bazFunction = barFunction.getNext();
-
-    NodeTraversal.traverseScopeRoots(
-        compiler,
-        null,
-        ImmutableList.of(fooFunction, barFunction, bazFunction),
-        callback,
-        callback, // FunctionCallback
-        false);
-    assertThat(callback.enteredFunctions).containsExactly(fooFunction, barFunction, bazFunction);
-  }
-
-  @Test
   public void testTraverseEs6ScopeRoots_callsEnterScope() {
     Compiler compiler = new Compiler();
 
     List<Node> scopesEntered = new ArrayList<>();
 
-    NodeTraversal.Callback callback = new NodeTraversal.ScopedCallback() {
+    class TestCallback implements NodeTraversal.ScopedCallback {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {}
 
@@ -746,8 +720,7 @@ public final class NodeTraversalTest {
 
       @Override
       public void exitScope(NodeTraversal t) {}
-
-    };
+    }
 
     String code = "function foo() { {} }";
 
@@ -755,11 +728,7 @@ public final class NodeTraversalTest {
     Node fooFunction = tree.getFirstChild();
 
     NodeTraversal.traverseScopeRoots(
-        compiler,
-        null,
-        ImmutableList.of(fooFunction),
-        callback,
-        true);
+        compiler, null, ImmutableList.of(fooFunction), new TestCallback(), true);
     assertThat(scopesEntered).hasSize(3);  // Function, function's body, and the block inside it.
   }
 
@@ -784,20 +753,6 @@ public final class NodeTraversalTest {
       assertWithMessage("Expected a RuntimeException;").fail();
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
-    }
-  }
-
-  private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback
-      implements ChangeScopeRootCallback {
-
-    List<Node> enteredFunctions = new ArrayList<>();
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {}
-
-    @Override
-    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
-      enteredFunctions.add(root);
     }
   }
 

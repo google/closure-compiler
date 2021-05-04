@@ -25,7 +25,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
@@ -75,10 +74,11 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         Sets.union(
             compiler.getAccessorSummary().getAccessors().keySet(), compiler.getExternProperties());
 
-    NodeTraversal.traverseChangedFunctions(compiler, new FunctionVisitor(skiplistedPropNames));
+    NodeTraversal.traverse(
+        compiler, compiler.getJsRoot(), new FunctionVisitor(skiplistedPropNames));
   }
 
-  private static class FunctionVisitor implements ChangeScopeRootCallback {
+  private static class FunctionVisitor extends NodeTraversal.AbstractChangedScopeCallback {
 
     /** A set of properties names that are potentially unsafe to remove duplicate writes to. */
     private final Set<String> skiplistedPropNames;
@@ -88,7 +88,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     @Override
-    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
+    public void enterChangedScopeRoot(AbstractCompiler compiler, Node root) {
       if (!root.isFunction()) {
         return;
       }

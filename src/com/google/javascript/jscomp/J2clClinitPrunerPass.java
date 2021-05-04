@@ -21,10 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -78,14 +77,9 @@ public class J2clClinitPrunerPass implements CompilerPass {
   }
 
   private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
-    RedundantClinitPruner redundantClinitPruner = new RedundantClinitPruner();
+    List<Node> changedRoots = getNonNestedParentScopeNodes(changedScopeNodes);
     NodeTraversal.traverseScopeRoots(
-        compiler,
-        root,
-        getNonNestedParentScopeNodes(changedScopeNodes),
-        redundantClinitPruner,
-        redundantClinitPruner, // FunctionCallback
-        true);
+        compiler, root, changedRoots, new RedundantClinitPruner(changedRoots), true);
 
     NodeTraversal.traverseScopeRoots(
         compiler, root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
@@ -163,20 +157,24 @@ public class J2clClinitPrunerPass implements CompilerPass {
   }
 
   /** Removes redundant clinit calls inside method body if it is guaranteed to be called earlier. */
-  private final class RedundantClinitPruner implements Callback, ChangeScopeRootCallback {
+  private final class RedundantClinitPruner implements NodeTraversal.Callback {
 
-    @Override
-    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
-      // Reset the clinit call tracking when starting over on a new scope.
-      clinitsCalledAtBranch = new HierarchicalSet<>(null);
-      stateStack.clear();
-    }
-
+    private final ImmutableSet<Node> roots;
     private final Deque<HierarchicalSet<String>> stateStack = new ArrayDeque<>();
     private HierarchicalSet<String> clinitsCalledAtBranch = new HierarchicalSet<>(null);
 
+    RedundantClinitPruner(Iterable<Node> roots) {
+      this.roots = (roots == null) ? ImmutableSet.of() : ImmutableSet.copyOf(roots);
+    }
+
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node node, Node parent) {
+      if (this.roots.contains(node)) {
+        // Reset the clinit call tracking when starting over on a new scope.
+        clinitsCalledAtBranch = new HierarchicalSet<>(null);
+        stateStack.clear();
+      }
+
       if (NodeUtil.isFunctionDeclaration(node) || node.isScript()) {
         // In the case of function declarations, unlike function expressions, we don't know when the
         // function will be executed so assume there are no clinits already executed.
@@ -184,7 +182,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         // to be executed in program order.
         stateStack.addLast(clinitsCalledAtBranch);
         clinitsCalledAtBranch = new HierarchicalSet<>(null);
-      } 
+      }
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = new HierarchicalSet<>(clinitsCalledAtBranch);

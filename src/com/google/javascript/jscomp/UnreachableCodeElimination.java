@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
@@ -59,26 +58,26 @@ class UnreachableCodeElimination implements CompilerPass {
   @Override
   public void process(Node externs, Node toplevel) {
     checkState(compiler.getLifeCycleStage().isNormalized());
+    NodeTraversal.traverse(compiler, compiler.getJsRoot(), new EliminationInChangedFunctionsPass());
+  }
 
-    NodeTraversal.traverseChangedFunctions(compiler, new ChangeScopeRootCallback() {
-        @Override
-        public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
-          // Computes the control flow graph.
-          ControlFlowAnalysis cfa =
-              new ControlFlowAnalysis(compiler, false, false);
-          cfa.process(null, root);
-          ControlFlowGraph<Node> cfg = cfa.getCfg();
-          new GraphReachability<>(cfg)
-              .compute(cfg.getEntry().getValue());
-          if (root.isFunction()) {
-            root = root.getLastChild();
-          }
-          do {
-            codeChanged = false;
-            NodeTraversal.traverse(compiler, root, new EliminationPass(cfg));
-          } while (codeChanged);
-        }
-      });
+  private final class EliminationInChangedFunctionsPass
+      extends NodeTraversal.AbstractChangedScopeCallback {
+    @Override
+    public void enterChangedScopeRoot(AbstractCompiler compiler, Node root) {
+      // Computes the control flow graph.
+      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+      cfa.process(null, root);
+      ControlFlowGraph<Node> cfg = cfa.getCfg();
+      new GraphReachability<>(cfg).compute(cfg.getEntry().getValue());
+      if (root.isFunction()) {
+        root = root.getLastChild();
+      }
+      do {
+        codeChanged = false;
+        NodeTraversal.traverse(compiler, root, new EliminationPass(cfg));
+      } while (codeChanged);
+    }
   }
 
   private class EliminationPass implements Callback {
