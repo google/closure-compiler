@@ -255,8 +255,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "<num-js-files> may be set to 'auto' for the first chunk if it "
                 + "has no dependencies. "
                 + "Provide the value 'auto' to trigger chunk creation from CommonJS"
-                + "modules.",
-        aliases = "--module")
+                + "modules.")
     private List<String> chunk = new ArrayList<>();
 
     @Option(
@@ -367,8 +366,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "Alternately, %output% can be used in place of %s. "
                 + "%n% can be used to represent a newline. "
                 + "The %basename% placeholder can "
-                + "also be used to substitute the base name of the chunk output file.",
-        aliases = "--module_wrapper")
+                + "also be used to substitute the base name of the chunk output file.")
     private List<String> chunkWrapper = new ArrayList<>();
 
     @Option(
@@ -376,8 +374,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Prefix for filenames of compiled JS chunks. "
                 + "<chunk-name>.js will be appended to this prefix. Directories "
-                + "will be created as needed. Use with --chunk",
-        aliases = "--module_output_path_prefix")
+                + "will be created as needed. Use with --chunk")
     private String chunkOutputPathPrefix = "./";
 
     @Option(
@@ -407,7 +404,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--source_map_input",
-        hidden = false,
         usage =
             "Source map locations for input files, separated by a '|', "
                 + "(i.e. input-file-path|input-source-map)")
@@ -581,30 +577,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean processCommonJsModules = false;
 
     @Option(
-        name = "--common_js_module_path_prefix",
-        hidden = true,
-        usage = "Deprecated: use --js_module_root.")
-    private List<String> commonJsPathPrefix = new ArrayList<>();
-
-    @Option(
         name = "--js_module_root",
         usage = "Path prefixes to be removed from ES6 & CommonJS modules.")
     private List<String> moduleRoot = new ArrayList<>();
-
-    @Option(
-        name = "--common_js_entry_module",
-        hidden = true,
-        usage = "Deprecated: use --entry_point.")
-    @Deprecated
-    private String commonJsEntryModule;
-
-    @Option(
-        name = "--transform_amd_modules",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Deprecated: Transform AMD to CommonJS modules.")
-    @Deprecated
-    private boolean transformAmdModules = false;
 
     @Option(
         name = "--process_closure_primitives",
@@ -616,39 +591,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean processClosurePrimitives = true;
 
     @Option(
-        name = "--manage_closure_dependencies",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Deprecated: use --dependency_mode=PRUNE_LEGACY.")
-    @Deprecated
-    private boolean manageClosureDependencies = false;
-
-    @Option(
-        name = "--only_closure_dependencies",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Deprecated: use --dependency_mode=PRUNE.")
-    @Deprecated
-    private boolean onlyClosureDependencies = false;
-
-    @Option(name = "--closure_entry_point", hidden = true, usage = "Deprecated: use --entry_point.")
-    @Deprecated
-    private List<String> closureEntryPoint = new ArrayList<>();
-
-    @Option(
         name = "--angular_pass",
         handler = BooleanOptionHandler.class,
         usage =
             "Generate $inject properties for AngularJS for functions " + "annotated with @ngInject")
     private boolean angularPass = false;
-
-    @Option(
-        name = "--polymer_pass",
-        handler = BooleanOptionHandler.class,
-        hidden = true,
-        usage = "Equivalent to --polymer_version=1")
-    @Deprecated
-    private boolean polymerPass = false;
 
     @Option(name = "--polymer_version", usage = "Which version of Polymer is being used (1 or 2).")
     private Integer polymerVersion = null;
@@ -694,8 +641,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--output_chunk_dependencies",
-        usage = "Prints out a JSON file of dependencies between chunks.",
-        aliases = "--output_module_dependencies")
+        usage = "Prints out a JSON file of dependencies between chunks.")
     private String outputChunkDependencies = "";
 
     @Option(
@@ -801,7 +747,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--json_streams",
-        hidden = true,
         usage =
             "Specifies whether standard input and output streams will be "
                 + "a JSON array of sources. Each source will be an object of the "
@@ -870,7 +815,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--module_resolution",
-        hidden = false,
         usage =
             "Specifies how the compiler locates modules. BROWSER requires all module imports "
                 + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
@@ -879,7 +823,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--browser_resolver_prefix_replacements",
-        hidden = false,
         usage =
             "Prefixes to replace in ES6 import paths before resolving. "
                 + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
@@ -932,9 +875,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--chunk_output_type",
         usage =
-            "Indicates what format the compiler should use for output chunks. Options are:\n"
-                + "1. GLOBAL_NAMESPACE (default)\n"
-                + "2. ES_MODULES")
+            "Indicates what format the compiler should use for output chunks. GLOBAL_NAMESPACE is "
+                + "typically used in conjunction with --rename_prefix_namespace. ES_MODULES "
+                + "outputs chunks as proper modules with 'import' and 'export' statements.")
     private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
@@ -945,7 +888,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Indicates that the compiler should allow dynamic import expressions. Dynamic import "
                 + "expressions are not yet fully supported and may lead to broken output code.")
-    private boolean allowDynamicImport = false;
+    private boolean allowDynamicImport = true;
 
     @Option(
         name = "--dynamic_import_alias",
@@ -1035,13 +978,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "isolation_mode",
                     "output_wrapper",
                     "output_wrapper_file",
-                    "rename_prefix_namespace",
                     "rename_variable_prefix"))
             .putAll("Dependency Management", ImmutableList.of("dependency_mode", "entry_point"))
             .putAll(
                 "JS Modules",
                 ImmutableList.of(
-                    "allow_dynamic_import",
                     "dynamic_import_alias",
                     "js_module_root",
                     "module_resolution",
@@ -1059,7 +1000,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             .putAll(
                 "Code Splitting",
                 ImmutableList.of(
-                    "chunk", "chunk_output_path_prefix", "chunk_output_type", "chunk_wrapper"))
+                    "chunk",
+                    "chunk_output_path_prefix",
+                    "chunk_output_type",
+                    "chunk_wrapper",
+                    "rename_prefix_namespace"))
             .putAll(
                 "Reports",
                 ImmutableList.of(
@@ -1080,6 +1025,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "define",
                     "flagfile",
                     "help",
+                    "json_streams",
                     "third_party",
                     "use_types_for_optimization",
                     "version"))
@@ -1716,20 +1662,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       conv = new ClosureCodingConvention();
     }
 
-    // For backwards compatibility, allow both commonJsPathPrefix and jsModuleRoot.
-    List<String> moduleRoots = new ArrayList<>();
-    if (!flags.moduleRoot.isEmpty()) {
-      moduleRoots.addAll(flags.moduleRoot);
-
-      if (!flags.commonJsPathPrefix.isEmpty()) {
-        reportError("--commonJsPathPrefix cannot be used with --js_module_root.");
-      }
-    } else if (flags.commonJsPathPrefix != null) {
-      moduleRoots.addAll(flags.commonJsPathPrefix);
-    } else {
-      moduleRoots.add(ModuleLoader.DEFAULT_FILENAME_PREFIX);
-    }
-
     if (!flags.renaming
         && flags.compilationLevelParsed == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
       reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used.");
@@ -1739,12 +1671,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     try {
       dependencyOptions =
           DependencyOptions.fromFlags(
-              flags.dependencyMode,
-              flags.entryPoint,
-              flags.closureEntryPoint,
-              flags.commonJsEntryModule,
-              flags.manageClosureDependencies,
-              flags.onlyClosureDependencies);
+              flags.dependencyMode, flags.entryPoint, ImmutableList.of(), null, false, false);
     } catch (FlagUsageException e) {
       reportError(e.getMessage());
     }
@@ -1795,8 +1722,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setSkipNormalOutputs(skipNormalOutputs)
           .setOutputModuleDependencies(flags.outputChunkDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
-          .setModuleRoots(moduleRoots)
-          .setTransformAMDToCJSModules(flags.transformAmdModules)
+          .setModuleRoots(flags.moduleRoot)
           .setWarningsAllowlistFile(flags.warningsAllowlistFile)
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
@@ -1881,7 +1807,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       level.setTypeBasedOptimizationOptions(options);
     }
 
-    if (flags.assumeFunctionWrapper || flags.isolationMode == IsolationMode.IIFE) {
+    if (flags.assumeFunctionWrapper
+        || flags.isolationMode == IsolationMode.IIFE
+        || flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
       level.setWrappedOutputOptimizations(options);
     }
 
@@ -1898,11 +1826,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.angularPass = flags.angularPass;
 
-    if (flags.polymerPass) {
-      options.polymerVersion = 1;
-    } else {
-      options.polymerVersion = flags.polymerVersion;
-    }
+    options.polymerVersion = flags.polymerVersion;
     try {
       options.polymerExportPolicy =
           PolymerExportPolicy.valueOf(Ascii.toUpperCase(flags.polymerExportPolicy));
@@ -2015,17 +1939,26 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setAllowDynamicImport(flags.allowDynamicImport);
     options.setDynamicImportAlias(flags.dynamicImportAlias);
 
-    if (flags.chunkOutputType == ChunkOutputType.ES_MODULES
-        && flags.renamePrefixNamespace != null) {
-      throw new FlagUsageException(
-          "Expected --rename_prefix_namespace not to be specified when"
-              + "--chunk_output_type is set to ES_MODULES.");
-    }
-    options.chunkOutputType = flags.chunkOutputType;
-    if (options.chunkOutputType == ChunkOutputType.ES_MODULES
-        && level == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
-      options.setExtractPrototypeMemberDeclarations(
-          ExtractPrototypeMemberDeclarationsMode.USE_CHUNK_TEMP);
+    if (flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
+      if (flags.renamePrefixNamespace != null) {
+        throw new FlagUsageException(
+            "Expected --rename_prefix_namespace not to be specified when "
+                + "--chunk_output_type is set to ES_MODULES.");
+      }
+
+      if (flags.emitUseStrict) {
+        throw new FlagUsageException(
+            "Expected --emit_use_strict should not be specified when "
+                + "--chunk_output_type is set to ES_MODULES.");
+      }
+
+      options.chunkOutputType = flags.chunkOutputType;
+      options.setEmitUseStrict(false);
+
+      if (level == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
+        options.setExtractPrototypeMemberDeclarations(
+            ExtractPrototypeMemberDeclarationsMode.USE_CHUNK_TEMP);
+      }
     }
 
     return options;
