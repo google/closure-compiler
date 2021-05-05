@@ -4467,4 +4467,42 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         srcs("var a = p ? x : {b: 1}; a.c = 2;"), expected("var a = p ? x : {b: 1}; var a$c = 2;"));
   }
+
+  @Test
+  public void testModuleExportsOnly() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "var mod = require('./mod1.js');",
+                "alert(mod);",
+                "var a = {};",
+                "a.b = {};",
+                "/** @constructor */",
+                "a.b.c = function(){};")));
+    inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "var mod = module$mod1$default;",
+                "alert(module$mod1$default);",
+                "var a = {};",
+                "a.b = {};",
+                "/** @constructor */",
+                "a.b.c = function(){};")));
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            lines(
+                "/** @const */ var module$mod1 = {};",
+                "/** @const */ var module$mod1$default = 123;")));
+
+    test(inputs, expected);
+  }
 }
