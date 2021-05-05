@@ -16,16 +16,21 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A helper class for passes that want to access all information about where a variable is
@@ -44,8 +49,10 @@ public final class ReferenceCollector
   private final Map<Var, ReferenceCollection> referenceMap =
        new LinkedHashMap<>();
 
-  /** The stack of basic blocks and scopes the current traversal is in. */
-  private ArrayDeque<BasicBlock> blockStack = new ArrayDeque<>();
+  /**
+   * The stack of basic blocks and scopes the current traversal is in.
+   */
+  private List<BasicBlock> blockStack = new ArrayList<>();
 
   /**
    * Source of behavior at various points in the traversal.
@@ -66,8 +73,12 @@ public final class ReferenceCollector
 
   private final CollectorCallback callback = new CollectorCallback();
 
-  private final HashSet<Node> collectedHoistedFunctions = new HashSet<>();
-
+  /**
+   * Traverse hoisted functions where they're referenced, not
+   * where they're declared.
+   */
+  private final Set<Var> startedFunctionTraverse = new HashSet<>();
+  private final Set<Var> finishedFunctionTraverse = new HashSet<>();
   private Scope narrowScope;
 
   /** Constructor initializes block stack. */
@@ -112,11 +123,11 @@ public final class ReferenceCollector
     boolean shouldAddToBlockStack = !scope.isHoistScope();
     this.narrowScope = scope;
     if (shouldAddToBlockStack) {
-      blockStack.addLast(new BasicBlock(null, scope.getRootNode()));
+      blockStack.add(new BasicBlock(null, scope.getRootNode()));
     }
     this.createTraversalBuilder().traverseAtScope(scope);
     if (shouldAddToBlockStack) {
-      blockStack.removeLast();
+      pop(blockStack);
     }
     this.narrowScope = null;
   }
@@ -158,53 +169,68 @@ public final class ReferenceCollector
     return referenceMap.get(v);
   }
 
-  private void maybeJumpToHoistedFunction(Var v, NodeTraversal t) {
-    Node fnNode = v.getParentNode();
-    if (fnNode == null
-        || !NodeUtil.isHoistedFunctionDeclaration(fnNode)
-        // If we're only traversing a narrow scope, do not try to climb outside.
-        || !(narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())
-        || this.collectedHoistedFunctions.contains(fnNode)) {
+  private void outOfBandTraversal(Var v) {
+    if (startedFunctionTraverse.contains(v)) {
       return;
     }
+    startedFunctionTraverse.add(v);
 
-    /**
-     * Replace the block stack with a new one matching the hoist position.
-     *
-     * <p>This algorithm only works because we know hoisted functions cannot be inside loops. It
-     * will have to change if we ever do general function continuations.
-     *
-     * <p>This is tricky to compute because of the weird traverseAtScope call for
-     * AggressiveInlineAliases.
-     */
-    ArrayDeque<BasicBlock> oldBlockStack = this.blockStack;
-    this.blockStack = new ArrayDeque<>();
+    Node fnNode = v.getParentNode();
+
+    // Replace the block stack with a new one. This algorithm only works
+    // because we know hoisted functions cannot be inside loops. It will have to
+    // change if we ever do general function continuations.
+    checkState(NodeUtil.isHoistedFunctionDeclaration(fnNode), fnNode);
 
     Scope containingScope = v.getScope();
+
+    // This is tricky to compute because of the weird traverseAtScope call for
+    // AggressiveInlineAliases.
+    List<BasicBlock> newBlockStack = null;
     if (containingScope.isGlobal()) {
-      this.blockStack.addLast(oldBlockStack.getFirst());
+      newBlockStack = new ArrayList<>();
+      newBlockStack.add(blockStack.get(0));
     } else {
-      for (BasicBlock b : oldBlockStack) {
-        this.blockStack.addLast(b);
-        if (b.getRoot() == containingScope.getRootNode()) {
-          break;
+      for (int i = 0; i < blockStack.size(); i++) {
+        if (blockStack.get(i).getRoot() == containingScope.getRootNode()) {
+          newBlockStack = new ArrayList<>(blockStack.subList(0, i + 1));
         }
       }
     }
+    checkNotNull(newBlockStack);
 
-    /**
-     * Record the function declaration reference explicitly because it is a bleeding name. The
-     * reference must be recorded with the containing scope, and traverseAtScope skips bleeding
-     * function NAME nodes
-     */
-    this.addReference(v, fnNode.getFirstChild(), t);
-    this.createTraversalBuilder()
-        .traverseAtScope(scopeCreator.createScope(fnNode, containingScope));
+    List<BasicBlock> oldBlockStack = blockStack;
+    blockStack = newBlockStack;
 
-    this.blockStack = oldBlockStack;
+    this.createTraversalBuilder().traverseFunctionOutOfBand(fnNode, containingScope);
+
+    blockStack = oldBlockStack;
+    finishedFunctionTraverse.add(v);
   }
 
   private final class CollectorCallback implements ScopedCallback {
+    /** Updates block stack and invokes any additional behavior. */
+    @Override
+    public void enterScope(NodeTraversal t) {
+      Node n = t.getScopeRoot();
+      BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
+      // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
+      // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
+      // are added in shouldTraverse() or processScope() and removed in visit().
+      if (t.isHoistScope()) {
+        blockStack.add(new BasicBlock(parent, n));
+      }
+    }
+
+    /** Updates block stack and invokes any additional behavior. */
+    @Override
+    public void exitScope(NodeTraversal t) {
+      if (t.isHoistScope()) {
+        pop(blockStack);
+      }
+      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
+    }
+
     /** Updates block stack. */
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
@@ -214,39 +240,21 @@ public final class ReferenceCollector
       // TODO(nicksantos): Maybe generalize this to a continuation mechanism
       // like in RemoveUnusedCode.
       if (NodeUtil.isHoistedFunctionDeclaration(n)) {
-        if (!collectedHoistedFunctions.add(n)) {
+        Node nameNode = n.getFirstChild();
+        Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());
+        checkNotNull(functionVar);
+        if (finishedFunctionTraverse.contains(functionVar)) {
           return false;
         }
+        startedFunctionTraverse.add(functionVar);
       }
 
       // If node is a new basic block, put on basic block stack
       if (isBlockBoundary(n, parent)) {
-        blockStack.addLast(new BasicBlock(blockStack.getLast(), n));
+        blockStack.add(new BasicBlock(peek(blockStack), n));
       }
 
       return true;
-    }
-
-    /** Updates block stack and invokes any additional behavior. */
-    @Override
-    public void enterScope(NodeTraversal t) {
-      Node n = t.getScopeRoot();
-      BasicBlock parent = blockStack.isEmpty() ? null : blockStack.getLast();
-      // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
-      // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
-      // are added in shouldTraverse() or processScope() and removed in visit().
-      if (t.isHoistScope()) {
-        blockStack.addLast(new BasicBlock(parent, n));
-      }
-    }
-
-    /** Updates block stack and invokes any additional behavior. */
-    @Override
-    public void exitScope(NodeTraversal t) {
-      if (t.isHoistScope()) {
-        blockStack.removeLast();
-      }
-      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
     }
 
     /** For each node, update the block stack and reference collection as appropriate. */
@@ -261,18 +269,33 @@ public final class ReferenceCollector
         }
 
         Var v = t.getScope().getVar(n.getString());
-        if (v == null) {
-          return;
-        }
 
-        addReference(v, n, t);
-        maybeJumpToHoistedFunction(v, t);
+        if (v != null) {
+          if (varFilter.apply(v)) {
+            addReference(v, new Reference(n, t, peek(blockStack)));
+          }
+
+          if (v.getParentNode() != null
+              && NodeUtil.isHoistedFunctionDeclaration(v.getParentNode())
+              // If we're only traversing a narrow scope, do not try to climb outside.
+              && (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
+            outOfBandTraversal(v);
+          }
+        }
       }
 
       if (isBlockBoundary(n, parent)) {
-        blockStack.removeLast();
+        pop(blockStack);
       }
     }
+  }
+
+  private static <T> T pop(List<T> list) {
+    return list.remove(list.size() - 1);
+  }
+
+  private static <T> T peek(List<T> list) {
+    return Iterables.getLast(list);
   }
 
   /**
@@ -321,17 +344,13 @@ public final class ReferenceCollector
     return n.isCase();
   }
 
-  private void addReference(Var v, Node n, NodeTraversal t) {
-    if (!this.varFilter.apply(v)) {
-      return;
-    }
-
+  private void addReference(Var v, Reference reference) {
     // Create collection if none already
-    ReferenceCollection collection =
+    ReferenceCollection referenceInfo =
         referenceMap.computeIfAbsent(v, k -> new ReferenceCollection());
 
     // Add this particular reference
-    collection.add(new Reference(n, t, blockStack.getLast()));
+    referenceInfo.add(reference);
   }
 
   static class ReferenceMapWrapper implements ReferenceMap {
