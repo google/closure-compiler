@@ -107,7 +107,7 @@ var IntersectionObserverCallback;
  *   threshold: (!Array<number>|number|undefined),
  *   delay: (number|undefined),
  *   trackVisibility: (boolean|undefined),
- *   root: (?Element|undefined),
+ *   root: (?Document|?Element|undefined),
  *   rootMargin: (string|undefined)
  * }}
  */
