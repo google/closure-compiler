@@ -360,18 +360,22 @@ class CollapseProperties implements CompilerPass {
 
     for (Name p : n.props) {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
-
       final Inlinability inlinability = p.canCollapseOrInline();
-      if (inlinability.canCollapse()) {
-        logDecisionForName(p, inlinability, "will flatten references");
-        flattenReferencesTo(p, propAlias);
-      } else if (p.isCollapsingExplicitlyDenied()) {
-        logDecisionForName(p, "@nocollapse: will not flatten references");
-      } else if (p.isSimpleStubDeclaration()) {
-        logDecisionForName(p, "simple stub declaration: will flatten references");
-        flattenSimpleStubDeclaration(p, propAlias);
-      } else {
-        logDecisionForName(p, inlinability, "will not flatten references");
+
+      boolean isAllowedToCollapse =
+          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
+      if (isAllowedToCollapse) {
+        if (inlinability.canCollapse()) {
+          logDecisionForName(p, inlinability, "will flatten references");
+          flattenReferencesTo(p, propAlias);
+        } else if (p.isCollapsingExplicitlyDenied()) {
+          logDecisionForName(p, "@nocollapse: will not flatten references");
+        } else if (p.isSimpleStubDeclaration()) {
+          logDecisionForName(p, "simple stub declaration: will flatten references");
+          flattenSimpleStubDeclaration(p, propAlias);
+        } else {
+          logDecisionForName(p, inlinability, "will not flatten references");
+        }
       }
 
       flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
