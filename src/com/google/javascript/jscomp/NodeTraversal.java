@@ -402,12 +402,8 @@ public class NodeTraversal {
       this.build().traverseAtScope(scope);
     }
 
-    public void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
+    void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
       this.build().traverseFunctionOutOfBand(node, scope);
-    }
-
-    void traverseInnerNode(Node node, Node parent, AbstractScope<?, ?> refinedScope) {
-      this.build().traverseInnerNode(node, parent, refinedScope);
     }
 
     void traverseRoots(Node externs, Node root) {
@@ -723,28 +719,6 @@ public class NodeTraversal {
     pushScope(scope, true /* quietly */);
     traverseBranch(node, currentNode);
     popScope(true /* quietly */);
-  }
-
-  /**
-   * Traverses an inner node recursively with a refined scope. An inner node may be any node with a
-   * non {@code null} parent (i.e. all nodes except the root).
-   *
-   * @param node the node to traverse
-   * @param parent the node's parent, it may not be {@code null}
-   * @param refinedScope the refined scope of the scope currently at the top of the scope stack or
-   *     in trivial cases that very scope or {@code null}
-   */
-  private void traverseInnerNode(Node node, Node parent, AbstractScope<?, ?> refinedScope) {
-    checkNotNull(parent);
-    initTraversal(node);
-    if (refinedScope != null && getAbstractScope() != refinedScope) {
-      currentNode = node;
-      pushScope(refinedScope);
-      traverseBranch(node, parent);
-      popScope();
-    } else {
-      traverseBranch(node, parent);
-    }
   }
 
   public AbstractCompiler getCompiler() {
