@@ -402,10 +402,6 @@ public class NodeTraversal {
       this.build().traverseAtScope(scope);
     }
 
-    void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
-      this.build().traverseFunctionOutOfBand(node, scope);
-    }
-
     void traverseRoots(Node externs, Node root) {
       this.build().traverseRoots(externs, root);
     }
@@ -701,24 +697,6 @@ public class NodeTraversal {
     } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
-  }
-
-  /**
-   * Traverse a function out-of-band of normal traversal.
-   *
-   * @param node The function node.
-   * @param scope The scope the function is contained in. Does not fire enter/exit callback events
-   *     for this scope.
-   */
-  private void traverseFunctionOutOfBand(Node node, AbstractScope<?, ?> scope) {
-    checkNotNull(scope);
-    checkState(node.isFunction(), node);
-    checkNotNull(scope.getRootNode());
-    initTraversal(node);
-    currentNode = node.getParent();
-    pushScope(scope, true /* quietly */);
-    traverseBranch(node, currentNode);
-    popScope(true /* quietly */);
   }
 
   public AbstractCompiler getCompiler() {
