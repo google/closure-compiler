@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckGlobalNames.NAME_DEFINED_LATE_WARNING;
 import static com.google.javascript.jscomp.CheckGlobalNames.STRICT_MODULE_DEP_QNAME;
-import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
@@ -51,7 +50,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    final CheckGlobalNames checkGlobalNames = new CheckGlobalNames(compiler, CheckLevel.WARNING);
+    final CheckGlobalNames checkGlobalNames = new CheckGlobalNames(compiler);
     if (injectNamespace) {
       return new CompilerPass() {
         @Override
@@ -146,102 +145,12 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testRefToUndefinedProperty1() {
-    testWarning(NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
-    // GlobalNamespace does not report `a.c?.x` as a reference to a global qualified name `a.c.x`,
-    // so UNDEFINED_NAME_WARNING will not be emitted. This is working as intended.
-    testSame(NAMES + "alert(a?.x);");
-
-    testWarning(CLASS_DECLARATION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testSame(CLASS_DECLARATION_NAMES + "alert(A?.x);");
-    testWarning(CLASS_EXPRESSION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testSame(CLASS_EXPRESSION_NAMES + "alert(A?.x);");
-    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testSame("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A?.x);");
-    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testSame("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A?.x);");
-    testWarning(EXT_OBJLIT_NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
-    testSame(EXT_OBJLIT_NAMES + "alert(a?.x);");
-  }
-
-  @Test
-  public void testRefToUndefinedProperty2() {
-    testWarning(NAMES + "a.x();", UNDEFINED_NAME_WARNING);
-
-    testWarning(LET_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
-    testWarning(CONST_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
-
-    testWarning(CLASS_DECLARATION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
-    testWarning(CLASS_EXPRESSION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
-    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());", UNDEFINED_NAME_WARNING);
-    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());", UNDEFINED_NAME_WARNING);
-  }
-
-  @Test
-  public void testRefToUndefinedProperty3() {
-    testWarning(NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    // GlobalNamespace does not report `a.c?.x` as a reference to a global qualified name `a.c.x`,
-    // so UNDEFINED_NAME_WARNING will not be emitted. This is working as intended.
-    testSame(NAMES + "alert(a.c?.x);");
-
-    testWarning(GET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    testSame(GET_NAMES + "alert(a.c?.x);");
-
-    testWarning(SET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    testSame(SET_NAMES + "alert(a.c?.x);");
-
-    testWarning(LET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    testSame(LET_NAMES + "alert(a.c?.x);");
-
-    testWarning(CONST_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    testSame(CONST_NAMES + "alert(a.c?.x);");
-  }
-
-  @Test
-  public void testRefToUndefinedProperty4() {
-    testSame(NAMES + "alert(a.d.x);");
-    testSame(GET_NAMES + "alert(a.d.x);");
-    testSame(SET_NAMES + "alert(a.d.x);");
-  }
-
-  @Test
-  public void testRefToClassPrototypeMemberThroughCtor() {
-    testWarning("class C { b() {} } C.b()", UNDEFINED_NAME_WARNING);
-    testSame("class C { static b() {} b() {} } C.b();");
+    testSame(NAMES + "alert(a.x);");
   }
 
   @Test
   public void testRefToDescendantOfUndefinedProperty1() {
-    testWarning(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
-
-    testWarning(LET_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
-    testWarning(CONST_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
-
-    testWarning(CLASS_DECLARATION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-    testWarning(CLASS_EXPRESSION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-  }
-
-  @Test
-  public void testRefToDescendantOfUndefinedProperty2() {
-    testWarning(NAMES + "a.x.b();", UNDEFINED_NAME_WARNING);
-    testWarning(NAMES + "a.x?.b();", UNDEFINED_NAME_WARNING);
-    testWarning(NAMES + "a.x.b?.();", UNDEFINED_NAME_WARNING);
-
-    testWarning(CLASS_DECLARATION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
-    testWarning(CLASS_EXPRESSION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
-    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();", UNDEFINED_NAME_WARNING);
-    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();", UNDEFINED_NAME_WARNING);
-  }
-
-  @Test
-  public void testRefToDescendantOfUndefinedProperty3() {
-    testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING);
-
-    testWarning(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
-    testWarning(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
-    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
-    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
+    testSame(NAMES + "var c = a.x.b;");
   }
 
   @Test
@@ -274,31 +183,6 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   @Test
   public void testDestructuringTypedefAliasGivesNoWarning() {
     testSame("var a = {}; /** @typedef {number} */ a.b; const {b} = a;");
-  }
-
-  @Test
-  public void testRefToDescendantOfUndefinedPropertyGivesCorrectWarning() {
-    testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING, UNDEFINED_NAME_WARNING.format("a.x"));
-
-    testWarning(
-        LET_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING, UNDEFINED_NAME_WARNING.format("a.x"));
-    testWarning(
-        CONST_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING, UNDEFINED_NAME_WARNING.format("a.x"));
-
-    testWarning(
-        CLASS_DECLARATION_NAMES + "A.x.y = 42;",
-        UNDEFINED_NAME_WARNING,
-        UNDEFINED_NAME_WARNING.format("A.x"));
-    testWarning(
-        CLASS_EXPRESSION_NAMES + "A.x.y = 42;",
-        UNDEFINED_NAME_WARNING,
-        UNDEFINED_NAME_WARNING.format("A.x"));
-  }
-
-  @Test
-  public void testNamespaceInjection() {
-    injectNamespace = true;
-    testWarning(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
   }
 
   @Test
@@ -414,9 +298,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testUndefinedModuleDep1() {
-    testSame(
-        JSChunkGraphBuilder.forChain().addChunk("var c = a.xxx;").addChunk(NAMES).build(),
-        UNDEFINED_NAME_WARNING);
+    testSame(JSChunkGraphBuilder.forChain().addChunk("var c = a.xxx;").addChunk(NAMES).build());
   }
 
   @Test
@@ -503,25 +385,6 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testBadInterfacePropRef() {
-    testWarning(
-        lines(
-            "/** @interface */ function F() {}", //
-            "F.bar();"),
-        UNDEFINED_NAME_WARNING);
-    testWarning(
-        lines(
-            "/** @interface */ function F() {}", //
-            "F.bar?.();"),
-        UNDEFINED_NAME_WARNING);
-    testSame(
-        lines(
-            "/** @interface */ function F() {}", //
-            // ?. after F indicates some uncertainty that F actually exists
-            "F?.bar();"));
-  }
-
-  @Test
   public void testInterfaceFunctionPropRef() {
     testSame("/** @interface */ function F() {}" + "F.call(); F.hasOwnProperty('z');");
   }
@@ -556,64 +419,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogInheritsAlias() {
-    testSame(
-        "Function.prototype.inherits = function(ctor) {"
-            + "  this.superClass_ = ctor;"
-            + "};"
-            + "/** @constructor */ function Foo() {}"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @constructor */ function SubFoo() {}"
-            + "SubFoo.inherits(Foo);"
-            + "SubFoo.superClass_.bar();");
-  }
-
-  @Test
-  public void testGoogInheritsAlias2() {
-    testWarning(
-        CompilerTypeTestCase.CLOSURE_DEFS
-            + "/** @constructor */ function Foo() {}"
-            + "Foo.prototype.bar = function() {};"
-            + "/** @constructor */ function SubFoo() {}"
-            + "goog.inherits(SubFoo, Foo);"
-            + "SubFoo.superClazz();",
-        UNDEFINED_NAME_WARNING);
-  }
-
-  @Test
   public void testGlobalCatch() {
     testSame("try {" + "  throw Error();" + "} catch (e) {" + "  console.log(e.name)" + "}");
-  }
-
-  @Test
-  public void testEs6Subclass_noWarningOnValidPropertyAccess() {
-    testNoWarning(
-        lines(
-            "class Parent {",
-            "  static f() {}",
-            "}",
-            "class Child extends Parent {}",
-            "Child.f();"));
-  }
-
-  @Test
-  public void testEs6Subclass_noWarningOnInvalidPropertyAccess() {
-    // We don't warn for accesses on any ES6 class that extend another class and let typechecking
-    // handle warning for missing static properties.
-    // It's not clear that this class can actually do any better than typechecking.
-
-    // Not ok but we don't warn
-    testNoWarning(
-        lines(
-            "class Parent {}", // preserve newline
-            "class Child extends Parent {}",
-            "Child.f();"));
-  }
-
-  @Test
-  public void testEs6NonSubclass_stillWarnsForMissingProperty() {
-    // We still do warn for undefined properties on an ES6 class with no superclass
-    testWarning("class Child {} Child.f();", UNDEFINED_NAME_WARNING);
   }
 
   @Test

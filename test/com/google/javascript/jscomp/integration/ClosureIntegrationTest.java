@@ -1186,7 +1186,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
     options.setChecksOnly(true);
-    options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
+    options.setCheckTypes(true);
 
     test(
         options,
@@ -1194,7 +1194,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "var ns = {};",
             // generally it's not allowed to access undefined namespaces
             "ns.subns.foo = function() {};"),
-        DiagnosticGroups.UNDEFINED_NAMES);
+        DiagnosticGroups.MISSING_PROPERTIES);
 
     testSame(
         options,
@@ -1221,7 +1221,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
     options.setChecksOnly(true);
-    options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
     String externs =
         lines(
             "/** @externs */",

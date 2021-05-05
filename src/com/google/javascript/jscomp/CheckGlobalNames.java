@@ -34,17 +34,12 @@ class CheckGlobalNames implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
-  private final CheckLevel level;
 
   private GlobalNamespace namespace = null;
   private final Set<String> objectPrototypeProps = new HashSet<>();
   private final Set<String> functionPrototypeProps = new HashSet<>();
 
   // Warnings
-  static final DiagnosticType UNDEFINED_NAME_WARNING = DiagnosticType.warning(
-      "JSC_UNDEFINED_NAME",
-      "{0} is never defined");
-
   static final DiagnosticType NAME_DEFINED_LATE_WARNING =
       DiagnosticType.warning(
           "JSC_NAME_DEFINED_LATE",
@@ -59,13 +54,10 @@ class CheckGlobalNames implements CompilerPass {
           "cannot reference {2} because of a missing module dependency\n"
           + "defined in module {1}, referenced from module {0}");
 
-  /**
-   * Creates a pass to check global name references at the given warning level.
-   */
-  CheckGlobalNames(AbstractCompiler compiler, CheckLevel level) {
+  /** Creates a pass to check global name references */
+  CheckGlobalNames(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
-    this.level = level;
   }
 
   /**
@@ -146,7 +138,7 @@ class CheckGlobalNames implements CompilerPass {
             && hasSpreadProp(prop.getParent())) {
           // Skip validating props of object literals that contain spread properties as they can
           // potentially report
-          // spurious UNDEFINED_NAME warnings. See tests {@code testObjectWithSpreadProperty_*}.
+          // spurious warnings. See tests {@code testObjectWithSpreadProperty_*}.
           continue;
         }
         validateName(prop, propIsDefined);
@@ -162,13 +154,8 @@ class CheckGlobalNames implements CompilerPass {
 
     boolean isTypedef = isTypedef(name);
     for (Ref ref : name.getRefs()) {
-      // Don't worry about global exprs.
-      boolean isGlobalExpr = ref.getNode().getParent().isExprResult();
 
       if (!isDefined && !isTypedef) {
-        if (!isGlobalExpr) {
-          reportRefToUndefinedName(name, ref);
-        }
       } else if (checkForBadModuleReference(name, ref)) {
         reportBadModuleReference(name, ref);
       } else {
@@ -312,16 +299,6 @@ class CheckGlobalNames implements CompilerPass {
             ref.getModule().getName(),
             name.getDeclaration().getModule().getName(),
             name.getFullName()));
-  }
-
-  private void reportRefToUndefinedName(Name name, Ref ref) {
-    // grab the highest undefined ancestor to output in the warning message.
-    while (name.getParent() != null
-        && name.getParent().getGlobalSets() + name.getParent().getLocalSets() == 0) {
-      name = name.getParent();
-    }
-
-    compiler.report(JSError.make(ref.getNode(), level, UNDEFINED_NAME_WARNING, name.getFullName()));
   }
 
   /**

@@ -299,8 +299,7 @@ public class DiagnosticGroups {
           VarCheck.UNDEFINED_VAR_ERROR);
 
   public static final DiagnosticGroup UNDEFINED_NAMES =
-      DiagnosticGroups.registerGroup("undefinedNames",
-          CheckGlobalNames.UNDEFINED_NAME_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("undefinedNames");
 
   public static final DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
       DiagnosticGroups.registerGroup("checkDebuggerStatement",

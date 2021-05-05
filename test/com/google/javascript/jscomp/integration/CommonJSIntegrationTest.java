@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.WarningLevel;
@@ -414,9 +413,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
               "module$i0.bar();", //
               "/** @const */ var module$i1 = {};")
         },
-        new DiagnosticGroup[] {
-          DiagnosticGroups.UNDEFINED_NAMES, DiagnosticGroups.MISSING_PROPERTIES
-        });
+        DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Override

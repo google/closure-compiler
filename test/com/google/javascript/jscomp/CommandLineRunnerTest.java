@@ -449,13 +449,6 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testCheckUndefinedProperties2() {
-    args.add("--warning_level=VERBOSE");
-    args.add("--jscomp_off=missingProperties");
-    test("var x = {}; var y = x.bar;", CheckGlobalNames.UNDEFINED_NAME_WARNING);
-  }
-
-  @Test
   public void testCheckUndefinedProperties3() {
     args.add("--warning_level=VERBOSE");
     test("function f() {var x = {}; var y = x.bar;}",

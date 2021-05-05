@@ -1442,8 +1442,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testCheckGlobalNames() {
     CompilerOptions options = createCompilerOptions();
-    options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
-    test(options, "var x = {}; var y = x.z;", DiagnosticGroups.UNDEFINED_NAMES);
+    options.setCheckTypes(true);
+    test(options, "var x = {}; var y = x.z;", DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Test

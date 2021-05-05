@@ -187,19 +187,6 @@ public enum CompilationParam {
     }
   },
 
-  /** Checks the integrity of references to qualified global names. (e.g. "a.b") */
-  CHECK_GLOBAL_NAMES(ParamGroup.ERROR_CHECKING) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setCheckGlobalNamesLevel(value ? CheckLevel.WARNING : CheckLevel.OFF);
-    }
-
-    @Override
-    public String getJavaInfo() {
-      return "options.setCheckGlobalNamesLevel(CheckLevel.WARNING)";
-    }
-  },
-
   /**
    * Checks for certain uses of the {@code this} keyword that are considered unsafe because they are
    * likely to reference the global {@code this} object unintentionally.

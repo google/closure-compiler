@@ -363,6 +363,8 @@ public class CompilerOptions implements Serializable {
   // whether to skip the RemoveTypes pass
   private boolean shouldUnsafelyPreserveTypesForDebugging;
 
+  // TODO(b/187217909): deprecate this option. Currently it still is used to enable the
+  // CheckGlobalNames pass to run/not run in DefaultPassConfig.
   public CheckLevel checkGlobalNamesLevel;
 
   /** Checks the integrity of references to qualified global names. (e.g. "a.b") */
