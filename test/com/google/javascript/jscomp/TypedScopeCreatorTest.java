@@ -2677,6 +2677,47 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtends_andCompatibleJsdoc() {
+    testSame(
+        lines(
+            "/** @template T */",
+            "class Bar {}", //
+            "/** @extends {Bar<string>} */",
+            "class Foo extends Bar {}"));
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtends_andIncompatibleJsdoc() {
+    testSame(
+        lines(
+            "class Bar {}", //
+            "class Qux {}",
+            "/** @extends {Bar} */",
+            "class Foo extends Qux {}"));
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    FunctionType qux = (FunctionType) (findNameType("Qux", globalScope));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Qux").withTypeThat().isEqualTo(qux);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isTrue();
   }
 
   @Test
@@ -2695,6 +2736,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
   }
 
   @Test
@@ -2702,8 +2744,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         lines(
             "const ns = {};", //
+            "ns.Bar = class {};",
+            "const nsAliased = ns;",
+            "",
+            "/** @extends {nsAliased.Bar} */",
+            "class Foo extends nsAliased.Bar {}"));
+    FunctionType bar = (FunctionType) findNameType("ns.Bar", globalScope);
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtendsFromNamespaceAndJSDoc_incompatible() {
+    testSame(
+        lines(
+            "const ns = {};", //
             "/** @template T */",
             "ns.Bar = class {};",
+            "ns.Qux = class {};",
             "const nsAliased = ns;",
             "",
             "/** @extends {nsAliased.Bar<number>} */",
@@ -2716,6 +2780,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
   }
 
   @Test
@@ -2751,6 +2816,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
   }
 
   @Test
@@ -2775,6 +2841,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
   }
 
   @Test
@@ -2799,6 +2866,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
     assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.isAmbiguousConstructor()).isFalse();
   }
 
   @Test

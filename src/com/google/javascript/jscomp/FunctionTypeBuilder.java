@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
@@ -94,6 +95,7 @@ final class FunctionTypeBuilder {
   private boolean isInterface = false;
   private boolean isRecord = false;
   private boolean isAbstract = false;
+  private boolean isKnownAmbiguous = false;
   private List<Parameter> parameters = null;
   private ClosurePrimitive closurePrimitiveId = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
@@ -439,12 +441,15 @@ final class FunctionTypeBuilder {
       if (isConstructor || isInterface) {
         ObjectType infoBaseType =
             info.getBaseType().evaluate(templateScope, typeRegistry).toMaybeObjectType();
-        // TODO(sdh): ensure JSDoc's baseType and AST's baseType are compatible if both are set
+        if (!areCompatibleExtendsTypes(infoBaseType, classExtendsType)) {
+          this.isKnownAmbiguous = true;
+        }
         if (infoBaseType.setValidator(new ExtendedTypeValidator())) {
           baseType = infoBaseType;
         }
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
+        this.isKnownAmbiguous = true;
       }
     } else if (classExtendsType != null && (isConstructor || isInterface)) {
       // This case is:
@@ -522,6 +527,26 @@ final class FunctionTypeBuilder {
     }
 
     return this;
+  }
+
+  /**
+   * Decide if the types in the @extends annotation and the extends clause of a class are a
+   * "sensible" combination.
+   *
+   * <p>Sensible is vague here, depending on how dynamic we allow types to be. It's not just a
+   * supertype/subtype check. Generally, we want to trust user annotations as declarations of
+   * intent, but we also want to protect users from dangerous lies. UNKNOWN as one of the types is a
+   * particularly uncertain case.
+   */
+  private static boolean areCompatibleExtendsTypes(
+      ObjectType annotated, @Nullable ObjectType extendsClause) {
+    if (extendsClause == null || identical(annotated, extendsClause)) {
+      return true;
+    }
+
+    // Allow `/** @extends {Foo<T>} */ class Bar extends Foo`
+    return annotated.isTemplatizedType()
+        && identical(annotated.toMaybeTemplatizedType().getReferencedType(), extendsClause);
   }
 
   /**
@@ -990,6 +1015,7 @@ final class FunctionTypeBuilder {
         .withName(this.fnName)
         .withSourceNode(this.contents.getSourceNode())
         .withTemplateKeys(this.templateTypeNames)
+        .setIsKnownAmbiguous(this.isKnownAmbiguous)
         .setGoogModuleId(TypedScopeCreator.containingGoogModuleIdOf(this.declarationScope));
   }
 

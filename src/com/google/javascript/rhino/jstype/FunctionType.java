@@ -102,7 +102,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     IS_UNAMBIGUOUS_CONSTRUCTOR,
   }
 
-  private ConstructorAmbiguity constructorAmbiguity = ConstructorAmbiguity.UNKNOWN;
+  private ConstructorAmbiguity constructorAmbiguity;
 
   /** {@code [[Call]]} property. */
   private ArrowType call;
@@ -173,6 +173,10 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     this.source = source;
     this.googModuleId = builder.googModuleId;
     this.kind = builder.kind;
+    this.constructorAmbiguity =
+        builder.isKnownAmbiguous
+            ? ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR
+            : ConstructorAmbiguity.UNKNOWN;
 
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
@@ -1395,6 +1399,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
     private Kind kind = Kind.ORDINARY;
     private boolean isAbstract;
+    private boolean isKnownAmbiguous = false;
     private boolean returnTypeIsInferred;
     private boolean returnsOwnInstanceType;
     private ClosurePrimitive primitiveId = null;
@@ -1522,6 +1527,11 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     /** Mark abstract method. */
     public Builder withIsAbstract(boolean isAbstract) {
       this.isAbstract = isAbstract;
+      return this;
+    }
+
+    public Builder setIsKnownAmbiguous(boolean x) {
+      this.isKnownAmbiguous = x;
       return this;
     }
 
