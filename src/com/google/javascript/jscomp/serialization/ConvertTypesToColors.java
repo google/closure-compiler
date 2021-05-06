@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.IdentityHashMap;
 
 /**
  * Pass to convert JSType objects from TypeChecking that are attached to the AST into Color objects
@@ -49,6 +48,10 @@ public final class ConvertTypesToColors implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       n.setJSType(null);
+      clearTypeRelatedProperties(n);
+    }
+
+    protected void clearTypeRelatedProperties(Node n) {
       n.setJSTypeBeforeCast(null);
       n.setDeclaredTypeExpression(null);
       n.setTypedefTypeProp(null);
@@ -62,27 +65,22 @@ public final class ConvertTypesToColors implements CompilerPass {
 
   private static class RemoveTypesAndApplyColors extends RemoveTypes {
     private final ColorDeserializer deserializer;
-    private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
 
-    RemoveTypesAndApplyColors(
-        ColorDeserializer deserializer, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
+    RemoveTypesAndApplyColors(ColorDeserializer deserializer) {
       super();
       this.deserializer = deserializer;
-      this.typePointersByJstype = typePointersByJstype;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      JSType oldType = n.getJSType();
+      TypePointer pointer = n.getColorPointer();
       JSType oldTypeBeforeCast = n.getJSTypeBeforeCast();
 
-      super.visit(t, n, parent);
+      clearTypeRelatedProperties(n);
 
-      if (oldType != null) {
-        TypePointer pointer = typePointersByJstype.get(oldType);
-        if (pointer != null) {
-          n.setColor(deserializer.pointerToColor(pointer));
-        }
+      if (pointer != null) {
+        n.setColorPointer(null);
+        n.setColor(deserializer.pointerToColor(pointer));
       }
 
       if (oldTypeBeforeCast != null) {
@@ -119,10 +117,7 @@ public final class ConvertTypesToColors implements CompilerPass {
     StringPool stringPool = stringPoolBuilder.build();
 
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
-    NodeTraversal.traverse(
-        compiler,
-        externsAndJsRoot,
-        new RemoveTypesAndApplyColors(deserializer, serializeJstypes.getTypePointersByJstype()));
+    NodeTraversal.traverse(compiler, externsAndJsRoot, new RemoveTypesAndApplyColors(deserializer));
 
     compiler.clearJSTypeRegistry();
     compiler.setColorRegistry(deserializer.getRegistry());

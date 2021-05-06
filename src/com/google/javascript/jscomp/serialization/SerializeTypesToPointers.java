@@ -86,14 +86,18 @@ final class SerializeTypesToPointers {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       JSType type = n.getJSType();
-      if (type != null && !typePointersByJstype.containsKey(type)) {
-        typePointersByJstype.put(type, jstypeSerializer.serializeType(type));
+      if (type == null) {
+        return;
       }
-    }
-  }
 
-  IdentityHashMap<JSType, TypePointer> getTypePointersByJstype() {
-    return typePointersByJstype;
+      // TODO(lharker): this map is only used for debugging information and a speed improvement
+      // to serializeType. Try removing the need for the Map once b/185519307 is fixed and
+      // JSTypeSerializer does more caching.
+      TypePointer pointer =
+          typePointersByJstype.computeIfAbsent(type, jstypeSerializer::serializeType);
+      n.setJSType(null);
+      n.setColorPointer(pointer);
+    }
   }
 
   TypePool getTypePool() {

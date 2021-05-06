@@ -50,6 +50,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.serialization.TypePointer;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
@@ -2149,6 +2150,21 @@ public class Node {
 
   public final Node setColor(@Nullable Color x) {
     checkState(this.jstypeOrColor == null || this.jstypeOrColor instanceof Color, this);
+    this.jstypeOrColor = x;
+    return this;
+  }
+
+  /**
+   * Returns the compiled inferred type on this node. Not to be confused with {@link
+   * #getDeclaredTypeExpression()} which returns the syntactically specified type.
+   */
+  @Nullable
+  public final TypePointer getColorPointer() {
+    return (this.jstypeOrColor instanceof TypePointer) ? (TypePointer) this.jstypeOrColor : null;
+  }
+
+  public final Node setColorPointer(@Nullable TypePointer x) {
+    checkState(this.jstypeOrColor == null || this.jstypeOrColor instanceof TypePointer, this);
     this.jstypeOrColor = x;
     return this;
   }
