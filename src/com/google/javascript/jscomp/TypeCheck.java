@@ -247,9 +247,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_UNKNOWN_EXPR_TYPE", "could not determine the type of this expression");
 
-  static final DiagnosticType UNRESOLVED_TYPE =
-      DiagnosticType.warning("JSC_UNRESOLVED_TYPE", "could not resolve the name {0} to a type");
-
   static final DiagnosticType WRONG_ARGUMENT_COUNT =
       DiagnosticType.warning(
           "JSC_WRONG_ARGUMENT_COUNT",
@@ -340,7 +337,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           UNKNOWN_OVERRIDE,
           UNKNOWN_PROTOTYPAL_OVERRIDE,
           INTERFACE_METHOD_OVERRIDE,
-          UNRESOLVED_TYPE,
           WRONG_ARGUMENT_COUNT,
           ILLEGAL_IMPLICIT_CAST,
           INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
