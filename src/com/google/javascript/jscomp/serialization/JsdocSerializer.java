@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.serialization;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -285,7 +284,7 @@ public final class JsdocSerializer {
 
         case JSDOC_UNSPECIFIED:
         case UNRECOGNIZED:
-          throw new InvalidSerializedFormatException(
+          throw new MalformedTypedAstException(
               "Unsupported JSDoc tag can't be deserialized: " + tag);
       }
     }

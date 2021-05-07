@@ -47,13 +47,6 @@ public final class ColorDeserializer {
   private final ColorRegistry colorRegistry;
   private final TypePool typePool;
 
-  /** Error emitted when the deserializer sees a serialized type it cannot support deserialize */
-  public static final class InvalidSerializedFormatException extends RuntimeException {
-    public InvalidSerializedFormatException(String msg) {
-      super("Invalid serialized TypeProto format: " + msg);
-    }
-  }
-
   private ColorDeserializer(
       ImmutableList<Color> colorPool, ColorRegistry colorRegistry, TypePool typePool) {
     this.colorPool = colorPool;
@@ -187,8 +180,7 @@ public final class ColorDeserializer {
      */
     private Color deserializeType(int i, TypeProto serialized) {
       if (currentlyDeserializing.contains(serialized)) {
-        throw new InvalidSerializedFormatException(
-            "Cannot deserialize type in cycle " + serialized);
+        throw new MalformedTypedAstException("Cannot deserialize type in cycle " + serialized);
       }
       currentlyDeserializing.add(serialized);
 
@@ -206,7 +198,7 @@ public final class ColorDeserializer {
         case UNION:
           return createUnionColor(serialized.getUnion());
         case KIND_NOT_SET:
-          throw new InvalidSerializedFormatException(
+          throw new MalformedTypedAstException(
               "Expected all Types to have a Kind, found " + serialized);
       }
       throw new AssertionError();
@@ -246,8 +238,7 @@ public final class ColorDeserializer {
 
     private Color createUnionColor(UnionTypeProto serialized) {
       if (serialized.getUnionMemberCount() <= 1) {
-        throw new InvalidSerializedFormatException(
-            "Unions must have >= 2 elements, found " + serialized);
+        throw new MalformedTypedAstException("Unions must have >= 2 elements, found " + serialized);
       }
       ImmutableSet<Color> allAlternates =
           serialized.getUnionMemberList().stream()
@@ -297,7 +288,7 @@ public final class ColorDeserializer {
         return NativeColorId.SYMBOL;
 
       case UNRECOGNIZED:
-        throw new InvalidSerializedFormatException("Unrecognized PrimitiveType " + primitive);
+        throw new MalformedTypedAstException("Unrecognized PrimitiveType " + primitive);
     }
     throw new AssertionError();
   }
@@ -318,7 +309,7 @@ public final class ColorDeserializer {
     // Account for the first N type pointer offsets being reserved for the primitive types.
     if (poolOffset < 0
         || poolOffset >= typePool.getTypeCount() + JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-      throw new InvalidSerializedFormatException(
+      throw new MalformedTypedAstException(
           "TypeProto pointer has out-of-bounds pool offset: "
               + typePointer
               + " for pool size "

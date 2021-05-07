@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.NativeColorId;
-import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -270,7 +269,7 @@ public class ColorDeserializerTest {
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
             .build();
     assertThrows(
-        InvalidSerializedFormatException.class,
+        MalformedTypedAstException.class,
         () ->
             ColorDeserializer.buildFromTypePool(typePool, StringPool.empty())
                 .pointerToColor(poolPointer(0)));
@@ -367,7 +366,7 @@ public class ColorDeserializerTest {
     // better than infinite recursion.
 
     assertThrows(
-        InvalidSerializedFormatException.class,
+        MalformedTypedAstException.class,
         () ->
             ColorDeserializer.buildFromTypePool(typePool, StringPool.empty())
                 .pointerToColor(poolPointer(0)));
@@ -378,7 +377,7 @@ public class ColorDeserializerTest {
     TypePool typePool = TypePool.newBuilder().addType(TypeProto.getDefaultInstance()).build();
 
     assertThrows(
-        InvalidSerializedFormatException.class,
+        MalformedTypedAstException.class,
         () ->
             ColorDeserializer.buildFromTypePool(typePool, StringPool.empty())
                 .pointerToColor(poolPointer(0)));
@@ -396,7 +395,7 @@ public class ColorDeserializerTest {
             .build();
 
     assertThrows(
-        InvalidSerializedFormatException.class,
+        MalformedTypedAstException.class,
         () ->
             ColorDeserializer.buildFromTypePool(typePool, StringPool.empty())
                 .pointerToColor(poolPointer(0)));
