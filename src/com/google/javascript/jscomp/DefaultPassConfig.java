@@ -584,10 +584,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(stripCode);
     }
 
-    if (options.replaceIdGenerators) {
-      passes.add(replaceIdGenerators);
-    }
-
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
     if (options.j2clPassMode.shouldAddJ2clPasses()
@@ -600,6 +596,10 @@ public final class DefaultPassConfig extends PassConfig {
     // the main optimization loop.
     if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
       passes.add(collapseProperties);
+    }
+
+    if (options.replaceIdGenerators) {
+      passes.add(replaceIdGenerators);
     }
 
     if (options.inferConsts) {
