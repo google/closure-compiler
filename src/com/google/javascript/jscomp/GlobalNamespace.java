@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -479,13 +480,15 @@ class GlobalNamespace
         case STRING_KEY:
           name = null;
           if (parent.isObjectLit()) {
-            name = NodeUtil.getBestLValueName(n);
+            ObjLitStringKeyAnalysis analysis = createObjLitStringKeyAnalysis(n);
+            name = analysis.getNameString();
+            type = analysis.getNameType();
             isSet = true;
           } else if (parent.isObjectPattern()) {
             name = getNameForObjectPatternKey(n);
+            type = getValueType(n.getFirstChild());
             // not a set
-          }
-          type = getValueType(n.getFirstChild());
+          } // else not a reference we should record
           break;
         case NAME:
         case GETPROP:
@@ -607,6 +610,31 @@ class GlobalNamespace
         }
       } else {
         handleGet(module, scope, n, parent, name, nameMetadata);
+      }
+    }
+
+    private ObjLitStringKeyAnalysis createObjLitStringKeyAnalysis(Node stringKeyNode) {
+      String nameString = NodeUtil.getBestLValueName(stringKeyNode);
+      if (nameString != null) {
+        // `parent.qname = { myPropName: myValue }`;
+        // `NodeUtil.getBestLValueName()` finds the name being assigned for this case.
+        return ObjLitStringKeyAnalysis.forObjLitAssignment(
+            nameString, getValueType(stringKeyNode.getOnlyChild()));
+      } else {
+        // maybe we have a case like
+        // `Object.defineProperties(parentName, { myPropName: { get: ..., set: ..., ... })`
+        Node objLitNode = stringKeyNode.getParent();
+        checkArgument(objLitNode.isObjectLit(), objLitNode);
+        Node objLitParentNode = objLitNode.getParent();
+        if (NodeUtil.isObjectDefinePropertiesDefinition(objLitParentNode)) {
+          Node receiverNode = objLitParentNode.getSecondChild();
+          if (receiverNode.isQualifiedName()) {
+            checkState(objLitNode == receiverNode.getNext(), objLitParentNode);
+            nameString = receiverNode.getQualifiedName() + "." + stringKeyNode.getString();
+            return ObjLitStringKeyAnalysis.forObjectDefineProperty(nameString);
+          }
+        }
+        return ObjLitStringKeyAnalysis.forNonReference();
       }
     }
 
@@ -1221,7 +1249,7 @@ class GlobalNamespace
     return new Name(name, null, SourceKind.CODE);
   }
 
-  private enum NameType {
+  enum NameType {
     CLASS, // class C {}
     OBJECTLIT, // var x = {};
     FUNCTION, // function f() {}
@@ -2465,6 +2493,39 @@ class GlobalNamespace
           .add("module", module)
           .add("scope", scope)
           .toString();
+    }
+  }
+
+  @AutoValue
+  abstract static class ObjLitStringKeyAnalysis {
+    @Nullable
+    public abstract String getNameString();
+
+    @Nullable
+    public abstract NameType getNameType();
+
+    /**
+     * The object literal key is used to define a property. <code>
+     * Object.defineProperty(parent.qname, { strKeyName: value, { get: ..., } })</code>
+     */
+    static ObjLitStringKeyAnalysis forObjectDefineProperty(String nameString) {
+      // Technically the definition may not have a getter or setter, but we'll just
+      // always pretend it does, because we cannot inline and collapse properties defined this
+      // way.
+      return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
+          checkNotNull(nameString), NameType.GET_SET);
+    }
+
+    /** The object literal key represents `parent.qname = { strKeyName: value }` */
+    static ObjLitStringKeyAnalysis forObjLitAssignment(String nameString, NameType nameType) {
+      return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
+          checkNotNull(nameString), nameType);
+    }
+
+    /** The object literal key does not represent a qualified name assignment. */
+    static ObjLitStringKeyAnalysis forNonReference() {
+      return new AutoValue_GlobalNamespace_ObjLitStringKeyAnalysis(
+          /* nameString = */ null, NameType.OTHER);
     }
   }
 }

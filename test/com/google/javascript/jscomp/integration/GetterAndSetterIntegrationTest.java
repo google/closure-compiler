@@ -261,8 +261,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "    ES5Class,",
             "    {",
             "      unusedProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !1,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -276,8 +277,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "      },",
             // used property included for comparison, to show that it isn't removed
             "      usedProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !1,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -294,8 +296,36 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "alert(ES5Class.usedProp);",
             ""),
         lines(
-            // TODO(b/72879754): Property with getter should not be inlined
-            "alert(2);", ""));
+            "/** @constructor */",
+            "function ES5Class() {",
+            "}",
+            // static properties used by static getter/setter properties
+            // TODO(b/130682799): Properties used in getters and setters should not be removed
+            // "/** @private {number} */",
+            // "ES5Class.usedProp_ = 2;",
+            "Object.defineProperties(",
+            "    ES5Class,",
+            "    {",
+            // used property included for comparison, to show that it isn't removed
+            "      usedProp: {",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !1,",
+            "        writable: !0,",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @return {number}",
+            "         */",
+            "        get: function() { return this.usedProp_; },",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @param {number} value",
+            "         */",
+            "        set: function(value) { this.usedProp_ = value; },",
+            "      }",
+            "    });",
+            "ES5Class.usedProp = 2;",
+            "alert(ES5Class.usedProp);",
+            ""));
   }
 
   @Test
@@ -654,8 +684,10 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "    ES5Class,",
             "    {",
             "      onlySetProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimzed values for true and false, so the result
+            // won't have changes irrelevant to this test
+            "        configurable: !1,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -669,8 +701,10 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "      },",
             // used property included for comparison, to show that it isn't removed
             "      usedProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimzed values for true and false, so the result
+            // won't have changes irrelevant to this test
+            "        configurable: !1,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -688,8 +722,55 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "alert(ES5Class.usedProp);",
             ""),
         lines(
-            // TODO(b/72879754): property with setter should not be inlined.
-            "alert(2);", ""));
+            "/** @constructor */",
+            "function ES5Class() {",
+            "}",
+            // TODO(b/130682799): Properties used inside getters and setters should not be removed
+            // "/** @private {number} */",
+            // "ES5Class.onlySetProp_ = 1;",
+            // "/** @private {number} */",
+            // "ES5Class.usedProp_ = 2;",
+            "Object.defineProperties(",
+            "    ES5Class,",
+            "    {",
+            "      onlySetProp: {",
+            // use pre-optimzed values for true and false, so the result
+            // won't have changes irrelevant to this test
+            "        configurable: !1,",
+            "        writable: !0,",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @return {number}",
+            "         */",
+            "        get: function() { return this.onlySetProp_; },",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @param {number} value",
+            "         */",
+            "        set: function(value) { this.onlySetProp_ = value; },",
+            "      },",
+            // used property included for comparison, to show that it isn't removed
+            "      usedProp: {",
+            // use pre-optimzed values for true and false, so the result
+            // won't have changes irrelevant to this test
+            "        configurable: !1,",
+            "        writable: !0,",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @return {number}",
+            "         */",
+            "        get: function() { return this.usedProp_; },",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @param {number} value",
+            "         */",
+            "        set: function(value) { this.usedProp_ = value; },",
+            "      }",
+            "    });",
+            "ES5Class.onlySetProp = 1;",
+            "ES5Class.usedProp = 2;",
+            "alert(ES5Class.usedProp);",
+            ""));
   }
 
   @Test
@@ -1118,8 +1199,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "    ES5Class,",
             "    {",
             "      onlyGetProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !1,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -1133,8 +1215,9 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "      },",
             // used property included for comparison, to show that it isn't removed
             "      usedProp: {",
-            "        configurable: false,",
-            "        writable: true,",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !0,",
+            "        writable: !0,",
             "        /**",
             "         * @this {typeof ES5Class}",
             "         * @return {number}",
@@ -1172,11 +1255,25 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
             "         */",
             "        set: function(value) { this.onlyGetProp_ = value; },",
             "      },",
+            "      usedProp: {",
+            // use pre-optimized boolean values to avoid unrelated changes
+            "        configurable: !0,",
+            "        writable: !0,",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @return {number}",
+            "         */",
+            "        get: function() { return this.usedProp_; },",
+            "        /**",
+            "         * @this {typeof ES5Class}",
+            "         * @param {number} value",
+            "         */",
+            "        set: function(value) { this.usedProp_ = value; },",
+            "      }",
             "    });",
             "ES5Class.onlyGetProp;", // reference to property with getter must remain
-            // TODO(b/72879754): References to properties with getters should not be inlined or
-            // removed
-            "alert(2);",
+            "ES5Class.usedProp = 2;",
+            "alert(ES5Class.usedProp);",
             ""));
   }
 
