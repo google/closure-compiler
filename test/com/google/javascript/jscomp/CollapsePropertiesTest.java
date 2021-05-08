@@ -4374,44 +4374,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testModuleDynamicImportCommonJs() {
-
-    this.setupModuleExportsOnly();
-    this.setWebpackModulesById(
-        ImmutableMap.of(
-            "1", "mod1.js",
-            "2", "entry.js"));
-    this.setModuleResolutionMode(ResolutionMode.WEBPACK);
-    this.enableDependencyManagement = true;
-    this.entryPoints = new ArrayList<>();
-    this.entryPoints.add(ModuleIdentifier.forFile("entry.js"));
-
-    ArrayList<SourceFile> inputs = new ArrayList<>();
-    inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
-    inputs.add(
-        SourceFile.fromCode(
-            "entry.js",
-            lines(
-                "__webpack_require__.e(1).then(",
-                "    function() { return __webpack_require__(1);})")));
-
-    ArrayList<SourceFile> expected = new ArrayList<>();
-    expected.add(
-        SourceFile.fromCode(
-            "mod1.js",
-            "/** @const */ var module$mod1={}; /** @const */ module$mod1.default = 123;"));
-    expected.add(
-        SourceFile.fromCode(
-            "entry.js",
-            lines(
-                "/** @const */ var module$entry={};",
-                "__webpack_require__.e(1).then(",
-                "    function() { return module$mod1.default;})")));
-
-    test(inputs, expected);
-  }
-
-  @Test
   public void testOrExpression() {
     // left branch, read declared prop
     testSame("var a = {b: 1} || x; var t = a.b;");

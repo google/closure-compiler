@@ -334,9 +334,17 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   public void outputModulesExternInjected() {
     this.chunkOutputType = ChunkOutputType.ES_MODULES;
     this.dynamicImportAlias = null;
+    JSModule actualChunk0 = new JSModule("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSModule actualChunk1 = new JSModule("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
 
     testExternChanges(
-        "import('foo.js')", "function " + DYNAMIC_IMPORT_CALLBACK_FN + "(importCallback) {}");
+        "",
+        new JSModule[] {actualChunk0, actualChunk1},
+        "function " + DYNAMIC_IMPORT_CALLBACK_FN + "(importCallback) {}",
+       (DiagnosticType[]) null);
   }
 
   @Test

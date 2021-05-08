@@ -1917,6 +1917,22 @@ public abstract class CompilerTestCase {
         maybeCreateSources(GENERATED_EXTERNS_NAME, extern),
         maybeCreateSources(GENERATED_SRC_NAME, input),
         options);
+    testExternChangesInternal(compiler, expectedExtern, warnings);
+  }
+
+  protected void testExternChanges(
+      String extern, JSModule[] modules, String expectedExtern, DiagnosticType... warnings) {
+    Compiler compiler = createCompiler();
+    CompilerOptions options = getOptions();
+    compiler.initModules(
+        maybeCreateSources(GENERATED_EXTERNS_NAME, extern),
+        ImmutableList.copyOf(modules),
+        options);
+    testExternChangesInternal(compiler, expectedExtern, warnings);
+  }
+
+  private void testExternChangesInternal(
+      Compiler compiler, String expectedExtern, DiagnosticType ...warnings) {
     compiler.parseInputs();
 
     if (createModuleMap) {

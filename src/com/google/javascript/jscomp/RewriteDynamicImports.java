@@ -72,6 +72,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   private final boolean shouldWrapDynamicImportCallbacks;
   private boolean dynamicImportsRemoved = false;
   private boolean arrowFunctionsAdded = false;
+  private boolean wrappedDynamicImportCallback = false;
 
   /** @param compiler The compiler */
   public RewriteDynamicImports(
@@ -89,11 +90,11 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     dynamicImportsRemoved = false;
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
-    if (shouldWrapDynamicImportCallbacks) {
-      injectWrappingFunctionExtern();
-    }
 
     NodeTraversal.traverse(compiler, root, this);
+    if (wrappedDynamicImportCallback) {
+      injectWrappingFunctionExtern();
+    }
     if (dynamicImportsRemoved) {
       // This pass removes dynamic import, but adds arrow functions.
       compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT));
@@ -288,6 +289,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
               DYNAMIC_IMPORT_CALLBACK_FN,
               registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType()));
       thenArgument = astFactory.createCall(wrappingFunction, callbackFn);
+      wrappedDynamicImportCallback = true;
     }
     final Node importThenCall =
         astFactory.createCall(astFactory.createGetProp(dynamicImport, "then"), thenArgument);

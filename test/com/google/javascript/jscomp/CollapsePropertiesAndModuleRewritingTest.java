@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -33,6 +34,9 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
+  private PropertyCollapseLevel collapseLevel = PropertyCollapseLevel.ALL;
+  private ChunkOutputType chunkOutputType = ChunkOutputType.ES_MODULES;
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
@@ -42,7 +46,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         List<PassFactory> factories = new ArrayList<>();
         GatherModuleMetadata gatherModuleMetadata =
-            new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER);
+            new GatherModuleMetadata(compiler, false, options.getModuleResolutionMode());
         factories.add(
             PassFactory.builder()
                 .setName(PassNames.GATHER_MODULE_METADATA)
@@ -75,10 +79,10 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                     (x) ->
                         new CollapseProperties(
                             compiler,
-                            PropertyCollapseLevel.ALL,
-                            ChunkOutputType.ES_MODULES,
+                            collapseLevel,
+                            chunkOutputType,
                             true,
-                            ResolutionMode.BROWSER))
+                            options.getModuleResolutionMode()))
                 .setFeatureSetForChecks()
                 .build());
         for (PassFactory factory : factories) {
@@ -121,5 +125,39 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
     expectedModules[1].addDependency(expectedModules[0]);
 
     test(inputModules, expectedModules);
+  }
+
+  @Test
+  public void testModuleDynamicImportCommonJs() {
+    enableProcessCommonJsModules();
+    collapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
+    chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
+    setModuleResolutionMode(ResolutionMode.WEBPACK);
+    this.setWebpackModulesById(
+        ImmutableMap.of(
+            "1", "entry.js",
+            "2", "mod1.js"));
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "entry.js",
+            lines(
+                "__webpack_require__.e(2).then(",
+                "    function() { return __webpack_require__(2);})")));
+    inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js",
+            "__webpack_require__.e(2).then(function() { return module$mod1.default;})"));
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            "/** @const */ var module$mod1={}; /** @const */ module$mod1.default = 123;"));
+
+
+    test(inputs, expected);
   }
 }
