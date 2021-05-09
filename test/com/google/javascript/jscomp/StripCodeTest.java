@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link StripCode}.
- *
- */
+/** Tests for {@link StripCode}. */
 @RunWith(JUnit4.class)
 public final class StripCodeTest extends CompilerTestCase {
 
@@ -71,10 +68,12 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerDefinedInConstructor() {
-    test("a.b.c = function() {" +
-         "  this.logger = goog.debug.Logger.getLogger('a.b.c');" +
-         "};",
-         "a.b.c=function(){}");
+    test(
+        lines(
+            "a.b.c = function() {", //
+            "  this.logger = goog.debug.Logger.getLogger('a.b.c');",
+            "};"),
+        "a.b.c=function(){}");
   }
 
   @Test
@@ -107,51 +106,65 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerDefinedInPrototype1() {
-    test("a.b.c = function() {};" +
-         "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');",
-         "a.b.c=function(){}");
+    test(
+        lines(
+            "a.b.c = function() {}",
+            "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');"),
+        "a.b.c=function(){}");
   }
 
   @Test
   public void testLoggerDefinedInPrototype2() {
-    test("a.b.c = function() {};" +
-         "a.b.c.prototype = {logger: goog.debug.Logger.getLogger('a.b.c')}",
-         "a.b.c = function() {};" +
-         "a.b.c.prototype = {}");
+    test(
+        lines(
+            "a.b.c = function() {};", //
+            "a.b.c.prototype = {logger: goog.debug.Logger.getLogger('a.b.c')}"),
+        lines(
+            "a.b.c = function() {}", //
+            "a.b.c.prototype = {}"));
   }
 
   @Test
   public void testLoggerDefinedInPrototype3() {
-    test("a.b.c = function() {};" +
-         "a.b.c.prototype = { " +
-         "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}" +
-         "}",
-         "a.b.c = function() {};" +
-         "a.b.c.prototype = {}");
+    test(
+        lines(
+            "a.b.c = function() {}",
+            "a.b.c.prototype = { ",
+            "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}",
+            "}"),
+        lines(
+            "a.b.c = function() {}", //
+            "a.b.c.prototype = {}"));
   }
 
   @Test
   public void testLoggerDefinedInPrototype4() {
-    test("a.b.c = function() {};" +
-         "a.b.c.prototype = { " +
-         "  set logger(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}" +
-         "}",
-         "a.b.c = function() {};" +
-         "a.b.c.prototype = {}");
+    test(
+        lines(
+            "a.b.c = function() {}",
+            "a.b.c.prototype = { ",
+            "  set logger(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}",
+            "}"),
+        lines(
+            "a.b.c = function() {}", //
+            "a.b.c.prototype = {}"));
   }
 
   @Test
   public void testLoggerDefinedInPrototype5() {
-    test("a.b.c = function() {};" +
-         "a.b.c.prototype = { " +
-         "  get f() {return this.x;}," +
-         "  set f(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}" +
-         "}",
-         "a.b.c = function() {};" +
-         "a.b.c.prototype = { " +
-         "  get f() {return this.x;}," +
-         "  set f(a) {this.x = null}" +
-         "}");
+    test(
+        lines(
+            "a.b.c = function() {}",
+            "a.b.c.prototype = { ",
+            "  get f() {return this.x;},",
+            "  set f(a) {this.x = goog.debug.Logger.getLogger('a.b.c')}",
+            "}"),
+        lines(
+            "a.b.c = function() {}",
+            "a.b.c.prototype = { ",
+            "  get f() {return this.x;},",
+            "  set f(a) {this.x = null}",
+            "}"));
   }
 
   @Test
@@ -185,9 +198,11 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerDefinedStatically() {
-    test("a.b.c = function() {};" +
-         "a.b.c.logger = goog.debug.Logger.getLogger('a.b.c');",
-         "a.b.c=function(){}");
+    test(
+        lines(
+            "a.b.c = function() {}", //
+            "a.b.c.logger = goog.debug.Logger.getLogger('a.b.c');"),
+        "a.b.c=function(){}");
   }
 
   @Test
@@ -197,44 +212,53 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerDefinedInObjectLiteral1() {
-    test("a.b.c = {" +
-         "  x: 0," +
-         "  logger: goog.debug.Logger.getLogger('a.b.c')" +
-         "};",
-         "a.b.c={x:0}");
+    test(
+        lines(
+            "a.b.c = {", //
+            "  x: 0,",
+            "  logger: goog.debug.Logger.getLogger('a.b.c')",
+            "};"),
+        "a.b.c={x:0}");
   }
 
   @Test
   public void testLoggerDefinedInObjectLiteral2() {
-    test("a.b.c = {" +
-         "  x: 0," +
-         "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}" +
-         "};",
-         "a.b.c={x:0}");
+    test(
+        lines(
+            "a.b.c = {",
+            "  x: 0,",
+            "  get logger() {return goog.debug.Logger.getLogger('a.b.c')}",
+            "};"),
+        "a.b.c={x:0}");
   }
 
   @Test
   public void testLoggerDefinedInObjectLiteral3() {
-    test("a.b.c = {" +
-         "  x: null," +
-         "  get logger() {return this.x}," +
-         "  set logger(a) {this.x  = goog.debug.Logger.getLogger(a)}" +
-         "};",
-         "a.b.c={x:null}");
+    test(
+        lines(
+            "a.b.c = {",
+            "  x: null,",
+            "  get logger() {return this.x},",
+            "  set logger(a) {this.x  = goog.debug.Logger.getLogger(a)}",
+            "};"),
+        "a.b.c={x:null}");
   }
 
   @Test
   public void testLoggerDefinedInObjectLiteral4() {
-    test("a.b.c = {" +
-         "  x: null," +
-         "  get y() {return this.x}," +
-         "  set y(a) {this.x  = goog.debug.Logger.getLogger(a)}" +
-         "};",
-         "a.b.c = {" +
-         "  x: null," +
-         "  get y() {return this.x}," +
-         "  set y(a) {this.x  = null}" +
-         "};");
+    test(
+        lines(
+            "a.b.c = {",
+            "  x: null,",
+            "  get y() {return this.x},",
+            "  set y(a) {this.x  = goog.debug.Logger.getLogger(a)}",
+            "};"),
+        lines(
+            "a.b.c = {",
+            "  x: null,",
+            "  get y() {return this.x},",
+            "  set y(a) {this.x  = null}",
+            "};"));
   }
 
   @Test
@@ -270,28 +294,33 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerDefinedInPrototypeAndUsedInConstructor() {
-    test("a.b.c = function(level) {" +
-         "  if (!this.logger.isLoggable(level)) {" +
-         "    this.logger.setLevel(level);" +
-         "  }" +
-         "  this.logger.log(level, 'hi');" +
-         "};" +
-         "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');" +
-         "a.b.c.prototype.go = function() { this.logger.finer('x'); };",
-         "a.b.c=function(level){if(!null);};" +
-         "a.b.c.prototype.go=function(){}");
+    test(
+        lines(
+            "a.b.c = function(level) {",
+            "  if (!this.logger.isLoggable(level)) {",
+            "    this.logger.setLevel(level);",
+            "  }",
+            "  this.logger.log(level, 'hi');",
+            "};",
+            "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');",
+            "a.b.c.prototype.go = function() { this.logger.finer('x'); };"),
+        lines(
+            "a.b.c=function(level){if(!null);}", //
+            "a.b.c.prototype.go=function(){}"));
   }
 
   @Test
   public void testLoggerDefinedStaticallyAndUsedInConstructor() {
-    test("a.b.c = function(level) {" +
-         "  if (!a.b.c.logger.isLoggable(level)) {" +
-         "    a.b.c.logger.setLevel(level);" +
-         "  }" +
-         "  a.b.c.logger.log(level, 'hi');" +
-         "};" +
-         "a.b.c.logger = goog.debug.Logger.getLogger('a.b.c');",
-         "a.b.c=function(level){if(!null);}");
+    test(
+        lines(
+            "a.b.c = function(level) {",
+            "  if (!a.b.c.logger.isLoggable(level)) {",
+            "    a.b.c.logger.setLevel(level);",
+            "  }",
+            "  a.b.c.logger.log(level, 'hi');",
+            "};",
+            "a.b.c.logger = goog.debug.Logger.getLogger('a.b.c');"),
+        "a.b.c=function(level){if(!null);}");
   }
 
   @Test
@@ -326,28 +355,27 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testLoggerMethodCallByVariableType_var() {
-    test("var x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
-         "y.info(a)");
+    test("var x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);", "y.info(a)");
   }
 
   @Test
   public void testLoggerMethodCallByVariableType_let() {
-    test("let x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
-        "y.info(a)");
+    test("let x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);", "y.info(a)");
   }
 
   @Test
   public void testLoggerMethodCallByVariableType_const() {
-    test("const x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
-        "y.info(a)");
+    test("const x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);", "y.info(a)");
   }
 
   @Test
   public void testSubPropertyAccessByVariableName_var() {
-    test("var x, y = goog.debug.Logger.getLogger('a.b.c');" +
-         "var logger = x;" +
-         "var curlevel = logger.level_ ? logger.getLevel().name : 3;",
-         "var x;var curlevel=null?null:3");
+    test(
+        lines(
+            "var x, y = goog.debug.Logger.getLogger('a.b.c')",
+            "var logger = x;",
+            "var curlevel = logger.level_ ? logger.getLevel().name : 3;"),
+        "var x;var curlevel=null?null:3");
   }
 
   @Test
@@ -372,26 +400,35 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testPrefixedVariableName() {
-    test("this.blcLogger_ = goog.debug.Logger.getLogger('a.b.c');" +
-         "this.blcLogger_.fine('Raised dirty states.');", "");
+    test(
+        lines(
+            "this.blcLogger_ = goog.debug.Logger.getLogger('a.b.c')",
+            "this.blcLogger_.fine('Raised dirty states.');"),
+        "");
   }
 
   @Test
   public void testPrefixedPropertyName() {
-    test("a.b.c.staticLogger_ = goog.debug.Logger.getLogger('a.b.c');" +
-         "a.b.c.staticLogger_.fine('-' + a.b.c.d_())", "");
+    test(
+        lines(
+            "a.b.c.staticLogger_ = goog.debug.Logger.getLogger('a.b.c')",
+            "a.b.c.staticLogger_.fine('-' + a.b.c.d_())"),
+        "");
   }
 
   @Test
   public void testPrefixedClassName() {
-    test("a.b.MyLogger = function(logger) {" +
-         "  this.logger_ = logger;" +
-         "};" +
-         "a.b.MyLogger.prototype.shout = function(msg, opt_x) {" +
-         "  this.logger_.log(goog.debug.Logger.Level.SHOUT, msg, opt_x);" +
-         "};",
-         "a.b.MyLogger=function(logger){};" +
-         "a.b.MyLogger.prototype.shout=function(msg,opt_x){}");
+    test(
+        lines(
+            "a.b.MyLogger = function(logger) {",
+            "  this.logger_ = logger;",
+            "};",
+            "a.b.MyLogger.prototype.shout = function(msg, opt_x) {",
+            "  this.logger_.log(goog.debug.Logger.Level.SHOUT, msg, opt_x);",
+            "};"),
+        lines(
+            "a.b.MyLogger=function(logger){}",
+            "a.b.MyLogger.prototype.shout=function(msg,opt_x){}"));
   }
 
   @Test
@@ -401,15 +438,21 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testStaticLoggerPropertyDefinition() {
-    test("goog.debug.Logger.Level.SHOUT=" +
-         "new goog.debug.Logger.Level(x,1200)", "");
+    test(
+        lines(
+            "goog.debug.Logger.Level.SHOUT=", //
+            "new goog.debug.Logger.Level(x,1200)"),
+        "");
   }
 
   @Test
   public void testStaticLoggerMethodDefinition() {
-    test("goog.debug.Logger.getLogger=function(name){" +
-         "return goog.debug.LogManager.getLogger(name)" +
-         "};", "");
+    test(
+        lines(
+            "goog.debug.Logger.getLogger=function(name){",
+            "return goog.debug.LogManager.getLogger(name)",
+            "};"),
+        "");
   }
 
   @Test
@@ -424,8 +467,11 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testPrototypeMethodDefinition() {
-    test("goog.debug.Logger.prototype.addHandler=" +
-         "function(handler){this.handlers_.push(handler)};", "");
+    test(
+        lines(
+            "goog.debug.Logger.prototype.addHandler=",
+            "function(handler){this.handlers_.push(handler)};"),
+        "");
   }
 
   @Test
@@ -450,16 +496,20 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testClassDefiningCallWithStripType2() {
-    test("goog.formatter=function(){};" +
-         "goog.inherits(goog.debug.Formatter,goog.formatter)",
-         "goog.formatter=function(){}");
+    test(
+        lines(
+            "goog.formatter=function(){};", //
+            "goog.inherits(goog.debug.Formatter,goog.formatter)"),
+        "goog.formatter=function(){}");
   }
 
   @Test
   public void testClassDefiningCallWithStripType3() {
-    testError("goog.formatter=function(){};" +
-         "goog.inherits(goog.formatter,goog.debug.Formatter)",
-         StripCode.STRIP_TYPE_INHERIT_ERROR);
+    testError(
+        lines(
+            "goog.formatter=function(){}", //
+            "goog.inherits(goog.formatter,goog.debug.Formatter)"),
+        StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
   @Test
@@ -481,7 +531,6 @@ public final class StripCodeTest extends CompilerTestCase {
     test("class GA_GoogleDebugger {}", "");
     test("if (class GA_GoogleDebugger {}) {}", "if (null) {}");
 
-
     // types that happen to have strip types as prefix should not be
     // stripped.
     testSame("goog.debug.DebugWindowFoo=function(){}");
@@ -501,13 +550,14 @@ public final class StripCodeTest extends CompilerTestCase {
   @Test
   public void testClassInheritanceFromStripType1() {
     // Formatter is not a strip name or type, so cannot extend a strip type.
-    testError("class Formatter extends goog.debug.Formatter {}",
-        StripCode.STRIP_TYPE_INHERIT_ERROR);
+    testError(
+        "class Formatter extends goog.debug.Formatter {}", StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
   @Test
   public void testClassInheritanceFromStripType2() {
-    testError("let Formatter = class extends goog.debug.Formatter {}",
+    testError(
+        "let Formatter = class extends goog.debug.Formatter {}",
         StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
@@ -519,8 +569,9 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testPropertyWithEmptyStringKey() {
-    test("goog.format.NUMERIC_SCALES_BINARY_ = {'': 1};",
-         "goog.format.NUMERIC_SCALES_BINARY_={\"\":1}");
+    test(
+        "goog.format.NUMERIC_SCALES_BINARY_ = {'': 1};",
+        "goog.format.NUMERIC_SCALES_BINARY_={\"\":1}");
   }
 
   @Test
@@ -535,16 +586,17 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testAssignInIf() {
-    test("var logger=null;if(x)logger=1;else foo()",
-         "if(x);else foo()");
+    test("var logger=null;if(x)logger=1;else foo()", "if(x);else foo()");
   }
 
   @Test
   public void testNamePrefix() {
-    test("a = function(traceZZZ) {}; a.prototype.traceXXX = {x: 1};" +
-         "a.prototype.z = function() { this.traceXXX.f(); };" +
-         "var traceYYY = 0;",
-         "a=function(traceZZZ){};a.prototype.z=function(){}");
+    test(
+        lines(
+            "a = function(traceZZZ) {}; a.prototype.traceXXX = {x: 1}",
+            "a.prototype.z = function() { this.traceXXX.f(); };",
+            "var traceYYY = 0;"),
+        "a=function(traceZZZ){};a.prototype.z=function(){}");
   }
 
   @Test
@@ -557,133 +609,138 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testStripCallsToStrippedNames1() {
-    test("a = function() { this.logger_ = function(msg){}; };" +
-         "a.prototype.b = function() { this.logger_('hi'); }",
-         "a=function(){};a.prototype.b=function(){}");
-    test("a = function() {};" +
-         "a.prototype.logger_ = function(msg) {};" +
-         "a.prototype.b = function() { this.logger_('hi'); }",
-         "a=function(){};a.prototype.b=function(){}");
+    test(
+        lines(
+            "a = function() { this.logger_ = function(msg){}; }",
+            "a.prototype.b = function() { this.logger_('hi'); }"),
+        "a=function(){};a.prototype.b=function(){}");
+    test(
+        lines(
+            "a = function() {}",
+            "a.prototype.logger_ = function(msg) {};",
+            "a.prototype.b = function() { this.logger_('hi'); }"),
+        "a=function(){};a.prototype.b=function(){}");
   }
 
   @Test
   public void testStripCallsToStrippedNames2() {
-    test("a = function() {};" +
-         "a.prototype.logger_ = function(msg) {};" +
-         "a.prototype.b = function() { this.logger_('hi'); }",
-         "a=function(){};a.prototype.b=function(){}");
+    test(
+        lines(
+            "a = function() {}",
+            "a.prototype.logger_ = function(msg) {};",
+            "a.prototype.b = function() { this.logger_('hi'); }"),
+        "a=function(){};a.prototype.b=function(){}");
   }
 
   @Test
   public void testStripCallsToStrippedNames3() {
-    test("a = function() { this.logger_ = function(msg){}; };" +
-         "a.prototype.b = function() { this.logger_('hi').foo = 2; }",
-         "a=function(){};a.prototype.b=function(){2;}");
+    test(
+        lines(
+            "a = function() { this.logger_ = function(msg){}; }",
+            "a.prototype.b = function() { this.logger_('hi').foo = 2; }"),
+        "a=function(){};a.prototype.b=function(){2;}");
   }
 
   @Test
   public void testStripCallsToStrippedNames4() {
-    test("a = this.logger_().foo;",
-         "a = null;");
+    test("a = this.logger_().foo;", "a = null;");
   }
 
   @Test
   public void testStripVarsInitializedFromStrippedNames1() {
-    test("a = function() { this.logger_ = function() { return 1; }; };" +
-         "a.prototype.b = function() { " +
-         "  var one = this.logger_(); if (one) foo() }",
-          "a=function(){};a.prototype.b=function(){if(null)foo()}");
+    test(
+        lines(
+            "a = function() { this.logger_ = function() { return 1; }; }",
+            "a.prototype.b = function() { ",
+            "  var one = this.logger_(); if (one) foo() }"),
+        "a=function(){};a.prototype.b=function(){if(null)foo()}");
   }
 
   @Test
   public void testStripVarsInitializedFromStrippedNames2() {
-    test("a = function() { this.logger_ = function() { return 1; }; };" +
-         "a.prototype.b = function() { " +
-         "  var one = this.logger_.foo.bar(); if (one) foo() }",
-         "a=function(){};a.prototype.b=function(){if(null)foo()}");
+    test(
+        lines(
+            "a = function() { this.logger_ = function() { return 1; }; }",
+            "a.prototype.b = function() { ",
+            "  var one = this.logger_.foo.bar(); if (one) foo() }"),
+        "a=function(){};a.prototype.b=function(){if(null)foo()}");
   }
 
   @Test
   public void testReportErrorOnStripInNestedAssignment() {
     // Strip name
-    testError("(foo.logger_ = 7) + 8",
-         StripCode.STRIP_ASSIGNMENT_ERROR);
+    testError("(foo.logger_ = 7) + 8", StripCode.STRIP_ASSIGNMENT_ERROR);
 
     // Strip namespaced type
-    testError("(goog.debug.Logger.foo = 7) + 8",
-         StripCode.STRIP_ASSIGNMENT_ERROR);
+    testError("(goog.debug.Logger.foo = 7) + 8", StripCode.STRIP_ASSIGNMENT_ERROR);
 
     // Strip non-namespaced type
-    testError("(GA_GoogleDebugger.foo = 7) + 8",
-         StripCode.STRIP_ASSIGNMENT_ERROR);
+    testError("(GA_GoogleDebugger.foo = 7) + 8", StripCode.STRIP_ASSIGNMENT_ERROR);
   }
 
   @Test
   public void testNewOperator1() {
-    test("function foo() {} foo.bar = new goog.debug.Logger();",
-         "function foo() {} foo.bar = null;");
+    test(
+        "function foo() {} foo.bar = new goog.debug.Logger();",
+        "function foo() {} foo.bar = null;");
   }
 
   @Test
   public void testNewOperator2() {
-    test("function foo() {} foo.bar = (new goog.debug.Logger()).foo();",
-         "function foo() {} foo.bar = null;");
+    test(
+        "function foo() {} foo.bar = (new goog.debug.Logger()).foo();",
+        "function foo() {} foo.bar = null;");
   }
 
   @Test
   public void testNewOperator3() {
-    test("(new goog.debug.Logger()).foo().bar = 2;",
-         "2;");
+    test("(new goog.debug.Logger()).foo().bar = 2;", "2;");
   }
 
   @Test
   public void testCrazyNesting1() {
-    test("var x = {}; x[new goog.debug.Logger()] = 3;",
-         "var x = {}; x[null] = 3;");
+    test("var x = {}; x[new goog.debug.Logger()] = 3;", "var x = {}; x[null] = 3;");
   }
 
   @Test
   public void testCrazyNesting2() {
-    test("var x = {}; x[goog.debug.Logger.getLogger()] = 3;",
-         "var x = {}; x[null] = 3;");
+    test("var x = {}; x[goog.debug.Logger.getLogger()] = 3;", "var x = {}; x[null] = 3;");
   }
 
   @Test
   public void testCrazyNesting3() {
-    test("var x = function() {}; x(new goog.debug.Logger());",
-         "var x = function() {}; x(null);");
+    test("var x = function() {}; x(new goog.debug.Logger());", "var x = function() {}; x(null);");
   }
 
   @Test
   public void testCrazyNesting4() {
-    test("var x = function() {}; x(goog.debug.Logger.getLogger());",
-         "var x = function() {}; x(null);");
+    test(
+        "var x = function() {}; x(goog.debug.Logger.getLogger());",
+        "var x = function() {}; x(null);");
   }
 
   @Test
   public void testCrazyNesting5() {
-    test("var x = function() {}; var y = {}; " +
-         "var z = goog.debug.Logger.getLogger(); x(y[z['foo']]);",
-         "var x = function() {}; var y = {}; x(y[null]);");
+    test(
+        lines(
+            "var x = function() {}; var y = {}; ",
+            "var z = goog.debug.Logger.getLogger(); x(y[z['foo']]);"),
+        "var x = function() {}; var y = {}; x(y[null]);");
   }
 
   @Test
   public void testNamespace1() {
-    test(
-        "var x = {};x.traceutil = {};x.traceutil.FOO = 1;",
-        "var x = {};");
+    test("var x = {};x.traceutil = {};x.traceutil.FOO = 1;", "var x = {};");
   }
 
   @Test
   public void testMethodCallTriggersRemoval() {
-    test("this.logger_.foo.bar();",
-        "");
+    test("this.logger_.foo.bar();", "");
   }
 
   @Test
   public void testRemoveExpressionByName() {
-    test("this.logger_.foo.bar;",
-        "");
+    test("this.logger_.foo.bar;", "");
   }
 
   @Test
