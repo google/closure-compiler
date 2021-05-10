@@ -21,12 +21,14 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Locale;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -127,13 +129,52 @@ class StripCode implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    NodeTraversal.traverse(compiler, root, new Strip());
+    try (LogFile decisionsLog =
+        compiler.createOrReopenIndexedLog(this.getClass(), "decisions.log")) {
+      decisionsLog.log(new StripCodeConfigRecord());
+      decisionsLog.log("\n=== decisions ===\n");
+      NodeTraversal.traverse(compiler, root, new Strip(decisionsLog));
+    }
   }
 
   // -------------------------------------------------------------------------
+  private final class StripCodeConfigRecord implements Supplier<String> {
+
+    @Override
+    public String get() {
+      StringBuilder builder = new StringBuilder();
+      builder.append("=== stripNameSuffixes ===\n");
+      for (String stripNameSuffix : stripNameSuffixes) {
+        builder.append(stripNameSuffix).append("\n");
+      }
+      builder.append("\n");
+      builder.append("=== stripNamePrefixes ===\n");
+      for (String stripNamePrefix : stripNamePrefixes) {
+        builder.append(stripNamePrefix).append("\n");
+      }
+      builder.append("\n");
+      builder.append("=== stripTypesList ===\n");
+      for (String stripType : stripTypesList) {
+        builder.append(stripType).append("\n");
+      }
+      builder.append("\n");
+      builder.append("=== stripTypePrefixesList ===\n");
+      for (String stripNamePrefix : stripTypePrefixesList) {
+        builder.append(stripNamePrefix).append("\n");
+      }
+      builder.append("\n");
+      return builder.toString();
+    }
+  }
 
   /** A callback that strips debug code from a JavaScript parse tree. */
   private class Strip extends AbstractPostOrderCallback {
+
+    private final LogFile decisionsLog;
+
+    private Strip(LogFile decisionsLog) {
+      this.decisionsLog = decisionsLog;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -203,6 +244,7 @@ class StripCode implements CompilerPass {
         }
         String name = nameNode.getString();
         if (isStripName(name) || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
+          decisionsLog.log(() -> name + ": removing name");
           // Remove the NAME.
           varsToRemove.put(name, name);
           nameNode.detach();
@@ -518,15 +560,18 @@ class StripCode implements CompilerPass {
       if (name != null) {
         for (String type : stripTypesList) {
           if (name.equals(type)) {
+            logStripName(name, "equals strip type");
             return true;
           }
         }
         for (String type : stripTypePrefixesList) {
           if (name.startsWith(type)) {
+            logStripName(name, "starts with strip type prefix");
             return true;
           }
         }
       }
+      logNotAStripName(name, "does not begin with a strip type");
       return false;
     }
 
@@ -637,28 +682,50 @@ class StripCode implements CompilerPass {
      * @return Whether {@code name} is a name that triggers removal
      */
     boolean isStripName(String name) {
-      if (stripNameSuffixes.contains(name) || stripNamePrefixes.contains(name)) {
+      if (stripNameSuffixes.contains(name)) {
+        logNotAStripName(name, "matches a suffix");
+        return true;
+      }
+
+      if (stripNamePrefixes.contains(name)) {
+        logNotAStripName(name, "matches a prefix");
         return true;
       }
 
       if (name.isEmpty() || Character.isUpperCase(name.charAt(0))) {
+        logNotAStripName(name, "empty or starts with uppercase");
         return false;
       }
 
       String lcName = name.toLowerCase(Locale.ROOT);
       for (String stripName : stripNamePrefixesLowerCaseList) {
         if (lcName.startsWith(stripName)) {
+          logStripName(name, () -> "matches lc prefix: " + stripName);
           return true;
         }
       }
 
       for (String stripName : stripNameSuffixesLowerCaseList) {
         if (lcName.endsWith(stripName)) {
+          logStripName(name, () -> "matches lc suffix: " + stripName);
           return true;
         }
       }
 
+      logNotAStripName(name, "no matches");
       return false;
+    }
+
+    private void logNotAStripName(String name, String reason) {
+      decisionsLog.log(() -> name + "\tnot a strip name: " + reason);
+    }
+
+    private void logStripName(String name, String reason) {
+      decisionsLog.log(() -> name + "\tstrip name: " + reason);
+    }
+
+    private void logStripName(String name, Supplier<String> reasonSupplier) {
+      decisionsLog.log(() -> name + "\tstrip name: " + reasonSupplier.get());
     }
 
     /**
@@ -668,10 +735,10 @@ class StripCode implements CompilerPass {
      * @param parent {@code n}'s parent
      */
     void replaceWithNull(Node n, Node parent) {
+      decisionsLog.log(() -> "replace with null: " + n.getLocation());
       n.replaceWith(IR.nullNode());
       NodeUtil.markFunctionsDeleted(n, compiler);
     }
-
     /**
      * Replaces a node with an EMPTY node. This is useful where a statement is expected.
      *
@@ -679,8 +746,10 @@ class StripCode implements CompilerPass {
      * @param parent {@code n}'s parent
      */
     void replaceWithEmpty(Node n, Node parent) {
+      decisionsLog.log(() -> "replace with empty: " + n.getLocation());
       NodeUtil.removeChild(parent, n);
       NodeUtil.markFunctionsDeleted(n, compiler);
     }
+
   }
 }
