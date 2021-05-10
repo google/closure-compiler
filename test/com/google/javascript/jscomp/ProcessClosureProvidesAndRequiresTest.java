@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
@@ -49,11 +48,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   private ProcessClosureProvidesAndRequires createClosureProcessorWithoutTypechecking(
       Compiler compiler, CheckLevel requireCheckLevel) {
     return new ProcessClosureProvidesAndRequires(
-        compiler,
-        null,
-        requireCheckLevel,
-        preserveGoogProvidesAndRequires,
-        /* globalTypedScope= */ null);
+        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires);
   }
 
   private ProcessClosureProvidesAndRequires createClosureProcessorWithTypechecking(
@@ -61,13 +56,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-    TypedScope globalTypedScope =
-        checkNotNull(
-            new TypeCheck(compiler, rai, compiler.getTypeRegistry())
-                .processForTesting(externs, main));
+    new TypeCheck(compiler, rai, compiler.getTypeRegistry()).processForTesting(externs, main);
     compiler.setTypeCheckingHasRun(true);
     return new ProcessClosureProvidesAndRequires(
-        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires, globalTypedScope);
+        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires);
   }
 
   @Override

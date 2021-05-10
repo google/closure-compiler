@@ -72,23 +72,18 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private boolean hasRewritingOccurred = false;
   private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
   private final Set<Node> previouslyProvidedDefinitions = new HashSet<>();
-  private final TypedScope globalTypedScope;
   private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       CheckLevel requiresLevel,
-      boolean preserveGoogProvidesAndRequires,
-      @Nullable TypedScope globalTypedScope) {
-    checkArgument(globalTypedScope == null || globalTypedScope.isGlobal());
-
+      boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
-    this.globalTypedScope = globalTypedScope;
     this.astFactory = compiler.createAstFactory();
   }
 
@@ -890,11 +885,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       Node name = IR.name(namespace);
       name.addChildToFront(value);
 
-      if (globalTypedScope != null) {
-        TypedVar typedVar = checkNotNull(globalTypedScope.getVar(namespace), namespace);
-        name.setJSType(typedVar.getType());
-      }
-
       Node decl = IR.var(name);
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
 
@@ -912,7 +902,9 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
     /** Creates a dotted namespace assignment expression (e.g. <code>foo.bar = {};</code>). */
     private Node makeAssignmentExprNode(Node value) {
-      Node lhs = astFactory.createQName(globalTypedScope, namespace).srcrefTree(firstNode);
+      // Note: as of May 2021, using the unknown type vs. the actual inferred type both produced the
+      // same optimized JS after type-based optimizations. So the lack of type info is intentional.
+      Node lhs = astFactory.createQNameWithUnknownType(namespace).srcrefTree(firstNode);
       Node decl = IR.exprResult(astFactory.createAssign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       if (!hasCandidateDefinitionNotFromPreviousPass()) {

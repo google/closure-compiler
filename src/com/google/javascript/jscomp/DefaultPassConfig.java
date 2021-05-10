@@ -1281,14 +1281,11 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                TypedScope globalTypedScope =
-                    compiler.getOptions().allowsHotswapReplaceScript() ? null : this.getTopScope();
                 return new ProcessClosureProvidesAndRequires(
                     compiler,
                     preprocessorSymbolTableFactory.getInstanceOrNull(),
                     options.brokenClosureRequiresLevel,
-                    options.shouldPreservesGoogProvidesAndRequires(),
-                    globalTypedScope);
+                    options.shouldPreservesGoogProvidesAndRequires());
               })
           .setFeatureSetForChecks()
           .build();

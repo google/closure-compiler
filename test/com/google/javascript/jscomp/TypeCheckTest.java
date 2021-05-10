@@ -24963,7 +24963,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     // For processing goog.forwardDeclare for forward typedefs.
     new ProcessClosurePrimitives(compiler).process(externs, jsRoot);
-    new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false, null)
+    new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
         .process(externs, jsRoot);
 
     new TypeCheck(
