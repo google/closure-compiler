@@ -924,24 +924,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       }
     }
 
-    private static final ImmutableSet<String> gwtUnsupportedFlags =
-        ImmutableSet.of(
-            "conformance_configs",
-            "error_format",
-            "warnings_whitelist_file",
-            "warnings_allowlist_file",
-            "output_wrapper_file",
-            "output_manifest",
-            "output_chunk_dependencies",
-            "property_renaming_report",
-            "source_map_input",
-            "source_map_location_mapping",
-            "variable_renaming_report",
-            "charset",
-            "help",
-            "third_party",
-            "version");
-
     private static final Multimap<String, String> categories =
         new ImmutableMultimap.Builder<String, String>()
             .putAll(
@@ -1107,17 +1089,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             stringWriter.flush();
             String rawOptionUsage = stringWriter.toString();
             Matcher optionNameMatches = Pattern.compile(" *--([a-z0-9_]+)").matcher(rawOptionUsage);
-            String jsVersionDisclaimer = "";
-            if (optionNameMatches.find()
-                && gwtUnsupportedFlags.contains(optionNameMatches.group(1))) {
-              jsVersionDisclaimer =
-                  "<sub><sup>*Not supported by the JavaScript version*</sup></sub>  \n";
-            }
             int delimiterIndex = rawOptionUsage.indexOf(" : ");
             if (delimiterIndex > 0) {
               outputStream.write(
                   "\n**" + rawOptionUsage.substring(0, delimiterIndex).trim() + "**  \n");
-              outputStream.write(jsVersionDisclaimer);
 
               String optionDescription =
                   rawOptionUsage
@@ -1127,7 +1102,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
               outputStream.write(optionDescription + "\n");
             } else {
               outputStream.write(rawOptionUsage.replaceAll(markdownCharsToEscape, "\\\\$0"));
-              outputStream.write(jsVersionDisclaimer);
             }
             outputStream.flush();
           }
