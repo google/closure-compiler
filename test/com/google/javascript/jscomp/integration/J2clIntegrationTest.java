@@ -17,8 +17,10 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,6 +28,74 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class J2clIntegrationTest extends IntegrationTestCase {
+  @Test
+  public void testInlineClassStaticGetterSetter() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addFunction().addConsole().buildExternsFile("externs.js"));
+    test(
+        createCompilerOptions(),
+        lines(
+            "var A = class {",
+            "  static $clinit() {",
+            "    A.$x = 2;",
+            "  }",
+            "  static get x() {",
+            "    return A.$clinit(), A.$x;",
+            "  }",
+            "  static set x(value) {",
+            "    A.$clinit(), A.$x = value;",
+            "  }",
+            "};",
+            "A.x = 3;",
+            "console.log(A.x);"),
+        lines(
+            "var a;", //
+            "a = 2;",
+            "a = 3;",
+            "console.log(a);"));
+  }
+
+  @Test
+  public void testInlineDefinePropertiesGetterSetter() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addObject()
+                .addFunction()
+                .addConsole()
+                .buildExternsFile("externs.js"));
+    test(
+        createCompilerOptions(),
+        lines(
+            "/** @constructor */",
+            "var A = function() {};",
+            "A.$clinit = function() {",
+            "  A.$x = 2;",
+            "};",
+            "Object.defineProperties(",
+            "    A,",
+            "    {",
+            "      x: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        get: function() {",
+            "          return A.$clinit(), A.$x;",
+            "        },",
+            "        set: function(value) {",
+            "          A.$clinit(), A.$x = value;",
+            "        }",
+            "      }",
+            "    });",
+            "A.x = 3;",
+            "console.log(A.x);"),
+        lines(
+            "var a;", //
+            "a = 2;",
+            "a = 3;",
+            "console.log(a);"));
+  }
+
   @Test
   public void testStripNoSideEffectsClinit() {
     String source =

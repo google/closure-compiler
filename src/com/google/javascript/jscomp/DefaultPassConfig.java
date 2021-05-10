@@ -584,14 +584,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(stripCode);
     }
 
-    // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
-    // from desugaring) don't block class stripping.
-    if (options.j2clPassMode.shouldAddJ2clPasses()
-        && options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
-      // Relies on collapseProperties-triggered aggressive alias inlining.
-      passes.add(j2clPropertyInlinerPass);
-    }
-
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
     if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
@@ -600,6 +592,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.replaceIdGenerators) {
       passes.add(replaceIdGenerators);
+    }
+
+    // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
+    // from desugaring) don't block class stripping.
+    if (options.j2clPassMode.shouldAddJ2clPasses()
+        && options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
+      // Relies on collapseProperties-triggered aggressive alias inlining.
+      passes.add(j2clPropertyInlinerPass);
     }
 
     if (options.inferConsts) {
@@ -2774,7 +2774,7 @@ public final class DefaultPassConfig extends PassConfig {
   /** Rewrites J2CL constructs to be more optimizable. */
   private final PassFactory j2clPropertyInlinerPass =
       PassFactory.builder()
-          .setName("j2clES6Pass")
+          .setName("j2clPropertyInlinerPass")
           .setInternalFactory(J2clPropertyInlinerPass::new)
           .setFeatureSetForOptimizations()
           .build();

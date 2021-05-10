@@ -49,9 +49,16 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
     test(js, js);
   }
 
+  // Nearly all of the tests in this file were written at a time when
+  // J2clPropertyInlinerPassTest ran before CollapseProperties, so they
+  // are written with the `$clinit()` method and the internally generated
+  // static property used by the getter and setter in their uncollapsed forms.
+  // Now this pass runs after properties are collapsed, so this test case
+  // and integration cases in J2clIntegrationTest confirm that the collapsed
+  // forms are handled correctly also.
   @Test
-  public void testNoInlineNonJ2clProps() {
-    testDoesntChange(
+  public void testInlineCollapsedProp() {
+    test(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
@@ -68,6 +75,38 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "  }",
                     "}});",
                     "var A$$0x = null;",
+                    "var x = A.x;"))),
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "someFile.js",
+                lines(
+                    "var A = function() {};",
+                    "var A$$0clinit = function() {",
+                    "  A$$0x = 2;",
+                    "};",
+                    "var A$$0x = null;",
+                    "var x = (A$$0clinit(), A$$0x);"))));
+  }
+
+  @Test
+  public void testNoInlineNonJ2clProps() {
+    testDoesntChange(
+        Lists.newArrayList(
+            SourceFile.fromCode(
+                "someFile.js",
+                lines(
+                    "var A = function() {};",
+                    "var globalValue = null;",
+                    "var initGlobalValue = function() {",
+                    "  globalValue = 2;",
+                    "};",
+                    "Object.defineProperties(A, {x :{",
+                    "  configurable:true,",
+                    "  enumerable:true,",
+                    "  get:function() {",
+                    "    return initGlobalValue, globalValue;",
+                    "  }",
+                    "}});",
                     "var x = A.x;"))));
   }
 
