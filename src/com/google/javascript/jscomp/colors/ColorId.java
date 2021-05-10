@@ -125,12 +125,6 @@ public final class ColorId implements Serializable {
     return new ColorId(hasher.hash().asLong());
   }
 
-  static ColorId forNative(NativeColorId nat) {
-    checkState(nat.getId() == null);
-    // TODO(b/185519307): Do some kind of hashing here so that native IDs are spread over more bits.
-    return new ColorId(nat.ordinal());
-  }
-
   private ColorId(long rightAligned) {
     this.rightAligned = rightAligned;
   }

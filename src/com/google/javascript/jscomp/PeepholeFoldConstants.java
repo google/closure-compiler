@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.jscomp.base.Tri;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -974,7 +974,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return n.getColor() != null && n.getColor().is(NativeColorId.NUMBER);
+      return n.getColor() != null && n.getColor().equals(StandardColors.NUMBER);
     }
     return false;
   }
@@ -984,7 +984,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return n.getColor() != null && n.getColor().is(NativeColorId.BIGINT);
+      return n.getColor() != null && n.getColor().equals(StandardColors.BIGINT);
     }
     return false;
   }
@@ -1093,7 +1093,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return n.getColor() != null && n.getColor().is(NativeColorId.STRING);
+      return n.getColor() != null && n.getColor().equals(StandardColors.STRING);
     }
     return false;
   }

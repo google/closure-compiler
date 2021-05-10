@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -218,7 +218,7 @@ public class AstAnalyzer {
     if (compiler.getOptions().useTypesForLocalOptimization) {
       Color color = n.getColor();
       if (color != null) {
-        return color.is(NativeColorId.STRING);
+        return color.equals(StandardColors.STRING);
       }
       JSType type = n.getJSType();
       if (type != null) {

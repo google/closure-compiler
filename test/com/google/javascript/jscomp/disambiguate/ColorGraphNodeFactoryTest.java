@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,37 +45,33 @@ public final class ColorGraphNodeFactoryTest {
   public void topLikeTypes_flattenToTop() {
     // Given
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
-    ColorGraphNode flatTop = factory.createNode(colorRegistry.get(NativeColorId.UNKNOWN));
+    ColorGraphNode flatTop = factory.createNode(StandardColors.UNKNOWN);
 
     // When & Then
     assertThat(factory.createNode((Color) null)).isSameInstanceAs(flatTop);
-    assertThat(factory.createNode(colorRegistry.get(NativeColorId.NULL_OR_VOID)))
-        .isSameInstanceAs(flatTop);
+    assertThat(factory.createNode(StandardColors.NULL_OR_VOID)).isSameInstanceAs(flatTop);
   }
 
   @Test
   public void primitiveTypes_flattenToBoxedType() {
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
-    ColorGraphNode flatString = factory.createNode(colorRegistry.get(NativeColorId.STRING));
+    ColorGraphNode flatString = factory.createNode(StandardColors.STRING);
     ColorGraphNode flatStringObject =
-        factory.createNode(colorRegistry.get(NativeColorId.STRING_OBJECT));
-    ColorGraphNode flatTop = factory.createNode(colorRegistry.get(NativeColorId.UNKNOWN));
+        factory.createNode(colorRegistry.get(StandardColors.STRING_OBJECT_ID));
+    ColorGraphNode flatTop = factory.createNode(StandardColors.UNKNOWN);
 
     assertThat(flatString).isNotEqualTo(flatTop);
     assertThat(flatString).isSameInstanceAs(flatStringObject);
 
     assertThat(
             factory.createNode(
-                Color.createUnion(
-                    ImmutableSet.of(
-                        colorRegistry.get(NativeColorId.STRING),
-                        colorRegistry.get(NativeColorId.NUMBER)))))
+                Color.createUnion(ImmutableSet.of(StandardColors.STRING, StandardColors.NUMBER))))
         .isSameInstanceAs(
             factory.createNode(
                 Color.createUnion(
                     ImmutableSet.of(
-                        colorRegistry.get(NativeColorId.STRING_OBJECT),
-                        colorRegistry.get(NativeColorId.NUMBER_OBJECT)))));
+                        colorRegistry.get(StandardColors.STRING_OBJECT_ID),
+                        colorRegistry.get(StandardColors.NUMBER_OBJECT_ID)))));
   }
 
   @Test
@@ -84,12 +80,9 @@ public final class ColorGraphNodeFactoryTest {
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     Color nullOrVoidOrNumberType =
-        Color.createUnion(
-            ImmutableSet.of(
-                colorRegistry.get(NativeColorId.NULL_OR_VOID),
-                colorRegistry.get(NativeColorId.NUMBER)));
+        Color.createUnion(ImmutableSet.of(StandardColors.NULL_OR_VOID, StandardColors.NUMBER));
 
-    ColorGraphNode flatNumber = factory.createNode(colorRegistry.get(NativeColorId.NUMBER));
+    ColorGraphNode flatNumber = factory.createNode(StandardColors.NUMBER);
 
     // Given
     ColorGraphNode flatNullOrVoidOrNumber = factory.createNode(nullOrVoidOrNumberType);
@@ -120,7 +113,7 @@ public final class ColorGraphNodeFactoryTest {
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            colorRegistry.get(NativeColorId.NUMBER),
+            StandardColors.NUMBER,
             Color.singleBuilder().setId(fromAscii("Foo")).build(),
             Color.singleBuilder().setId(fromAscii("Bar")).build());
 
@@ -141,7 +134,7 @@ public final class ColorGraphNodeFactoryTest {
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            colorRegistry.get(NativeColorId.NUMBER),
+            StandardColors.NUMBER,
             Color.singleBuilder().setId(fromAscii("Foo")).build(),
             Color.singleBuilder().setId(fromAscii("Bar")).build());
 
@@ -176,7 +169,7 @@ public final class ColorGraphNodeFactoryTest {
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            colorRegistry.get(NativeColorId.NUMBER),
+            StandardColors.NUMBER,
             Color.singleBuilder().setId(fromAscii("Foo")).build(),
             Color.singleBuilder().setId(fromAscii("Bar")).build());
 

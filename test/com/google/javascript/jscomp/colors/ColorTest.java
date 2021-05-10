@@ -31,14 +31,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ColorTest {
 
-  // Immutable so safe to share among test instances
-  private final ColorRegistry colorRegistry = ColorRegistry.createForTesting();
-
   private final Color numberOrString =
-      Color.createUnion(
-          ImmutableSet.of(
-              this.colorRegistry.get(NativeColorId.STRING),
-              this.colorRegistry.get(NativeColorId.NUMBER)));
+      Color.createUnion(ImmutableSet.of(StandardColors.STRING, StandardColors.NUMBER));
 
   @Test
   public void unionsReportIsUnion() {
@@ -52,7 +46,7 @@ public class ColorTest {
 
   @Test
   public void primitivesReportIsPrimitiveButNotUnion() {
-    Color string = this.colorRegistry.get(NativeColorId.STRING);
+    Color string = StandardColors.STRING;
     assertThat(string).isPrimitive();
     assertThat(string.isUnion()).isFalse();
   }
@@ -66,44 +60,28 @@ public class ColorTest {
 
   @Test
   public void getAlternatesReturnsAlternatesList() {
-    assertThat(numberOrString)
-        .hasAlternates(
-            this.colorRegistry.get(NativeColorId.NUMBER),
-            this.colorRegistry.get(NativeColorId.STRING));
+    assertThat(numberOrString).hasAlternates(StandardColors.NUMBER, StandardColors.STRING);
   }
 
   @Test
   public void alternatesMayContainOtherUnion() {
-    Color newUnion =
-        Color.createUnion(
-            ImmutableSet.of(numberOrString, this.colorRegistry.get(NativeColorId.BIGINT)));
+    Color newUnion = Color.createUnion(ImmutableSet.of(numberOrString, StandardColors.BIGINT));
 
     assertThat(newUnion)
-        .hasAlternates(
-            this.colorRegistry.get(NativeColorId.STRING),
-            this.colorRegistry.get(NativeColorId.BIGINT),
-            this.colorRegistry.get(NativeColorId.NUMBER));
+        .hasAlternates(StandardColors.STRING, StandardColors.BIGINT, StandardColors.NUMBER);
   }
 
   @Test
   public void alternatesAreDeduplicatedFromOtherUnion() {
-    Color union =
-        Color.createUnion(
-            ImmutableSet.of(this.colorRegistry.get(NativeColorId.NUMBER), numberOrString));
+    Color union = Color.createUnion(ImmutableSet.of(StandardColors.NUMBER, numberOrString));
 
-    assertThat(union)
-        .hasAlternates(
-            this.colorRegistry.get(NativeColorId.NUMBER),
-            this.colorRegistry.get(NativeColorId.STRING));
+    assertThat(union).hasAlternates(StandardColors.NUMBER, StandardColors.STRING);
   }
 
   @Test
   public void createUnionAllowsSingleAlternate() {
     assertThrows(Exception.class, () -> Color.createUnion(ImmutableSet.of()));
-    assertThat(
-            Color.createUnion(ImmutableSet.of(this.colorRegistry.get(NativeColorId.NUMBER)))
-                .isUnion())
-        .isFalse();
+    assertThat(Color.createUnion(ImmutableSet.of(StandardColors.NUMBER)).isUnion()).isFalse();
   }
 
   @Test
@@ -111,11 +89,7 @@ public class ColorTest {
     // In some "check" type systems, the top type + another type is equivalent to just the
     // top type. Colors don't replicate those semantics. Whatever serialized type structure the
     // colors are created from has already dealt with this.
-    Color union =
-        Color.createUnion(
-            ImmutableSet.of(
-                this.colorRegistry.get(NativeColorId.UNKNOWN),
-                this.colorRegistry.get(NativeColorId.STRING)));
+    Color union = Color.createUnion(ImmutableSet.of(StandardColors.UNKNOWN, StandardColors.STRING));
 
     assertThat(union).isUnion();
     assertThat(union.getUnionElements()).hasSize(2);
@@ -125,9 +99,7 @@ public class ColorTest {
   public void nullableUnionDoesNotInvalidate() {
     Color nonInvalidatingObject = Color.singleBuilder().setId(fromAscii("Bar")).build();
     Color objects =
-        Color.createUnion(
-            ImmutableSet.of(
-                this.colorRegistry.get(NativeColorId.NULL_OR_VOID), nonInvalidatingObject));
+        Color.createUnion(ImmutableSet.of(StandardColors.NULL_OR_VOID, nonInvalidatingObject));
 
     assertThat(objects).isNotInvalidating();
   }
@@ -180,13 +152,11 @@ public class ColorTest {
   }
 
   @Test
-  public void primitivesAreInvalidatingBasedOnNativeColorId() {
-    ColorRegistry registry = ColorRegistry.createForTesting();
-
-    assertThat(registry.get(NativeColorId.UNKNOWN)).isInvalidating();
-    assertThat(registry.get(NativeColorId.TOP_OBJECT)).isInvalidating();
-    assertThat(registry.get(NativeColorId.NUMBER)).isNotInvalidating();
-    assertThat(registry.get(NativeColorId.STRING)).isNotInvalidating();
+  public void primitivesAreInvalidatingBasedOnConstantData() {
+    assertThat(StandardColors.UNKNOWN).isInvalidating();
+    assertThat(StandardColors.TOP_OBJECT).isInvalidating();
+    assertThat(StandardColors.NUMBER).isNotInvalidating();
+    assertThat(StandardColors.STRING).isNotInvalidating();
   }
 
   @Test

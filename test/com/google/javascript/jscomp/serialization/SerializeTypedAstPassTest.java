@@ -20,16 +20,20 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -131,6 +135,22 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 .setStringObject(pointerForType("String", typePool))
                 .setSymbolObject(pointerForType("Symbol", typePool))
                 .build());
+
+    ImmutableMap<String, ColorId> nativeObjectNameToId =
+        ImmutableMap.<String, ColorId>builder()
+            .put("BigInt", StandardColors.BIGINT_OBJECT_ID)
+            .put("Boolean", StandardColors.BOOLEAN_OBJECT_ID)
+            .put("Number", StandardColors.NUMBER_OBJECT_ID)
+            .put("String", StandardColors.STRING_OBJECT_ID)
+            .put("Symbol", StandardColors.SYMBOL_OBJECT_ID)
+            .build();
+    nativeObjectNameToId.forEach(
+        (name, expectedId) -> {
+          int offset = pointerForType(name, typePool).getPoolOffset();
+          TypeProto proto = typePool.getType(trimOffset(offset));
+          ColorId actualId = ColorId.fromBytes(proto.getObject().getUuid());
+          assertThat(actualId).isEqualTo(expectedId);
+        });
   }
 
   @Test

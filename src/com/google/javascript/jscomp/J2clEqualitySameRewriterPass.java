@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -120,15 +120,14 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     if (color == null) {
       return false;
     }
+
     if (color.isUnion()) {
       // ignore null/undefined
-      Color nonNullVoid = color.subtractNullOrVoid();
-      // In theory we could allow unions of multiple objects here
-      return !nonNullVoid.isUnion()
-          && !nonNullVoid.isPrimitive()
-          && !nonNullVoid.is(NativeColorId.UNKNOWN);
+      color = color.subtractNullOrVoid();
     }
-    return !color.isPrimitive() && !color.is(NativeColorId.UNKNOWN);
+
+    // In theory we could allow unions of multiple objects here
+    return !color.isUnion() && !color.isPrimitive() && !color.equals(StandardColors.UNKNOWN);
   }
 
   private Node rewriteAsStrictEq(Node firstExpr, Node secondExpr) {

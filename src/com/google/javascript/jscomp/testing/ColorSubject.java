@@ -22,7 +22,7 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.ColorId;
 import javax.annotation.Nullable;
 
 /** Subject for {@link Color} */
@@ -50,8 +50,8 @@ public final class ColorSubject extends Subject {
 
   // Custom assertions
 
-  public void isNative(NativeColorId nativeColorId) {
-    check("is").that(actualNonNull().is(nativeColorId)).isTrue();
+  public void hasId(ColorId id) {
+    check("getId").that(actualNonNull().getId()).isEqualTo(id);
   }
 
   public void isUnion() {

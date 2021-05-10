@@ -17,20 +17,33 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import javax.annotation.Nullable;
 
 final class JSTypeColorIdHasher {
 
-  JSTypeColorIdHasher() {}
+  private final ImmutableMap<ObjectType, ColorId> boxTypeToId;
+
+  JSTypeColorIdHasher(JSTypeRegistry registry) {
+    this.boxTypeToId =
+        BOX_TYPE_TO_ID.entrySet().stream()
+            .collect(
+                toImmutableMap(
+                    (e) -> registry.getNativeObjectType(e.getKey()), (e) -> e.getValue()));
+  }
 
   ColorId hashObjectType(ObjectType type) {
     checkState(
@@ -41,6 +54,11 @@ final class JSTypeColorIdHasher {
             && !type.isUnknownType()
             && !type.isTemplateType(),
         type);
+
+    ColorId boxId = this.boxTypeToId.get(type);
+    if (boxId != null) {
+      return boxId;
+    }
 
     Hasher hasher = FARM_64.newHasher();
 
@@ -118,4 +136,13 @@ final class JSTypeColorIdHasher {
     static final int NO_GOOG_MODULE_ID = 0x2593c5ff;
     static final int UNKNOWN_SOURCEREF = 0x660be782;
   }
+
+  static final ImmutableMap<JSTypeNative, ColorId> BOX_TYPE_TO_ID =
+      ImmutableMap.<JSTypeNative, ColorId>builder()
+          .put(JSTypeNative.BIGINT_OBJECT_TYPE, StandardColors.BIGINT_OBJECT_ID)
+          .put(JSTypeNative.BOOLEAN_OBJECT_TYPE, StandardColors.BOOLEAN_OBJECT_ID)
+          .put(JSTypeNative.NUMBER_OBJECT_TYPE, StandardColors.NUMBER_OBJECT_ID)
+          .put(JSTypeNative.STRING_OBJECT_TYPE, StandardColors.STRING_OBJECT_ID)
+          .put(JSTypeNative.SYMBOL_OBJECT_TYPE, StandardColors.SYMBOL_OBJECT_ID)
+          .build();
 }

@@ -59,7 +59,7 @@ final class JSTypeSerializer {
 
   private final InvalidatingTypes invalidatingTypes;
   private final StringPool.Builder stringPoolBuilder;
-  private final JSTypeColorIdHasher hasher = new JSTypeColorIdHasher();
+  private final JSTypeColorIdHasher hasher;
   private final SerializationOptions serializationMode;
   private final LinkedHashMap<SimplifiedType, SeenTypeRecord> seenSerializableTypes =
       new LinkedHashMap<>();
@@ -77,12 +77,7 @@ final class JSTypeSerializer {
           JSTypeNative.FUNCTION_TYPE,
           JSTypeNative.FUNCTION_FUNCTION_TYPE);
 
-  /**
-   * The first N TypePointer pool offsets correspond to PrimitiveType values
-   *
-   * <p>Subtract 1 for the auto-generated UNRECOGNIZED element.
-   */
-  static final int PRIMITIVE_POOL_SIZE = PrimitiveType.values().length - 1;
+  static final int PRIMITIVE_POOL_SIZE = TypePointers.AXIOMATIC_COLOR_COUNT;
 
   private enum State {
     COLLECTING_TYPES,
@@ -98,6 +93,7 @@ final class JSTypeSerializer {
     this.unknownType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
     this.topObjectType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.OBJECT_TYPE));
     this.registry = registry;
+    this.hasher = new JSTypeColorIdHasher(registry);
     this.topObjectLikeTypes =
         TOP_LIKE_OBJECT_IDS.stream().map(registry::getNativeType).collect(toImmutableSet());
     this.nullType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.NULL_TYPE));

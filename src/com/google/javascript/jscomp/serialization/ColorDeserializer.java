@@ -16,9 +16,8 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.util.Arrays.stream;
+import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,12 +28,11 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Convert a {@link TypePool} (from a single compilation) into {@link Color}s.
@@ -74,49 +72,35 @@ public final class ColorDeserializer {
       validatePointer(supertype, typePool);
       // Make the offset correspond to the actual list of type protos and exclude native types, as
       // native types are hardcoded in the ColorRegistry.
-      disambiguationEdges.put(
-          subtype.getPoolOffset() - JSTypeSerializer.PRIMITIVE_POOL_SIZE, supertype);
+      disambiguationEdges.put(trimOffset(subtype), supertype);
     }
 
-    ColorRegistry.Builder colorRegistry = ColorRegistry.builder();
-    ImmutableMap<NativeColorId, Color> colorIdToColor = colorRegistry.getNativePrimitives();
-
-    ImmutableMap<PrimitiveType, Color> nativeTypeToColor =
-        stream(PrimitiveType.values())
-            .filter(primitive -> !primitive.equals(PrimitiveType.UNRECOGNIZED))
-            .collect(
-                toImmutableMap(
-                    Function.identity(),
-                    (nativeType) -> colorIdToColor.get(primitiveToColorId(nativeType))));
-
     ColorPoolBuilder colorPoolBuilder =
-        new ColorPoolBuilder(typePool, stringPool, disambiguationEdges.build(), nativeTypeToColor);
+        new ColorPoolBuilder(typePool, stringPool, disambiguationEdges.build());
 
-    ImmutableMap<NativeColorId, Color> nativeObjectColors =
+    ImmutableMap<ColorId, Color> nativeObjectColors =
         gatherNativeObjects(typePool.getNativeObjectTable(), colorPoolBuilder);
     return new ColorDeserializer(
-        colorPoolBuilder.build(),
-        colorRegistry.withNativeObjectColors(nativeObjectColors).build(),
-        typePool);
+        colorPoolBuilder.build(), ColorRegistry.create(nativeObjectColors), typePool);
   }
 
-  private static ImmutableMap<NativeColorId, Color> gatherNativeObjects(
+  private static ImmutableMap<ColorId, Color> gatherNativeObjects(
       NativeObjectTable nativeObjectTable, ColorPoolBuilder colorPoolBuilder) {
-    return ImmutableMap.<NativeColorId, Color>builder()
+    return ImmutableMap.<ColorId, Color>builder()
         .put(
-            NativeColorId.BIGINT_OBJECT,
+            StandardColors.BIGINT_OBJECT_ID,
             colorPoolBuilder.pointerToColor(nativeObjectTable.getBigintObject()))
         .put(
-            NativeColorId.BOOLEAN_OBJECT,
+            StandardColors.BOOLEAN_OBJECT_ID,
             colorPoolBuilder.pointerToColor(nativeObjectTable.getBooleanObject()))
         .put(
-            NativeColorId.NUMBER_OBJECT,
+            StandardColors.NUMBER_OBJECT_ID,
             colorPoolBuilder.pointerToColor(nativeObjectTable.getNumberObject()))
         .put(
-            NativeColorId.STRING_OBJECT,
+            StandardColors.STRING_OBJECT_ID,
             colorPoolBuilder.pointerToColor(nativeObjectTable.getStringObject()))
         .put(
-            NativeColorId.SYMBOL_OBJECT,
+            StandardColors.SYMBOL_OBJECT_ID,
             colorPoolBuilder.pointerToColor(nativeObjectTable.getSymbolObject()))
         .build();
   }
@@ -134,19 +118,16 @@ public final class ColorDeserializer {
     private final ImmutableMultimap<Integer, TypePointer> disambiguationEdges;
     private final TypePool typePool;
     private final StringPool stringPool;
-    private final ImmutableMap<PrimitiveType, Color> nativeToColor;
 
     private ColorPoolBuilder(
         TypePool typePool,
         StringPool stringPool,
-        ImmutableMultimap<Integer, TypePointer> disambiguationEdges,
-        ImmutableMap<PrimitiveType, Color> nativeToColor) {
+        ImmutableMultimap<Integer, TypePointer> disambiguationEdges) {
       this.typePool = typePool;
       this.stringPool = stringPool;
       this.colorPool = new ArrayList<>();
       this.disambiguationEdges = disambiguationEdges;
       this.colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
-      this.nativeToColor = nativeToColor;
     }
 
     private ImmutableList<Color> build() {
@@ -254,53 +235,24 @@ public final class ColorDeserializer {
     private Color pointerToColor(TypePointer typePointer) {
       validatePointer(typePointer, this.typePool);
       int poolOffset = typePointer.getPoolOffset();
-      if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-        return this.nativeToColor.get(PrimitiveType.forNumber(poolOffset));
+      if (poolOffset < TypePointers.AXIOMATIC_COLOR_COUNT) {
+        return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset);
       }
-      int adjustedOffset = poolOffset - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
-      if (this.colorPool.get(adjustedOffset) == null) {
-        this.deserializeTypeByOffset(adjustedOffset);
+      int trimmedOffset = trimOffset(poolOffset);
+      if (this.colorPool.get(trimmedOffset) == null) {
+        this.deserializeTypeByOffset(trimmedOffset);
       }
-      return this.colorPool.get(adjustedOffset);
+      return this.colorPool.get(trimmedOffset);
     }
-  }
-
-  private static NativeColorId primitiveToColorId(PrimitiveType primitive) {
-    switch (primitive) {
-        // Type-system primitives
-      case TOP_OBJECT:
-        return NativeColorId.TOP_OBJECT;
-      case UNKNOWN_TYPE:
-        return NativeColorId.UNKNOWN;
-
-        // JavaScript language primitives
-      case BIGINT_TYPE:
-        return NativeColorId.BIGINT;
-      case BOOLEAN_TYPE:
-        return NativeColorId.BOOLEAN;
-      case NULL_OR_VOID_TYPE:
-        return NativeColorId.NULL_OR_VOID;
-      case NUMBER_TYPE:
-        return NativeColorId.NUMBER;
-      case STRING_TYPE:
-        return NativeColorId.STRING;
-      case SYMBOL_TYPE:
-        return NativeColorId.SYMBOL;
-
-      case UNRECOGNIZED:
-        throw new MalformedTypedAstException("Unrecognized PrimitiveType " + primitive);
-    }
-    throw new AssertionError();
   }
 
   public Color pointerToColor(TypePointer typePointer) {
     validatePointer(typePointer, this.typePool);
     int poolOffset = typePointer.getPoolOffset();
     if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-      return this.colorRegistry.get(primitiveToColorId(PrimitiveType.forNumber(poolOffset)));
+      return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset);
     }
-    int adjustedOffset = poolOffset - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
-    return this.colorPool.get(adjustedOffset);
+    return this.colorPool.get(trimOffset(poolOffset));
   }
 
   /** Validates that the given typePointer is valid according to the given pool of types */

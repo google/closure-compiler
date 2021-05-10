@@ -16,13 +16,12 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.LinkedHashMap;
 import javax.annotation.Nullable;
 
@@ -40,9 +39,8 @@ class ColorGraphNodeFactory {
 
   static ColorGraphNodeFactory createFactory(ColorRegistry colorRegistry) {
     LinkedHashMap<Color, ColorGraphNode> typeIndex = new LinkedHashMap<>();
-    Color unknownColor = colorRegistry.get(NativeColorId.UNKNOWN);
-    ColorGraphNode unknownColorNode = ColorGraphNode.create(unknownColor, 0);
-    typeIndex.put(unknownColor, unknownColorNode);
+    ColorGraphNode unknownColorNode = ColorGraphNode.create(StandardColors.UNKNOWN, 0);
+    typeIndex.put(StandardColors.UNKNOWN, unknownColorNode);
     return new ColorGraphNodeFactory(typeIndex, colorRegistry);
   }
 
@@ -69,7 +67,7 @@ class ColorGraphNodeFactory {
   // Merges different colors with the same ambiguation-behavior into one
   private Color simplifyColor(@Nullable Color type) {
     if (type == null) {
-      return this.registry.get(NativeColorId.UNKNOWN);
+      return StandardColors.UNKNOWN;
     }
 
     if (type.isUnion()) {
@@ -79,18 +77,12 @@ class ColorGraphNodeFactory {
           ? Color.createUnion(
               type.getUnionElements().stream().map(this::simplifyColor).collect(toImmutableSet()))
           : simplifyColor(type);
-    } else if (type.isPrimitive()) {
-      return flattenSingletonPrimitive(type);
+    } else if (type.getBoxId() != null) {
+      return this.registry.get(type.getBoxId());
+    } else if (type.equals(StandardColors.NULL_OR_VOID)) {
+      return StandardColors.UNKNOWN;
     } else {
       return type;
     }
-  }
-
-  private Color flattenSingletonPrimitive(Color type) {
-    NativeColorId nativeColorId = checkNotNull(type.getNativeColorId());
-    if (NativeColorId.NULL_OR_VOID.equals(nativeColorId)) {
-      return this.registry.get(NativeColorId.UNKNOWN);
-    }
-    return this.registry.get(nativeColorId.box());
   }
 }

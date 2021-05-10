@@ -34,7 +34,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.ParsingUtil;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -1638,12 +1638,12 @@ public final class NodeUtil {
     if (useType) {
       Color color = n.getColor();
       if (color != null) {
-        if (color.is(NativeColorId.STRING)) {
+        if (color.equals(StandardColors.STRING)) {
           return true;
-        } else if (color.is(NativeColorId.NUMBER)
-            || color.is(NativeColorId.BIGINT)
-            || color.is(NativeColorId.BOOLEAN)
-            || color.is(NativeColorId.NULL_OR_VOID)) {
+        } else if (color.equals(StandardColors.NUMBER)
+            || color.equals(StandardColors.BIGINT)
+            || color.equals(StandardColors.BOOLEAN)
+            || color.equals(StandardColors.NULL_OR_VOID)) {
           return false;
         }
       }

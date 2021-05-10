@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
 import static com.google.common.collect.Streams.stream;
+import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static java.util.Comparator.naturalOrder;
 
 import com.google.common.collect.ComparisonChain;
@@ -31,7 +32,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.colors.ColorId;
-import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -155,7 +155,7 @@ final class SerializeTypesToPointers {
     }
 
     /**
-     * Returns the unique ID of this pointer if in the type pool, or a debugging string otherwise
+     * Returns the unique ID of this pointer if in the type pool.
      *
      * <p>The given type may not be in the type pool because the type pool was generated based on
      * all types reachable from the AST, while a TypeMismatch may contain a type in dead code no
@@ -163,13 +163,11 @@ final class SerializeTypesToPointers {
      */
     private static ColorId typePointerToId(TypePointer typePointer, TypePool typePool) {
       int poolOffset = typePointer.getPoolOffset();
-      if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-        return NativeColorId.values()[poolOffset].getId();
+      if (poolOffset < TypePointers.AXIOMATIC_COLOR_COUNT) {
+        return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset).getId();
       }
 
-      int adjustedOffset = typePointer.getPoolOffset() - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
-
-      TypeProto typeProto = typePool.getTypeList().get(adjustedOffset);
+      TypeProto typeProto = typePool.getTypeList().get(trimOffset(poolOffset));
       switch (typeProto.getKindCase()) {
         case UNION:
           return ColorId.union(

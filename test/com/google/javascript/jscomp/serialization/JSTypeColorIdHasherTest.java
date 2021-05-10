@@ -27,8 +27,10 @@ import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.LinkedHashMap;
 import org.junit.Before;
@@ -39,7 +41,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public final class JSTypeColorIdHasherTest extends CompilerTestCase {
 
-  private final JSTypeColorIdHasher hasher = new JSTypeColorIdHasher();
+  private JSTypeColorIdHasher hasher;
   private LinkedHashMap<String, ColorId> labelToColorId;
   private LinkedHashMultimap<ColorId, JSType> colorIdToJSTypes; // Useful for debugging.
 
@@ -96,8 +98,9 @@ public final class JSTypeColorIdHasherTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    labelToColorId = new LinkedHashMap<>();
-    colorIdToJSTypes = LinkedHashMultimap.create();
+    this.hasher = new JSTypeColorIdHasher(compiler.getTypeRegistry());
+    this.labelToColorId = new LinkedHashMap<>();
+    this.colorIdToJSTypes = LinkedHashMultimap.create();
 
     return (Node externs, Node root) ->
         NodeTraversal.traverseRoots(compiler, new LabeledTypeFinder(), externs, root);
@@ -397,5 +400,17 @@ public final class JSTypeColorIdHasherTest extends CompilerTestCase {
     assertThat(idsFromSource).isNotEmpty();
     assertThat(idsFromSource).isNotSameInstanceAs(idsFromHeader);
     assertThat(idsFromSource).isEqualTo(idsFromHeader);
+  }
+
+  @Test
+  public void returnsNativeId_forBoxTypes() {
+    JSTypeRegistry registry = new JSTypeRegistry(ErrorReporter.ALWAYS_THROWS_INSTANCE);
+    this.hasher = new JSTypeColorIdHasher(registry);
+
+    JSTypeColorIdHasher.BOX_TYPE_TO_ID.forEach(
+        (n, i) -> {
+          ObjectType t = registry.getNativeObjectType(n);
+          assertThat(this.hasher.hashObjectType(t)).isEqualTo(i);
+        });
   }
 }

@@ -24,7 +24,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,13 +39,13 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance(), StringPool.empty());
 
     assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)))
-        .isNative(NativeColorId.NUMBER);
+        .isEqualTo(StandardColors.NUMBER);
     assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)))
         .isNotInvalidating();
     assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.STRING_TYPE)))
-        .isNative(NativeColorId.STRING);
+        .isEqualTo(StandardColors.STRING);
     assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.UNKNOWN_TYPE)))
-        .isNative(NativeColorId.UNKNOWN);
+        .isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
@@ -84,7 +84,7 @@ public class ColorDeserializerTest {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
-    Color numberObject = deserializer.getRegistry().get(NativeColorId.NUMBER_OBJECT);
+    Color numberObject = deserializer.getRegistry().get(StandardColors.NUMBER_OBJECT_ID);
     assertThat(numberObject).isInvalidating();
     assertThat(numberObject)
         .hasDisambiguationSupertypes(deserializer.pointerToColor(poolPointer(1)));
@@ -297,13 +297,9 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
-        .hasAlternates(
-            deserializer.getRegistry().get(NativeColorId.STRING),
-            deserializer.getRegistry().get(NativeColorId.NUMBER));
+        .hasAlternates(StandardColors.STRING, StandardColors.NUMBER);
     assertThat(deserializer.pointerToColor(poolPointer(1)))
-        .hasAlternates(
-            deserializer.getRegistry().get(NativeColorId.BIGINT),
-            deserializer.getRegistry().get(NativeColorId.NUMBER));
+        .hasAlternates(StandardColors.BIGINT, StandardColors.NUMBER);
   }
 
   @Test
@@ -330,15 +326,10 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
-        .hasAlternates(
-            deserializer.getRegistry().get(NativeColorId.STRING),
-            deserializer.getRegistry().get(NativeColorId.NUMBER));
+        .hasAlternates(StandardColors.STRING, StandardColors.NUMBER);
 
     assertThat(deserializer.pointerToColor(poolPointer(1)))
-        .hasAlternates(
-            deserializer.getRegistry().get(NativeColorId.BIGINT),
-            deserializer.getRegistry().get(NativeColorId.STRING),
-            deserializer.getRegistry().get(NativeColorId.NUMBER));
+        .hasAlternates(StandardColors.BIGINT, StandardColors.STRING, StandardColors.NUMBER);
   }
 
   @Test
@@ -436,7 +427,7 @@ public class ColorDeserializerTest {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
-    assertThat(deserializer.pointerToColor(poolPointer(0))).isNative(NativeColorId.NUMBER);
+    assertThat(deserializer.pointerToColor(poolPointer(0))).isEqualTo(StandardColors.NUMBER);
     assertThat(deserializer.pointerToColor(poolPointer(0)).isUnion()).isFalse();
   }
 

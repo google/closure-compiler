@@ -23,7 +23,7 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
@@ -79,7 +79,7 @@ final class ColorGraphBuilder {
 
     this.topNode =
         this.colorHoldsInstanceGraph.createNode(
-            this.nodeFactory.createNode(colorRegistry.get(NativeColorId.UNKNOWN)));
+            this.nodeFactory.createNode(StandardColors.UNKNOWN));
   }
 
   public void add(ColorGraphNode flat) {

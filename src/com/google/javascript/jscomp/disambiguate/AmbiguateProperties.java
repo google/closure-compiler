@@ -31,7 +31,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -506,7 +506,7 @@ public class AmbiguateProperties implements CompilerPass {
       ImmutableSet<Color> possiblePrototypes = classConstructorType.getPrototypes();
       Color classPrototype =
           possiblePrototypes.isEmpty()
-              ? colorRegistry.get(NativeColorId.UNKNOWN)
+              ? StandardColors.UNKNOWN
               : Color.createUnion(possiblePrototypes);
       for (Node member = NodeUtil.getClassMembers(classNode).getFirstChild();
           member != null;
@@ -568,7 +568,7 @@ public class AmbiguateProperties implements CompilerPass {
     Color type = n.getColor();
     if (type == null) {
       // TODO(bradfordcsmith): This branch indicates a compiler bug. It should throw an exception.
-      return colorRegistry.get(NativeColorId.UNKNOWN);
+      return StandardColors.UNKNOWN;
     } else {
       return type;
     }

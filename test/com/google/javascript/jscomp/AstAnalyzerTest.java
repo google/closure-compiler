@@ -77,7 +77,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -820,7 +820,7 @@ public final class AstAnalyzerTest {
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
 
       xNode.setJSType(null);
-      xNode.setColor(helper.compiler.getColorRegistry().get(NativeColorId.STRING));
+      xNode.setColor(StandardColors.STRING);
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
     }
   }

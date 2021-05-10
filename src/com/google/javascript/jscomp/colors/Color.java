@@ -17,13 +17,14 @@
 package com.google.javascript.jscomp.colors;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -59,7 +60,7 @@ public abstract class Color {
   public abstract ImmutableSet<String> getOwnProperties();
 
   @Nullable
-  public abstract NativeColorId getNativeColorId();
+  public abstract ColorId getBoxId();
 
   /**
    * Whether this type is some Closure assertion function removable by Closure-specific
@@ -156,17 +157,12 @@ public abstract class Color {
      * primitive, but the *value* held by a union reference may be.
      */
     checkState(!this.isUnion(), this);
-    return this.getNativeColorId() != null && this.getNativeColorId().isPrimitive();
+    return StandardColors.PRIMITIVE_COLORS.containsKey(this.getId());
   }
 
   public final boolean isUnion() {
     // Single element sets are banned in the builder.
     return !this.getUnionElements().isEmpty();
-  }
-
-  /** Whether this is exactly the given native color (and not a union containing that color). */
-  public final boolean is(NativeColorId color) {
-    return this.getNativeColorId() == color;
   }
 
   /**
@@ -191,15 +187,16 @@ public abstract class Color {
 
   @Memoized
   public Color subtractNullOrVoid() {
-    /**
-     * Forbid calling this on non-unions to avoid defining what NULL_OR_VOID.subtract(NULL_OR_VOID)
-     * is.
-     */
-    ImmutableSet<Color> elements =
-        this.getUnionElements().stream()
-            .filter(alt -> !alt.is(NativeColorId.NULL_OR_VOID))
-            .collect(toImmutableSet());
-    return (elements.size() == this.getUnionElements().size()) ? this : createUnion(elements);
+    /** Avoid defining NULL_OR_VOID.subtract(NULL_OR_VOID) */
+    checkState(this.isUnion());
+
+    if (!this.getUnionElements().contains(StandardColors.NULL_OR_VOID)) {
+      return this;
+    }
+
+    LinkedHashSet<Color> elements = new LinkedHashSet<>(this.getUnionElements());
+    elements.remove(StandardColors.NULL_OR_VOID);
+    return createUnion(elements);
   }
 
   /**
@@ -225,13 +222,13 @@ public abstract class Color {
 
     public abstract Builder setClosureAssert(boolean x);
 
-    abstract Builder setNativeColorId(@Nullable NativeColorId x);
-
     abstract Builder setPrototypes(ImmutableSet<Color> x);
 
     abstract Builder setInstanceColors(ImmutableSet<Color> x);
 
     abstract Builder setUnionElements(ImmutableSet<Color> x);
+
+    abstract Builder setBoxId(@Nullable ColorId x);
 
     @VisibleForTesting
     public Builder setDebugName(String x) {
@@ -251,15 +248,25 @@ public abstract class Color {
     public final Color build() {
       Color result = this.buildInternal();
       checkState(result.getUnionElements().isEmpty(), result);
+      checkState(result.getBoxId() == null, result);
+      checkState(!StandardColors.AXIOMATIC_COLORS.containsKey(result.getId()), result);
       return result;
     }
 
-    @SuppressWarnings("ReferenceEquality")
     private final Color buildUnion() {
       Color result = this.buildInternal();
       checkState(result.getUnionElements().size() > 1, result);
-      checkState(result.getDebugInfo() == DebugInfo.EMPTY, result);
-      checkState(result.getNativeColorId() == null, result);
+      checkState(identical(result.getDebugInfo(), DebugInfo.EMPTY), result);
+      checkState(result.getBoxId() == null, result);
+      return result;
+    }
+
+    final Color buildAxiomatic() {
+      checkState(StandardColors.AXIOMATIC_COLORS == null, "StandardColors are all defined");
+
+      Color result = this.buildInternal();
+      checkState(result.getUnionElements().isEmpty(), result);
+      checkState(!result.getDebugInfo().getClassName().isEmpty(), result);
       return result;
     }
   }

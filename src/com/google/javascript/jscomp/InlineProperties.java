@@ -20,8 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
@@ -41,7 +40,6 @@ import java.util.Map;
 final class InlineProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private final ColorRegistry colorRegistry;
 
   private static class PropertyInfo {
     PropertyInfo(Color color, Node value) {
@@ -59,7 +57,6 @@ final class InlineProperties implements CompilerPass {
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.colorRegistry = compiler.getColorRegistry();
     invalidateExternProperties();
   }
 
@@ -75,7 +72,7 @@ final class InlineProperties implements CompilerPass {
     Color color = n.getColor();
 
     if (color == null) {
-      return colorRegistry.get(NativeColorId.UNKNOWN);
+      return StandardColors.UNKNOWN;
     } else {
       return color;
     }

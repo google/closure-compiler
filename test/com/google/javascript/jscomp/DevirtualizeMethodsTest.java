@@ -18,14 +18,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
@@ -121,14 +120,13 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     Color barResultType = getLabelledExpression("BAR_RESULT").getColor();
     Color bazResultType = getLabelledExpression("BAZ_RESULT").getColor();
 
-    assertThat(fooResultType).isNative(NativeColorId.NUMBER);
-    assertThat(barResultType).isNative(NativeColorId.NUMBER);
-    assertThat(bazResultType).isNative(NativeColorId.NULL_OR_VOID);
+    assertThat(fooResultType).isEqualTo(StandardColors.NUMBER);
+    assertThat(barResultType).isEqualTo(StandardColors.NUMBER);
+    assertThat(bazResultType).isEqualTo(StandardColors.NULL_OR_VOID);
 
-    assertThat(fooType.is(NativeColorId.UNKNOWN)).isFalse();
-
-    assertThat(barType.is(NativeColorId.UNKNOWN)).isFalse();
-    assertThat(bazType.is(NativeColorId.UNKNOWN)).isFalse();
+    assertThat(fooType).isNotEqualTo(StandardColors.UNKNOWN);
+    assertThat(barType).isNotEqualTo(StandardColors.UNKNOWN);
+    assertThat(bazType).isNotEqualTo(StandardColors.UNKNOWN);
   }
 
   private Node getLabelledExpression(String label) {

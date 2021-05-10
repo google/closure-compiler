@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -287,9 +287,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node three = newScript.getFirstFirstChild();
 
     assertNode(three).hasToken(Token.NUMBER);
-    assertThat(three.getColor()).isNative(NativeColorId.NUMBER);
-    assertThat(three.getColor())
-        .isSameInstanceAs(result.getColorRegistry().get(NativeColorId.NUMBER));
+    assertThat(three.getColor()).isSameInstanceAs(StandardColors.NUMBER);
   }
 
   @Test

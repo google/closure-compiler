@@ -131,7 +131,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "IFoo.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("top_object", "IFoo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
   }
 
@@ -152,7 +152,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
@@ -174,7 +174,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
   }
@@ -223,7 +223,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
@@ -267,7 +267,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "(typeof Foo0)", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("top_object", "(typeof Foo0)", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("(typeof Foo0)", "(typeof Foo1)", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("(typeof Foo1)", "(typeof Foo2)", CAN_HOLD);
   }
@@ -296,7 +296,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     StubLcaFinder stubFinder =
         new StubLcaFinder()
             .addStub(
-                ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "UNKNOWN"));
+                ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "unknown"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -448,7 +448,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 .filter((n) -> n.getInEdges().isEmpty())
                 .collect(toImmutableSet()))
         .comparingElementsUsing(NODE_HAS_TYPENAME)
-        .containsExactly("UNKNOWN");
+        .containsExactly("unknown");
   }
 
   @After
