@@ -32,8 +32,8 @@ public final class ColorIdTest {
   private static final ColorId B = ColorId.fromAscii("b");
   private static final ColorId C = ColorId.fromAscii("c");
 
-  private static final ColorId ZERO = ColorId.fromBytes(new byte[] {0});
-  private static final ColorId ONE = ColorId.fromBytes(new byte[] {1});
+  private static final ColorId ZERO = ColorId.fromUnsigned(0);
+  private static final ColorId ONE = ColorId.fromUnsigned(1);
 
   @Test
   public void equals_sameInputTrue() {
@@ -111,6 +111,13 @@ public final class ColorIdTest {
   public void union_oneAffectsResult() {
     assertNotEqualsAndRelatedMethods(
         ColorId.union(ImmutableSet.of(A, B)), ColorId.union(ImmutableSet.of(A, B, ONE)));
+  }
+
+  @Test
+  public void fromUnsigned_noSignExtension() {
+    assertThat(ColorId.fromUnsigned((byte) -1).toString()).isEqualTo("ff");
+    assertThat(ColorId.fromUnsigned((int) -1).toString()).isEqualTo("ffffffff");
+    assertThat(ColorId.fromUnsigned((long) -1).toString()).isEqualTo("ffffffffffffffff");
   }
 
   private void assertEqualsAndRelatedMethods(ColorId actual, ColorId expected) {
