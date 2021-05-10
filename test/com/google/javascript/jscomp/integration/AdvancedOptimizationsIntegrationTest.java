@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
@@ -521,45 +520,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "ns.SomeType.defaultName = 'foobarbaz';"),
         // the provides should be rewritten, then collapsed, then removed by RemoveUnusedCode
         "");
-  }
-
-  @Test
-  public void testExpose() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-
-    // TODO(tbreisacher): Re-enable dev mode and fix test failure.
-    options.setDevMode(DevMode.OFF);
-
-    test(
-        options,
-        new String[] {
-          lines(
-              "var x = {eeny: 1, /** @expose */ meeny: 2};",
-              "/** @constructor */ var Foo = function() {};",
-              "/** @expose */  Foo.prototype.miny = 3;",
-              "Foo.prototype.moe = 4;",
-              "/** @expose */  Foo.prototype.tiger;",
-              "function moe(a, b) { return a.meeny + b.miny + a.tiger; }",
-              "window['x'] = x;",
-              "window['Foo'] = Foo;",
-              "window['moe'] = moe;")
-        },
-        new String[] {
-          lines(
-              "function a(){}",
-              "a.prototype.miny=3;",
-              "window.x={a:1,meeny:2};",
-              "window.Foo=a;",
-              "window.moe=function(b,c){",
-              "  return b.meeny+c.miny+b.tiger",
-              "}")
-        },
-        new DiagnosticGroup[] {
-          DiagnosticGroups.DEPRECATED_ANNOTATIONS,
-          DiagnosticGroups.DEPRECATED_ANNOTATIONS,
-          DiagnosticGroups.DEPRECATED_ANNOTATIONS
-        });
   }
 
   @Test

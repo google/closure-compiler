@@ -146,7 +146,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateTypeAnnotations(n, info);
     validateFunctionJsDoc(n, info);
     validateMsgJsDoc(n, info);
-    validateDeprecatedJsDoc(n, info);
     validateNoCollapse(n, info);
     validateClassLevelJsDoc(n, info);
     validateArrowFunction(n);
@@ -427,16 +426,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         || info.hasBaseType()
         || info.getImplementedInterfaceCount() != 0
         || info.getExtendedInterfacesCount() != 0;
-  }
-
-  /**
-   * Checks that deprecated annotations such as @expose are not present
-   */
-  private void validateDeprecatedJsDoc(Node n, JSDocInfo info) {
-    if (info != null && info.isExpose()) {
-      report(n, ANNOTATION_DEPRECATED, "@expose",
-              "Use @nocollapse or @export instead.");
-    }
   }
 
   /**

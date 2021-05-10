@@ -56,7 +56,6 @@ import java.util.Set;
  *       shadowed (note: "arguments" may require special handling).
  *   <li>Removes duplicate variable declarations.
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
- *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block.
  *   <li>Take var statements out from for-loop initializer. This: for(var a = 0;a<0;a++) {} becomes:
  *       var a = 0; for(a;a<0;a++) {}
@@ -114,81 +113,8 @@ class Normalize implements CompilerPass {
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
-    FindExposeAnnotations findExposeAnnotations = new FindExposeAnnotations();
-    NodeTraversal.traverse(compiler, root, findExposeAnnotations);
-    if (!findExposeAnnotations.exposedProperties.isEmpty()) {
-      NodeTraversal.traverse(compiler, root,
-          new RewriteExposedProperties(
-              findExposeAnnotations.exposedProperties));
-    }
-
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    }
-  }
-
-  /**
-   * Find all the @expose annotations.
-   */
-  private static class FindExposeAnnotations extends AbstractPostOrderCallback {
-    private final Set<String> exposedProperties = new HashSet<>();
-
-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isExprAssign(n)) {
-        Node assign = n.getFirstChild();
-        Node lhs = assign.getFirstChild();
-        if (lhs.isGetProp() && isMarkedExpose(assign)) {
-          exposedProperties.add(lhs.getString());
-        }
-      } else if (n.isStringKey() && isMarkedExpose(n)) {
-        exposedProperties.add(n.getString());
-      } else if (n.isGetProp() && n.getParent().isExprResult()
-                  && isMarkedExpose(n)) {
-        exposedProperties.add(n.getString());
-      }
-    }
-
-    private static boolean isMarkedExpose(Node n) {
-      JSDocInfo info = n.getJSDocInfo();
-      return info != null && info.isExpose();
-    }
-  }
-
-  /**
-   * Rewrite all exposed properties in [] form.
-   */
-  private class RewriteExposedProperties
-      extends AbstractPostOrderCallback {
-    private final Set<String> exposedProperties;
-
-    RewriteExposedProperties(Set<String> exposedProperties) {
-      this.exposedProperties = exposedProperties;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isGetProp()) {
-        String propName = n.getString();
-        if (exposedProperties.contains(propName)) {
-          Node string = IR.string(propName).srcref(n);
-          Node getelem =
-              IR.getelem(n.removeFirstChild(), string)
-                  .clonePropsFrom(n)
-                  .srcref(n)
-                  .setJSType(n.getJSType());
-
-          compiler.reportChangeToEnclosingScope(n);
-          n.replaceWith(getelem);
-        }
-      } else if (n.isStringKey()) {
-        String propName = n.getString();
-        if (exposedProperties.contains(propName)) {
-          if (!n.isQuotedString()) {
-            compiler.reportChangeToEnclosingScope(n);
-            n.setQuotedString();
-          }
-        }
-      }
     }
   }
 

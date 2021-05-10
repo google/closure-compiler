@@ -1902,21 +1902,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCustomBanExpose() {
-    configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExpose'\n"
-            + "  error_message: 'BanExpose Message'\n"
-            + "}";
-
-    testWarning(
-        "/** @expose */ var x;",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: BanExpose Message");
-  }
-
-  @Test
   public void testCustomRestrictThrow1() {
     configuration =
         "requirement: {\n"

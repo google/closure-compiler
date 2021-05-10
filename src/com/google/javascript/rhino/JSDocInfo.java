@@ -320,7 +320,6 @@ public class JSDocInfo implements Serializable {
     NOSIDEEFFECTS,
     EXTERNS,
     NOCOMPILE,
-    EXPOSE,
     UNRESTRICTED,
     STRUCT,
     DICT,
@@ -794,11 +793,6 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.EXPORT);
   }
 
-  /** Returns whether the {@code @expose} annotation is present on this {@link JSDocInfo}. */
-  public boolean isExpose() {
-    return checkBit(Bit.EXPOSE);
-  }
-
   /** Returns whether the {@code @implicitCast} annotation is present on this {@link JSDocInfo}. */
   public boolean isImplicitCast() {
     return checkBit(Bit.IMPLICITCAST);
@@ -862,7 +856,6 @@ public class JSDocInfo implements Serializable {
                     | Bit.DEFINE.mask
                     | Bit.OVERRIDE.mask
                     | Bit.EXPORT.mask
-                    | Bit.EXPOSE.mask
                     | Bit.DEPRECATED.mask
                     | Bit.INTERFACE.mask
                     | Bit.IMPLICITCAST.mask
@@ -2311,14 +2304,6 @@ public class JSDocInfo implements Serializable {
      */
     public boolean removeExport() {
       return populateBit(Bit.EXPORT, false);
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExpose()}
-     * flag set to {@code true}.
-     */
-    public boolean recordExpose() {
-      return populateBit(Bit.EXPOSE, true);
     }
 
     /**

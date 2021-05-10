@@ -47,10 +47,6 @@ enum JsdocTag {
   // Used by ClosureCodeRemoval
   JSDOC_ABSTRACT = 19;
 
-  // Used by Normalize
-  // TODO(b/180010003): delete this tag
-  JSDOC_EXPOSE = 20;
-
   // Used by ReplaceMessage i18n
   JSDOC_HIDDEN = 21;
   JSDOC_SUPPRESS_MESSAGE_CONVENTION = 22;

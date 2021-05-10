@@ -1348,7 +1348,12 @@ public final class ConformanceRules {
     }
   }
 
-  /** Banned @expose */
+  /**
+   * Banned @expose
+   *
+   * <p>TODO(b/180010003): delete this rule. It is a no-op now that compiler support for @expose is
+   * deleted.
+   */
   public static final class BanExpose extends AbstractRule {
     public BanExpose(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -1357,10 +1362,6 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      JSDocInfo info = n.getJSDocInfo();
-      if (info != null && info.isExpose()) {
-        return ConformanceResult.VIOLATION;
-      }
       return ConformanceResult.CONFORMANCE;
     }
   }

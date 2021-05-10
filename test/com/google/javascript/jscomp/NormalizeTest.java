@@ -906,21 +906,6 @@ public final class NormalizeTest extends CompilerTestCase {
       assertThat(hasProp.getString()).isEqualTo("CONST");
     }
   }
-
-  @Test
-  public void testExposeSimple() {
-    test(
-        "var x = {}; /** @expose */ x.y = 3; x.y = 5;",
-        "var x = {}; /** @expose */ x['y'] = 3; x['y'] = 5;");
-  }
-
-  @Test
-  public void testExposeComplex() {
-    test(
-        "var x = {/** @expose */ a: 1, b: 2}; x.a = 3; /** @expose */ x.b = 5;",
-        "var x = {/** @expose */ 'a': 1, 'b': 2}; x['a'] = 3; /** @expose */ x['b'] = 5;");
-  }
-
   @Test
   public void testShadowFunctionName() {
     test(

@@ -39,7 +39,6 @@ enum Annotation {
   EXTENDS,
   EXTERNS,
   EXPORT,
-  EXPOSE,
   FILE_OVERVIEW,
   FINAL,
   HIDDEN,
@@ -103,7 +102,6 @@ enum Annotation {
           .put("dict", Annotation.DICT)
           .put("enum", Annotation.ENUM)
           .put("export", Annotation.EXPORT)
-          .put("expose", Annotation.EXPOSE)
           .put("extends", Annotation.EXTENDS)
           .put("externs", Annotation.EXTERNS)
           .put("fileoverview", Annotation.FILE_OVERVIEW)

@@ -119,10 +119,6 @@ public final class JSDocInfoPrinter {
       parts.add("@mixinFunction");
     }
 
-    if (info.isExpose()) {
-      parts.add("@expose");
-    }
-
     if (info.isNoSideEffects()) {
       parts.add("@nosideeffects");
     }

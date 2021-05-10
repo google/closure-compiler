@@ -118,11 +118,6 @@ public final class JsdocSerializer {
       builder.addKind(JsdocTag.JSDOC_ABSTRACT);
     }
 
-    // Used by Normalize
-    if (jsdoc.isExpose()) {
-      builder.addKind(JsdocTag.JSDOC_EXPOSE);
-    }
-
     // Used by ReplaceMessages
     if (jsdoc.isHidden()) {
       builder.addKind(JsdocTag.JSDOC_HIDDEN);
@@ -262,10 +257,6 @@ public final class JsdocSerializer {
           continue;
         case JSDOC_ID_GENERATOR_INCONSISTENT:
           builder.recordIdGenerator();
-          continue;
-
-        case JSDOC_EXPOSE:
-          builder.recordExpose();
           continue;
 
         case JSDOC_ABSTRACT:

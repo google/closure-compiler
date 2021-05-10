@@ -2204,16 +2204,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testParseExpose1() {
-    assertThat(parse("@expose*/").isExpose()).isTrue();
-  }
-
-  @Test
-  public void testParseExpose2() {
-    parse("@expose\n@expose*/", "extra @expose tag");
-  }
-
-  @Test
   public void testParseExterns1() {
     assertThat(parseFileOverview("@externs*/").isExterns()).isTrue();
   }

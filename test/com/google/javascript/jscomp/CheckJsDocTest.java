@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
 import static com.google.javascript.jscomp.CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
@@ -536,16 +535,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Test
   public void testMethodsOnObjectLiterals_withES6Modules() {
     testSame("export var x = { /** @return {?} */ foo() {} };");
-  }
-
-  @Test
-  public void testExposeDeprecated() {
-    testWarning("/** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
-  }
-
-  @Test
-  public void testExposeDeprecated_withES6Modules() {
-    testWarning("export /** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
   }
 
   @Test

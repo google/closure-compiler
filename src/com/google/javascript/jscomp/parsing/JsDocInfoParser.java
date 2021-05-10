@@ -563,12 +563,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case EXPOSE:
-          if (!jsdocBuilder.recordExpose()) {
-            addParserWarning("msg.jsdoc.expose");
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case EXTERNS:
           if (!jsdocBuilder.recordExterns()) {
             addParserWarning("msg.jsdoc.externs");
