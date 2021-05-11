@@ -31,6 +31,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 final class JSTypeColorIdHasher {
@@ -42,7 +43,7 @@ final class JSTypeColorIdHasher {
         BOX_TYPE_TO_ID.entrySet().stream()
             .collect(
                 toImmutableMap(
-                    (e) -> registry.getNativeObjectType(e.getKey()), (e) -> e.getValue()));
+                    (e) -> registry.getNativeObjectType(e.getKey()), Map.Entry::getValue));
   }
 
   ColorId hashObjectType(ObjectType type) {

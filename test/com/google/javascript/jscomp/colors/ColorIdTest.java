@@ -116,7 +116,8 @@ public final class ColorIdTest {
   @Test
   public void fromUnsigned_noSignExtension() {
     assertThat(ColorId.fromUnsigned((byte) -1).toString()).isEqualTo("ff");
-    assertThat(ColorId.fromUnsigned((int) -1).toString()).isEqualTo("ffffffff");
+    // -1 is an int by default
+    assertThat(ColorId.fromUnsigned(-1).toString()).isEqualTo("ffffffff");
     assertThat(ColorId.fromUnsigned((long) -1).toString()).isEqualTo("ffffffffffffffff");
   }
 
