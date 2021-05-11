@@ -24,8 +24,10 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
@@ -38,6 +40,8 @@ final class TypedAstSerializer {
   private int previousColumn;
   private final ArrayDeque<SourceFile> subtreeSourceFiles = new ArrayDeque<>();
   private final LinkedHashMap<SourceFile, Integer> sourceFilePointers = new LinkedHashMap<>();
+
+  private IdentityHashMap<JSType, TypePointer> typesToPointers = null;
 
   private TypedAstSerializer(
       AbstractCompiler compiler,
@@ -64,8 +68,10 @@ final class TypedAstSerializer {
       SerializeTypesToPointers typeSerializer =
           SerializeTypesToPointers.create(this.compiler, this.stringPool, this.serializationMode);
       typeSerializer.gatherTypesOnAst(jsRoot.getParent());
+      this.typesToPointers = typeSerializer.getTypePointersByJstype();
       typePool = typeSerializer.getTypePool();
     } else {
+      this.typesToPointers = new IdentityHashMap<>();
       typePool = TypePool.getDefaultInstance();
     }
 
@@ -169,9 +175,9 @@ final class TypedAstSerializer {
       return;
     }
 
-    TypePointer pointer = n.getColorPointer();
-    if (pointer != null) {
-      builder.setType(pointer);
+    JSType type = n.getJSType();
+    if (type != null) {
+      builder.setType(this.typesToPointers.get(type));
     }
   }
 
