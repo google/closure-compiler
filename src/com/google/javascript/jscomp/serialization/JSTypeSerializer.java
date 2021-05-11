@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 
@@ -76,8 +77,6 @@ final class JSTypeSerializer {
           JSTypeNative.FUNCTION_PROTOTYPE,
           JSTypeNative.FUNCTION_TYPE,
           JSTypeNative.FUNCTION_FUNCTION_TYPE);
-
-  static final int PRIMITIVE_POOL_SIZE = TypePointers.AXIOMATIC_COLOR_COUNT;
 
   private enum State {
     COLLECTING_TYPES,
@@ -407,7 +406,7 @@ final class JSTypeSerializer {
           SimplifiedType.ofJSType(this.registry.getNativeType(jsTypeNative));
       this.seenSerializableTypes.put(simplified, record);
     }
-    checkState(this.seenSerializableTypes.size() == PRIMITIVE_POOL_SIZE);
+    checkState(this.seenSerializableTypes.size() == TypePointers.AXIOMATIC_COLOR_COUNT);
   }
 
   /** Checks that this instance is in a valid state. */
@@ -445,10 +444,7 @@ final class JSTypeSerializer {
     for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
       if (seen.type == null) {
         // seen.type is if and only this is a native type without a TypeProto representation.
-        checkState(
-            seen.pointer.getPoolOffset() < PRIMITIVE_POOL_SIZE,
-            "Missing .type for SeenTypeRecord %s",
-            seen);
+        checkState(isAxiomatic(seen.pointer), "Missing .type for SeenTypeRecord %s", seen);
         continue;
       }
       builder.addType(seen.type);

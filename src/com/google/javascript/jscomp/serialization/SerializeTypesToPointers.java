@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
 import static com.google.common.collect.Streams.stream;
+import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static java.util.Comparator.naturalOrder;
 
@@ -159,7 +160,7 @@ final class SerializeTypesToPointers {
      */
     private static ColorId typePointerToId(TypePointer typePointer, TypePool typePool) {
       int poolOffset = typePointer.getPoolOffset();
-      if (poolOffset < TypePointers.AXIOMATIC_COLOR_COUNT) {
+      if (isAxiomatic(poolOffset)) {
         return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset).getId();
       }
 

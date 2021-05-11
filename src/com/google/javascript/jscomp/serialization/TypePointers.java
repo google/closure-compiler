@@ -52,6 +52,19 @@ final class TypePointers {
     return x - AXIOMATIC_COLOR_COUNT;
   }
 
+  static int untrimOffset(int x) {
+    checkState(x >= 0, x);
+    return x + AXIOMATIC_COLOR_COUNT;
+  }
+
+  static boolean isAxiomatic(TypePointer x) {
+    return isAxiomatic(x.getPoolOffset());
+  }
+
+  static boolean isAxiomatic(int x) {
+    return x < AXIOMATIC_COLOR_COUNT;
+  }
+
   private TypePointers() {
     throw new AssertionError();
   }

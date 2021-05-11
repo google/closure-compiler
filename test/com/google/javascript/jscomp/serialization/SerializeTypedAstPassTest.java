@@ -20,6 +20,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
+import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
+import static com.google.javascript.jscomp.serialization.TypePointers.untrimOffset;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -707,9 +710,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   private static TypePointer pointerForType(String className, List<TypeProto> pool) {
     for (int i = 0; i < pool.size(); i++) {
       if (pool.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
-        return TypePointer.newBuilder()
-            .setPoolOffset(i + JSTypeSerializer.PRIMITIVE_POOL_SIZE)
-            .build();
+        return TypePointer.newBuilder().setPoolOffset(untrimOffset(i)).build();
       }
     }
     throw new AssertionError("Unable to find type '" + className + "' in " + pool);
@@ -729,14 +730,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     return offset;
   }
 
-  private static int adjustPoolOffset(int offset) {
-    return offset - PrimitiveType.values().length + 1;
-  }
-
   private static List<TypeProto> getNonPrimitiveSupertypesFor(TypePool typePool, String className) {
     ArrayList<TypeProto> supertypes = new ArrayList<>();
     for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
-      TypeProto subtype = typePool.getType(adjustPoolOffset(edge.getSubtype().getPoolOffset()));
+      TypeProto subtype = typePool.getType(trimOffset(edge.getSubtype()));
       if (!subtype.hasObject()) {
         continue;
       }
@@ -744,11 +741,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
       if (!objectSubtype.getDebugInfo().getClassName().equals(className)) {
         continue;
       }
-      if (edge.getSupertype().getPoolOffset() < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
-        // Skip native supertpyes as they don't have a TypeProto
-        continue;
+      if (isAxiomatic(edge.getSupertype())) {
+        continue; // Skip axiomatic supertpyes as they don't have a TypeProto
       }
-      supertypes.add(typePool.getType(adjustPoolOffset(edge.getSupertype().getPoolOffset())));
+      supertypes.add(typePool.getType(trimOffset(edge.getSupertype())));
     }
     return supertypes;
   }

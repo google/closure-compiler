@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 
 import com.google.common.collect.ImmutableList;
@@ -230,7 +231,7 @@ public final class ColorDeserializer {
     private Color pointerToColor(TypePointer typePointer) {
       validatePointer(typePointer, this.typePool);
       int poolOffset = typePointer.getPoolOffset();
-      if (poolOffset < TypePointers.AXIOMATIC_COLOR_COUNT) {
+      if (isAxiomatic(poolOffset)) {
         return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset);
       }
       int trimmedOffset = trimOffset(poolOffset);
@@ -244,7 +245,7 @@ public final class ColorDeserializer {
   public Color pointerToColor(TypePointer typePointer) {
     validatePointer(typePointer, this.typePool);
     int poolOffset = typePointer.getPoolOffset();
-    if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
+    if (isAxiomatic(poolOffset)) {
       return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset);
     }
     return this.colorPool.get(trimOffset(poolOffset));
@@ -255,7 +256,7 @@ public final class ColorDeserializer {
     int poolOffset = typePointer.getPoolOffset();
     // Account for the first N type pointer offsets being reserved for the primitive types.
     if (poolOffset < 0
-        || poolOffset >= typePool.getTypeCount() + JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
+        || poolOffset >= typePool.getTypeCount() + TypePointers.AXIOMATIC_COLOR_COUNT) {
       throw new MalformedTypedAstException(
           "TypeProto pointer has out-of-bounds pool offset: "
               + typePointer
