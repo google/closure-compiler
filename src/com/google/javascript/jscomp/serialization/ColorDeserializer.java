@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -28,9 +28,9 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
-import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -75,34 +75,29 @@ public final class ColorDeserializer {
       disambiguationEdges.put(trimOffset(subtype), supertype);
     }
 
-    ColorPoolBuilder colorPoolBuilder =
-        new ColorPoolBuilder(typePool, stringPool, disambiguationEdges.build());
+    ImmutableList<Color> colorPool =
+        new ColorPoolBuilder(typePool, stringPool, disambiguationEdges.build()).build();
 
-    ImmutableMap<ColorId, Color> nativeObjectColors =
-        gatherNativeObjects(typePool.getNativeObjectTable(), colorPoolBuilder);
     return new ColorDeserializer(
-        colorPoolBuilder.build(), ColorRegistry.create(nativeObjectColors), typePool);
+        colorPool, ColorRegistry.create(gatherBoxColors(colorPool)), typePool);
   }
 
-  private static ImmutableMap<ColorId, Color> gatherNativeObjects(
-      NativeObjectTable nativeObjectTable, ColorPoolBuilder colorPoolBuilder) {
-    return ImmutableMap.<ColorId, Color>builder()
-        .put(
-            StandardColors.BIGINT_OBJECT_ID,
-            colorPoolBuilder.pointerToColor(nativeObjectTable.getBigintObject()))
-        .put(
-            StandardColors.BOOLEAN_OBJECT_ID,
-            colorPoolBuilder.pointerToColor(nativeObjectTable.getBooleanObject()))
-        .put(
-            StandardColors.NUMBER_OBJECT_ID,
-            colorPoolBuilder.pointerToColor(nativeObjectTable.getNumberObject()))
-        .put(
-            StandardColors.STRING_OBJECT_ID,
-            colorPoolBuilder.pointerToColor(nativeObjectTable.getStringObject()))
-        .put(
-            StandardColors.SYMBOL_OBJECT_ID,
-            colorPoolBuilder.pointerToColor(nativeObjectTable.getSymbolObject()))
-        .build();
+  private static LinkedHashMap<ColorId, Color> gatherBoxColors(ImmutableList<Color> colorPool) {
+    ImmutableSet<ColorId> boxIds = ImmutableSet.copyOf(JSTypeColorIdHasher.BOX_TYPE_TO_ID.values());
+
+    LinkedHashMap<ColorId, Color> boxIdToColor = new LinkedHashMap<>();
+    for (Color c : colorPool) {
+      ColorId id = c.getId();
+      if (boxIds.contains(id)) {
+        checkState(!boxIdToColor.containsKey(id), id);
+        boxIdToColor.put(id, c);
+      }
+    }
+    for (ColorId id : boxIds) {
+      boxIdToColor.computeIfAbsent(id, (unused) -> Color.singleBuilder().setId(id).build());
+    }
+
+    return boxIdToColor;
   }
 
   /**

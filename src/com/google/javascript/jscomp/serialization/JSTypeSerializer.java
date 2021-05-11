@@ -441,8 +441,7 @@ final class JSTypeSerializer {
     checkValid();
     this.state = State.GENERATING_POOL;
 
-    TypePool.Builder builder =
-        TypePool.newBuilder().setNativeObjectTable(this.createNativeObjectTable());
+    TypePool.Builder builder = TypePool.newBuilder();
     for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
       if (seen.type == null) {
         // seen.type is if and only this is a native type without a TypeProto representation.
@@ -564,24 +563,6 @@ final class JSTypeSerializer {
         throw new AssertionError();
     }
     throw new AssertionError();
-  }
-
-  /**
-   * Creates a table pointing from native objects to their {@link TypePointer} into the type pool
-   */
-  private NativeObjectTable createNativeObjectTable() {
-    return NativeObjectTable.newBuilder()
-        .setBigintObject(
-            this.serializeType(registry.getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE)))
-        .setBooleanObject(
-            this.serializeType(registry.getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE)))
-        .setNumberObject(
-            this.serializeType(registry.getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE)))
-        .setStringObject(
-            this.serializeType(registry.getNativeType(JSTypeNative.STRING_OBJECT_TYPE)))
-        .setSymbolObject(
-            this.serializeType(registry.getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE)))
-        .build();
   }
 
   /**

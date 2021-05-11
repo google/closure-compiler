@@ -13,8 +13,6 @@ message TypePool {
   repeated SubtypingEdge disambiguation_edges = 2;
   // Human-readable representation of where this TypePool comes from.
   string source_name = 3;
-  // Lists the positions of various NativeObjectTypes in the type list.
-  NativeObjectTable native_object_table = 4;
 }
 
 // References a serialized type. Typically, any reference to a type that needs
@@ -115,24 +113,6 @@ enum PrimitiveType {
   // while it is technically an "object type", it is also a type-system
   // primitive and does not appear in the list of type protos.
   TOP_OBJECT = 7;
-}
-
-/**
- * Types that appear as TypeProtos in the TypePool and have some special
- * use case to the optimizer.
- *
- * This only includes object types because primitives are never serialized as
- * TypeProtos.
- *
- * The TypePointers in this table have no special significance, unlike the
- * TypePointers representing a PrimitiveType.
- */
-message NativeObjectTable {
-  TypePointer boolean_object = 1;
-  TypePointer string_object = 2;
-  TypePointer number_object = 3;
-  TypePointer symbol_object = 4;
-  TypePointer bigint_object = 5;
 }
 
 // Used for testing only and possibly only temporary. Wraps type pools from

@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
@@ -68,7 +69,9 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setObject(
                         ObjectTypeProto.newBuilder()
-                            .setUuid(ByteString.copyFromUtf8("Number"))
+                            .setUuid(StandardColors.NUMBER_OBJECT_ID.asByteString())
+                            .setDebugInfo(
+                                ObjectTypeProto.DebugInfo.newBuilder().setClassName("Number"))
                             .setIsInvalidating(true))
                     .build())
             .addType(
@@ -76,7 +79,6 @@ public class ColorDeserializerTest {
                     .setObject(
                         ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Num.pro")))
                     .build())
-            .setNativeObjectTable(NativeObjectTable.newBuilder().setNumberObject(poolPointer(0)))
             .addDisambiguationEdges(
                 // Number is a subtype of Number.prototype
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
@@ -89,6 +91,17 @@ public class ColorDeserializerTest {
     assertThat(numberObject)
         .hasDisambiguationSupertypes(deserializer.pointerToColor(poolPointer(1)));
     assertThat(numberObject).isSameInstanceAs(deserializer.pointerToColor(poolPointer(0)));
+  }
+
+  @Test
+  public void testSynthesizesMissingBoxColors() {
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance(), StringPool.empty());
+    ColorRegistry registry = deserializer.getRegistry();
+
+    for (ColorId id : JSTypeColorIdHasher.BOX_TYPE_TO_ID.values()) {
+      assertThat(registry.get(id)).hasId(id);
+    }
   }
 
   @Test
