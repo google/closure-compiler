@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -1076,16 +1075,23 @@ class CollapseProperties implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // After rewriting, CommonJS dynamic imports are of the form
+      // __webpack_require__.e(2).then(function() { return module$mod1.default; })
+      //
+      // Mark the base module name as being dynamically imported.
       if (processCommonJSModules
-          && ProcessCommonJSModules.isCommonJsDynamicImportCallback(n, moduleResolutionMode)) {
-        String importPath = ProcessCommonJSModules.getCommonJsImportPath(n, moduleResolutionMode);
-        ModuleLoader.ModulePath modulePath =
-            t.getInput()
-                .getPath()
-                .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
-
-        if (modulePath != null) {
-          dynamicallyImportedModules.add(modulePath.toModuleName());
+          && n.isGetProp()
+          && n.isQualifiedName()
+          && n.getParent() != null
+          && n.getParent().isReturn()
+          && n.getGrandparent().isBlock()
+          && n.getGrandparent().hasOneChild()
+          && n.getGrandparent().getParent().isFunction()) {
+        Node potentialCallback = NodeUtil.getEnclosingFunction(n);
+        if (potentialCallback != null
+            && ProcessCommonJSModules.isCommonJsDynamicImportCallback(
+                NodeUtil.getEnclosingFunction(potentialCallback), moduleResolutionMode)) {
+          dynamicallyImportedModules.add(NodeUtil.getRootOfQualifiedName(n.getQualifiedName()));
         }
       } else if (ConvertChunksToESModules.isDynamicImportCallback(n)) {
         Node moduleNamespace =
