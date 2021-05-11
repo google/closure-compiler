@@ -283,12 +283,10 @@ public class Node {
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect);
       if (equiv) {
-        double thisValue = getDouble();
-        double thatValue = ((NumberNode) node).getDouble();
-        if (thisValue == thatValue) {
-          // detect the difference between 0.0 and -0.0.
-          return (thisValue != 0.0) || (1 / thisValue == 1 / thatValue);
-        }
+        // Detect the difference between 0.0 vs -0.0, and various NaN values.
+        long thisBits = Double.doubleToRawLongBits(this.number);
+        long thatBits = Double.doubleToRawLongBits(((NumberNode) node).number);
+        return thisBits == thatBits;
       }
       return false;
     }
