@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.ArrayList;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,9 +44,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
           "var arguments");
 
   private PropertyCollapseLevel propertyCollapseLevel = PropertyCollapseLevel.ALL;
-
-  private boolean enableDependencyManagement = false;
-  private List<ModuleIdentifier> entryPoints = null;
 
   public CollapsePropertiesTest() {
     super(EXTERNS);
@@ -76,17 +72,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableProcessCommonJsModules();
     enableTranspile();
     propertyCollapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
-  }
-
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-
-    if (this.enableDependencyManagement && this.entryPoints != null) {
-      options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(this.entryPoints));
-    }
-
-    return options;
   }
 
   @Test
