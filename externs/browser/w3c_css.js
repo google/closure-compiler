@@ -952,7 +952,7 @@ function DOMImplementationCSS() {}
 DOMImplementationCSS.prototype.createCSSStyleSheet = function(title, media) {};
 
 /**
- * @constructor
+ * @record
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ElementCSSInlineStyle
  */
 function ElementCSSInlineStyle() {}
