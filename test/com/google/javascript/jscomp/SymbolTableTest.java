@@ -138,6 +138,24 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testSourceInfoForProvidedSymbol() {
+    SymbolTable table =
+        createSymbolTable(lines("goog.provide('foo.bar.Baz'); foo.bar.Baz = class {};"));
+
+    Symbol foo = getGlobalVar(table, "foo");
+    assertThat(foo).isNotNull();
+    assertNode(table.getReferenceList(foo).get(0).getNode()).hasCharno(14);
+
+    Symbol fooBar = getGlobalVar(table, "foo.bar");
+    assertThat(fooBar).isNotNull();
+    assertNode(table.getReferenceList(fooBar).get(0).getNode()).hasCharno(18);
+
+    Symbol fooBarBaz = getGlobalVar(table, "foo.bar.Baz");
+    assertThat(fooBarBaz).isNotNull();
+    assertNode(table.getReferenceList(fooBarBaz).get(0).getNode()).hasCharno(37);
+  }
+
+  @Test
   public void testGlobalThisPropertyReferences() {
     SymbolTable table = createSymbolTable("/** @constructor */ function Foo() {} this.Foo;");
 

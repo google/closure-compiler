@@ -79,6 +79,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_SET_TEST_ONLY = QualifiedName.of("goog.setTestOnly");
 
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
+
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
@@ -5346,6 +5348,14 @@ public final class NodeUtil {
     // returning (int)d does not work as d can be outside int range
     // but the result must always be 32 lower bits of l
     return (int) l;
+  }
+
+  public static boolean isGoogProvideCall(Node n) {
+    if (isExprCall(n)) {
+      Node target = n.getFirstFirstChild();
+      return GOOG_PROVIDE.matches(target);
+    }
+    return false;
   }
 
   public static boolean isGoogModuleCall(Node n) {
