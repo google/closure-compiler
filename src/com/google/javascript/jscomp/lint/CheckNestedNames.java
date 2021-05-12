@@ -157,6 +157,11 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
 
   private DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
     checkArgument(lhs.isFirstChildOf(parent), lhs);
+    // Handle `/** @typedef {...} */` X.Y` or `/** @const */ X.Y = SomeTypeDefName`
+    if (lhs.getTypedefTypeProp() != null) {
+      return DeclarationKind.TYPEDEF;
+    }
+
     JSType type = lhs.getJSType();
     if (type != null) {
       // check whether it's an enum, interface or typedef first.
@@ -164,18 +169,7 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
         return DeclarationKind.ENUM;
       } else if (type.isInterface()) {
         return DeclarationKind.INTERFACE;
-      }
-    }
-
-    // Handle `/** @typedef {...} */` X.Y` or `/** @const */ X.Y = SomeTypeDefName`
-    if (lhs.getTypedefTypeProp() != null) {
-      return DeclarationKind.TYPEDEF;
-    }
-
-    if (parent.isAssign()) {
-      Node rhs = parent.getLastChild();
-      if (rhs.isClass()) {
-        // `X.Y = class {...}`
+      } else if (type.isConstructor()) {
         return DeclarationKind.CLASS;
       }
     }

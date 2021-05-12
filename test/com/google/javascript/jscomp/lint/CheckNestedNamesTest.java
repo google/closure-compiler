@@ -132,7 +132,14 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
   @Test
   public void testNoAnnotations() {
     // tests `X.Y = ...` where `X.Y` is missing the @typedef/@interface/@enum annotation
+    nestedNameWarning("goog.module('a'); class C {}; class D {}; /** @const */ C.C = D;");
     nestedNameWarning("goog.module('a'); class C {}; C.C = class {};");
+
+    nestedNameWarning(
+        "goog.module('a'); class C {}; /** @constructor */ function D() {}; /** @const */ C.C ="
+            + " D;");
+    noWarning("goog.module('a'); class C {}; function D() {}; /** @const */ C.C = D;");
+
     nestedNameWarning("goog.module('a'); class C {}; /** @enum */ E = {}; C.E = E;");
     nestedNameWarning("goog.module('a'); class C {}; /** @interface */ I = class {}; C.I = I;");
 
