@@ -18,18 +18,19 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -69,6 +70,26 @@ class StripCode implements CompilerPass {
       DiagnosticType.error("JSC_STRIP_ASSIGNMENT_ERROR", "Unable to strip assignment to {0}");
 
   /**
+   * Returns a stream containing `s` and, if `s` contains a ".", also all the possible collapsed
+   * forms of `s`. (e.g. for `'a.b.c'` we generate `'a$b.c'` and `'a$b$c'`)
+   *
+   * <p>StripCode now runs after `CollapseProperties`, so it needs to look for both the original and
+   * collapsed versions of qualified names.
+   */
+  private static Stream<String> toStreamWithCollapsedVersions(String s) {
+    final ArrayList<String> possibleForms = new ArrayList<>();
+    possibleForms.add(s);
+    final char[] chars = s.toCharArray();
+    for (int i = 0; i < chars.length; ++i) {
+      if (chars[i] == '.') {
+        chars[i] = '$';
+        possibleForms.add(new String(chars));
+      }
+    }
+    return possibleForms.stream();
+  }
+
+  /**
    * Creates an instance.
    *
    * @param compiler The compiler
@@ -82,49 +103,48 @@ class StripCode implements CompilerPass {
 
     this.compiler = compiler;
 
-    this.stripNameSuffixes = stripNameSuffixes;
-    this.stripNamePrefixes = stripNamePrefixes;
+    this.stripNameSuffixes =
+        stripNameSuffixes.stream()
+            .flatMap(StripCode::toStreamWithCollapsedVersions)
+            .collect(toImmutableSet());
+    this.stripNamePrefixes =
+        stripNamePrefixes.stream()
+            .flatMap(StripCode::toStreamWithCollapsedVersions)
+            .collect(toImmutableSet());
 
+    Stream<String> stripTypesStream = stripTypes.stream();
     // Add "tweak" class stripping if requested
+    if (enableTweakStripping) {
+      stripTypesStream = Stream.concat(stripTypesStream, Stream.of("goog.tweak"));
+    }
     ImmutableSet<String> stripTypesAdjusted =
-        maybeEnableTweakStripping(enableTweakStripping, stripTypes);
+        stripTypesStream
+            .flatMap(StripCode::toStreamWithCollapsedVersions)
+            .collect(toImmutableSet());
 
     // Iteration overhead was a high cost in this pass. Using a native array
     // is trivial and avoid those costs.
     this.stripTypesList = stripTypesAdjusted.toArray(new String[0]);
 
-    // Always strip types that defined on a type that is being stripped, otherwise the
-    // resulting code will be invalid, so add "prefix" stripping that isn't a partial name.
+    // We want to strip types that are defined on a type that is being stripped, otherwise the
+    // resulting code will be invalid. So, we'll also check for prefixes that indicate such child
+    // names.
     // TODO(johnlenz): I'm not sure what the original intent of "type prefix" stripping was.
     // Verify that we can always assume a complete namespace and simplify this logic.
-    HashSet<String> stripTypePrefixes = new HashSet<>();
-    for (String type : stripTypesAdjusted) {
-      stripTypePrefixes.add(type + ".");
-    }
-    this.stripTypePrefixesList = stripTypePrefixes.toArray(new String[0]);
+    this.stripTypePrefixesList =
+        // look for both non-collapsed and collapsed child names
+        stripTypesAdjusted.stream()
+            .flatMap(s -> Stream.of(s + ".", s + "$"))
+            .toArray(String[]::new);
 
     // Precalculate the lowercase versions of the string to avoid repeated
     // lowercase conversions.
-    ArrayList<String> stripNamePrefixesTemp = new ArrayList<>();
-    for (String stripName : stripNamePrefixes) {
-      stripNamePrefixesTemp.add(stripName.toLowerCase(Locale.ROOT));
-    }
-    this.stripNamePrefixesLowerCaseList = stripNamePrefixesTemp.toArray(new String[0]);
+    this.stripNamePrefixesLowerCaseList =
+        this.stripNamePrefixes.stream().map(s -> s.toLowerCase(Locale.ROOT)).toArray(String[]::new);
 
-    ArrayList<String> stripNameSuffixesTemp = new ArrayList<>();
-    for (String stripName : stripNameSuffixes) {
-      stripNameSuffixesTemp.add(stripName.toLowerCase(Locale.ROOT));
-    }
-    this.stripNameSuffixesLowerCaseList = stripNameSuffixesTemp.toArray(new String[0]);
-  }
-
-  /** Enables stripping of goog.tweak functions. */
-  private ImmutableSet<String> maybeEnableTweakStripping(
-      boolean enableTweakStripping, ImmutableSet<String> types) {
-    if (enableTweakStripping) {
-      return ImmutableSet.<String>builder().addAll(types).add("goog.tweak").build();
-    }
-    return types;
+    this.stripNameSuffixesLowerCaseList =
+        this.stripNameSuffixes.stream().map(s -> s.toLowerCase(Locale.ROOT)).toArray(String[]::new);
+    ;
   }
 
   @Override
@@ -169,12 +189,33 @@ class StripCode implements CompilerPass {
   }
 
   /** A callback that strips debug code from a JavaScript parse tree. */
-  private class Strip extends AbstractPostOrderCallback {
+  private class Strip implements NodeTraversal.Callback {
 
     private final LogFile decisionsLog;
 
     private Strip(LogFile decisionsLog) {
       this.decisionsLog = decisionsLog;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      // Here we check for cases where we're going to remove a large chunk of code,
+      // and so should not traverse into it to avoid both wasting time and causing
+      // problems with logic duplication.
+      switch (n.getToken()) {
+        case CALL:
+        case NEW:
+          // If we're removing the whole call / new
+          if (isMethodOrCtorCallThatTriggersRemoval(t, n, parent)) {
+            decisionsLog.log(() -> "removing function call");
+            replaceHighestNestedCallWithNull(t, n, parent);
+            return false;
+          } else {
+            return true;
+          }
+        default:
+          return true;
+      }
     }
 
     @Override
@@ -205,17 +246,12 @@ class StripCode implements CompilerPass {
           maybeEliminateAssignmentByLvalueName(t, n, parent);
           break;
 
-        case CALL:
-        case NEW:
-          maybeRemoveCall(t, n, parent);
-          break;
-
         case OBJECTLIT:
           eliminateKeysWithStripNamesFromObjLit(t, n);
           break;
 
         case EXPR_RESULT:
-          maybeEliminateExpressionByName(t, n, parent);
+          maybeEliminateExpressionByName(n);
           break;
 
         case CLASS:
@@ -243,13 +279,48 @@ class StripCode implements CompilerPass {
         if (nameNode.isDestructuringLhs()) {
           continue;
         }
+        checkState(nameNode.isName(), nameNode);
         String name = nameNode.getString();
-        if (isStripName(name) || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
-          decisionsLog.log(() -> name + ": removing name");
+        // If this variable represents a collapsed property, it's the original property name we're
+        // supposed to be matching against.
+        String possibleStripName = name.contains("$") ? name.replaceAll(".*\\$", "") : name;
+        if (isStripName(possibleStripName)
+            || qualifiedNameBeginsWithStripType(nameNode)
+            || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
           // Remove the NAME.
           varsToRemove.put(name, name);
-          nameNode.detach();
-          NodeUtil.markFunctionsDeleted(nameNode, compiler);
+          if (name.contains("$")) {
+            // We need to be careful with this code pattern that appears after
+            // collapsing properties.
+            // ```javascript
+            // /** @constructor */
+            // var a$b$C = function() {
+            //   this.nonStrippedName = a$b$C$strippedByNameOrValue;
+            // };
+            // var a$b$C$strippedByNameOrValue = strippedFunction();
+            // ```
+            // Note that the declaration of `a$b$C$nonStrippedByNameOrValue` will be visited
+            // **after** its first use, so it's too late to go back and remove the
+            // reference (without restructuring this class quite a bit). Instead,
+            // we'll preserve here the behavior you would get before collapsing and
+            // just replace the rhs with `null`.
+            decisionsLog.log(() -> name + ": initialize with null (" + possibleStripName + ")");
+            if (nameNode.hasChildren()) {
+              replaceWithNull(nameNode.getOnlyChild());
+            } else {
+              // `var my$name = null;` is a bit easier to optimize away than
+              // `var my$name;`, because we can clearly see that it is initialized, so we have
+              // a value to inline in later passes.
+              nameNode.addChildToFront(IR.nullNode().srcref(nameNode));
+            }
+            t.reportCodeChange();
+          } else {
+            // Assume that the declaration comes before any reference.
+            // We will remove the references when we see them later.
+            decisionsLog.log(() -> name + ": removing declaration");
+            nameNode.detach();
+            NodeUtil.markFunctionsDeleted(nameNode, compiler);
+          }
         }
       }
       if (!n.hasChildren()) {
@@ -320,16 +391,27 @@ class StripCode implements CompilerPass {
             } else {
               // The var reference is the r-value. Replace it with null.
               decisionsLog.log(() -> n.getQualifiedName() + ": replacing rhs reference with null");
-              replaceWithNull(n, parent);
+              replaceWithNull(n);
               t.reportCodeChange();
             }
+          }
+          break;
+
+        case NEW:
+        case CALL:
+          if (!n.isFirstChildOf(parent) && isReferenceToRemovedVar(t, n)) {
+            // NOTE: the callee is handled when we visit the CALL or NEW node
+            decisionsLog.log(
+                () -> n.getQualifiedName() + ": replacing parameter reference with null");
+            replaceWithNull(n);
+            t.reportCodeChange();
           }
           break;
 
         default:
           if (isReferenceToRemovedVar(t, n)) {
             decisionsLog.log(() -> n.getQualifiedName() + ": replacing reference with null");
-            replaceWithNull(n, parent);
+            replaceWithNull(n);
             t.reportCodeChange();
           }
           break;
@@ -347,9 +429,12 @@ class StripCode implements CompilerPass {
       Node ancestorParent;
       while (true) {
         ancestorParent = ancestor.getParent();
+        if (ancestorParent == null) {
+          return; // the call was already removed from the AST
+        }
 
         if (ancestor.getFirstChild() != ancestorChild) {
-          replaceWithNull(ancestorChild, ancestor);
+          replaceWithNull(ancestorChild);
           break;
         }
         if (ancestor.isExprResult()) {
@@ -362,7 +447,7 @@ class StripCode implements CompilerPass {
           break;
         }
         if (!NodeUtil.isNormalGet(ancestor) && !ancestor.isCall()) {
-          replaceWithNull(ancestorChild, ancestor);
+          replaceWithNull(ancestorChild);
           break;
         }
 
@@ -398,8 +483,12 @@ class StripCode implements CompilerPass {
         if (parent.isExprResult()) {
           decisionsLog.log(() -> lvalue.getString() + ": removing assignment statement");
           Node grandparent = parent.getParent();
-          replaceWithEmpty(parent, grandparent);
-          compiler.reportChangeToEnclosingScope(grandparent);
+          // the assignment may already have been removed when visiting either the lhs
+          // or the rhs.
+          if (grandparent != null) {
+            replaceWithEmpty(parent, grandparent);
+            compiler.reportChangeToEnclosingScope(grandparent);
+          }
         } else {
           t.report(n, STRIP_ASSIGNMENT_ERROR, lvalue.getQualifiedName());
         }
@@ -418,14 +507,17 @@ class StripCode implements CompilerPass {
      * null;) This expression is not an assignment and so will not be caught by
      * maybeEliminateAssignmentByLvalueName.
      *
-     * @param t The traversal
      * @param n An EXPR_RESULT node
-     * @param parent {@code n}'s parent
      */
-    void maybeEliminateExpressionByName(NodeTraversal t, Node n, Node parent) {
+    void maybeEliminateExpressionByName(Node n) {
       // EXPR_RESULT
       //   expression
       checkArgument(n.isExprResult(), n);
+      final Node parent = n.getParent();
+      if (parent == null) {
+        // This EXPR_RESULT was already removed when one of its child nodes was visited.
+        return;
+      }
       Node expression = n.getFirstChild();
       if (nameIncludesFieldNameToStrip(expression)
           || qualifiedNameBeginsWithStripType(expression)) {
@@ -433,24 +525,6 @@ class StripCode implements CompilerPass {
             () -> expression.getString() + ": removing property declaration statement");
         replaceWithEmpty(n, parent);
         compiler.reportChangeToEnclosingScope(parent);
-      }
-    }
-
-    /**
-     * Removes a method call if {@link #isMethodOrCtorCallThatTriggersRemoval} indicates that it
-     * should be removed.
-     *
-     * @param t The traversal
-     * @param n A CALL node
-     * @param parent {@code n}'s parent
-     */
-    void maybeRemoveCall(NodeTraversal t, Node n, Node parent) {
-      // CALL/NEW
-      //   function
-      //   arguments
-      if (isMethodOrCtorCallThatTriggersRemoval(t, n, parent)) {
-        decisionsLog.log(() -> "removing function call");
-        replaceHighestNestedCallWithNull(t, n, parent);
       }
     }
 
@@ -503,7 +577,7 @@ class StripCode implements CompilerPass {
           if (NodeUtil.isStatementParent(parent)) {
             replaceWithEmpty(classNode, parent);
           } else {
-            replaceWithNull(classNode, parent);
+            replaceWithNull(classNode);
           }
           t.reportCodeChange();
           return;
@@ -614,11 +688,7 @@ class StripCode implements CompilerPass {
       //   ... (arguments)
 
       Node function = n.getFirstChild();
-      if (function == null || !function.isGetProp()) {
-        // We are only interested in calls on object references that are
-        // properties. We don't need to eliminate method calls on variables
-        // that are getting removed, since that's already done by the code
-        // that removes all references to those variables.
+      if (function == null || !function.isQualifiedName()) {
         return false;
       }
 
@@ -634,6 +704,9 @@ class StripCode implements CompilerPass {
         }
       }
 
+      if (function.isName() && isStripName(function.getString())) {
+        return true;
+      }
       Node callee = function.getFirstChild();
       return nameIncludesFieldNameToStrip(callee)
           || nameIncludesFieldNameToStrip(function)
@@ -646,10 +719,19 @@ class StripCode implements CompilerPass {
      *     "foo.stripMe.bar", "(foo.bar).stripMe", etc.
      */
     boolean nameIncludesFieldNameToStrip(@Nullable Node n) {
-      if (n != null && n.isGetProp()) {
+      if (n == null) {
+        return false;
+      } else if (n.isGetProp()) {
         return isStripName(n.getString()) || nameIncludesFieldNameToStrip(n.getFirstChild());
+      } else if (n.isName()) {
+        String nameString = n.getString();
+        // CollapseProperties may have turned "a.b.c" into "a$b$c",
+        // so split that up and match its parts.
+        return nameString.contains("$")
+            && Arrays.stream(nameString.split("\\$")).anyMatch(this::isStripName);
+      } else {
+        return false;
       }
-      return false;
     }
 
     /**
@@ -741,9 +823,8 @@ class StripCode implements CompilerPass {
      * Replaces a node with a NULL node. This is useful where a value is expected.
      *
      * @param n A node
-     * @param parent {@code n}'s parent
      */
-    void replaceWithNull(Node n, Node parent) {
+    void replaceWithNull(Node n) {
       decisionsLog.log(() -> "replace with null: " + n.getLocation());
       n.replaceWith(IR.nullNode());
       NodeUtil.markFunctionsDeleted(n, compiler);

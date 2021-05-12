@@ -577,17 +577,17 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineTypeAliases);
     }
 
+    // Collapsing properties can undo constant inlining, so we do this before
+    // the main optimization loop.
+    if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
+      passes.add(collapseProperties);
+    }
+
     if (options.getTweakProcessing().shouldStrip()
         || !options.stripTypes.isEmpty()
         || !options.stripNameSuffixes.isEmpty()
         || !options.stripNamePrefixes.isEmpty()) {
       passes.add(stripCode);
-    }
-
-    // Collapsing properties can undo constant inlining, so we do this before
-    // the main optimization loop.
-    if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
-      passes.add(collapseProperties);
     }
 
     if (options.replaceIdGenerators) {
@@ -2939,4 +2939,3 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getOptions().getChunkOutputType()))
           .build();
 }
-
