@@ -31,6 +31,11 @@ var ResizeObserverCallback;
 var ResizeObserverOptions;
 
 /**
+ * @typedef {{blockSize: number, inlineSize: number}}
+ */
+var ResizeObserverSize;
+
+/**
  * @constructor
  * @param {!ResizeObserverCallback} callback
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/ResizeObserver
@@ -65,13 +70,25 @@ ResizeObserver.prototype.disconnect = function() {};
 function ResizeObserverEntry() {}
 
 /**
- * @const {!Element}
- * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/target
+ * @const {!Array<!ResizeObserverSize>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/borderBoxSize
  */
-ResizeObserverEntry.prototype.target;
+ResizeObserverEntry.prototype.borderBoxSize;
+
+/**
+ * @const {!Array<!ResizeObserverSize>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/contentBoxSize
+ */
+ResizeObserverEntry.prototype.contentBoxSize;
 
 /**
  * @const {!DOMRectReadOnly}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/contentRect
  */
 ResizeObserverEntry.prototype.contentRect;
+
+/**
+ * @const {!Element}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/target
+ */
+ResizeObserverEntry.prototype.target;
