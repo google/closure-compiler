@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
@@ -282,6 +283,7 @@ class StripCode implements CompilerPass {
           //   NAME
           //   NUMBER|STRING|NAME|...
           if (parent.getFirstChild() == n && isReferenceToRemovedVar(t, n)) {
+            decisionsLog.log(() -> n.getString() + ": removing getelem/getprop/call chain");
             replaceHighestNestedCallWithNull(t, parent, parent.getParent());
           }
           break;
@@ -301,6 +303,8 @@ class StripCode implements CompilerPass {
           if (isReferenceToRemovedVar(t, n)) {
             if (parent.getFirstChild() == n) {
               Node grandparent = parent.getParent();
+              decisionsLog.log(
+                  () -> n.getQualifiedName() + ": removing assignment to stripped var");
               if (grandparent.isExprResult()) {
                 // Remove the assignment.
                 Node greatGrandparent = grandparent.getParent();
@@ -315,6 +319,7 @@ class StripCode implements CompilerPass {
               }
             } else {
               // The var reference is the r-value. Replace it with null.
+              decisionsLog.log(() -> n.getQualifiedName() + ": replacing rhs reference with null");
               replaceWithNull(n, parent);
               t.reportCodeChange();
             }
@@ -323,6 +328,7 @@ class StripCode implements CompilerPass {
 
         default:
           if (isReferenceToRemovedVar(t, n)) {
+            decisionsLog.log(() -> n.getQualifiedName() + ": replacing reference with null");
             replaceWithNull(n, parent);
             t.reportCodeChange();
           }
@@ -390,6 +396,7 @@ class StripCode implements CompilerPass {
         // safe to eliminate assignment in complex expressions,
         // e.g. in ((x = 7) + 8)
         if (parent.isExprResult()) {
+          decisionsLog.log(() -> lvalue.getString() + ": removing assignment statement");
           Node grandparent = parent.getParent();
           replaceWithEmpty(parent, grandparent);
           compiler.reportChangeToEnclosingScope(grandparent);
@@ -418,17 +425,14 @@ class StripCode implements CompilerPass {
     void maybeEliminateExpressionByName(NodeTraversal t, Node n, Node parent) {
       // EXPR_RESULT
       //   expression
+      checkArgument(n.isExprResult(), n);
       Node expression = n.getFirstChild();
       if (nameIncludesFieldNameToStrip(expression)
           || qualifiedNameBeginsWithStripType(expression)) {
-        if (parent.isExprResult()) {
-          Node grandparent = parent.getParent();
-          replaceWithEmpty(parent, grandparent);
-          compiler.reportChangeToEnclosingScope(grandparent);
-        } else {
-          replaceWithEmpty(n, parent);
-          compiler.reportChangeToEnclosingScope(parent);
-        }
+        decisionsLog.log(
+            () -> expression.getString() + ": removing property declaration statement");
+        replaceWithEmpty(n, parent);
+        compiler.reportChangeToEnclosingScope(parent);
       }
     }
 
@@ -445,6 +449,7 @@ class StripCode implements CompilerPass {
       //   function
       //   arguments
       if (isMethodOrCtorCallThatTriggersRemoval(t, n, parent)) {
+        decisionsLog.log(() -> "removing function call");
         replaceHighestNestedCallWithNull(t, n, parent);
       }
     }
@@ -489,11 +494,12 @@ class StripCode implements CompilerPass {
      */
     void maybeEliminateClassByNameOrExtends(NodeTraversal t, Node classNode, Node parent) {
       Node nameNode = NodeUtil.getNameNode(classNode);
-      String className = "<anonymous>";
+      final String className;
       // Replace class with null if it is a strip type
       if (nameNode != null && nameNode.isQualifiedName()) {
         className = nameNode.getQualifiedName();
         if (qualifiedNameBeginsWithStripType(className)) {
+          decisionsLog.log(() -> className + ": removing class");
           if (NodeUtil.isStatementParent(parent)) {
             replaceWithEmpty(classNode, parent);
           } else {
@@ -502,6 +508,8 @@ class StripCode implements CompilerPass {
           t.reportCodeChange();
           return;
         }
+      } else {
+        className = "<anonymous>";
       }
 
       // If the class is not a strip type, the superclass also cannot be a strip type
@@ -660,6 +668,7 @@ class StripCode implements CompilerPass {
         // It's okay to strip a type that inherits from a non-stripped type
         // e.g. goog.inherits(goog.debug.Logger, Object)
         if (qualifiedNameBeginsWithStripType(classes.subclassName)) {
+          logStripName(classes.subclassName, "class defining call");
           return true;
         }
 
@@ -750,6 +759,5 @@ class StripCode implements CompilerPass {
       NodeUtil.removeChild(parent, n);
       NodeUtil.markFunctionsDeleted(n, compiler);
     }
-
   }
 }
