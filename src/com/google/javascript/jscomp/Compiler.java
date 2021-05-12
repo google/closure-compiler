@@ -1702,7 +1702,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)
-          || options.processCommonJSModules) {
+          || options.getProcessCommonJSModules()) {
         initializeModuleLoader();
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
@@ -1712,9 +1712,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (options.getDependencyOptions().needsManagement()) {
         findModulesFromEntryPoints(
             options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
-            options.processCommonJSModules);
+            options.getProcessCommonJSModules());
       } else if (options.needsTranspilationFrom(FeatureSet.ES2015_MODULES)
-          || options.processCommonJSModules) {
+          || options.getProcessCommonJSModules()) {
         if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
           parsePotentialModules(moduleGraph.getAllInputs());
         }

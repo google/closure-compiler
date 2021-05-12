@@ -44,6 +44,16 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
+
+  @Override
+  protected CompilerOptions getOptions(DiagnosticGroup... typesOfGuard) {
+    CompilerOptions options = super.getOptions(typesOfGuard);
+
+    // TODO(b/144593112): remove this option
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    return options;
+  }
+
   @Test
   public void testInfer() {
     CompilerOptions options = getOptions(DiagnosticGroups.ACCESS_CONTROLS);

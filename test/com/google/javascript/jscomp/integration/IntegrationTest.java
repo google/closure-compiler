@@ -3386,6 +3386,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     test(
         options,

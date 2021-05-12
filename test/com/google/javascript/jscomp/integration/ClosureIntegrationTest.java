@@ -272,6 +272,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     DiagnosticGroup[] warnings = {
       DiagnosticGroups.INVALID_DEFINES,
       DiagnosticGroups.INVALID_DEFINES,
@@ -581,6 +583,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testTypedefProvides() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     test(
         options,
         lines(
@@ -700,6 +704,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     options.setClosurePass(true);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     test(
         options,
@@ -732,6 +738,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     test(
         options,
         lines("var goog = {};", "goog.provide('foo');", "function f() { foo = {};}"),
@@ -1104,6 +1112,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     // This is a very weird pattern, but we need to remove the usages before we remove support
     test(
@@ -1269,6 +1279,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     externs =
         ImmutableList.<SourceFile>builder()

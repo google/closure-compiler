@@ -823,7 +823,7 @@ public class CompilerOptions implements Serializable {
   boolean transformAMDToCJSModules = false;
 
   /** Rewrite CommonJS modules so that they can be concatenated together. */
-  boolean processCommonJSModules = false;
+  private boolean processCommonJSModules = false;
 
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
@@ -1160,7 +1160,7 @@ public class CompilerOptions implements Serializable {
   //  - run module rewriting after typechecking
   //  - don't run module rewriting, but if it's reenabled, run it before typechecking
   //  - don't run module rewriting, but if it's reenabled, run it after typechecking
-  private boolean rewriteModulesBeforeTypechecking = true;
+  private boolean rewriteModulesBeforeTypechecking = false;
   private boolean enableModuleRewriting = true;
 
   /** Whether to enable the bad module rewriting before typechecking that we want to get rid of */
@@ -1169,7 +1169,8 @@ public class CompilerOptions implements Serializable {
   }
 
   boolean shouldRewriteModulesBeforeTypechecking() {
-    return this.enableModuleRewriting && this.rewriteModulesBeforeTypechecking;
+    return this.enableModuleRewriting
+        && (this.rewriteModulesBeforeTypechecking || this.processCommonJSModules);
   }
 
   /**
@@ -1255,7 +1256,7 @@ public class CompilerOptions implements Serializable {
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
-    rewriteModulesBeforeTypechecking = true;
+    rewriteModulesBeforeTypechecking = false;
     enableModuleRewriting = true;
 
     // Checks

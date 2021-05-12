@@ -500,6 +500,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testTypedefProvides() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+
     test(
         options,
         lines(
@@ -958,6 +961,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+
     String code =
         lines(
             "var goog; goog.provide('i.am.on.a.Horse');",

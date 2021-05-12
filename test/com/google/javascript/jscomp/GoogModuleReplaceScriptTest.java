@@ -26,6 +26,15 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
+  @Override
+  protected CompilerOptions getOptions(DiagnosticGroup... typesOfGuard) {
+    CompilerOptions options = super.getOptions(typesOfGuard);
+
+    // TODO(b/144593112): remove this option
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    return options;
+  }
+
   private void runNoOpReplaceScriptNoWarnings(List<String> sources) {
     for (int i = 0; i < sources.size(); i++) {
       runReplaceScriptNoWarnings(sources, sources.get(i), i);

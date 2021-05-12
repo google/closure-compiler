@@ -193,7 +193,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getWhitespaceOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.processCommonJSModules) {
+    if (options.getProcessCommonJSModules()) {
       passes.add(rewriteCommonJsModules);
     } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       passes.add(rewriteScriptsToEs6Modules);
@@ -249,7 +249,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
-    if (!options.processCommonJSModules
+    if (!options.getProcessCommonJSModules()
         && options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteScriptsToEs6Modules);
     }
@@ -258,7 +258,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(gatherModuleMetadataPass);
     checks.add(createModuleMapPass);
 
-    if (options.processCommonJSModules) {
+    if (options.getProcessCommonJSModules()) {
       checks.add(rewriteCommonJsModules);
     }
 
@@ -293,7 +293,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(declaredGlobalExternsOnWindow);
 
-    if (!options.processCommonJSModules) {
+    if (!options.getProcessCommonJSModules()) {
       // TODO(ChadKillingsworth): move CommonJS module rewriting after VarCheck
       checks.add(checkVars);
     }
@@ -347,7 +347,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(createSyntheticBlocks);
     }
 
-    if (options.processCommonJSModules) {
+    if (options.getProcessCommonJSModules()) {
       // TODO(ChadKillingsworth): remove this branch.
       checks.add(checkVars);
     }
@@ -2874,7 +2874,7 @@ public final class DefaultPassConfig extends PassConfig {
                 // Force creation of the synthetic input so that we create metadata for it
                 compiler.getSynthesizedExternsInput();
                 return new GatherModuleMetadata(
-                    compiler, options.processCommonJSModules, options.moduleResolutionMode);
+                    compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
               })
           .setFeatureSetForChecks()
           .build();

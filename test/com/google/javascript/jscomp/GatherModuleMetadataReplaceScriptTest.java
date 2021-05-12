@@ -26,6 +26,16 @@ import org.junit.runners.JUnit4;
 /** Tests the hotswap functionality of {@link GatherModuleMetadata}. */
 @RunWith(JUnit4.class)
 public class GatherModuleMetadataReplaceScriptTest extends BaseReplaceScriptTestCase {
+
+  @Override
+  protected CompilerOptions getOptions(DiagnosticGroup... typesOfGuard) {
+    CompilerOptions options = super.getOptions(typesOfGuard);
+
+    // TODO(b/144593112): remove this option
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    return options;
+  }
+
   @Test
   public void testAddScript() {
     CompilerOptions options = getOptions();

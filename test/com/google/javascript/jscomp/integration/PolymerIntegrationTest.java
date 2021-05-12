@@ -88,6 +88,8 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
 
     test(
@@ -261,6 +263,8 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setClosurePass(true);
+    // TODO(b/144593112): remove this option
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
     test(
         options,
@@ -340,6 +344,8 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
 
     test(

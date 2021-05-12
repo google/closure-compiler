@@ -449,7 +449,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
-    options.processCommonJSModules = config.processCommonJSModules;
+    options.setProcessCommonJSModules(config.processCommonJSModules);
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
 
@@ -1158,7 +1158,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     boolean createCommonJsModules = false;
-    if (options.processCommonJSModules
+    if (options.getProcessCommonJSModules()
         && (config.module.size() == 1 && "auto".equals(config.module.get(0)))) {
       createCommonJsModules = true;
       config.module.remove(0);

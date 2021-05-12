@@ -1777,6 +1777,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.setContinueAfterErrors(flags.continueAfterErrors);
 
+    // TODO(b/144593112): remove this flag.
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
     }

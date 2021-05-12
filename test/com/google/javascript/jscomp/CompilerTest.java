@@ -1454,7 +1454,7 @@ public final class CompilerTest {
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
-    options.processCommonJSModules = true;
+    options.setProcessCommonJSModules(true);
     List<SourceFile> externs =
         ImmutableList.of(
             new TestExternsBuilder().addAlert().buildExternsFile("default_externs.js"));
