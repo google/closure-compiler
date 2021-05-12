@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import java.util.List;
@@ -67,14 +66,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           "JSC_MISSING_RETURN_JSDOC",
           "Function with non-trivial return must have JSDoc indicating the return type.{0}");
 
-  public static final DiagnosticType MUST_BE_PRIVATE =
-      DiagnosticType.disabled(
-          "JSC_MUST_BE_PRIVATE", "Properties ending with \"_\" must be marked @private");
-
-  public static final DiagnosticType MUST_HAVE_TRAILING_UNDERSCORE =
-      DiagnosticType.disabled(
-          "JSC_MUST_HAVE_TRAILING_UNDERSCORE", "Private property {0} should end with ''_''");
-
   public static final DiagnosticType OPTIONAL_PARAM_NOT_MARKED_OPTIONAL =
       DiagnosticType.disabled(
           "JSC_OPTIONAL_PARAM_NOT_MARKED_OPTIONAL",
@@ -110,11 +101,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           EXTERNS_FILES_SHOULD_BE_ANNOTATED,
           PREFER_BACKTICKS_TO_AT_SIGN_CODE);
 
-  public static final DiagnosticGroup UNDERSCORE_DIAGNOSTICS =
-      new DiagnosticGroup(MUST_BE_PRIVATE, MUST_HAVE_TRAILING_UNDERSCORE);
-
-  public static final DiagnosticGroup ALL_DIAGNOSTICS =
-      new DiagnosticGroup(LINT_DIAGNOSTICS, UNDERSCORE_DIAGNOSTICS);
+  public static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(LINT_DIAGNOSTICS);
 
   private final AbstractCompiler compiler;
 
@@ -194,18 +181,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         return;
       }
       name = lhs.getString();
-    }
-
-    if (jsDoc != null && name != null) {
-      if (compiler.getCodingConvention().isPrivate(name)
-          && !jsDoc.getVisibility().equals(Visibility.PRIVATE)
-          && jsDoc.containsDeclaration()) {
-        t.report(n, MUST_BE_PRIVATE);
-      } else if (compiler.getCodingConvention().hasPrivacyConvention()
-          && !compiler.getCodingConvention().isPrivate(name)
-          && jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
-        t.report(n, MUST_HAVE_TRAILING_UNDERSCORE, name);
-      }
     }
   }
 

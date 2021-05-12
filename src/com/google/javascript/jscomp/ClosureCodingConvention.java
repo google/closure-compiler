@@ -354,11 +354,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public boolean isPrivate(String name) {
-    return false;
-  }
-
-  @Override
   public ImmutableCollection<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableSet.<AssertionFunctionSpec>builder()
         .addAll(super.getAssertionFunctions())

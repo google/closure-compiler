@@ -86,13 +86,6 @@ public final class GoogleCodingConventionTest {
   }
 
   @Test
-  public void testPrivateName() {
-    assertThat(conv.isPrivate("a_")).isTrue();
-    assertThat(conv.isPrivate("a")).isFalse();
-    assertThat(conv.isPrivate("_a_")).isFalse();
-  }
-
-  @Test
   public void testEnumKey() {
     assertThat(conv.isValidEnumKey("A")).isTrue();
     assertThat(conv.isValidEnumKey("123")).isTrue();

@@ -142,23 +142,6 @@ public interface CodingConvention extends Serializable {
   public String getPackageName(StaticSourceFile source);
 
   /**
-   * Checks whether a name should be considered private. Private global
-   * variables and functions can only be referenced within the source file in
-   * which they are declared. Private properties and methods should only be
-   * accessed by the class that defines them.
-   *
-   * @param name The name of a global variable or function, or a method or
-   *     property.
-   * @return {@code true} if the name should be considered private.
-   */
-  public boolean isPrivate(String name);
-
-  /**
-   * Whether this CodingConvention includes a convention for what private names should look like.
-   */
-  public boolean hasPrivacyConvention();
-
-  /**
    * Checks if the given method defines a subclass relationship,
    * and if it does, returns information on that relationship. By default,
    * always returns null. Meant to be overridden by subclasses.

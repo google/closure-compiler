@@ -182,20 +182,4 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
       return lastSlash == -1 ? "" : name.substring(0, lastSlash);
     }
   }
-
-  /**
-   * {@inheritDoc}
-   *
-   * <p>In Google code, private names end with an underscore, and exported
-   * names are never considered private (see {@link #isExported}).
-   */
-  @Override
-  public boolean isPrivate(String name) {
-    return name.endsWith("_") && !name.endsWith("__") && !isExported(name);
-  }
-
-  @Override
-  public boolean hasPrivacyConvention() {
-    return true;
-  }
 }

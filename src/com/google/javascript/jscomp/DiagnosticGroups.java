@@ -214,9 +214,7 @@ public class DiagnosticGroups {
           CheckAccessControls.DEPRECATED_CLASS_REASON);
 
   public static final DiagnosticGroup UNDERSCORE =
-      DiagnosticGroups.registerGroup(
-          "underscore", // undocumented
-          CheckJSDocStyle.UNDERSCORE_DIAGNOSTICS);
+      DiagnosticGroups.registerDeprecatedGroup("underscore");
 
   public static final DiagnosticGroup VISIBILITY =
       DiagnosticGroups.registerGroup(
