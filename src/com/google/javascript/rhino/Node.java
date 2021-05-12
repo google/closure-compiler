@@ -275,7 +275,7 @@ public class Node {
 
     NumberNode(double number) {
       super(Token.NUMBER);
-      this.number = number;
+      this.setDouble(number);
     }
 
     @Override
@@ -283,7 +283,7 @@ public class Node {
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect);
       if (equiv) {
-        // Detect the difference between 0.0 vs -0.0, and various NaN values.
+        // Detect the difference between 0.0 vs -0.0.
         long thisBits = Double.doubleToRawLongBits(this.number);
         long thatBits = Double.doubleToRawLongBits(((NumberNode) node).number);
         return thisBits == thatBits;
@@ -1067,8 +1067,9 @@ public class Node {
     return ((NumberNode) this).number;
   }
 
-  public final void setDouble(double d) {
-    ((NumberNode) this).number = d;
+  public final void setDouble(double x) {
+    checkState(!Double.isNaN(x), x);
+    ((NumberNode) this).number = x;
   }
 
   public final BigInteger getBigInt() {

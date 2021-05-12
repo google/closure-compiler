@@ -1288,14 +1288,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
         return rv == null
             ? Tri.UNKNOWN
-            : tryAbstractEqualityComparison(peepholeOptimization, left, IR.number(rv));
+            : tryAbstractEqualityComparison(
+                peepholeOptimization, left, NodeUtil.numberNode(rv, right));
       }
       if ((leftValueType == ValueType.STRING && rightValueType == ValueType.NUMBER)
           || leftValueType == ValueType.BOOLEAN) {
         Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
         return lv == null
             ? Tri.UNKNOWN
-            : tryAbstractEqualityComparison(peepholeOptimization, IR.number(lv), right);
+            : tryAbstractEqualityComparison(
+                peepholeOptimization, NodeUtil.numberNode(lv, left), right);
       }
 
       if (leftValueType == ValueType.BIGINT || rightValueType == ValueType.BIGINT) {

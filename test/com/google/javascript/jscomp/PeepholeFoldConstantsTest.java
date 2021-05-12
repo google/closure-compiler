@@ -2118,15 +2118,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
             "|",
             "&",
             "^");
-    for (int iOperandA = 0; iOperandA < LITERAL_OPERANDS.size(); iOperandA++) {
-      for (int iOperandB = iOperandA;
-           iOperandB < LITERAL_OPERANDS.size();
-           iOperandB++) {
-        for (int iOp = 0; iOp < operators.size(); iOp++) {
-          String a = LITERAL_OPERANDS.get(iOperandA);
-          String b = LITERAL_OPERANDS.get(iOperandB);
-          String op = operators.get(iOp);
-
+    for (String a : LITERAL_OPERANDS) {
+      for (String b : LITERAL_OPERANDS) {
+        for (String op : operators) {
           // Test commutativity.
           assertSameResults(join(a, op, b), join(b, op, a));
         }
