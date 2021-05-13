@@ -1308,14 +1308,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   public final ImmutableList<TemplateType> getConstructorOnlyTemplateParameters() {
     checkState(this.isConstructor(), this);
 
-    /**
-     * Structural constructor types (e.g `function(new:Foo<T>)`) cannot have template params of
-     * their own.
-     */
-    if (this.source == null) {
-      return ImmutableList.of();
-    }
-
     // Within the `TemplateTypeMap` of a ctor type, the ctor only keys always appear after the
     // instance type keys.
     TemplateTypeMap map = getTemplateTypeMap();
@@ -1393,33 +1385,6 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
 
   public static Builder builder(JSTypeRegistry registry) {
     return new Builder(registry);
-  }
-
-  /** Copies all the information from another function type. */
-  public Builder toBuilder() {
-    Builder builder =
-        builder(this.registry)
-            .setGoogModuleId(this.getGoogModuleId())
-            .setName(this.getReferenceName())
-            .setNative(this.isNativeObjectType())
-            .setTemplateTypeMap(this.getTemplateTypeMap())
-            .withCanonicalRepresentation(this.getCanonicalRepresentation())
-            .setIsKnownAmbiguous(
-                this.constructorAmbiguity == ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR)
-            .withClosurePrimitiveId(this.getClosurePrimitive())
-            .withIsAbstract(this.isAbstract())
-            .withKind(this.getKind())
-            .withParameters(this.getParameters())
-            .withReturnType(this.getReturnType(), this.isReturnTypeInferred())
-            .withSourceNode(this.getSource())
-            .withTypeOfThis(this.getTypeOfThis())
-            .setTemplateParamCount(this.getTemplateParamCount());
-
-    if (this.isConstructor()) {
-      builder.withConstructorTemplateKeys(this.getConstructorOnlyTemplateParameters());
-    }
-
-    return builder;
   }
 
   /** A builder class for function and arrow types. */
@@ -1585,6 +1550,23 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     /** Sets the canonical representation of a constructor, if any */
     private Builder withCanonicalRepresentation(FunctionType representation) {
       this.canonicalRepresentation = representation;
+      return this;
+    }
+
+    /** Copies all the information from another function type. */
+    public Builder copyFromOtherFunction(FunctionType otherType) {
+      this.setName(otherType.getReferenceName())
+          .setNative(otherType.isNativeObjectType())
+          .setTemplateTypeMap(otherType.getTemplateTypeMap())
+          .setTemplateParamCount(otherType.getTemplateParamCount());
+      this.sourceNode = otherType.getSource();
+      this.parameters = otherType.getParameters();
+      this.returnType = otherType.getReturnType();
+      this.typeOfThis = otherType.getTypeOfThis();
+      this.kind = otherType.getKind();
+      this.returnTypeIsInferred = otherType.isReturnTypeInferred();
+      this.isAbstract = otherType.isAbstract();
+      this.primitiveId = otherType.getClosurePrimitive();
       return this;
     }
 

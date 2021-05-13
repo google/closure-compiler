@@ -1709,7 +1709,10 @@ public class JSTypeRegistry {
    */
   public FunctionType createFunctionTypeWithNewReturnType(
       FunctionType existingFunctionType, JSType returnType) {
-    return existingFunctionType.toBuilder().withReturnType(returnType).build();
+    return FunctionType.builder(this)
+        .copyFromOtherFunction(existingFunctionType)
+        .withReturnType(returnType)
+        .build();
   }
 
   private FunctionType createNativeFunctionType(

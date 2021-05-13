@@ -170,7 +170,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
     JSType beforeThis = type.getTypeOfThis();
     JSType afterThis = coerseToThisType(beforeThis.visit(this));
-    if (!identical(beforeThis, afterThis)) {
+    if (beforeThis != afterThis) {
       changed = true;
     }
 
@@ -184,7 +184,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     for (FunctionType.Parameter paramNode : type.getParameters()) {
       JSType beforeParamType = paramNode.getJSType();
       JSType afterParamType = beforeParamType.visit(this);
-      if (!identical(beforeParamType, afterParamType)) {
+      if (beforeParamType != afterParamType) {
         changed = true;
       }
       if (paramNode.isOptional()) {
@@ -197,11 +197,16 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     }
 
     if (changed) {
-      return type.toBuilder()
-          .withParameters(paramBuilder.build())
-          .withReturnType(afterReturn)
-          .withTypeOfThis(afterThis)
-          .build();
+      FunctionType ft =
+          FunctionType.builder(registry)
+              .withKind(type.getKind())
+              .withParameters(paramBuilder.build())
+              .withReturnType(afterReturn)
+              .withTypeOfThis(afterThis)
+              .withTemplateKeys(type.getTypeParameters())
+              .withClosurePrimitiveId(type.getClosurePrimitive())
+              .build();
+      return ft;
     }
 
     return type;
