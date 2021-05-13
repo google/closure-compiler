@@ -5231,12 +5231,11 @@ google.maps.MarkerOptions.prototype.map;
 google.maps.MarkerOptions.prototype.opacity;
 
 /**
- * Optimization renders many markers as a single static element. Disable
- * optimized rendering for animated GIFs or PNGs, or when each marker must be
- * rendered as a separate DOM element (advanced usage only). By default, the
- * Maps JavaScript API will decide whether or not a Marker will be optimized.
- * Not all Markers can be optimized; in some situations, the Maps JavaScript API
- * may need to render Markers without optimization.
+ * Optimization enhances performance by rendering many markers as a single
+ * static element. This is useful in cases where a large number of markers is
+ * required. Read more about <a
+ * href="https://developers.google.com/maps/documentation/javascript/markers#optimize">marker
+ * optimization</a>.
  * @type {?boolean|undefined}
  */
 google.maps.MarkerOptions.prototype.optimized;
