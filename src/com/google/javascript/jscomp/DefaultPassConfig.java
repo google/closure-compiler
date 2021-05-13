@@ -567,21 +567,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clAssertRemovalPass);
     }
 
-    // Inline aliases so that following optimizations don't have to understand alias chains.
-    if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
-      // This helps AggressiveInlineAliases / CollapseProperties with static inheritance
-      passes.add(convertStaticInheritance);
-      passes.add(aggressiveInlineAliases);
-    } else {
-      // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
-      passes.add(inlineTypeAliases);
-    }
-
-    // Collapsing properties can undo constant inlining, so we do this before
-    // the main optimization loop.
-    if (options.getPropertyCollapseLevel() != PropertyCollapseLevel.NONE) {
-      passes.add(collapseProperties);
-    }
+    passes.add(inlineAndCollapseProperties);
 
     if (options.getTweakProcessing().shouldStrip()
         || !options.stripTypes.isEmpty()
@@ -1374,28 +1360,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
-  private final PassFactory convertStaticInheritance =
-      PassFactory.builder()
-          .setName("concretizeStaticInheritance")
-          .setInternalFactory(ConcretizeStaticInheritanceForInlining::new)
-          .setFeatureSetForOptimizations()
-          .build();
-
-  private final PassFactory inlineTypeAliases =
-      PassFactory.builder()
-          .setName(PassNames.INLINE_TYPE_ALIASES)
-          .setInternalFactory(InlineAliases::new)
-          .setFeatureSetForOptimizations()
-          .build();
-
-  /** Inlines type aliases if they are explicitly or effectively const. */
-  private final PassFactory aggressiveInlineAliases =
-      PassFactory.builder()
-          .setName("aggressiveInlineAliases")
-          .setInternalFactory(AggressiveInlineAliases::new)
-          .setFeatureSetForOptimizations()
-          .build();
-
   private final PassFactory removeWeakSources =
       PassFactory.builder()
           .setName("removeWeakSources")
@@ -2150,18 +2114,21 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Collapses names in the global scope. */
-  private final PassFactory collapseProperties =
+  /**
+   * Perform inlining of aliases and collapsing of qualified names to global variables in order to
+   * improve later optimizations, such as RemoveUnusedCode.
+   */
+  private final PassFactory inlineAndCollapseProperties =
       PassFactory.builder()
-          .setName(PassNames.COLLAPSE_PROPERTIES)
+          .setName("inlineAndCollapseProperties")
           .setInternalFactory(
               (compiler) ->
-                  new CollapseProperties(
-                      compiler,
-                      options.getPropertyCollapseLevel(),
-                      options.getChunkOutputType(),
-                      options.getProcessCommonJSModules(),
-                      options.getModuleResolutionMode()))
+                  InlineAndCollapseProperties.builder(compiler)
+                      .setPropertyCollapseLevel(options.getPropertyCollapseLevel())
+                      .setChunkOutputType(options.getChunkOutputType())
+                      .setHaveModulesBeenRewritten(options.getProcessCommonJSModules())
+                      .setModuleResolutionMode(options.getModuleResolutionMode())
+                      .build())
           .setFeatureSetForOptimizations()
           .build();
 
