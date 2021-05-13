@@ -5516,6 +5516,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testForAwaitOfWithDestructuring() {
+    testTypes(
+        lines(
+            "async function f(/** !Iterable<Promise<{a: number}>> */ o) {",
+            "  for await (const {a, b} of o) {}",
+            "}"),
+        "Property b never defined on ?");
+  }
+
+  @Test
   public void testObjectPatternWithMissingPropertyWarningInParameters() {
     testTypes(
         lines(

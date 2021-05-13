@@ -2309,7 +2309,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitVar(NodeTraversal t, Node n) {
     // Handle var declarations in for-of loops separately from regular var declarations.
-    if (n.getParent().isForOf() || n.getParent().isForIn()) {
+    if (n.getParent().isForOf() || n.getParent().isForIn() || n.getParent().isForAwaitOf()) {
       return;
     }
 
