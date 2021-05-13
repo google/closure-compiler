@@ -22,13 +22,12 @@ import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link AggressiveInlineAliases} plus {@link CollapseProperties}. */
+/** Tests for {@link InlineAndCollapseProperties}. */
 @RunWith(JUnit4.class)
 public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
@@ -46,22 +45,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {
-      AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
-      CollapseProperties collapseProperties =
-          new CollapseProperties(
-              compiler,
-              PropertyCollapseLevel.ALL,
-              ChunkOutputType.GLOBAL_NAMESPACE,
-              /* haveModulesBeenRewritten */ false,
-              ResolutionMode.BROWSER);
-
-      @Override
-      public void process(Node externs, Node root) {
-        aggressiveInlineAliases.process(externs, root);
-        collapseProperties.process(externs, root);
-      }
-    };
+    return InlineAndCollapseProperties.builder(compiler)
+        .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+        .setHaveModulesBeenRewritten(false)
+        .setModuleResolutionMode(ResolutionMode.BROWSER)
+        .build();
   }
 
   @Override
