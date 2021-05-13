@@ -1348,24 +1348,6 @@ public final class ConformanceRules {
     }
   }
 
-  /**
-   * Banned @expose
-   *
-   * <p>TODO(b/180010003): delete this rule. It is a no-op now that compiler support for @expose is
-   * deleted.
-   */
-  public static final class BanExpose extends AbstractRule {
-    public BanExpose(AbstractCompiler compiler, Requirement requirement)
-        throws InvalidRequirementSpec {
-      super(compiler, requirement);
-    }
-
-    @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      return ConformanceResult.CONFORMANCE;
-    }
-  }
-
   /** Require "use strict" rule */
   public static class RequireUseStrict extends AbstractRule {
 
