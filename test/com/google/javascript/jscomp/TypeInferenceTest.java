@@ -2739,6 +2739,39 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testFunctionTemplateType_specializedFunctionType_copiesColorIdCompnents() {
+    inFunction(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {T} a",
+            " * @return {T}",
+            " */",
+            "function f(a) {}",
+            "TEMPLATE: f;",
+            "",
+            "SPECIALIZED: f(10);"));
+
+    FunctionType templateFn =
+        getLabeledStatement("TEMPLATE")
+            .statementNode
+            .getFirstChild()
+            .getJSType()
+            .toMaybeFunctionType();
+    FunctionType specializedFn =
+        getLabeledStatement("SPECIALIZED")
+            .statementNode
+            .getFirstFirstChild()
+            .getJSType()
+            .toMaybeFunctionType();
+
+    assertThat(specializedFn).isNotEqualTo(templateFn);
+    assertThat(specializedFn.getReferenceName()).isEqualTo(templateFn.getReferenceName());
+    assertThat(specializedFn.getSource()).isEqualTo(templateFn.getSource());
+    assertThat(specializedFn.getGoogModuleId()).isEqualTo(templateFn.getGoogModuleId());
+  }
+
+  @Test
   public void testFunctionTemplateType_literalParam() {
     inFunction(
         lines(
