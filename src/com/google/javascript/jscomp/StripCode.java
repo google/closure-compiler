@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Arrays.stream;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -26,7 +27,6 @@ import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -728,7 +728,7 @@ class StripCode implements CompilerPass {
         // CollapseProperties may have turned "a.b.c" into "a$b$c",
         // so split that up and match its parts.
         return nameString.contains("$")
-            && Arrays.stream(nameString.split("\\$")).anyMatch(this::isStripName);
+            && stream(nameString.split("\\$")).anyMatch(this::isStripName);
       } else {
         return false;
       }
