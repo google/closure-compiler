@@ -1988,8 +1988,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
           && !thisType.isUnknownType()
           && callTargetFn.getTypeOfThis().isUnknownType()) {
         callTargetFn =
-            FunctionType.builder(registry)
-                .copyFromOtherFunction(callTargetFn)
+            callTargetFn.toBuilder()
                 .withTypeOfThis(thisType.toObjectType())
                 .withSourceNode(null)
                 .buildAndResolve();
@@ -2005,11 +2004,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     if (bindType != null && n.getFirstChild() != target) {
       // Update the type of the
       bindType =
-          FunctionType.builder(registry)
-              .copyFromOtherFunction(bindType)
-              .withReturnType(returnType)
-              .withSourceNode(null)
-              .buildAndResolve();
+          bindType.toBuilder().withReturnType(returnType).withSourceNode(null).buildAndResolve();
       n.getFirstChild().setJSType(bindType);
     }
 
@@ -2100,8 +2095,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       // but the expected type does, back fill it.
       if (currentType.getTypeOfThis().isUnknownType()
           && !expectedType.getTypeOfThis().isUnknownType()) {
-        return FunctionType.builder(registry)
-            .copyFromOtherFunction(currentType)
+        return currentType.toBuilder()
             .withTypeOfThis(expectedType.getTypeOfThis())
             .buildAndResolve();
       }
