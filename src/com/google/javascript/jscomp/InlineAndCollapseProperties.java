@@ -79,6 +79,11 @@ class InlineAndCollapseProperties implements CompilerPass {
               + " Consider annotating @nocollapse; however, other properties on the receiver may"
               + " still be collapsed.");
 
+  static final DiagnosticType UNSAFE_CTOR_ALIASING =
+      DiagnosticType.warning(
+          "JSC_UNSAFE_CTOR_ALIASING",
+          "Variable {0} aliases a constructor, so it cannot be assigned multiple times");
+
   private final AbstractCompiler compiler;
   private final PropertyCollapseLevel propertyCollapseLevel;
   private final ChunkOutputType chunkOutputType;
@@ -194,12 +199,12 @@ class InlineAndCollapseProperties implements CompilerPass {
 
   private void performAggressiveInliningAndCollapsing(Node externs, Node root) {
     new ConcretizeStaticInheritanceForInlining(compiler).process(externs, root);
-    new AggressiveInlineAliases(compiler).process(externs, root);
+    new AggressiveInlineAliases().process(externs, root);
     new CollapseProperties().process(externs, root);
   }
 
   private void performAggressiveInliningForTest(Node externs, Node root) {
-    final AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
+    final AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases();
     aggressiveInlineAliases.process(externs, root);
     optionalGlobalNamespaceTester
         .get()
@@ -218,19 +223,12 @@ class InlineAndCollapseProperties implements CompilerPass {
    * properties, possibly past places that change the property value. However, it will only do so in
    * cases where CollapseProperties would unsafely collapse the property anyway.
    */
-  static class AggressiveInlineAliases implements CompilerPass {
+  class AggressiveInlineAliases implements CompilerPass {
 
-    static final DiagnosticType UNSAFE_CTOR_ALIASING =
-        DiagnosticType.warning(
-            "JSC_UNSAFE_CTOR_ALIASING",
-            "Variable {0} aliases a constructor, so it cannot be assigned multiple times");
-
-    private final AbstractCompiler compiler;
     private boolean codeChanged;
     private GlobalNamespace namespace;
 
-    AggressiveInlineAliases(AbstractCompiler compiler) {
-      this.compiler = compiler;
+    AggressiveInlineAliases() {
       this.codeChanged = true;
     }
 
@@ -257,68 +255,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     private JSModule getRefModule(Reference ref) {
       CompilerInput input = compiler.getInput(ref.getInputId());
       return input == null ? null : input.getModule();
-    }
-
-    /**
-     * Rewrite "simple" destructuring aliases to a format that is more amenable to inlining.
-     *
-     * <p>To be specific, this rewrites aliases of the form: const {x} = qualified.name; to: const x
-     * = qualified.name.x;
-     */
-    private static class RewriteSimpleDestructuringAliases
-        extends NodeTraversal.AbstractPostOrderCallback {
-
-      public boolean isSimpleDestructuringAlias(Node n) {
-        if (!NodeUtil.isStatement(n) || !n.isConst()) {
-          return false;
-        }
-        checkState(n.hasOneChild());
-        Node destructuringLhs = n.getFirstChild();
-        if (!destructuringLhs.isDestructuringLhs()) {
-          return false;
-        }
-        Node objectPattern = destructuringLhs.getFirstChild();
-        if (!objectPattern.isObjectPattern()) {
-          return false;
-        }
-        Node rhs = destructuringLhs.getLastChild();
-        if (!rhs.isQualifiedName()) {
-          return false;
-        }
-        for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
-          if (!key.isStringKey() || key.isQuotedString()) {
-            return false;
-          }
-          checkState(key.hasOneChild());
-          Node identifier = key.getFirstChild();
-          if (!identifier.isName()) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (!isSimpleDestructuringAlias(n)) {
-          return;
-        }
-
-        Node insertionPoint = n;
-
-        Node destructuringLhs = n.getFirstChild();
-        Node objectPattern = destructuringLhs.getFirstChild();
-        Node rhs = destructuringLhs.getLastChild();
-        for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
-          Node identifier = key.getFirstChild();
-          Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(identifier);
-          Node newConstNode = IR.constNode(identifier.detach(), newRhs).srcref(n);
-          newConstNode.insertAfter(insertionPoint);
-          insertionPoint = newConstNode;
-        }
-        n.detach();
-        t.reportCodeChange();
-      }
     }
 
     /**
@@ -484,70 +420,6 @@ class InlineAndCollapseProperties implements CompilerPass {
       namespace.scanNewNodes(newNodes);
     }
 
-    @Nullable
-    private static Node maybeGetInnerNameNode(Node maybeFunctionOrClassNode) {
-      if (NodeUtil.isFunctionExpression(maybeFunctionOrClassNode)) {
-        Node nameNode = maybeFunctionOrClassNode.getFirstChild();
-        checkState(nameNode.isName(), nameNode);
-        // functions with no name have a NAME node with an empty string
-        return nameNode.getString().isEmpty() ? null : nameNode;
-      } else if (NodeUtil.isClassExpression(maybeFunctionOrClassNode)) {
-        Node nameNode = maybeFunctionOrClassNode.getFirstChild();
-        // classes with no name have an EMPTY node first child
-        return nameNode.isName() ? nameNode : null;
-      } else {
-        return null; // not a function or class expression
-      }
-    }
-
-    /**
-     * Adds properties of `name` to the worklist if the following conditions hold:
-     *
-     * <ol>
-     *   <li>1. The given property of `name` either meets condition (a) or is unsafely collapsible
-     *       (as defined by {@link Name#canCollapse()}
-     *   <li>2. `name` meets condition (b)
-     * </ol>
-     *
-     * This only adds direct properties of a name, not all its descendants. For example, this adds
-     * `a.b` given `a`, but not `a.b.c`.
-     */
-    private static void maybeAddPropertiesToWorklist(Name name, Deque<Name> workList) {
-      if (!(name.isObjectLiteral() || name.isFunction() || name.isClass())) {
-        // Don't add properties for things like `Foo` in
-        //   const Foo = someMysteriousFunctionCall();
-        // Since `Foo` is not declared as an object, class, or function literal, assume its value
-        // may be aliased somewhere and its properties do not meet condition (a).
-        return;
-      }
-      if (isUnsafelyReassigned(name)) {
-        // Don't add properties if this was assigned multiple times, except for 'safe'
-        // reassignments:
-        //    var ns = ns || {};
-        // This is equivalent to condition (b)
-        return;
-      }
-      if (name.props == null) {
-        return;
-      }
-
-      if (name.getAliasingGets() == 0) {
-        // All of {@code name}'s children meet condition (a), so they can be
-        // added to the worklist.
-        workList.addAll(name.props);
-      } else {
-        // The children do NOT meet condition (a) but we may try to add them anyway.
-        // This is because CollapseProperties will unsafely collapse properties on constructors and
-        // enums, so we want to be more aggressive about inlining references to their children.
-        for (Name property : name.props) {
-          // Only add properties that would be unsafely collapsed by CollapseProperties
-          if (property.canCollapse()) {
-            workList.add(property);
-          }
-        }
-      }
-    }
-
     /**
      * Inline all references to inherited static superclass properties from the subclass or any
      * descendant of the given subclass. Avoids inlining references to inherited methods when
@@ -605,40 +477,6 @@ class InlineAndCollapseProperties implements CompilerPass {
 
         rewriteNestedAliasReference(superclassNameNode, 0, newNodes, subclassPropNameObj);
         namespace.scanNewNodes(newNodes);
-      }
-      return true;
-    }
-
-    /**
-     * Returns true if the alias is possibly defined in the global scope, which we handle with more
-     * caution than with locally scoped variables. May return false positives.
-     *
-     * @param alias An aliasing get.
-     * @return If the alias is possibly defined in the global scope.
-     */
-    private static boolean mayBeGlobalAlias(Ref alias) {
-      // Note: alias.scope is the closest scope in which the aliasing assignment occurred.
-      // So for "if (true) { var alias = aliasedVar; }", the alias.scope would be the IF block
-      // scope.
-      if (alias.scope.isGlobal()) {
-        return true;
-      }
-      // If the scope in which the alias is assigned is not global, look up the LHS of the
-      // assignment.
-      Node aliasParent = alias.getNode().getParent();
-      if (!aliasParent.isAssign() && !aliasParent.isName()) {
-        // Only handle variable assignments and initializing declarations.
-        return true;
-      }
-      Node aliasLhsNode = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
-      if (!aliasLhsNode.isName()) {
-        // Only handle assignments to simple names, not qualified names or GETPROPs.
-        return true;
-      }
-      String aliasVarName = aliasLhsNode.getString();
-      Var aliasVar = alias.scope.getVar(aliasVarName);
-      if (aliasVar != null) {
-        return aliasVar.isGlobal();
       }
       return true;
     }
@@ -810,34 +648,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     }
 
     /**
-     * Returns whether a ReferenceCollection for some aliasing variable references a property on the
-     * original aliased variable that may be collapsed in CollapseProperties.
-     *
-     * <p>See {@link Name#canCollapse} for what can/cannot be collapsed.
-     */
-    private static boolean referencesCollapsibleProperty(
-        ReferenceCollection aliasRefs, Name aliasedName, GlobalNamespace namespace) {
-      for (Reference ref : aliasRefs.references) {
-        if (ref.getParent() == null) {
-          continue;
-        }
-        if (NodeUtil.isNormalOrOptChainGetProp(ref.getParent())) {
-          // e.g. if the reference is "alias.b.someProp", this will be "b".
-          String propertyName = ref.getParent().getString();
-          // e.g. if the aliased name is "originalName", this will be "originalName.b".
-          String originalPropertyName = aliasedName.getName() + "." + propertyName;
-          Name originalProperty = namespace.getOwnSlot(originalPropertyName);
-          // If the original property isn't in the namespace or can't be collapsed, keep going.
-          if (originalProperty == null || !originalProperty.canCollapse()) {
-            continue;
-          }
-          return true;
-        }
-      }
-      return false;
-    }
-
-    /**
      * @param alias A GlobalNamespace.Ref of the variable being aliased
      * @param aliasRef One particular usage of an alias that we want to replace with the aliased
      *     var.
@@ -987,25 +797,6 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
     }
 
-    /** Check if the name has multiple sets that are not of the form "a = a || {}" */
-    private static boolean isUnsafelyReassigned(Name name) {
-      boolean foundOriginalDefinition = false;
-      for (Ref ref : name.getRefs()) {
-        if (!ref.isSet()) {
-          continue;
-        }
-        if (isSafeNamespaceReinit(ref)) {
-          continue;
-        }
-        if (!foundOriginalDefinition) {
-          foundOriginalDefinition = true;
-        } else {
-          return true;
-        }
-      }
-      return false;
-    }
-
     /**
      * @param name The Name whose properties references should be updated.
      * @param value The value to use when rewriting.
@@ -1106,30 +897,236 @@ class InlineAndCollapseProperties implements CompilerPass {
         codeChanged = true;
       }
     }
+  }
 
-    /**
-     * Tries to find an lvalue for the subclass given the superclass node in an `class ... extends `
-     * clause
-     *
-     * <p>Only handles cases where we have either a class declaration or a class expression in an
-     * assignment or name declaration. Otherwise returns null.
-     */
-    @Nullable
-    private static Node getSubclassForEs6Superclass(Node superclass) {
-      Node classNode = superclass.getParent();
-      checkArgument(classNode.isClass(), classNode);
-      if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {
-        // const Clazz = class extends Super {
-        return classNode.getParent();
-      } else if (superclass.getGrandparent().isAssign()) {
-        // ns.foo.Clazz = class extends Super {
-        return classNode.getPrevious();
-      } else if (NodeUtil.isClassDeclaration(classNode)) {
-        // class Clazz extends Super {
-        return classNode.getFirstChild();
+  /**
+   * Rewrite "simple" destructuring aliases to a format that is more amenable to inlining.
+   *
+   * <p>To be specific, this rewrites aliases of the form: const {x} = qualified.name; to: const x =
+   * qualified.name.x;
+   */
+  private static class RewriteSimpleDestructuringAliases extends AbstractPostOrderCallback {
+
+    public boolean isSimpleDestructuringAlias(Node n) {
+      if (!NodeUtil.isStatement(n) || !n.isConst()) {
+        return false;
       }
-      return null;
+      checkState(n.hasOneChild());
+      Node destructuringLhs = n.getFirstChild();
+      if (!destructuringLhs.isDestructuringLhs()) {
+        return false;
+      }
+      Node objectPattern = destructuringLhs.getFirstChild();
+      if (!objectPattern.isObjectPattern()) {
+        return false;
+      }
+      Node rhs = destructuringLhs.getLastChild();
+      if (!rhs.isQualifiedName()) {
+        return false;
+      }
+      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
+        if (!key.isStringKey() || key.isQuotedString()) {
+          return false;
+        }
+        checkState(key.hasOneChild());
+        Node identifier = key.getFirstChild();
+        if (!identifier.isName()) {
+          return false;
+        }
+      }
+      return true;
     }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!isSimpleDestructuringAlias(n)) {
+        return;
+      }
+
+      Node insertionPoint = n;
+
+      Node destructuringLhs = n.getFirstChild();
+      Node objectPattern = destructuringLhs.getFirstChild();
+      Node rhs = destructuringLhs.getLastChild();
+      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
+        Node identifier = key.getFirstChild();
+        Node newRhs = IR.getprop(rhs.cloneTree(), key.getString()).srcref(identifier);
+        Node newConstNode = IR.constNode(identifier.detach(), newRhs).srcref(n);
+        newConstNode.insertAfter(insertionPoint);
+        insertionPoint = newConstNode;
+      }
+      n.detach();
+      t.reportCodeChange();
+    }
+  }
+
+  @Nullable
+  private static Node maybeGetInnerNameNode(Node maybeFunctionOrClassNode) {
+    if (NodeUtil.isFunctionExpression(maybeFunctionOrClassNode)) {
+      Node nameNode = maybeFunctionOrClassNode.getFirstChild();
+      checkState(nameNode.isName(), nameNode);
+      // functions with no name have a NAME node with an empty string
+      return nameNode.getString().isEmpty() ? null : nameNode;
+    } else if (NodeUtil.isClassExpression(maybeFunctionOrClassNode)) {
+      Node nameNode = maybeFunctionOrClassNode.getFirstChild();
+      // classes with no name have an EMPTY node first child
+      return nameNode.isName() ? nameNode : null;
+    } else {
+      return null; // not a function or class expression
+    }
+  }
+
+  /**
+   * Adds properties of `name` to the worklist if the following conditions hold:
+   *
+   * <ol>
+   *   <li>1. The given property of `name` either meets condition (a) or is unsafely collapsible (as
+   *       defined by {@link Name#canCollapse()}
+   *   <li>2. `name` meets condition (b)
+   * </ol>
+   *
+   * This only adds direct properties of a name, not all its descendants. For example, this adds
+   * `a.b` given `a`, but not `a.b.c`.
+   */
+  private static void maybeAddPropertiesToWorklist(Name name, Deque<Name> workList) {
+    if (!(name.isObjectLiteral() || name.isFunction() || name.isClass())) {
+      // Don't add properties for things like `Foo` in
+      //   const Foo = someMysteriousFunctionCall();
+      // Since `Foo` is not declared as an object, class, or function literal, assume its value
+      // may be aliased somewhere and its properties do not meet condition (a).
+      return;
+    }
+    if (isUnsafelyReassigned(name)) {
+      // Don't add properties if this was assigned multiple times, except for 'safe'
+      // reassignments:
+      //    var ns = ns || {};
+      // This is equivalent to condition (b)
+      return;
+    }
+    if (name.props == null) {
+      return;
+    }
+
+    if (name.getAliasingGets() == 0) {
+      // All of {@code name}'s children meet condition (a), so they can be
+      // added to the worklist.
+      workList.addAll(name.props);
+    } else {
+      // The children do NOT meet condition (a) but we may try to add them anyway.
+      // This is because CollapseProperties will unsafely collapse properties on constructors and
+      // enums, so we want to be more aggressive about inlining references to their children.
+      for (Name property : name.props) {
+        // Only add properties that would be unsafely collapsed by CollapseProperties
+        if (property.canCollapse()) {
+          workList.add(property);
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns true if the alias is possibly defined in the global scope, which we handle with more
+   * caution than with locally scoped variables. May return false positives.
+   *
+   * @param alias An aliasing get.
+   * @return If the alias is possibly defined in the global scope.
+   */
+  private static boolean mayBeGlobalAlias(Ref alias) {
+    // Note: alias.scope is the closest scope in which the aliasing assignment occurred.
+    // So for "if (true) { var alias = aliasedVar; }", the alias.scope would be the IF block
+    // scope.
+    if (alias.scope.isGlobal()) {
+      return true;
+    }
+    // If the scope in which the alias is assigned is not global, look up the LHS of the
+    // assignment.
+    Node aliasParent = alias.getNode().getParent();
+    if (!aliasParent.isAssign() && !aliasParent.isName()) {
+      // Only handle variable assignments and initializing declarations.
+      return true;
+    }
+    Node aliasLhsNode = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
+    if (!aliasLhsNode.isName()) {
+      // Only handle assignments to simple names, not qualified names or GETPROPs.
+      return true;
+    }
+    String aliasVarName = aliasLhsNode.getString();
+    Var aliasVar = alias.scope.getVar(aliasVarName);
+    if (aliasVar != null) {
+      return aliasVar.isGlobal();
+    }
+    return true;
+  }
+
+  /**
+   * Returns whether a ReferenceCollection for some aliasing variable references a property on the
+   * original aliased variable that may be collapsed in CollapseProperties.
+   *
+   * <p>See {@link Name#canCollapse} for what can/cannot be collapsed.
+   */
+  private static boolean referencesCollapsibleProperty(
+      ReferenceCollection aliasRefs, Name aliasedName, GlobalNamespace namespace) {
+    for (Reference ref : aliasRefs.references) {
+      if (ref.getParent() == null) {
+        continue;
+      }
+      if (NodeUtil.isNormalOrOptChainGetProp(ref.getParent())) {
+        // e.g. if the reference is "alias.b.someProp", this will be "b".
+        String propertyName = ref.getParent().getString();
+        // e.g. if the aliased name is "originalName", this will be "originalName.b".
+        String originalPropertyName = aliasedName.getName() + "." + propertyName;
+        Name originalProperty = namespace.getOwnSlot(originalPropertyName);
+        // If the original property isn't in the namespace or can't be collapsed, keep going.
+        if (originalProperty == null || !originalProperty.canCollapse()) {
+          continue;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Check if the name has multiple sets that are not of the form "a = a || {}" */
+  private static boolean isUnsafelyReassigned(Name name) {
+    boolean foundOriginalDefinition = false;
+    for (Ref ref : name.getRefs()) {
+      if (!ref.isSet()) {
+        continue;
+      }
+      if (isSafeNamespaceReinit(ref)) {
+        continue;
+      }
+      if (!foundOriginalDefinition) {
+        foundOriginalDefinition = true;
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Tries to find an lvalue for the subclass given the superclass node in an `class ... extends `
+   * clause
+   *
+   * <p>Only handles cases where we have either a class declaration or a class expression in an
+   * assignment or name declaration. Otherwise returns null.
+   */
+  @Nullable
+  private static Node getSubclassForEs6Superclass(Node superclass) {
+    Node classNode = superclass.getParent();
+    checkArgument(classNode.isClass(), classNode);
+    if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {
+      // const Clazz = class extends Super {
+      return classNode.getParent();
+    } else if (superclass.getGrandparent().isAssign()) {
+      // ns.foo.Clazz = class extends Super {
+      return classNode.getPrevious();
+    } else if (NodeUtil.isClassDeclaration(classNode)) {
+      // class Clazz extends Super {
+      return classNode.getFirstChild();
+    }
+    return null;
   }
 
   /**
