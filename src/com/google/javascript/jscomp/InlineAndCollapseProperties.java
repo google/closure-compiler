@@ -16,10 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Perform inlining of aliases and collapsing of qualified names in order to improve later
@@ -33,12 +38,28 @@ class InlineAndCollapseProperties implements CompilerPass {
   private final boolean haveModulesBeenRewritten;
   private final ResolutionMode moduleResolutionMode;
 
+  /**
+   * Used by `AggressiveInlineAliasesTest` to enable execution of the aggressive inlining logic
+   * without doing any collapsing.
+   */
+  private final boolean testAggressiveInliningOnly;
+
+  /**
+   * Supplied by `AggressiveInlineAliasesTest`.
+   *
+   * <p>The `GlobalNamespace` created by `AggressiveInlineAliases` will be passed to this `Consumer`
+   * for examination.
+   */
+  private final Optional<Consumer<GlobalNamespace>> optionalGlobalNamespaceTester;
+
   private InlineAndCollapseProperties(Builder builder) {
     this.compiler = builder.compiler;
     this.propertyCollapseLevel = builder.propertyCollapseLevel;
     this.chunkOutputType = builder.chunkOutputType;
     this.haveModulesBeenRewritten = builder.haveModulesBeenRewritten;
     this.moduleResolutionMode = builder.moduleResolutionMode;
+    this.testAggressiveInliningOnly = builder.testAggressiveInliningOnly;
+    this.optionalGlobalNamespaceTester = builder.optionalGlobalNamespaceTester;
   }
 
   static final class Builder {
@@ -47,6 +68,8 @@ class InlineAndCollapseProperties implements CompilerPass {
     private ChunkOutputType chunkOutputType;
     private boolean haveModulesBeenRewritten;
     private ResolutionMode moduleResolutionMode;
+    private boolean testAggressiveInliningOnly = false;
+    private Optional<Consumer<GlobalNamespace>> optionalGlobalNamespaceTester = Optional.empty();
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -72,17 +95,28 @@ class InlineAndCollapseProperties implements CompilerPass {
       return this;
     }
 
+    @VisibleForTesting
+    public Builder testAggressiveInliningOnly(Consumer<GlobalNamespace> globalNamespaceTester) {
+      this.testAggressiveInliningOnly = true;
+      this.optionalGlobalNamespaceTester = Optional.of(globalNamespaceTester);
+      return this;
+    }
+
     InlineAndCollapseProperties build() {
       return new InlineAndCollapseProperties(this);
     }
   }
 
-  static final Builder builder(AbstractCompiler compiler) {
+  static Builder builder(AbstractCompiler compiler) {
     return new Builder(compiler);
   }
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(
+        !testAggressiveInliningOnly || propertyCollapseLevel == PropertyCollapseLevel.ALL,
+        "testAggressiveInlining is invalid for: %s",
+        propertyCollapseLevel);
     switch (propertyCollapseLevel) {
       case NONE:
         performMinimalInliningAndNoCollapsing(externs, root);
@@ -91,7 +125,11 @@ class InlineAndCollapseProperties implements CompilerPass {
         performMinimalInliningAndModuleExportCollapsing(externs, root);
         break;
       case ALL:
-        performAggressiveInliningAndCollapsing(externs, root);
+        if (testAggressiveInliningOnly) {
+          performAggressiveInliningForTest(externs, root);
+        } else {
+          performAggressiveInliningAndCollapsing(externs, root);
+        }
         break;
     }
   }
@@ -123,5 +161,13 @@ class InlineAndCollapseProperties implements CompilerPass {
             haveModulesBeenRewritten,
             moduleResolutionMode)
         .process(externs, root);
+  }
+
+  private void performAggressiveInliningForTest(Node externs, Node root) {
+    final AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
+    aggressiveInlineAliases.process(externs, root);
+    optionalGlobalNamespaceTester
+        .get()
+        .accept(aggressiveInlineAliases.getLastUsedGlobalNamespace());
   }
 }

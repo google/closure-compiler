@@ -18,18 +18,18 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
-import org.junit.After;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link AggressiveInlineAliases}. */
+/** Tests for the aggressive inlining part of {@link InlineAndCollapseProperties}. */
 @RunWith(JUnit4.class)
 public class AggressiveInlineAliasesTest extends CompilerTestCase {
-
-  private AggressiveInlineAliases lastAggressiveInlineAliases;
 
   private static final String EXTERNS =
       lines(
@@ -45,8 +45,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    this.lastAggressiveInlineAliases = new AggressiveInlineAliases(compiler);
-    return this.lastAggressiveInlineAliases;
+    return InlineAndCollapseProperties.builder(compiler)
+        .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+        .setHaveModulesBeenRewritten(false)
+        .setModuleResolutionMode(ResolutionMode.BROWSER)
+        .testAggressiveInliningOnly(this::validateGlobalNamespace)
+        .build();
   }
 
   @Override
@@ -2943,9 +2948,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
    * <p>This check compares the names in the global namespace in the pass with a freshly-created
    * global namespace.
    */
-  @After
-  public void validateGlobalNamespace() {
-    GlobalNamespace passGlobalNamespace = lastAggressiveInlineAliases.getLastUsedGlobalNamespace();
+  public void validateGlobalNamespace(GlobalNamespace passGlobalNamespace) {
     GlobalNamespace expectedGlobalNamespace =
         new GlobalNamespace(getLastCompiler(), getLastCompiler().getJsRoot());
 
