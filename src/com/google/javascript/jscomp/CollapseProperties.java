@@ -68,8 +68,9 @@ import java.util.function.Supplier;
  * values. For example, in the following case, an alias a$b, if created, could easily keep the value
  * 0 even after a.b became 5: <code> a = {b: 0}; c = a; c.b = 5; </code>.
  *
- * <p>This pass may break code, but relies on {@link AggressiveInlineAliases} running before this
- * pass to make some common patterns safer.
+ * <p>This pass may break code, but relies on {@link
+ * InlineAndCollapseProperties.AggressiveInlineAliases} running before this pass to make some common
+ * patterns safer.
  *
  * <p>This pass doesn't flatten property accesses of the form: a[b].
  *

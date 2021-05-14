@@ -236,7 +236,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
             "  alias = function() {}",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -252,7 +252,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(alias.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
             "  alias = function() {}",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
     testSame(
         lines(
             "/** @constructor */",
@@ -266,7 +266,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(alias?.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
             "  alias = function() {}",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -281,7 +281,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  alias = a;",
             "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -300,7 +300,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "    use(alias.staticProp);",
             "  }",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -862,7 +862,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(tmp);",
             "  use(tmp.doSomething);",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -881,7 +881,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(tmp);",
             "  use(tmp.doSomething);",
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test

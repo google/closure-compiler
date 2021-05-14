@@ -918,7 +918,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "  use(tmp.doSomething);", // can't inline this use of tmp.
             "}"),
-        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+        InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -1607,7 +1607,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "  return x.staticProp;",
             "}"),
-        warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
+        warning(InlineAndCollapseProperties.AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
   }
 
   @Test

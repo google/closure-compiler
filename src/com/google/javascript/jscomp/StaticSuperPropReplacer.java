@@ -26,8 +26,9 @@ import java.util.Optional;
  * Replaces references to `super` properties in static class methods with the superclass, for cases
  * where the superclass in the extends clause is a qualified name.
  *
- * <p>This runs during {@link AggressiveInlineAliases} in order to avoid breaking references to
- * superclass properties during {@link CollapseProperties}. For example: replaces
+ * <p>This runs during {@link InlineAndCollapseProperties.AggressiveInlineAliases} in order to avoid
+ * breaking references to superclass properties during {@link CollapseProperties}. For example:
+ * replaces
  *
  * <p>`class Bar extends Foo { static m() { super.m() {} }}`
  *
