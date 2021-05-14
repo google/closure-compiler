@@ -77,14 +77,15 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .setRunInFixedPointLoop(true)
                 .setInternalFactory(
                     (x) ->
-                        new CollapseProperties(
-                            compiler,
-                            collapseLevel,
-                            chunkOutputType,
-                            true,
-                            options.getModuleResolutionMode()))
+                        InlineAndCollapseProperties.builder(compiler)
+                            .setPropertyCollapseLevel(collapseLevel)
+                            .setChunkOutputType(chunkOutputType)
+                            .setHaveModulesBeenRewritten(true)
+                            .setModuleResolutionMode(options.getModuleResolutionMode())
+                            .build())
                 .setFeatureSetForChecks()
                 .build());
+
         for (PassFactory factory : factories) {
           factory.create(compiler).process(externs, root);
         }
@@ -95,6 +96,9 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
   @Test
   public void testModuleDynamicImport() {
     allowExternsChanges();
+    // TODO(bradfordcsmith): aggressive alias inlining prevents this example from working with
+    // PropertyCollapseLevel.ALL
+    collapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
 
     JSModule[] inputModules = new JSModule[] {new JSModule("entry"), new JSModule("mod1")};
     inputModules[0].add(
@@ -102,7 +106,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             "entry.js", "import('./mod1.js').then((ns) => console.log(ns.Foo.bar()));"));
     inputModules[1].add(
         SourceFile.fromCode(
-            "mod1.js", lines("export class Foo {", "  static bar() { return 'bar'; }", "}")));
+            "mod1.js",
+            lines(
+                "export class Foo {", //
+                "  static bar() { return 'bar'; }",
+                "}")));
     inputModules[1].addDependency(inputModules[0]);
 
     JSModule[] expectedModules = new JSModule[] {new JSModule("entry"), new JSModule("mod1")};
