@@ -51,12 +51,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CollapseProperties(
-        compiler,
-        propertyCollapseLevel,
-        ChunkOutputType.GLOBAL_NAMESPACE,
-        false,
-        ResolutionMode.BROWSER);
+    return InlineAndCollapseProperties.builder(compiler)
+        .setPropertyCollapseLevel(propertyCollapseLevel)
+        .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+        .setHaveModulesBeenRewritten(false)
+        .setModuleResolutionMode(ResolutionMode.BROWSER)
+        .build();
   }
 
   @Override
@@ -1306,8 +1306,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // quoted/computed does not get read
     test(
-        srcs("   var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"),
-        expected("   var            a$b$c = 0          ; var e = 1; e = a$b$c")); // incorrect
+        srcs("    var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"),
+        expected("var            a$b$c = 0          ; var e = 1; e = a$b$c")); // incorrect
     test(
         srcs("var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b?.c;"),
         expected("var         a$b = {c: 0, ['d']: 1}; var e = 1; e = a$b?.c"));
@@ -1319,8 +1319,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // key collision
     test(
-        srcs("var a = {}; a.b = {c: 0, ['c']: 1}; var e = a.b.c;"),
-        expected("var a$b$c = 0; var e = a$b$c;")); // incorrect
+        srcs("    var a = {}; a.b = {c : 0, ['c']: 1}; var e = a.b.c;"),
+        expected("var            a$b$c = 0;            var e =  null;")); // incorrect
   }
 
   @Test
@@ -3117,18 +3117,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "foo(Foo.STR);",
             ""),
         lines(
-            "const ns = {}",
-            "ns.Foo = class {};",
-            "ns.Foo.STR = '';",
-            "const {Foo} = ns;",
-            "foo(Foo.STR);",
-            ""),
-        warning(PARTIAL_NAMESPACE_WARNING));
+            "var ns$Foo = class {};",
+            "var ns$Foo$STR = '';",
+            "const Foo = null;",
+            "foo(ns$Foo$STR);",
+            ""));
   }
 
   @Test
   public void testCanCollapseSinglePropertyInObjectPattern() {
-    testSame("const x = {y: 1}; const {y} = x; use(y);");
+    // Aggressive alias inlining replaces the reference to `y` with `x.y`
+    // and sets `y` to `null`.
+    test(
+        "const x   = {y: 1}; const {y} = x   ; use(  y);", //
+        "var   x$y =     1 ; const  y  = null; use(x$y);");
   }
 
   @Test
@@ -3565,7 +3567,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDontCollapseLateAddedClassStaticMemberReferencedByInnerName() {
-    // TODO(b/147588398): We should back off of collapsing here
     test(
         srcs(
             lines(
@@ -3581,7 +3582,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             lines(
                 "const Bar = class BarInternal {", //
                 "  method() {",
-                "    return BarInternal.Enum.E1;", // no longer exists!
+                "    return Bar$Enum$E1;",
                 "  }",
                 "};",
                 "var Bar$Enum$E1 = 1;",
@@ -3823,8 +3824,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // superclass. However, AggressiveInlineAliases tries to rewrite inherited accesses to make this
     // collapsing safe. See InlineAndCollapsePropertiesTests for examples.
     test(
-        srcs("class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);"),
-        expected("class A {} var A$foo = 5; use(A$foo); class B extends A {} use(B.foo);"));
+        srcs("    class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);"),
+        expected("class A {} var A$foo = 5; use(A$foo); class B extends A {} use(A$foo);"));
     test(
         srcs("class A {}     A.foo = 5; use?.(A?.foo); class B extends A {} use?.(B?.foo);"),
         expected("class A {} var A$foo = 5; use?.(A?.foo); class B extends A {} use?.(B?.foo);"));
@@ -4373,7 +4374,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {b: 1} || x; a.c = 2;");
 
     // right branch, read declared prop
-    testSame("var a = x || {b: 1}; var t = a.b;");
+    // aggressive alias inlining still works
+    test(
+        "var a = x || {b: 1}; var t =  a.b; use(  t);", //
+        "var a = x || {b: 1}; var t = null; use(a.b);");
 
     // right branch, read undeclared prop
     testSame("var a = x || {b: 1}; var t = a.c;");
@@ -4388,7 +4392,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testTernaryExpression() {
     // left branch, read declared prop
-    testSame("var a = p ? {b: 1} : x; var t = a.b;");
+    // aggressive alias inlining still works
+    test(
+        "var a = p ? {b: 1} : x; var t =  a.b; use(  t);", //
+        "var a = p ? {b: 1} : x; var t = null; use(a.b);");
 
     // left branch, read undeclared prop
     testSame("var a = p ? {b: 1} : x; var t = a.c;");
@@ -4401,7 +4408,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         srcs("var a = p ? {b: 1} : x; a.c = 2;"), expected("var a = p ? {b: 1} : x; var a$c = 2;"));
 
     // right branch, read declared prop
-    testSame("var a = p ? x : {b: 1}; var t = a.b;");
+    // aggressive alias inlining still works
+    test(
+        "var a = p ? x : {b: 1}; var t =  a.b; use(  t);", //
+        "var a = p ? x : {b: 1}; var t = null; use(a.b);");
 
     // right branch, read undeclared prop
     testSame("var a = p ? x : {b: 1}; var t = a.c;");
