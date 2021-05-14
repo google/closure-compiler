@@ -119,12 +119,12 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         if (rename) {
           NodeTraversal.traverse(compiler, js, new Renamer());
         }
-        new CollapseProperties(
-                compiler,
-                PropertyCollapseLevel.ALL,
-                ChunkOutputType.GLOBAL_NAMESPACE,
-                false,
-                ResolutionMode.BROWSER)
+        InlineAndCollapseProperties.builder(compiler)
+            .setPropertyCollapseLevel(PropertyCollapseLevel.ALL)
+            .setChunkOutputType(ChunkOutputType.GLOBAL_NAMESPACE)
+            .setHaveModulesBeenRewritten(false)
+            .setModuleResolutionMode(ResolutionMode.BROWSER)
+            .build()
             .process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia = SourceInformationAnnotator.create();
