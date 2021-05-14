@@ -45,6 +45,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 final class JSTypeSerializer {
@@ -173,14 +175,10 @@ final class JSTypeSerializer {
     }
 
     if (type.isUnionType()) {
-      ImmutableSet<SimplifiedType> alternates =
+      return SimplifiedType.ofUnion(
           type.toMaybeUnionType().getAlternates().stream()
               .map(this::simplifyTypeInternal)
-              .collect(toImmutableSet());
-      // Simplification may collapse some members of the union
-      return alternates.size() > 1
-          ? SimplifiedType.ofUnion(alternates)
-          : Iterables.getOnlyElement(alternates);
+              .collect(toImmutableSet()));
     }
 
     if (type.isFunctionType() && type.toMaybeFunctionType().getCanonicalRepresentation() != null) {
@@ -516,9 +514,29 @@ final class JSTypeSerializer {
       return AutoOneOf_JSTypeSerializer_SimplifiedType.single(t);
     }
 
-    private static SimplifiedType ofUnion(ImmutableSet<SimplifiedType> union) {
-      checkArgument(union.size() > 1, "Union %s must have > 1 element", union);
-      return AutoOneOf_JSTypeSerializer_SimplifiedType.union(union);
+    private static SimplifiedType ofUnion(Set<SimplifiedType> dirtyAlts) {
+      if (dirtyAlts.size() == 1) {
+        return Iterables.getOnlyElement(dirtyAlts);
+      }
+
+      LinkedHashSet<SimplifiedType> cleanAlts = new LinkedHashSet<>();
+      for (SimplifiedType s : dirtyAlts) {
+        switch (s.getKind()) {
+          case SINGLE:
+            cleanAlts.add(s);
+            break;
+          case UNION:
+            cleanAlts.addAll(s.union());
+            break;
+        }
+      }
+
+      if (cleanAlts.size() == 1) {
+        // Cleaning may collapse some members of the union
+        return Iterables.getOnlyElement(cleanAlts);
+      }
+
+      return AutoOneOf_JSTypeSerializer_SimplifiedType.union(ImmutableSet.copyOf(cleanAlts));
     }
   }
 

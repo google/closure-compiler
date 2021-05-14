@@ -185,6 +185,40 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnion_proxyLikeTypes_dontPreventUnionCollapsing() {
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "/** @enum {boolean|number} */", //
+                "const Foo = {};",
+                "",
+                "let /** !Foo|string|number */ x;"));
+
+    List<UnionTypeProto> unionsContainingUnions =
+        typePool.stream()
+            .filter(TypeProto::hasUnion)
+            .map(TypeProto::getUnion)
+            .filter(
+                (u) ->
+                    u.getUnionMemberList().stream()
+                        .filter((p) -> !isAxiomatic(p))
+                        .anyMatch((e) -> typePool.get(trimOffset(e)).hasUnion()))
+            .collect(toImmutableList());
+    assertThat(unionsContainingUnions).isEmpty();
+
+    assertThat(typePool)
+        .contains(
+            TypeProto.newBuilder()
+                .setUnion(
+                    UnionTypeProto.newBuilder()
+                        .addUnionMember(pointerForType(PrimitiveType.BOOLEAN_TYPE))
+                        .addUnionMember(pointerForType(PrimitiveType.NUMBER_TYPE))
+                        .addUnionMember(pointerForType(PrimitiveType.STRING_TYPE))
+                        .build())
+                .build());
+  }
+
+  @Test
   public void testSerializedInstanceTypeHasClassName() {
     assertThat(compileToTypes("/** @constructor */ function Foo() {} new Foo;"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
