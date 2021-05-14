@@ -387,7 +387,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup(
           "duplicate",
-          CollapseProperties.NAMESPACE_REDEFINED_WARNING,
+          InlineAndCollapseProperties.NAMESPACE_REDEFINED_WARNING,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           TypeCheck.FUNCTION_MASKS_VARIABLE,
@@ -549,7 +549,8 @@ public class DiagnosticGroups {
           "typeImportCodeReferences", CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
 
   public static final DiagnosticGroup PARTIAL_ALIAS =
-      DiagnosticGroups.registerGroup("partialAlias", CollapseProperties.PARTIAL_NAMESPACE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "partialAlias", InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING);
 
   // This lint is given its own diagnostic group because it's harder to fix than other
   // lint errors, and we want to discourage users from doing a blanket @suppress {lintChecks}.

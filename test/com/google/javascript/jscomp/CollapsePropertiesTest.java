@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
-import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
-import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
+import static com.google.javascript.jscomp.InlineAndCollapseProperties.NAMESPACE_REDEFINED_WARNING;
+import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING;
+import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests {@link CollapseProperties}. */
+/** Tests {@link InlineAndCollapseProperties.CollapseProperties}. */
 @RunWith(JUnit4.class)
 public final class CollapsePropertiesTest extends CompilerTestCase {
 
@@ -1871,7 +1871,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = function() {this.c};",
         "var a$b = function() {this.c}; ",
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test
@@ -1894,7 +1894,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {b: function() {this.c}};",
         "var a$b = function() { this.c };",
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test
@@ -3938,7 +3938,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  return this.bar",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     test(
         srcs(
@@ -3978,7 +3978,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  return this.bar",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // "this" is lexically scoped in arrow functions so collapsing is safe.
     test(
@@ -4011,7 +4011,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  return (() => this);",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // `super` is also a receiver reference
     // TODO(b/122665204): Make this case pass rather than crash.
@@ -4033,7 +4033,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                     "  return super.bar", // Unclear what goes here.
                     "};",
                     "foo$myFunc();"),
-                warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE)));
+                warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE)));
 
     // check references in param lists
     test(
@@ -4049,7 +4049,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var foo$myFunc = function(x = this) {",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        warning(InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test

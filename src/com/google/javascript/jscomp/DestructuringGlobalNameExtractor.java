@@ -28,9 +28,10 @@ import javax.annotation.Nullable;
 
 /**
  * Helper for changing the value of an lvalue in a destructuring pattern. Intended for use by {@link
- * CollapseProperties} and {@link InlineAndCollapseProperties.AggressiveInlineAliases} only. This
- * class makes some assumptions that don't generally hold in order to preserve {@link
- * GlobalNamespace} validity and avoid creating temporary variables.
+ * InlineAndCollapseProperties.CollapseProperties} and {@link
+ * InlineAndCollapseProperties.AggressiveInlineAliases} only. This class makes some assumptions that
+ * don't generally hold in order to preserve {@link GlobalNamespace} validity and avoid creating
+ * temporary variables.
  */
 class DestructuringGlobalNameExtractor {
   /**
