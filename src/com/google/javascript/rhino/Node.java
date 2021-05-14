@@ -1069,6 +1069,7 @@ public class Node {
 
   public final void setDouble(double x) {
     checkState(!Double.isNaN(x), x);
+    checkState(Double.compare(0.0, x) <= 0, x); // isPositive
     ((NumberNode) this).number = x;
   }
 
@@ -2729,6 +2730,10 @@ public class Node {
     return this.token == Token.BIGINT;
   }
 
+  public final boolean isBitNot() {
+    return this.token == Token.BITNOT;
+  }
+
   public final boolean isBreak() {
     return this.token == Token.BREAK;
   }
@@ -2955,6 +2960,10 @@ public class Node {
 
   public final boolean isNE() {
     return this.token == Token.NE;
+  }
+
+  public final boolean isNeg() {
+    return this.token == Token.NEG;
   }
 
   public final boolean isNew() {

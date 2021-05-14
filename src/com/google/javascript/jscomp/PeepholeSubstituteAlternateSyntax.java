@@ -568,19 +568,20 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node reduceSubstractionAssignment(Node n) {
     Node right = n.getLastChild();
-    if (right.isNumber()) {
-      if (right.getDouble() == 1) {
-        Node newNode = IR.dec(n.removeFirstChild(), false);
-        n.replaceWith(newNode);
-        reportChangeToEnclosingScope(newNode);
-        return newNode;
-      } else if (right.getDouble() == -1) {
-        Node newNode = IR.inc(n.removeFirstChild(), false);
-        n.replaceWith(newNode);
-        reportChangeToEnclosingScope(newNode);
-        return newNode;
-      }
+    boolean isNegative = false;
+    if (right.isNeg()) {
+      isNegative = true;
+      right = right.getOnlyChild();
     }
+
+    if (right.isNumber() && right.getDouble() == 1) {
+      Node left = n.removeFirstChild();
+      Node newNode = isNegative ? IR.inc(left, false) : IR.dec(left, false);
+      n.replaceWith(newNode);
+      reportChangeToEnclosingScope(newNode);
+      return newNode;
+    }
+
     return n;
   }
 

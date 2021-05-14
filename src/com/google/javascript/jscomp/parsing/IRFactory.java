@@ -2267,12 +2267,8 @@ class IRFactory {
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
       Token type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
-      if (type == Token.NEG && (operand.isNumber() || operand.isBigInt())) {
-        if (operand.isBigInt()) {
-          operand.setBigInt(operand.getBigInt().negate());
-        } else {
-          operand.setDouble(-operand.getDouble());
-        }
+      if (type == Token.NEG && operand.isBigInt()) {
+        operand.setBigInt(operand.getBigInt().negate());
         operand.setLinenoCharno(-1, -1);
         setSourceInfo(operand, exprNode.operator.getStart(), exprNode.operand.getEnd());
         return operand;

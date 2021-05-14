@@ -266,7 +266,25 @@ public final class NodeUtilTest {
             {"class Klass {}", Tri.TRUE},
             {"new Date()", Tri.TRUE},
             {"b", Tri.UNKNOWN},
-            {"-'0.0'", Tri.UNKNOWN},
+
+            // Numbers
+            {"+'0.0'", Tri.FALSE},
+            {"+'1.0'", Tri.TRUE},
+            {"-'0.0'", Tri.FALSE},
+            {"-'1.0'", Tri.TRUE},
+            {"-'1.0'", Tri.TRUE},
+            {"-0.0", Tri.FALSE},
+            {"-1.0", Tri.TRUE},
+            {"-Infinity", Tri.TRUE},
+            {"-NaN", Tri.FALSE},
+            {"0.0", Tri.FALSE},
+            {"1", Tri.TRUE},
+            {"Infinity", Tri.TRUE},
+            {"NaN", Tri.FALSE},
+            {"~'-1.0'", Tri.FALSE},
+            {"~-1.0", Tri.FALSE},
+            {"~0.0", Tri.TRUE},
+            {"~NaN", Tri.TRUE},
 
             // template literals
             {"``", Tri.FALSE},
@@ -487,6 +505,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getStringValue(parseExpr("true"))).isEqualTo("true");
       assertThat(NodeUtil.getStringValue(parseExpr("10"))).isEqualTo("10");
       assertThat(NodeUtil.getStringValue(parseExpr("1.0"))).isEqualTo("1");
+      assertThat(NodeUtil.getStringValue(parseExpr("-1.0"))).isEqualTo("-1");
 
       /* See https://github.com/google/closure-compiler/issues/1262 */
       assertThat(NodeUtil.getStringValue(parseExpr("1.2323919403474454e+21")))

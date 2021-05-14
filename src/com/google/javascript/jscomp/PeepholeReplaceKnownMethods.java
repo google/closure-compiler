@@ -457,9 +457,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         // is 10 or omitted, just replace it with the number
         Node numericNode;
         if (isParseInt) {
-          numericNode = IR.number(checkVal.intValue());
+          numericNode = NodeUtil.numberNode(checkVal.intValue(), null);
         } else {
-          numericNode = IR.number(checkVal);
+          numericNode = NodeUtil.numberNode(checkVal, null);
         }
         n.replaceWith(numericNode);
         reportChangeToEnclosingScope(numericNode);
@@ -513,12 +513,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         return n;
       }
 
-      newNode = IR.number(newVal);
+      newNode = NodeUtil.numberNode(newVal, null);
     } else {
       String normalizedNewVal = "0";
       try {
         double newVal = Double.parseDouble(stringVal);
-        newNode = IR.number(newVal);
+        newNode = NodeUtil.numberNode(newVal, null);
         normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
       } catch (NumberFormatException e) {
         return n;
@@ -566,7 +566,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
     int indexVal = isIndexOf ? lstring.indexOf(searchValue, fromIndex)
                              : lstring.lastIndexOf(searchValue, fromIndex);
-    Node newNode = IR.number(indexVal);
+    Node newNode = NodeUtil.numberNode(indexVal, null);
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
 
@@ -619,7 +619,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         } else {
           sb.append(joinString);
         }
-        sb.append(NodeUtil.getArrayElementStringValue(elem));
+        String elementStr = NodeUtil.getArrayElementStringValue(elem);
+        if (elementStr == null) {
+          return n; // TODO(nickreid): Is this ever null?
+        }
+        sb.append(elementStr);
       } else {
         if (sb != null) {
           checkNotNull(prev);

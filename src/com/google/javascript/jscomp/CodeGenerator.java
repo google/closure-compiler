@@ -360,27 +360,12 @@ public class CodeGenerator {
       case NOT:
       case BITNOT:
       case POS:
+      case NEG:
         {
           // All of these unary operators are right-associative
           checkState(childCount == 1, node);
           cc.addOp(NodeUtil.opToStrNoFail(type), false);
           addExpr(first, NodeUtil.precedence(type), Context.OTHER);
-          break;
-        }
-
-      case NEG:
-        {
-          checkState(childCount == 1, node);
-
-          // It's important to our validity checker that the code we print produces the same AST as
-          // the code we parse back. NEG is a weird case because Rhino parses "- -2" as "2".
-          if (node.getFirstChild().isNumber()) {
-            cc.addNumber(-node.getFirstChild().getDouble(), node.getFirstChild());
-          } else {
-            cc.addOp(NodeUtil.opToStrNoFail(type), false);
-            addExpr(first, NodeUtil.precedence(type), Context.OTHER);
-          }
-
           break;
         }
 

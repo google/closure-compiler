@@ -146,6 +146,20 @@ public final class NodeUtil {
           return Tri.UNKNOWN;
         }
 
+      case BITNOT:
+      case POS:
+      case NEG:
+        {
+          Double val = getNumberValue(n.getOnlyChild());
+          if (val == null) {
+            return Tri.UNKNOWN;
+          }
+
+          // ~NaN => -1 => true
+          Tri result = Tri.forBoolean(!val.isNaN() && val != 0.0);
+          return n.isBitNot() ? result.not() : result;
+        }
+
       case ASSIGN:
       case COMMA:
         // For ASSIGN and COMMA the value is the value of the RHS.
@@ -229,8 +243,16 @@ public final class NodeUtil {
         }
         break;
 
+      case NEG:
       case NUMBER:
-        return DToA.numberToString(n.getDouble());
+        {
+          Double value = getNumberValue(n);
+          if (value == null) {
+            break;
+          }
+
+          return DToA.numberToString(value.doubleValue());
+        }
 
       case BIGINT:
         return n.getBigInt() + "n";
@@ -340,10 +362,13 @@ public final class NodeUtil {
         return null;
 
       case NEG:
-        if (n.hasOneChild()
-            && n.getFirstChild().isName()
-            && n.getFirstChild().getString().equals("Infinity")) {
-          return Double.NEGATIVE_INFINITY;
+        if (n.hasOneChild()) {
+          Node child = n.getFirstChild();
+          if (child.isNumber()) {
+            return -child.getDouble();
+          } else if (child.isName() && child.getString().equals("Infinity")) {
+            return Double.NEGATIVE_INFINITY;
+          }
         }
         return null;
 
@@ -436,28 +461,40 @@ public final class NodeUtil {
         return BigInteger.ZERO;
 
       case NUMBER:
-        double val = n.getDouble();
-        return val % 1 == 0 ? BigInteger.valueOf((long) val) : null;
+        {
+          double val = n.getDouble();
+          return val % 1 == 0 ? BigInteger.valueOf((long) val) : null;
+        }
 
       case BIGINT:
         return n.getBigInt();
 
       case NOT:
-        Tri child = getBooleanValue(n.getFirstChild());
-        if (child != Tri.UNKNOWN) {
-          return child.toBoolean(true) ? BigInteger.ZERO : BigInteger.ONE; // reversed.
-        }
-        return null;
-
-      case TEMPLATELIT:
-        String string = getStringValue(n);
-        if (string == null) {
+        {
+          Tri child = getBooleanValue(n.getFirstChild());
+          if (child != Tri.UNKNOWN) {
+            return child.toBoolean(true) ? BigInteger.ZERO : BigInteger.ONE; // reversed.
+          }
           return null;
         }
-        return getStringBigIntValue(string);
+
+      case TEMPLATELIT:
+        {
+          String string = getStringValue(n);
+          if (string == null) {
+            return null;
+          }
+          return getStringBigIntValue(string);
+        }
 
       case STRINGLIT:
         return getStringBigIntValue(n.getString());
+
+      case NEG:
+        {
+          BigInteger result = getBigIntValue(n.getOnlyChild());
+          return (result == null) ? null : result.negate();
+        }
 
       case ARRAYLIT:
       case OBJECTLIT:
@@ -465,7 +502,6 @@ public final class NodeUtil {
         return value != null ? getStringBigIntValue(value) : null;
       case VOID:
       case NAME:
-      case NEG:
       case NULL:
       default:
         return null;
@@ -5245,12 +5281,13 @@ public final class NodeUtil {
     Node result;
     if (Double.isNaN(value)) {
       result = IR.name("NaN");
-    } else if (value == Double.POSITIVE_INFINITY) {
+    } else if (Double.isInfinite(value)) {
       result = IR.name("Infinity");
-    } else if (value == Double.NEGATIVE_INFINITY) {
-      result = IR.neg(IR.name("Infinity"));
     } else {
-      result = IR.number(value);
+      result = IR.number(Math.abs(value));
+    }
+    if (Double.compare(0.0, value) > 0) { // isNegative
+      result = IR.neg(result);
     }
     if (srcref != null) {
       result.srcrefTree(srcref);

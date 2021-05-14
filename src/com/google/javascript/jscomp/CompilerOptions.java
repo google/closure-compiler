@@ -50,7 +50,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -762,7 +762,7 @@ public class CompilerOptions implements Serializable {
   protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
-  private Map<String, Object> defineReplacements;
+  private final LinkedHashMap<String, Object> defineReplacements;
 
   /** What kind of processing to do for goog.tweak functions. */
   private TweakProcessing tweakProcessing;
@@ -1337,7 +1337,7 @@ public class CompilerOptions implements Serializable {
     stripNameSuffixes = ImmutableSet.of();
     stripNamePrefixes = ImmutableSet.of();
     customPasses = null;
-    defineReplacements = new HashMap<>();
+    defineReplacements = new LinkedHashMap<>();
     tweakProcessing = TweakProcessing.OFF;
     rewriteGlobalDeclarationsForTryCatchWrapping = false;
     checksOnly = false;
@@ -1384,25 +1384,19 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Returns the map of define replacements. */
-  public Map<String, Node> getDefineReplacements() {
-    return getReplacementsHelper(defineReplacements);
-  }
-
-  /** Creates a map of String->Node from a map of String->Number/String/Boolean. */
-  private static ImmutableMap<String, Node> getReplacementsHelper(Map<String, Object> source) {
+  public ImmutableMap<String, Node> getDefineReplacements() {
     ImmutableMap.Builder<String, Node> map = ImmutableMap.builder();
-    for (Map.Entry<String, Object> entry : source.entrySet()) {
+    for (Map.Entry<String, Object> entry : this.defineReplacements.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
       if (value instanceof Boolean) {
         map.put(name, NodeUtil.booleanNode(((Boolean) value).booleanValue()));
-      } else if (value instanceof Integer) {
-        map.put(name, IR.number(((Integer) value).intValue()));
-      } else if (value instanceof Double) {
-        map.put(name, IR.number(((Double) value).doubleValue()));
-      } else {
-        checkState(value instanceof String);
+      } else if (value instanceof Number) {
+        map.put(name, NodeUtil.numberNode(((Number) value).doubleValue(), null));
+      } else if (value instanceof String) {
         map.put(name, IR.string((String) value));
+      } else {
+        throw new IllegalStateException(String.valueOf(value));
       }
     }
     return map.build();
@@ -1410,22 +1404,22 @@ public class CompilerOptions implements Serializable {
 
   /** Sets the value of the {@code @define} variable in JS to a boolean literal. */
   public void setDefineToBooleanLiteral(String defineName, boolean value) {
-    defineReplacements.put(defineName, value);
+    this.defineReplacements.put(defineName, value);
   }
 
   /** Sets the value of the {@code @define} variable in JS to a String literal. */
   public void setDefineToStringLiteral(String defineName, String value) {
-    defineReplacements.put(defineName, value);
+    this.defineReplacements.put(defineName, value);
   }
 
   /** Sets the value of the {@code @define} variable in JS to a number literal. */
   public void setDefineToNumberLiteral(String defineName, int value) {
-    defineReplacements.put(defineName, value);
+    this.defineReplacements.put(defineName, value);
   }
 
   /** Sets the value of the {@code @define} variable in JS to a number literal. */
   public void setDefineToDoubleLiteral(String defineName, double value) {
-    defineReplacements.put(defineName, value);
+    this.defineReplacements.put(defineName, value);
   }
 
   /** Skip all possible passes, to make the compiler as fast as possible. */
@@ -2324,7 +2318,8 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setDefineReplacements(Map<String, Object> defineReplacements) {
-    this.defineReplacements = defineReplacements;
+    this.defineReplacements.clear();
+    this.defineReplacements.putAll(defineReplacements);
   }
 
   @Deprecated

@@ -706,6 +706,8 @@ public class IR {
   }
 
   public static Node number(double d) {
+    checkState(!Double.isNaN(d), d);
+    checkState(Double.compare(0.0, d) <= 0, d); // isPositive
     return Node.newNumber(d);
   }
 

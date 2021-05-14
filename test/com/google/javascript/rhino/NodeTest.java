@@ -39,6 +39,7 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -170,6 +171,25 @@ public class NodeTest {
   public void testIsEquivalentToNumber() {
     assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(1))).isTrue();
     assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(2))).isFalse();
+  }
+
+  @Test
+  public void testNumberRejects_isNaN() {
+    assertNumberNodeRejects(Double.NaN);
+    assertNumberNodeRejects(-Double.NaN);
+  }
+
+  @Test
+  public void testNumberRejects_negativeValues() {
+    assertNumberNodeRejects(-1394793.114);
+    assertNumberNodeRejects(-1.0);
+    assertNumberNodeRejects(-0.0);
+    assertNumberNodeRejects(Double.NEGATIVE_INFINITY);
+  }
+
+  private void assertNumberNodeRejects(double d) {
+    assertThrows(Exception.class, () -> Node.newNumber(d));
+    assertThrows(Exception.class, () -> Node.newNumber(0.0).setDouble(d));
   }
 
   @Test

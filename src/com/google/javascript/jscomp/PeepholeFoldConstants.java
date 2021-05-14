@@ -26,6 +26,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
+import javax.annotation.Nullable;
 
 /**
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
@@ -374,6 +375,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         n.replaceWith(replacementNode);
         reportChangeToEnclosingScope(parent);
         return replacementNode;
+
       case POS:
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
@@ -382,6 +384,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           return left;
         }
         return n;
+
       case NEG:
         if (left.isName()) {
           if (left.getString().equals("Infinity")) {
@@ -395,38 +398,32 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return left;
           }
         }
-
-        if (left.isNumber()) {
-          double negNum = -left.getDouble();
-
-          Node negNumNode = IR.number(negNum);
-          n.replaceWith(negNumNode);
-          reportChangeToEnclosingScope(parent);
-          return negNumNode;
-        }
         return n;
 
       case BITNOT:
-        if (left.isNumber()) {
-          double val = left.getDouble();
-          if (Math.floor(val) == val) {
-            int intVal = jsConvertDoubleToBits(val);
-            Node notIntValNode = IR.number(~intVal);
-            n.replaceWith(notIntValNode);
+        {
+          Double doubleVal = this.getSideEffectFreeNumberValue(left);
+
+          if (doubleVal != null) {
+            if (isIntValue(doubleVal)) {
+              int intVal = jsConvertDoubleToBits(doubleVal);
+              Node notIntValNode = NodeUtil.numberNode(~intVal, left);
+              n.replaceWith(notIntValNode);
+              reportChangeToEnclosingScope(parent);
+              return notIntValNode;
+            } else {
+              report(FRACTIONAL_BITWISE_OPERAND, left);
+              return n;
+            }
+          } else if (left.isBigInt()) {
+            BigInteger val = left.getBigInt();
+            Node notValNode = IR.bigint(val.not());
+            n.replaceWith(notValNode);
             reportChangeToEnclosingScope(parent);
-            return notIntValNode;
+            return notValNode;
           } else {
-            report(FRACTIONAL_BITWISE_OPERAND, left);
             return n;
           }
-        } else if (left.isBigInt()) {
-          BigInteger val = left.getBigInt();
-          Node notValNode = IR.bigint(val.not());
-          n.replaceWith(notValNode);
-          reportChangeToEnclosingScope(parent);
-          return notValNode;
-        } else {
-          return n;
         }
 
         default:
@@ -440,6 +437,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    */
   private int jsConvertDoubleToBits(double d) {
     return (int) (((long) Math.floor(d)) & 0xffffffff);
+  }
+
+  private boolean isReasonableDoubleValue(@Nullable Double x) {
+    return x != null && !x.isInfinite() && !x.isNaN();
+  }
+
+  private boolean isIntValue(double x) {
+    return Math.floor(x) == x;
   }
 
   /**
@@ -1102,56 +1107,52 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold shift operations
    */
   private Node tryFoldShift(Node n, Node left, Node right) {
-    if (left.isNumber() &&
-        right.isNumber()) {
+    Double leftVal = this.getSideEffectFreeNumberValue(left);
+    Double rightVal = this.getSideEffectFreeNumberValue(right);
 
-      double result;
-      double lval = left.getDouble();
-      double rval = right.getDouble();
-
-      // only the lower 5 bits are used when shifting, so don't do anything
-      // if the shift amount is outside [0,32)
-      if (!(rval >= 0 && rval < 32)) {
-        return n;
-      }
-
-      int rvalInt = (int) rval;
-      if (rvalInt != rval) {
-        report(FRACTIONAL_BITWISE_OPERAND, right);
-        return n;
-      }
-
-      if (Math.floor(lval) != lval) {
-        report(FRACTIONAL_BITWISE_OPERAND, left);
-        return n;
-      }
-
-      int bits = jsConvertDoubleToBits(lval);
-
-      switch (n.getToken()) {
-        case LSH:
-          result = bits << rvalInt;
-          break;
-        case RSH:
-          result = bits >> rvalInt;
-          break;
-        case URSH:
-          // JavaScript always treats the result of >>> as unsigned.
-          // We must force Java to do the same here.
-          result = 0xffffffffL & (bits >>> rvalInt);
-          break;
-        default:
-          throw new AssertionError("Unknown shift operator: " + n.getToken());
-      }
-
-      Node newNumber = IR.number(result);
-      reportChangeToEnclosingScope(n);
-      n.replaceWith(newNumber);
-
-      return newNumber;
+    if (!isReasonableDoubleValue(leftVal) || !isReasonableDoubleValue(rightVal)) {
+      return n;
+    }
+    if (!isIntValue(leftVal)) {
+      report(FRACTIONAL_BITWISE_OPERAND, left);
+      return n;
+    }
+    if (!isIntValue(rightVal)) {
+      report(FRACTIONAL_BITWISE_OPERAND, right);
+      return n;
     }
 
-    return n;
+    // only the lower 5 bits are used when shifting, so don't do anything
+    // if the shift amount is outside [0,32)
+    if (!(0 <= rightVal && rightVal < 32)) {
+      return n;
+    }
+
+    int rvalInt = rightVal.intValue();
+    int bits = jsConvertDoubleToBits(leftVal);
+
+    double result;
+    switch (n.getToken()) {
+      case LSH:
+        result = bits << rvalInt;
+        break;
+      case RSH:
+        result = bits >> rvalInt;
+        break;
+      case URSH:
+        // JavaScript always treats the result of >>> as unsigned.
+        // We must force Java to do the same here.
+        result = 0xffffffffL & (bits >>> rvalInt);
+        break;
+      default:
+        throw new AssertionError("Unknown shift operator: " + n.getToken());
+    }
+
+    Node newNumber = NodeUtil.numberNode(result, n);
+    reportChangeToEnclosingScope(n);
+    n.replaceWith(newNumber);
+
+    return newNumber;
   }
 
   /**
@@ -1579,14 +1580,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (!right.isNumber()) {
+    Double index = this.getSideEffectFreeNumberValue(right);
+    if (!isReasonableDoubleValue(index)) {
       // Sometimes people like to use complex expressions to index into
       // arrays, or strings to index into array methods.
       return n;
     }
 
-    double index = right.getDouble();
-    int intIndex = (int) index;
+    int intIndex = index.intValue();
     if (intIndex != index) {
       // Ideally this should be caught in the check passes.
       report(INVALID_GETELEM_INDEX_ERROR, right);
@@ -1664,14 +1665,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (!right.isNumber()) {
+    Double index = this.getSideEffectFreeNumberValue(right);
+    if (!isReasonableDoubleValue(index)) {
       // Sometimes people like to use complex expressions to index into
       // arrays, or strings to index into array methods.
       return n;
     }
 
-    double index = right.getDouble();
-    int intIndex = (int) index;
+    int intIndex = index.intValue();
     if (intIndex != index) {
       report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;

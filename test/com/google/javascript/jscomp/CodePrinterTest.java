@@ -1431,9 +1431,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("var x = 0xFE;", "var x = 254;\n");
     assertPrettyPrintSame("var x = 1" + String.format("%0100d", 0) + ";\n"); // a googol
     assertPrettyPrintSame("f(10000);\n");
-    assertPrettyPrint("var x = -10000;\n", "var x = -1E4;\n");
-    assertPrettyPrint("var x = y - -10000;\n", "var x = y - -1E4;\n");
-    assertPrettyPrint("f(-10000);\n", "f(-1E4);\n");
+    assertPrettyPrint("var x = -10000;\n", "var x = -10000;\n");
+    assertPrettyPrint("var x = y - -10000;\n", "var x = y - -10000;\n");
+    assertPrettyPrint("f(-10000);\n", "f(-10000);\n");
     assertPrettyPrintSame("x < 2592000;\n");
     assertPrettyPrintSame("x < 1000.000;\n");
     assertPrettyPrintSame("x < 1000.912;\n");
@@ -2384,22 +2384,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintNumber("1E3", 1000);
     assertPrintNumber("1E4", 10000);
     assertPrintNumber("1E5", 100000);
-    assertPrintNumber("-1", -1);
-    assertPrintNumber("-10", -10);
-    assertPrintNumber("-100", -100);
-    assertPrintNumber("-1E3", -1000);
-    assertPrintNumber("-12341234E4", -123412340000L);
     assertPrintNumber("1E18", 1000000000000000000L);
     assertPrintNumber("1E5", 100000.0);
     assertPrintNumber("100000.1", 100000.1);
 
     assertPrintNumber("1E-6", 0.000001);
-    assertPrintNumber("-0x38d7ea4c68001", -0x38d7ea4c68001L);
     assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001L);
     assertPrintNumber("0x7fffffffffffffff", 0x7fffffffffffffffL);
 
-    assertPrintNumber("-1.01", -1.01);
-    assertPrintNumber("-.01", -0.01);
     assertPrintNumber(".01", 0.01);
     assertPrintNumber("1.01", 1.01);
   }
@@ -2647,10 +2639,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testNegCollapse() {
-    // Collapse the negative symbol on numbers at generation time,
-    // to match the Rhino behavior.
-    assertPrint("var x = - - 2;", "var x=2");
+  public void testNegNoCollapse() {
+    assertPrint("var x = - - 2;", "var x=- -2");
     assertPrint("var x = - (2);", "var x=-2");
   }
 
