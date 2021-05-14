@@ -16,19 +16,22 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
+import static com.google.javascript.jscomp.InlineAndCollapseProperties.ALIAS_CYCLE;
 
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Unit tests for {@link InlineAliases}. */
+/** Unit tests for {@link InlineAndCollapseProperties.InlineAliases}. */
 @RunWith(JUnit4.class)
 public class InlineAliasesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new InlineAliases(compiler);
+    return InlineAndCollapseProperties.builder(compiler)
+        .setPropertyCollapseLevel(PropertyCollapseLevel.NONE)
+        .build();
   }
 
   @Override
