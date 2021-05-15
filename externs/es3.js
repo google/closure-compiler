@@ -104,6 +104,12 @@ Symbol.match;
 Symbol.matchAll;
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/split
+ * @const {symbol}
+ */
+Symbol.split;
+
+/**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/replace
  * @const {symbol}
  */
