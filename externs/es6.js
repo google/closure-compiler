@@ -415,12 +415,12 @@ function SharedArrayBuffer(length) {}
 SharedArrayBuffer.prototype.byteLength;
 
 /**
- * @param {number} begin
+ * @param {number=} opt_begin
  * @param {number=} opt_end
  * @return {!SharedArrayBuffer}
  * @nosideeffects
  */
-SharedArrayBuffer.prototype.slice = function(begin, opt_end) {};
+SharedArrayBuffer.prototype.slice = function(opt_begin, opt_end) {};
 
 
 /**
