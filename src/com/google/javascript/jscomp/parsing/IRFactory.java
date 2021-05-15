@@ -2267,32 +2267,31 @@ class IRFactory {
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
       Token type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
-      if (type == Token.NEG && operand.isBigInt()) {
-        operand.setBigInt(operand.getBigInt().negate());
-        operand.setLinenoCharno(-1, -1);
-        setSourceInfo(operand, exprNode.operator.getStart(), exprNode.operand.getEnd());
-        return operand;
-      } else {
-        if (type == Token.DELPROP
-            && !(operand.isGetProp()
-                || operand.isGetElem()
-                || operand.isName()
-                || operand.isOptChainGetProp()
-                || operand.isOptChainGetElem())) {
-          String msg =
-              "Invalid delete operand. Only properties can be deleted.";
-          errorReporter.error(
-              msg,
-              sourceName,
-              operand.getLineno(), 0);
-        }
-        if (type == Token.POS && operand.isBigInt()) {
-          errorReporter.error(
-              "Cannot convert a BigInt value to a number", sourceName, operand.getLineno(), 0);
-        }
 
-        return newNode(type, operand);
+      switch (type) {
+        case DELPROP:
+          if (!(operand.isGetProp()
+              || operand.isGetElem()
+              || operand.isName()
+              || operand.isOptChainGetProp()
+              || operand.isOptChainGetElem())) {
+            String msg = "Invalid delete operand. Only properties can be deleted.";
+            errorReporter.error(msg, sourceName, operand.getLineno(), 0);
+          }
+          break;
+
+        case POS:
+          if (operand.isBigInt()) {
+            errorReporter.error(
+                "Cannot convert a BigInt value to a number", sourceName, operand.getLineno(), 0);
+          }
+          break;
+
+        default:
+          break;
       }
+
+      return newNode(type, operand);
     }
 
     Node processUpdateExpression(UpdateExpressionTree updateExpr) {

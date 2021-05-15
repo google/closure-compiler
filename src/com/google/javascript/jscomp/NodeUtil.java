@@ -150,14 +150,19 @@ public final class NodeUtil {
       case POS:
       case NEG:
         {
-          Double val = getNumberValue(n.getOnlyChild());
-          if (val == null) {
-            return Tri.UNKNOWN;
+          Double doubleVal = getNumberValue(n);
+          if (doubleVal != null) {
+            boolean isFalsey = doubleVal.isNaN() || doubleVal == 0.0; // 0.0 == -0.0
+            return Tri.forBoolean(!isFalsey);
           }
 
-          // ~NaN => -1 => true
-          Tri result = Tri.forBoolean(!val.isNaN() && val != 0.0);
-          return n.isBitNot() ? result.not() : result;
+          BigInteger bigintVal = getBigIntValue(n);
+          if (bigintVal != null) {
+            boolean isFalsey = bigintVal.equals(BigInteger.ZERO);
+            return Tri.forBoolean(!isFalsey);
+          }
+
+          return Tri.UNKNOWN;
         }
 
       case ASSIGN:
@@ -361,16 +366,20 @@ public final class NodeUtil {
         }
         return null;
 
+      case POS:
+        return getNumberValue(n.getOnlyChild());
+
       case NEG:
-        if (n.hasOneChild()) {
-          Node child = n.getFirstChild();
-          if (child.isNumber()) {
-            return -child.getDouble();
-          } else if (child.isName() && child.getString().equals("Infinity")) {
-            return Double.NEGATIVE_INFINITY;
-          }
+        {
+          Double val = getNumberValue(n.getOnlyChild());
+          return (val == null) ? null : -val;
         }
-        return null;
+
+      case BITNOT:
+        {
+          Double val = getNumberValue(n.getOnlyChild());
+          return (val == null) ? null : (double) ~toInt32(val);
+        }
 
       case NOT:
         Tri child = getBooleanValue(n.getFirstChild());
@@ -454,12 +463,6 @@ public final class NodeUtil {
    */
   static BigInteger getBigIntValue(Node n) {
     switch (n.getToken()) {
-      case TRUE:
-        return BigInteger.ONE;
-
-      case FALSE:
-        return BigInteger.ZERO;
-
       case NUMBER:
         {
           double val = n.getDouble();
@@ -469,14 +472,18 @@ public final class NodeUtil {
       case BIGINT:
         return n.getBigInt();
 
+      case FALSE:
       case NOT:
-        {
-          Tri child = getBooleanValue(n.getFirstChild());
-          if (child != Tri.UNKNOWN) {
-            return child.toBoolean(true) ? BigInteger.ZERO : BigInteger.ONE; // reversed.
-          }
-          return null;
+      case TRUE:
+        switch (getBooleanValue(n)) {
+          case TRUE:
+            return BigInteger.ONE;
+          case FALSE:
+            return BigInteger.ZERO;
+          case UNKNOWN:
+            return null;
         }
+        throw new AssertionError();
 
       case TEMPLATELIT:
         {
@@ -494,6 +501,12 @@ public final class NodeUtil {
         {
           BigInteger result = getBigIntValue(n.getOnlyChild());
           return (result == null) ? null : result.negate();
+        }
+
+      case BITNOT:
+        {
+          BigInteger result = getBigIntValue(n.getOnlyChild());
+          return (result == null) ? null : result.not();
         }
 
       case ARRAYLIT:

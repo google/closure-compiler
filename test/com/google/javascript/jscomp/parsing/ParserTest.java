@@ -3893,15 +3893,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralNegative() {
-    Node bigint =
+    Node neg =
         parse("-1n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
-            .getOnlyChild(); // BIGINT
+            .getOnlyChild(); // NEG
+
+    assertNode(neg).hasType(Token.NEG);
+    assertNode(neg).hasLineno(1);
+    assertNode(neg).hasCharno(0);
+    assertNode(neg).hasLength(3);
+
+    Node bigint = neg.getOnlyChild();
     assertNode(bigint).hasType(Token.BIGINT);
     assertNode(bigint).hasLineno(1);
-    assertNode(bigint).hasCharno(0);
-    assertNode(bigint).hasLength(3);
-    assertNode(bigint).isBigInt(new BigInteger("-1"));
+    assertNode(bigint).hasCharno(1);
+    assertNode(bigint).hasLength(2);
+    assertNode(bigint).isBigInt(BigInteger.ONE);
   }
 
   @Test

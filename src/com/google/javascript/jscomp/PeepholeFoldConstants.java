@@ -386,27 +386,31 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         return n;
 
       case NEG:
-        if (left.isName()) {
-          if (left.getString().equals("Infinity")) {
-            // "-Infinity" is valid and a literal, don't modify it.
-            return n;
-          } else if (left.getString().equals("NaN")) {
-            // "-NaN" is "NaN".
-            left.detach();
-            n.replaceWith(left);
-            reportChangeToEnclosingScope(parent);
-            return left;
+        {
+          Node result = null;
+          if (left.isName() && left.getString().equals("NaN")) {
+            result = left.detach(); // "-NaN" is "NaN".
+          } else if (left.isNeg()) {
+            Node leftLeft = left.getOnlyChild();
+            if (leftLeft.isBigInt() || leftLeft.isNumber()) {
+              result = leftLeft.detach(); // `-(-4)` is `4`
+            }
           }
+
+          if (result != null) {
+            n.replaceWith(result);
+            reportChangeToEnclosingScope(parent);
+            return result;
+          }
+          return n;
         }
-        return n;
 
       case BITNOT:
         {
           Double doubleVal = this.getSideEffectFreeNumberValue(left);
-
           if (doubleVal != null) {
             if (isIntValue(doubleVal)) {
-              int intVal = jsConvertDoubleToBits(doubleVal);
+              int intVal = NodeUtil.toInt32(doubleVal);
               Node notIntValNode = NodeUtil.numberNode(~intVal, left);
               n.replaceWith(notIntValNode);
               reportChangeToEnclosingScope(parent);
@@ -415,28 +419,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
               report(FRACTIONAL_BITWISE_OPERAND, left);
               return n;
             }
-          } else if (left.isBigInt()) {
-            BigInteger val = left.getBigInt();
-            Node notValNode = IR.bigint(val.not());
-            n.replaceWith(notValNode);
-            reportChangeToEnclosingScope(parent);
-            return notValNode;
-          } else {
-            return n;
           }
+
+          BigInteger bigintVal = this.getSideEffectFreeBigIntValue(n);
+          if (bigintVal != null) {
+            Node bigintNotNode = bigintNode(bigintVal, n);
+            n.replaceWith(bigintNotNode);
+            reportChangeToEnclosingScope(parent);
+            return bigintNotNode;
+          }
+
+          return n;
         }
 
         default:
           return n;
     }
-  }
-
-  /**
-   * Uses a method for treating a double as 32bits that is equivalent to
-   * how JavaScript would convert a number before applying a bit operation.
-   */
-  private int jsConvertDoubleToBits(double d) {
-    return (int) (((long) Math.floor(d)) & 0xffffffff);
   }
 
   private boolean isReasonableDoubleValue(@Nullable Double x) {
@@ -773,7 +771,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold arithmetic binary operators
    */
   private Node tryFoldArithmeticOp(Node n, Node left, Node right) {
-    Node result = performArithmeticOp(n.getToken(), left, right);
+    Node result = performArithmeticOp(n, left, right);
     if (result != null) {
       result.srcrefTreeIfMissing(n);
       reportChangeToEnclosingScope(n);
@@ -783,20 +781,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Try to fold arithmetic binary operators
-   */
-  private Node performArithmeticOp(Token opType, Node left, Node right) {
+  /** Try to fold arithmetic binary operators */
+  private Node performArithmeticOp(Node n, Node left, Node right) {
     // Unlike other operations, ADD operands are not always converted
     // to Number.
-    if (opType == Token.ADD
+    if (n.isAdd()
         && (NodeUtil.mayBeString(left, shouldUseTypes)
             || NodeUtil.mayBeString(right, shouldUseTypes))) {
       return null;
     }
 
     if (isBigInt(left) && isBigInt(right)) {
-      return performBigIntArithmeticOp(opType, left, right);
+      return performBigIntArithmeticOp(n, left, right);
     }
 
     double result;
@@ -812,7 +808,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
     // handle the operations that have algebraic identities, since we can simplify the tree without
     // actually knowing the value statically.
-    switch (opType) {
+    switch (n.getToken()) {
       case ADD:
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj + rValObj, lValObj, rValObj);
@@ -880,7 +876,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
     double lval = lValObj;
     double rval = rValObj;
-    switch (opType) {
+    switch (n.getToken()) {
       case BITAND:
         result = NodeUtil.toInt32(lval) & NodeUtil.toInt32(rval);
         break;
@@ -897,42 +893,42 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         result = lval % rval;
         break;
       default:
-        throw new Error("Unexpected arithmetic operator: " + opType);
+        throw new IllegalStateException("Unexpected arithmetic operator: " + n.getToken());
     }
     return maybeReplaceBinaryOpWithNumericResult(result, lval, rval);
   }
 
-  private Node performBigIntArithmeticOp(Token opType, Node left, Node right) {
+  private Node performBigIntArithmeticOp(Node n, Node left, Node right) {
     BigInteger lVal = getSideEffectFreeBigIntValue(left);
     BigInteger rVal = getSideEffectFreeBigIntValue(right);
     if (lVal != null && rVal != null) {
-      switch (opType) {
+      switch (n.getToken()) {
         case ADD:
-          return IR.bigint(lVal.add(rVal));
+          return bigintNode(lVal.add(rVal), n);
         case SUB:
-          return IR.bigint(lVal.subtract(rVal));
+          return bigintNode(lVal.subtract(rVal), n);
         case MUL:
-          return IR.bigint(lVal.multiply(rVal));
+          return bigintNode(lVal.multiply(rVal), n);
         case DIV:
           if (!rVal.equals(BigInteger.ZERO)) {
-            return IR.bigint(lVal.divide(rVal));
+            return bigintNode(lVal.divide(rVal), n);
           } else {
             return null;
           }
         case EXPONENT:
           try {
-            return IR.bigint(lVal.pow(rVal.intValueExact()));
+            return bigintNode(lVal.pow(rVal.intValueExact()), n);
           } catch (ArithmeticException exception) {
             return null;
           }
         case MOD:
-          return IR.bigint(lVal.mod(rVal));
+          return bigintNode(lVal.mod(rVal), n);
         case BITAND:
-          return IR.bigint(lVal.and(rVal));
+          return bigintNode(lVal.and(rVal), n);
         case BITOR:
-          return IR.bigint(lVal.or(rVal));
+          return bigintNode(lVal.or(rVal), n);
         case BITXOR:
-          return IR.bigint(lVal.xor(rVal));
+          return bigintNode(lVal.xor(rVal), n);
         default:
           return null;
       }
@@ -940,7 +936,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // handle the operations that have algebraic identities, since we can simplify the tree without
     // actually knowing the value statically.
-    switch (opType) {
+    switch (n.getToken()) {
       case ADD:
         if (lVal != null && lVal.equals(BigInteger.ZERO)) {
           return right.cloneTree(/* cloneTypeExprs= */ true);
@@ -1039,10 +1035,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node lr = ll.getNext();
 
       Node valueToCombine = ll;
-      Node replacement = performArithmeticOp(opType, valueToCombine, right);
+      Node replacement = performArithmeticOp(n, valueToCombine, right);
       if (replacement == null) {
         valueToCombine = lr;
-        replacement = performArithmeticOp(opType, valueToCombine, right);
+        replacement = performArithmeticOp(n, valueToCombine, right);
       }
       if (replacement != null) {
         // Remove the child that has been combined
@@ -1129,7 +1125,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     int rvalInt = rightVal.intValue();
-    int bits = jsConvertDoubleToBits(leftVal);
+    int bits = NodeUtil.toInt32(leftVal);
 
     double result;
     switch (n.getToken()) {
@@ -1856,5 +1852,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     reportChangeToEnclosingScope(value);
     markFunctionsDeleted(n);
     return n;
+  }
+
+  private static Node bigintNode(BigInteger val, Node srcref) {
+    Node tree = (val.signum() < 0) ? IR.neg(IR.bigint(val.negate())) : IR.bigint(val);
+    return tree.srcrefTree(srcref);
   }
 }

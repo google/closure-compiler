@@ -270,11 +270,15 @@ public final class NodeUtilTest {
             // Numbers
             {"+'0.0'", Tri.FALSE},
             {"+'1.0'", Tri.TRUE},
+            {"+'3.1'", Tri.TRUE},
+            {"+3.1", Tri.TRUE},
             {"-'0.0'", Tri.FALSE},
             {"-'1.0'", Tri.TRUE},
             {"-'1.0'", Tri.TRUE},
+            {"-'3.1'", Tri.TRUE},
             {"-0.0", Tri.FALSE},
             {"-1.0", Tri.TRUE},
+            {"-3.1", Tri.TRUE},
             {"-Infinity", Tri.TRUE},
             {"-NaN", Tri.FALSE},
             {"0.0", Tri.FALSE},
@@ -284,7 +288,20 @@ public final class NodeUtilTest {
             {"~'-1.0'", Tri.FALSE},
             {"~-1.0", Tri.FALSE},
             {"~0.0", Tri.TRUE},
+            {"~3.1", Tri.TRUE},
             {"~NaN", Tri.TRUE},
+
+            // BigInts
+            {"0n", Tri.FALSE},
+            {"-0n", Tri.FALSE},
+            {"~0n", Tri.TRUE},
+            {"~-0n", Tri.TRUE},
+            {"-~0n", Tri.TRUE},
+            {"1n", Tri.TRUE},
+            {"-1n", Tri.TRUE},
+            {"~1n", Tri.TRUE},
+            {"~-1n", Tri.FALSE},
+            {"-~1n", Tri.TRUE},
 
             // template literals
             {"``", Tri.FALSE},
@@ -1708,13 +1725,23 @@ public final class NodeUtilTest {
       // Literals
       assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isEqualTo(null);
-      // "-1" is parsed as a literal
       assertThat(NodeUtil.getNumberValue(parseExpr("-1"))).isEqualTo(-1.0);
-      // "+1" is parse as an op + literal
-      assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("22"))).isEqualTo(22.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("0x22"))).isEqualTo(34.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-0.1"))).isEqualTo(-0.1);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-0.0"))).isEqualTo(-0.0);
+
+      // BITNOT
+      assertThat(NodeUtil.getNumberValue(parseExpr("~1"))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~-1"))).isEqualTo(0.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~22"))).isEqualTo(-23.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~022"))).isEqualTo(-19.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~0.0"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~0.1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~NaN"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~Infinity"))).isEqualTo(-1.0);
 
       assertThat(NodeUtil.getNumberValue(parseExpr("true"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("false"))).isEqualTo(0.0);
@@ -1736,7 +1763,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("x.y"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1/2"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1-2"))).isNull();
-      assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isNull();
     }
 
     @Test

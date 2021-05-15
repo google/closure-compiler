@@ -193,6 +193,18 @@ public class NodeTest {
   }
 
   @Test
+  public void testBigintRejects_negativeValues() {
+    assertBigIntNodeRejects(new BigInteger("-1394793"));
+    assertBigIntNodeRejects(new BigInteger("-1"));
+    assertThat(Node.newBigInt(new BigInteger("-0"))).isNotNull();
+  }
+
+  private void assertBigIntNodeRejects(BigInteger x) {
+    assertThrows(Exception.class, () -> Node.newBigInt(x));
+    assertThrows(Exception.class, () -> Node.newBigInt(BigInteger.ZERO).setBigInt(x));
+  }
+
+  @Test
   public void testIsEquivalentToBigInt() {
     assertThat(Node.newBigInt(BigInteger.ONE).isEquivalentTo(Node.newBigInt(BigInteger.ONE)))
         .isTrue();

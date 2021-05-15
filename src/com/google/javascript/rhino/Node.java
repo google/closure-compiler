@@ -1078,7 +1078,9 @@ public class Node {
   }
 
   public final void setBigInt(BigInteger number) {
-    ((BigIntNode) this).bigint = checkNotNull(number);
+    checkNotNull(number);
+    checkState(number.signum() >= 0, number);
+    ((BigIntNode) this).bigint = number;
   }
 
   public final String getString() {

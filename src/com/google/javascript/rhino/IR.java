@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
@@ -712,6 +713,8 @@ public class IR {
   }
 
   public static Node bigint(BigInteger b) {
+    checkNotNull(b);
+    checkState(b.signum() >= 0, b);
     return Node.newBigInt(b);
   }
 
