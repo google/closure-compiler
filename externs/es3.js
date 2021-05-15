@@ -2287,6 +2287,14 @@ RegExp.$9;
 RegExp.prototype.global;
 
 /**
+ * The dotAll property indicates whether or not the "s" flag is used with the regular expression.
+ *
+ * @type {boolean}
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/dotAll
+ */
+RegExp.prototype.dotAll;
+
+/**
  * Whether to ignore case while attempting a match in a string.
  * @type {boolean}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/ignoreCase
