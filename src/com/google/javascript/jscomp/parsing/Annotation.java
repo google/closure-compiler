@@ -70,6 +70,8 @@ enum Annotation {
   PURE_OR_BREAK_MY_CODE,
   RETURN,
   SEE,
+  SOY_MODULE,
+  SOY_TEMPLATE,
   STRUCT,
   SUPPRESS,
   TEMPLATE,
@@ -137,6 +139,8 @@ enum Annotation {
           .put("return", Annotation.RETURN)
           .put("returns", Annotation.RETURN)
           .put("see", Annotation.SEE)
+          .put("soyModule", Annotation.SOY_MODULE)
+          .put("soyTemplate", Annotation.SOY_TEMPLATE)
           .put("struct", Annotation.STRUCT)
           .put("suppress", Annotation.SUPPRESS)
           .put("template", Annotation.TEMPLATE)

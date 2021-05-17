@@ -1015,7 +1015,9 @@ public final class JsDocInfoParser {
         case IDGENERATOR:
           token = parseIdGeneratorTag(next());
           return token;
-
+        case SOY_MODULE:
+        case SOY_TEMPLATE:
+          return eatUntilEOLIfNotAnnotation();
         case WIZACTION:
           if (!jsdocBuilder.recordWizaction()) {
             addParserWarning("msg.jsdoc.wizaction");
