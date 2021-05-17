@@ -40,6 +40,7 @@ package com.google.javascript.rhino;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.base.Preconditions;
 import java.math.BigInteger;
@@ -708,7 +709,7 @@ public class IR {
 
   public static Node number(double d) {
     checkState(!Double.isNaN(d), d);
-    checkState(Double.compare(0.0, d) <= 0, d); // isPositive
+    checkState(isPositive(d), d);
     return Node.newNumber(d);
   }
 

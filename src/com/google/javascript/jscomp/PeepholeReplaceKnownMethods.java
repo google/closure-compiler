@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToUint32;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -179,7 +180,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           }
           break;
         case "clz32":
-          replacement = Double.valueOf(Integer.numberOfLeadingZeros(NodeUtil.toUInt32(arg)));
+          replacement = (double) Integer.numberOfLeadingZeros(ecmascriptToUint32(arg));
           break;
         default: // fall out
       }

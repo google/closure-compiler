@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.Node;
@@ -320,51 +321,45 @@ public abstract class CodeConsumer {
   }
 
   void addNumber(double x, Node n) {
-    // This is not pretty printing. This is to prevent misparsing of x- -4 as
-    // x--4 (which is a syntax error).
-    char prev = getLastChar();
-    boolean negativeZero = isNegativeZero(x);
-    if ((x < 0 || negativeZero) && prev == '-') {
-      add(" ");
+    checkState(isPositive(x), x);
+
+    if ((long) x != x) {
+      addConstant(String.valueOf(x).replace(".0E", "E").replaceFirst("^0\\.", "."));
+      return;
     }
 
-    if (negativeZero) {
-      addConstant("-0");
-    } else if ((long) x == x) {
-      long value = (long) x;
-      long mantissa = value;
-      int exp = 0;
-      if (Math.abs(x) >= 100) {
-        while (mantissa / 10 * ((long) Math.pow(10, exp + 1)) == value) {
-          mantissa /= 10;
-          exp++;
-        }
+    long value = (long) x;
+    long mantissa = value;
+    int exp = 0;
+    if (x >= 100) {
+      while (mantissa % 10 == 0) {
+        mantissa /= 10;
+        exp++;
       }
-      if (exp > 2) {
-        addConstant(mantissa + "E" + exp);
-      } else {
-        long valueAbs = Math.abs(value);
-        if (valueAbs > 1000000000000L && // Values <1E12 are shorter in decimal
-            Long.toHexString(valueAbs).length() + 2 <
-            Long.toString(valueAbs).length()) {
-          addConstant((value < 0 ? "-" : "") + "0x" +
-              Long.toHexString(valueAbs));
-        } else {
-          addConstant(Long.toString(value));
-        }
-      }
+    }
+
+    if (exp > 2) {
+      addConstant(mantissa + "E" + exp);
+      return;
+    }
+
+    String decValueString = Long.toString(value);
+    if (value <= 1000000000000L) {
+      // Values <1E12 are shorter in decimal
+      addConstant(decValueString);
+      return;
+    }
+
+    String hexValueString = Long.toHexString(value);
+    if (hexValueString.length() + 2 < decValueString.length()) {
+      addConstant("0x" + hexValueString);
     } else {
-      addConstant(String.valueOf(x).replace(".0E", "E").replaceFirst(
-          "^(-?)0\\.", "$1."));
+      addConstant(decValueString);
     }
   }
 
   void addConstant(String newcode) {
     add(newcode);
-  }
-
-  static boolean isNegativeZero(double x) {
-    return x == 0.0 && 1 / x < 0;
   }
 
   static boolean isWordChar(char ch) {

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt32;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -185,11 +186,11 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         return -1;
       }
 
-      Node index = ref.getNext();
+      Node indexNode = ref.getNext();
 
       // We have something like arguments[x] where x is not a constant. That
       // means at least one of the access is not known.
-      if (!index.isNumber() || index.getDouble() < 0) {
+      if (!indexNode.isNumber()) {
         // TODO(user): Its possible not to give up just yet. The type
         // inference did a 'semi value propagation'. If we know that string
         // is never a subclass of the type of the index. We'd know that
@@ -197,8 +198,9 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         return -1; // Give up.
       }
 
-      //We want to bail out if someone tries to access arguments[0.5] for example
-      if (index.getDouble() != Math.floor(index.getDouble())){
+      // We want to bail out if someone tries to access arguments[0.5] for example
+      double index = indexNode.getDouble();
+      if (!isExactInt32(index)) {
         return -1;
       }
 
@@ -213,9 +215,9 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
       // Replace the highest index if we see an access that has a higher index
       // than all the one we saw before.
-      int value = (int) index.getDouble();
-      if (value > highestIndex) {
-        highestIndex = value;
+      int indexInt = (int) index;
+      if (indexInt > highestIndex) {
+        highestIndex = indexInt;
       }
     }
     return highestIndex;

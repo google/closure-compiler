@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
@@ -320,18 +321,12 @@ public final class CodePrinter {
      */
     @Override
     void addNumber(double x, Node n) {
-      if (isNegativeZero(x)) {
-        super.addNumber(x, n);
-        return;
-      }
+      checkState(isPositive(x), x);
+
       String numberFromSource = getNumberFromSource(n);
       if (numberFromSource == null) {
         super.addNumber(x, n);
         return;
-      }
-
-      if (x < 0) {
-        numberFromSource = "-" + numberFromSource;
       }
 
       // The string we extract from the source code is not always a number.

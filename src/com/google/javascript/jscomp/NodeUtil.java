@@ -19,6 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isEitherZero;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isNegative;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -135,15 +139,15 @@ public final class NodeUtil {
         return getBooleanValue(n.getLastChild()).not();
 
       case NAME:
-        String name = n.getString();
-        if ("undefined".equals(name) || "NaN".equals(name)) {
-          // We assume here that programs don't change the value of the keyword
-          // undefined to something other than the value undefined.
-          return Tri.FALSE;
-        } else if ("Infinity".equals(name)) {
-          return Tri.TRUE;
-        } else {
-          return Tri.UNKNOWN;
+        // We assume here that programs don't change the value of these global variables.
+        switch (n.getString()) {
+          case "undefined":
+          case "NaN":
+            return Tri.FALSE;
+          case "Infinity":
+            return Tri.TRUE;
+          default:
+            return Tri.UNKNOWN;
         }
 
       case BITNOT:
@@ -152,7 +156,7 @@ public final class NodeUtil {
         {
           Double doubleVal = getNumberValue(n);
           if (doubleVal != null) {
-            boolean isFalsey = doubleVal.isNaN() || doubleVal == 0.0; // 0.0 == -0.0
+            boolean isFalsey = doubleVal.isNaN() || isEitherZero(doubleVal);
             return Tri.forBoolean(!isFalsey);
           }
 
@@ -332,13 +336,6 @@ public final class NodeUtil {
    */
   static Double getNumberValue(Node n) {
     switch (n.getToken()) {
-      case TRUE:
-        return 1.0;
-
-      case FALSE:
-      case NULL:
-        return 0.0;
-
       case NUMBER:
         return n.getDouble();
 
@@ -353,18 +350,15 @@ public final class NodeUtil {
         return Double.NaN;
 
       case NAME:
-        // Check for known constants
-        String name = n.getString();
-        if (name.equals("undefined")) {
-          return Double.NaN;
+        switch (n.getString()) {
+          case "undefined":
+          case "NaN":
+            return Double.NaN;
+          case "Infinity":
+            return Double.POSITIVE_INFINITY;
+          default:
+            return null;
         }
-        if (name.equals("NaN")) {
-          return Double.NaN;
-        }
-        if (name.equals("Infinity")) {
-          return Double.POSITIVE_INFINITY;
-        }
-        return null;
 
       case POS:
         return getNumberValue(n.getOnlyChild());
@@ -378,15 +372,22 @@ public final class NodeUtil {
       case BITNOT:
         {
           Double val = getNumberValue(n.getOnlyChild());
-          return (val == null) ? null : (double) ~toInt32(val);
+          return (val == null) ? null : (double) ~ecmascriptToInt32(val);
         }
 
+      case FALSE:
       case NOT:
-        Tri child = getBooleanValue(n.getFirstChild());
-        if (child != Tri.UNKNOWN) {
-          return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
+      case NULL:
+      case TRUE:
+        switch (getBooleanValue(n)) {
+          case TRUE:
+            return 1.0;
+          case FALSE:
+            return 0.0;
+          case UNKNOWN:
+            return null;
         }
-        break;
+        throw new AssertionError();
 
       case TEMPLATELIT:
         String string = getStringValue(n);
@@ -466,7 +467,7 @@ public final class NodeUtil {
       case NUMBER:
         {
           double val = n.getDouble();
-          return val % 1 == 0 ? BigInteger.valueOf((long) val) : null;
+          return isMathematicalInteger(val) ? BigInteger.valueOf((long) val) : null;
         }
 
       case BIGINT:
@@ -5294,13 +5295,15 @@ public final class NodeUtil {
     Node result;
     if (Double.isNaN(value)) {
       result = IR.name("NaN");
-    } else if (Double.isInfinite(value)) {
-      result = IR.name("Infinity");
     } else {
-      result = IR.number(Math.abs(value));
-    }
-    if (Double.compare(0.0, value) > 0) { // isNegative
-      result = IR.neg(result);
+      if (Double.isInfinite(value)) {
+        result = IR.name("Infinity");
+      } else {
+        result = IR.number(Math.abs(value));
+      }
+      if (isNegative(value)) {
+        result = IR.neg(result);
+      }
     }
     if (srcref != null) {
       result.srcrefTree(srcref);
@@ -5357,47 +5360,6 @@ public final class NodeUtil {
     JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordConstancy();
     return builder.build();
-  }
-
-  static int toInt32(double d) {
-    int id = (int) d;
-    if (id == d) {
-      // This covers -0.0 as well
-      return id;
-    }
-
-    if (Double.isNaN(d) || d == Double.POSITIVE_INFINITY || d == Double.NEGATIVE_INFINITY) {
-      return 0;
-    }
-
-    d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
-
-    double two32 = 4294967296.0;
-    d = d % two32;
-    // (double)(long)d == d should hold here
-
-    long l = (long) d;
-    // returning (int)d does not work as d can be outside int range
-    // but the result must always be 32 lower bits of l
-    return (int) l;
-  }
-
-  static int toUInt32(double d) {
-    if (Double.isNaN(d) || Double.isInfinite(d) || d == 0) {
-      return 0;
-    }
-
-    d = Math.signum(d) * Math.floor(Math.abs(d));
-
-    double two32 = 4294967296.0;
-    // this ensures that d is positive
-    d = ((d % two32) + two32) % two32;
-    // (double)(long)d == d should hold here
-
-    long l = (long) d;
-    // returning (int)d does not work as d can be outside int range
-    // but the result must always be 32 lower bits of l
-    return (int) l;
   }
 
   public static boolean isGoogProvideCall(Node n) {

@@ -43,6 +43,7 @@ package com.google.javascript.rhino;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -281,14 +282,8 @@ public class Node {
     @Override
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
-      boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect);
-      if (equiv) {
-        // Detect the difference between 0.0 vs -0.0.
-        long thisBits = Double.doubleToRawLongBits(this.number);
-        long thatBits = Double.doubleToRawLongBits(((NumberNode) node).number);
-        return thisBits == thatBits;
-      }
-      return false;
+      return super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
+          && (this.number == ((NumberNode) node).number); // -0.0 and NaN are forbidden.
     }
 
     @Override
@@ -1069,7 +1064,7 @@ public class Node {
 
   public final void setDouble(double x) {
     checkState(!Double.isNaN(x), x);
-    checkState(Double.compare(0.0, x) <= 0, x); // isPositive
+    checkState(isPositive(x), x);
     ((NumberNode) this).number = x;
   }
 

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt32;
+import static java.lang.Double.isNaN;
+
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
@@ -397,7 +400,7 @@ public final class TypeTransformationParser {
       return false;
     }
     double index = getCallArgument(expr, 1).getDouble();
-    if (index < 0 || index % 1 != 0) {
+    if (isNaN(index) || !isExactInt32(index)) {
       warnInvalid("index");
       warnInvalidInside(Keywords.TEMPLATETYPEOF.name);
       return false;

@@ -18,6 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.jscomp.base.Tri;
@@ -409,8 +413,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         {
           Double doubleVal = this.getSideEffectFreeNumberValue(left);
           if (doubleVal != null) {
-            if (isIntValue(doubleVal)) {
-              int intVal = NodeUtil.toInt32(doubleVal);
+            if (isMathematicalInteger(doubleVal)) {
+              int intVal = ecmascriptToInt32(doubleVal);
               Node notIntValNode = NodeUtil.numberNode(~intVal, left);
               n.replaceWith(notIntValNode);
               reportChangeToEnclosingScope(parent);
@@ -439,10 +443,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private boolean isReasonableDoubleValue(@Nullable Double x) {
     return x != null && !x.isInfinite() && !x.isNaN();
-  }
-
-  private boolean isIntValue(double x) {
-    return Math.floor(x) == x;
   }
 
   /**
@@ -878,13 +878,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double rval = rValObj;
     switch (n.getToken()) {
       case BITAND:
-        result = NodeUtil.toInt32(lval) & NodeUtil.toInt32(rval);
+        result = ecmascriptToInt32(lval) & ecmascriptToInt32(rval);
         break;
       case BITOR:
-        result = NodeUtil.toInt32(lval) | NodeUtil.toInt32(rval);
+        result = ecmascriptToInt32(lval) | ecmascriptToInt32(rval);
         break;
       case BITXOR:
-        result = NodeUtil.toInt32(lval) ^ NodeUtil.toInt32(rval);
+        result = ecmascriptToInt32(lval) ^ ecmascriptToInt32(rval);
         break;
       case MOD:
         if (rval == 0) {
@@ -1109,11 +1109,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (!isReasonableDoubleValue(leftVal) || !isReasonableDoubleValue(rightVal)) {
       return n;
     }
-    if (!isIntValue(leftVal)) {
+    if (!isMathematicalInteger(leftVal)) {
       report(FRACTIONAL_BITWISE_OPERAND, left);
       return n;
     }
-    if (!isIntValue(rightVal)) {
+    if (!isMathematicalInteger(rightVal)) {
       report(FRACTIONAL_BITWISE_OPERAND, right);
       return n;
     }
@@ -1125,7 +1125,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     int rvalInt = rightVal.intValue();
-    int bits = NodeUtil.toInt32(leftVal);
+    int bits = ecmascriptToInt32(leftVal);
 
     double result;
     switch (n.getToken()) {
@@ -1217,10 +1217,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Finally, try comparisons between BigInt and Number.
     if (lvBig != null && rvNum != null) {
-      return compareBigIntAndNumber(lvBig, rvNum, false, willNegate);
+      return bigintLessThanDouble(lvBig, rvNum, Tri.FALSE, willNegate);
     }
     if (lvNum != null && rvBig != null) {
-      return compareBigIntAndNumber(rvBig, lvNum, true, willNegate);
+      return bigintLessThanDouble(rvBig, lvNum, Tri.TRUE, willNegate);
     }
 
     // Special case: `x < x` is always false.
@@ -1235,30 +1235,32 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return Tri.UNKNOWN;
   }
 
-  private static Tri compareBigIntAndNumber(
-      BigInteger bigint, double number, boolean invert, boolean willNegate) {
+  private static Tri bigintLessThanDouble(
+      BigInteger bigint, double number, Tri invert, boolean willNegate) {
     // if invert is false, then the number is on the right in tryAbstractRelationalComparison
     // if it's true, then the number is on the left
     if (Double.isNaN(number)) {
       return Tri.forBoolean(willNegate);
     } else if (number == Double.POSITIVE_INFINITY) {
-      return invert ? Tri.FALSE : Tri.TRUE;
+      return Tri.TRUE.xor(invert);
     } else if (number == Double.NEGATIVE_INFINITY) {
-      return invert ? Tri.TRUE : Tri.FALSE;
+      return Tri.FALSE.xor(invert);
     } else {
+      // long can hold all values within [-2^53, 2^53]
       BigInteger numberAsBigInt = BigInteger.valueOf((long) number);
-      int comparison = invert ? numberAsBigInt.compareTo(bigint) : bigint.compareTo(numberAsBigInt);
-      switch (comparison) {
-        case -1:
-          return Tri.TRUE;
-        case 1:
-          return Tri.FALSE;
-        case 0:
-          // Even if the number has a decimal it can still be compared to a bigint
-          double remainder = (invert ? -number : number) % 1;
-          return Tri.forBoolean(remainder > 0);
-        default:
-          throw new AssertionError("compareTo returned an unexpected value: " + comparison);
+      int negativeMeansBigintSmaller = bigint.compareTo(numberAsBigInt);
+      if (negativeMeansBigintSmaller < 0) {
+        return Tri.TRUE.xor(invert);
+      } else if (negativeMeansBigintSmaller > 0) {
+        return Tri.FALSE.xor(invert);
+      } else {
+        if (isMathematicalInteger(number)) {
+          return Tri.FALSE; // This is the == case, don't invert.
+        } else if (isPositive(number)) {
+          return Tri.TRUE.xor(invert);
+        } else {
+          return Tri.FALSE.xor(invert);
+        }
       }
     }
   }
@@ -1583,13 +1585,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    int intIndex = index.intValue();
-    if (intIndex != index) {
+    if (!isExactInt32(index)) {
       // Ideally this should be caught in the check passes.
       report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;
     }
 
+    int intIndex = index.intValue();
     Node current = intIndex >= 0 ? left.getFirstChild() : null;
     Node elem = null;
     for (int i = 0; current != null; i++) {
