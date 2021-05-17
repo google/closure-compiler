@@ -26,7 +26,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -110,6 +109,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -401,24 +401,50 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     initWarningsGuard(options.getWarningsGuard());
+    if (options.getDebugLogDirectory() != null) {
+      // If debug logs are requested, then we'll always log the configuration for convenience.
+      options.setPrintConfig(true);
+    }
   }
 
-  public void printConfig(PrintStream printStream) {
-    printStream.println("==== Externs ====");
-    printStream.println(externs);
-    printStream.println("==== Inputs ====");
-    // To get a pretty-printed JSON module graph, change this line to
-    //
-    // printStream.println(
-    //     new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson()));
-    //
-    // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-    // compiled with J2CL, so we can permanently improve this.
-    printStream.println(Iterables.toString(moduleGraph.getAllInputs()));
-    printStream.println("==== CompilerOptions ====");
-    printStream.println(options);
-    printStream.println("==== WarningsGuard ====");
-    printStream.println(warningsGuard);
+  public void printConfig() {
+    if (this.getOptions().getDebugLogDirectory() == null) {
+      // Debug logging is not enabled, so use stderr
+      final PrintStream err = System.err;
+      err.println("==== Externs ====");
+      err.println(externs.toString());
+      err.println("==== Inputs ====");
+      // To get a pretty-printed JSON module graph, change this line to
+      //
+      // err.println(
+      //     new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson()));
+      //
+      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
+      // compiled with J2CL, so we can permanently improve this.
+      err.println(Iterables.toString(moduleGraph.getAllInputs()));
+      err.println("==== CompilerOptions ====");
+      err.println(options.toString());
+      err.println("==== WarningsGuard ====");
+      err.println(warningsGuard.toString());
+    } else {
+      // Log to separate files for convenience.
+      logToFile("externs.log", () -> externs.toString());
+      // To get a pretty-printed JSON module graph, change the string generation expression to
+      //
+      // new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson())
+      //
+      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
+      // compiled with J2CL, so we can permanently improve this.
+      logToFile("inputs.json", () -> Iterables.toString(moduleGraph.getAllInputs()));
+      logToFile("options.log", () -> options.toString());
+      logToFile("warningsGuard.log", () -> warningsGuard.toString());
+    }
+  }
+
+  private void logToFile(String logFileName, Supplier<String> logStringSupplier) {
+    try (LogFile log = this.createOrReopenLog(this.getClass(), logFileName)) {
+      log.log(logStringSupplier);
+    }
   }
 
   private void initWarningsGuard(WarningsGuard warningsGuard) {
@@ -661,7 +687,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     try {
       init(externs, inputs, options);
       if (options.printConfig) {
-        printConfig(System.err);
+        printConfig();
       }
       if (!hasErrors()) {
         parseForCompilation();
@@ -717,7 +743,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     try {
       initModules(externs, modules, options);
       if (options.printConfig) {
-        printConfig(System.err);
+        printConfig();
       }
       if (!hasErrors()) {
         parseForCompilation();
@@ -1326,7 +1352,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Deprecated
   @Override
-  Supplier<String> getUniqueNameIdSupplier() {
+  com.google.common.base.Supplier<String> getUniqueNameIdSupplier() {
     return () -> String.valueOf(Compiler.this.nextUniqueNameId());
   }
 

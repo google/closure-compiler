@@ -1229,7 +1229,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (options.printConfig) {
-      compiler.printConfig(System.err);
+      compiler.printConfig();
     }
 
     String saveAfterChecksFilename = config.getSaveAfterChecksFileName();
