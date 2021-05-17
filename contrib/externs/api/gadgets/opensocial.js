@@ -267,33 +267,6 @@ gadgets.Prefs.prototype.set = function(key, value) {};
  */
 gadgets.Prefs.prototype.setArray = function(key, array) {};
 
-
-// Namespace for embedding flash content in gadgets.
-gadgets.flash = {};
-
-/**
- * @return {boolean} Injects the cached Flash file into the DOM tree.
- */
-gadgets.flash.embedCachedFlash = function() {};
-
-/**
- * @return {number} The major version of Flash Player or 0 if Flash is not
- *     supported.
- */
-gadgets.flash.getMajorVersion = function() {};
-
-/**
- * @param {string} url The URL of the flash to embed.
- * @param {string|Element} container The ID or object reference to the
- *     existing HTML container.
- * @param {number} minVersion The minimum version required.
- * @param {Object=} opt_params An optional object that may contain any valid
- *     HTML parameters that will be passed to the Flash movie.
- * @return {boolean} Whether the function call completes successfully.
- */
-gadgets.flash.embedFlash = function(
-    url, container, minVersion, opt_params) {};
-
 // Namespace for retrieving content from remote servers via the gadgets proxy.
 gadgets.io = {};
 
