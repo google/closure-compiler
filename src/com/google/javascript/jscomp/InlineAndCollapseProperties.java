@@ -109,6 +109,14 @@ class InlineAndCollapseProperties implements CompilerPass {
    */
   private final Optional<Consumer<GlobalNamespace>> optionalGlobalNamespaceTester;
 
+  /**
+   * Records decisions made by this class and related logic.
+   *
+   * <p>This field is allocated and cleaned up by process(). It's a class field to avoid having to
+   * pass it as an extra argument through a lot of methods.
+   */
+  private LogFile decisionsLog = null;
+
   private InlineAndCollapseProperties(Builder builder) {
     this.compiler = builder.compiler;
     this.propertyCollapseLevel = builder.propertyCollapseLevel;
@@ -174,20 +182,27 @@ class InlineAndCollapseProperties implements CompilerPass {
         !testAggressiveInliningOnly || propertyCollapseLevel == PropertyCollapseLevel.ALL,
         "testAggressiveInlining is invalid for: %s",
         propertyCollapseLevel);
-    switch (propertyCollapseLevel) {
-      case NONE:
-        performMinimalInliningAndNoCollapsing(externs, root);
-        break;
-      case MODULE_EXPORT:
-        performMinimalInliningAndModuleExportCollapsing(externs, root);
-        break;
-      case ALL:
-        if (testAggressiveInliningOnly) {
-          performAggressiveInliningForTest(externs, root);
-        } else {
-          performAggressiveInliningAndCollapsing(externs, root);
-        }
-        break;
+    try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "decisions.log")) {
+      // NOTE: decisionsLog will be a do-nothing proxy object unless the compiler
+      // was given an option telling it to generate log files and where to put them.
+      decisionsLog = logFile;
+      switch (propertyCollapseLevel) {
+        case NONE:
+          performMinimalInliningAndNoCollapsing(externs, root);
+          break;
+        case MODULE_EXPORT:
+          performMinimalInliningAndModuleExportCollapsing(externs, root);
+          break;
+        case ALL:
+          if (testAggressiveInliningOnly) {
+            performAggressiveInliningForTest(externs, root);
+          } else {
+            performAggressiveInliningAndCollapsing(externs, root);
+          }
+          break;
+      }
+    } finally {
+      decisionsLog = null;
     }
   }
 
@@ -1172,48 +1187,32 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     private final HashSet<String> dynamicallyImportedModules = new HashSet<>();
 
-    /**
-     * Records decisions made by this class.
-     *
-     * <p>This field is allocated and cleaned up by process(). It's a class field to avoid having to
-     * pass it as an extra argument through a lot of methods.
-     */
-    private LogFile decisionsLog = null;
-
     @Override
     public void process(Node externs, Node root) {
-      try (LogFile decisionsLog =
-          compiler.createOrReopenIndexedLog(this.getClass(), "decisions.log")) {
-        // NOTE: decisionsLog will be a do-nothing proxy object unless the compiler
-        // was given an option telling it to generate log files and where to put them.
-        this.decisionsLog = decisionsLog;
-        if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT
-            || chunkOutputType == ChunkOutputType.ES_MODULES) {
-          NodeTraversal.traverse(
-              compiler,
-              root,
-              new FindDynamicallyImportedModules(haveModulesBeenRewritten, moduleResolutionMode));
-        }
-
-        GlobalNamespace namespace = new GlobalNamespace(decisionsLog, compiler, root);
-        nameMap = namespace.getNameIndex();
-        List<Name> globalNames = namespace.getNameForest();
-        Set<Name> escaped = checkNamespaces();
-        for (Name name : globalNames) {
-          flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
-          // We collapse property definitions after collapsing property references
-          // because this step can alter the parse tree above property references,
-          // invalidating the node ancestry stored with each reference.
-          collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
-        }
-
-        // This shouldn't be necessary, this pass should already be setting new constants as
-        // constant.
-        // TODO(b/64256754): Investigate.
-        new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
-      } finally {
-        decisionsLog = null;
+      if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT
+          || chunkOutputType == ChunkOutputType.ES_MODULES) {
+        NodeTraversal.traverse(
+            compiler,
+            root,
+            new FindDynamicallyImportedModules(haveModulesBeenRewritten, moduleResolutionMode));
       }
+
+      GlobalNamespace namespace = new GlobalNamespace(decisionsLog, compiler, root);
+      nameMap = namespace.getNameIndex();
+      List<Name> globalNames = namespace.getNameForest();
+      Set<Name> escaped = checkNamespaces();
+      for (Name name : globalNames) {
+        flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
+        // We collapse property definitions after collapsing property references
+        // because this step can alter the parse tree above property references,
+        // invalidating the node ancestry stored with each reference.
+        collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
+      }
+
+      // This shouldn't be necessary, this pass should already be setting new constants as
+      // constant.
+      // TODO(b/64256754): Investigate.
+      new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
     }
 
     private boolean canCollapse(Name name) {
