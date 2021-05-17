@@ -117,6 +117,9 @@ class InlineAndCollapseProperties implements CompilerPass {
    */
   private LogFile decisionsLog = null;
 
+  /** A `GlobalNamespace` that is shared by alias inlining and property collapsing code. */
+  private GlobalNamespace namespace;
+
   private InlineAndCollapseProperties(Builder builder) {
     this.compiler = builder.compiler;
     this.propertyCollapseLevel = builder.propertyCollapseLevel;
@@ -214,6 +217,10 @@ class InlineAndCollapseProperties implements CompilerPass {
   private void performMinimalInliningAndModuleExportCollapsing(Node externs, Node root) {
     // TODO(b/124915436): Remove InlineAliases completely after cleaning up the codebase.
     new InlineAliases().process(externs, root);
+    // CollapseProperties needs this namespace.
+    // TODO(bradfordcsmith): Have `InlineAliases` update the namespace it already created
+    // and reuse that one instead.
+    namespace = new GlobalNamespace(decisionsLog, compiler, root);
     new CollapseProperties().process(externs, root);
   }
 
@@ -246,7 +253,6 @@ class InlineAndCollapseProperties implements CompilerPass {
   class AggressiveInlineAliases implements CompilerPass {
 
     private boolean codeChanged;
-    private GlobalNamespace namespace;
 
     AggressiveInlineAliases() {
       this.codeChanged = true;
@@ -265,7 +271,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       // Building the `GlobalNamespace` dominates the cost of this pass, so it is built once and
       // updated as changes are made so it can be reused for the next iteration.
-      this.namespace = new GlobalNamespace(compiler, root);
+      namespace = new GlobalNamespace(decisionsLog, compiler, root);
       while (codeChanged) {
         codeChanged = false;
         inlineAliases(namespace);
@@ -1197,8 +1203,7 @@ class InlineAndCollapseProperties implements CompilerPass {
             new FindDynamicallyImportedModules(haveModulesBeenRewritten, moduleResolutionMode));
       }
 
-      GlobalNamespace namespace = new GlobalNamespace(decisionsLog, compiler, root);
-      nameMap = namespace.getNameIndex();
+      nameMap = checkNotNull(namespace, "namespace was not initialized").getNameIndex();
       List<Name> globalNames = namespace.getNameForest();
       Set<Name> escaped = checkNamespaces();
       for (Name name : globalNames) {
