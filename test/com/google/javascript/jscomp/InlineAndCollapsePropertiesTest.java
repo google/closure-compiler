@@ -62,6 +62,24 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstObjRefInTemplateLiteralComputedPropKey() {
+    test(
+        srcs(
+            lines(
+                "var module$name = {}", //
+                "module$name.cssClasses = {",
+                "  CLASS_A: 'class-a',",
+                "};",
+                "",
+                "module$name.oldCssClassesMap = {",
+                "  [`${module$name.cssClasses.CLASS_A}`]: 'old-class-a',",
+                "};",
+                "")),
+        // TODO(bradfordcsmith): Shouldn't we be leaving the computed property in place?
+        expected("var module$name$cssClasses$CLASS_A = 'class-a';"));
+  }
+
+  @Test
   public void testObjLitSpread() {
     test(
         lines(
