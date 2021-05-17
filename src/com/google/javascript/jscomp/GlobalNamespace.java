@@ -553,6 +553,13 @@ class GlobalNamespace
             case ITER_SPREAD:
             case OBJECT_SPREAD:
               break; // isSet = false, type = OTHER.
+            case CALL:
+              if (n.isFirstChildOf(parent) && isObjectHasOwnPropertyCall(parent)) {
+                String qname = n.getFirstChild().getQualifiedName();
+                Name globalName = getOrCreateName(qname, curMetadata);
+                globalName.usedHasOwnProperty = true;
+              }
+              break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                 isSet = true;
@@ -566,11 +573,7 @@ class GlobalNamespace
           break;
 
         case CALL:
-          if (isObjectHasOwnPropertyCall(n)) {
-            String qname = n.getFirstFirstChild().getQualifiedName();
-            Name globalName = getOrCreateName(qname, curMetadata);
-            globalName.usedHasOwnProperty = true;
-          } else if (parent.isExprResult()
+          if (parent.isExprResult()
               && GOOG_PROVIDE.matches(n.getFirstChild())
               && n.getSecondChild().isStringLit()) {
             // goog.provide goes through a different code path than regular sets because it can
@@ -1410,6 +1413,10 @@ class GlobalNamespace
 
     String getFullName() {
       return parent == null ? baseName : parent.getFullName() + '.' + baseName;
+    }
+
+    boolean usesHasOwnProperty() {
+      return usedHasOwnProperty;
     }
 
     @Nullable

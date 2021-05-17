@@ -63,6 +63,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testHasOwnProperty() {
+    test(
+        "var a = {'b': 1, 'c': 1}; var alias = a;    alert(alias.hasOwnProperty('c'));", //
+        "var a = {'b': 1, 'c': 1}; var alias = null; alert(a.hasOwnProperty('c'));");
+  }
+
+  @Test
   public void test_b19179602() {
     test(
         lines(
@@ -2957,6 +2964,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // So to compare equality: we verify that
     //  1. the two namespaces have the same qualified names, bar extern names
     //  2. each name has the same number of references in both namespaces
+    //  3. each name has the same computed `Inlinability`
     for (Name expectedName : expectedGlobalNamespace.getNameForest()) {
       if (expectedName.inExterns()) {
         continue;
@@ -2983,6 +2991,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
       assertWithMessage(fullName)
           .that(actualName.getCallGets())
           .isEqualTo(expectedName.getCallGets());
+      assertWithMessage(fullName + ": canCollapseOrInline()")
+          .that(actualName.canCollapseOrInline())
+          .isEqualTo(expectedName.canCollapseOrInline());
+      assertWithMessage(fullName + ": canCollapseOrInlineChildNames()")
+          .that(actualName.canCollapseOrInlineChildNames())
+          .isEqualTo(expectedName.canCollapseOrInlineChildNames());
     }
     // Verify that no names in the actual name forest are not present in the expected name forest
     for (Name actualName : passGlobalNamespace.getNameForest()) {

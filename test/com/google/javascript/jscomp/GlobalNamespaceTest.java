@@ -510,6 +510,34 @@ public final class GlobalNamespaceTest {
     assertThat(baz.getGlobalSets()).isEqualTo(1);
   }
 
+  @Test
+  public void testScanFromNodeNoticesHasOwnProperty() {
+    GlobalNamespace namespace = parse("const x = {bar: 0}; const y = x; y.hasOwnProperty('bar');");
+
+    Name xName = namespace.getOwnSlot("x");
+    Name yName = namespace.getOwnSlot("y");
+    assertThat(xName.usesHasOwnProperty()).isFalse();
+    assertThat(yName.usesHasOwnProperty()).isTrue();
+
+    // Replace "const baz = y.bar" with "const baz = x.bar"
+    Node root = lastCompiler.getJsRoot();
+    Node yDotHasOwnProperty =
+        root.getFirstChild() // SCRIPT
+            .getLastChild() // EXPR_RESULT `y.hasOwnProperty('bar');`
+            .getFirstFirstChild(); // `y.hasOwnProperty`
+    Node yNode = yDotHasOwnProperty.getFirstChild(); // `y`
+    checkState(
+        yDotHasOwnProperty.getQualifiedName().equals("y.hasOwnProperty"), yDotHasOwnProperty);
+    Node xNode = IR.name("x");
+    yNode.replaceWith(xNode);
+
+    // Rescan the new nodes
+    // In this case the new node is `x.hasOwnProperty`, since that's the full, new qualified name.
+    namespace.scanNewNodes(ImmutableSet.of(createGlobalAstChangeForNode(root, yDotHasOwnProperty)));
+
+    assertThat(xName.usesHasOwnProperty()).isTrue();
+  }
+
   private AstChange createGlobalAstChangeForNode(Node jsRoot, Node n) {
     // This only creates a global scope, so don't use this with local nodes
     Scope globalScope = new SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
