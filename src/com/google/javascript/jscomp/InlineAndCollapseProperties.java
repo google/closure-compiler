@@ -1615,40 +1615,36 @@ class InlineAndCollapseProperties implements CompilerPass {
      * @param alias The flattened name for {@code n}
      */
     private void collapseDeclarationOfNameAndDescendants(Name n, String alias, Set<Name> escaped) {
-      final Deque<NameAndAlias> worklist = new ArrayDeque<>();
-      worklist.add(new NameAndAlias(n, alias));
-      while (!worklist.isEmpty()) {
-        final NameAndAlias nameAndAlias = worklist.removeFirst();
-        n = nameAndAlias.name;
-        alias = nameAndAlias.alias;
+      final Inlinability childNameInlinability = n.canCollapseOrInlineChildNames();
+      final boolean canCollapseChildNames;
+      if (!childNameInlinability.canCollapse()) {
+        logDecisionForName(
+            n,
+            () ->
+                SimpleFormat.format(
+                    "child name inlinability: %s: will not collapse child names",
+                    childNameInlinability));
+        canCollapseChildNames = false;
+      } else if (escaped.contains(n)) {
+        logDecisionForName(n, "escapes: will not collapse child names");
+        canCollapseChildNames = false;
+      } else {
+        canCollapseChildNames = true;
+      }
 
-        final Inlinability childNameInlinability = n.canCollapseOrInlineChildNames();
-        final boolean canCollapseChildNames;
-        if (!childNameInlinability.canCollapse()) {
-          logDecisionForName(
-              n,
-              () ->
-                  SimpleFormat.format(
-                      "child name inlinability: %s: will not collapse child names",
-                      childNameInlinability));
-          canCollapseChildNames = false;
-        } else if (escaped.contains(n)) {
-          logDecisionForName(n, "escapes: will not collapse child names");
-          canCollapseChildNames = false;
-        } else {
-          canCollapseChildNames = true;
-        }
+      // Handle this name first so that nested object literals get unrolled.
+      if (canCollapse(n)) {
+        logDecisionForName(n, "collapsing");
+        updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
+      }
 
-        // Handle this name first so that nested object literals get unrolled.
-        if (canCollapse(n)) {
-          logDecisionForName(n, "collapsing");
-          updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
-        }
-
-        if (n.props != null && !escaped.contains(n)) {
-          logDecisionForName(n, "collapsing descendants");
-          worklist.addAll(getChildNameAndAliasRecords(n, alias));
-        }
+      if (n.props == null || escaped.contains(n)) {
+        return;
+      }
+      logDecisionForName(n, "collapsing descendants");
+      for (Name p : n.props) {
+        collapseDeclarationOfNameAndDescendants(
+            p, appendPropForAlias(alias, p.getBaseName()), escaped);
       }
     }
 
