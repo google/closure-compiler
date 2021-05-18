@@ -2225,7 +2225,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setDisambiguateProperties(true);
-    options.setUseGraphBasedDisambiguator(true);
 
     test(
         options,
