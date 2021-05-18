@@ -61,13 +61,13 @@ public final class ConvertTypesToColors implements CompilerPass {
   }
 
   private static class RemoveTypesAndApplyColors extends RemoveTypes {
-    private final ColorDeserializer deserializer;
+    private final ColorPool.ShardView colorPoolShard;
     private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
 
     RemoveTypesAndApplyColors(
-        ColorDeserializer deserializer, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
+        ColorPool colorPool, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
       super();
-      this.deserializer = deserializer;
+      this.colorPoolShard = colorPool.getOnlyShard();
       this.typePointersByJstype = typePointersByJstype;
     }
 
@@ -81,7 +81,7 @@ public final class ConvertTypesToColors implements CompilerPass {
       if (oldType != null) {
         TypePointer pointer = typePointersByJstype.get(oldType);
         if (pointer != null) {
-          n.setColor(deserializer.pointerToColor(pointer));
+          n.setColor(colorPoolShard.getColor(pointer));
         }
       }
 
@@ -118,13 +118,13 @@ public final class ConvertTypesToColors implements CompilerPass {
     TypePool typePool = serializeJstypes.getTypePool();
     StringPool stringPool = stringPoolBuilder.build();
 
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
+    ColorPool colorPool = ColorPool.fromOnlyShard(typePool, stringPool);
     NodeTraversal.traverse(
         compiler,
         externsAndJsRoot,
-        new RemoveTypesAndApplyColors(deserializer, serializeJstypes.getTypePointersByJstype()));
+        new RemoveTypesAndApplyColors(colorPool, serializeJstypes.getTypePointersByJstype()));
 
     compiler.clearJSTypeRegistry();
-    compiler.setColorRegistry(deserializer.getRegistry());
+    compiler.setColorRegistry(colorPool.getRegistry());
   }
 }

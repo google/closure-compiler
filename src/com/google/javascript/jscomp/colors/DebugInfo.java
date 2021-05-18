@@ -30,7 +30,7 @@ public abstract class DebugInfo {
    * Since null and non-null objects would unequal, DebugInfo fields should never be null. Instead,
    * we suggest using this unintersting empty instance to signal absence of meaningful debug info.
    */
-  static final DebugInfo EMPTY = builder().build();
+  public static final DebugInfo EMPTY = builder().build();
 
   public abstract String getClassName();
 

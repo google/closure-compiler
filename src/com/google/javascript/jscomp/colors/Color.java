@@ -190,9 +190,9 @@ public abstract class Color {
 
     public abstract Builder setClosureAssert(boolean x);
 
-    abstract Builder setPrototypes(ImmutableSet<Color> x);
+    public abstract Builder setInstanceColors(ImmutableSet<Color> x);
 
-    abstract Builder setInstanceColors(ImmutableSet<Color> x);
+    public abstract Builder setPrototypes(ImmutableSet<Color> x);
 
     abstract Builder setUnionElements(ImmutableSet<Color> x);
 

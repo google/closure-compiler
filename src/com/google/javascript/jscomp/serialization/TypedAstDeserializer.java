@@ -45,7 +45,7 @@ import java.util.LinkedHashMap;
 public final class TypedAstDeserializer {
 
   private final TypedAst typedAst;
-  private final ColorDeserializer colorDeserializer;
+  private final ColorPool.ShardView colorPoolShard;
   private final StringPool stringPool;
   private final LinkedHashMap<InputId, CompilerInput> inputsById = new LinkedHashMap<>();
   // indices into this list correspond to AstNode::getSourceFile() - 1, as '0' is reserved for an
@@ -60,10 +60,10 @@ public final class TypedAstDeserializer {
   private TypedAstDeserializer(
       TypedAst typedAst,
       StringPool stringPool,
-      ColorDeserializer colorDeserializer,
+      ColorPool colorPool,
       ImmutableList<SourceFile> sourceFiles) {
     this.typedAst = typedAst;
-    this.colorDeserializer = colorDeserializer;
+    this.colorPoolShard = colorPool.getOnlyShard();
     this.stringPool = stringPool;
     this.sourceFiles = sourceFiles;
   }
@@ -71,17 +71,17 @@ public final class TypedAstDeserializer {
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
   public static DeserializedAst deserialize(TypedAst typedAst) {
     StringPool stringPool = StringPool.fromProto(typedAst.getStringPool());
-    ColorDeserializer colorDeserializer =
-        ColorDeserializer.buildFromTypePool(typedAst.getTypePool(), stringPool);
+    ColorPool colorPool = ColorPool.fromOnlyShard(typedAst.getTypePool(), stringPool);
+
     ImmutableList<SourceFile> sourceFiles =
         typedAst.getSourceFilePool().getSourceFileList().stream()
             .map(SourceFile::fromProto)
             .collect(toImmutableList());
     TypedAstDeserializer deserializer =
-        new TypedAstDeserializer(typedAst, stringPool, colorDeserializer, sourceFiles);
+        new TypedAstDeserializer(typedAst, stringPool, colorPool, sourceFiles);
     Node root = deserializer.deserializeToScriptNodes();
     return DeserializedAst.create(
-        root, colorDeserializer.getRegistry(), ImmutableMap.copyOf(deserializer.inputsById));
+        root, colorPool.getRegistry(), ImmutableMap.copyOf(deserializer.inputsById));
   }
 
   /** The result of deserializing a given TypedAst object */
@@ -147,7 +147,7 @@ public final class TypedAstDeserializer {
     Node n = deserializeSingleNode(astNode);
     n.setStaticSourceFileFrom(this.currentTemplateNode.peek());
     if (astNode.hasType()) {
-      n.setColor(this.colorDeserializer.pointerToColor(astNode.getType()));
+      n.setColor(this.colorPoolShard.getColor(astNode.getType()));
     }
     deserializeProperties(n, astNode);
     n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc()));

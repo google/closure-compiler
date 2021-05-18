@@ -48,6 +48,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /** Assembles the various parts of the diambiguator to execute them as a compiler pass. */
@@ -218,17 +219,28 @@ public final class DisambiguateProperties2 implements CompilerPass {
    * <p>TODO(b/177695515): delete this method
    */
   private boolean mayHaveProperty(Color color, String propertyName) {
-    if (color.isUnion()) {
-      return color.getUnionElements().stream()
-          .anyMatch(element -> mayHaveProperty(element, propertyName));
-    }
+    try {
+      if (!this.mayHavePropertySeenSet.add(color)) {
+        return false;
+      }
 
-    if (color.getOwnProperties().contains(propertyName)) {
-      return true;
+      if (color.isUnion()) {
+        return color.getUnionElements().stream()
+            .anyMatch(element -> mayHaveProperty(element, propertyName));
+      }
+
+      if (color.getOwnProperties().contains(propertyName)) {
+        return true;
+      }
+      return this.registry.getDisambiguationSupertypes(color).stream()
+          .anyMatch(element -> mayHaveProperty(element, propertyName));
+
+    } finally {
+      this.mayHavePropertySeenSet.remove(color);
     }
-    return this.registry.getDisambiguationSupertypes(color).stream()
-        .anyMatch(element -> mayHaveProperty(element, propertyName));
   }
+
+  private final LinkedHashSet<Color> mayHavePropertySeenSet = new LinkedHashSet<>();
 
   private void registerOwnDeclaredProperties(
       ColorGraphNode colorGraphNode, Map<String, PropertyClustering> propIndex) {

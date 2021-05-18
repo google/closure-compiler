@@ -75,13 +75,17 @@ public final class ColorSubject extends Subject {
     check("isClosureAssert()").that(actualNonNull().isClosureAssert()).isTrue();
   }
 
+  public void isConstructor() {
+    check("isConstructor()").that(actualNonNull().isConstructor()).isTrue();
+  }
+
   public void propertiesKeepOriginalName() {
     check("propertiesKeepOriginalName")
         .that(actualNonNull().getPropertiesKeepOriginalName())
         .isTrue();
   }
 
-  public IterableSubject withOwnPropertiesSetThat() {
+  public IterableSubject hasOwnPropertiesSetThat() {
     return check("getOwnProperties()").that(actualNonNull().getOwnProperties());
   }
 

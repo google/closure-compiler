@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
@@ -236,21 +237,30 @@ final class InlineProperties implements CompilerPass {
     }
 
     private boolean hasInSupertypesList(Color subCtor, Color superCtor) {
-      if (subCtor == null || superCtor == null) {
-        return false;
-      }
-      if (subCtor.equals(superCtor)) {
-        return true;
-      }
+      try {
+        if (!this.hasInSupertypesListSeenSet.add(subCtor)) {
+          return false;
+        }
 
-      for (Color immediateSupertype : registry.getDisambiguationSupertypes(subCtor)) {
-        if (!immediateSupertype.isUnion() && hasInSupertypesList(immediateSupertype, superCtor)) {
+        if (subCtor == null || superCtor == null) {
+          return false;
+        }
+        if (subCtor.equals(superCtor)) {
           return true;
         }
 
+        for (Color immediateSupertype : registry.getDisambiguationSupertypes(subCtor)) {
+          if (!immediateSupertype.isUnion() && hasInSupertypesList(immediateSupertype, superCtor)) {
+            return true;
+          }
+        }
+        return false;
+      } finally {
+        this.hasInSupertypesListSeenSet.remove(subCtor);
       }
-      return false;
     }
+
+    private final LinkedHashSet<Color> hasInSupertypesListSeenSet = new LinkedHashSet<>();
   }
 
   private static Color removeNullAndUndefinedIfUnion(Color original) {

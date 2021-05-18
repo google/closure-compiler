@@ -29,6 +29,12 @@ package com.google.javascript.jscomp.serialization;
  */
 public final class MalformedTypedAstException extends RuntimeException {
 
+  static void checkWellFormed(boolean condition, Object msg) {
+    if (!condition) {
+      throw new MalformedTypedAstException(msg);
+    }
+  }
+
   public MalformedTypedAstException(Object msg) {
     super(msg.toString());
   }
