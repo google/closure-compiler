@@ -20,7 +20,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isAtLeastIntegerPrecision;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isNegative;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
@@ -47,11 +49,56 @@ public final class JSCompDoublesTest {
     assertThat(isExactInt32(3.1e-5)).isFalse();
     assertThat(isExactInt32(-3.1e-5)).isFalse();
     assertThat(isExactInt32(3.1e12)).isFalse();
+    assertThat(isExactInt32(-3.1e12)).isFalse();
     assertThat(isExactInt32(Double.POSITIVE_INFINITY)).isFalse();
     assertThat(isExactInt32(Double.NEGATIVE_INFINITY)).isFalse();
     assertThat(isExactInt32(Double.NaN)).isFalse();
     assertThat(isExactInt32(Integer.MIN_VALUE - 1.0)).isFalse();
     assertThat(isExactInt32(Integer.MAX_VALUE + 1.0)).isFalse();
+  }
+
+  @Test
+  public void testIsExactInt64() {
+    assertThat(isExactInt64(0.0)).isTrue();
+    assertThat(isExactInt64(-0.0)).isTrue();
+    assertThat(isExactInt64(1.0)).isTrue();
+    assertThat(isExactInt64(-1.0)).isTrue();
+    assertThat(isExactInt64(3.1e5)).isTrue();
+    assertThat(isExactInt64(-3.1e5)).isTrue();
+    assertThat(isExactInt64(3.1e12)).isTrue();
+    assertThat(isExactInt64(-3.1e12)).isTrue();
+    assertThat(isExactInt64(Long.MIN_VALUE)).isTrue();
+    assertThat(isExactInt64(Long.MAX_VALUE)).isTrue();
+
+    assertThat(isExactInt64(3.1e-5)).isFalse();
+    assertThat(isExactInt64(-3.1e-5)).isFalse();
+    assertThat(isExactInt64(3.1e24)).isFalse();
+    assertThat(isExactInt64(-3.1e24)).isFalse();
+    assertThat(isExactInt64(Double.POSITIVE_INFINITY)).isFalse();
+    assertThat(isExactInt64(Double.NEGATIVE_INFINITY)).isFalse();
+    assertThat(isExactInt64(Double.NaN)).isFalse();
+    assertThat(isExactInt64(POW_2_200)).isFalse();
+    assertThat(isExactInt64(-POW_2_200)).isFalse();
+  }
+
+  @Test
+  public void testIsAtLeastIntegerPrecision() {
+    assertThat(isAtLeastIntegerPrecision(Double.POSITIVE_INFINITY)).isFalse();
+    assertThat(isAtLeastIntegerPrecision(Double.NEGATIVE_INFINITY)).isFalse();
+    assertThat(isAtLeastIntegerPrecision(Double.NaN)).isFalse();
+    assertThat(isAtLeastIntegerPrecision(POW_2_53)).isFalse();
+    assertThat(isAtLeastIntegerPrecision(-POW_2_53)).isFalse();
+
+    assertThat(isAtLeastIntegerPrecision(0.0)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(-0.0)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(1.0)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(-1.0)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(3.1e5)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(-3.1e5)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(POW_2_53 - 1.0)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(-(POW_2_53 - 1.0))).isTrue();
+    assertThat(isAtLeastIntegerPrecision(3.1e-5)).isTrue();
+    assertThat(isAtLeastIntegerPrecision(-3.1e-5)).isTrue();
   }
 
   @Test
@@ -70,11 +117,11 @@ public final class JSCompDoublesTest {
     assertIsMathematicalIntegerWithDecimalPrecision(Integer.MIN_VALUE - 1.0);
     assertIsMathematicalIntegerWithDecimalPrecision(Integer.MAX_VALUE + 1.0);
 
-    assertIsMathematicalIntegerWithoutDecimalPrecision(Math.pow(2, 53) - 1.0);
-    assertIsMathematicalIntegerWithoutDecimalPrecision(Math.pow(2, 53));
-    assertIsMathematicalIntegerWithoutDecimalPrecision(Math.pow(2, 53) + 2.0);
-    assertIsMathematicalIntegerWithoutDecimalPrecision(Math.pow(2, 64));
-    assertIsMathematicalIntegerWithoutDecimalPrecision(Math.pow(2, 200));
+    assertIsMathematicalIntegerWithoutDecimalPrecision(POW_2_53 - 1.0);
+    assertIsMathematicalIntegerWithoutDecimalPrecision(POW_2_53);
+    assertIsMathematicalIntegerWithoutDecimalPrecision(POW_2_53 + 2.0);
+    assertIsMathematicalIntegerWithoutDecimalPrecision(POW_2_64);
+    assertIsMathematicalIntegerWithoutDecimalPrecision(POW_2_200);
   }
 
   private static void assertIsMathematicalIntegerWithDecimalPrecision(double x) {
@@ -129,16 +176,16 @@ public final class JSCompDoublesTest {
     assertEcmascriptToInt32Equals(1.0, 1);
     assertEcmascriptToInt32Equals(2.0, 2);
     assertEcmascriptToInt32Equals(726832.0, 726832);
-    assertEcmascriptToInt32Equals(Math.pow(2, 31), (1 << 31));
-    assertEcmascriptToInt32Equals(Math.pow(2, 31) + 1, (1 << 31) + 1);
-    assertEcmascriptToInt32Equals(Math.pow(2, 64), 0);
-    assertEcmascriptToInt32Equals(Math.pow(2, 64) + 1.0, 0);
+    assertEcmascriptToInt32Equals(POW_2_31, (1 << 31));
+    assertEcmascriptToInt32Equals(POW_2_31 + 1, (1 << 31) + 1);
+    assertEcmascriptToInt32Equals(POW_2_64, 0);
+    assertEcmascriptToInt32Equals(POW_2_64 + 1.0, 0);
   }
 
   private static void assertEcmascriptToInt32Equals(double input, int expected) {
     checkState(isPositive(input));
 
-    for (double bias : new double[] {0.0, Math.pow(2, 32), Math.pow(2, 52)}) {
+    for (double bias : new double[] {0.0, POW_2_32, POW_2_52}) {
       for (double frac : new double[] {0.0, 0.1}) {
         for (int sign : new int[] {1, -1}) {
           double value = sign * (input + bias + frac);
@@ -149,4 +196,11 @@ public final class JSCompDoublesTest {
       }
     }
   }
+
+  private static final double POW_2_31 = Math.pow(2, 31);
+  private static final double POW_2_32 = Math.pow(2, 32);
+  private static final double POW_2_52 = Math.pow(2, 52);
+  private static final double POW_2_53 = Math.pow(2, 53);
+  private static final double POW_2_64 = Math.pow(2, 64);
+  private static final double POW_2_200 = Math.pow(2, 200);
 }

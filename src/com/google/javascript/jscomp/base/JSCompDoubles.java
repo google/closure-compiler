@@ -35,6 +35,19 @@ public final class JSCompDoubles {
   }
 
   /**
+   * Can a 64 bit int exactly represent `x`?
+   *
+   * <p>Many double values are not exact integers. Many that are integers are too large to fit into
+   * a Java long.
+   *
+   * <p>This function does not guarantee that a value can be round-tripped from double to long to
+   * double and have an identical bit pattern. Notably, 0.0 and -0.0 both represent exactly 0.
+   */
+  public static boolean isExactInt64(double x) {
+    return !Double.isNaN(x) && ((double) ((long) x)) == x;
+  }
+
+  /**
    * Does `x` exactly represent an value with no fractional part?
    *
    * <p>The value may be too large to fit in a primitive integral type, such as long.
@@ -46,6 +59,20 @@ public final class JSCompDoubles {
    */
   public static boolean isMathematicalInteger(double x) {
     return x % 1.0 == 0.0;
+  }
+
+  /**
+   * Does `x` have precision down to the "ones column"?
+   *
+   * <p>A double can hold exact integer values that are very large, but to do so it may loose
+   * precision at the scale of "ones". That is "largeDouble + 1.0 == largeDouble" may be true.
+   *
+   * <p>Returns false for NaN and Infinity.
+   */
+  public static boolean isAtLeastIntegerPrecision(double x) {
+    // It's possible for a JVM to use floating-point values with more than 53 bits of precision,
+    // but we have to be conservative.
+    return Math.abs(x) < POW_2_53;
   }
 
   /**
@@ -129,6 +156,7 @@ public final class JSCompDoubles {
   }
 
   private static final double POW_2_32 = Math.pow(2, 32);
+  private static final double POW_2_53 = Math.pow(2, 53);
 
   private JSCompDoubles() {
     throw new AssertionError();

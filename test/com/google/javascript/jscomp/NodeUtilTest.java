@@ -1825,9 +1825,15 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getBigIntValue(parseExpr("022"))).isEqualTo(new BigInteger("18"));
       assertThat(NodeUtil.getBigIntValue(parseExpr("0x22"))).isEqualTo(new BigInteger("34"));
 
-      final String maxSafeInt = "9007199254740991"; // Number.MAX_SAFE_INTEGER
-      assertThat(NodeUtil.getBigIntValue(parseExpr(maxSafeInt)))
-          .isEqualTo(new BigInteger(maxSafeInt));
+      final long maxSafeInt = 9007199254740991L; // Number.MAX_SAFE_INTEGER
+      assertThat(NodeUtil.getBigIntValue(parseExpr(String.valueOf(maxSafeInt))))
+          .isEqualTo(BigInteger.valueOf(maxSafeInt));
+      assertThat(NodeUtil.getBigIntValue(parseExpr(String.valueOf(-maxSafeInt))))
+          .isEqualTo(BigInteger.valueOf(-maxSafeInt));
+
+      final long maxSafeIntPlusOne = maxSafeInt + 1L;
+      assertThat(NodeUtil.getBigIntValue(parseExpr(String.valueOf(maxSafeIntPlusOne)))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr(String.valueOf(-maxSafeIntPlusOne)))).isNull();
 
       assertThat(NodeUtil.getBigIntValue(parseExpr("true"))).isEqualTo(BigInteger.ONE);
       assertThat(NodeUtil.getBigIntValue(parseExpr("false"))).isEqualTo(BigInteger.ZERO);

@@ -449,6 +449,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("-1n > -1.1", "true");
     test("-1n > -0.9", "false");
 
+    // Don't fold unsafely large numbers because there might be floating-point error
+    final long maxSafeInt = 9007199254740991L;
+    test("0n > " + maxSafeInt, "false");
+    test("0n < " + maxSafeInt, "true");
+    test("0n > " + -maxSafeInt, "true");
+    test("0n < " + -maxSafeInt, "false");
+    testSame("0n > " + (maxSafeInt + 1L));
+    testSame("0n < " + (maxSafeInt + 1L));
+    testSame("0n > " + -(maxSafeInt + 1L));
+    testSame("0n < " + -(maxSafeInt + 1L));
+
     // comparing with Infinity is allowed
     test("1n < Infinity", "true");
     test("1n > Infinity", "false");

@@ -20,8 +20,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isAtLeastIntegerPrecision;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isEitherZero;
-import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isNegative;
 
 import com.google.auto.value.AutoValue;
@@ -467,7 +468,9 @@ public final class NodeUtil {
       case NUMBER:
         {
           double val = n.getDouble();
-          return isMathematicalInteger(val) ? BigInteger.valueOf((long) val) : null;
+          return isAtLeastIntegerPrecision(val) && isExactInt64(val)
+              ? BigInteger.valueOf((long) val)
+              : null;
         }
 
       case BIGINT:

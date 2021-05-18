@@ -19,7 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isAtLeastIntegerPrecision;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt32;
+import static com.google.javascript.jscomp.base.JSCompDoubles.isExactInt64;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isMathematicalInteger;
 import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
@@ -1245,23 +1247,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return Tri.TRUE.xor(invert);
     } else if (number == Double.NEGATIVE_INFINITY) {
       return Tri.FALSE.xor(invert);
+    } else if (!isAtLeastIntegerPrecision(number)) {
+      return Tri.UNKNOWN;
+    }
+
+    // long can hold all values within [-2^53, 2^53]
+    BigInteger numberAsBigInt = BigInteger.valueOf((long) number);
+    int negativeMeansBigintSmaller = bigint.compareTo(numberAsBigInt);
+    if (negativeMeansBigintSmaller < 0) {
+      return Tri.TRUE.xor(invert);
+    } else if (negativeMeansBigintSmaller > 0) {
+      return Tri.FALSE.xor(invert);
+    } else if (isExactInt64(number)) {
+      return Tri.FALSE; // This is the == case, don't invert.
     } else {
-      // long can hold all values within [-2^53, 2^53]
-      BigInteger numberAsBigInt = BigInteger.valueOf((long) number);
-      int negativeMeansBigintSmaller = bigint.compareTo(numberAsBigInt);
-      if (negativeMeansBigintSmaller < 0) {
-        return Tri.TRUE.xor(invert);
-      } else if (negativeMeansBigintSmaller > 0) {
-        return Tri.FALSE.xor(invert);
-      } else {
-        if (isMathematicalInteger(number)) {
-          return Tri.FALSE; // This is the == case, don't invert.
-        } else if (isPositive(number)) {
-          return Tri.TRUE.xor(invert);
-        } else {
-          return Tri.FALSE.xor(invert);
-        }
-      }
+      return Tri.forBoolean(isPositive(number)).xor(invert);
     }
   }
 
