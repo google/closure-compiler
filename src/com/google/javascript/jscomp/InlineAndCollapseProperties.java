@@ -54,7 +54,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -1382,67 +1381,39 @@ class InlineAndCollapseProperties implements CompilerPass {
      */
     private void flattenReferencesToCollapsibleDescendantNames(
         Name n, String alias, Set<Name> escaped) {
-      Deque<NameAndAlias> worklist = new ArrayDeque<>();
-      worklist.add(new NameAndAlias(n, alias));
-      while (!worklist.isEmpty()) {
-        NameAndAlias currentNameAndAlias = worklist.removeFirst();
-        Name p = currentNameAndAlias.name;
-        String propAlias = currentNameAndAlias.alias;
+      if (n.props == null) {
+        return;
+      }
+      if (n.isCollapsingExplicitlyDenied()) {
+        logDecisionForName(n, "@nocollapse: will not flatten descendant name references");
+        return;
+      }
+      if (escaped.contains(n)) {
+        logDecisionForName(n, "escapes: will not flatten descendant name references");
+        return;
+      }
 
-        if (p.isCollapsingExplicitlyDenied()) {
-          logDecisionForName(p, "@nocollapse: will not flatten references for this or child names");
-        } else {
-          final boolean isSimpleNameOrCollapsedName;
-          if (p.isSimpleName()) {
-            isSimpleNameOrCollapsedName = true;
+      for (Name p : n.props) {
+        String propAlias = appendPropForAlias(alias, p.getBaseName());
+        final Inlinability inlinability = p.canCollapseOrInline();
+
+        boolean isAllowedToCollapse =
+            propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
+        if (isAllowedToCollapse) {
+          if (inlinability.canCollapse()) {
+            logDecisionForName(p, inlinability, "will flatten references");
+            flattenReferencesTo(p, propAlias);
+          } else if (p.isCollapsingExplicitlyDenied()) {
+            logDecisionForName(p, "@nocollapse: will not flatten references");
+          } else if (p.isSimpleStubDeclaration()) {
+            logDecisionForName(p, "simple stub declaration: will flatten references");
+            flattenSimpleStubDeclaration(p, propAlias);
           } else {
-            final Inlinability inlinability = p.canCollapseOrInline();
-            boolean isAllowedToCollapse =
-                propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
-            if (isAllowedToCollapse) {
-              if (inlinability.canCollapse()) {
-                logDecisionForName(p, inlinability, "will flatten references");
-                flattenReferencesTo(p, propAlias);
-                isSimpleNameOrCollapsedName = true;
-              } else if (p.isSimpleStubDeclaration()) {
-                logDecisionForName(p, "simple stub declaration: will flatten references");
-                flattenSimpleStubDeclaration(p, propAlias);
-                isSimpleNameOrCollapsedName = true;
-              } else {
-                logDecisionForName(p, inlinability, "will not flatten references");
-                isSimpleNameOrCollapsedName = false;
-              }
-            } else {
-              isSimpleNameOrCollapsedName = false;
-            }
-          }
-          if (isSimpleNameOrCollapsedName) {
-            if (escaped.contains(p)) {
-              logDecisionForName(p, "escapes: will not flatten descendant name references");
-            } else if (p.props != null) {
-              worklist.addAll(getChildNameAndAliasRecords(p, propAlias));
-            }
+            logDecisionForName(p, inlinability, "will not flatten references");
           }
         }
-      }
-    }
 
-    List<NameAndAlias> getChildNameAndAliasRecords(Name parentName, String parentAlias) {
-      return parentName.props.stream()
-          .map(
-              (childName) ->
-                  new NameAndAlias(
-                      childName, appendPropForAlias(parentAlias, childName.getBaseName())))
-          .collect(Collectors.toList());
-    }
-
-    private class NameAndAlias {
-      private final Name name;
-      private final String alias;
-
-      private NameAndAlias(Name name, String alias) {
-        this.name = name;
-        this.alias = alias;
+        flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
       }
     }
 
