@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -40,6 +41,7 @@ import java.util.Map;
 final class InlineProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final ColorRegistry registry;
 
   private static class PropertyInfo {
     PropertyInfo(Color color, Node value) {
@@ -57,6 +59,7 @@ final class InlineProperties implements CompilerPass {
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.registry = compiler.getColorRegistry();
     invalidateExternProperties();
   }
 
@@ -240,7 +243,7 @@ final class InlineProperties implements CompilerPass {
         return true;
       }
 
-      for (Color immediateSupertype : subCtor.getDisambiguationSupertypes()) {
+      for (Color immediateSupertype : registry.getDisambiguationSupertypes(subCtor)) {
         if (!immediateSupertype.isUnion() && hasInSupertypesList(immediateSupertype, superCtor)) {
           return true;
         }

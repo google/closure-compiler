@@ -2371,7 +2371,6 @@ public abstract class CompilerTestCase {
   private static Function<Node, String> createPrettyPrinter(Compiler compiler) {
     return (n) ->
         new CodePrinter.Builder(n)
-            .setTypeRegistry(compiler.getTypeRegistry())
             .setCompilerOptions(compiler.getOptions())
             .setPrettyPrint(true)
             .build();

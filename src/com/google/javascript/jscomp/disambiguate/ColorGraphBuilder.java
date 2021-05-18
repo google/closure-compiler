@@ -42,6 +42,7 @@ final class ColorGraphBuilder {
     CAN_HOLD
   }
 
+  private final ColorRegistry registry;
   private final ColorGraphNodeFactory nodeFactory;
   private final LowestCommonAncestorFinder<ColorGraphNode, Object> lcaFinder;
   private final LinkedDiGraphNode<ColorGraphNode, Object> topNode;
@@ -73,7 +74,8 @@ final class ColorGraphBuilder {
   ColorGraphBuilder(
       ColorGraphNodeFactory nodeFactory,
       LowestCommonAncestorFinder.Factory<ColorGraphNode, Object> lcaFinderFactory,
-      ColorRegistry colorRegistry) {
+      ColorRegistry registry) {
+    this.registry = registry;
     this.nodeFactory = nodeFactory;
     this.lcaFinder = lcaFinderFactory.create(this.colorHoldsInstanceGraph);
 
@@ -153,10 +155,11 @@ final class ColorGraphBuilder {
     }
 
     Color color = node.getColor();
-    if (color.getDisambiguationSupertypes().isEmpty()) {
+    ImmutableSet<Color> supertypes = this.registry.getDisambiguationSupertypes(color);
+    if (supertypes.isEmpty()) {
       this.connectSourceToDest(topNode, EdgeReason.ALGEBRAIC, flatNode);
     } else {
-      for (Color supertype : color.getDisambiguationSupertypes()) {
+      for (Color supertype : supertypes) {
         this.connectSourceToDest(this.addInternal(supertype), EdgeReason.CAN_HOLD, flatNode);
       }
     }

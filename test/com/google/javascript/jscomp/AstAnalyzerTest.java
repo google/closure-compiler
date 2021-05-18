@@ -163,7 +163,7 @@ public final class AstAnalyzerTest {
               ImmutableMap.of(
                   "getter", PropertyAccessKind.GETTER_ONLY, //
                   "setter", PropertyAccessKind.SETTER_ONLY)));
-      compiler.setColorRegistry(ColorRegistry.createForTesting());
+      compiler.setColorRegistry(ColorRegistry.builder().setDefaultNativeColorsForTesting().build());
     }
 
     private Node parseInternal(String js) {

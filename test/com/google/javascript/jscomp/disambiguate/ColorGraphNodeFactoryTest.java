@@ -38,7 +38,7 @@ public final class ColorGraphNodeFactoryTest {
 
   @Before
   public void initRegistry() {
-    this.colorRegistry = ColorRegistry.createForTesting();
+    this.colorRegistry = ColorRegistry.builder().setDefaultNativeColorsForTesting().build();
   }
 
   @Test

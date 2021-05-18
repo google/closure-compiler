@@ -57,7 +57,6 @@ public class ColorDeserializerTest {
 
     Color object = deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.TOP_OBJECT));
     assertThat(object).isInvalidating();
-    assertThat(object.getDisambiguationSupertypes()).isEmpty();
     assertThat(object.getInstanceColors()).isEmpty();
     assertThat(object.getPrototypes()).isEmpty();
   }
@@ -90,7 +89,8 @@ public class ColorDeserializerTest {
     Color numberObject = deserializer.getRegistry().get(StandardColors.NUMBER_OBJECT_ID);
     assertThat(numberObject).isInvalidating();
     assertThat(numberObject)
-        .hasDisambiguationSupertypes(deserializer.pointerToColor(poolPointer(1)));
+        .hasDisambiguationSupertypesThat(deserializer.getRegistry())
+        .containsExactly(deserializer.pointerToColor(poolPointer(1)));
     assertThat(numberObject).isSameInstanceAs(deserializer.pointerToColor(poolPointer(0)));
   }
 
@@ -217,30 +217,7 @@ public class ColorDeserializerTest {
   }
 
   @Test
-  public void addsSingleSupertypeToDirectSupertypesField() {
-    TypePool typePool =
-        TypePool.newBuilder()
-            .addType(
-                TypeProto.newBuilder()
-                    .setObject(
-                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
-            .addType(
-                TypeProto.newBuilder()
-                    .setObject(
-                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Bar"))))
-            // Bar is a subtype of Foo
-            .addDisambiguationEdges(
-                SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
-            .build();
-    ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
-
-    assertThat(deserializer.pointerToColor(poolPointer(1)))
-        .hasDisambiguationSupertypes(createObjectColorBuilder().setId(fromAscii("Foo")).build());
-  }
-
-  @Test
-  public void addsMultipleSupertypesToDirectSupertypesField() {
+  public void recordsDisambiguationsSupertypes_multipleSupertypesPerSubtype() {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
@@ -265,10 +242,46 @@ public class ColorDeserializerTest {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
 
-    assertThat(deserializer.pointerToColor(poolPointer(1)))
-        .hasDisambiguationSupertypes(
-            createObjectColorBuilder().setId(fromAscii("Foo")).build(),
-            createObjectColorBuilder().setId(fromAscii("Baz")).build());
+    Color foo = deserializer.pointerToColor(poolPointer(0));
+    Color bar = deserializer.pointerToColor(poolPointer(1));
+    Color baz = deserializer.pointerToColor(poolPointer(2));
+
+    assertThat(bar)
+        .hasDisambiguationSupertypesThat(deserializer.getRegistry())
+        .containsExactly(foo, baz);
+  }
+
+  @Test
+  public void recordsDisambiguationsSupertypes_cylceInSupertypeGraph() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Bar"))))
+            // Foo is a subtype of Bar
+            .addDisambiguationEdges(
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
+            // Bar is also a subtype of Foo
+            .addDisambiguationEdges(
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
+            .build();
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.empty());
+
+    Color foo = deserializer.pointerToColor(poolPointer(0));
+    Color bar = deserializer.pointerToColor(poolPointer(1));
+
+    assertThat(bar)
+        .hasDisambiguationSupertypesThat(deserializer.getRegistry())
+        .containsExactly(foo);
+    assertThat(foo)
+        .hasDisambiguationSupertypesThat(deserializer.getRegistry())
+        .containsExactly(bar);
   }
 
   @Test

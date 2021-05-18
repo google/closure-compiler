@@ -596,7 +596,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void propertiesAreNotDisambiguated_onObjectLiteralTypes() {
+  public void propertiesAreInvalidated_onObjectLiteralTypes() {
     testSame(
         srcs(
             lines(
@@ -822,6 +822,53 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "  JSC$6_x() { }",
                 "  y() { }",
                 "  JSC$6_z() { }",
+                "}")));
+  }
+
+  @Test
+  public void propertiesAreInvalidated_ifUsedOnType_butNotDeclaredOnAncestor() {
+    test(
+        srcs(
+            lines(
+                "/** @interface */",
+                "class IFoo {",
+                "  a() { }",
+                "}",
+                "",
+                "/** @implements {IFoo} */",
+                "class Foo {",
+                "  b() { }",
+                "}",
+                "",
+                "new Foo().a;",
+                "new Foo().b;",
+                "new Foo().c;",
+                "",
+                "class Other {",
+                "  a() { }",
+                "  b() { }",
+                "  c() { }",
+                "}")),
+        expected(
+            lines(
+                "/** @interface */",
+                "class IFoo {",
+                "  JSC$1_a() { }",
+                "}",
+                "",
+                "/** @implements {IFoo} */",
+                "class Foo {",
+                "  JSC$3_b() { }",
+                "}",
+                "",
+                "new Foo().JSC$1_a;",
+                "new Foo().JSC$3_b;",
+                "new Foo().c;",
+                "",
+                "class Other {",
+                "  JSC$6_a() { }",
+                "  JSC$6_b() { }",
+                "  c() { }",
                 "}")));
   }
 

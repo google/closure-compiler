@@ -41,12 +41,6 @@ public abstract class Color {
 
   public abstract ImmutableSet<Color> getInstanceColors();
 
-  /**
-   * List of other colors directly above this in the subtyping graph for the purposes of property
-   * (dis)ambiguation.
-   */
-  public abstract ImmutableSet<Color> getDisambiguationSupertypes();
-
   public abstract boolean isInvalidating();
 
   public abstract boolean getPropertiesKeepOriginalName();
@@ -75,7 +69,6 @@ public abstract class Color {
         .setClosureAssert(false)
         .setConstructor(false)
         .setDebugInfo(DebugInfo.EMPTY)
-        .setDisambiguationSupertypes(ImmutableSet.of())
         .setInstanceColors(ImmutableSet.of())
         .setInvalidating(false)
         .setOwnProperties(ImmutableSet.of())
@@ -94,7 +87,6 @@ public abstract class Color {
         break;
     }
 
-    ImmutableSet.Builder<Color> disambiguationSupertypes = ImmutableSet.builder();
     ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
     ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
     ImmutableSet.Builder<Color> newElements = ImmutableSet.builder();
@@ -116,7 +108,6 @@ public abstract class Color {
         ids.add(element.getId());
       }
 
-      disambiguationSupertypes.addAll(element.getDisambiguationSupertypes());
       instanceColors.addAll(element.getInstanceColors());
       isClosureAssert &= element.isClosureAssert();
       isConstructor &= element.isConstructor();
@@ -130,7 +121,6 @@ public abstract class Color {
         .setClosureAssert(isClosureAssert)
         .setConstructor(isConstructor)
         .setDebugInfo(DebugInfo.EMPTY)
-        .setDisambiguationSupertypes(disambiguationSupertypes.build())
         .setId(ColorId.union(ids.build()))
         .setInstanceColors(instanceColors.build())
         .setInvalidating(isInvalidating)
@@ -165,26 +155,6 @@ public abstract class Color {
     return !this.getUnionElements().isEmpty();
   }
 
-  /**
-   * Returns true if the color or any of its ancestors has the given property
-   *
-   * <p>If this is a union, returns true if /any/ union alternate has the property.
-   *
-   * <p>TODO(b/177695515): delete this method
-   */
-  public boolean mayHaveProperty(String propertyName) {
-    if (this.isUnion()) {
-      return this.getUnionElements().stream()
-          .anyMatch(element -> element.mayHaveProperty(propertyName));
-    }
-
-    if (this.getOwnProperties().contains(propertyName)) {
-      return true;
-    }
-    return this.getDisambiguationSupertypes().stream()
-        .anyMatch(element -> element.mayHaveProperty(propertyName));
-  }
-
   @Memoized
   public Color subtractNullOrVoid() {
     /** Avoid defining NULL_OR_VOID.subtract(NULL_OR_VOID) */
@@ -211,8 +181,6 @@ public abstract class Color {
     public abstract Builder setInvalidating(boolean x);
 
     public abstract Builder setPropertiesKeepOriginalName(boolean x);
-
-    public abstract Builder setDisambiguationSupertypes(ImmutableSet<Color> x);
 
     public abstract Builder setConstructor(boolean x);
 

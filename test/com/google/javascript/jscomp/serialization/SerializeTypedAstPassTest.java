@@ -149,7 +149,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDisambiguationEdgesPointFromInstanceToPrototype() {
+  public void testDisambiguationEdges_pointFromInstanceToPrototype() {
     TypePool typePool = compileToTypePool("class Foo { m() {} } new Foo().m();");
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo"))
@@ -158,7 +158,34 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDisambiguationEdgesPointFromSubctorToSuperctor() {
+  public void testDisambiguationEdges_pointFromInterfaceToPrototype() {
+    TypePool typePool =
+        compileToTypePool(
+            lines(
+                "/** @interface */ class IFoo { m() {} }", //
+                "let /** !IFoo */ x;"));
+
+    assertThat(getNonPrimitiveSupertypesFor(typePool, "IFoo"))
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("IFoo.prototype")).build());
+  }
+
+  @Test
+  public void testDisambiguationEdges_pointFromInstanceToInterface() {
+    TypePool typePool =
+        compileToTypePool(
+            lines("/** @interface */ class IFoo {}", "/** @implements {IFoo} */ class Foo {}"));
+
+    assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo"))
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .ignoringFieldDescriptors(
+            ObjectTypeProto.getDescriptor().findFieldByName("prototype"),
+            ObjectTypeProto.getDescriptor().findFieldByName("instance_type"))
+        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("IFoo")).build());
+  }
+
+  @Test
+  public void testDisambiguationEdges_pointFromSubctorToSuperctor() {
     TypePool typePool = compileToTypePool("class Foo {} class Bar extends Foo {}");
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "(typeof Bar)"))

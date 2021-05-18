@@ -23,6 +23,7 @@ import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import javax.annotation.Nullable;
 
 /** Subject for {@link Color} */
@@ -84,14 +85,6 @@ public final class ColorSubject extends Subject {
     return check("getOwnProperties()").that(actualNonNull().getOwnProperties());
   }
 
-  public void mayHaveProperty(String property) {
-    check("mayHaveProperty()").that(actualNonNull().mayHaveProperty(property)).isTrue();
-  }
-
-  public void doesNotHaveProperty(String property) {
-    check("mayHaveProperty()").that(actualNonNull().mayHaveProperty(property)).isFalse();
-  }
-
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")
@@ -100,10 +93,8 @@ public final class ColorSubject extends Subject {
         .containsExactly((Object[]) alternates);
   }
 
-  public void hasDisambiguationSupertypes(Color... alternates) {
-    check("getDirectSupertypes().containsExactly()")
-        .that(actualNonNull().getDisambiguationSupertypes())
-        // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
-        .containsExactly((Object[]) alternates);
+  public IterableSubject hasDisambiguationSupertypesThat(ColorRegistry registry) {
+    return check("registry.getDisambiguationSupertypes(%s)", this.actual)
+        .that(registry.getDisambiguationSupertypes(this.actual));
   }
 }

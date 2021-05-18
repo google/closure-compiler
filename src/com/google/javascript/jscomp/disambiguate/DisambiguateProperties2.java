@@ -172,7 +172,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static void invalidateBasedOnType(ColorGraphNodeFactory flattener) {
+  private void invalidateBasedOnType(ColorGraphNodeFactory flattener) {
     for (ColorGraphNode type : flattener.getAllKnownTypes()) {
       if (type.getColor().isInvalidating()) {
         for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
@@ -184,25 +184,50 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static void invalidateNonDeclaredPropertyAccesses(ColorGraphNode colorGraphNode) {
+  /**
+   * Invalidate all property accesses that cause "missing property" warnings.
+   *
+   * <p>This behavior is not inherently necessary for correctness. It only exists because the older
+   * version of the disambiguator invalidated these properties and some projects began to rely on
+   * this.
+   *
+   * <p>TODO(b/177695515): delete this method
+   */
+  private void invalidateNonDeclaredPropertyAccesses(ColorGraphNode colorGraphNode) {
     Color color = colorGraphNode.getColor();
     checkArgument(
         !color.isInvalidating(),
         "Not applicable to invalidating types. All their properties are invalidated");
-    // Invalidate all property accesses that cause "missing property" warnings. This behavior is
-    // not
-    // inherently necessary for correctness. It only exists because the older version of the
-    // disambiguator invalidated these properties and some projects began to rely on this.
-    // TODO(b/177695515): delete this method.
+
     for (PropertyClustering prop : colorGraphNode.getAssociatedProps().keySet()) {
       if (prop.isInvalidated()) {
         continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
       }
 
-      if (!color.mayHaveProperty(prop.getName())) {
+      if (!mayHaveProperty(color, prop.getName())) {
         prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getIndex()));
       }
     }
+  }
+
+  /**
+   * Returns true if the color or any of its ancestors has the given property
+   *
+   * <p>If this is a union, returns true if /any/ union alternate has the property.
+   *
+   * <p>TODO(b/177695515): delete this method
+   */
+  private boolean mayHaveProperty(Color color, String propertyName) {
+    if (color.isUnion()) {
+      return color.getUnionElements().stream()
+          .anyMatch(element -> mayHaveProperty(element, propertyName));
+    }
+
+    if (color.getOwnProperties().contains(propertyName)) {
+      return true;
+    }
+    return this.registry.getDisambiguationSupertypes(color).stream()
+        .anyMatch(element -> mayHaveProperty(element, propertyName));
   }
 
   private void registerOwnDeclaredProperties(
