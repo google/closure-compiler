@@ -1207,99 +1207,18 @@ class InlineAndCollapseProperties implements CompilerPass {
       nameMap = checkNotNull(namespace, "namespace was not initialized").getNameIndex();
       List<Name> globalNames = namespace.getNameForest();
       Set<Name> escaped = checkNamespaces();
-      collapseNames(globalNames, escaped);
+      for (Name name : globalNames) {
+        flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
+        // We collapse property definitions after collapsing property references
+        // because this step can alter the parse tree above property references,
+        // invalidating the node ancestry stored with each reference.
+        collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
+      }
 
       // This shouldn't be necessary, this pass should already be setting new constants as
       // constant.
       // TODO(b/64256754): Investigate.
       new PropagateConstantAnnotationsOverVars(compiler, false).process(externs, root);
-    }
-
-    /**
-     * Collapse qualified names based on the given global names where possible.
-     *
-     * <p>Both the references to the names and their declarations are collapsed.
-     *
-     * @param globalNames names of global variables
-     * @param escaped set of global qualified names that are known to escape to a context where
-     *     their properties may be referenced on an alias.
-     */
-    private void collapseNames(List<Name> globalNames, Set<Name> escaped) {
-      for (Name baseName : globalNames) {
-        Deque<NameAndAlias> worklist = new ArrayDeque<>();
-        worklist.add(new NameAndAlias(baseName, baseName.getBaseName()));
-        while (!worklist.isEmpty()) {
-          NameAndAlias currentNameAndAlias = worklist.removeFirst();
-          Name name = currentNameAndAlias.name;
-          String collapsedAlias = currentNameAndAlias.alias;
-
-          if (name.isCollapsingExplicitlyDenied()) {
-            logDecisionForName(
-                name, "@nocollapse: will not flatten references for this or child names");
-          } else {
-            final boolean isSimpleNameOrCollapsedName;
-            if (name.isSimpleName()) {
-              isSimpleNameOrCollapsedName = true;
-            } else {
-              final Inlinability inlinability = name.canCollapseOrInline();
-              boolean isAllowedToCollapse =
-                  propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT
-                      || name.isModuleExport();
-              if (isAllowedToCollapse) {
-                if (inlinability.canCollapse()) {
-                  logDecisionForName(name, inlinability, "will flatten references");
-                  flattenReferencesTo(name, collapsedAlias);
-                  isSimpleNameOrCollapsedName = true;
-                } else if (name.isSimpleStubDeclaration()) {
-                  logDecisionForName(name, "simple stub declaration: will flatten references");
-                  flattenSimpleStubDeclaration(name, collapsedAlias);
-                  isSimpleNameOrCollapsedName = true;
-                } else {
-                  logDecisionForName(name, inlinability, "will not flatten references");
-                  isSimpleNameOrCollapsedName = false;
-                }
-              } else {
-                isSimpleNameOrCollapsedName = false;
-              }
-            }
-            if (isSimpleNameOrCollapsedName) {
-              // This name is either a global variable or a global qualified name that we have
-              // decided to collapse.
-              // For a qualified name, we'll need to collapse its definition into a variable
-              // declaration.
-              // In either case when the assigned value is an object literal, we may need to create
-              // global variable declarations for the child names defined in that literal.
-              final Inlinability childNameInlinability = name.canCollapseOrInlineChildNames();
-              final boolean canCollapseChildNames;
-              if (!childNameInlinability.canCollapse()) {
-                logDecisionForName(
-                    name,
-                    () ->
-                        SimpleFormat.format(
-                            "child name inlinability: %s: will not collapse child names",
-                            childNameInlinability));
-                canCollapseChildNames = false;
-              } else if (escaped.contains(name)) {
-                logDecisionForName(name, "escapes: will not collapse child names");
-                canCollapseChildNames = false;
-              } else {
-                canCollapseChildNames = true;
-              }
-
-              // Handle this name first so that nested object literals get unrolled.
-              if (canCollapse(name)) {
-                logDecisionForName(name, "collapsing");
-                updateGlobalNameDeclaration(name, collapsedAlias, canCollapseChildNames);
-              }
-              if (escaped.contains(name)) {
-                logDecisionForName(name, "escapes: will not flatten descendant name references");
-              } else if (name.props != null) {
-                worklist.addAll(getChildNameAndAliasRecords(name, collapsedAlias));
-              }
-            }
-          }
-        }
-      }
     }
 
     private boolean canCollapse(Name name) {
@@ -1454,6 +1373,60 @@ class InlineAndCollapseProperties implements CompilerPass {
           JSError.make(ref.getNode(), NAMESPACE_REDEFINED_WARNING, nameObj.getFullName()));
     }
 
+    /**
+     * Flattens all references to collapsible properties of a global name except their initial
+     * definitions. Recurs on subnames.
+     *
+     * @param n An object representing a global name
+     * @param alias The flattened name for {@code n}
+     */
+    private void flattenReferencesToCollapsibleDescendantNames(
+        Name n, String alias, Set<Name> escaped) {
+      Deque<NameAndAlias> worklist = new ArrayDeque<>();
+      worklist.add(new NameAndAlias(n, alias));
+      while (!worklist.isEmpty()) {
+        NameAndAlias currentNameAndAlias = worklist.removeFirst();
+        Name p = currentNameAndAlias.name;
+        String propAlias = currentNameAndAlias.alias;
+
+        if (p.isCollapsingExplicitlyDenied()) {
+          logDecisionForName(p, "@nocollapse: will not flatten references for this or child names");
+        } else {
+          final boolean isSimpleNameOrCollapsedName;
+          if (p.isSimpleName()) {
+            isSimpleNameOrCollapsedName = true;
+          } else {
+            final Inlinability inlinability = p.canCollapseOrInline();
+            boolean isAllowedToCollapse =
+                propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
+            if (isAllowedToCollapse) {
+              if (inlinability.canCollapse()) {
+                logDecisionForName(p, inlinability, "will flatten references");
+                flattenReferencesTo(p, propAlias);
+                isSimpleNameOrCollapsedName = true;
+              } else if (p.isSimpleStubDeclaration()) {
+                logDecisionForName(p, "simple stub declaration: will flatten references");
+                flattenSimpleStubDeclaration(p, propAlias);
+                isSimpleNameOrCollapsedName = true;
+              } else {
+                logDecisionForName(p, inlinability, "will not flatten references");
+                isSimpleNameOrCollapsedName = false;
+              }
+            } else {
+              isSimpleNameOrCollapsedName = false;
+            }
+          }
+          if (isSimpleNameOrCollapsedName) {
+            if (escaped.contains(p)) {
+              logDecisionForName(p, "escapes: will not flatten descendant name references");
+            } else if (p.props != null) {
+              worklist.addAll(getChildNameAndAliasRecords(p, propAlias));
+            }
+          }
+        }
+      }
+    }
+
     List<NameAndAlias> getChildNameAndAliasRecords(Name parentName, String parentAlias) {
       return parentName.props.stream()
           .map(
@@ -1513,28 +1486,19 @@ class InlineAndCollapseProperties implements CompilerPass {
           // Declarations are handled separately.
           continue;
         }
-        final Node rNode = r.getNode();
-        Node rParent = rNode.getParent();
-        if (rParent == null) {
-          // This reference has already been removed from the AST.
-          // NOTE: Currently the only known cause for this is having an enum object literal
-          //       that has duplicate keys. They both get removed by
-          //       `declareVariablesForObjLitValues()` before this point is reached.
-          logDecisionForName(n, () -> r.getNode().getLocation() + ":null parent for " + rNode);
-          continue;
-        }
+        Node rParent = r.getNode().getParent();
         // There are two cases when we shouldn't flatten a reference:
         // 1) Object literal keys, because duplicate keys show up as refs.
         // 2) References inside a complex assign. (a = x.y = 0). These are
         //    called TWIN references, because they show up twice in the
         //    reference list. Only collapse the set, not the alias.
-        if (!NodeUtil.mayBeObjectLitKey(rNode) && (r.getTwin() == null || r.isSet())) {
-          flattenNameRef(alias, rNode, rParent, originalName);
-        } else if (rNode.isStringKey() && rParent.isObjectPattern()) {
-          Node newNode = IR.name(alias).srcref(rNode);
-          NodeUtil.copyNameAnnotations(rNode, newNode);
+        if (!NodeUtil.mayBeObjectLitKey(r.getNode()) && (r.getTwin() == null || r.isSet())) {
+          flattenNameRef(alias, r.getNode(), rParent, originalName);
+        } else if (r.getNode().isStringKey() && r.getNode().getParent().isObjectPattern()) {
+          Node newNode = IR.name(alias).srcref(r.getNode());
+          NodeUtil.copyNameAnnotations(r.getNode(), newNode);
           DestructuringGlobalNameExtractor.reassignDestructringLvalue(
-              rNode, newNode, null, r, compiler);
+              r.getNode(), newNode, null, r, compiler);
         }
       }
 
@@ -1622,23 +1586,6 @@ class InlineAndCollapseProperties implements CompilerPass {
     private void flattenNameRef(String alias, Node n, Node parent, String originalName) {
       Preconditions.checkArgument(
           n.isGetProp(), "Expected GETPROP, found %s. Node: %s", n.getToken(), n);
-      Node enclosingChangeScopeRoot = NodeUtil.getEnclosingChangeScopeRoot(n);
-      if (enclosingChangeScopeRoot == null) {
-        // The reference was already removed from the AST, so do nothing.
-        //
-        // One case in which this is known to happen is when this reference was used
-        // in a computed property, and the object literal containing it was removed.
-        //
-        // e.g
-        // ```javascript
-        // // When collapsing the definition of other.name, we may decide to entirely
-        // // remove this definition.
-        // other.name = {
-        //   [our.name]: value
-        // };
-        // ```
-        return;
-      }
 
       // BEFORE:
       //   getprop
@@ -1658,6 +1605,51 @@ class InlineAndCollapseProperties implements CompilerPass {
 
       n.replaceWith(ref);
       compiler.reportChangeToEnclosingScope(ref);
+    }
+
+    /**
+     * Collapses definitions of the collapsible properties of a global name. Recurs on subnames that
+     * also represent JavaScript objects with collapsible properties.
+     *
+     * @param n A node representing a global name
+     * @param alias The flattened name for {@code n}
+     */
+    private void collapseDeclarationOfNameAndDescendants(Name n, String alias, Set<Name> escaped) {
+      final Deque<NameAndAlias> worklist = new ArrayDeque<>();
+      worklist.add(new NameAndAlias(n, alias));
+      while (!worklist.isEmpty()) {
+        final NameAndAlias nameAndAlias = worklist.removeFirst();
+        n = nameAndAlias.name;
+        alias = nameAndAlias.alias;
+
+        final Inlinability childNameInlinability = n.canCollapseOrInlineChildNames();
+        final boolean canCollapseChildNames;
+        if (!childNameInlinability.canCollapse()) {
+          logDecisionForName(
+              n,
+              () ->
+                  SimpleFormat.format(
+                      "child name inlinability: %s: will not collapse child names",
+                      childNameInlinability));
+          canCollapseChildNames = false;
+        } else if (escaped.contains(n)) {
+          logDecisionForName(n, "escapes: will not collapse child names");
+          canCollapseChildNames = false;
+        } else {
+          canCollapseChildNames = true;
+        }
+
+        // Handle this name first so that nested object literals get unrolled.
+        if (canCollapse(n)) {
+          logDecisionForName(n, "collapsing");
+          updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
+        }
+
+        if (n.props != null && !escaped.contains(n)) {
+          logDecisionForName(n, "collapsing descendants");
+          worklist.addAll(getChildNameAndAliasRecords(n, alias));
+        }
+      }
     }
 
     /**
@@ -2074,6 +2066,10 @@ class InlineAndCollapseProperties implements CompilerPass {
         // done. (Duplicate keys in an object literal can bring us here twice
         // for the same global name.)
         if (isJsIdentifier && p != null) {
+          if (!discardKeys) {
+            p.addAliasingGetClonedFromDeclaration(refNode);
+          }
+
           p.updateRefNode(p.getDeclaration(), nameNode);
 
           if (value.isFunction()) {

@@ -1613,10 +1613,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "(function() { a$b = {}; })();",
                 "/** @constructor */ var a$b$c = function() {}")));
 
-    testSame(
-        lines(
-            "var a = {}; (function() { /** @nocollapse */ a.b = {}; })();",
-            " /** @constructor */a.b.c = function() {};"));
+    test(
+        srcs(
+            lines(
+                "var a = {}; (function() { /** @nocollapse */ a.b = {}; })();",
+                " /** @constructor */a.b.c = function() {};")),
+        expected(
+            lines(
+                "var a = {}; (function() { /** @nocollapse */ a.b = {}; })();",
+                " /** @constructor */ var a$b$c = function() {};")));
 
     test(
         srcs(
@@ -2788,13 +2793,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testDelete11() {
-    testSame(
-        srcs(
-            lines(
-                "var x = {};",
-                "x.foo = {};",
-                "/** @constructor */ x.foo.Bar = function() {};",
-                "delete x.foo;")),
+    // Constructors are always collapsed.
+    test(
+        lines(
+            "var x = {};",
+            "x.foo = {};",
+            "/** @constructor */ x.foo.Bar = function() {};",
+            "delete x.foo;"),
+        lines(
+            "var x = {};",
+            "x.foo = {};",
+            "/** @constructor */ var x$foo$Bar = function() {};",
+            "delete x.foo;"),
         warning(NAMESPACE_REDEFINED_WARNING));
     testSame(
         srcs(
