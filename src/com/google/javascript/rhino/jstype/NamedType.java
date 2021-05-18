@@ -161,7 +161,7 @@ public final class NamedType extends ProxyObjectType {
       // Already resolved, just restrict.
       // TODO(b/146173738): just return getReferencedType().restrictByNotNullOrUndefined() after
       // fixing how conformance checks handle unresolved types.
-      return this.isUnresolvedOrResolvedUnknown()
+      return this.isNoResolvedType() || this.isUnknownType()
           ? this
           : getReferencedType().restrictByNotNullOrUndefined();
     }

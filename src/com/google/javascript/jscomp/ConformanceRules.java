@@ -853,7 +853,7 @@ public final class ConformanceRules {
     }
 
     static boolean isLooseType(JSType type) {
-      return type.isUnknownType() || type.isUnresolved() || type.isAllType();
+      return type.isUnknownType() || type.isNoResolvedType() || type.isAllType();
     }
 
     static JSType evaluateTypeString(AbstractCompiler compiler, String expression)
@@ -1632,7 +1632,7 @@ public final class ConformanceRules {
             return nonConformingPart;
           }
         }
-      } else if (type.isUnresolved()) {
+      } else if (type.isNoResolvedType()) {
         return type;
       }
       return null;

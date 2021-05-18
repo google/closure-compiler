@@ -181,15 +181,6 @@ public abstract class JSType {
     return false;
   }
 
-  public final boolean isUnresolved() {
-    return isNoResolvedType();
-  }
-
-  public final boolean isUnresolvedOrResolvedUnknown() {
-    // TODO(b/146173738): delete this method
-    return isNoResolvedType() || (isNamedType() && isUnknownType());
-  }
-
   public boolean isNoObjectType() {
     return false;
   }

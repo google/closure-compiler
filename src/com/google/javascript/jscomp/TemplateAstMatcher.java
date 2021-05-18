@@ -484,7 +484,7 @@ public final class TemplateAstMatcher {
     // that resolves to unknown instead of being a no resolved type. This should
     // be fixed in the compiler such that it resolves to a no resolved type, and
     // then this code can be simplified to use that.
-    if (type.isUnresolvedOrResolvedUnknown()) {
+    if (type.isNoResolvedType() || (type.isNamedType() && type.isUnknownType())) {
       return true;
     }
     if (type.isUnionType()) {
