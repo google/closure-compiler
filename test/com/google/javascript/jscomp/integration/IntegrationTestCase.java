@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.SourceFile;
@@ -321,12 +322,24 @@ abstract class IntegrationTestCase {
   protected Compiler compile(CompilerOptions options, ImmutableList<JSModule> modules) {
     Compiler compiler =
         useNoninjectingCompiler
-            ? new NoninjectingCompiler(new BlackHoleErrorManager())
-            : new Compiler(new BlackHoleErrorManager());
+            ? createNoninjectingCompiler(new BlackHoleErrorManager())
+            : createCompiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
     compiler.compileModules(externs, modules, options);
     return compiler;
+  }
+
+  Compiler createNoninjectingCompiler(ErrorManager errorManager) {
+    return new NoninjectingCompiler(errorManager);
+  }
+
+  Compiler createCompiler(ErrorManager errorManager) {
+    return new Compiler(errorManager);
+  }
+
+  Compiler createCompiler() {
+    return new Compiler();
   }
 
   protected void testNoWarnings(CompilerOptions options, String code) {
@@ -353,7 +366,7 @@ abstract class IntegrationTestCase {
   }
 
   protected Node parse(String[] original, CompilerOptions options) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = createCompiler();
     List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode(inputFileNamePrefix + i + inputFileNameSuffix, original[i]));

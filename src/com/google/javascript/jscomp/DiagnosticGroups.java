@@ -96,8 +96,7 @@ public class DiagnosticGroups {
     return group;
   }
 
-  static DiagnosticGroup registerGroup(String name,
-      DiagnosticType ... types) {
+  public static DiagnosticGroup registerGroup(String name, DiagnosticType... types) {
     DiagnosticGroup group = new DiagnosticGroup(name, types);
     groupsByName.put(name, group);
     return group;

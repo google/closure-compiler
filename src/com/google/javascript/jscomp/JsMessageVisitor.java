@@ -54,7 +54,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           "JSC_MSG_HAS_NO_TEXT",
           "Message value of {0} is just an empty string. " + "Empty messages are forbidden.");
 
-  static final DiagnosticType MESSAGE_TREE_MALFORMED =
+  public static final DiagnosticType MESSAGE_TREE_MALFORMED =
       DiagnosticType.error("JSC_MSG_TREE_MALFORMED", "Message parse tree malformed. {0}");
 
   static final DiagnosticType MESSAGE_HAS_NO_VALUE =
@@ -75,13 +75,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           "JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
           "message not initialized using " + MSG_FUNCTION_NAME);
 
-  static final DiagnosticType BAD_FALLBACK_SYNTAX =
+  public static final DiagnosticType BAD_FALLBACK_SYNTAX =
       DiagnosticType.error(
           "JSC_MSG_BAD_FALLBACK_SYNTAX",
           SimpleFormat.format(
               "Bad syntax. " + "Expected syntax: %s(MSG_1, MSG_2)", MSG_FALLBACK_FUNCTION_NAME));
 
-  static final DiagnosticType FALLBACK_ARG_ERROR =
+  public static final DiagnosticType FALLBACK_ARG_ERROR =
       DiagnosticType.error(
           "JSC_MSG_FALLBACK_ARG_ERROR", "Could not find message entry for fallback argument {0}");
 

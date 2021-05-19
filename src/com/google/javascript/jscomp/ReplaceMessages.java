@@ -37,16 +37,16 @@ import javax.annotation.Nullable;
  * JsMessageVisitor implementation.
  */
 @GwtIncompatible("JsMessage")
-final class ReplaceMessages extends JsMessageVisitor {
+public final class ReplaceMessages extends JsMessageVisitor {
   private final MessageBundle bundle;
   private final boolean strictReplacement;
 
-  static final DiagnosticType BUNDLE_DOES_NOT_HAVE_THE_MESSAGE =
+  public static final DiagnosticType BUNDLE_DOES_NOT_HAVE_THE_MESSAGE =
       DiagnosticType.error(
           "JSC_BUNDLE_DOES_NOT_HAVE_THE_MESSAGE",
           "Message with id = {0} could not be found in replacement bundle");
 
-  static final DiagnosticType INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS =
+  public static final DiagnosticType INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS =
       DiagnosticType.error(
           "JSC_INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS",
           "Alternate message ID={0} placeholders ({1}) differs from {2} placeholders ({3}).");
