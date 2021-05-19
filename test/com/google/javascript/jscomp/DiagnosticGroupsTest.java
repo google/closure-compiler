@@ -51,4 +51,13 @@ public final class DiagnosticGroupsTest {
           .isEmpty();
     }
   }
+
+  @Test
+  public void conformanceErrorsCannotBeDowngraded() {
+    for (DiagnosticGroup group : DiagnosticGroups.getRegisteredGroups().values()) {
+      assertWithMessage("Group '" + group.getName() + "' should not include JSC_CONFORMANCE_ERROR")
+          .that(group.getTypes())
+          .doesNotContain(CheckConformance.CONFORMANCE_ERROR);
+    }
+  }
 }
