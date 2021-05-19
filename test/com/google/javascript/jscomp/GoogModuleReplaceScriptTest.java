@@ -56,25 +56,6 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
   }
 
   @Test
-  public void testWrappedGoogModules() {
-    String source0 =
-        LINE_JOINER.join(
-            "goog.loadModule(function(exports){ 'use strict';",
-            "  goog.module('ns.Bar');",
-            "  /** @constructor */ exports = function() {};",
-            "  return exports;",
-            "});");
-    String source1 = LINE_JOINER.join(
-            "goog.loadModule(function(exports){ 'use strict';",
-            "  goog.module('ns.Baz');",
-            "  var Bar = goog.require('ns.Bar');",
-            "  var a = new Bar();",
-            "  return exports;",
-            "});");
-    runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
-  }
-
-  @Test
   public void testSimpleBundledGoogModule() {
     String source0 =
         LINE_JOINER.join(

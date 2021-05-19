@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESP
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -843,24 +842,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     testWarning(
         new TestExternsBuilder().addClosureExterns().build() + "goog.forwardDeclare('C', 'D');",
         TypeCheck.WRONG_ARGUMENT_COUNT);
-  }
-
-  @Test
-  public void testBadCrossModuleRequire() {
-    test(
-        JSChunkGraphBuilder.forStar()
-            .addChunk(new TestExternsBuilder().addClosureExterns().build())
-            .addChunk("")
-            .addChunk("goog.provide('goog.ui');")
-            .addChunk("goog.require('goog.ui');")
-            .build(),
-        new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
-          "",
-          "/** @const */ goog.ui = {};",
-          ""
-        },
-        warning(XMODULE_REQUIRE_ERROR));
   }
 
   @Test

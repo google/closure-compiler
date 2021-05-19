@@ -31,10 +31,10 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GO
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,13 +84,13 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   private ModuleType moduleType;
-  private LanguageMode languageMode;
-
+  // use the static ModuleMetadata fields rather than rebuilding the ModuleMetadataMap
+  private boolean useDefaultModuleMetadata;
 
   @Before
   public void reset() {
     moduleType = ModuleType.SCRIPT;
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    useDefaultModuleMetadata = true;
   }
 
   @Override
@@ -110,25 +110,28 @@ public class CheckClosureImportsTest extends CompilerTestCase {
             .isTestOnly(false)
             .build();
 
-    return new CheckClosureImports(
-        compiler,
-        new ModuleMetadataMap(
-            ImmutableMap.of(
-                PROVIDES_SYMBOL_PATH,
-                PROVIDES_SYMBOL_METADATA,
-                ES_MODULE_PATH,
-                ES_MODULE_METADATA,
-                TEST_CODE_PATH,
-                testMetadata,
-                "externs",
-                EXTERN_METADATA),
-            ImmutableMap.of(
-                "symbol",
-                PROVIDES_SYMBOL_METADATA,
-                "es.module",
-                ES_MODULE_METADATA,
-                "test",
-                testMetadata)));
+    ModuleMetadataMap metadata =
+        useDefaultModuleMetadata
+            ? new ModuleMetadataMap(
+                ImmutableMap.of(
+                    PROVIDES_SYMBOL_PATH,
+                    PROVIDES_SYMBOL_METADATA,
+                    ES_MODULE_PATH,
+                    ES_MODULE_METADATA,
+                    TEST_CODE_PATH,
+                    testMetadata,
+                    "externs",
+                    EXTERN_METADATA),
+                ImmutableMap.of(
+                    "symbol",
+                    PROVIDES_SYMBOL_METADATA,
+                    "es.module",
+                    ES_MODULE_METADATA,
+                    "test",
+                    testMetadata))
+            : compiler.getModuleMetadataMap();
+
+    return new CheckClosureImports(compiler, metadata);
   }
 
   /** A test common to goog.require, goog.forwardDeclare, and goog.requireType. */
@@ -732,5 +735,96 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                     "function fn() {",
                     "  return arguments;",
                     "}"))));
+  }
+
+  @Test
+  public void crossChunkGoogRequire_ofGoogModule_isError() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("// base")
+                .addChunk("goog.module('test');")
+                .addChunk("goog.require('test');")
+                .build()),
+        warning(CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR));
+  }
+
+  @Test
+  public void crossChunkGoogRequire_ofBundledGoogModule_isError() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("// base")
+                .addChunk(
+                    lines(
+                        "goog.loadModule(function(exports) {",
+                        "goog.module('test');",
+                        "return exports;",
+                        "});"))
+                .addChunk("goog.require('test');")
+                .build()),
+        warning(CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR));
+  }
+
+  @Test
+  public void crossChunkGoogRequire_ofGoogProvide_isError() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("// base")
+                .addChunk("goog.provide('test');")
+                .addChunk("goog.require('test');")
+                .build()),
+        warning(CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR));
+  }
+
+  @Test
+  public void crossChunkGoogRequireType_isOk() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("// base")
+                .addChunk("goog.module('test');")
+                .addChunk("goog.requireType('test');")
+                .build()));
+  }
+
+  @Test
+  public void crossChunkGoogForwardDeclare_isOk() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    testNoWarning(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("// base")
+                .addChunk("goog.module('test');")
+                .addChunk("goog.forwardDeclare('test');")
+                .build()));
+  }
+
+  @Test
+  public void crossChunkGoogRequire_withExplicitChunkDependency_isOk() {
+    this.useDefaultModuleMetadata = false;
+    enableCreateModuleMap();
+
+    testNoWarning(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("goog.module('test');")
+                .addChunk("goog.require('test');")
+                .build()));
   }
 }

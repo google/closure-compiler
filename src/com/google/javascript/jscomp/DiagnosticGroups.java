@@ -248,7 +248,7 @@ public class DiagnosticGroups {
           "strictModuleDepCheck",
           VarCheck.STRICT_MODULE_DEP_ERROR,
           CheckGlobalNames.STRICT_MODULE_DEP_QNAME,
-          ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR);
+          CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR);
 
   public static final DiagnosticGroup VIOLATED_MODULE_DEP =
       DiagnosticGroups.registerGroup("violatedModuleDep",

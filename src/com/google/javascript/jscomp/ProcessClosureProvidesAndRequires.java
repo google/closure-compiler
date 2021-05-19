@@ -170,7 +170,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
                 case "require":
                 case "requireType":
                   if (isValidPrimitiveCall(t, n)) {
-                    processRequireCall(t, n, parent);
+                    processRequireCall(n, parent);
                   }
                   break;
                 case "provide":
@@ -238,37 +238,12 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   }
 
   /** Handles a goog.require or goog.requireType call. */
-  private void processRequireCall(NodeTraversal t, Node n, Node parent) {
+  private void processRequireCall(Node n, Node parent) {
     Node left = n.getFirstChild();
     Node arg = left.getNext();
-    String method = left.getString();
     if (verifyLastArgumentIsString(left, arg)) {
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);
-      if (provided == null || !provided.isExplicitlyProvided()) {
-      } else {
-        JSModule providedModule = provided.explicitModule;
-
-        if (!provided.isFromExterns()) {
-          checkNotNull(providedModule, n);
-
-          JSModule module = t.getModule();
-          // A cross-chunk goog.require must match a goog.provide in an earlier chunk. However, a
-          // cross-chunk goog.requireType is allowed to match a goog.provide in a later chunk.
-          // TODO(b/142571318): move this into CheckClosureImports
-          if (module != providedModule
-              && !moduleGraph.dependsOn(module, providedModule)
-              && !method.equals("requireType")) {
-            compiler.report(
-                JSError.make(
-                    n,
-                    ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR,
-                    ns,
-                    providedModule.getName(),
-                    module.getName()));
-          }
-        }
-      }
 
       maybeAddNameToSymbolTable(left);
       maybeAddNameToSymbolTable(arg);
@@ -578,8 +553,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // If this is previously provided, this will instead be the expression or declaration marked
     // as IS_NAMESPACE.
     private Node explicitNode = null;
-    // The JSModule of explicitNode, null if this is not explicit or there are no input modules.
-    private JSModule explicitModule = null;
     // Whether there are child namespaces of this one.
     private boolean hasAChildNamespace = false;
 
@@ -652,7 +625,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
             node.isExprResult() || (NodeUtil.isNameDeclaration(node) && isPreviouslyProvided),
             node);
         explicitNode = node;
-        explicitModule = module;
       } else {
         // goog.provide('name.space.some.child');
         hasAChildNamespace = true;

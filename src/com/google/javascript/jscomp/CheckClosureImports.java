@@ -20,6 +20,7 @@ import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.base.Ascii.toLowerCase;
 import static com.google.common.base.Ascii.toUpperCase;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
@@ -33,6 +34,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -176,6 +178,12 @@ final class CheckClosureImports implements HotSwapCompilerPass {
           "JSC_LHS_OF_CLOUSRE_IMPORT_MUST_BE_CONST_IN_ES_MODULE",
           "The left side of a {0} must use ''const'' (not ''let'' or ''var'') in an ES module.");
 
+  static final DiagnosticType CROSS_CHUNK_REQUIRE_ERROR =
+      DiagnosticType.warning(
+          "JSC_XMODULE_REQUIRE_ERROR",
+          "namespace \"{0}\" is required in chunk {2} but provided in chunk {1}."
+              + " Is chunk {2} missing a dependency on chunk {1}?");
+
   private static final Node GOOG_REQUIRE = IR.getprop(IR.name("goog"), "require");
   private static final Node GOOG_MODULE_GET = IR.getprop(IR.name("goog"), "module", "get");
   private static final Node GOOG_FORWARD_DECLARE = IR.getprop(IR.name("goog"), "forwardDeclare");
@@ -184,12 +192,14 @@ final class CheckClosureImports implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final Checker checker;
   private final Set<String> namespacesSeen;
+  private final JSModuleGraph chunkGraph;
   private boolean inHotSwap = false;
 
   CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
     this.checker = new Checker(compiler, moduleMetadataMap);
     this.namespacesSeen = new HashSet<>();
+    this.chunkGraph = compiler.getModuleGraph();
   }
 
   @Override
@@ -452,18 +462,49 @@ final class CheckClosureImports implements HotSwapCompilerPass {
           return;
         }
         t.report(call, MISSING_MODULE_OR_PROVIDE, namespace);
-      } else if (!inHotSwap && importType.mustBeOrdered() && !namespacesSeen.contains(namespace)) {
-        // Since hot swap passes run one file at a time, namespacesSeen will not include
-        // any provides earlier than this current file.
-        t.report(call, LATE_PROVIDE_ERROR, namespace);
+        return;
+      }
+
+      if (importType.mustBeOrdered()) {
+        verifyRequireOrder(namespace, call, t, requiredModule);
       }
 
       if (importType == ClosureImport.REQUIRE
-          && requiredModule != null
           && currentModule.isEs6Module()
           && requiredModule.isEs6Module()) {
         t.report(call, Es6RewriteModules.SHOULD_IMPORT_ES6_MODULE);
       }
+    }
+  }
+
+  private void verifyRequireOrder(
+      String namespace, Node call, NodeTraversal t, ModuleMetadata requiredModule) {
+    if (!inHotSwap && !namespacesSeen.contains(namespace)) {
+      // Since hot swap passes run one file at a time, namespacesSeen will not include
+      // any provides earlier than this current file.
+      t.report(call, LATE_PROVIDE_ERROR, namespace);
+      return;
+    }
+
+    if (requiredModule.rootNode() == null || requiredModule.rootNode().isFromExterns()) {
+      return; // synthetic metadata for tests may have no root node.
+    }
+
+    InputId requiredInputId = NodeUtil.getInputId(requiredModule.rootNode());
+    CompilerInput requiredInput =
+        checkNotNull(
+            compiler.getInput(requiredInputId), "Cannot find CompilerInput for %s", requiredModule);
+
+    JSModule requiredChunk = requiredInput.getModule();
+    JSModule currentChunk = t.getModule();
+    if (currentChunk != requiredChunk && !chunkGraph.dependsOn(currentChunk, requiredChunk)) {
+      compiler.report(
+          JSError.make(
+              call,
+              CROSS_CHUNK_REQUIRE_ERROR,
+              namespace,
+              requiredChunk.getName(),
+              currentChunk.getName()));
     }
   }
 }

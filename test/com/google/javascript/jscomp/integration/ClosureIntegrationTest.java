@@ -1284,9 +1284,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     Compiler compiler = compile(options, code);
 
     assertThat(compiler.getErrors()).isEmpty();
-    // TODO(b/188237981): this should have a 'strict dep check' error.
-    // the provide case below works, though.
-    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(compiler.getWarnings()).hasSize(1);
+
+    assertWithMessage("Unexpected error " + compiler.getWarnings().get(0))
+        .that(DiagnosticGroups.STRICT_MODULE_DEP_CHECK.matches(compiler.getWarnings().get(0)))
+        .isTrue();
   }
 
   @Test
