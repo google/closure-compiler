@@ -80,12 +80,6 @@ public final class XtbMessageBundle implements MessageBundle {
   private final Map<String, JsMessage> messages;
   private final JsMessage.IdGenerator idGenerator;
 
-  public XtbMessageBundle(
-      InputStream xtb, @Nullable String projectId,
-      @SuppressWarnings("unused") boolean unused) {
-    this(xtb, projectId);
-  }
-
   /**
    * Creates an instance and initializes it with the messages in an XTB file.
    *
