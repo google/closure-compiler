@@ -397,7 +397,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void doNotMoveFunctionCall_thatIsSideEffected() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forChain()
             // m1
             .addChunk(
@@ -916,7 +916,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void movePrototypeMethodsForDifferentClassesInTheRightOrder() {
-    JSModule[] m =
+    JSChunk[] m =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
                 lines(
@@ -965,7 +965,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodsForDifferentClassesInTheRightOrder() {
-    JSModule[] m =
+    JSChunk[] m =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
                 lines(
@@ -1034,7 +1034,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void movePrototypeMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forUnordered()
             .addChunk(
                 lines(
@@ -1070,7 +1070,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
 
   @Test
   public void moveClassMethodToDeepestCommonDependencyOfReferencingChunks() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forUnordered()
             .addChunk("class Foo { baz() {} }")
             // Chunk 2

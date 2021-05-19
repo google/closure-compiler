@@ -359,9 +359,9 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     //   - Rewriting all call-sites in a way that preserves exact ordering (e.g. using
     //     `ExpressionDecomposer`) has a significant code-size impact (circa 2018-11-19).
 
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
-    @Nullable JSModule definitionModule = moduleForNode(definitionSite);
-    @Nullable JSModule callModule = moduleForNode(access);
+    JSChunkGraph moduleGraph = compiler.getModuleGraph();
+    @Nullable JSChunk definitionModule = moduleForNode(definitionSite);
+    @Nullable JSChunk callModule = moduleForNode(access);
     if (definitionModule == callModule) {
       // Do nothing.
     } else if (callModule == null) {
@@ -508,7 +508,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
   }
 
   @Nullable
-  private JSModule moduleForNode(Node node) {
+  private JSChunk moduleForNode(Node node) {
     Node script = NodeUtil.getEnclosingScript(node);
     CompilerInput input = compiler.getInput(script.getInputId());
     return input.getModule();

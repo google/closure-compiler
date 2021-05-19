@@ -41,7 +41,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
   private final AbstractCompiler compiler;
   private final IdGenerator idGenerator;
   private final AnalyzePrototypeProperties analyzer;
-  private final JSModuleGraph moduleGraph;
+  private final JSChunkGraph moduleGraph;
   private final boolean noStubFunctions;
   private final AstFactory astFactory;
 
@@ -115,7 +115,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
         continue;
       }
 
-      JSModule deepestCommonModuleRef = nameInfo.getDeepestCommonModuleRef();
+      JSChunk deepestCommonModuleRef = nameInfo.getDeepestCommonModuleRef();
       if (deepestCommonModuleRef == null) {
         compiler.report(JSError.make(NULL_COMMON_MODULE_ERROR));
         continue;
@@ -145,7 +145,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
   }
 
   private void tryToMovePrototypeMethod(
-      NameInfo nameInfo, JSModule deepestCommonModuleRef, PrototypeProperty prop) {
+      NameInfo nameInfo, JSChunk deepestCommonModuleRef, PrototypeProperty prop) {
 
     // We should only move a property across chunks if:
     // 1) We can move it deeper in the chunk graph, and
@@ -420,7 +420,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
    * @param classMemberFunction definition of the method within its class body
    */
   private void tryToMoveMemberFunction(
-      NameInfo nameInfo, JSModule deepestCommonModuleRef, ClassMemberFunction classMemberFunction) {
+      NameInfo nameInfo, JSChunk deepestCommonModuleRef, ClassMemberFunction classMemberFunction) {
 
     // We should only move a property across chunks if:
     // 1) We can move it deeper in the chunk graph,

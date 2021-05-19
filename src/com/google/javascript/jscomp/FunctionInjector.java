@@ -163,10 +163,10 @@ class FunctionInjector {
   static class Reference {
     final Node callNode;
     final Scope scope;
-    final JSModule module;
+    final JSChunk module;
     final InliningMode mode;
 
-    Reference(Node callNode, Scope scope, JSModule module, InliningMode mode) {
+    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
       this.callNode = callNode;
       this.scope = scope;
       this.module = module;
@@ -900,7 +900,7 @@ class FunctionInjector {
 
   /** Determine if inlining the function is likely to reduce the code size. */
   boolean inliningLowersCost(
-      JSModule fnModule,
+      JSChunk fnModule,
       Node fnNode,
       Collection<? extends Reference> refs,
       Set<String> namesToAlias,
@@ -914,7 +914,7 @@ class FunctionInjector {
     int referencesUsingBlockInlining = 0;
 
     boolean checkModules = isRemovable && fnModule != null;
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    JSChunkGraph moduleGraph = compiler.getModuleGraph();
 
     for (Reference ref : refs) {
       if (ref.mode == InliningMode.BLOCK) {

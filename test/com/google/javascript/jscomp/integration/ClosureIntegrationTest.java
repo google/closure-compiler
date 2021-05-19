@@ -37,7 +37,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GenerateExports;
 import com.google.javascript.jscomp.GoogleCodingConvention;
-import com.google.javascript.jscomp.JSModule;
+import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -1271,7 +1271,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
 
-    ImmutableList<JSModule> code =
+    ImmutableList<JSChunk> code =
         ImmutableList.copyOf(
             JSChunkGraphBuilder.forStar()
                 .addChunk(CLOSURE_BOILERPLATE)
@@ -1296,7 +1296,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
 
-    ImmutableList<JSModule> code =
+    ImmutableList<JSChunk> code =
         ImmutableList.copyOf(
             JSChunkGraphBuilder.forStar()
                 .addChunk(CLOSURE_BOILERPLATE)

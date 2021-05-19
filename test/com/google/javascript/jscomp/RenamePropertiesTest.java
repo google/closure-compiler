@@ -317,16 +317,16 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         "function Car(){} Car.prototype.getC=function(z){};"
             + "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
 
-    JSModule module1 = new JSModule("m1");
+    JSChunk module1 = new JSChunk("m1");
     module1.add(SourceFile.fromCode("input1", module1Js));
 
-    JSModule module2 = new JSModule("m2");
+    JSChunk module2 = new JSChunk("m2");
     module2.add(SourceFile.fromCode("input2", module2Js));
 
-    JSModule module3 = new JSModule("m3");
+    JSChunk module3 = new JSChunk("m3");
     module3.add(SourceFile.fromCode("input3", module3Js));
 
-    JSModule[] modules = new JSModule[] { module1, module2, module3 };
+    JSChunk[] modules = new JSChunk[] {module1, module2, module3};
     Compiler compiler = compileModules("", modules);
 
     Result result = compiler.getResult();
@@ -760,7 +760,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         );
   }
 
-  private Compiler compileModules(String externs, JSModule[] modules) {
+  private Compiler compileModules(String externs, JSChunk[] modules) {
     SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
     CompilerOptions options = new CompilerOptions();

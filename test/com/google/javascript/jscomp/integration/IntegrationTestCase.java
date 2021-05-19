@@ -30,8 +30,8 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
+import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
@@ -319,7 +319,7 @@ abstract class IntegrationTestCase {
                 .build()));
   }
 
-  protected Compiler compile(CompilerOptions options, ImmutableList<JSModule> modules) {
+  protected Compiler compile(CompilerOptions options, ImmutableList<JSChunk> modules) {
     Compiler compiler =
         useNoninjectingCompiler
             ? createNoninjectingCompiler(new BlackHoleErrorManager())

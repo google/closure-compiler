@@ -55,12 +55,12 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A {@link JSModule} dependency graph that assigns a depth to each module and can answer
+ * A {@link JSChunk} dependency graph that assigns a depth to each module and can answer
  * depth-related queries about them. For the purposes of this class, a module's depth is defined as
  * the number of hops in the longest (non cyclic) path from the module to a module with no
  * dependencies.
  */
-public final class JSModuleGraph implements Serializable {
+public final class JSChunkGraph implements Serializable {
 
   static final DiagnosticType WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR =
       DiagnosticType.error(
@@ -77,7 +77,7 @@ public final class JSModuleGraph implements Serializable {
           "JSC_IMPLICIT_WEAK_ENTRY_POINT_ERROR",
           "Implicit entry point input should not be weak: {0}");
 
-  private final JSModule[] modules;
+  private final JSChunk[] modules;
 
   /**
    * selfPlusTransitiveDeps[i] = indices of all modules that modules[i] depends on, including
@@ -94,34 +94,34 @@ public final class JSModuleGraph implements Serializable {
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
    * depth 3, for example.
    */
-  private final List<List<JSModule>> modulesByDepth;
+  private final List<List<JSChunk>> modulesByDepth;
 
   /**
    * dependencyMap is a cache of dependencies that makes the dependsOn function faster. Each map
-   * entry associates a starting JSModule with the set of JSModules that are transitively dependent
+   * entry associates a starting JSChunk with the set of JSModules that are transitively dependent
    * on the starting module.
    *
    * <p>If the cache returns null, then the entry hasn't been filled in for that module.
    *
-   * <p>NOTE: JSModule has identity semantics so this map implementation is safe
+   * <p>NOTE: JSChunk has identity semantics so this map implementation is safe
    */
-  private final Map<JSModule, Set<JSModule>> dependencyMap = new IdentityHashMap<>();
+  private final Map<JSChunk, Set<JSChunk>> dependencyMap = new IdentityHashMap<>();
 
   /** Creates a module graph from a list of modules in dependency order. */
-  public JSModuleGraph(JSModule[] modulesInDepOrder) {
+  public JSChunkGraph(JSChunk[] modulesInDepOrder) {
     this(Arrays.asList(modulesInDepOrder));
   }
 
   /** Creates a module graph from a list of modules in dependency order. */
-  public JSModuleGraph(List<JSModule> modulesInDepOrder) {
+  public JSChunkGraph(List<JSChunk> modulesInDepOrder) {
     Preconditions.checkState(!modulesInDepOrder.isEmpty());
     modulesInDepOrder = makeWeakModule(modulesInDepOrder);
-    modules = new JSModule[modulesInDepOrder.size()];
+    modules = new JSChunk[modulesInDepOrder.size()];
 
     // n = number of modules
     // Populate modules O(n)
     for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
-      final JSModule module = modulesInDepOrder.get(moduleIndex);
+      final JSChunk module = modulesInDepOrder.get(moduleIndex);
       checkState(module.getIndex() == -1, "Module index already set: %s", module);
       module.setIndex(moduleIndex);
       modules[moduleIndex] = module;
@@ -140,16 +140,16 @@ public final class JSModuleGraph implements Serializable {
     subtreeSize = initSubtreeSize();
 
     // Move all sources marked as weak by outside sources (e.g. flags) into the weak module.
-    moveMarkedWeakSources(getModuleByName(JSModule.WEAK_MODULE_NAME), getAllInputs());
+    moveMarkedWeakSources(getModuleByName(JSChunk.WEAK_MODULE_NAME), getAllInputs());
   }
 
-  private List<List<JSModule>> initModulesByDepth() {
-    final List<List<JSModule>> tmpModulesByDepth = new ArrayList<>();
+  private List<List<JSChunk>> initModulesByDepth() {
+    final List<List<JSChunk>> tmpModulesByDepth = new ArrayList<>();
     for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
-      final JSModule module = modules[moduleIndex];
+      final JSChunk module = modules[moduleIndex];
       checkState(module.getDepth() == -1, "Module depth already set: %s", module);
       int depth = 0;
-      for (JSModule dep : module.getDependencies()) {
+      for (JSChunk dep : module.getDependencies()) {
         int depDepth = dep.getDepth();
         if (depDepth < 0) {
           throw new ModuleDependenceException(SimpleFormat.format(
@@ -162,7 +162,7 @@ public final class JSModuleGraph implements Serializable {
 
       module.setDepth(depth);
       if (depth == tmpModulesByDepth.size()) {
-        tmpModulesByDepth.add(new ArrayList<JSModule>());
+        tmpModulesByDepth.add(new ArrayList<JSChunk>());
       }
       tmpModulesByDepth.get(depth).add(module);
     }
@@ -179,12 +179,12 @@ public final class JSModuleGraph implements Serializable {
    * @throws IllegalStateException if a weak module already exists but doesn't fulfill the above
    *     conditions
    */
-  private List<JSModule> makeWeakModule(List<JSModule> modulesInDepOrder) {
+  private List<JSChunk> makeWeakModule(List<JSChunk> modulesInDepOrder) {
     boolean hasWeakModule = false;
-    for (JSModule module : modulesInDepOrder) {
-      if (module.getName().equals(JSModule.WEAK_MODULE_NAME)) {
+    for (JSChunk module : modulesInDepOrder) {
+      if (module.getName().equals(JSChunk.WEAK_MODULE_NAME)) {
         hasWeakModule = true;
-        Set<JSModule> allOtherModules = new HashSet<>(modulesInDepOrder);
+        Set<JSChunk> allOtherModules = new HashSet<>(modulesInDepOrder);
         allOtherModules.remove(module);
         checkState(
             module.getAllDependencies().containsAll(allOtherModules),
@@ -199,8 +199,8 @@ public final class JSModuleGraph implements Serializable {
       // All weak files (and only weak files) should be in the weak module.
       List<String> misplacedWeakFiles = new ArrayList<>();
       List<String> misplacedStrongFiles = new ArrayList<>();
-      for (JSModule module : modulesInDepOrder) {
-        boolean isWeakModule = module.getName().equals(JSModule.WEAK_MODULE_NAME);
+      for (JSChunk module : modulesInDepOrder) {
+        boolean isWeakModule = module.getName().equals(JSChunk.WEAK_MODULE_NAME);
         for (CompilerInput input : module.getInputs()) {
           if (isWeakModule && !input.getSourceFile().isWeak()) {
             misplacedStrongFiles.add(input.getSourceFile().getName());
@@ -224,8 +224,8 @@ public final class JSModuleGraph implements Serializable {
         throw new IllegalStateException(sb.toString());
       }
     } else {
-      JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
-      for (JSModule module : modulesInDepOrder) {
+      JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+      for (JSChunk module : modulesInDepOrder) {
         weakModule.addDependency(module);
       }
       modulesInDepOrder = new ArrayList<>(modulesInDepOrder);
@@ -237,12 +237,12 @@ public final class JSModuleGraph implements Serializable {
   private BitSet[] initTransitiveDepsBitSets() {
     BitSet[] array = new BitSet[modules.length];
     for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
-      final JSModule module = modules[moduleIndex];
+      final JSChunk module = modules[moduleIndex];
       BitSet selfPlusTransitiveDeps = new BitSet(moduleIndex + 1);
       array[moduleIndex] = selfPlusTransitiveDeps;
       selfPlusTransitiveDeps.set(moduleIndex);
       // O(moduleIndex * log64(moduleIndex))
-      for (JSModule dep : module.getDependencies()) {
+      for (JSChunk dep : module.getDependencies()) {
         // Add this dependency and all of its dependencies to the current module.
         // O(log64(moduleIndex))
         selfPlusTransitiveDeps.or(array[dep.getIndex()]);
@@ -268,22 +268,20 @@ public final class JSModuleGraph implements Serializable {
 
   /** Gets an iterable over all input source files in dependency order. */
   Iterable<CompilerInput> getAllInputs() {
-    return Iterables.concat(Iterables.transform(Arrays.asList(modules), JSModule::getInputs));
+    return Iterables.concat(Iterables.transform(Arrays.asList(modules), JSChunk::getInputs));
   }
 
   /** Gets the total number of input source files. */
   int getInputCount() {
     int count = 0;
-    for (JSModule module : modules) {
+    for (JSChunk module : modules) {
       count += module.getInputCount();
     }
     return count;
   }
 
-  /**
-   * Gets an iterable over all modules in dependency order.
-   */
-  Iterable<JSModule> getAllModules() {
+  /** Gets an iterable over all modules in dependency order. */
+  Iterable<JSChunk> getAllModules() {
     return Arrays.asList(modules);
   }
 
@@ -293,8 +291,8 @@ public final class JSModuleGraph implements Serializable {
    * @return The module, or null if no such module exists.
    */
   @Nullable
-  JSModule getModuleByName(String name) {
-    for (JSModule m : modules) {
+  JSChunk getModuleByName(String name) {
+    for (JSChunk m : modules) {
       if (m.getName().equals(name)) {
         return m;
       }
@@ -302,12 +300,10 @@ public final class JSModuleGraph implements Serializable {
     return null;
   }
 
-  /**
-   * Gets all modules indexed by name.
-   */
-  Map<String, JSModule> getModulesByName() {
-    Map<String, JSModule> result = new HashMap<>();
-    for (JSModule m : modules) {
+  /** Gets all modules indexed by name. */
+  Map<String, JSChunk> getModulesByName() {
+    Map<String, JSChunk> result = new HashMap<>();
+    for (JSChunk m : modules) {
       result.put(m.getName(), m);
     }
     return result;
@@ -320,36 +316,32 @@ public final class JSModuleGraph implements Serializable {
     return modules.length;
   }
 
-  /**
-   * Gets the root module.
-   */
-  JSModule getRootModule() {
+  /** Gets the root module. */
+  JSChunk getRootModule() {
     return Iterables.getOnlyElement(modulesByDepth.get(0));
   }
 
   /**
-   * Returns a JSON representation of the JSModuleGraph. Specifically a
-   * JsonArray of "Modules" where each module has a
-   * - "name"
-   * - "dependencies" (list of module names)
-   * - "transitive-dependencies" (list of module names, deepest first)
-   * - "inputs" (list of file names)
+   * Returns a JSON representation of the JSChunkGraph. Specifically a JsonArray of "Modules" where
+   * each module has a - "name" - "dependencies" (list of module names) - "transitive-dependencies"
+   * (list of module names, deepest first) - "inputs" (list of file names)
+   *
    * @return List of module JSONObjects.
    */
   @GwtIncompatible("com.google.gson")
   JsonArray toJson() {
     JsonArray modules = new JsonArray();
-    for (JSModule module : getAllModules()) {
+    for (JSChunk module : getAllModules()) {
       JsonObject node = new JsonObject();
         node.add("name", new JsonPrimitive(module.getName()));
         JsonArray deps = new JsonArray();
         node.add("dependencies", deps);
-        for (JSModule m : module.getDependencies()) {
+      for (JSChunk m : module.getDependencies()) {
           deps.add(new JsonPrimitive(m.getName()));
         }
         JsonArray transitiveDeps = new JsonArray();
         node.add("transitive-dependencies", transitiveDeps);
-        for (JSModule m : getTransitiveDepsDeepestFirst(module)) {
+      for (JSChunk m : getTransitiveDepsDeepestFirst(module)) {
           transitiveDeps.add(new JsonPrimitive(m.getName()));
         }
         JsonArray inputs = new JsonArray();
@@ -364,10 +356,10 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Determines whether this module depends on a given module. Note that a
-   * module never depends on itself, as that dependency would be cyclic.
+   * Determines whether this module depends on a given module. Note that a module never depends on
+   * itself, as that dependency would be cyclic.
    */
-  public boolean dependsOn(JSModule src, JSModule m) {
+  public boolean dependsOn(JSChunk src, JSChunk m) {
     return src != m && selfPlusTransitiveDeps[src.getIndex()].get(m.getIndex());
   }
 
@@ -384,7 +376,7 @@ public final class JSModuleGraph implements Serializable {
    * @param dependentModules indices of modules to consider
    * @return A module on which all of the argument modules depend
    */
-  public JSModule getSmallestCoveringSubtree(JSModule parentTree, BitSet dependentModules) {
+  public JSChunk getSmallestCoveringSubtree(JSChunk parentTree, BitSet dependentModules) {
     checkState(!dependentModules.isEmpty());
 
     // Candidate modules are those that all of the given dependent modules depend on, including
@@ -426,25 +418,24 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Finds the deepest common dependency of two modules, not including the two
-   * modules themselves.
+   * Finds the deepest common dependency of two modules, not including the two modules themselves.
    *
    * @param m1 A module in this graph
    * @param m2 A module in this graph
-   * @return The deepest common dep of {@code m1} and {@code m2}, or null if
-   *     they have no common dependencies
+   * @return The deepest common dep of {@code m1} and {@code m2}, or null if they have no common
+   *     dependencies
    */
-  JSModule getDeepestCommonDependency(JSModule m1, JSModule m2) {
+  JSChunk getDeepestCommonDependency(JSChunk m1, JSChunk m2) {
     int m1Depth = m1.getDepth();
     int m2Depth = m2.getDepth();
     // According our definition of depth, the result must have a strictly
     // smaller depth than either m1 or m2.
     for (int depth = min(m1Depth, m2Depth) - 1; depth >= 0; depth--) {
-      List<JSModule> modulesAtDepth = modulesByDepth.get(depth);
+      List<JSChunk> modulesAtDepth = modulesByDepth.get(depth);
       // Look at the modules at this depth in reverse order, so that we use the
       // original ordering of the modules to break ties (later meaning deeper).
       for (int i = modulesAtDepth.size() - 1; i >= 0; i--) {
-        JSModule m = modulesAtDepth.get(i);
+        JSChunk m = modulesAtDepth.get(i);
         if (dependsOn(m1, m) && dependsOn(m2, m)) {
           return m;
         }
@@ -454,16 +445,14 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Finds the deepest common dependency of two modules, including the
-   * modules themselves.
+   * Finds the deepest common dependency of two modules, including the modules themselves.
    *
    * @param m1 A module in this graph
    * @param m2 A module in this graph
-   * @return The deepest common dep of {@code m1} and {@code m2}, or null if
-   *     they have no common dependencies
+   * @return The deepest common dep of {@code m1} and {@code m2}, or null if they have no common
+   *     dependencies
    */
-  public JSModule getDeepestCommonDependencyInclusive(
-      JSModule m1, JSModule m2) {
+  public JSChunk getDeepestCommonDependencyInclusive(JSChunk m1, JSChunk m2) {
     if (m2 == m1 || dependsOn(m2, m1)) {
       return m1;
     } else if (dependsOn(m1, m2)) {
@@ -474,10 +463,9 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /** Returns the deepest common dependency of the given modules. */
-  public JSModule getDeepestCommonDependencyInclusive(
-      Collection<JSModule> modules) {
-    Iterator<JSModule> iter = modules.iterator();
-    JSModule dep = iter.next();
+  public JSChunk getDeepestCommonDependencyInclusive(Collection<JSChunk> modules) {
+    Iterator<JSChunk> iter = modules.iterator();
+    JSChunk dep = iter.next();
     while (iter.hasNext()) {
       dep = getDeepestCommonDependencyInclusive(dep, iter.next());
     }
@@ -485,33 +473,32 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Creates an iterable over the transitive dependencies of module {@code m}
-   * in a non-increasing depth ordering. The result does not include the module
-   * {@code m}.
+   * Creates an iterable over the transitive dependencies of module {@code m} in a non-increasing
+   * depth ordering. The result does not include the module {@code m}.
    *
    * @param m A module in this graph
    * @return The transitive dependencies of module {@code m}
    */
   @VisibleForTesting
-  List<JSModule> getTransitiveDepsDeepestFirst(JSModule m) {
+  List<JSChunk> getTransitiveDepsDeepestFirst(JSChunk m) {
     return InverseDepthComparator.INSTANCE.sortedCopy(getTransitiveDeps(m));
   }
 
   /** Returns the transitive dependencies of the module. */
-  private Set<JSModule> getTransitiveDeps(JSModule m) {
-    return dependencyMap.computeIfAbsent(m, JSModule::getAllDependencies);
+  private Set<JSChunk> getTransitiveDeps(JSChunk m) {
+    return dependencyMap.computeIfAbsent(m, JSChunk::getAllDependencies);
   }
 
   /**
    * Moves all sources that have {@link SourceKind#WEAK} into the weak module so that they may be
    * pruned later.
    */
-  private static void moveMarkedWeakSources(JSModule weakModule, Iterable<CompilerInput> inputs) {
+  private static void moveMarkedWeakSources(JSChunk weakModule, Iterable<CompilerInput> inputs) {
     checkNotNull(weakModule);
     ImmutableList<CompilerInput> allInputs = ImmutableList.copyOf(inputs);
     for (CompilerInput i : allInputs) {
       if (i.getSourceFile().isWeak()) {
-        JSModule existingModule = i.getModule();
+        JSChunk existingModule = i.getModule();
         if (existingModule == weakModule) {
           continue;
         }
@@ -572,16 +559,15 @@ public final class JSModuleGraph implements Serializable {
         sorter.getStrongDependenciesOf(originalInputs, dependencyOptions.shouldSort());
 
     // Figure out which sources *must* be in each module.
-    ListMultimap<JSModule, CompilerInput> entryPointInputsPerModule =
-        LinkedListMultimap.create();
+    ListMultimap<JSChunk, CompilerInput> entryPointInputsPerModule = LinkedListMultimap.create();
     for (CompilerInput input : entryPointInputs) {
-      JSModule module = input.getModule();
+      JSChunk module = input.getModule();
       checkNotNull(module);
       entryPointInputsPerModule.put(module, input);
     }
 
     // Clear the modules of their inputs. This also nulls out the input's reference to its module.
-    for (JSModule module : getAllModules()) {
+    for (JSChunk module : getAllModules()) {
       module.removeAll();
     }
 
@@ -590,7 +576,7 @@ public final class JSModuleGraph implements Serializable {
     List<CompilerInput> orderedInputs = new ArrayList<>();
     Set<CompilerInput> reachedInputs = new HashSet<>();
 
-    for (JSModule module : modules) {
+    for (JSChunk module : modules) {
       List<CompilerInput> transitiveClosure;
       // Prefer a depth first ordering of dependencies from entry points.
       // Always orders in a deterministic fashion regardless of the order of provided inputs
@@ -624,7 +610,7 @@ public final class JSModuleGraph implements Serializable {
               JSError.make(
                   WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR, input.getSourceFile().getName()));
         }
-        JSModule oldModule = input.getModule();
+        JSChunk oldModule = input.getModule();
         if (oldModule == null) {
           input.setModule(module);
         } else {
@@ -639,7 +625,7 @@ public final class JSModuleGraph implements Serializable {
       orderedInputs = absoluteOrder;
     }
 
-    JSModule weakModule = getModuleByName(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = getModuleByName(JSChunk.WEAK_MODULE_NAME);
     checkNotNull(weakModule);
     // Mark all sources that are detected as weak.
     if (dependencyOptions.shouldPrune()) {
@@ -660,7 +646,7 @@ public final class JSModuleGraph implements Serializable {
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
     for (CompilerInput input : orderedInputs) {
-      JSModule module = input.getModule();
+      JSChunk module = input.getModule();
       if (module != null && !module.getInputs().contains(input)) {
         module.add(input);
       }
@@ -668,7 +654,7 @@ public final class JSModuleGraph implements Serializable {
 
     // Now, generate the sorted result.
     ImmutableList.Builder<CompilerInput> result = ImmutableList.builder();
-    for (JSModule module : getAllModules()) {
+    for (JSChunk module : getAllModules()) {
       result.addAll(module.getInputs());
     }
 
@@ -710,7 +696,7 @@ public final class JSModuleGraph implements Serializable {
       SortedDependencies<CompilerInput> sorter)
       throws MissingModuleException, MissingProvideException {
     Set<CompilerInput> entryPointInputs = new LinkedHashSet<>();
-    Map<String, JSModule> modulesByName = getModulesByName();
+    Map<String, JSChunk> modulesByName = getModulesByName();
     if (dependencyOptions.shouldPrune()) {
       // Some files implicitly depend on base.js without actually requiring anything.
       // So we always treat it as the first entry point to ensure it's ordered correctly.
@@ -742,7 +728,7 @@ public final class JSModuleGraph implements Serializable {
               entryPointInput = sorter.getInputProviding(entryPoint.getName());
             }
           } else {
-            JSModule module = modulesByName.get(entryPoint.getModuleName());
+            JSChunk module = modulesByName.get(entryPoint.getModuleName());
             if (module == null) {
               throw new MissingModuleException(entryPoint.getModuleName());
             } else {
@@ -769,12 +755,11 @@ public final class JSModuleGraph implements Serializable {
   }
 
   @SuppressWarnings("unused")
-  LinkedDirectedGraph<JSModule, String> toGraphvizGraph() {
-    LinkedDirectedGraph<JSModule, String> graphViz =
-        LinkedDirectedGraph.create();
-    for (JSModule module : getAllModules()) {
+  LinkedDirectedGraph<JSChunk, String> toGraphvizGraph() {
+    LinkedDirectedGraph<JSChunk, String> graphViz = LinkedDirectedGraph.create();
+    for (JSChunk module : getAllModules()) {
       graphViz.createNode(module);
-      for (JSModule dep : module.getDependencies()) {
+      for (JSChunk dep : module.getDependencies()) {
         graphViz.createNode(dep);
         graphViz.connect(module, "->", dep);
       }
@@ -783,18 +768,19 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * A module depth comparator that considers a deeper module to be "less than"
-   * a shallower module. Uses module names to consistently break ties.
+   * A module depth comparator that considers a deeper module to be "less than" a shallower module.
+   * Uses module names to consistently break ties.
    */
-  private static final class InverseDepthComparator extends Ordering<JSModule> {
+  private static final class InverseDepthComparator extends Ordering<JSChunk> {
     static final InverseDepthComparator INSTANCE = new InverseDepthComparator();
+
     @Override
-    public int compare(JSModule m1, JSModule m2) {
+    public int compare(JSChunk m1, JSChunk m2) {
       return depthCompare(m2, m1);
     }
   }
 
-  private static int depthCompare(JSModule m1, JSModule m2) {
+  private static int depthCompare(JSChunk m1, JSChunk m2) {
     if (m1 == m2) {
       return 0;
     }
@@ -804,29 +790,26 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Exception class for declaring when the modules being fed into a
-   * JSModuleGraph as input aren't in dependence order, and so can't be
-   * processed for caching of various dependency-related queries.
+   * Exception class for declaring when the modules being fed into a JSChunkGraph as input aren't in
+   * dependence order, and so can't be processed for caching of various dependency-related queries.
    */
-  protected static class ModuleDependenceException
-      extends IllegalArgumentException {
+  protected static class ModuleDependenceException extends IllegalArgumentException {
     private static final long serialVersionUID = 1;
 
-    private final JSModule module;
-    private final JSModule dependentModule;
+    private final JSChunk module;
+    private final JSChunk dependentModule;
 
-    protected ModuleDependenceException(String message,
-        JSModule module, JSModule dependentModule) {
+    protected ModuleDependenceException(String message, JSChunk module, JSChunk dependentModule) {
       super(message);
       this.module = module;
       this.dependentModule = dependentModule;
     }
 
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
 
-    public JSModule getDependentModule() {
+    public JSChunk getDependentModule() {
       return dependentModule;
     }
   }

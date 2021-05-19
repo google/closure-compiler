@@ -145,7 +145,7 @@ public final class AliasStringsTest extends CompilerTestCase {
     // '------adios------' must be lifted from m2 and m3 and go in the
     // common parent module m1
 
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forBush()
             .addChunk(
                 "function f(a) { alert('ffffffffffffffffffff' + 'ffffffffffffffffffff' + a); }"
@@ -202,7 +202,7 @@ public final class AliasStringsTest extends CompilerTestCase {
     // '------adios------' must be lifted from m2 and m3 and go in the
     // common parent module m1
 
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forBush()
             .addChunk("function g() { alert('ciaociaociaociaociao'); }")
             .addChunk(
@@ -238,7 +238,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Test
   public void testAliasInCommonModuleInclusive() {
 
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forBush()
             .addChunk("")
             .addChunk("function g() { alert('ciaociaociaociaociao'); }")
@@ -266,7 +266,7 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   @Test
   public void testEmptyModules() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             .addChunk("")
             .addChunk("function foo() { f('goodgoodgoodgoodgood') }")

@@ -93,7 +93,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /** Gets the module graph. */
   @Nullable
-  abstract JSModuleGraph getModuleGraph();
+  abstract JSChunkGraph getModuleGraph();
 
   /**
    * Gets the inputs in the order in which they are being processed. Only for use by {@code
@@ -215,7 +215,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * @param module A module. If null, will return the first SCRIPT node of all modules.
    * @return A SCRIPT node (never null).
    */
-  abstract Node getNodeForCodeInsertion(@Nullable JSModule module);
+  abstract Node getNodeForCodeInsertion(@Nullable JSChunk module);
 
   abstract TypeValidator getTypeValidator();
 

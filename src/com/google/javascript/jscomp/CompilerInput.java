@@ -51,7 +51,7 @@ public class CompilerInput extends DependencyInfo.Base {
   private static final long serialVersionUID = 2L;
 
   // Info about where the file lives.
-  private JSModule module;
+  private JSChunk module;
   private final InputId id;
 
   // The AST.
@@ -510,19 +510,19 @@ public class CompilerInput extends DependencyInfo.Base {
   }
 
   /** Returns the module to which the input belongs. */
-  public JSModule getModule() {
+  public JSChunk getModule() {
     return module;
   }
 
   /** Sets the module to which the input belongs. */
-  public void setModule(JSModule module) {
+  public void setModule(JSChunk module) {
     // An input may only belong to one module.
     checkArgument(module == null || this.module == null || this.module == module);
     this.module = module;
   }
 
   /** Overrides the module to which the input belongs. */
-  void overrideModule(JSModule module) {
+  void overrideModule(JSChunk module) {
     this.module = module;
   }
 

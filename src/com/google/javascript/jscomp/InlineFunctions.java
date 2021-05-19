@@ -256,7 +256,7 @@ class InlineFunctions implements CompilerPass {
    * Updates the FunctionState object for the given function. Checks if the given function matches
    * the criteria for an inlinable function.
    */
-  void maybeAddFunction(Function fn, JSModule module) {
+  void maybeAddFunction(Function fn, JSChunk module) {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
 
@@ -504,7 +504,7 @@ class InlineFunctions implements CompilerPass {
     }
 
     void maybeAddReference(
-        NodeTraversal t, FunctionState functionState, Node callNode, JSModule module) {
+        NodeTraversal t, FunctionState functionState, Node callNode, JSChunk module) {
       if (!functionState.canInline()) {
         return;
       }
@@ -530,7 +530,7 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal t,
         FunctionState functionState,
         Node callNode,
-        JSModule module,
+        JSChunk module,
         InliningMode mode) {
 
       // If many functions are inlined into the same function F in the same
@@ -833,7 +833,7 @@ class InlineFunctions implements CompilerPass {
     private boolean referencesThis = false;
     private boolean hasInnerFunctions = false;
     private Map<Node, Reference> references = null;
-    private JSModule module = null;
+    private JSChunk module = null;
     private Set<String> namesToAlias = null;
 
     boolean hasExistingFunctionDefinition() {
@@ -958,11 +958,11 @@ class InlineFunctions implements CompilerPass {
       namesToAlias = names;
     }
 
-    public void setModule(JSModule module) {
+    public void setModule(JSChunk module) {
       this.module = module;
     }
 
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
   }
@@ -1080,7 +1080,7 @@ class InlineFunctions implements CompilerPass {
     boolean requiresDecomposition = false;
     boolean inlined = false;
 
-    Reference(Node callNode, Scope scope, JSModule module, InliningMode mode) {
+    Reference(Node callNode, Scope scope, JSChunk module, InliningMode mode) {
       super(callNode, scope, module, mode);
     }
 

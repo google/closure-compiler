@@ -168,7 +168,7 @@ public final class TypeInferenceTest {
 
   private void withModules(ImmutableList<String> js) {
     Node script = compiler.parseTestCode(js);
-    JSModule module = new JSModule("entry");
+    JSChunk module = new JSChunk("entry");
     Collection<CompilerInput> inputs = compiler.getInputsById().values();
     for (CompilerInput input : inputs) {
       module.add(input.getSourceFile());

@@ -39,20 +39,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link JSModuleGraph}
- *
- */
+/** Tests for {@link JSChunkGraph} */
 @RunWith(JUnit4.class)
 public final class JSModuleGraphTest {
 
-  private JSModule moduleA;
-  private JSModule moduleB;
-  private JSModule moduleC;
-  private JSModule moduleD;
-  private JSModule moduleE;
-  private JSModule moduleF;
-  private JSModuleGraph graph = null;
+  private JSChunk moduleA;
+  private JSChunk moduleB;
+  private JSChunk moduleC;
+  private JSChunk moduleD;
+  private JSChunk moduleE;
+  private JSChunk moduleF;
+  private JSChunkGraph graph = null;
 
   // For resolving dependencies only.
   private Compiler compiler;
@@ -63,12 +60,12 @@ public final class JSModuleGraphTest {
   }
 
   private void makeDeps() {
-    moduleA = new JSModule("moduleA");
-    moduleB = new JSModule("moduleB");
-    moduleC = new JSModule("moduleC");
-    moduleD = new JSModule("moduleD");
-    moduleE = new JSModule("moduleE");
-    moduleF = new JSModule("moduleF");
+    moduleA = new JSChunk("moduleA");
+    moduleB = new JSChunk("moduleB");
+    moduleC = new JSChunk("moduleC");
+    moduleD = new JSChunk("moduleD");
+    moduleE = new JSChunk("moduleE");
+    moduleF = new JSChunk("moduleF");
     moduleB.addDependency(moduleA); //     __A__
     moduleC.addDependency(moduleA); //    /  |  \
     moduleD.addDependency(moduleB); //   B   C  |
@@ -80,12 +77,11 @@ public final class JSModuleGraphTest {
   }
 
   private void makeGraph() {
-    graph =
-        new JSModuleGraph(new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF});
+    graph = new JSChunkGraph(new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF});
   }
 
-  private JSModule getWeakModule() {
-    return graph.getModuleByName(JSModule.WEAK_MODULE_NAME);
+  private JSChunk getWeakModule() {
+    return graph.getModuleByName(JSChunk.WEAK_MODULE_NAME);
   }
 
   @Test
@@ -93,7 +89,7 @@ public final class JSModuleGraphTest {
     makeDeps();
     makeGraph();
     assertThat(graph.getModuleCount()).isEqualTo(7);
-    assertThat(graph.getModulesByName()).containsKey(JSModule.WEAK_MODULE_NAME);
+    assertThat(graph.getModulesByName()).containsKey(JSChunk.WEAK_MODULE_NAME);
     assertThat(getWeakModule().getAllDependencies())
         .containsExactly(moduleA, moduleB, moduleC, moduleD, moduleE, moduleF);
   }
@@ -101,7 +97,7 @@ public final class JSModuleGraphTest {
   @Test
   public void testAcceptExistingWeakModule() {
     makeDeps();
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -112,18 +108,18 @@ public final class JSModuleGraphTest {
 
     weakModule.add(SourceFile.fromCode("weak", "", SourceKind.WEAK));
 
-    JSModuleGraph graph =
-        new JSModuleGraph(
-            new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+    JSChunkGraph graph =
+        new JSChunkGraph(
+            new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
 
     assertThat(graph.getModuleCount()).isEqualTo(7);
-    assertThat(graph.getModuleByName(JSModule.WEAK_MODULE_NAME)).isSameInstanceAs(weakModule);
+    assertThat(graph.getModuleByName(JSChunk.WEAK_MODULE_NAME)).isSameInstanceAs(weakModule);
   }
 
   @Test
   public void testExistingWeakModuleMustHaveDependenciesOnAllOtherModules() {
     makeDeps();
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -133,8 +129,8 @@ public final class JSModuleGraphTest {
     // Missing F
 
     try {
-      new JSModuleGraph(
-          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      new JSChunkGraph(
+          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
@@ -146,7 +142,7 @@ public final class JSModuleGraphTest {
   @Test
   public void testWeakFileCannotExistOutsideWeakModule() {
     makeDeps();
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -158,8 +154,8 @@ public final class JSModuleGraphTest {
     moduleA.add(SourceFile.fromCode("a", "", SourceKind.WEAK));
 
     try {
-      new JSModuleGraph(
-          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      new JSChunkGraph(
+          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
@@ -171,7 +167,7 @@ public final class JSModuleGraphTest {
   @Test
   public void testStrongFileCannotExistInWeakModule() {
     makeDeps();
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -183,8 +179,8 @@ public final class JSModuleGraphTest {
     weakModule.add(SourceFile.fromCode("a", "", SourceKind.STRONG));
 
     try {
-      new JSModuleGraph(
-          new JSModule[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
+      new JSChunkGraph(
+          new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
       fail();
     } catch (IllegalStateException e) {
       assertThat(e)
@@ -195,14 +191,14 @@ public final class JSModuleGraphTest {
 
   @Test
   public void testSmallerTreeBeatsDeeperTree() {
-    final JSModule a = new JSModule("a");
-    final JSModule b = new JSModule("b");
-    final JSModule c = new JSModule("c");
-    final JSModule d = new JSModule("d");
-    final JSModule e = new JSModule("e");
-    final JSModule f = new JSModule("f");
-    final JSModule g = new JSModule("g");
-    final JSModule h = new JSModule("h");
+    final JSChunk a = new JSChunk("a");
+    final JSChunk b = new JSChunk("b");
+    final JSChunk c = new JSChunk("c");
+    final JSChunk d = new JSChunk("d");
+    final JSChunk e = new JSChunk("e");
+    final JSChunk f = new JSChunk("f");
+    final JSChunk g = new JSChunk("g");
+    final JSChunk h = new JSChunk("h");
     //   a
     //  / \
     // b   c
@@ -225,7 +221,7 @@ public final class JSModuleGraphTest {
     f.addDependency(d);
     g.addDependency(d);
     h.addDependency(d);
-    JSModuleGraph graph = new JSModuleGraph(new JSModule[] {a, b, c, d, e, f, g, h});
+    JSChunkGraph graph = new JSChunkGraph(new JSChunk[] {a, b, c, d, e, f, g, h});
     // d is deeper, but it also has an extra dependent node, so b is the better choice.
     assertSmallestCoveringSubtree(b, graph, a, e, f, g);
     // However, if the parent tree we're looking at is c, then b isn't an option
@@ -394,8 +390,8 @@ public final class JSModuleGraphTest {
 
   @Test
   public void testManageDependenciesStrictWithEntryPointWithDuplicates() throws Exception {
-    final JSModule a = new JSModule("a");
-    JSModuleGraph graph = new JSModuleGraph(new JSModule[] {a});
+    final JSChunk a = new JSChunk("a");
+    JSChunkGraph graph = new JSChunkGraph(new JSChunk[] {a});
 
     // Create all the input files.
     List<CompilerInput> inputs = new ArrayList<>();
@@ -869,7 +865,7 @@ public final class JSModuleGraphTest {
         .containsExactly(strong1);
   }
 
-  private void assertInputs(JSModule module, String... sourceNames) {
+  private void assertInputs(JSChunk module, String... sourceNames) {
     assertThat(sourceNames(module.getInputs())).isEqualTo(ImmutableList.copyOf(sourceNames));
   }
 
@@ -906,22 +902,22 @@ public final class JSModuleGraphTest {
   }
 
   private void assertSmallestCoveringSubtree(
-      JSModule expected, JSModule parentTree, JSModule... modules) {
+      JSChunk expected, JSChunk parentTree, JSChunk... modules) {
     assertSmallestCoveringSubtree(expected, graph, parentTree, modules);
   }
 
   private void assertSmallestCoveringSubtree(
-      JSModule expected, JSModuleGraph graph, JSModule parentTree, JSModule... modules) {
+      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, JSChunk... modules) {
     BitSet modulesBitSet = new BitSet();
-    for (JSModule m : modules) {
+    for (JSChunk m : modules) {
       modulesBitSet.set(m.getIndex());
     }
     assertSmallestCoveringSubtree(expected, graph, parentTree, modulesBitSet);
   }
 
   private void assertSmallestCoveringSubtree(
-      JSModule expected, JSModuleGraph graph, JSModule parentTree, BitSet modules) {
-    JSModule actual = graph.getSmallestCoveringSubtree(parentTree, modules);
+      JSChunk expected, JSChunkGraph graph, JSChunk parentTree, BitSet modules) {
+    JSChunk actual = graph.getSmallestCoveringSubtree(parentTree, modules);
     assertWithMessage(
             "Smallest covering subtree of %s in %s should be %s but was %s",
             parentTree, modules, expected, actual)
@@ -929,19 +925,19 @@ public final class JSModuleGraphTest {
         .isEqualTo(expected);
   }
 
-  private void assertDeepestCommonDepInclusive(JSModule expected, JSModule m1, JSModule m2) {
+  private void assertDeepestCommonDepInclusive(JSChunk expected, JSChunk m1, JSChunk m2) {
     assertDeepestCommonDepOneWay(expected, m1, m2, true);
     assertDeepestCommonDepOneWay(expected, m2, m1, true);
   }
 
-  private void assertDeepestCommonDep(JSModule expected, JSModule m1, JSModule m2) {
+  private void assertDeepestCommonDep(JSChunk expected, JSChunk m1, JSChunk m2) {
     assertDeepestCommonDepOneWay(expected, m1, m2, false);
     assertDeepestCommonDepOneWay(expected, m2, m1, false);
   }
 
   private void assertDeepestCommonDepOneWay(
-      JSModule expected, JSModule m1, JSModule m2, boolean inclusive) {
-    JSModule actual =
+      JSChunk expected, JSChunk m1, JSChunk m2, boolean inclusive) {
+    JSChunk actual =
         inclusive
             ? graph.getDeepestCommonDependencyInclusive(m1, m2)
             : graph.getDeepestCommonDependency(m1, m2);
@@ -957,9 +953,9 @@ public final class JSModuleGraphTest {
     }
   }
 
-  private void assertTransitiveDepsDeepestFirst(JSModule m, JSModule... deps) {
-    Iterable<JSModule> actual = graph.getTransitiveDepsDeepestFirst(m);
-    assertThat(Arrays.toString(Iterables.toArray(actual, JSModule.class)))
+  private void assertTransitiveDepsDeepestFirst(JSChunk m, JSChunk... deps) {
+    Iterable<JSChunk> actual = graph.getTransitiveDepsDeepestFirst(m);
+    assertThat(Arrays.toString(Iterables.toArray(actual, JSChunk.class)))
         .isEqualTo(Arrays.toString(deps));
   }
 }

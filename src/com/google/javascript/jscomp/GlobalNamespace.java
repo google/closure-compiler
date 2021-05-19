@@ -271,11 +271,11 @@ class GlobalNamespace
    * the global namespace.
    */
   static class AstChange {
-    final JSModule module;
+    final JSChunk module;
     final Scope scope;
     final Node node;
 
-    AstChange(JSModule module, Scope scope, Node node) {
+    AstChange(JSChunk module, Scope scope, Node node) {
       this.module = module;
       this.scope = scope;
       this.node = node;
@@ -315,7 +315,7 @@ class GlobalNamespace
     }
   }
 
-  private void scanFromNode(BuildGlobalNamespace builder, JSModule module, Scope scope, Node n) {
+  private void scanFromNode(BuildGlobalNamespace builder, JSChunk module, Scope scope, Node n) {
     // Check affected parent nodes first.
     Node parent = n.getParent();
     if ((n.isName() || n.isGetProp()) && parent.isGetProp()) {
@@ -459,7 +459,7 @@ class GlobalNamespace
       }
     }
 
-    private void collect(JSModule module, Scope scope, Node n) {
+    private void collect(JSChunk module, Scope scope, Node n) {
       Node parent = n.getParent();
 
       String name;
@@ -756,7 +756,7 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        JSModule module,
+        JSChunk module,
         Scope scope,
         Node n,
         Node parent,
@@ -802,7 +802,7 @@ class GlobalNamespace
      * @param scope
      */
     private void addOrConfirmTwinRefs(
-        Name nameObj, Node node, Ref.Type setRefType, JSModule module, Scope scope) {
+        Name nameObj, Node node, Ref.Type setRefType, JSChunk module, Scope scope) {
       ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
       if (existingRefs.isEmpty()) {
         nameObj.addTwinRefs(module, scope, node, setRefType, currentPreOrderIndex);
@@ -861,7 +861,7 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
     void handleSetFromLocal(
-        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
         return;
       }
@@ -889,7 +889,7 @@ class GlobalNamespace
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
     void handleGet(
-        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
       if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
         return;
       }
@@ -1016,7 +1016,7 @@ class GlobalNamespace
      * @param type The reference type
      */
     void handleGet(
-        JSModule module,
+        JSChunk module,
         Scope scope,
         Node n,
         Node parent,
@@ -1034,7 +1034,7 @@ class GlobalNamespace
      * Otherwise add a new one.
      */
     private void addOrConfirmRef(
-        Name nameObj, Node node, Ref.Type refType, JSModule module, Scope scope) {
+        Name nameObj, Node node, Ref.Type refType, JSChunk module, Scope scope) {
       ImmutableList<Ref> existingRefs = nameObj.getRefsForNode(node);
       if (existingRefs.isEmpty()) {
         nameObj.addSingleRef(module, scope, node, refType, currentPreOrderIndex++);
@@ -1091,7 +1091,7 @@ class GlobalNamespace
      *     Ref.Type#ALIASING_GET}
      */
     Ref.Type determineGetTypeForHookOrBooleanExpr(
-        JSModule module, Scope scope, Node parent, String name) {
+        JSChunk module, Scope scope, Node parent, String name) {
       Node prev = parent;
       for (Node anc : parent.getAncestors()) {
         switch (anc.getToken()) {
@@ -1162,7 +1162,7 @@ class GlobalNamespace
      * @return Whether the name was handled
      */
     boolean maybeHandlePrototypePrefix(
-        JSModule module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
       // We use a string-based approach instead of inspecting the parse tree
       // to avoid complexities with object literals, possibly nested, beneath
       // assignments.
@@ -1491,7 +1491,7 @@ class GlobalNamespace
      * @param setRefPreOrderIndex used for setter Ref, getter ref will be this value + 1
      */
     private void addTwinRefs(
-        JSModule module, Scope scope, Node node, Ref.Type setType, int setRefPreOrderIndex) {
+        JSChunk module, Scope scope, Node node, Ref.Type setType, int setRefPreOrderIndex) {
       checkArgument(
           setType == Ref.Type.SET_FROM_GLOBAL || setType == Ref.Type.SET_FROM_LOCAL, setType);
       Ref setRef = createNewRef(module, scope, node, setType, setRefPreOrderIndex);
@@ -1507,7 +1507,7 @@ class GlobalNamespace
     }
 
     private void addSingleRef(
-        JSModule module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
+        JSChunk module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
       checkNoExistingRefsForNode(node);
       Ref ref = createNewRef(module, scope, node, type, preOrderIndex);
       refs.add(ref);
@@ -1521,7 +1521,7 @@ class GlobalNamespace
     }
 
     private Ref createNewRef(
-        JSModule module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
+        JSChunk module, Scope scope, Node node, Ref.Type type, int preOrderIndex) {
       return new Ref(
           module, // null if the compilation isn't using JSModules
           checkNotNull(scope),
@@ -2425,7 +2425,7 @@ class GlobalNamespace
 
     // Not final because CollapseProperties needs to update the namespace in-place.
     private Node node;
-    final JSModule module;
+    final JSChunk module;
     final Name name;
     final Type type;
     /**
@@ -2451,7 +2451,7 @@ class GlobalNamespace
      * created just for testing. However, all Refs for real use must be created by methods on the
      * Name class, which does do argument checking.
      */
-    private Ref(JSModule module, Scope scope, Node node, Name name, Type type, int index) {
+    private Ref(JSChunk module, Scope scope, Node node, Name name, Type type, int index) {
       this.node = node;
       this.name = name;
       this.module = module;
@@ -2475,7 +2475,7 @@ class GlobalNamespace
       return name;
     }
 
-    JSModule getModule() {
+    JSChunk getModule() {
       return module;
     }
 

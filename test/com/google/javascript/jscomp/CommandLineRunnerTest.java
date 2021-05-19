@@ -1520,7 +1520,7 @@ public final class CommandLineRunnerTest {
     });
 
     StringBuilder builder = new StringBuilder();
-    JSModule module = lastCompiler.getModuleGraph().getRootModule();
+    JSChunk module = lastCompiler.getModuleGraph().getRootModule();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
     lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
@@ -1536,7 +1536,7 @@ public final class CommandLineRunnerTest {
     });
 
     StringBuilder builder = new StringBuilder();
-    JSModule module = lastCompiler.getModuleGraph().getRootModule();
+    JSChunk module = lastCompiler.getModuleGraph().getRootModule();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
     lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
@@ -2759,7 +2759,7 @@ public final class CommandLineRunnerTest {
 
     File outputFile1 = new File(outDir, "a.js");
     File outputFile2 = new File(outDir, "b.js");
-    File weakFile = new File(outDir, JSModule.WEAK_MODULE_NAME + ".js");
+    File weakFile = new File(outDir, JSChunk.WEAK_MODULE_NAME + ".js");
 
     args.add("--chunk_output_path_prefix");
     args.add(outDir + "/");
@@ -3021,7 +3021,7 @@ public final class CommandLineRunnerTest {
       assertWithMessage(new String(errReader.toByteArray(), UTF_8)).fail();
     }
     Supplier<List<SourceFile>> inputsSupplier = null;
-    Supplier<List<JSModule>> modulesSupplier = null;
+    Supplier<List<JSChunk>> modulesSupplier = null;
 
     if (useModules == ModulePattern.NONE) {
       List<SourceFile> inputs = new ArrayList<>();
@@ -3031,11 +3031,11 @@ public final class CommandLineRunnerTest {
       inputsSupplier = Suppliers.ofInstance(inputs);
     } else if (useModules == ModulePattern.STAR) {
       modulesSupplier =
-          Suppliers.<List<JSModule>>ofInstance(
+          Suppliers.<List<JSChunk>>ofInstance(
               ImmutableList.copyOf(JSChunkGraphBuilder.forStar().addChunks(original).build()));
     } else if (useModules == ModulePattern.CHAIN) {
       modulesSupplier =
-          Suppliers.<List<JSModule>>ofInstance(
+          Suppliers.<List<JSChunk>>ofInstance(
               ImmutableList.copyOf(JSChunkGraphBuilder.forChain().addChunks(original).build()));
     } else {
       throw new IllegalArgumentException("Unknown module type: " + useModules);

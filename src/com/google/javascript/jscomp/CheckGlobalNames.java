@@ -262,7 +262,7 @@ class CheckGlobalNames implements CompilerPass {
       // We don't know the source of non-literal names, so don't warn for property accesses.
       return false;
     }
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    JSChunkGraph moduleGraph = compiler.getModuleGraph();
     if (name.getGlobalSets() == 0 || ref.type == Ref.Type.SET_FROM_GLOBAL) {
       // Back off if either 1) this name was never set, or 2) this reference /is/ a set.
       return false;
@@ -285,7 +285,7 @@ class CheckGlobalNames implements CompilerPass {
 
   /** Whether the set is in the global scope and occurs in a module the original ref depends on */
   private static boolean isSetFromPrecedingModule(
-      Ref originalRef, Ref set, JSModuleGraph moduleGraph) {
+      Ref originalRef, Ref set, JSChunkGraph moduleGraph) {
     return set.type == Ref.Type.SET_FROM_GLOBAL
         && (originalRef.getModule() == set.getModule()
             || moduleGraph.dependsOn(originalRef.getModule(), set.getModule()));

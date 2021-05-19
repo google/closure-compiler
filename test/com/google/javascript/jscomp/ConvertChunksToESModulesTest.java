@@ -70,7 +70,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testMultipleInputsPerChunk() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
             .addChunk("a")
@@ -78,7 +78,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
     original[0].add(SourceFile.fromCode("m0-1", "console.log(a)"));
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1; console.log(a); export {a}")
             .addChunk("import {a} from './m0.js'; a")
@@ -92,13 +92,13 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathReferenceAbsolute() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "/js/m0")
             .addChunkWithName("a", "/js/m1")
             .build();
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1; export {a}", "/js/m0")
             .addChunkWithName("import {a} from './m0.js'; a", "/js/m1")
@@ -110,7 +110,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathReferenceAbsoluteWithRelative1() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "other/m0")
             .addChunkWithName("a", "/js/m1")
@@ -125,7 +125,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathReferenceAbsoluteWithRelative2() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "/other/m0")
             .addChunkWithName("a", "js/m1")
@@ -140,13 +140,13 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathAmbiguous() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "js/m0")
             .addChunkWithName("a", "js/m1")
             .build();
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1; export {a}", "js/m0")
             .addChunkWithName("import {a} from './m0.js'; a", "js/m1")
@@ -158,13 +158,13 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathMixedDepth1() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "js/m0")
             .addChunkWithName("a", "m1")
             .build();
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1; export {a}", "js/m0")
             .addChunkWithName("import {a} from './js/m0.js'; a", "m1")
@@ -179,13 +179,13 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathMixedDepth2() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "m0")
             .addChunkWithName("a", "js/m1")
             .build();
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1; export {a}", "m0")
             .addChunkWithName("import {a} from '../m0.js'; a", "js/m1")
@@ -197,13 +197,13 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testImportPathMixedDepth3() {
     ignoreWarnings(LOAD_WARNING);
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "js/other/path/one/m0")
             .addChunkWithName("a", "external/path/m1")
             .build();
 
-    JSModule[] expected =
+    JSChunk[] expected =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1; export {a}", "js/other/path/one/m0")
             .addChunkWithName(
@@ -215,7 +215,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathParentAboveRoot() {
-    JSModule[] original =
+    JSChunk[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunkWithName("var a = 1;", "js/m0")
             .addChunkWithName("a", "../node_modules/m1")

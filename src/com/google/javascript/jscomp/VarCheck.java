@@ -295,9 +295,9 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     }
 
     // Check module dependencies.
-    JSModule currModule = currInput.getModule();
-    JSModule varModule = varInput.getModule();
-    JSModuleGraph moduleGraph = compiler.getModuleGraph();
+    JSChunk currModule = currInput.getModule();
+    JSChunk varModule = varInput.getModule();
+    JSChunkGraph moduleGraph = compiler.getModuleGraph();
     if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
       if (varModule.isWeak()) {
         this.handleUndeclaredVariableRef(t, n);

@@ -1305,7 +1305,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule1() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE))
@@ -1325,7 +1325,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule2() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk("")
@@ -1345,7 +1345,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewriteSameModule3() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION))
@@ -1365,7 +1365,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_definitionModule_beforeUseModule() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             // m1
             .addChunk(ModuleTestInput.DEFINITION)
@@ -1385,7 +1385,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_definitionModule_afterUseModule() {
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             .addChunk(ModuleTestInput.USE)
             .addChunk(ModuleTestInput.DEFINITION)

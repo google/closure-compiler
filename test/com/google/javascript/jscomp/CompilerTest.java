@@ -515,8 +515,7 @@ public final class CompilerTest {
 
   @Test
   public void testRebuildInputsFromModule() {
-    List<JSModule> modules = ImmutableList.of(
-        new JSModule("m1"), new JSModule("m2"));
+    List<JSChunk> modules = ImmutableList.of(new JSChunk("m1"), new JSChunk("m2"));
     modules.get(0).add(SourceFile.fromCode("in1", ""));
     modules.get(1).add(SourceFile.fromCode("in2", ""));
 
@@ -1255,7 +1254,7 @@ public final class CompilerTest {
     options.setCheckTypes(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    JSModule m = new JSModule("m");
+    JSChunk m = new JSChunk("m");
     SourceFile inputSourceFile =
         SourceFile.fromCode(
             "input.js",
@@ -2233,18 +2232,18 @@ public final class CompilerTest {
 
     assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
-        .isEqualTo(JSModule.STRONG_MODULE_NAME);
+        .isEqualTo(JSChunk.STRONG_MODULE_NAME);
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
-        .isEqualTo(JSModule.WEAK_MODULE_NAME);
+        .isEqualTo(JSChunk.WEAK_MODULE_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
   }
 
   private void weakSourcesModulesHelper(boolean saveAndRestore) throws Exception {
-    JSModule m1 = new JSModule("m1");
+    JSChunk m1 = new JSChunk("m1");
     m1.add(SourceFile.fromCode("weak1.js", "goog.provide('a');", SourceKind.WEAK));
     m1.add(SourceFile.fromCode("strong1.js", "goog.provide('a.b');", SourceKind.STRONG));
-    JSModule m2 = new JSModule("m2");
+    JSChunk m2 = new JSChunk("m2");
     m2.add(SourceFile.fromCode("weak2.js", "goog.provide('c');", SourceKind.WEAK));
     m2.add(SourceFile.fromCode("strong2.js", "goog.provide('d');", SourceKind.STRONG));
 
@@ -2273,7 +2272,7 @@ public final class CompilerTest {
 
     assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(3);
 
-    JSModule weakModule = compiler.getModuleGraph().getModuleByName("$weak$");
+    JSChunk weakModule = compiler.getModuleGraph().getModuleByName("$weak$");
     assertThat(weakModule).isNotNull();
 
     assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
@@ -2332,9 +2331,9 @@ public final class CompilerTest {
 
   @Test
   public void testPreexistingWeakModule() throws Exception {
-    JSModule strong = new JSModule("m");
+    JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
-    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
     weak.addDependency(strong);
 
@@ -2354,16 +2353,16 @@ public final class CompilerTest {
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
         .isEqualTo("m");
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
-        .isEqualTo(JSModule.WEAK_MODULE_NAME);
+        .isEqualTo(JSChunk.WEAK_MODULE_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};");
   }
 
   @Test
   public void testPreexistingWeakModuleWithAdditionalStrongSources() throws Exception {
-    JSModule strong = new JSModule("m");
+    JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
-    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
     weak.add(
         SourceFile.fromCode(
@@ -2386,11 +2385,11 @@ public final class CompilerTest {
 
   @Test
   public void testPreexistingWeakModuleWithMissingWeakSources() throws Exception {
-    JSModule strong = new JSModule("m");
+    JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
     strong.add(
         SourceFile.fromCode("strong_but_actually_weak.js", "goog.provide('b');", SourceKind.WEAK));
-    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('c');", SourceKind.WEAK));
     weak.addDependency(strong);
 
@@ -2411,9 +2410,9 @@ public final class CompilerTest {
 
   @Test
   public void testPreexistingWeakModuleWithIncorrectDependencies() throws Exception {
-    JSModule m1 = new JSModule("m1");
-    JSModule m2 = new JSModule("m2");
-    JSModule weak = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk m1 = new JSChunk("m1");
+    JSChunk m2 = new JSChunk("m2");
+    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
     weak.addDependency(m1);
 
     CompilerOptions options = new CompilerOptions();

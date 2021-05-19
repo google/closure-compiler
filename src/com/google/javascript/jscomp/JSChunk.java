@@ -41,7 +41,7 @@ import java.util.Set;
  * A JavaScript module has a unique name, consists of a list of compiler inputs, and can depend on
  * other modules.
  */
-public final class JSModule extends DependencyInfo.Base implements Serializable {
+public final class JSChunk extends DependencyInfo.Base implements Serializable {
   // The name of the artificial module containing all strong sources when there is no module spec.
   // If there is a module spec, strong sources go in their respective modules, and this module does
   // not exist.
@@ -60,11 +60,11 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
 
   /** Source code inputs */
   // non-final for deserilaization
-  // CompilerInputs must be explicitly added to the JSModule again after deserialization
+  // CompilerInputs must be explicitly added to the JSChunk again after deserialization
   private transient List<CompilerInput> inputs = new ArrayList<>();
 
   /** Modules that this module depends on */
-  private final List<JSModule> deps = new ArrayList<>();
+  private final List<JSChunk> deps = new ArrayList<>();
 
   /** The length of the longest path starting from this module */
   private int depth;
@@ -76,7 +76,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
    *
    * @param name A unique name for the module
    */
-  public JSModule(String name) {
+  public JSChunk(String name) {
     this.name = name;
     // Depth and index will be set to their correct values by the JSModuleGraph into which they
     // are placed.
@@ -108,7 +108,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   @Override
   public ImmutableList<Require> getRequires() {
     ImmutableList.Builder<Require> builder = ImmutableList.builder();
-    for (JSModule m : deps) {
+    for (JSChunk m : deps) {
       builder.add(Require.compilerModule(m.getName()));
     }
     return builder.build();
@@ -168,7 +168,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   /** Adds a dependency on another module. */
-  public void addDependency(JSModule dep) {
+  public void addDependency(JSChunk dep) {
     checkNotNull(dep);
     Preconditions.checkState(dep != this, "Cannot add dependency on self", this);
     deps.add(dep);
@@ -193,7 +193,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
    *
    * @return A list that may be empty but not null
    */
-  public ImmutableList<JSModule> getDependencies() {
+  public ImmutableList<JSChunk> getDependencies() {
     return ImmutableList.copyOf(deps);
   }
 
@@ -203,7 +203,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
    */
   List<String> getSortedDependencyNames() {
     List<String> names = new ArrayList<>();
-    for (JSModule module : getDependencies()) {
+    for (JSChunk module : getDependencies()) {
       names.add(module.getName());
     }
     Collections.sort(names);
@@ -211,19 +211,18 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   /**
-   * Returns the transitive closure of dependencies starting from the
-   * dependencies of this module.
+   * Returns the transitive closure of dependencies starting from the dependencies of this module.
    */
-  public Set<JSModule> getAllDependencies() {
-    // JSModule uses identity semantics
-    Set<JSModule> allDeps = Sets.newIdentityHashSet();
+  public Set<JSChunk> getAllDependencies() {
+    // JSChunk uses identity semantics
+    Set<JSChunk> allDeps = Sets.newIdentityHashSet();
     allDeps.addAll(deps);
-    ArrayDeque<JSModule> stack = new ArrayDeque<>(deps);
+    ArrayDeque<JSChunk> stack = new ArrayDeque<>(deps);
 
     while (!stack.isEmpty()) {
-      JSModule module = stack.pop();
-      List<JSModule> moduleDeps = module.deps;
-      for (JSModule dep : moduleDeps) {
+      JSChunk module = stack.pop();
+      List<JSChunk> moduleDeps = module.deps;
+      for (JSChunk dep : moduleDeps) {
         if (allDeps.add(dep)) {
           stack.push(dep);
         }
@@ -233,8 +232,8 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   /** Returns this module and all of its dependencies in one list. */
-  public Set<JSModule> getThisAndAllDependencies() {
-    Set<JSModule> deps = getAllDependencies();
+  public Set<JSChunk> getThisAndAllDependencies() {
+    Set<JSChunk> deps = getAllDependencies();
     deps.add(this);
     return deps;
   }
@@ -313,7 +312,7 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
       input.setCompiler(compiler);
     }
 
-    // Sort the JSModule in this order.
+    // Sort the JSChunk in this order.
     List<CompilerInput> sortedList = new Es6SortedDependencies<>(inputs).getSortedList();
     inputs.clear();
     inputs.addAll(sortedList);

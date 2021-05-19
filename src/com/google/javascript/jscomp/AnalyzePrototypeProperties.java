@@ -52,8 +52,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final boolean anchorUnusedVars;
   private final boolean rootScopeUsesAreGlobal;
 
-  private final JSModuleGraph moduleGraph;
-  private final JSModule firstModule;
+  private final JSChunkGraph moduleGraph;
+  private final JSChunk firstModule;
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
@@ -75,7 +75,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   //
   // then there would be a node for "scotch", a node for "age", and an edge
   // from scotch to age.
-  private final LinkedDirectedGraph<NameInfo, JSModule> symbolGraph =
+  private final LinkedDirectedGraph<NameInfo, JSChunk> symbolGraph =
       LinkedDirectedGraph.createWithoutAnnotations();
 
   // A dummy node for representing global references.
@@ -109,7 +109,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    */
   AnalyzePrototypeProperties(
       AbstractCompiler compiler,
-      JSModuleGraph moduleGraph,
+      JSChunkGraph moduleGraph,
       boolean canModifyExterns,
       boolean anchorUnusedVars,
       boolean rootScopeUsesAreGlobal) {
@@ -135,7 +135,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       if (moduleGraph == null) {
         symbolGraph.connect(externNode, null, nameInfo);
       } else {
-        for (JSModule module : moduleGraph.getAllModules()) {
+        for (JSChunk module : moduleGraph.getAllModules()) {
           symbolGraph.connect(externNode, module, nameInfo);
         }
       }
@@ -151,7 +151,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
-    FixedPointGraphTraversal<NameInfo, JSModule> t =
+    FixedPointGraphTraversal<NameInfo, JSChunk> t =
         FixedPointGraphTraversal.newTraversal(new PropagateReferences());
     t.computeFixedPoint(symbolGraph, ImmutableSet.of(externNode, globalNode));
   }
@@ -394,7 +394,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       }
     }
 
-    private void addSymbolUse(String name, JSModule module, SymbolType type) {
+    private void addSymbolUse(String name, JSChunk module, SymbolType type) {
       NameInfo info = getNameInfoForName(name, type);
       NameInfo def = null;
       // Skip all anonymous nodes. We care only about symbols with names.
@@ -575,7 +575,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       return maybeName.isName() ? t.getScope().getVar(maybeName.getString()) : null;
     }
 
-    private void addGlobalUseOfSymbol(String name, JSModule module, SymbolType type) {
+    private void addGlobalUseOfSymbol(String name, JSChunk module, SymbolType type) {
       symbolGraph.connect(globalNode, module, getNameInfoForName(name, type));
     }
   }
@@ -610,11 +610,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
   }
 
-  private class PropagateReferences implements EdgeCallback<NameInfo, JSModule> {
+  private class PropagateReferences implements EdgeCallback<NameInfo, JSChunk> {
     @Override
-    public boolean traverseEdge(NameInfo start, JSModule edge, NameInfo dest) {
+    public boolean traverseEdge(NameInfo start, JSChunk edge, NameInfo dest) {
       if (start.isReferenced()) {
-        JSModule startModule = start.getDeepestCommonModuleRef();
+        JSChunk startModule = start.getDeepestCommonModuleRef();
         if (startModule != null && moduleGraph.dependsOn(startModule, edge)) {
           return dest.markReference(startModule);
         } else {
@@ -631,7 +631,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     Var getRootVar();
 
     /** Returns the module where this appears. */
-    JSModule getModule();
+    JSChunk getModule();
   }
 
   private enum SymbolType {
@@ -645,9 +645,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
    */
   static class GlobalFunction implements Symbol {
     private final Var var;
-    private final JSModule module;
+    private final JSChunk module;
 
-    GlobalFunction(Node nameNode, Var var, JSModule module) {
+    GlobalFunction(Node nameNode, Var var, JSChunk module) {
       Node parent = nameNode.getParent();
       checkState(
           (NodeUtil.isNameDeclaration(parent) && var.isGlobal())
@@ -662,7 +662,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
   }
@@ -676,9 +676,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
   static class ClassMemberFunction implements Property {
     private final Node node;
     private final Var var;
-    private final JSModule module;
+    private final JSChunk module;
 
-    ClassMemberFunction(Node node, Var var, JSModule module) {
+    ClassMemberFunction(Node node, Var var, JSChunk module) {
       checkState(node.getParent().isClassMembers());
       checkState(node.isMemberFunctionDef() || node.isSetterDef() || node.isGetterDef());
       this.node = node;
@@ -692,7 +692,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
 
@@ -743,10 +743,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
   static class AssignmentPrototypeProperty implements PrototypeProperty {
     private final Node exprNode;
     private final Var rootVar;
-    private final JSModule module;
+    private final JSChunk module;
 
     /** @param node An EXPR node. */
-    AssignmentPrototypeProperty(Node node, Var rootVar, JSModule module) {
+    AssignmentPrototypeProperty(Node node, Var rootVar, JSChunk module) {
       this.exprNode = node;
       this.rootVar = rootVar;
       this.module = module;
@@ -772,7 +772,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
   }
@@ -787,9 +787,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private final Node value;
     private final Node assign;
     private final Var rootVar;
-    private final JSModule module;
+    private final JSChunk module;
 
-    LiteralPrototypeProperty(Node value, Node assign, Var rootVar, JSModule module) {
+    LiteralPrototypeProperty(Node value, Node assign, Var rootVar, JSChunk module) {
       this.value = value;
       this.assign = assign;
       this.rootVar = rootVar;
@@ -812,7 +812,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     @Override
-    public JSModule getModule() {
+    public JSChunk getModule() {
       return module;
     }
   }
@@ -841,7 +841,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     private boolean referenced = false;
     private final Deque<Symbol> declarations = new ArrayDeque<>();
-    private JSModule deepestCommonModuleRef = null;
+    private JSChunk deepestCommonModuleRef = null;
 
     // True if this property is a function that reads a variable from an
     // outer scope which isn't the global scope.
@@ -888,14 +888,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * @param module The module where it was referenced.
      * @return Whether the name info has changed.
      */
-    boolean markReference(JSModule module) {
+    boolean markReference(JSChunk module) {
       boolean hasChanged = false;
       if (!referenced) {
         referenced = true;
         hasChanged = true;
       }
 
-      JSModule originalDeepestCommon = deepestCommonModuleRef;
+      JSChunk originalDeepestCommon = deepestCommonModuleRef;
 
       if (deepestCommonModuleRef == null) {
         deepestCommonModuleRef = module;
@@ -912,7 +912,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     /** Returns the deepest common module of all the references to this property. */
-    JSModule getDeepestCommonModuleRef() {
+    JSChunk getDeepestCommonModuleRef() {
       return deepestCommonModuleRef;
     }
 

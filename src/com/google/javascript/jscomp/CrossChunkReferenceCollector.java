@@ -186,7 +186,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     return true;
   }
 
-  private TopLevelStatementDraft initializeDraftStatement(JSModule module, Node statementNode) {
+  private TopLevelStatementDraft initializeDraftStatement(JSChunk module, Node statementNode) {
     TopLevelStatementDraft draft =
         new TopLevelStatementDraft(statementCounter++, module, statementNode);
     // Determine whether this statement declares a name or not.
@@ -455,7 +455,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     /** 0-based index indicating original order of this statement in the source. */
     private final int originalOrder;
 
-    private final JSModule module;
+    private final JSChunk module;
     private final Node statementNode;
     private final List<Reference> nonDeclarationReferences;
     private final Reference declaredNameReference;
@@ -474,7 +474,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
       return originalOrder;
     }
 
-    JSModule getModule() {
+    JSChunk getModule() {
       return module;
     }
 
@@ -510,14 +510,15 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
     /** 0-based index indicating original order of this statement in the source. */
     final int originalOrder;
-    final JSModule module;
+
+    final JSChunk module;
     final Node statementNode;
     final List<Reference> nonDeclarationReferences = new ArrayList<>();
     Node declaredValueNode = null;
     Node declaredNameNode = null;
     Reference declaredNameReference = null;
 
-    TopLevelStatementDraft(int originalOrder, JSModule module, Node statementNode) {
+    TopLevelStatementDraft(int originalOrder, JSChunk module, Node statementNode) {
       this.originalOrder = originalOrder;
       this.module = module;
       this.statementNode = statementNode;

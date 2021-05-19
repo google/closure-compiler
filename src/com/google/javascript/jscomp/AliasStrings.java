@@ -54,7 +54,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   private final AbstractCompiler compiler;
 
-  private final JSModuleGraph moduleGraph;
+  private final JSChunkGraph moduleGraph;
 
   private final boolean outputStringUsage;
 
@@ -63,11 +63,10 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
   private final Set<String> usedHashedAliases = new LinkedHashSet<>();
 
   /**
-   * Map from module to the node in that module that should parent any string
-   * variable declarations that have to be moved into that module
+   * Map from module to the node in that module that should parent any string variable declarations
+   * that have to be moved into that module
    */
-  private final Map<JSModule, Node> moduleVarParentMap =
-      new HashMap<>();
+  private final Map<JSChunk, Node> moduleVarParentMap = new HashMap<>();
 
   /** package private.  This value is AND-ed with the hash function to allow
    * unit tests to reduce the range of hash values to test collision cases */
@@ -81,10 +80,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
    */
-  AliasStrings(
-      AbstractCompiler compiler,
-      JSModuleGraph moduleGraph,
-      boolean outputStringUsage) {
+  AliasStrings(AbstractCompiler compiler, JSChunkGraph moduleGraph, boolean outputStringUsage) {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
     this.outputStringUsage = outputStringUsage;
@@ -140,7 +136,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       info.occurrences.add(occurrence);
 
       // The current module.
-      JSModule module = t.getModule();
+      JSChunk module = t.getModule();
       if (info.occurrences.size() != 1) {
         // Check whether the current module depends on the module containing
         // the declaration.
@@ -287,7 +283,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
     final ArrayList<Node> occurrences = new ArrayList<>();
 
-    JSModule moduleToContainDecl;
+    JSChunk moduleToContainDecl;
     Node parentForNewVarDecl;
     Node siblingToInsertVarDeclBefore;
 

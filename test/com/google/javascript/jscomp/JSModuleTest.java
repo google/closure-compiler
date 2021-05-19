@@ -27,39 +27,36 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link JSModule}
- *
- */
+/** Tests for {@link JSChunk} */
 @RunWith(JUnit4.class)
 public final class JSModuleTest {
-  private JSModule mod1;
-  private JSModule mod2;  // depends on mod1
-  private JSModule mod3;  // depends on mod1
-  private JSModule mod4;  // depends on mod2, mod3
-  private JSModule mod5;  // depends on mod1
+  private JSChunk mod1;
+  private JSChunk mod2; // depends on mod1
+  private JSChunk mod3; // depends on mod1
+  private JSChunk mod4; // depends on mod2, mod3
+  private JSChunk mod5; // depends on mod1
 
   @Before
   public void setUp() throws Exception {
-    List<JSModule> modulesInDepOrder = new ArrayList<>();
+    List<JSChunk> modulesInDepOrder = new ArrayList<>();
 
-    mod1 = new JSModule("mod1");
+    mod1 = new JSChunk("mod1");
     modulesInDepOrder.add(mod1);
 
-    mod2 = new JSModule("mod2");
+    mod2 = new JSChunk("mod2");
     mod2.addDependency(mod1);
     modulesInDepOrder.add(mod2);
 
-    mod3 = new JSModule("mod3");
+    mod3 = new JSChunk("mod3");
     mod3.addDependency(mod1);
     modulesInDepOrder.add(mod3);
 
-    mod4 = new JSModule("mod4");
+    mod4 = new JSChunk("mod4");
     mod4.addDependency(mod2);
     mod4.addDependency(mod3);
     modulesInDepOrder.add(mod4);
 
-    mod5 = new JSModule("mod5");
+    mod5 = new JSChunk("mod5");
     mod5.addDependency(mod1);
     modulesInDepOrder.add(mod5);
   }
@@ -130,7 +127,7 @@ public final class JSModuleTest {
   private void assertSortedInputs(
       List<CompilerInput> expected, List<CompilerInput> shuffled)
       throws Exception {
-    JSModule mod = new JSModule("mod");
+    JSChunk mod = new JSChunk("mod");
     for (CompilerInput input : shuffled) {
       input.setModule(null);
       mod.add(input);

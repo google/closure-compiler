@@ -137,7 +137,7 @@ public class RecoverableJsAstTest {
     // Keep this a "small" test. Don't use threads.
     compiler.disableThreads();
 
-    JSModule module = new JSModule("m0");
+    JSChunk module = new JSChunk("m0");
     module.add(new CompilerInput(ast));
     compiler.compileModules(ImmutableList.<SourceFile>of(),
         ImmutableList.of(module),

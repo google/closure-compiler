@@ -649,19 +649,19 @@ public final class VarCheckTest extends CompilerTestCase {
       boolean m2DependsOnm1,
       DiagnosticType error,
       DiagnosticType warning) {
-    JSModule m1 = new JSModule("m1");
+    JSChunk m1 = new JSChunk("m1");
     m1.add(SourceFile.fromCode("input1", code1));
-    JSModule m2 = new JSModule("m2");
+    JSChunk m2 = new JSChunk("m2");
     m2.add(SourceFile.fromCode("input2", code2));
     if (m2DependsOnm1) {
       m2.addDependency(m1);
     }
     if (error == null && warning == null) {
-      test(new JSModule[] { m1, m2 }, new String[] { code1, code2 });
+      test(new JSChunk[] {m1, m2}, new String[] {code1, code2});
     } else if (error == null) {
-      test(new JSModule[] { m1, m2 }, new String[] { code1, code2 }, warning(warning));
+      test(new JSChunk[] {m1, m2}, new String[] {code1, code2}, warning(warning));
     } else {
-      testError(srcs(new JSModule[] { m1, m2 }), error(error));
+      testError(srcs(new JSChunk[] {m1, m2}), error(error));
     }
   }
 
@@ -1084,8 +1084,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromStrongFile() {
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
-    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
@@ -1094,7 +1094,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     test(
         srcs(
-            new JSModule[] {
+            new JSChunk[] {
               strongModule, weakModule,
             }),
         error(VarCheck.VIOLATED_MODULE_DEP_ERROR),
@@ -1103,7 +1103,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromWeakFile() {
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
     weakModule.add(
         SourceFile.fromCode(
             "weak.js",
@@ -1113,15 +1113,15 @@ public final class VarCheckTest extends CompilerTestCase {
             SourceKind.WEAK));
 
     testSame(
-        new JSModule[] {
+        new JSChunk[] {
           weakModule,
         });
   }
 
   @Test
   public void testReferenceToWeakNamespaceRoot_fromStrongFile() {
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
-    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
@@ -1136,7 +1136,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     test(
         srcs(
-            new JSModule[] {
+            new JSChunk[] {
               strongModule, weakModule,
             }),
         error(VarCheck.UNDEFINED_VAR_ERROR));
@@ -1144,8 +1144,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToStrongNamespaceRoot_withAdditionalWeakProvide_fromStrongFile() {
-    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
-    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
@@ -1160,7 +1160,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     testSame(
         srcs(
-            new JSModule[] {
+            new JSChunk[] {
               strongModule, weakModule,
             }));
   }

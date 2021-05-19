@@ -100,7 +100,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
     // PropertyCollapseLevel.ALL
     collapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
 
-    JSModule[] inputModules = new JSModule[] {new JSModule("entry"), new JSModule("mod1")};
+    JSChunk[] inputModules = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
     inputModules[0].add(
         SourceFile.fromCode(
             "entry.js", "import('./mod1.js').then((ns) => console.log(ns.Foo.bar()));"));
@@ -113,7 +113,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 "}")));
     inputModules[1].addDependency(inputModules[0]);
 
-    JSModule[] expectedModules = new JSModule[] {new JSModule("entry"), new JSModule("mod1")};
+    JSChunk[] expectedModules = new JSChunk[] {new JSChunk("entry"), new JSChunk("mod1")};
     expectedModules[0].add(
         SourceFile.fromCode(
             "entry.js",

@@ -58,7 +58,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private static final String GOOG = "goog";
 
   private final AbstractCompiler compiler;
-  private final JSModuleGraph moduleGraph;
+  private final JSChunkGraph moduleGraph;
 
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
@@ -260,7 +260,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   }
 
   /** Handles a goog.module that is a legacy namespace. */
-  private void processLegacyModuleCall(String namespace, Node googModuleCall, JSModule module) {
+  private void processLegacyModuleCall(String namespace, Node googModuleCall, JSChunk module) {
     registerAnyProvidedPrefixes(namespace, googModuleCall, module);
     providedNames.put(
         namespace,
@@ -388,7 +388,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
    * <p>TODO(b/128120127): delete this method
    */
   private void processProvideFromPreviousPass(NodeTraversal t, String name, Node parent) {
-    JSModule module = t.getModule();
+    JSChunk module = t.getModule();
     if (providedNames.containsKey(name)) {
       ProvidedName provided = providedNames.get(name);
       provided.addDefinition(parent, module);
@@ -507,7 +507,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
    * @param node The EXPR of the provide call.
    * @param module The current module.
    */
-  private void registerAnyProvidedPrefixes(String ns, Node node, JSModule module) {
+  private void registerAnyProvidedPrefixes(String ns, Node node, JSChunk module) {
     int pos = ns.indexOf('.');
     while (pos != -1) {
       String prefixNs = ns.substring(0, pos);
@@ -547,7 +547,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // This should only be used for source info and a place to hang namespace definitions.
     private final Node firstNode;
     // The module where this namespace was first goog.provided, if modules exist. */
-    private final JSModule firstModule;
+    private final JSChunk firstModule;
 
     // The node where the call was explicitly goog.provided. Null if the namespace is implicit.
     // If this is previously provided, this will instead be the expression or declaration marked
@@ -566,7 +566,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // The minimum module where the provide namespace definition must appear. If child namespaces of
     // this provide appear in multiple modules, this module must be earlier than all child
     // namespace's modules.
-    private JSModule minimumModule = null;
+    private JSChunk minimumModule = null;
 
     // The replacement declaration. Null until replace() has been called.
     private Node replacementNode = null;
@@ -586,7 +586,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     ProvidedName(
         String namespace,
         Node node,
-        JSModule module,
+        JSChunk module,
         boolean explicit,
         boolean fromPreviousProvide) {
       Preconditions.checkArgument(
@@ -617,7 +617,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
      * @param node the EXPR_RESULT representing this provide or possible a VAR for a previously
      *     provided name. null if implicit.
      */
-    void addProvide(Node node, JSModule module, boolean explicit) {
+    void addProvide(Node node, JSChunk module, boolean explicit) {
       if (explicit) {
         // goog.provide('name.space');
         checkState(explicitNode == null || isPreviouslyProvided);
@@ -688,7 +688,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
      * <p>This pass gives preference to declarations. If no declaration exists, records a reference
      * to an assignment so it can be repurposed later into a declaration.
      */
-    private void addDefinition(Node node, JSModule module) {
+    private void addDefinition(Node node, JSChunk module) {
       Preconditions.checkArgument(
           node.isExprResult() // assign
               || node.isFunction()
@@ -700,7 +700,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       }
     }
 
-    private void updateMinimumModule(JSModule newModule) {
+    private void updateMinimumModule(JSChunk newModule) {
       if (minimumModule == null) {
         minimumModule = newModule;
       } else if (moduleGraph.getModuleCount() > 1) {

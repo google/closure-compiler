@@ -239,7 +239,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         }
         // Compare the module where the variable is declared to the current
         // module. If they are different, the variable is used across modules.
-        JSModule module = input.getModule();
+        JSChunk module = input.getModule();
         if (module != t.getModule()) {
           crossModuleNames.add(name);
         }

@@ -40,8 +40,8 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
-import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
-import com.google.javascript.jscomp.JSModuleGraph.ModuleDependenceException;
+import com.google.javascript.jscomp.JSChunkGraph.MissingModuleException;
+import com.google.javascript.jscomp.JSChunkGraph.ModuleDependenceException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -155,7 +155,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private List<CompilerInput> externs;
 
   // The source module graph, denoting dependencies between chunks.
-  private JSModuleGraph moduleGraph;
+  private JSChunkGraph moduleGraph;
 
   // The module loader for resolving paths into module URIs.
   private ModuleLoader moduleLoader;
@@ -511,12 +511,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Initializes the instance state needed for a compile job. */
   public final <T1 extends SourceFile, T2 extends SourceFile> void init(
       List<T1> externs, List<T2> sources, CompilerOptions options) {
-    JSModule module = new JSModule(JSModule.STRONG_MODULE_NAME);
+    JSChunk module = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     for (SourceFile source : sources) {
       module.add(new CompilerInput(source));
     }
 
-    List<JSModule> modules = new ArrayList<>(1);
+    List<JSChunk> modules = new ArrayList<>(1);
     modules.add(module);
     initModules(externs, modules, options);
     addFilesToSourceMap(sources);
@@ -524,7 +524,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Initializes the instance state needed for a compile job if the sources are in modules. */
   public <T extends SourceFile> void initModules(
-      List<T> externs, List<JSModule> modules, CompilerOptions options) {
+      List<T> externs, List<JSChunk> modules, CompilerOptions options) {
     initOptions(options);
 
     checkFirstModule(modules);
@@ -533,7 +533,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // Generate the module graph, and report any errors in the module specification as errors.
     try {
-      this.moduleGraph = new JSModuleGraph(modules);
+      this.moduleGraph = new JSChunkGraph(modules);
     } catch (ModuleDependenceException e) {
       // problems with the module format.  Report as an error.  The
       // message gives all details.
@@ -600,7 +600,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Verifies that at least one module has been provided and that the first one has at least one
    * source code input.
    */
-  private void checkFirstModule(List<JSModule> modules) {
+  private void checkFirstModule(List<JSChunk> modules) {
     if (modules.isEmpty()) {
       report(JSError.make(EMPTY_MODULE_LIST_ERROR));
     } else if (modules.get(0).getInputs().isEmpty() && modules.size() > 1) {
@@ -615,9 +615,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Fill any empty modules with a place holder file. It makes any cross module motion easier. */
-  private void fillEmptyModules(Iterable<JSModule> modules) {
-    for (JSModule module : modules) {
-      if (!module.getName().equals(JSModule.WEAK_MODULE_NAME) && module.getInputs().isEmpty()) {
+  private void fillEmptyModules(Iterable<JSChunk> modules) {
+    for (JSChunk module : modules) {
+      if (!module.getName().equals(JSChunk.WEAK_MODULE_NAME) && module.getInputs().isEmpty()) {
         CompilerInput input =
             new CompilerInput(SourceFile.fromCode(createFillFileName(module.getName()), ""));
         input.setCompiler(this);
@@ -736,7 +736,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * and customize this.
    */
   public <T extends SourceFile> Result compileModules(
-      List<T> externs, List<JSModule> modules, CompilerOptions options) {
+      List<T> externs, List<JSChunk> modules, CompilerOptions options) {
     // The compile method should only be called once.
     checkState(jsRoot == null);
 
@@ -802,7 +802,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
-    JSModule weakModule = moduleGraph.getModuleByName(JSModule.WEAK_MODULE_NAME);
+    JSChunk weakModule = moduleGraph.getModuleByName(JSChunk.WEAK_MODULE_NAME);
     if (weakModule != null) {
       for (CompilerInput i : moduleGraph.getAllInputs()) {
         if (i.getSourceFile().isWeak()) {
@@ -1166,7 +1166,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
     if (!moduleNameRegexList.isEmpty()) {
-      for (JSModule jsModule : getModules()) {
+      for (JSChunk jsModule : getModules()) {
         for (String regex : moduleNameRegexList) {
           if (jsModule.getName().matches(regex)) {
             String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
@@ -1442,7 +1442,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
     putCompilerInput(ast.getInputId(), newInput);
 
-    JSModule module = oldInput.getModule();
+    JSChunk module = oldInput.getModule();
     if (module != null) {
       module.addAfter(newInput, oldInput);
       module.remove(oldInput);
@@ -1471,8 +1471,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
 
     // TODO(tylerg): handle this for multiple modules at some point.
-    JSModule firstModule = Iterables.getFirst(getModules(), null);
-    if (firstModule.getName().equals(JSModule.STRONG_MODULE_NAME)) {
+    JSChunk firstModule = Iterables.getFirst(getModules(), null);
+    if (firstModule.getName().equals(JSChunk.STRONG_MODULE_NAME)) {
       firstModule.add(newInput);
     }
 
@@ -1487,7 +1487,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Nullable
   @Override
-  JSModuleGraph getModuleGraph() {
+  JSChunkGraph getModuleGraph() {
     return moduleGraph;
   }
 
@@ -1498,7 +1498,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * result is always non-empty, even in the degenerate case where there's only one module.
    */
   @Nullable
-  public Iterable<JSModule> getModules() {
+  public Iterable<JSChunk> getModules() {
     return moduleGraph != null ? moduleGraph.getAllModules() : null;
   }
 
@@ -2019,7 +2019,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       externsRoot.addChildToBack(root);
       scriptNodeByFilename.put(input.getSourceFile().getName(), root);
 
-      JSModule module = input.getModule();
+      JSChunk module = input.getModule();
       if (module != null) {
         module.remove(input);
       }
@@ -2231,7 +2231,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Converts the parse tree for a module back to JS code. */
-  public String toSource(final JSModule module) {
+  public String toSource(final JSChunk module) {
     return runInCompilerThread(
         () -> {
           List<CompilerInput> inputs = module.getInputs();
@@ -2357,7 +2357,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Converts the parse tree for each input in a module back to JS code. */
-  public String[] toSourceArray(final JSModule module) {
+  public String[] toSourceArray(final JSChunk module) {
     return runInCompilerThread(
         () -> {
           List<CompilerInput> inputs = module.getInputs();
@@ -2980,7 +2980,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // ------------------------------------------------------------------------
 
   @Override
-  protected Node getNodeForCodeInsertion(@Nullable JSModule module) {
+  protected Node getNodeForCodeInsertion(@Nullable JSChunk module) {
     if (this.inputsById.containsKey(SYNTHETIC_CODE_INPUT_ID)) {
       return this.inputsById.get(SYNTHETIC_CODE_INPUT_ID).getAstRoot(this);
     }
@@ -3212,8 +3212,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput input = new CompilerInput(ast, false);
     jsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
 
-    JSModule firstModule = Iterables.getFirst(getModules(), null);
-    if (firstModule.getName().equals(JSModule.STRONG_MODULE_NAME)) {
+    JSChunk firstModule = Iterables.getFirst(getModules(), null);
+    if (firstModule.getName().equals(JSChunk.STRONG_MODULE_NAME)) {
       firstModule.add(input);
     }
     input.setModule(firstModule);
@@ -3485,15 +3485,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void restoreCompilerInputsToJSModules(
-      List<JSModule> deserializedModules,
-      ImmutableListMultimap<JSModule, InputId> moduleToInputList) {
-    // The JSModuleGraph and JSModules are serialized via Java serialization. JSModules reference
+      List<JSChunk> deserializedModules,
+      ImmutableListMultimap<JSChunk, InputId> moduleToInputList) {
+    // The JSChunkGraph and JSModules are serialized via Java serialization. JSModules reference
     // CompilerInputs which are not serialized and are reconstructed via TypedAST serialization.
-    // This method fills in the list of CompilerInputs of a deserialized JSModule.
+    // This method fills in the list of CompilerInputs of a deserialized JSChunk.
     // TODO(b/183734515): when deserializing TypedASTs from multiple libraries, we will instead
-    // need to reconstruct the entire JSModuleGraph.
+    // need to reconstruct the entire JSChunkGraph.
 
-    for (JSModule deserializedModule : deserializedModules) {
+    for (JSChunk deserializedModule : deserializedModules) {
       for (InputId inputId : moduleToInputList.get(deserializedModule)) {
         deserializedModule.add(
             checkNotNull(
@@ -3523,7 +3523,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
-    private final JSModuleGraph moduleGraph;
+    private final JSChunkGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
     private final Set<String> exportedNames;
@@ -3533,7 +3533,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<String, Object> annotationMap;
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
-    private final ImmutableListMultimap<JSModule, InputId> moduleToInputList;
+    private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
     // non-final since it doesn't use java serialization
     private TypedAst typedAst = null;
 
@@ -3557,11 +3557,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private static final ImmutableListMultimap<JSModule, InputId> mapJSModulesToInputIds(
-      Iterable<JSModule> jsModules) {
-    ImmutableListMultimap.Builder<JSModule, InputId> jsmoduleToInputId =
+  private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(
+      Iterable<JSChunk> jsModules) {
+    ImmutableListMultimap.Builder<JSChunk, InputId> jsmoduleToInputId =
         ImmutableListMultimap.builder();
-    for (JSModule jsModule : jsModules) {
+    for (JSChunk jsModule : jsModules) {
       jsmoduleToInputId.putAll(
           jsModule,
           jsModule.getInputs().stream().map(CompilerInput::getInputId).collect(toImmutableList()));
@@ -3727,10 +3727,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       // Add all the compilation sources to the source map as potential sources
-      Iterable<JSModule> allModules = getModules();
+      Iterable<JSChunk> allModules = getModules();
       if (allModules != null) {
         List<SourceFile> sourceFiles = new ArrayList<>();
-        for (JSModule module : allModules) {
+        for (JSChunk module : allModules) {
           for (CompilerInput input : module.getInputs()) {
             sourceFiles.add(input.getSourceFile());
           }

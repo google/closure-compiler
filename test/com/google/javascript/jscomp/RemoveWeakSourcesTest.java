@@ -57,31 +57,31 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
     SourceFile emptyWeakSrc3 = SourceFile.fromCode("e.js", "");
     SourceFile fillFileSrc = SourceFile.fromCode("$fillFile", "");
 
-    JSModule moduleBefore1 = new JSModule("m1");
+    JSChunk moduleBefore1 = new JSChunk("m1");
     moduleBefore1.add(strongSrc1);
     moduleBefore1.add(weakSrc1);
-    JSModule moduleAfter1 = new JSModule("m1");
+    JSChunk moduleAfter1 = new JSChunk("m1");
     moduleAfter1.add(strongSrc1);
 
-    JSModule moduleBefore2 = new JSModule("m2");
+    JSChunk moduleBefore2 = new JSChunk("m2");
     moduleBefore2.add(weakSrc2);
     moduleBefore2.add(strongSrc2);
-    JSModule moduleAfter2 = new JSModule("m2");
+    JSChunk moduleAfter2 = new JSChunk("m2");
     moduleAfter2.add(strongSrc2);
 
-    JSModule moduleBefore3 = new JSModule("m3");
+    JSChunk moduleBefore3 = new JSChunk("m3");
     moduleBefore3.add(weakSrc3);
-    JSModule moduleAfter3 = new JSModule("m3");
+    JSChunk moduleAfter3 = new JSChunk("m3");
     moduleAfter3.add(fillFileSrc);
 
-    JSModule weakModule = new JSModule("$weak$");
+    JSChunk weakModule = new JSChunk("$weak$");
     weakModule.add(emptyWeakSrc1);
     weakModule.add(emptyWeakSrc2);
     weakModule.add(emptyWeakSrc3);
 
     // Expect the weak sources to be emptied and moved to a separate final module.
     test(
-        srcs(new JSModule[] {moduleBefore1, moduleBefore2, moduleBefore3}),
-        expected(new JSModule[] {moduleAfter1, moduleAfter2, moduleAfter3, weakModule}));
+        srcs(new JSChunk[] {moduleBefore1, moduleBefore2, moduleBefore3}),
+        expected(new JSChunk[] {moduleAfter1, moduleAfter2, moduleAfter3, weakModule}));
   }
 }

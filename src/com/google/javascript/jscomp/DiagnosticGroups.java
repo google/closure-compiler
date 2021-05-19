@@ -735,7 +735,7 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("conflictingIjsFile", IjsErrors.CONFLICTING_IJS_FILE);
 
     DiagnosticGroups.registerGroup(
-        "implicitWeakEntryPoint", JSModuleGraph.IMPLICIT_WEAK_ENTRY_POINT_ERROR);
+        "implicitWeakEntryPoint", JSChunkGraph.IMPLICIT_WEAK_ENTRY_POINT_ERROR);
   }
 
   /** Adds warning levels by name. */

@@ -192,7 +192,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final Checker checker;
   private final Set<String> namespacesSeen;
-  private final JSModuleGraph chunkGraph;
+  private final JSChunkGraph chunkGraph;
   private boolean inHotSwap = false;
 
   CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
@@ -495,8 +495,8 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         checkNotNull(
             compiler.getInput(requiredInputId), "Cannot find CompilerInput for %s", requiredModule);
 
-    JSModule requiredChunk = requiredInput.getModule();
-    JSModule currentChunk = t.getModule();
+    JSChunk requiredChunk = requiredInput.getModule();
+    JSChunk currentChunk = t.getModule();
     if (currentChunk != requiredChunk && !chunkGraph.dependsOn(currentChunk, requiredChunk)) {
       compiler.report(
           JSError.make(

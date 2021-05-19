@@ -1069,7 +1069,7 @@ public abstract class CompilerTestCase {
    * @param srcs Input chunks
    * @param expected Expected chunks
    */
-  protected void test(JSModule[] srcs, JSModule[] expected) {
+  protected void test(JSChunk[] srcs, JSChunk[] expected) {
     test(srcs(srcs), expected(expected));
   }
 
@@ -1125,7 +1125,7 @@ public abstract class CompilerTestCase {
   }
 
   /** Verifies that the compiler generates the given error for the given input. */
-  protected void testError(JSModule[] srcs, DiagnosticType error, String description) {
+  protected void testError(JSChunk[] srcs, DiagnosticType error, String description) {
     assertThat(error).isNotNull();
     test(srcs(srcs), error(error).withMessage(description));
   }
@@ -1314,7 +1314,7 @@ public abstract class CompilerTestCase {
    * @param modules Module inputs
    * @param expected Expected JS outputs (one per module)
    */
-  protected void test(JSModule[] modules, String[] expected) {
+  protected void test(JSChunk[] modules, String[] expected) {
     test(srcs(modules), expected(expected));
   }
 
@@ -1327,7 +1327,7 @@ public abstract class CompilerTestCase {
    * @param expected Expected JS outputs (one per module)
    * @param diagnostic the warning or error expected
    */
-  protected void test(JSModule[] modules, String[] expected, Diagnostic diagnostic) {
+  protected void test(JSChunk[] modules, String[] expected, Diagnostic diagnostic) {
     test(srcs(modules), expected(expected), diagnostic);
   }
 
@@ -1374,7 +1374,7 @@ public abstract class CompilerTestCase {
    *
    * @param modules Module inputs
    */
-  protected void testSame(JSModule[] modules) {
+  protected void testSame(JSChunk[] modules) {
     test(srcs(modules), expected(modules));
   }
 
@@ -1384,7 +1384,7 @@ public abstract class CompilerTestCase {
    * @param modules Module inputs
    * @param warning A warning, or null for no expected warning.
    */
-  protected void testSame(JSModule[] modules, DiagnosticType warning) {
+  protected void testSame(JSChunk[] modules, DiagnosticType warning) {
     test(srcs(modules), expected(modules), warning(warning));
   }
 
@@ -1921,7 +1921,7 @@ public abstract class CompilerTestCase {
   }
 
   protected void testExternChanges(
-      String extern, JSModule[] modules, String expectedExtern, DiagnosticType... warnings) {
+      String extern, JSChunk[] modules, String expectedExtern, DiagnosticType... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.initModules(
@@ -2094,7 +2094,7 @@ public abstract class CompilerTestCase {
     return new FlatSources(Arrays.asList(files));
   }
 
-  protected static Sources srcs(JSModule[] modules) {
+  protected static Sources srcs(JSChunk[] modules) {
     return new ModuleSources(modules);
   }
 
@@ -2114,9 +2114,9 @@ public abstract class CompilerTestCase {
     return new Expected(Arrays.asList(files));
   }
 
-  protected static Expected expected(JSModule[] modules) {
+  protected static Expected expected(JSChunk[] modules) {
     List<String> expectedSrcs = new ArrayList<>();
-    for (JSModule module : modules) {
+    for (JSChunk module : modules) {
       for (CompilerInput input : module.getInputs()) {
         try {
           expectedSrcs.add(input.getSourceFile().getCode());
@@ -2214,7 +2214,7 @@ public abstract class CompilerTestCase {
       return expected(((FlatSources) srcs).sources);
     } else if (srcs instanceof ModuleSources) {
       ModuleSources modules = ((ModuleSources) srcs);
-      return expected(modules.modules.toArray(new JSModule[0]));
+      return expected(modules.modules.toArray(new JSChunk[0]));
     } else {
       throw new IllegalStateException("unexpected");
     }
@@ -2257,9 +2257,9 @@ public abstract class CompilerTestCase {
   }
 
   protected static final class ModuleSources extends Sources {
-    final ImmutableList<JSModule> modules;
+    final ImmutableList<JSChunk> modules;
 
-    ModuleSources(JSModule[] modules) {
+    ModuleSources(JSChunk[] modules) {
       this.modules = ImmutableList.copyOf(modules);
     }
   }

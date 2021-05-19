@@ -130,7 +130,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
           (targetModuleVarName == null) ? null : t.getScope().getVar(targetModuleVarName);
 
       if (targetModuleNS != null) {
-        final JSModule targetModule = targetModuleNS.getInput().getModule();
+        final JSChunk targetModule = targetModuleNS.getInput().getModule();
         // If the target module is bundled into the same output chunk, replace the import statement
         // with a promise that resolves to the module namespace.
         // No further rewriting occurs for this case.
@@ -212,7 +212,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     dynamicImportsRemoved = true;
   }
 
-  private static String getChunkFileName(JSModule chunk) {
+  private static String getChunkFileName(JSChunk chunk) {
     return chunk.getName() + ".js";
   }
 
@@ -231,7 +231,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    *   import('./chunk0.js');
    * </pre>
    */
-  private void retargetImportSpecifier(NodeTraversal t, Node dynamicImport, JSModule targetModule) {
+  private void retargetImportSpecifier(NodeTraversal t, Node dynamicImport, JSChunk targetModule) {
     String retargetedSpecifier;
     String importingChunkFilename = getChunkFileName(t.getInput().getModule());
     String targetChunkFilename = getChunkFileName(targetModule);

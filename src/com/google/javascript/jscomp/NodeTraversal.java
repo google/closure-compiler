@@ -757,7 +757,7 @@ public class NodeTraversal {
   }
 
   /** Gets the current input module. */
-  public JSModule getModule() {
+  public JSChunk getModule() {
     CompilerInput input = getInput();
     return input == null ? null : input.getModule();
   }

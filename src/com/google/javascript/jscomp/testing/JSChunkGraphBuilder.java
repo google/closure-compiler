@@ -18,21 +18,21 @@ package com.google.javascript.jscomp.testing;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Strings;
-import com.google.javascript.jscomp.JSModule;
+import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-/** Utility to create various input {@link com.google.javascript.jscomp.JSModule} graphs */
+/** Utility to create various input {@link com.google.javascript.jscomp.JSChunk} graphs */
 public final class JSChunkGraphBuilder {
 
   private enum GraphType {
     // each chunk depends on the chunk immediately before
     CHAIN() {
       @Override
-      void addDependencyEdges(JSModule[] chunks) {
+      void addDependencyEdges(JSChunk[] chunks) {
         for (int i = 1; i < chunks.length; i++) {
           chunks[i].addDependency(chunks[i - 1]);
         }
@@ -41,7 +41,7 @@ public final class JSChunkGraphBuilder {
     // each chunk depends on the fist chunk
     STAR() {
       @Override
-      void addDependencyEdges(JSModule[] chunks) {
+      void addDependencyEdges(JSChunk[] chunks) {
         for (int i = 1; i < chunks.length; i++) {
           chunks[i].addDependency(chunks[0]);
         }
@@ -52,7 +52,7 @@ public final class JSChunkGraphBuilder {
     // chunk 2 depends on chunk 1, and all others depend on chunk 2
     BUSH() {
       @Override
-      void addDependencyEdges(JSModule[] chunks) {
+      void addDependencyEdges(JSChunk[] chunks) {
         checkState(chunks.length > 2, "BUSHes need at least three graph nodes");
         for (int i = 1; i < chunks.length; i++) {
           chunks[i].addDependency(chunks[i == 1 ? 0 : 1]);
@@ -62,14 +62,14 @@ public final class JSChunkGraphBuilder {
     // binary tree
     TREE() {
       @Override
-      void addDependencyEdges(JSModule[] chunks) {
+      void addDependencyEdges(JSChunk[] chunks) {
         for (int i = 1; i < chunks.length; i++) {
           chunks[i].addDependency(chunks[(i - 1) / 2]);
         }
       }
     };
 
-    void addDependencyEdges(JSModule[] chunks) {}
+    void addDependencyEdges(JSChunk[] chunks) {}
   }
 
   private final GraphType graphType;
@@ -154,11 +154,11 @@ public final class JSChunkGraphBuilder {
     return this;
   }
 
-  public JSModule[] build() {
-    JSModule[] chunks = new JSModule[this.chunks.size()];
+  public JSChunk[] build() {
+    JSChunk[] chunks = new JSChunk[this.chunks.size()];
     for (int i = 0; i < this.chunks.size(); i++) {
       String chunkName = this.chunkNames.getOrDefault(i, "m" + i);
-      JSModule chunk = chunks[i] = new JSModule(chunkName);
+      JSChunk chunk = chunks[i] = new JSChunk(chunkName);
 
       chunk.add(
           SourceFile.fromCode(Strings.lenientFormat(this.filenameFormat, i), this.chunks.get(i)));

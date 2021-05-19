@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * Moves top-level function declarations to the top of the enclosing JSModule and rewrites class
+ * Moves top-level function declarations to the top of the enclosing JSChunk and rewrites class
  * declarations.
  *
  * <p>Enable this pass if a try catch block wraps the output after compilation, and the output runs
@@ -59,7 +59,7 @@ import java.util.Map.Entry;
  */
 class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
-  private final ListMultimap<JSModule, Node> functions = ArrayListMultimap.create();
+  private final ListMultimap<JSChunk, Node> functions = ArrayListMultimap.create();
   private final ArrayList<Node> classes = new ArrayList<>();
 
   RewriteGlobalDeclarationsForTryCatchWrapping(AbstractCompiler compiler) {
@@ -69,7 +69,7 @@ class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, Compiler
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    for (Entry<JSModule, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
+    for (Entry<JSChunk, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
       Node addingRoot = compiler.getNodeForCodeInsertion(entry.getKey());
       List<Node> fnNodes = Lists.reverse(entry.getValue());
       if (!fnNodes.isEmpty()) {

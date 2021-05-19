@@ -291,7 +291,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   public void testNotEnoughPrototypeToExtractInChunk() {
     pattern = Pattern.USE_CHUNK_TEMP;
     for (int i = 0; i < 7; i++) {
-      JSModule[] modules =
+      JSChunk[] modules =
           JSChunkGraphBuilder.forStar()
               .addChunk(generatePrototypeDeclarations("x", i))
               .addChunk(generatePrototypeDeclarations("y", i))
@@ -303,7 +303,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   @Test
   public void testExtractingSingleClassPrototypeInChunk() {
     pattern = Pattern.USE_CHUNK_TEMP;
-    JSModule[] modules =
+    JSChunk[] modules =
         JSChunkGraphBuilder.forStar()
             .addChunk(generatePrototypeDeclarations("x", 7))
             .addChunk(generatePrototypeDeclarations("y", 7))
@@ -320,7 +320,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
         .append(SimpleFormat.format("var %s; %s = y.prototype;", yTmp, yTmp))
         .append(generateExtractedDeclarations(7, 1));
 
-    JSModule[] expectedModules =
+    JSChunk[] expectedModules =
         JSChunkGraphBuilder.forStar()
             .addChunk(builderX.toString())
             .addChunk(builderY.toString())

@@ -178,7 +178,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       compiler.reportChangeToEnclosingScope(var);
     }
     // Go through all extraction instances and extract each of them.
-    for (Map.Entry<JSModule, ExtractionInstanceInfo> entry : info.instancesByModule.entrySet()) {
+    for (Map.Entry<JSChunk, ExtractionInstanceInfo> entry : info.instancesByModule.entrySet()) {
       String alias = PROTOTYPE_ALIAS;
       if (pattern == Pattern.USE_CHUNK_TEMP) {
         // Rather than a truly global variable, use a unique variable per output chunk.
@@ -276,7 +276,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   /** Collects all the possible extraction instances in a node traversal. */
   private class GatherExtractionInfo extends AbstractShallowCallback {
-    private final Map<JSModule, ExtractionInstanceInfo> instancesByModule = new HashMap<>();
+    private final Map<JSChunk, ExtractionInstanceInfo> instancesByModule = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -300,7 +300,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
           instancesByModule.computeIfAbsent(
-              t.getModule(), (JSModule k) -> new ExtractionInstanceInfo());
+              t.getModule(), (JSChunk k) -> new ExtractionInstanceInfo());
           ExtractionInstanceInfo instanceInfo = instancesByModule.get(t.getModule());
           instanceInfo.instances.add(instance);
           instanceInfo.totalDelta += instance.delta;
@@ -324,7 +324,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      * @return {@code true} if the sum of all the extraction instance gain outweighs the overhead of
      *     the temp variable declaration.
      */
-    private boolean shouldExtractModule(JSModule module) {
+    private boolean shouldExtractModule(JSChunk module) {
       ExtractionInstanceInfo instanceInfo = instancesByModule.get(module);
       if (instanceInfo == null) {
         return false;
