@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
@@ -308,20 +309,23 @@ abstract class IntegrationTestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
+    return compile(
+        options,
+        ImmutableList.copyOf(
+            JSChunkGraphBuilder.forChain()
+                .addChunks(ImmutableList.copyOf(original))
+                .setFilenameFormat(inputFileNamePrefix + "%s" + inputFileNameSuffix)
+                .build()));
+  }
+
+  protected Compiler compile(CompilerOptions options, ImmutableList<JSModule> modules) {
     Compiler compiler =
         useNoninjectingCompiler
             ? new NoninjectingCompiler(new BlackHoleErrorManager())
             : new Compiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
-    compiler.compileModules(
-        externs,
-        ImmutableList.copyOf(
-            JSChunkGraphBuilder.forChain()
-                .addChunks(ImmutableList.copyOf(original))
-                .setFilenameFormat(inputFileNamePrefix + "%s" + inputFileNameSuffix)
-                .build()),
-        options);
+    compiler.compileModules(externs, modules, options);
     return compiler;
   }
 

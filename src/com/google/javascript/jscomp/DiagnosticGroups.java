@@ -244,9 +244,11 @@ public class DiagnosticGroups {
           TypeValidator.INVALID_CAST);
 
   public static final DiagnosticGroup STRICT_MODULE_DEP_CHECK =
-      DiagnosticGroups.registerGroup("strictModuleDepCheck",
+      DiagnosticGroups.registerGroup(
+          "strictModuleDepCheck",
           VarCheck.STRICT_MODULE_DEP_ERROR,
-          CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
+          CheckGlobalNames.STRICT_MODULE_DEP_QNAME,
+          ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR);
 
   public static final DiagnosticGroup VIOLATED_MODULE_DEP =
       DiagnosticGroups.registerGroup("violatedModuleDep",

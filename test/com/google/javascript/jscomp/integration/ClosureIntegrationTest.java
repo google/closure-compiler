@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.CHECK_TYPES;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -36,10 +37,12 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GenerateExports;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -1261,6 +1264,53 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
               "/** @type {ns.from.externs.Clazz} */",
               "var module$contents$ns$from$other_usingExterns = null;"),
         });
+  }
+
+  @Test
+  public void testCrossChunkDepCheck_inModule_withRequire() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    ImmutableList<JSModule> code =
+        ImmutableList.copyOf(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(CLOSURE_BOILERPLATE)
+                .addChunk("goog.module('goog.Foo'); /** @constructor */ exports = function() {};")
+                .addChunk(
+                    "goog.module('goog.Bar'); const Foo = goog.require('goog.Foo'); new Foo();")
+                .setFilenameFormat(inputFileNamePrefix + "%s" + inputFileNameSuffix)
+                .build());
+
+    Compiler compiler = compile(options, code);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    // TODO(b/188237981): this should have a 'strict dep check' error.
+    // the provide case below works, though.
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  @Test
+  public void testCrossChunkDepCheck_forProvide_withRequire() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    ImmutableList<JSModule> code =
+        ImmutableList.copyOf(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(CLOSURE_BOILERPLATE)
+                .addChunk("goog.provide('goog.Foo');/** @constructor */ goog.Foo = function() {};")
+                .addChunk("goog.require('goog.Foo'); new goog.Foo();")
+                .setFilenameFormat(inputFileNamePrefix + "%s" + inputFileNameSuffix)
+                .build());
+
+    Compiler compiler = compile(options, code);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).hasSize(1);
+
+    assertWithMessage("Unexpected error " + compiler.getWarnings().get(0))
+        .that(DiagnosticGroups.STRICT_MODULE_DEP_CHECK.matches(compiler.getWarnings().get(0)))
+        .isTrue();
   }
 
   @Test
