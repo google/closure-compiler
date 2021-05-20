@@ -33,11 +33,6 @@ var gadgets = {};
 gadgets.window = {};
 
 /**
- * @param {number=} opt_height The new height for the gadget.
- */
-gadgets.window.adjustHeight = function(opt_height) {};
-
-/**
  * @return {Object} Dimensions for the viewport.
  */
 gadgets.window.getViewportDimensions = function() {};
