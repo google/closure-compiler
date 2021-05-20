@@ -70,12 +70,9 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class IntegrationTest extends IntegrationTestCase {
-  private static final String CLOSURE_BOILERPLATE =
-      "/** @define {boolean} */ var COMPILED = false; var goog = {};"
-          + "goog.exportSymbol = function() {};";
+  private static final String CLOSURE_BOILERPLATE = "";
 
-  private static final String CLOSURE_COMPILED =
-      "var COMPILED = true; var goog$exportSymbol = function() {};";
+  private static final String CLOSURE_COMPILED = "";
 
   @Test
   public void testNewDotTargetTranspilation() {
@@ -339,8 +336,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     test(
         options,
-        CLOSURE_BOILERPLATE + "/** @export */ goog.CONSTANT = 1;" + "var x = goog.CONSTANT;",
-        "(function() {})('goog.CONSTANT', 1);");
+        "const o = {}; /** @export */ o.CONSTANT = 1;" + "var x = o.CONSTANT;",
+        "goog.exportSymbol('o.CONSTANT', 1);");
   }
 
   // http://b/31448683
@@ -449,13 +446,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;"
-            + "var goog = {}; goog.exportSymbol('b', goog);",
-        "var a = true; var c = {}; c.exportSymbol('b', c);");
+            + "const ns = {};"
+            + "goog.exportSymbol('b', ns);",
+        "var a = true; var c = {}; goog.exportSymbol('b', c);");
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;"
-            + "var goog = {}; goog.exportSymbol('a', goog);",
-        "var b = true; var c = {}; c.exportSymbol('a', c);");
+            + "const ns = {};"
+            + "goog.exportSymbol('a', ns);",
+        "var b = true; var c = {}; goog.exportSymbol('a', c);");
   }
 
   @Test
@@ -509,12 +508,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.exportTestFunctions = true;
     test(
         options,
-        "/** @const */ var goog = {}; function testFoo() {}",
-        lines(
-            "/** @const */",
-            "var goog = {};", //
-            "/** @export */ function testFoo() {}",
-            "goog.exportSymbol('testFoo', testFoo);"));
+        "function testFoo() {}",
+        lines("/** @export */ function testFoo() {}", "goog.exportSymbol('testFoo', testFoo);"));
   }
 
   @Test
@@ -524,23 +519,29 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setGeneratePseudoNames(true);
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(
-        options,
-        new String[] {
-          lines(
-              "var goog = {};",
-              "goog.provide('goog.testing.testSuite');",
-              "goog.testing.testSuite = function(a) {};"),
-          lines(
-              "goog.module('testing');",
-              "var testSuite = goog.require('goog.testing.testSuite');",
-              "testSuite({testMethod:function(){}});")
-        },
-        new String[] {
-          "var $goog$testing$testSuite$$ = function($a$$) {};",
-          "$goog$testing$testSuite$$({'testMethod':function(){}})"
-        });
+
+    Compiler compiler =
+        compile(
+            options,
+            new String[] {
+              lines(
+                  "goog.provide('goog.testing.testSuite');",
+                  "goog.testing.testSuite = function(a) {};"),
+              lines(
+                  "goog.module('testing');",
+                  "var testSuite = goog.require('goog.testing.testSuite');",
+                  "testSuite({testMethod:function(){}});")
+            });
+
+    // Compare the exact expected source instead of the parsed AST because the free call
+    // (0, [...])() doesn't parse as expected.
+    assertThat(compiler.toSource())
+        .isEqualTo(
+            "" //
+                + "goog.$testing$={};"
+                + "goog.$testing$.$testSuite$=function($a$$){};"
+                + "var $module$exports$testing$$={};"
+                + "(0,goog.$testing$.$testSuite$)({\"testMethod\":function(){}});");
   }
 
   @Test
@@ -653,8 +654,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-        "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
+        "/** @define {boolean} */ var COMPILED = false; goog.provide('Foo'); /** @enum */ Foo ="
+            + " {a: 3};",
+        "var COMPILED=true;var Foo={a:3}");
     assertThat(lastCompiler.getErrorManager().getTypedPercent()).isEqualTo(0.0);
 
     // This does not generate a warning.
@@ -706,7 +708,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  function Foo() { this.b = 3; }",
             "  function Bar() {}",
             "  Foo.prototype.a = function(a, b) {};",
-            "  goog.c(Bar, Foo);",
+            "  goog.inherits(Bar, Foo);",
             "  var o = new Bar();",
             "  o.a(o.a, o.b);",
             "}"));
@@ -908,21 +910,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void ambiguatePropertiesWithEs5Mixins() {
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(
-        SourceFile.fromCode(
-            "extraExterns",
-            lines(
-                "", //
-                "var goog;",
-                "/**",
-                " * @param {!Function} childCtor",
-                " * @param {!Function} parentCtor",
-                " */",
-                "goog.inherits = function(childCtor, parentCtor) {};",
-                "")));
-    externs = externsList.build();
 
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
@@ -1048,9 +1035,9 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testRemoveClosureAsserts() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    testSame(options, "var goog = {};" + "goog.asserts.assert(goog);");
+    testSame(options, "goog.asserts.assert(goog);");
     options.setRemoveClosureAsserts(true);
-    test(options, "var goog = {};" + "goog.asserts.assert(goog);", "var goog = {};");
+    test(options, "goog.asserts.assert(goog);", "");
   }
 
   @Test
@@ -1232,8 +1219,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         code,
-        "function Foo(){} Foo.prototype.JSC$40_bar = 3;"
-            + "function Baz(){} Baz.prototype.JSC$42_bar = 3;");
+        "function Foo(){} Foo.prototype.JSC$42_bar = 3;"
+            + "function Baz(){} Baz.prototype.JSC$44_bar = 3;");
   }
 
   // When closure-code-removal runs before disambiguate-properties, make sure
@@ -1249,7 +1236,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         lines(
-            "/** @const */ var goog = {};",
             "goog.abstractMethod = function() {};",
             "/** @interface */ function I() {}",
             "I.prototype.a = function(x) {};",
@@ -1258,7 +1244,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @constructor @extends Foo */ function Bar() {}",
             "/** @override */ Bar.prototype.a = function(x) {};"),
         lines(
-            "var goog={};",
             "goog.abstractMethod = function() {};",
             "function I(){}",
             "I.prototype.a=function(x){};",
@@ -1581,13 +1566,13 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$40_foo = function() { "
+            + "A.prototype.JSC$42_foo = function() { "
             + "  window.console.log('A'); "
             + "}; "
             + "function B() {} "
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$40_foo(); "
+            + "  a.JSC$42_foo(); "
             + "  window['b'] = new B; "
             + "}";
 
@@ -1647,21 +1632,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     // type ambiguity in function notCalled is unreachable.
     String expected =
         "function A() {} "
-            + "A.prototype.JSC$40_always = function() { "
+            + "A.prototype.JSC$42_always = function() { "
             + "  window.console.log('AA'); "
             + "}; "
-            + "A.prototype.JSC$40_sometimes = function(){ "
+            + "A.prototype.JSC$42_sometimes = function(){ "
             + "  window.console.log('SA'); "
             + "}; "
             + "function B() {} "
-            + "B.prototype.JSC$42_always=function(){ "
+            + "B.prototype.JSC$44_always=function(){ "
             + "  window.console.log('AB'); "
             + "};"
             + "window['main'] = function() { "
             + "  var a = window['a'] = new A; "
-            + "  a.JSC$40_always(); "
-            + "  a.JSC$40_sometimes(); "
-            + "  (window['b'] = new B).JSC$42_always(); "
+            + "  a.JSC$42_always(); "
+            + "  a.JSC$42_sometimes(); "
+            + "  (window['b'] = new B).JSC$44_always(); "
             + "}";
 
     test(options, code, expected);
@@ -1755,10 +1740,10 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var Arrays = function() {};",
             "Arrays.$create = function() { return {}; }",
             "/** @constructor */",
-            "function Foo() { this.JSC$40_myprop = 1; }",
+            "function Foo() { this.JSC$42_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$42_myprop = 2; }",
-            "var x = {}.JSC$40_myprop;"));
+            "function Bar() { this.JSC$44_myprop = 2; }",
+            "var x = {}.JSC$42_myprop;"));
   }
 
   @Test
@@ -1794,16 +1779,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$39_myprop = 1; }",
+            "function Foo() { this.JSC$41_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$41_myprop = 2; }",
+            "function Bar() { this.JSC$43_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$39_myprop;",
+            "  return 1 != getSomething().JSC$41_myprop;",
             "})()"));
   }
 
@@ -1846,16 +1831,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         lines(
             "/** @constructor */",
-            "function Foo() { this.JSC$39_myprop = 1; }",
+            "function Foo() { this.JSC$41_myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$41_myprop = 2; }",
+            "function Bar() { this.JSC$43_myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$39_myprop;",
+            "  return 1 != getSomething().JSC$41_myprop;",
             "})()"));
   }
 
@@ -1967,7 +1952,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String[] code =
         new String[] {
-          "var goog = {}; new goog.Foo();", "/** @constructor */ goog.Foo = function() {};",
+          "var o = {}; new o.Foo();", "/** @constructor */ o.Foo = function() {};",
         };
     testSame(options, code);
 
@@ -3306,32 +3291,25 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     test(
         options,
-        new String[] {
-          "/** @typeSummary */ /** @const */ var goog = {};",
-          lines(
-              "goog.provide('foo.baz');",
-              "",
-              "goog.scope(function() {",
-              "",
-              "var RESULT = 5;",
-              "/** @return {number} */",
-              "foo.baz = function() { return RESULT; }",
-              "",
-              "}); // goog.scope"),
-        },
-        new String[] {
-          lines(
-              "var $jscomp = $jscomp || {};",
-              "$jscomp.scope = {};",
-              "var foo = {};",
-              "/** @const */ $jscomp.scope.RESULT = 5;",
-              "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"),
-        });
+        lines(
+            "goog.provide('foo.baz');",
+            "",
+            "goog.scope(function() {",
+            "",
+            "var RESULT = 5;",
+            "/** @return {number} */",
+            "foo.baz = function() { return RESULT; }",
+            "",
+            "}); // goog.scope"),
+        lines(
+            "var $jscomp = $jscomp || {};",
+            "$jscomp.scope = {};",
+            "var foo = {};",
+            "/** @const */ $jscomp.scope.RESULT = 5;",
+            "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"));
   }
 
   @Test
@@ -4105,10 +4083,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String googDefine =
         lines(
-            "const goog = {};", //
-            "/** @define {number} */",
+            "/** @define {number} */", //
             "goog.FEATURESET_YEAR = 2012;\n");
-    String googDefineOutput = "const goog={};goog.FEATURESET_YEAR=2020;";
+    String googDefineOutput = "goog.FEATURESET_YEAR=2020;";
 
     // async generators and for await ... of are emitted untranspiled.
     test(
@@ -4153,10 +4130,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String googDefine =
         lines(
-            "const goog = {};", //
-            "/** @define {number} */",
+            "/** @define {number} */", //
             "goog.FEATURESET_YEAR = 2012;\n");
-    String googDefineOutput = "const goog={};goog.FEATURESET_YEAR=2021;";
+    String googDefineOutput = "goog.FEATURESET_YEAR=2021;";
 
     // bigints are emitted untranspiled.
     test(options, lines(googDefine, "const big = 42n;"), googDefineOutput + "const big = 42n;");
@@ -4191,7 +4167,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('my.Foo');", //
               "/** @private */",
@@ -4217,7 +4192,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('my.Foo');", //
               "class Foo {",

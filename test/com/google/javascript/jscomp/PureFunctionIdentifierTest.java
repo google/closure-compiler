@@ -134,7 +134,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
               " * @see {foo}",
               " */",
               "externObj4.prototype.propWithStubAfterWithJSDoc;",
-              "var goog = {};",
               "goog.reflect = {};",
               "goog.reflect.cache = function(a, b, c, opt_d) {};",
               "/** @nosideeffects */",
@@ -1509,43 +1508,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "a.foo = f;",
             "a.foo();");
     assertPureCallsMarked(sourceOverride, ImmutableList.of("A"));
-  }
-
-  @Test
-  public void testInheritance1() {
-    String source =
-        CompilerTypeTestCase.CLOSURE_DEFS
-            + lines(
-                "/**@constructor*/function I(){}",
-                "I.prototype.foo = function(){};",
-                "I.prototype.bar = function(){this.foo()};",
-                "/**@constructor@extends {I}*/function A(){};",
-                "goog.inherits(A, I);",
-                "/** @override */A.prototype.foo = function(){var data=24};",
-                "var i = new I();i.foo();i.bar();",
-                "var a = new A();a.foo();a.bar();");
-
-    assertPureCallsMarked(
-        source,
-        ImmutableList.of(
-            "this.foo", "goog.inherits", "I", "i.foo", "i.bar", "A", "a.foo", "a.bar"));
-  }
-
-  @Test
-  public void testInheritance2() {
-    String source =
-        CompilerTypeTestCase.CLOSURE_DEFS
-            + lines(
-                "/**@constructor*/function I(){}",
-                "I.prototype.foo = function(){};",
-                "I.prototype.bar = function(){this.foo()};",
-                "/**@constructor@extends {I}*/function A(){};",
-                "goog.inherits(A, I);",
-                "/** @override */A.prototype.foo = function(){this.data=24};",
-                "var i = new I();i.foo();i.bar();",
-                "var a = new A();a.foo();a.bar();");
-
-    assertPureCallsMarked(source, ImmutableList.of("goog.inherits", "I", "A"));
   }
 
   @Test

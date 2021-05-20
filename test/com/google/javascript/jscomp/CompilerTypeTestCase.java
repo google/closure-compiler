@@ -49,7 +49,6 @@ abstract class CompilerTypeTestCase {
 
   static final String CLOSURE_DEFS =
       LINE_JOINER.join(
-          "/** @const */ var goog = {};",
           "goog.inherits = function(x, y) {};",
           "/** @type {!Function} */ goog.abstractMethod = function() {};",
           "goog.isFunction = function(x) {};",
@@ -70,13 +69,8 @@ abstract class CompilerTypeTestCase {
           // return empty array to satisfy return type
           "goog.array.filter = function(arr, f, obj){ return []; };",
           "goog.asserts = {};",
-          "/** @return {*} */ goog.asserts.assert = function(x) { return x; };",
-          "goog.provide = function(ns) {};",
-          "goog.module = function(ns) {};",
-          "/** @return {?} */",
-          "goog.module.get = function(ns) {};",
-          "/** @return {?} */",
-          "goog.require = function(ns) {};",
+          "/** @return {*} */ goog.asserts.assert = function(obj, msg = undefined) { return obj;"
+              + " };",
           "goog.loadModule = function(mod) {};");
 
   /**

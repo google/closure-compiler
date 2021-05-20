@@ -1443,7 +1443,12 @@ public final class CompilerTest {
         ImmutableList.of(
             SourceFile.fromCode(
                 "/index.js",
-                "goog.provide('foobar'); const foo = require('./foo.js').default; foo('hello');"),
+                lines(
+                    "var goog = {};",
+                    "goog.provide = function(ns) {};", // stub, compiled out.
+                    "goog.provide('foobar');",
+                    "const foo = require('./foo.js').default;",
+                    "foo('hello');")),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints =

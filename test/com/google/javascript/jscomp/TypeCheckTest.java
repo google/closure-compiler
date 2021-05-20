@@ -1077,8 +1077,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeOfReduction11() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @param {Array|string} x\n@return {Array} */\n"
+        "/** @param {Array|string} x\n@return {Array} */\n"
             + "function f(x) {\n"
             + "return goog.isObject(x) ? x : [];\n"
             + "}",
@@ -1096,8 +1095,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeOfReduction13() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @enum {string} */ var E = {A: 'a', B: 'b'};\n"
+        "/** @enum {string} */ var E = {A: 'a', B: 'b'};\n"
             + "/** @param {E|Array} x\n@return {Array} */ "
             + "function f(x) { return goog.isObject(x) ? x : []; }",
         null);
@@ -1107,18 +1105,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeOfReduction15() {
     // Don't do type inference on GETELEMs.
     testClosureTypes(
-        CLOSURE_DEFS
-            + "function f(x) { "
-            + "  return typeof arguments[0] == 'string' ? arguments[0] : 0;"
-            + "}",
+        "function f(x) { " + "  return typeof arguments[0] == 'string' ? arguments[0] : 0;" + "}",
         null);
   }
 
   @Test
   public void testTypeOfReduction16() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @interface */ function I() {}\n"
+        "/** @interface */ function I() {}\n"
             + "/**\n"
             + " * @param {*} x\n"
             + " * @return {I}\n"
@@ -3191,7 +3185,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInnerFunction6NullishCoalesce() {
     testClosureTypes(
         lines(
-            CLOSURE_DEFS,
             "function f() {",
             " var x = null ?? function() {};",
             " function g() { if (goog.isFunction(x)) { x(1); } }",
@@ -3206,7 +3199,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInnerFunction7NullishCoalesce() {
     testClosureTypes(
         lines(
-            CLOSURE_DEFS,
             "function f() {",
             " /** @type {function()} */",
             " var x = null ?? function() {};",
@@ -3221,8 +3213,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testInnerFunction8() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "function f() {"
+        "function f() {"
             + " function x() {};\n"
             + " function g() { if (goog.isFunction(x)) { x(1); } }"
             + " g();"
@@ -3579,8 +3570,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testDuplicateStaticPropertyDecl4() {
     testClosureTypesMultipleWarnings(
-        "var goog = goog || {};"
-            + "/** @type {!Foo} */ goog.foo;"
+        "/** @type {!Foo} */ goog.foo;"
             + "/** @type {string} */ goog.foo = 'x';"
             + "/** @constructor */ function Foo() {}",
         ImmutableList.of(
@@ -4274,8 +4264,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testComparison15() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @constructor */ function F() {}"
+        "/** @constructor */ function F() {}"
             + "/**\n"
             + " * @param {number} x\n"
             + " * @constructor\n"
@@ -4393,7 +4382,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testEnum9() {
     testClosureTypesMultipleWarnings(
-        "var goog = {};" + "/** @enum */goog.a=8;",
+        "/** @enum */ goog.a=8;",
         ImmutableList.of(
             "assignment to property a of goog\n" + "found   : number\n" + "required: enum{goog.a}",
             "enum initializer must be an object literal or an enum"));
@@ -8356,8 +8345,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testClosure7() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string|null|undefined} */ var a = foo();"
+        "/** @type {string|null|undefined} */ var a = foo();"
             + "/** @type {number} */"
             + "var b = goog.asserts.assert(a);",
         "initializing variable\n" + "found   : string\n" + "required: number");
@@ -12347,7 +12335,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testGoogBind1() {
     testClosureTypes(
-        "var goog = {}; goog.bind = function(var_args) {};"
+        "goog.bind = function(var_args) {};"
             + "/** @type {function(number): boolean} */"
             + "function f(x, y) { return true; }"
             + "f(goog.bind(f, null, 'x')());",
@@ -12361,7 +12349,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // TODO(nicksantos): We do not currently type-check the arguments
     // of the goog.bind.
     testClosureTypes(
-        "var goog = {}; goog.bind = function(var_args) {};"
+        "goog.bind = function(var_args) {};"
             + "/** @type {function(boolean): boolean} */"
             + "function f(x, y) { return true; }"
             + "f(goog.bind(f, null, 'x')());",
@@ -12506,8 +12494,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCast13() {
     // In a typespace world, types and values may collide on the same symbol.
     testClosureTypes(
-        "var goog = {}; "
-            + "goog.forwardDeclare('goog.foo');"
+        "goog.forwardDeclare('goog.foo');"
             + "goog.foo = function() {};"
             + "function f() { return /** @type {goog.foo} */ (new Object()); }",
         null);
@@ -12518,8 +12505,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Test to make sure that the forward-declaration still prevents
     // some warnings.
     testClosureTypes(
-        "var goog = {}; "
-            + "goog.forwardDeclare('goog.bar');"
+        "goog.forwardDeclare('goog.bar');"
             + "function f() { return /** @type {goog.bar} */ (new Object()); }",
         null);
   }
@@ -13769,7 +13755,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInheritanceCheck14() {
     testClosureTypes(
         lines(
-            "var goog = {};",
             "/** @constructor\n @extends {goog.Missing} */",
             "goog.Super = function() {};",
             "/** @constructor\n @extends {goog.Super} */function Sub() {};",
@@ -15139,8 +15124,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeInferenceWithNoEntry2() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @param {number} x */ function f(x) {}"
+        "/** @param {number} x */ function f(x) {}"
             + "/** @param {!Object} x */ function g(x) {}"
             + "/** @constructor */ function Foo() {}"
             + "Foo.prototype.init = function() {"
@@ -16173,7 +16157,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testReflectObject1() {
     testClosureTypes(
-        "var goog = {}; goog.reflect = {}; "
+        "goog.reflect = {}; "
             + "goog.reflect.object = function(x, y){};"
             + "/** @constructor */ function A() {}"
             + "goog.reflect.object(A, {x: 3});",
@@ -16183,7 +16167,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testReflectObject2() {
     testClosureTypes(
-        "var goog = {}; goog.reflect = {}; "
+        "goog.reflect = {}; "
             + "goog.reflect.object = function(x, y){};"
             + "/** @param {string} x */ function f(x) {}"
             + "/** @constructor */ function A() {}"
@@ -17126,9 +17110,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTemplateTypeWithUnresolvedType() {
     testClosureTypes(
-        "var goog = {};\n"
-            + "goog.forwardDeclare = function(a){};\n"
-            + "goog.forwardDeclare('Color');\n"
+        "goog.forwardDeclare('Color');\n"
             + "/** @interface @template T */ function C() {}\n"
             + "/** @return {!Color} */ C.prototype.method;\n"
             + "/** @constructor @implements {C} */ function D() {}\n"
@@ -18064,8 +18046,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBackwardsInferenceGoogArrayFilter1() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {Array<string>} */"
+        "/** @type {Array<string>} */"
             + "var arr;\n"
             + "/** @type {!Array<number>} */"
             + "var result = goog.array.filter("
@@ -18077,8 +18058,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBackwardsInferenceGoogArrayFilter2() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {number} */"
+        "/** @type {number} */"
             + "var out;"
             + "/** @type {Array<string>} */"
             + "var arr;\n"
@@ -18091,8 +18071,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBackwardsInferenceGoogArrayFilter3() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string} */"
+        "/** @type {string} */"
             + "var out;"
             + "/** @type {Array<string>} */ var arr;\n"
             + "var result = goog.array.filter("
@@ -18105,7 +18084,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBackwardsInferenceGoogArrayFilter4() {
     testClosureTypes(
         lines(
-            CLOSURE_DEFS,
             "/** @type {string} */",
             "var out;",
             "/** @type {Array<string>} */ var arr;",
@@ -22389,12 +22367,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "goog.forwardDeclare('Foo');",
             "goog.forwardDeclare('Bar');",
-            "/** @const */",
-            "var goog = {};",
-            "goog.forwardDeclare = function(x) {};",
-            "/** @const */",
-            "goog.asserts = {};",
-            "goog.asserts.assert = function(x, y) {};",
+            "",
             "/** @interface */",
             "var Baz = function() {};",
             "/** @return {!Bar} */",
@@ -24698,12 +24671,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testEs6ExtendCannotUseGoogInherits() {
     testClosureTypes(
-        CLOSURE_DEFS
-            + lines(
-                "class Super {}", //
-                "/** @extends {Super} */",
-                "class Sub {}",
-                "goog.inherits(Sub, Super);"),
+        lines(
+            "class Super {}", //
+            "/** @extends {Super} */",
+            "class Sub {}",
+            "goog.inherits(Sub, Super);"),
         "Do not use goog.inherits with ES6 classes. Use the ES6 `extends` keyword to inherit"
             + " instead.");
   }
@@ -24861,13 +24833,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleId() {
     testTypesWithExtraExterns(
-        lines(
-            "/** @const @suppress {duplicate} */",
-            "var globalNs = {};",
-            "/** @const */",
-            "var goog = {};",
-            "goog.module = function(ns) {};",
-            "goog.module.declareLegacyNamespace = function() {};"),
+        lines("/** @const @suppress {duplicate} */", "var globalNs = {};"),
         lines(
             "goog.module('globalNs');", //
             "goog.module.declareLegacyNamespace();",
@@ -24881,13 +24847,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleIdWithProperties() {
     testTypesWithExtraExterns(
-        lines(
-            "/** @const @suppress {duplicate} */",
-            "var globalNs = {};",
-            "/** @const */",
-            "var goog = {};",
-            "goog.module = function(ns) {};",
-            "goog.module.declareLegacyNamespace = function() {};"),
+        lines("/** @const @suppress {duplicate} */", "var globalNs = {};"),
         lines(
             "goog.module('globalNs');", //
             "goog.module.declareLegacyNamespace();",
@@ -24905,11 +24865,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @const @suppress {duplicate} */",
             "var globalNs = {};",
             "/** @suppress {duplicate} */",
-            "globalNs.Ctor = class {};",
-            "/** @const */",
-            "var goog = {};",
-            "goog.module = function(ns) {};",
-            "goog.module.declareLegacyNamespace = function() {};"),
+            "globalNs.Ctor = class {};"),
         lines(
             "goog.module('globalNs.Ctor');",
             "goog.module.declareLegacyNamespace();",
@@ -24953,7 +24909,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   private void testClosureTypesMultipleWarnings(String js, List<String> descriptions) {
     compiler.initOptions(compiler.getOptions());
     Node jsRoot = IR.root(compiler.parseTestCode(js));
-    Node externs = IR.root(compiler.parseTestCode(new TestExternsBuilder().addString().build()));
+    Node externs =
+        IR.root(
+            compiler.parseTestCode(
+                new TestExternsBuilder()
+                    .addString()
+                    .addClosureExterns()
+                    .addExtra(CLOSURE_DEFS)
+                    .build()));
     IR.root(externs, jsRoot);
 
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
@@ -24962,8 +24925,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     // For processing goog.forwardDeclare for forward typedefs.
     new ProcessClosurePrimitives(compiler).process(externs, jsRoot);
-    new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
-        .process(externs, jsRoot);
 
     new TypeCheck(
             compiler,

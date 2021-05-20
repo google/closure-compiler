@@ -48,14 +48,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
 
-  private static final String CLOSURE_PRIMITIVES =
-      lines(
-          "/** @const */",
-          "var goog = {};",
-          "goog.module = function(ns) {};",
-          "/** @return {?} */",
-          "goog.require = function(ns) {};");
-
   public CheckAccessControlsEs6ClassTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
   }
@@ -970,8 +962,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                "/** @const */ var goog = {};",
-                "",
                 "goog.Foo = class {",
                 "  /** @protected */",
                 "  bar() {}",
@@ -1437,8 +1427,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                "/** @const */ var goog = {};",
-                "",
                 "goog.Foo = class {",
                 "  /** @protected */",
                 "  bar() {}",
@@ -2275,7 +2263,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     testError(
         srcs(
             ImmutableList.of(
-                SourceFile.fromCode("goog.js", CLOSURE_PRIMITIVES),
                 SourceFile.fromCode(
                     Compiler.joinPathParts("foo", "bar.js"),
                     lines(
@@ -2636,9 +2623,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                "/** @const */",
-                "var goog = {};",
-                "",
                 "/** @private */",
                 "goog.Foo = class {",
                 "  static create() { return new goog.Foo(); }",
@@ -2652,9 +2636,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                "/** @const */",
-                "var goog = {};",
-                "",
                 "goog.Foo = class {",
                 "  /** @private */",
                 "  constructor() {}",
@@ -2795,7 +2776,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
     disableRewriteClosureCode();
     testNoWarning(
         srcs(
-            "var goog = {}; goog.module = function(ns) {};",
             lines(
                 "goog.module('mod1');",
                 "class A {",

@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -578,7 +579,8 @@ public abstract class CompilerTestCase {
               " * @constructor",
               " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx",
               " */",
-              "function ActiveXObject(progId, opt_location) {}"));
+              "function ActiveXObject(progId, opt_location) {}"),
+          new TestExternsBuilder().addClosureExterns().build());
 
   /**
    * Constructs a test.

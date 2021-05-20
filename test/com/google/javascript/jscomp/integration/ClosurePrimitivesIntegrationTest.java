@@ -34,7 +34,6 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
 
   private static final String RENAME_FN_DEFINITION =
       lines(
-          "/** @const */ var goog = {};",
           "/** @const */ goog.reflect = {};",
           "/**",
           " * @param {string} propName",
@@ -75,7 +74,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         },
         new String[] {
           "",
-          "",
+          "goog.b = {};",
           lines(
               "function a() {}",
               "window.Foo = a;",
@@ -106,9 +105,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
         },
         new String[] {
           "",
-          lines(
-              "var goog= { reflect: {} };",
-              "goog.reflect.objectProperty = function(a,b) { return a; };"),
+          lines("goog.reflect = {};", "goog.reflect.objectProperty = function(a,b) { return a; };"),
           lines(
               "function Foo() {}",
               "window.Foo = Foo;",
@@ -130,7 +127,11 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
             "foo.log = function(input) { alert(input) };",
             "alert(goog.reflect.objectProperty('log', foo));",
             "foo.log('foobar');"),
-        lines("var b = { a: function(a) { alert(a); } };", "alert('a');", "b.a('foobar');"));
+        lines(
+            "goog.b = {};",
+            "var b = {a: function(a) {alert(a)}};",
+            "alert('a');",
+            "b.a('foobar');"));
   }
 
   @Test
@@ -145,7 +146,7 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
             "alert(goog.reflect.objectProperty('log', foo));",
             "foo.log('foobar');"),
         lines(
-            "var goog= { reflect: {} };",
+            "goog.reflect = {};",
             "goog.reflect.objectProperty = function(a,b) { return a; };",
             "var foo = {",
             "  log: function(a) { alert(a) }",

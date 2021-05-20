@@ -6835,7 +6835,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testTypeCheckingInsideGoogModule() {
     testTypesWithExterns(
-        CLOSURE_DEFS,
+        DEFAULT_EXTERNS + CLOSURE_DEFS,
         lines(
             "goog.module('mod.A');", //
             "const /** number */ n = 'a string';"),
@@ -6847,9 +6847,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGoogModuleGet_hasTypeInferredInNestedExpression() {
-    testTypes(
+    testTypesWithExterns(
+        DEFAULT_EXTERNS + CLOSURE_DEFS,
         lines(
-            CLOSURE_DEFS,
             "function takesString(/** string */ s) {}",
             "goog.loadModule(function(exports) {",
             "  goog.module('a');",
@@ -6868,9 +6868,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testJsdocCanReferToGoogModuleType_withoutNamedType() {
-    testTypes(
+    testTypesWithExterns(
+        DEFAULT_EXTERNS,
         lines(
-            CLOSURE_DEFS,
             "goog.loadModule(function(exports) {",
             "  goog.module('a');",
             "  exports.Foo = class {};",
@@ -6884,9 +6884,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testJsdocCanReferToFunctionDeclarationType_withoutNamedType() {
-    testTypes(
+    testTypesWithExterns(
+        DEFAULT_EXTERNS + CLOSURE_DEFS,
         lines(
-            CLOSURE_DEFS,
             // file1
             "goog.provide('a.Foo');",
             "/** @constructor */",

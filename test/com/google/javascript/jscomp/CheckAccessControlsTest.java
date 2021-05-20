@@ -49,14 +49,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class CheckAccessControlsTest extends CompilerTestCase {
 
-  private static final String CLOSURE_PRIMITIVES =
-      lines(
-          "/** @const */",
-          "var goog = {};",
-          "goog.module = function(ns) {};",
-          "/** @return {?} */",
-          "goog.require = function(ns) {};");
-
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
   }
@@ -146,8 +138,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testNoWarningInGlobalScope() {
-    testSame("var goog = {}; goog.makeSingleton = function(x) {};"
-        + "/** @deprecated */ function f() {} goog.makeSingleton(f);");
+    testSame(
+        "goog.makeSingleton = function(x) {};"
+            + "/** @deprecated */ function f() {} goog.makeSingleton(f);");
   }
 
   @Test
@@ -859,12 +852,13 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testProtectedAccessForProperties6() {
-    testSame(new String[] {
-        "/** @const */ var goog = {};"
-        + "/** @constructor */ goog.Foo = function() {};"
-        + "/** @protected */ goog.Foo.prototype.bar = function() {};",
-        "/** @constructor \n * @extends {goog.Foo} */"
-        + "goog.SubFoo = function() { this.bar(); };"});
+    testSame(
+        new String[] {
+          "/** @constructor */ goog.Foo = function() {};"
+              + "/** @protected */ goog.Foo.prototype.bar = function() {};",
+          "/** @constructor \n * @extends {goog.Foo} */"
+              + "goog.SubFoo = function() { this.bar(); };"
+        });
   }
 
   @Test
@@ -1230,8 +1224,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testNoProtectedAccessForProperties5() {
     testError(
         srcs(
-            "/** @const */ var goog = {};"
-                + "/** @constructor */ goog.Foo = function() {};"
+            "/** @constructor */ goog.Foo = function() {};"
                 + "/** @protected */ goog.Foo.prototype.bar = function() {};",
             "/** @constructor */" + "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"),
         BAD_PROTECTED_PROPERTY_ACCESS);
@@ -1361,7 +1354,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     disableRewriteClosureCode();
     testNoWarning(
         ImmutableList.of(
-            SourceFile.fromCode("goog.js", CLOSURE_PRIMITIVES),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1819,7 +1811,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     disableRewriteClosureCode();
     testNoWarning(
         ImmutableList.of(
-            SourceFile.fromCode("goog.js", CLOSURE_PRIMITIVES),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1878,7 +1869,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
-    test(
+    testNoWarning(
         ImmutableList.of(
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
@@ -1889,55 +1880,23 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                     "  * @package\n",
                     "  */\n",
                     "goog.provide('foo.bar');")),
-            SourceFile.fromCode("bar.js", "goog.require('foo')")),
-        ImmutableList.of(
-            SourceFile.fromCode("foo.js", "/** @const */ var foo={};"),
-            SourceFile.fromCode(
-                Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**\n",
-                    "  * @fileoverview\n",
-                    "  * @package\n",
-                    "  */\n",
-                    "/** @const */ foo.bar={};")),
-            SourceFile.fromCode("bar.js", "")));
+            SourceFile.fromCode("bar.js", "goog.require('foo')")));
   }
 
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace2() {
-    test(
+    testNoWarning(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "goog.provide('foo.bar');")),
+                lines("/**", " * @fileoverview", " * @package", " */", "goog.provide('foo.bar');")),
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
-            SourceFile.fromCode(
-                "bar.js",
-                lines(
-                    "goog.require('foo');",
-                    "var x = foo;"))),
-        ImmutableList.of(
-            SourceFile.fromCode(
-                Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @const */var foo={};",
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "/** @const */foo.bar={};")),
-            SourceFile.fromCode("foo.js", ""),
-            SourceFile.fromCode("bar.js", "var x=foo")));
+            SourceFile.fromCode("bar.js", lines("goog.require('foo');", "var x = foo;"))));
   }
 
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace3() {
-    test(
+    testNoWarning(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
@@ -1948,23 +1907,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                     " */",
                     "goog.provide('one.two');",
                     "one.two.three = function(){};")),
-            SourceFile.fromCode(
-                "baz.js",
-                lines(
-                    "goog.require('one.two');",
-                    "var x = one.two;"))),
-        ImmutableList.of(
-            SourceFile.fromCode(
-                Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "/** @const */ var one={};",
-                    "/**",
-                    " * @fileoverview",
-                    " * @package",
-                    " */",
-                    "/** @const */ one.two={};",
-                    "one.two.three=function(){};")),
-            SourceFile.fromCode("baz.js", "var x=one.two")));
+            SourceFile.fromCode("baz.js", lines("goog.require('one.two');", "var x = one.two;"))));
   }
 
   @Test
@@ -1974,15 +1917,13 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "goog.provide('one.two');\n"
-                + "one.two.three = function(){};"),
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "goog.provide('one.two');\n"
+                    + "one.two.three = function(){};"),
             SourceFile.fromCode(
-                "baz.js",
-                "goog.require('one.two');\n"
-                + "var x = one.two.three();")),
+                "baz.js", "goog.require('one.two');\n" + "var x = one.two.three();")),
         BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -2133,22 +2074,22 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testAccessOfStaticMethodOnPrivateQualifiedConstructor() {
-    testSame(new String[] {
-        "/** @const */ var goog = {};"
-        + "/** @constructor \n * @private */ goog.Foo = function() { }; "
-        + "goog.Foo.create = function() { return new goog.Foo(); };",
-        "goog.Foo.create()",
-    });
+    testSame(
+        new String[] {
+          "/** @constructor \n * @private */ goog.Foo = function() { }; "
+              + "goog.Foo.create = function() { return new goog.Foo(); };",
+          "goog.Foo.create()",
+        });
   }
 
   @Test
   public void testInstanceofOfPrivateConstructor() {
-    testSame(new String[] {
-        "/** @const */ var goog = {};"
-        + "/** @constructor \n * @private */ goog.Foo = function() { }; "
-        + "goog.Foo.create = function() { return new goog.Foo(); };",
-        "goog instanceof goog.Foo",
-    });
+    testSame(
+        new String[] {
+          "/** @constructor \n * @private */ goog.Foo = function() { }; "
+              + "goog.Foo.create = function() { return new goog.Foo(); };",
+          "goog instanceof goog.Foo",
+        });
   }
 
   @Test
@@ -2279,7 +2220,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     disableRewriteClosureCode();
     testNoWarning(
         srcs(
-            "var goog = {}; goog.module = function(ns) {};",
             lines(
                 "goog.module('mod1');",
                 "/** @constructor */",

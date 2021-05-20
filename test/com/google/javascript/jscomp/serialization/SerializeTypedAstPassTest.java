@@ -340,39 +340,17 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void uniquifiesTwoDifferentFunctionsWithSameJspath() {
+  public void uniquifiesTwoDifferentUnequalFunctionsWithSameName() {
     assertThat(
             compileToTypes(
                 lines(
                     "const ns = {};", //
-                    "ns.f = x => x;",
+                    "ns.f = (/** string */ x) => x;",
+                    "/** @suppress {checkTypes} */",
                     "ns.f = (/** number */ x) => x;")))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
         .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build(),
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build());
-  }
-
-  @Test
-  public void uniquifiesThreeDifferentFunctionsWithSameJspath() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "const ns = {};", //
-                    "ns.f = x => x;",
-                    "ns.f = (/** number */ x) => x;",
-                    "ns.f = (/** string */ x) => x;")))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build(),
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
                 .build(),

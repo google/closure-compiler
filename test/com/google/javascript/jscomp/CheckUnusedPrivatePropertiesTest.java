@@ -27,7 +27,6 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
-      "/** @const */ var goog = {};",
       "/** @const */ goog.reflect = {};",
       "goog.reflect.object;",
       "/** @constructor */",

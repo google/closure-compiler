@@ -55,7 +55,18 @@ public class TestExternsBuilder {
           "goog.setTestOnly = function() {};",
           "goog.scope = function(fn) {};",
           "goog.defineClass = function(superClass, clazz) {};",
-          "goog.declareModuleId = function(ns) {};");
+          "goog.declareModuleId = function(ns) {};",
+          "/**",
+          " * @param {string} name",
+          " * @param {T} defaultValue",
+          " * @return {T}",
+          " * @template T",
+          " */",
+          "goog.define = function(name, defaultValue) {};",
+          "goog.exportSymbol = function() {};",
+          "goog.inherits = function(childCtor, parentCtor) {",
+          "  childCtor.superClass_ = parentCtor.prototype;",
+          "};");
 
   private static final String BIGINT_EXTERNS =
       lines(

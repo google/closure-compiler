@@ -57,25 +57,13 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class ClosureIntegrationTest extends IntegrationTestCase {
-  private static final String CLOSURE_BOILERPLATE =
-      lines(
-          "/** @define {boolean} */ var COMPILED = false;",
-          "/** @const */",
-          "var goog = {};",
-          "/**",
-          " * @param {string} name",
-          " * @param {T} defaultValue",
-          " * @return {T}",
-          " * @template T",
-          " */",
-          "goog.define = function(name, defaultValue) {};",
-          "goog.exportSymbol = function() {};");
+  private static final String CLOSURE_BOILERPLATE_UNCOMPILED =
+      "/** @define {boolean} */ var COMPILED = false;";
 
-  private static final String CLOSURE_COMPILED =
-      lines(
-          "var COMPILED = true;",
-          "var goog$define = function(name,defaultValue){};",
-          "var goog$exportSymbol = function() {};");
+  private static final String CLOSURE_BOILERPLATE_COMPILED =
+      "/** @define {boolean} */ var COMPILED = true;";
+
+  private static final String CLOSURE_COLLAPSED = lines("var COMPILED = true;");
 
   @Test
   public void testProcessDefinesInModule() {
@@ -164,8 +152,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setClosurePass(true);
-    test(options, CLOSURE_BOILERPLATE + "goog.provide('FOO'); FOO.bar = 3;",
-        CLOSURE_COMPILED + "var FOO$bar = 3;");
+    test(
+        options,
+        CLOSURE_BOILERPLATE_UNCOMPILED + "goog.provide('FOO'); FOO.bar = 3;",
+        CLOSURE_COLLAPSED + "var FOO$bar = 3;");
   }
 
   @Test
@@ -176,10 +166,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         lines(
-            CLOSURE_BOILERPLATE, //
+            CLOSURE_BOILERPLATE_UNCOMPILED, //
             "goog.provide('FOO.BAR');",
             "FOO.BAR = 3;"),
-        lines(CLOSURE_COMPILED, "var FOO$BAR = 3;"));
+        lines(CLOSURE_COLLAPSED, "var FOO$BAR = 3;"));
   }
 
   /**
@@ -190,7 +180,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testBug22684459_invalidConstFromParamCompatibleWithPropertyCollapsing() {
     String source =
         lines(
-            "var goog = {};",
             "goog.string = {};",
             "goog.string.Const = {};",
             "goog.string.Const.from = function(x) {};",
@@ -227,12 +216,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        "var goog = {};"
-            + "function F() {}"
+        "function F() {}"
             + "/** @export */ function G() { G.base(this, 'constructor'); } "
             + "goog.inherits(G, F);",
-        "var goog = {};"
-            + "function F() {}"
+        "function F() {}"
             + "function G() { F.call(this); } "
             + "goog.inherits(G, F); goog.exportSymbol('G', G);");
   }
@@ -246,8 +233,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "var goog = {};"
-            + "goog.inherits = function(a,b) {};"
+        "goog.inherits = function(a,b) {};"
             + "goog.defineClass = function(a,b) {};"
             + "/** @template T */\n"
             + "var ClassA = goog.defineClass(null, {\n"
@@ -275,8 +261,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     DiagnosticGroup[] warnings = {
       DiagnosticGroups.INVALID_DEFINES,
       DiagnosticGroups.INVALID_DEFINES,
@@ -284,14 +268,14 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     };
     String[] input = {
       lines(
-          "var goog = {};", //
+          CLOSURE_BOILERPLATE_UNCOMPILED,
           "goog.provide('foo.bar');",
           "/** @define {foo.bar} */ foo.bar = {};"),
     };
     String[] output = {
       "",
       lines(
-          "var goog = {};", //
+          CLOSURE_BOILERPLATE_UNCOMPILED,
           "var foo = {};",
           "/** @define {foo.bar} */ foo.bar = {};"),
     };
@@ -306,7 +290,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testBug22684459_aliased() {
     String source =
         ""
-            + "var goog = {};"
             + "goog.string = {};"
             + "goog.string.Const = {};"
             + "goog.string.Const.from = function(x) {};"
@@ -481,10 +464,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     compile(
         options,
         new String[] {
-          lines(
-              "var goog = {};",
-              "goog.forwardDeclare = function(/** string */ t) {};",
-              "goog.module = function(/** string */ t) {};"),
           "goog.module('fwd.declared.Type'); exports = class {}",
           lines(
               "goog.module('a.b.c');",
@@ -505,8 +484,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         lines(
-            "const goog = {};",
-            "goog.forwardDeclare = function(/** string */ typeName) {};",
             "goog.forwardDeclare('fwd.declared.Type');",
             "",
             "/** @type {!fwd.declared.Type<string>} */",
@@ -514,7 +491,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "",
             "/** @type {!fwd.declared.Type<string, number>} */",
             "let y;"),
-        "var goog={};goog.forwardDeclare=function(typeName){};var x;var y");
+        "var x;var y");
   }
 
   @GwtIncompatible // b/63595345
@@ -522,11 +499,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testClosurePassOff() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(false);
-    testSame(options, "var goog = {}; goog.require = function(x) {}; goog.require('foo');");
-    testSame(
-        options,
-        "var goog = {}; goog.getCssName = function(x) {};" +
-        "goog.getCssName('foo');");
+    testSame(options, "goog.require('foo');");
+    testSame(options, "goog.getCssName = function(x) {};" + "goog.getCssName('foo');");
   }
 
   @GwtIncompatible // b/63595345
@@ -534,18 +508,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testClosurePassOn() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
+    test(options, "goog.require('foo');", DiagnosticGroups.MISSING_SOURCES_WARNINGS);
     test(
         options,
-        "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
-        DiagnosticGroups.MISSING_SOURCES_WARNINGS);
-    test(
-        options,
-        "/** @define {boolean} */ var COMPILED = false;" +
-        "var goog = {}; goog.getCssName = function(x) {};" +
-        "goog.getCssName('foo');",
-        "var COMPILED = true;" +
-        "var goog = {}; goog.getCssName = function(x) {};" +
-        "'foo';");
+        "goog.getCssName = function(x) {};" + "goog.getCssName('foo');",
+        "goog.getCssName = function(x) {};" + "'foo';");
   }
 
   @Test
@@ -586,13 +553,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testTypedefProvides() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     test(
         options,
         lines(
-            "/** @const */",
-            "var goog = {};",
+            CLOSURE_BOILERPLATE_UNCOMPILED,
             "goog.provide('ns');",
             "goog.provide('ns.SomeType');",
             "goog.provide('ns.SomeType.EnumValue');",
@@ -613,7 +577,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testGoogDefine1() {
     String code =
-        CLOSURE_BOILERPLATE + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', true);";
+        CLOSURE_BOILERPLATE_UNCOMPILED
+            + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', true);";
 
     CompilerOptions options = createCompilerOptions();
 
@@ -621,13 +586,14 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setDefineToBooleanLiteral("FLAG_XYZ", false);
 
-    test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
+    test(options, code, CLOSURE_COLLAPSED + " var FLAG = false;");
   }
 
   @Test
   public void testGoogDefine_typeMismatch() {
     String code =
-        CLOSURE_BOILERPLATE + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', 0);";
+        CLOSURE_BOILERPLATE_UNCOMPILED
+            + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', 0);";
 
     CompilerOptions options = createCompilerOptions();
 
@@ -640,7 +606,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testGoogDefine_missingDefineAnnotationErrors_checksOnly() {
-    String code = CLOSURE_BOILERPLATE + "var FLAG = goog.define('FLAG_XYZ', false);";
+    String code = CLOSURE_BOILERPLATE_UNCOMPILED + "var FLAG = goog.define('FLAG_XYZ', false);";
 
     CompilerOptions options = createCompilerOptions();
 
@@ -655,7 +621,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testGoogDefine2() {
     String code =
-        CLOSURE_BOILERPLATE
+        CLOSURE_BOILERPLATE_UNCOMPILED
             + "goog.provide('ns');"
             + "/** @define {boolean} */ ns.FLAG = goog.define('ns.FLAG_XYZ', true);";
 
@@ -664,7 +630,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setDefineToBooleanLiteral("ns.FLAG_XYZ", false);
-    test(options, code, CLOSURE_COMPILED + "var ns$FLAG = false;");
+    test(options, code, CLOSURE_COLLAPSED + "var ns$FLAG = false;");
   }
 
 
@@ -707,32 +673,19 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     options.setClosurePass(true);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     test(
         options,
         lines(
-            CLOSURE_BOILERPLATE,
+            CLOSURE_BOILERPLATE_UNCOMPILED,
             "goog.provide('Foo');",
             "/** @constructor */ Foo = function() {};",
             "var x = new Foo();"),
-        lines(
-            "var COMPILED=true;",
-            "var goog = {};",
-            "goog.define = function(name,defaultValue) {};",
-            "goog.exportSymbol=function() {};",
-            "var Foo = function() {};",
-            "var x = new Foo;"));
+        lines(CLOSURE_BOILERPLATE_COMPILED, "var Foo = function() {};", "var x = new Foo;"));
     test(
         options,
-        CLOSURE_BOILERPLATE + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
-        lines(
-            "var COMPILED=true;",
-            "var goog = {};",
-            "goog.define = function(name,defaultValue) {};",
-            "goog.exportSymbol=function() {};",
-            "var Foo={a:3}"));
+        CLOSURE_BOILERPLATE_UNCOMPILED + "goog.provide('Foo'); /** @enum */ Foo = {a: 3};",
+        lines(CLOSURE_BOILERPLATE_COMPILED, "var Foo={a:3}"));
   }
 
   @Test
@@ -741,13 +694,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     test(
         options,
-        lines("var goog = {};", "goog.provide('foo');", "function f() { foo = {};}"),
-        lines("var foo = {};", "function f() { foo = {}; }"),
-        DiagnosticGroups.CONST);
+        lines("goog.provide('foo');", "function f() { foo = {};}"),
+        lines("var foo = {};", "function f() { foo = {}; }"));
   }
 
   @Test
@@ -758,12 +708,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "var goog = {}; "
-        + "goog.provide('foo.bar'); goog.provide('foo.bar.baz'); "
-        + "/** @constructor */ foo.bar = function() {};"
-        + "/** @constructor */ foo.bar.baz = function() {};",
-        "var foo$bar = function(){};"
-        + "var foo$bar$baz = function(){};");
+        "goog.provide('foo.bar'); goog.provide('foo.bar.baz'); "
+            + "/** @constructor */ foo.bar = function() {};"
+            + "/** @constructor */ foo.bar.baz = function() {};",
+        "var foo$bar = function(){};" + "var foo$bar$baz = function(){};");
   }
 
   @Test
@@ -774,8 +722,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "var goog = {}; goog.provide('foo.Bar'); "
-        + "var foo = {}; foo.Bar = {};",
+        "goog.provide('foo.Bar'); " + "var foo = {}; foo.Bar = {};",
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
@@ -787,8 +734,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        "var goog = {}; goog.provide('foo.Bar'); "
-        + "foo = {}; foo.Bar = {};",
+        "goog.provide('foo.Bar'); " + "foo = {}; foo.Bar = {};",
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
@@ -898,9 +844,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         options,
         new String[] {
           lines(
-              "var goog = {};", //
-              "goog.exportSymbol = function(path, symbol) {};"),
-          lines(
               "goog.module('foo.example.ClassName');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -910,9 +853,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
               "exports = ClassName;"),
         },
         new String[] {
-          lines(
-              "var goog = {};", //
-              "goog.exportSymbol = function(path, symbol) {};"),
           lines(
               "var foo = {};",
               "foo.example = {};",
@@ -934,9 +874,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         options,
         new String[] {
           lines(
-              "var goog = {};", //
-              "goog.exportSymbol = function(path, symbol) {};"),
-          lines(
               "goog.module('foo.ns');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -946,9 +883,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
               "exports.ExportedName = ClassName;"),
         },
         new String[] {
-          lines(
-              "var goog = {};", //
-              "goog.exportSymbol = function(path, symbol) {};"),
           lines(
               "var foo = {};",
               "foo.ns = {};",
@@ -1115,8 +1049,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     // This is a very weird pattern, but we need to remove the usages before we remove support
     test(
@@ -1124,9 +1056,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         new String[] {
           lines(
               "/** @externs */",
+              CLOSURE_BOILERPLATE_UNCOMPILED,
               "goog.provide('ext.Bar');",
-              "/** @const */",
-              "var goog = {};",
               "/** @constructor */ ext.Bar = function() {};",
               ""),
           lines(
@@ -1274,7 +1205,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     ImmutableList<JSChunk> code =
         ImmutableList.copyOf(
             JSChunkGraphBuilder.forStar()
-                .addChunk(CLOSURE_BOILERPLATE)
+                .addChunk("// base")
                 .addChunk("goog.module('goog.Foo'); /** @constructor */ exports = function() {};")
                 .addChunk(
                     "goog.module('goog.Bar'); const Foo = goog.require('goog.Foo'); new Foo();")
@@ -1299,7 +1230,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     ImmutableList<JSChunk> code =
         ImmutableList.copyOf(
             JSChunkGraphBuilder.forStar()
-                .addChunk(CLOSURE_BOILERPLATE)
+                .addChunk("// base")
                 .addChunk("goog.provide('goog.Foo');/** @constructor */ goog.Foo = function() {};")
                 .addChunk("goog.require('goog.Foo'); new goog.Foo();")
                 .setFilenameFormat(inputFileNamePrefix + "%s" + inputFileNameSuffix)
@@ -1326,13 +1257,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testGoogForwardDeclareInExterns_doesNotBlockGoogRenaming() {
+  public void testGoogForwardDeclareInExterns_doesNotBlockVariableRenaming() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     externs =
         ImmutableList.<SourceFile>builder()
@@ -1340,13 +1269,13 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             .add(SourceFile.fromCode("abc.js", "goog.forwardDeclare('a.b.c');"))
             .build();
 
-    test(
+    compile(
         options,
         lines(
             "/** @type {!a.b.c} */ var x;", //
-            "/** @const */",
-            "var goog = {};"),
-        "var a; var b = {};");
+            CLOSURE_BOILERPLATE_UNCOMPILED));
+
+    assertThat(lastCompiler.toSource()).startsWith("var a;");
   }
 
   @Test
@@ -1449,6 +1378,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setGenerateExports(true);
     options.setContinueAfterErrors(true); // test that the AST is not left in an invalid state.
+    externs = ImmutableList.of(); // remove Closure base externs
 
     test(
         options,

@@ -60,6 +60,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             .addFunction()
             .addConsole()
             .addAlert()
+            .addClosureExterns()
             .build());
   }
 
@@ -504,10 +505,10 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   public void testClassExpressionInAssignment() {
     test(
         lines(
-            "/** @const */ var goog = {/** @const */ example: {}};", //
+            "/** @const */ goog.example = {};", //
             "goog.example.C = class { }"),
         lines(
-            "/** @const */ var goog = {/** @const */ example: {}};",
+            "/** @const */ goog.example = {};", //
             "/** @constructor */ goog.example.C = function() {}"));
   }
 
@@ -515,10 +516,10 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   public void testClassExpressionInAssignmentWithMethod() {
     test(
         lines(
-            "/** @const */ var goog = {/** @const */ example: {}};",
+            "/** @const */ goog.example = {};", //
             "goog.example.C = class { foo() {} }"),
         lines(
-            "/** @const */ var goog = {/** @const */ example: {}};",
+            "/** @const */ goog.example = {};", //
             "/** @constructor */ goog.example.C = function() {}",
             "goog.example.C.prototype.foo = function() {};"));
   }

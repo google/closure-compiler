@@ -34,7 +34,6 @@ import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
-import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -88,8 +87,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
 
     test(
@@ -297,28 +294,21 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
 
-    String[] srcs =
-        new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
-          lines(
-              "Polymer({", //
-              "  is: 'x',",
-              "});",
-              "export {}"),
-        };
+    String srcs =
+        lines(
+            "Polymer({", //
+            "  is: 'x',",
+            "});",
+            "export {}");
 
-    String[] compiledOut =
-        new String[] {
-          lines(
-              "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
-              "var XElement = function() {};",
-              new TestExternsBuilder().addClosureExterns().build()),
-          lines(
-              "Polymer(/** @lends {X.prototype} */ {", //
-              "  is: 'x',",
-              "});",
-              "var module$i1={}"),
-        };
+    String compiledOut =
+        lines(
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+            "var XElement = function() {};",
+            "Polymer(/** @lends {X.prototype} */ {", //
+            "  is: 'x',",
+            "});",
+            "var module$i0={}");
 
     test(options, srcs, compiledOut);
   }
@@ -344,8 +334,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
     addPolymerExterns();
 
     test(
@@ -380,7 +368,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('A');",
               "/** @polymerBehavior */",
@@ -432,7 +419,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('Data');",
               "class Item {",

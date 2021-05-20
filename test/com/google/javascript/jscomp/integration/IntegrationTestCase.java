@@ -59,6 +59,7 @@ abstract class IntegrationTestCase {
               .addPromise()
               .addArray()
               .addAlert()
+              .addClosureExterns()
               .addExtra(
                   lines(
                       "/**",

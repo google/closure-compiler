@@ -2814,7 +2814,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
             DEFAULT_EXTERNS,
             "/** @constructor */ function Document() {}",
             "/** @const {!Document} */ var document;",
-            "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
             "/** @constructor */ goog.dom.DomHelper = function() {};");
 
@@ -2884,7 +2883,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String externs =
         lines(
             DEFAULT_EXTERNS,
-            "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
             "/** @constructor */ goog.dom.DomHelper = function() {};");
 
@@ -2972,7 +2970,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String externs =
         lines(
             DEFAULT_EXTERNS,
-            "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
             "/** @constructor @template T */ goog.dom.TagName = function() {};",
             "/** @type {!goog.dom.TagName<!HTMLDivElement>} */",
@@ -3010,7 +3007,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String externs =
         lines(
             DEFAULT_EXTERNS,
-            "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
             "/** @constructor @template T */ goog.dom.TagName = function() {}",
             "/** @constructor */ function HTMLHeadingElement() {}\n");

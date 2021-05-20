@@ -1050,15 +1050,12 @@ public final class CommandLineRunnerTest {
         new String[] {
           lines(
               "/** @externs */", //
-              "var externVar;"),
-          lines(
-              "/** @const */", //
-              "var goog = {};",
-              "goog.provide('scotch');",
-              "var x = externVar;")
+              "var externVar;",
+              new TestExternsBuilder().addClosureExterns().build()),
+          lines("goog.provide('scotch');", "var x = externVar;")
         },
         new String[] {
-          "var goog = {}, scotch = {}, x = externVar;",
+          "var scotch = {}, x = externVar;",
         });
   }
 
@@ -1117,20 +1114,24 @@ public final class CommandLineRunnerTest {
     args.add("--warning_level=VERBOSE");
     test(
         new String[] {
-          "/** @const */ var goog = {};",
+          lines(
+              "/** @externs */", //
+              new TestExternsBuilder().addClosureExterns().build()),
           "goog.require('beer');",
           "goog.provide('beer'); /** @param {Scotch} x */ function f(x) {}",
           "goog.provide('Scotch'); var x = 3;"
         },
-        new String[] {"/** @const */ var goog = {};", "var beer = {}; function f(a) {}", ""});
+        new String[] {"var beer = {}; function f(a) {}", ""});
 
     test(
         new String[] {
-          "/** @const */ var goog = {};",
+          lines(
+              "/** @externs */", //
+              new TestExternsBuilder().addClosureExterns().build()),
           "goog.require('beer');",
           "goog.provide('beer'); /** @param {Scotch} x */ function f(x) {}"
         },
-        new String[] {"var goog = {};", "var beer = {}; function f(a) {}", ""},
+        new String[] {"var beer = {}; function f(a) {}", ""},
         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 

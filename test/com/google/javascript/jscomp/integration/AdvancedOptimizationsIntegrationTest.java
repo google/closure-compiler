@@ -497,35 +497,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
-  public void testTypedefProvides() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
-
-    test(
-        options,
-        lines(
-            "/** @const */",
-            "var goog = {};",
-            "goog.provide('ns');",
-            "goog.provide('ns.SomeType');",
-            "goog.provide('ns.SomeType.EnumValue');",
-            "goog.provide('ns.SomeType.defaultName');",
-            // subnamespace assignment happens before parent.
-            "/** @enum {number} */",
-            "ns.SomeType.EnumValue = { A: 1, B: 2 };",
-            // parent namespace isn't ever actually assigned.
-            // we're relying on goog.provide to provide it.
-            "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
-            "ns.SomeType;",
-            "/** @const {string} */",
-            "ns.SomeType.defaultName = 'foobarbaz';"),
-        // the provides should be rewritten, then collapsed, then removed by RemoveUnusedCode
-        "");
-  }
-
-  @Test
   public void testArrayValuesIsPolyfilledForEs2015Out() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -615,16 +586,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         lines(
-            "var goog = {};",
-            "goog.exportSymbol = function(path, symbol) {};",
             "",
             "/** @export */",
             "class C {",
             "  /** @export @return {string} */ static get exportedName() {}",
             "};",
             "alert(C.exportedName);"),
-        // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-        "class a {static get exportedName(){}} alert(a.exportedName)");
+        "class a {static get exportedName(){}} goog.exportSymbol('C', a); alert(a.exportedName)");
   }
 
   @Test
@@ -642,9 +610,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         lines(
             // hack replacement for compiler injected code
             "var $jscomp = { global: window };",
-            // hack replacement for closure library code
-            "var goog = {};",
-            "goog.exportSymbol = function(path, symbol) {};",
             "",
             "class C {",
             "  /** @export @param {number} x */ static set exportedName(x) {}",
@@ -820,11 +785,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testAddFunctionProperties4() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .buildExternsFile("externs.js")); // add Closure base.js as srcs
     String source =
         lines(
+            new TestExternsBuilder().addClosureExterns().build(),
             "/** @constructor */",
             "var Foo = function() {};",
-            "var goog = {};",
             "goog.addSingletonGetter = function(o) {",
             "  o.f = function() {",
             "    return o.i || (o.i = new o);",
@@ -911,8 +881,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         lines(
-            "var goog = {};",
-            "goog.inherits = function(x, y) {};",
             "var ns = {};",
             "/**",
             " * @constructor",
@@ -939,8 +907,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         lines(
-            "/** @const */",
-            "var goog = {};",
             "goog.scope(function () {",
             "  /** @constructor */ function F(x) { this.x = x; }",
             "  alert(new F(1));",
@@ -961,12 +927,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    // TODO(b/144593112): remove this flag.
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
 
     String code =
         lines(
-            "var goog; goog.provide('i.am.on.a.Horse');",
+            "goog.provide('i.am.on.a.Horse');",
             "i.am.on.a.Horse = function() {};",
             "i.am.on.a.Horse.prototype.x = function() {};",
             "i.am.on.a.Boat = function() {};",
@@ -1020,10 +984,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setCodingConvention(new ClosureCodingConvention());
+    externs = ImmutableList.of();
     test(
         options,
-        "/** @const */\n"
-            + "var goog = goog || {};\n"
+        new TestExternsBuilder().addClosureExterns().build()
             + "goog.addSingletonGetter = function(ctor) {\n"
             + "  ctor.getInstance = function() {\n"
             + "    return ctor.instance_ || (ctor.instance_ = new ctor());\n"
@@ -1067,7 +1031,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     String code =
         lines(
-            "var goog = {};",
             "var ns = {};",
             "ns.C = goog.defineClass(null, {",
             "  /** @constructor */",
@@ -1090,8 +1053,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     String code =
         lines(
-            "/** @const */",
-            "var goog = {};",
             "var C = goog.defineClass(null, {",
             "  /** @constructor */",
             "  constructor: function () {this.someProperty = 1}",
@@ -1114,8 +1075,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     String code =
         lines(
-            "/** @const */",
-            "var goog = {};",
             "var C = goog.defineClass(null, {",
             "  /** @constructor */",
             "  constructor: function () {",
@@ -1143,8 +1102,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     String code =
         lines(
-            "/** @const */",
-            "var goog = {};",
             "var C = goog.defineClass(null, {",
             "  /** @param {string} a */",
             "  constructor: function (a) {this.someProperty = 1}",
@@ -1379,13 +1336,18 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    // skip the default externs b/c they include Closure base.js,
+    // which we want in the srcs.
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addFunction()
+                .addExtra("var window;")
+                .buildExternsFile("externs.js"));
     test(
         options,
         lines(
-            "var goog = {}",
-            "goog.inherits = function(childCtor, parentCtor) {",
-            "  childCtor.superClass_ = parentCtor.prototype;",
-            "};",
+            new TestExternsBuilder().addClosureExterns().build(),
             "/** @constructor */",
             "var Foo = function() {}",
             "/**",
@@ -1986,17 +1948,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // test out-of-date.
     test(
         options,
-        new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
-          lines(
-              "goog.module('mod');",
-              "function alwaysNull() { return null; }",
-              // transpiled form of `const y = alwaysNull() ? 42;`
-              "var _a;",
-              "const y = (_a = alwaysNull()) !== null && _a !== void 0 ? _a : 42;",
-              "alert(y);")
-        },
-        new String[] {"", "alert(42);"});
+        lines(
+            "goog.module('mod');",
+            "function alwaysNull() { return null; }",
+            // transpiled form of `const y = alwaysNull() ? 42;`
+            "var _a;",
+            "const y = (_a = alwaysNull()) !== null && _a !== void 0 ? _a : 42;",
+            "alert(y);"),
+        "alert(42);");
   }
 
   @Test
@@ -2008,19 +1967,16 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // Ensure the compiler can optimize TS 3.8's transpilation of nullish coalescing.
     test(
         options,
-        new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
-          lines(
-              "goog.module('mod');",
-              "function alwaysNull() { return null; }",
-              "function getDefaultValue(maybeNull) {",
-              // transpiled form of `return maybeNull ?? 42;`
-              "  var _a;",
-              "  return (_a = maybeNull) !== null && _a !== void 0 ? _a : 42;",
-              "}",
-              "alert(getDefaultValue(alwaysNull()));")
-        },
-        new String[] {"", "alert(42);"});
+        lines(
+            "goog.module('mod');",
+            "function alwaysNull() { return null; }",
+            "function getDefaultValue(maybeNull) {",
+            // transpiled form of `return maybeNull ?? 42;`
+            "  var _a;",
+            "  return (_a = maybeNull) !== null && _a !== void 0 ? _a : 42;",
+            "}",
+            "alert(getDefaultValue(alwaysNull()));"),
+        "alert(42);");
   }
 
   @Test

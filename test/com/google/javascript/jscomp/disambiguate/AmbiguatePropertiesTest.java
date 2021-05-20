@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -949,6 +950,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
     String js =
         lines(
+            new TestExternsBuilder().addClosureExterns().build(),
             "goog.forwardDeclare('goog.Foo');",
             "/** @constructor */ ",
             "function A() {",
@@ -956,13 +958,15 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "}",
             "/** @param {goog.Foo} x */",
             "function f(x) { x.y = 4; }");
-    String result = lines(
-        "/** @constructor */ ",
-        "function A() {",
-        "  this.a = 3;",
-        "}",
-        "/** @param {goog.Foo} x */",
-        "function f(x) { x.y = 4; }");
+    String result =
+        lines(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "/** @constructor */ ",
+            "function A() {",
+            "  this.a = 3;",
+            "}",
+            "/** @param {goog.Foo} x */",
+            "function f(x) { x.y = 4; }");
     test(js, result);
   }
 
