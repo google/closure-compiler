@@ -129,18 +129,14 @@ final class SerializeTypesToPointers {
   }
 
   private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
-    final String found;
-    final String required;
     final String location;
-    final String foundUuid;
-    final String requiredUuid;
+    final String foundColorId;
+    final String requiredColorId;
 
-    TypeMismatchJson(TypeMismatch x, ColorId foundUuid, ColorId requiredUuid) {
-      this.found = x.getFound().toString();
-      this.required = x.getRequired().toString();
+    TypeMismatchJson(TypeMismatch x, ColorId found, ColorId required) {
       this.location = x.getLocation().getLocation();
-      this.foundUuid = foundUuid.toString();
-      this.requiredUuid = requiredUuid.toString();
+      this.foundColorId = found.toString();
+      this.requiredColorId = required.toString();
     }
 
     static TypeMismatchJson create(TypeMismatch x, JSTypeSerializer serializer, TypePool typePool) {
@@ -182,8 +178,8 @@ final class SerializeTypesToPointers {
     @Override
     public int compareTo(TypeMismatchJson x) {
       return ComparisonChain.start()
-          .compare(this.found, x.found)
-          .compare(this.required, x.required)
+          .compare(this.foundColorId, x.foundColorId)
+          .compare(this.requiredColorId, x.requiredColorId)
           .compare(this.location, x.location)
           .result();
     }

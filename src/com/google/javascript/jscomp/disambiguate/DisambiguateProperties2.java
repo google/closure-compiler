@@ -287,17 +287,17 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
   private static final class PropertyReferenceJson implements Comparable<PropertyReferenceJson> {
     final String location;
-    final int receiver;
+    final int receiverIndex;
 
     PropertyReferenceJson(Node location, ColorGraphNode receiver) {
       this.location = location.getLocation();
-      this.receiver = receiver.getIndex();
+      this.receiverIndex = receiver.getIndex();
     }
 
     @Override
     public int compareTo(PropertyReferenceJson x) {
       return ComparisonChain.start()
-          .compare(this.receiver, x.receiver)
+          .compare(this.receiverIndex, x.receiverIndex)
           .compare(this.location, x.location)
           .result();
     }
@@ -306,7 +306,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static final class TypeNodeJson {
     final int index;
     final boolean invalidating;
-    final String colorUuid;
+    final String colorId;
     final ImmutableSortedSet<TypeEdgeJson> edges;
     final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
 
@@ -314,7 +314,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
       ColorGraphNode t = n.getValue();
 
       this.index = t.getIndex();
-      this.colorUuid = t.getColor().getId().toString();
+      this.colorId = t.getColor().getId().toString();
       this.invalidating = t.getColor().isInvalidating();
       this.edges =
           n.getOutEdges().stream()
