@@ -37,7 +37,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Converts ES6 classes to valid ES5 or ES3 code. */
-public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPass {
   private static final FeatureSet features =
       FeatureSet.BARE_MINIMUM.with(
           Feature.CLASSES,
@@ -86,20 +86,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
     TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, features, this);
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, features, convertSuperConstructorCalls);
-
-    // Don't mark features as transpiled away if we had errors that prevented transpilation.
-    // We don't want a redundant error from the AstValidator complaining that the features are still
-    // there
-    if (!compiler.hasHaltingErrors()) {
-      TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
-    }
   }
 
   @Override

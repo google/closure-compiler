@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
  * <p>Unfortunately, this class is used with {@code CombinedCompilerPass}, which will pass instances
  * of it directly to {@code NodeTraversal.traverse()}.
  */
-final class CheckSuper implements HotSwapCompilerPass, NodeTraversal.Callback {
+final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
   static final DiagnosticType MISSING_CALL_TO_SUPER =
       DiagnosticType.error("JSC_MISSING_CALL_TO_SUPER", "constructor is missing a call to super()");
 
@@ -88,11 +88,6 @@ final class CheckSuper implements HotSwapCompilerPass, NodeTraversal.Callback {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   private final Deque<Context> contextStack = new ArrayDeque<>();

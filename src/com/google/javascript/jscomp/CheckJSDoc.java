@@ -29,10 +29,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-/**
- * Checks for misplaced, misused or deprecated JSDoc annotations.
- */
-final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+/** Checks for misplaced, misused or deprecated JSDoc annotations. */
+final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass {
 
   public static final DiagnosticType MISPLACED_MSG_ANNOTATION =
       DiagnosticType.disabled(
@@ -106,11 +104,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     NodeTraversal.traverse(compiler, externs, this);
     inExterns = false;
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /**

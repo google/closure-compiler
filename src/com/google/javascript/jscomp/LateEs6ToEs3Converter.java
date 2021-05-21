@@ -38,12 +38,12 @@ import java.util.List;
  * https://github.com/google/closure-compiler/wiki/ECMAScript6 lists which ES6 features are
  * supported. Other classes that start with "Es6" do other parts of the transpilation.
  *
- * <p>In most cases, the output is valid as ES3 (hence the class name) but in some cases, if
- * the output language is set to ES5, we rely on ES5 features such as getters, setters,
- * and Object.defineProperties.
+ * <p>In most cases, the output is valid as ES3 (hence the class name) but in some cases, if the
+ * output language is set to ES5, we rely on ES5 features such as getters, setters, and
+ * Object.defineProperties.
  */
 // TODO(tbreisacher): This class does too many things. Break it into smaller passes.
-public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final Es6TemplateLiterals templateLiteralConverter;
@@ -78,12 +78,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

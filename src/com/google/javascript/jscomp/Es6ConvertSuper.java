@@ -34,7 +34,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * are not converted here, but rather in {@link Es6ConvertSuperConstructorCalls}, which runs later.
  */
 public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
@@ -311,9 +311,4 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
 }

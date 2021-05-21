@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
  * <p>If modules have not been rewritten, this pass also includes legacy Closure module namespaces
  * in the list of {@link ProvidedName}s.
  */
-class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
+class ProcessClosureProvidesAndRequires implements CompilerPass {
 
   // The root Closure namespace
   private static final String GOOG = "goog";
@@ -91,13 +91,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     rewriteProvidesAndRequires(externs, root);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    // TODO(bashir): Implement a real hot-swap version instead and make it fully
-    // consistent with the full version.
-    this.compiler.process(this);
   }
 
   /** Collects all goog.provides in the given namespace and warns on invalid code */

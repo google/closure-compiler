@@ -36,7 +36,7 @@ import java.util.Iterator;
  * Rewrites destructuring patterns and default parameters to valid ES3 code or to a different form
  * of destructuring.
  */
-public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6RewriteDestructuring implements NodeTraversal.Callback, CompilerPass {
 
   public static final DiagnosticType UNEXPECTED_DESTRUCTURING_REST_PARAMETER =
       error(
@@ -142,14 +142,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   public void process(Node externs, Node root) {
     checkState(patternNestingStack.isEmpty());
     TranspilationPasses.processTranspile(compiler, root, featuresToTriggerRunningPass, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
-    checkState(patternNestingStack.isEmpty());
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    checkState(patternNestingStack.isEmpty());
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, featuresToTriggerRunningPass, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
     checkState(patternNestingStack.isEmpty());
   }

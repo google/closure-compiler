@@ -17,8 +17,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -26,17 +26,15 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 /**
- * Check for explicit creation of the object equivalents of primitive types
- * (e.g. Boolean instead of boolean) and their use in type declarations.
+ * Check for explicit creation of the object equivalents of primitive types (e.g. Boolean instead of
+ * boolean) and their use in type declarations.
  *
- * <p>Using these is confusing and gives no benefit.
- * For example, the result of
- * {@code typeof (new Boolean(true))} is {@code "object"}.
- * and the result of
- * {@code (new Boolean(false)) ? "true" : "false"} is {@code "true"}.
+ * <p>Using these is confusing and gives no benefit. For example, the result of {@code typeof (new
+ * Boolean(true))} is {@code "object"}. and the result of {@code (new Boolean(false)) ? "true" :
+ * "false"} is {@code "true"}.
  */
 public final class CheckPrimitiveAsObject extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   public static final DiagnosticType NEW_PRIMITIVE_OBJECT =
       DiagnosticType.warning("JSC_PRIMITIVE_OBJECT", "Explicit creation of a {0} object.");
 
@@ -57,11 +55,6 @@ public final class CheckPrimitiveAsObject extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

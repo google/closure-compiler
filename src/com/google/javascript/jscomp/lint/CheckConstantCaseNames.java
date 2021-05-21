@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
@@ -39,7 +39,7 @@ import java.util.LinkedHashSet;
  * In order to not confuse users, this pass does not warn that they should be @const. (A more
  * correct lint check could warn that non-module-locals should not be constant case.)
  */
-public class CheckConstantCaseNames implements NodeTraversal.Callback, HotSwapCompilerPass {
+public class CheckConstantCaseNames implements NodeTraversal.Callback, CompilerPass {
 
   public static final DiagnosticType MISSING_CONST_PROPERTY =
       DiagnosticType.disabled(
@@ -68,11 +68,6 @@ public class CheckConstantCaseNames implements NodeTraversal.Callback, HotSwapCo
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

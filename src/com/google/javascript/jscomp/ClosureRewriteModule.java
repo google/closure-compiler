@@ -50,6 +50,7 @@ import javax.annotation.Nullable;
 
 /**
  * Process aliases in goog.modules.
+ *
  * <pre>
  * goog.module('foo.Bar');
  * var Baz = goog.require('foo.Baz');
@@ -83,7 +84,7 @@ import javax.annotation.Nullable;
  * var module$exports$foo$Bar = module$contents$foo$Bar_Bar;
  * </pre>
  */
-final class ClosureRewriteModule implements HotSwapCompilerPass {
+final class ClosureRewriteModule implements CompilerPass {
 
   static final DiagnosticType INVALID_MODULE_ID_ARG =
       DiagnosticType.error(
@@ -763,36 +764,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     NodeTraversal.traverseRoots(compiler, new ScriptUpdater(scriptDescriptions), externs, root);
     declareSyntheticExterns();
     this.googModuleGetCalls.forEach(this::updateGoogModuleGetCall);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    checkState(scriptRoot.isScript(), scriptRoot);
-    NodeTraversal.traverse(compiler, scriptRoot, new UnwrapGoogLoadModule());
-
-    rewriteState.removeRoot(originalRoot);
-
-    Deque<ScriptDescription> scriptDescriptions = new ArrayDeque<>();
-
-    ScriptDescription currentDescript = new ScriptDescription();
-    scriptDescriptions.addLast(currentDescript);
-
-    checkState(scriptStack.isEmpty());
-
-    pushScript(currentDescript);
-    currentScript.rootNode = scriptRoot;
-    NodeTraversal.traverse(compiler, scriptRoot, new ScriptPreprocessor());
-    NodeTraversal.traverse(compiler, scriptRoot, new ScriptRecorder());
-    popScript();
-
-    if (compiler.hasHaltingErrors()) {
-      return;
-    }
-
-    NodeTraversal.traverse(compiler, scriptRoot, new ScriptUpdater(scriptDescriptions));
-    this.googModuleGetCalls.forEach(this::updateGoogModuleGetCall);
-
-    reportUnrecognizedRequires();
   }
 
   /**

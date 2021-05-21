@@ -17,8 +17,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodePrinter;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
@@ -37,8 +37,7 @@ import com.google.javascript.rhino.Node;
  * <p>Which requires changes on the importer side from {@code const C = goog.require} to {@code
  * const {C} = goog.require}.
  */
-public final class CheckDefaultExportOfGoogModule
-    implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class CheckDefaultExportOfGoogModule implements NodeTraversal.Callback, CompilerPass {
 
   private static final String WARNING_PREFIX =
       "Default exports of goog.modules "
@@ -79,11 +78,6 @@ public final class CheckDefaultExportOfGoogModule
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

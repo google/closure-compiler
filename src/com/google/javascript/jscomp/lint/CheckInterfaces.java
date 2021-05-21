@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.lint;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -27,11 +27,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
 
-/**
- * Checks for errors related to interfaces.
- */
-public final class CheckInterfaces extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+/** Checks for errors related to interfaces. */
+public final class CheckInterfaces extends AbstractPostOrderCallback implements CompilerPass {
   // Placeholder class name for error reporting on anonymous classes.
   private static final String ANONYMOUS_CLASSNAME = "<anonymous>";
 
@@ -77,11 +74,6 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /** Whether jsDoc is present and has an {@code @interface} or {@code @record} annotation */

@@ -28,16 +28,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * This pass looks for properties that are never read.
- * These can be properties created using "this", or static properties of
- * constructors or interfaces. Explicitly ignored is the possibility that
- * these properties may be indirectly referenced using "for-in" or
- * "Object.keys".
+ * This pass looks for properties that are never read. These can be properties created using "this",
+ * or static properties of constructors or interfaces. Explicitly ignored is the possibility that
+ * these properties may be indirectly referenced using "for-in" or "Object.keys".
  *
- * This class is based on RemoveUnusedCode, some effort should be made to extract the common pieces.
+ * <p>This class is based on RemoveUnusedCode, some effort should be made to extract the common
+ * pieces.
  */
-class CheckUnusedPrivateProperties
-    implements HotSwapCompilerPass, NodeTraversal.Callback {
+class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callback {
 
   static final DiagnosticType UNUSED_PRIVATE_PROPERTY =
       DiagnosticType.disabled(
@@ -54,11 +52,6 @@ class CheckUnusedPrivateProperties
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   private void reportUnused(NodeTraversal t) {

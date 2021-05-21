@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
@@ -25,9 +25,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 /**
- * Checks when a mutable property is assigned to a prototype. This is
- * generally undesirable because it can lead to the following unexpected
- * situation.
+ * Checks when a mutable property is assigned to a prototype. This is generally undesirable because
+ * it can lead to the following unexpected situation.
  *
  * <pre>
  * /** @constructor * /
@@ -39,7 +38,7 @@ import com.google.javascript.rhino.Node;
  * console.log(y.prop) // [1]
  * </pre>
  */
-public final class CheckPrototypeProperties implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class CheckPrototypeProperties implements CompilerPass, NodeTraversal.Callback {
   public static final DiagnosticType ILLEGAL_PROTOTYPE_MEMBER =
       DiagnosticType.disabled(
           "JSC_ILLEGAL_PROTOTYPE_MEMBER",
@@ -54,11 +53,6 @@ public final class CheckPrototypeProperties implements HotSwapCompilerPass, Node
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, originalRoot, this);
   }
 
   @Override

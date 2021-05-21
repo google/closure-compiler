@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
  *
  * <p>{@code import 'path/to/closure/goog.js'; const myNamespace = goog.require('my.namespace'); }
  */
-public class RewriteGoogJsImports implements HotSwapCompilerPass {
+public class RewriteGoogJsImports implements CompilerPass {
   static final DiagnosticType GOOG_JS_IMPORT_MUST_BE_GOOG_STAR =
       DiagnosticType.error(
           "JSC_GOOG_JS_IMPORT_MUST_BE_GOOG_STAR",
@@ -313,12 +313,6 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
             scriptRoot, googImportNode, module, /* globalizeAllReferences= */ googModule == null);
       }
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    rewriteImports(scriptRoot);
-    changeModules();
   }
 
   @Nullable

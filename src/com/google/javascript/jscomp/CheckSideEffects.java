@@ -28,16 +28,17 @@ import java.util.Set;
 
 /**
  * Checks for non side effecting statements such as
+ *
  * <pre>
  * var s = "this string is "
  *         "continued on the next line but you forgot the +";
  * x == foo();  // should that be '='?
  * foo();;  // probably just a stray-semicolon. Doesn't hurt to check though
  * </pre>
+ *
  * and generates warnings.
  */
-final class CheckSideEffects extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+final class CheckSideEffects extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType USELESS_CODE_ERROR = DiagnosticType.warning(
       "JSC_USELESS_CODE",
@@ -80,11 +81,6 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     if (protectSideEffectFreeCode) {
       protectSideEffects();
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

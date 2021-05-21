@@ -37,7 +37,7 @@ import java.util.function.Predicate;
  * targeted output language.
  */
 public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
 
   @VisibleForTesting
   public static final DiagnosticType UNTRANSPILABLE_FEATURE_PRESENT =
@@ -77,11 +77,6 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
     this.untranspilableFeaturesToRemove =
         ALL_UNTRANSPILABLE_FEATURES // Features that we can't transpile...
             .without(outputFeatures); // and do not exist in the output language features
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    checkForUntranspilable(scriptRoot);
   }
 
   @Override

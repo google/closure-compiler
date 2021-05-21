@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -26,26 +26,20 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Check for useless blocks. A block is considered useful if it is part of a
- * control structure like if / else / while / switch / etc. or if it contains
- * any block-scoped variables (let, const, class, or function declarations).
- * Otherwise there is no reason to use it so it is likely a mistake. This would
- * catch the classic error:
+ * Check for useless blocks. A block is considered useful if it is part of a control structure like
+ * if / else / while / switch / etc. or if it contains any block-scoped variables (let, const,
+ * class, or function declarations). Otherwise there is no reason to use it so it is likely a
+ * mistake. This would catch the classic error:
  *
- * return
- *     {foo: 'bar'};
+ * <p>return {foo: 'bar'};
  *
- * or more contrived cases like:
+ * <p>or more contrived cases like:
  *
- * if (denied) {
- *   showAccessDenied();
- * } {
- *   grantAccess();
- * }
+ * <p>if (denied) { showAccessDenied(); } { grantAccess(); }
  *
- * Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-lone-blocks.js)
+ * <p>Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-lone-blocks.js)
  */
-public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
+public final class CheckUselessBlocks implements Callback, CompilerPass {
   public static final DiagnosticType USELESS_BLOCK = DiagnosticType.disabled(
       "JSC_USELESS_BLOCK", "Useless block.");
 
@@ -60,11 +54,6 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /**

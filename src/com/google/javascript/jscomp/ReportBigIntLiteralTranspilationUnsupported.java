@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /** Reports an error when attempting to transpile away BitInt literals. */
-final class ReportBigIntLiteralTranspilationUnsupported implements HotSwapCompilerPass {
+final class ReportBigIntLiteralTranspilationUnsupported implements CompilerPass {
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.BIGINT);
 
@@ -43,12 +43,6 @@ final class ReportBigIntLiteralTranspilationUnsupported implements HotSwapCompil
         t.report(n, BIGINT_TRANSPILATION);
       }
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, TRANSPILED_FEATURES, new ReportErrorForBigIntLiterals());
   }
 
   @Override

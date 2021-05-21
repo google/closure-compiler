@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
  *
  * <p>An async function, foo(a, b), will be rewritten as:
  *
- * <pre> {@code
+ * <pre>{@code
  * function foo(a, b) {
  *   let $jscomp$async$this = this;
  *   let $jscomp$async$arguments = arguments;
@@ -54,9 +54,10 @@ import javax.annotation.Nullable;
  *         // - super.x replaced with $jscomp$async$super$get$x()
  *         // - super.x(5) replaced with $jscomp$async$super$get$x().call($jscomp$async$this, 5)
  *       });
- * }}</pre>
+ * }
+ * }</pre>
  */
-public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class RewriteAsyncFunctions implements NodeTraversal.Callback, CompilerPass {
 
   private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments";
   private static final String ASYNC_THIS = "$jscomp$async$this";
@@ -502,12 +503,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

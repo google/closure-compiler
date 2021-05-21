@@ -66,7 +66,7 @@ import javax.annotation.Nullable;
  * <p>{@code Es6RewriteGenerators} depends on {@link InjectTranspilationRuntimeLibraries} to inject
  * <code>generator_engine.js</code> template.
  */
-final class Es6RewriteGenerators implements HotSwapCompilerPass {
+final class Es6RewriteGenerators implements CompilerPass {
 
   private static final String GENERATOR_FUNCTION = "$jscomp$generator$function";
   private static final String GENERATOR_CONTEXT = "$jscomp$generator$context";
@@ -120,13 +120,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(
         compiler, root, transpiledFeatures, new GeneratorFunctionsTranspiler());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, transpiledFeatures, new GeneratorFunctionsTranspiler());
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

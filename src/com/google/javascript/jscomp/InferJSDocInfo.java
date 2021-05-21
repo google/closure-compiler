@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -94,7 +92,7 @@ import javax.annotation.Nullable;
  * assigning instances of these types as properties of nominal types (e.g. using `myFunction` as the
  * RHS of #2) the structural type JSDoc plays no part.
  */
-class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
   private final AbstractCompiler compiler;
 
   InferJSDocInfo(AbstractCompiler compiler) {
@@ -109,13 +107,6 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
     if (root != null) {
       NodeTraversal.traverse(compiler, root, this);
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node root, Node originalRoot) {
-    checkNotNull(root);
-    checkState(root.isScript());
-    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

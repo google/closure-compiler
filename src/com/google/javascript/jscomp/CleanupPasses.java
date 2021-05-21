@@ -19,10 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.GlobalVarReferenceMap.GlobalVarRefCleanupPass;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +35,6 @@ class CleanupPasses extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
     checks.add(fieldCleanupPassFactory);
-    checks.add(scopeCleanupPassFactory);
-    checks.add(globalVarRefCleanupPassFactory);
     return checks;
   }
 
@@ -55,59 +49,4 @@ class CleanupPasses extends PassConfig {
           .setInternalFactory(FieldCleanupPass::new)
           .setFeatureSet(ES5)
           .build();
-
-  final PassFactory scopeCleanupPassFactory =
-      PassFactory.builderForHotSwap()
-          .setName("ScopeCleanupPassFactory")
-          .setInternalFactory(MemoizedScopeCleanupPass::new)
-          .setFeatureSet(ES5)
-          .build();
-
-  final PassFactory globalVarRefCleanupPassFactory =
-      PassFactory.builderForHotSwap()
-          .setName("GlobalVarRefCleanupPassFactory")
-          .setInternalFactory(GlobalVarRefCleanupPass::new)
-          .setFeatureSet(ES5)
-          .build();
-
-  /**
-   * A CleanupPass implementation that will remove stored scopes from the
-   * TypedScopeCreator of the compiler instance for a the hot swapped script.
-   * <p>
-   * This pass will also clear out Source Nodes of Function Types declared on
-   * Vars tracked by TypedScopeCreator
-   */
-  static class MemoizedScopeCleanupPass implements HotSwapCompilerPass {
-
-    private final AbstractCompiler compiler;
-
-    public MemoizedScopeCleanupPass(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
-    @Override
-    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-      ScopeCreator creator = compiler.getTypedScopeCreator();
-      if (creator instanceof TypedScopeCreator) {
-        TypedScopeCreator scopeCreator = (TypedScopeCreator) creator;
-        String newSrc = scriptRoot.getSourceFileName();
-        for (TypedVar var : scopeCreator.getAllSymbols()) {
-          JSType type = var.getType();
-          if (type != null) {
-            FunctionType fnType = type.toMaybeFunctionType();
-            if (fnType != null
-                && newSrc.equals(NodeUtil.getSourceName(fnType.getSource()))) {
-              fnType.setSource(null);
-            }
-          }
-        }
-        scopeCreator.removeScopesForScript(originalRoot.getSourceFileName());
-      }
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      // MemoizedScopeCleanupPass should not do work during process.
-    }
-  }
 }

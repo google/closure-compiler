@@ -20,32 +20,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 
 /**
- * <p>A compiler pass combining multiple {@link Callback}
- * and {@link ScopedCallback} objects. This pass can be used to separate
- * logically different verifications without incurring any additional traversal
- * and CFG generation costs.</p>
+ * A compiler pass combining multiple {@link Callback} and {@link ScopedCallback} objects. This pass
+ * can be used to separate logically different verifications without incurring any additional
+ * traversal and CFG generation costs.
  *
- * <p>Due to this compiler pass' nature, none of the callbacks may mutate
- * the parse tree.</p>
+ * <p>Due to this compiler pass' nature, none of the callbacks may mutate the parse tree.
  *
- * <p>TODO(user):
- * This combined pass is currently limited in the type of callbacks it can
- * combine due to the difficulty of handling NodeTraversal's methods that
- * initiate more recursion (e.g., {@link NodeTraversal#traverse(Node)} and
- * {@link NodeTraversal#traverseInnerNode(Node, Node, Scope)}). The
- * {@link NodeTraversal} object passed to the individual callbacks should
- * be instrumented to emulate the correct behavior. For instance,
- * one could create a {@link NodeTraversal} whose
- * {@link NodeTraversal#traverseInnerNode(Node, Node, Scope)} ties
- * back into this compiler pass to give it context about what combined
- * passes are doing.</p>
+ * <p>TODO(user): This combined pass is currently limited in the type of callbacks it can
+ * combine due to the difficulty of handling NodeTraversal's methods that initiate more recursion
+ * (e.g., {@link NodeTraversal#traverse(Node)} and {@link NodeTraversal#traverseInnerNode(Node,
+ * Node, Scope)}). The {@link NodeTraversal} object passed to the individual callbacks should be
+ * instrumented to emulate the correct behavior. For instance, one could create a {@link
+ * NodeTraversal} whose {@link NodeTraversal#traverseInnerNode(Node, Node, Scope)} ties back into
+ * this compiler pass to give it context about what combined passes are doing.
  */
-final class CombinedCompilerPass implements HotSwapCompilerPass,
-    ScopedCallback {
+final class CombinedCompilerPass implements CompilerPass, ScopedCallback {
 
   /** The callbacks that this pass combines. */
   private final CallbackWrapper[] callbacks;
@@ -150,11 +142,6 @@ final class CombinedCompilerPass implements HotSwapCompilerPass,
   @Override
   public final void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

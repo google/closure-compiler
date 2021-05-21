@@ -16,21 +16,23 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 
 /**
  * Check for unused labels blocks. This can help catching errors like:
+ *
  * <pre>
  *   () =&gt; {a: 2}  // Returns undefined, not an Object
  * </pre>
  *
- * <p>Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
+ * <p>Inspired by ESLint
+ * (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
  */
-public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
+public final class CheckUnusedLabels implements Callback, CompilerPass {
   public static final DiagnosticType UNUSED_LABEL = DiagnosticType.disabled(
       "JSC_UNUSED_LABEL", "Unused label {0}.");
 
@@ -55,11 +57,6 @@ public final class CheckUnusedLabels implements Callback, HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

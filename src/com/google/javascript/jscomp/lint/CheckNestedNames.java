@@ -19,8 +19,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -65,7 +65,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * obj.Some = new Something();
  * }</pre>
  */
-public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class CheckNestedNames implements CompilerPass, NodeTraversal.Callback {
 
   public static final DiagnosticType NESTED_NAME_IN_GOOG_MODULE =
       DiagnosticType.disabled(
@@ -100,11 +100,6 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

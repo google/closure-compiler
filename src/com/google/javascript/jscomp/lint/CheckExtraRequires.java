@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
@@ -38,7 +38,7 @@ import java.util.Set;
  * reconciles the two lists, and reports warning for any unnecessary require statements.
  */
 public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   private final AbstractCompiler compiler;
 
   // Keys are the local name of a required namespace. Values are the goog.require CALL node.
@@ -66,11 +66,6 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     reset();
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    process(null, scriptRoot);
   }
 
   private String extractNamespace(Node call, String... primitiveNames) {

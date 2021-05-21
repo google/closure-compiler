@@ -215,34 +215,4 @@ class GlobalVarReferenceMap implements ReferenceMap {
       collection.references = newRefs;
     }
   }
-
-  /**
-   * A CleanupPass implementation that will replace references to old Syntactic Global Scopes
-   * generated in previous compile runs with references to the Global Typed Scope.
-   */
-  static class GlobalVarRefCleanupPass implements HotSwapCompilerPass {
-
-    private final AbstractCompiler compiler;
-
-    public GlobalVarRefCleanupPass(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
-    @Override
-    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-      GlobalVarReferenceMap refMap = compiler.getGlobalVarReferences();
-      if (refMap != null) {
-        // We don't have a suitable untyped scope to use, but the actual scope probably doesn't
-        // matter, so long as it's a global scope and doesn't persist references to things that
-        // need to be cleaned up.  So we just generate a new simple root scope.
-        refMap.updateReferencesWithGlobalScope(
-            Scope.createGlobalScope(compiler.getTopScope().getRootNode()));
-      }
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      // GlobalVarRefCleanupPass should not do work during process.
-    }
-  }
 }

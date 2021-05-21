@@ -31,12 +31,11 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Checks variables to see if they are referenced before their declaration, or
- * if they are redeclared in a way that is suspicious (i.e. not dictated by
- * control structures). This is a more aggressive version of {@link VarCheck},
- * but it lacks the cross-module checks.
+ * Checks variables to see if they are referenced before their declaration, or if they are
+ * redeclared in a way that is suspicious (i.e. not dictated by control structures). This is a more
+ * aggressive version of {@link VarCheck}, but it lacks the cross-module checks.
  */
-class VariableReferenceCheck implements HotSwapCompilerPass {
+class VariableReferenceCheck implements CompilerPass {
 
   static final DiagnosticType EARLY_REFERENCE =
       DiagnosticType.warning(
@@ -122,17 +121,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       new ReferenceCollector(
               compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
           .process(externs, root);
-    }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    if (!forTranspileOnly
-        || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015)
-            && TranspilationPasses.isScriptEs6OrHigher(scriptRoot))) {
-      new ReferenceCollector(
-              compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
-          .hotSwapScript(scriptRoot, originalRoot);
     }
   }
 

@@ -30,7 +30,7 @@ import java.util.Set;
  * Can run with or without typechecking but will find more if typechecking is enabled.
  */
 class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
 
   static final DiagnosticType MISSING_CONST_PROPERTY =
       DiagnosticType.disabled(
@@ -48,11 +48,6 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /** Reports the property definitions that should use the @const annotation. */

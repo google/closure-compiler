@@ -17,34 +17,24 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 /**
- * A CleanupPass implementation that will remove all field declarations on
- * JSTypes contributed by the original file.
- * <p>
- * This pass is expected to clear out declarations contributed to any JSType,
- * even if the constructor declaration is not provided in the file being
- * updated.
+ * A CleanupPass implementation that will remove all field declarations on JSTypes contributed by
+ * the original file.
+ *
+ * <p>This pass is expected to clear out declarations contributed to any JSType, even if the
+ * constructor declaration is not provided in the file being updated.
  */
-public final class FieldCleanupPass implements HotSwapCompilerPass {
+public final class FieldCleanupPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
   public FieldCleanupPass(AbstractCompiler compiler) {
     this.compiler = compiler;
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    String srcName = originalRoot.getSourceFileName();
-    Callback cb =
-        new QualifiedNameSearchTraversal(compiler.getTypeRegistry(), srcName);
-    NodeTraversal.traverse(compiler, originalRoot, cb);
   }
 
   @Override

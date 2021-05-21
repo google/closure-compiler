@@ -32,7 +32,7 @@ import java.util.Set;
  * into the function body.
  */
 public final class Es6RenameVariablesInParamLists
-    implements NodeTraversal.ScopedCallback, HotSwapCompilerPass {
+    implements NodeTraversal.ScopedCallback, CompilerPass {
 
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
@@ -102,11 +102,6 @@ public final class Es6RenameVariablesInParamLists
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   /**

@@ -19,9 +19,9 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckPathsBetweenNodes;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.ControlFlowGraph;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
@@ -31,10 +31,10 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 
 /**
- * Checks when a function is annotated as returning {SomeType} (nullable)
- * but actually always returns {!SomeType}, i.e. never returns null.
+ * Checks when a function is annotated as returning {SomeType} (nullable) but actually always
+ * returns {!SomeType}, i.e. never returns null.
  */
-public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback {
   final AbstractCompiler compiler;
 
   public static final DiagnosticType NULLABLE_RETURN =
@@ -157,8 +157,4 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
     NodeTraversal.traverse(compiler, root, this);
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, originalRoot, this);
-  }
 }

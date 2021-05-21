@@ -35,8 +35,7 @@ import java.util.Map;
  * inlining, reordering, or generating warnings. Callers do this by providing {@link Behavior} and
  * then calling {@link #process(Node, Node)}.
  */
-public final class ReferenceCollector
-    implements HotSwapCompilerPass, StaticSymbolTable<Var, Reference> {
+public final class ReferenceCollector implements CompilerPass, StaticSymbolTable<Var, Reference> {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -126,11 +125,6 @@ public final class ReferenceCollector
   /**
    * Same as process but only runs on a part of AST associated to one script.
    */
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    this.createTraversalBuilder().traverse(scriptRoot);
-  }
-
   private NodeTraversal.Builder createTraversalBuilder() {
     return NodeTraversal.builder()
         .setCompiler(compiler)

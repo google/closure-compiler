@@ -21,23 +21,25 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
- * Splits variable declarations that declare multiple variables into
- * separate declarations, if at least one of the declarations is a
- * destructuring declaration. For example
+ * Splits variable declarations that declare multiple variables into separate declarations, if at
+ * least one of the declarations is a destructuring declaration. For example
+ *
  * <pre>
  *   var [a, b] = foo(), c = bar();}
  * </pre>
+ *
  * becomes
+ *
  * <pre>
  *   var [a, b] = foo();
  *   var c = bar();
  * </pre>
  *
- * <p>This runs before the main ES6 transpilation step, to simplify
- * the transpilation of destructuring syntax.
+ * <p>This runs before the main ES6 transpilation step, to simplify the transpilation of
+ * destructuring syntax.
  */
-public final class Es6SplitVariableDeclarations extends
-    NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
+public final class Es6SplitVariableDeclarations extends NodeTraversal.AbstractPostOrderCallback
+    implements CompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.ARRAY_DESTRUCTURING, Feature.OBJECT_DESTRUCTURING);
@@ -49,11 +51,6 @@ public final class Es6SplitVariableDeclarations extends
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   @Override

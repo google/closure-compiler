@@ -31,7 +31,7 @@ import com.google.javascript.rhino.Node;
  *
  * <p>Note that object rest is handled by {@link Es6RewriteDestructuring}
  */
-public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class RewriteObjectSpread implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
@@ -46,12 +46,6 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

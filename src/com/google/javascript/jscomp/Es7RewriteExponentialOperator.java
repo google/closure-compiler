@@ -26,8 +26,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 /** Replaces the ES7 `**` and `**=` operators to calls to `Math.pow`. */
-public final class Es7RewriteExponentialOperator
-    implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es7RewriteExponentialOperator implements NodeTraversal.Callback, CompilerPass {
 
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.EXPONENT_OP);
@@ -65,12 +64,6 @@ public final class Es7RewriteExponentialOperator
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

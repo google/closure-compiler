@@ -45,7 +45,7 @@ import javax.annotation.Nullable;
  * <p>Because access control restrictions are attached to type information, this pass must run after
  * TypeInference, and InferJSDocInfo.
  */
-class CheckAccessControls implements Callback, HotSwapCompilerPass {
+class CheckAccessControls implements Callback, CompilerPass {
 
   static final DiagnosticType DEPRECATED_NAME = DiagnosticType.disabled(
       "JSC_DEPRECATED_VAR",
@@ -151,16 +151,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
     NodeTraversal.traverse(compiler, externs, this);
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    CollectFileOverviewVisibility collectPass =
-        new CollectFileOverviewVisibility(compiler);
-    collectPass.hotSwapScript(scriptRoot, originalRoot);
-    defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
-
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   private void enterAccessControlScope(Node root) {

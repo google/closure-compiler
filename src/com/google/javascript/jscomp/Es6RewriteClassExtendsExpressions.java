@@ -42,11 +42,11 @@ import com.google.javascript.rhino.Node;
  * <p>This must be done before {@link Es6ConvertSuper}, because that pass only handles extends
  * clauses which are simple NAME or GETPROP nodes.
  *
- * TODO(bradfordcsmith): This pass may no longer be necessary once the typechecker passes have all
- *     been updated to understand ES6 classes.
+ * <p>TODO(bradfordcsmith): This pass may no longer be necessary once the typechecker passes have
+ * all been updated to understand ES6 classes.
  */
 public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
 
   static final String CLASS_EXTENDS_VAR = "$classextends$var";
 
@@ -61,11 +61,6 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, features, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, features, this);
   }
 
   @Override

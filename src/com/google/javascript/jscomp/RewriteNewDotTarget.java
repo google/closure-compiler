@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /** Transpiles away `new.target`. */
-final class RewriteNewDotTarget implements HotSwapCompilerPass {
+final class RewriteNewDotTarget implements CompilerPass {
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.NEW_TARGET);
 
@@ -61,13 +61,6 @@ final class RewriteNewDotTarget implements HotSwapCompilerPass {
 
   private Node createThisDotConstructorForFunction(Node functionNode) {
     return astFactory.createGetProp(astFactory.createThisForFunction(functionNode), "constructor");
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, TRANSPILED_FEATURES, new RewriteNewDotTargetCallback());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 
   @Override

@@ -42,8 +42,7 @@ import javax.annotation.Nullable;
  * <p>Note that this file only does checks that can be done per-file. Whole program checks happen
  * during goog.module rewriting, in {@link ClosureRewriteModule}.
  */
-public final class ClosureCheckModule extends AbstractModuleCallback
-    implements HotSwapCompilerPass {
+public final class ClosureCheckModule extends AbstractModuleCallback implements CompilerPass {
   static final DiagnosticType AT_EXPORT_IN_GOOG_MODULE =
       DiagnosticType.error(
           "JSC_AT_EXPORT_IN_GOOG_MODULE",
@@ -189,11 +188,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

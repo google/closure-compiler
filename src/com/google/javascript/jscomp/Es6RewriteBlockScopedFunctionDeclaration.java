@@ -24,11 +24,11 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Rewrite block-scoped function declarations as "let"s.  This pass must happen before
+ * Rewrite block-scoped function declarations as "let"s. This pass must happen before
  * Es6RewriteBlockScopedDeclaration, which rewrites "let" to "var".
  */
 public final class Es6RewriteBlockScopedFunctionDeclaration extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
@@ -41,12 +41,6 @@ public final class Es6RewriteBlockScopedFunctionDeclaration extends AbstractPost
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
  * that declares them, and that any var references that cross module boundaries respect declared
  * module dependencies.
  */
-class VarCheck implements ScopedCallback, HotSwapCompilerPass {
+class VarCheck implements ScopedCallback, CompilerPass {
 
   static final DiagnosticType UNDEFINED_VAR_ERROR = DiagnosticType.error(
       "JSC_UNDEFINED_VARIABLE",
@@ -184,28 +184,6 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     if (dupHandler != null) {
       dupHandler.removeDuplicates();
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    checkState(scriptRoot.isScript());
-
-    if (closurePass) {
-      // Only run over the new script.
-      gatherImplicitVars(compiler.getRoot());
-    }
-
-    // We use the global scope to prevent wrong "undefined-var errors" on
-    // variables that are defined in other JS files.
-    SyntacticScopeCreator scopeCreator = createScopeCreator();
-    Scope topScope = scopeCreator.createScope(compiler.getRoot(), null);
-    NodeTraversal.builder()
-        .setCompiler(compiler)
-        .setCallback(this)
-        .setScopeCreator(scopeCreator)
-        .traverseWithScope(scriptRoot, topScope);
-
-    // TODO(bashir) Check if we need to createSynthesizedExternVar like process.
   }
 
   @Override

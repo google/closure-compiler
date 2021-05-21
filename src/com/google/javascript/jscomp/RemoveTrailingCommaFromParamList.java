@@ -39,7 +39,7 @@ import com.google.javascript.rhino.Node;
  * let x = new Number(1);
  * }</pre>
  */
-final class RemoveTrailingCommaFromParamList implements HotSwapCompilerPass {
+final class RemoveTrailingCommaFromParamList implements CompilerPass {
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
 
@@ -60,13 +60,6 @@ final class RemoveTrailingCommaFromParamList implements HotSwapCompilerPass {
         // evaluating the equality of nodes.
       }
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, TRANSPILED_FEATURES, new RemoveComma());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 
   @Override

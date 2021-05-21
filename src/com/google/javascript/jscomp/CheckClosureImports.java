@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
  * <p>Checks that these dependency calls both contain a valid Closure namespace and are in an
  * acceptable location (e.g. a goog.require cannot be within a function).
  */
-final class CheckClosureImports implements HotSwapCompilerPass {
+final class CheckClosureImports implements CompilerPass {
 
   private enum ClosureImport {
     REQUIRE {
@@ -200,13 +200,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
     this.checker = new Checker(compiler, moduleMetadataMap);
     this.namespacesSeen = new HashSet<>();
     this.chunkGraph = compiler.getModuleGraph();
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    inHotSwap = true;
-    NodeTraversal.traverse(compiler, scriptRoot.getParent(), checker);
-    inHotSwap = false;
   }
 
   @Override

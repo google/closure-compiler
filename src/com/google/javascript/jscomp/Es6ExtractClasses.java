@@ -33,21 +33,19 @@ import java.util.Deque;
 
 /**
  * Extracts ES6 classes defined in function calls to local constants.
- * <p>
- * Example:
- * Before: <code>foo(class { constructor() {} });</code>
- * After:
- * <code>
+ *
+ * <p>Example: Before: <code>foo(class { constructor() {} });</code> After: <code>
  *   const $jscomp$classdecl$var0 = class { constructor() {} };
  *   foo($jscomp$classdecl$var0);
  * </code>
- * <p>
- * This must be done before {@link Es6RewriteClass}, because that pass only handles classes
- * that are declarations or simple assignments.
+ *
+ * <p>This must be done before {@link Es6RewriteClass}, because that pass only handles classes that
+ * are declarations or simple assignments.
+ *
  * @see Es6RewriteClass#visitClass(NodeTraversal, Node, Node)
  */
-public final class Es6ExtractClasses
-    extends NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
+public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCallback
+    implements CompilerPass {
 
   static final String CLASS_DECL_VAR = "$classdecl$var";
 
@@ -67,12 +65,6 @@ public final class Es6ExtractClasses
         compiler, externs, features, this, new SelfReferenceRewriter());
     TranspilationPasses.processTranspile(
         compiler, root, features, this, new SelfReferenceRewriter());
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, features, this, new SelfReferenceRewriter());
   }
 
   @Override

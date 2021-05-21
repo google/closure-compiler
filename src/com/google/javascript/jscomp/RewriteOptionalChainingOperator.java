@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.function.Function;
 
 /** Replaces the ES2020 `?.` operator with conditional (? :). */
-final class RewriteOptionalChainingOperator implements HotSwapCompilerPass {
+final class RewriteOptionalChainingOperator implements CompilerPass {
 
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CHAINING);
@@ -58,13 +58,6 @@ final class RewriteOptionalChainingOperator implements HotSwapCompilerPass {
         compiler, externs, TRANSPILED_FEATURES, new TranspilationCallback());
     TranspilationPasses.processTranspile(
         compiler, root, TRANSPILED_FEATURES, new TranspilationCallback());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, TRANSPILED_FEATURES, new TranspilationCallback());
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 

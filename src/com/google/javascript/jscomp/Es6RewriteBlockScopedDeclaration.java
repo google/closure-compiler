@@ -58,7 +58,7 @@ import javax.annotation.Nullable;
  * <p>TODO(moz): Try to use MakeDeclaredNamesUnique
  */
 public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Table<Node, String, String> renameTable = HashBasedTable.create();
@@ -106,19 +106,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverse(compiler, root, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, root, transformer);
-    transformer.transformLoopClosure();
-    rewriteDeclsToVars();
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    shouldAddTypesOnNewAstNodes = getShouldAddTypesOnNewAstNodes();
-    NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
-    NodeTraversal.traverse(compiler, scriptRoot, this);
-    NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(renameTable));
-    LoopClosureTransformer transformer = new LoopClosureTransformer();
-    NodeTraversal.traverse(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);

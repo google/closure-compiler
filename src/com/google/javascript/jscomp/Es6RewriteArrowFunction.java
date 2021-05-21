@@ -27,7 +27,7 @@ import java.util.Deque;
 import javax.annotation.Nullable;
 
 /** Converts ES6 arrow functions to standard anonymous ES3 functions. */
-public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapCompilerPass {
+public class Es6RewriteArrowFunction implements NodeTraversal.Callback, CompilerPass {
   // The name of the vars that capture 'this' and 'arguments' for converting arrow functions. Note
   // that these names can be reused (once per scope) because declarations in nested scopes will
   // shadow one another, which results in the intended behaviour.
@@ -47,12 +47,6 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 

@@ -20,9 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -34,7 +33,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Creates a {@link ModuleMap}. */
-public class ModuleMapCreator implements HotSwapCompilerPass {
+public class ModuleMapCreator implements CompilerPass {
   public static final DiagnosticType MISSING_NAMESPACE_IMPORT =
       DiagnosticType.error(
           "JSC_MISSING_NAMESPACE_IMPORT", "Imported Closure namespace \"{0}\" never defined.");
@@ -292,31 +291,4 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
     compiler.setModuleMap(create());
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    for (ModuleMetadata metadata : compiler.getModuleMetadataMap().getAllModuleMetadata()) {
-      // Call NodeUtil.getInputId on the metadata's root node as it could be a block of a nested
-      // goog.module, which won't have an input ID on the node itself.
-      if (originalRoot.getInputId().equals(NodeUtil.getInputId(metadata.rootNode()))) {
-        // We're hotswapping this module, rescan it.
-        process(metadata);
-      } else {
-        // Existing module we aren't hot swapping. We need to pull off the previously created
-        // UnresolvedModule - we can't scan this again since the module is probably transpiled now.
-        if (metadata.path() != null) {
-          Module module = compiler.getModuleMap().getModule(metadata.path());
-          unresolvedModules.put(metadata.path().toModuleName(), module.unresolvedModule());
-          module.unresolvedModule().reset();
-        }
-
-        for (String namespace : metadata.googNamespaces()) {
-          Module module = compiler.getModuleMap().getClosureModule(namespace);
-          unresolvedModulesByClosureNamespace.put(namespace, module.unresolvedModule());
-          module.unresolvedModule().reset();
-        }
-      }
-    }
-
-    compiler.setModuleMap(resolve());
-  }
 }

@@ -63,7 +63,7 @@ import javax.annotation.Nullable;
  * <p>Also rewrites any goog.{require,requireType,forwardDeclare,goog.module.get} calls that are
  * either in an ES module or of an ES module using goog.declareModuleId.
  */
-public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Callback {
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
       DiagnosticType.error(
           "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
@@ -172,12 +172,6 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
     compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
     // This pass may add getters properties on module objects.
     GatherGetterAndSetterProperties.update(compiler, externs, root);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptNode, Node originalRoot) {
-    new RewriteRequiresForEs6Modules().rewrite(scriptNode);
-    NodeTraversal.traverse(compiler, scriptNode, this);
   }
 
   private void clearPerFileState() {

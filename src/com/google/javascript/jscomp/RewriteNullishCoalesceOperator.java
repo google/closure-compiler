@@ -21,8 +21,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /** Replaces the ES2020 `??` operator with conditional (?:). */
-public final class RewriteNullishCoalesceOperator
-    implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callback, CompilerPass {
 
   private static final String TEMP_VAR_NAME_PREFIX = "$jscomp$nullish$tmp";
   private static final FeatureSet TRANSPILED_FEATURES =
@@ -41,12 +40,6 @@ public final class RewriteNullishCoalesceOperator
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, TRANSPILED_FEATURES, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 
