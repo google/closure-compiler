@@ -49,24 +49,22 @@ import javax.annotation.Nullable;
 public abstract class JsMessage {
 
   /**
-   * Message style that could be used for JS code parsing.
-   * The enum order is from most relaxed to most restricted.
+   * Message style that could be used for JS code parsing. The enum order is from most relaxed to
+   * most restricted.
    */
   public enum Style {
     LEGACY, // All legacy code is completely OK
-    RELAX,  // You allowed to use legacy code but it would be reported as warn
+    RELAX, // You allowed to use legacy code but it would be reported as warn
     CLOSURE; // Any legacy code is prohibited
 
     /**
      * Calculates current messages {@link Style} based on the given arguments.
      *
      * @param useClosure if true then use closure style, otherwise not
-     * @param allowLegacyMessages if true then allow legacy messages otherwise
-     *        not
+     * @param allowLegacyMessages if true then allow legacy messages otherwise not
      * @return the message style based on the given arguments
      */
-    static Style getFromParams(boolean useClosure,
-        boolean allowLegacyMessages) {
+    static Style getFromParams(boolean useClosure, boolean allowLegacyMessages) {
       if (useClosure) {
         return allowLegacyMessages ? RELAX : CLOSURE;
       } else {
@@ -199,10 +197,7 @@ public abstract class JsMessage {
     // Allow arbitrary suffixes to allow for local variable disambiguation.
     private static final String MSG_EXTERNAL_PREFIX = "MSG_EXTERNAL_";
 
-    /**
-     * @return an external message id or null if this is not an
-     * external message identifier
-     */
+    /** @return an external message id or null if this is not an external message identifier */
     private static String getExternalMessageId(String identifier) {
       if (identifier.startsWith(MSG_EXTERNAL_PREFIX)) {
         int start = MSG_EXTERNAL_PREFIX.length();
@@ -249,25 +244,21 @@ public abstract class JsMessage {
     }
 
     /**
-     * @param key a key that should uniquely identify this message; typically
-     *     it is the message's name (e.g. {@code "MSG_HELLO"}).
+     * @param key a key that should uniquely identify this message; typically it is the message's
+     *     name (e.g. {@code "MSG_HELLO"}).
      */
     public Builder setKey(String key) {
       this.key = key;
       return this;
     }
 
-    /**
-     * @param sourceName The message's sourceName.
-     */
+    /** @param sourceName The message's sourceName. */
     public Builder setSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
     }
 
-    /**
-     * Appends a placeholder reference to the message
-     */
+    /** Appends a placeholder reference to the message */
     public Builder appendPlaceholderReference(String name) {
       checkNotNull(name, "Placeholder name could not be null");
       parts.add(PlaceholderReference.create(name));
@@ -294,8 +285,8 @@ public abstract class JsMessage {
     }
 
     /**
-     * Sets the programmer-specified meaning of this message, which
-     * forces this message to translate differently.
+     * Sets the programmer-specified meaning of this message, which forces this message to translate
+     * differently.
      */
     public Builder setMeaning(String meaning) {
       this.meaning = meaning;
@@ -372,8 +363,8 @@ public abstract class JsMessage {
     }
 
     /**
-     * Generates a compact uppercase alphanumeric text representation of a
-     * 63-bit fingerprint of the content parts of a message.
+     * Generates a compact uppercase alphanumeric text representation of a 63-bit fingerprint of the
+     * content parts of a message.
      */
     private static String fingerprint(List<CharSequence> messageParts) {
       StringBuilder sb = new StringBuilder();
@@ -392,23 +383,20 @@ public abstract class JsMessage {
   /**
    * This class contains routines for hashing.
    *
-   * <p>The hash takes a byte array representing arbitrary data (a
-   * number, String, or Object) and turns it into a small, hopefully
-   * unique, number. There are additional convenience functions which
-   * hash int, long, and String types.
+   * <p>The hash takes a byte array representing arbitrary data (a number, String, or Object) and
+   * turns it into a small, hopefully unique, number. There are additional convenience functions
+   * which hash int, long, and String types.
    *
-   * <p><b>Note</b>: this hash has weaknesses in the two
-   * most-significant key bits and in the three least-significant seed
-   * bits. The weaknesses are small and practically speaking, will not
-   * affect the distribution of hash values. Still, it would be good
-   * practice not to choose seeds 0, 1, 2, 3, ..., n to yield n,
-   * independent hash functions. Use pseudo-random seeds instead.
+   * <p><b>Note</b>: this hash has weaknesses in the two most-significant key bits and in the three
+   * least-significant seed bits. The weaknesses are small and practically speaking, will not affect
+   * the distribution of hash values. Still, it would be good practice not to choose seeds 0, 1, 2,
+   * 3, ..., n to yield n, independent hash functions. Use pseudo-random seeds instead.
    *
-   * <p>This code is based on the work of Craig Silverstein and Sanjay
-   * Ghemawat in, then forked from com.google.common.
+   * <p>This code is based on the work of Craig Silverstein and Sanjay Ghemawat in, then forked from
+   * com.google.common.
    *
-   * <p>The original code for the hash function is courtesy
-   * <a href="http://burtleburtle.net/bob/hash/evahash.html">Bob Jenkins</a>.
+   * <p>The original code for the hash function is courtesy <a
+   * href="http://burtleburtle.net/bob/hash/evahash.html">Bob Jenkins</a>.
    *
    * <p>TODO(anatol): Add stream hashing functionality.
    */
@@ -416,21 +404,17 @@ public abstract class JsMessage {
     private Hash() {}
 
     /** Default hash seed (64 bit) */
-    private static final long SEED64 =
-        0x2b992ddfa23249d6L; // part of pi, arbitrary
+    private static final long SEED64 = 0x2b992ddfa23249d6L; // part of pi, arbitrary
 
     /** Hash constant (64 bit) */
-    private static final long CONSTANT64 =
-        0xe08c1d668b756f82L; // part of golden ratio, arbitrary
-
+    private static final long CONSTANT64 = 0xe08c1d668b756f82L; // part of golden ratio, arbitrary
 
     /******************
      * STRING HASHING *
      ******************/
 
     /**
-     * Hash a string to a 64 bit value. The digits of pi are used for
-     * the hash seed.
+     * Hash a string to a 64 bit value. The digits of pi are used for the hash seed.
      *
      * @param value the string to hash
      * @return 64 bit hash value
@@ -468,16 +452,13 @@ public abstract class JsMessage {
      * Hash byte array to a 64 bit value using the supplied seed.
      *
      * @param value the bytes to hash
-     * @param offset the starting position of value where bytes are
-     * used for the hash computation
-     * @param length number of bytes of value that are used for the
-     * hash computation
+     * @param offset the starting position of value where bytes are used for the hash computation
+     * @param length number of bytes of value that are used for the hash computation
      * @param seed the seed
      * @return 64 bit hash value
      */
     @SuppressWarnings("fallthrough")
-    private static long hash64(
-        byte[] value, int offset, int length, long seed) {
+    private static long hash64(byte[] value, int offset, int length, long seed) {
       long a = CONSTANT64;
       long b = a;
       long c = seed;
@@ -489,18 +470,42 @@ public abstract class JsMessage {
         c += word64At(value, offset + 16);
 
         // Mix
-        a -= b; a -= c; a ^= c >>> 43;
-        b -= c; b -= a; b ^= a << 9;
-        c -= a; c -= b; c ^= b >>> 8;
-        a -= b; a -= c; a ^= c >>> 38;
-        b -= c; b -= a; b ^= a << 23;
-        c -= a; c -= b; c ^= b >>> 5;
-        a -= b; a -= c; a ^= c >>> 35;
-        b -= c; b -= a; b ^= a << 49;
-        c -= a; c -= b; c ^= b >>> 11;
-        a -= b; a -= c; a ^= c >>> 12;
-        b -= c; b -= a; b ^= a << 18;
-        c -= a; c -= b; c ^= b >>> 22;
+        a -= b;
+        a -= c;
+        a ^= c >>> 43;
+        b -= c;
+        b -= a;
+        b ^= a << 9;
+        c -= a;
+        c -= b;
+        c ^= b >>> 8;
+        a -= b;
+        a -= c;
+        a ^= c >>> 38;
+        b -= c;
+        b -= a;
+        b ^= a << 23;
+        c -= a;
+        c -= b;
+        c ^= b >>> 5;
+        a -= b;
+        a -= c;
+        a ^= c >>> 35;
+        b -= c;
+        b -= a;
+        b ^= a << 49;
+        c -= a;
+        c -= b;
+        c ^= b >>> 11;
+        a -= b;
+        a -= c;
+        a ^= c >>> 12;
+        b -= c;
+        b -= a;
+        b ^= a << 18;
+        c -= a;
+        c -= b;
+        c ^= b >>> 22;
       }
 
       c += length;
@@ -594,22 +599,44 @@ public abstract class JsMessage {
           + ((bytes[offset + 7] & 0xffL) << 56);
     }
 
-    /**
-     * Mixes longs a, b, and c, and returns the final value of c.
-     */
+    /** Mixes longs a, b, and c, and returns the final value of c. */
     private static long mix64(long a, long b, long c) {
-      a -= b; a -= c; a ^= c >>> 43;
-      b -= c; b -= a; b ^= a << 9;
-      c -= a; c -= b; c ^= b >>> 8;
-      a -= b; a -= c; a ^= c >>> 38;
-      b -= c; b -= a; b ^= a << 23;
-      c -= a; c -= b; c ^= b >>> 5;
-      a -= b; a -= c; a ^= c >>> 35;
-      b -= c; b -= a; b ^= a << 49;
-      c -= a; c -= b; c ^= b >>> 11;
-      a -= b; a -= c; a ^= c >>> 12;
-      b -= c; b -= a; b ^= a << 18;
-      c -= a; c -= b; c ^= b >>> 22;
+      a -= b;
+      a -= c;
+      a ^= c >>> 43;
+      b -= c;
+      b -= a;
+      b ^= a << 9;
+      c -= a;
+      c -= b;
+      c ^= b >>> 8;
+      a -= b;
+      a -= c;
+      a ^= c >>> 38;
+      b -= c;
+      b -= a;
+      b ^= a << 23;
+      c -= a;
+      c -= b;
+      c ^= b >>> 5;
+      a -= b;
+      a -= c;
+      a ^= c >>> 35;
+      b -= c;
+      b -= a;
+      b ^= a << 49;
+      c -= a;
+      c -= b;
+      c ^= b >>> 11;
+      a -= b;
+      a -= c;
+      a ^= c >>> 12;
+      b -= c;
+      b -= a;
+      b ^= a << 18;
+      c -= a;
+      c -= b;
+      c ^= b >>> 22;
       return c;
     }
   }
@@ -617,16 +644,13 @@ public abstract class JsMessage {
   /** ID generator */
   public interface IdGenerator {
     /**
-     * Generate the ID for the message. Messages with the same messageParts
-     * and meaning will get the same id. Messages with the same id
-     * will get the same translation.
+     * Generate the ID for the message. Messages with the same messageParts and meaning will get the
+     * same id. Messages with the same id will get the same translation.
      *
-     * @param meaning The programmer-specified meaning. If no {@code @meaning}
-     *     annotation appears, we will use the name of the variable it's
-     *     assigned to. If the variable is unnamed, then we will just
-     *     use a fingerprint of the message.
-     * @param messageParts The parts of the message, including the main
-     *     message text.
+     * @param meaning The programmer-specified meaning. If no {@code @meaning} annotation appears,
+     *     we will use the name of the variable it's assigned to. If the variable is unnamed, then
+     *     we will just use a fingerprint of the message.
+     * @param messageParts The parts of the message, including the main message text.
      */
     String generateId(String meaning, List<CharSequence> messageParts);
   }
