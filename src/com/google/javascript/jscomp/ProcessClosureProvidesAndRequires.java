@@ -58,7 +58,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private static final String GOOG = "goog";
 
   private final AbstractCompiler compiler;
-  private final JSChunkGraph moduleGraph;
+  private final JSChunkGraph chunkGraph;
 
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
@@ -81,7 +81,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    this.moduleGraph = compiler.getModuleGraph();
+    this.chunkGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
     this.astFactory = compiler.createAstFactory();
@@ -104,7 +104,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   Map<String, ProvidedName> collectProvidedNames(Node externs, Node root) {
     if (this.providedNames.isEmpty()) {
       // goog is special-cased because it is provided in Closure's base library.
-      providedNames.put(GOOG, new ProvidedName(GOOG, null, null, false /* implicit */, false));
+      providedNames.put(
+          GOOG, new ProvidedNameBuilder().setNamespace(GOOG).setNode(null).setChunk(null).build());
       NodeTraversal.traverseRoots(compiler, new CollectDefinitions(), externs, root);
     }
     return this.providedNames;
@@ -260,16 +261,17 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   }
 
   /** Handles a goog.module that is a legacy namespace. */
-  private void processLegacyModuleCall(String namespace, Node googModuleCall, JSChunk module) {
-    registerAnyProvidedPrefixes(namespace, googModuleCall, module);
+  private void processLegacyModuleCall(String namespace, Node googModuleCall, JSChunk chunk) {
+    registerAnyProvidedPrefixes(namespace, googModuleCall, chunk);
     providedNames.put(
         namespace,
-        new ProvidedName(
-            namespace,
-            googModuleCall,
-            module,
-            /* explicit= */ true,
-            /* fromPreviousProvide= */ false));
+        new ProvidedNameBuilder()
+            .setNamespace(namespace)
+            .setNode(googModuleCall)
+            .setChunk(chunk)
+            .setExplicit(true)
+            .setFromLegacyModule(true)
+            .build());
   }
 
   /** Handles a goog.provide call. */
@@ -292,8 +294,12 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         registerAnyProvidedPrefixes(ns, parent, t.getChunk());
         providedNames.put(
             ns,
-            new ProvidedName(
-                ns, parent, t.getChunk(), /* explicit= */ true, /* fromPreviousProvide= */ false));
+            new ProvidedNameBuilder()
+                .setNamespace(ns)
+                .setNode(parent)
+                .setChunk(t.getChunk())
+                .setExplicit(true)
+                .build());
       }
     }
   }
@@ -320,7 +326,14 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         } else if (n.getBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED)) {
           // We didn't find it in the providedNames, but it was previously marked as provided.
           // This implies we're in hotswap pass and the current typedef is a provided namespace.
-          ProvidedName provided = new ProvidedName(name, n, t.getChunk(), true, true);
+          ProvidedName provided =
+              new ProvidedNameBuilder()
+                  .setNamespace(name)
+                  .setNode(n)
+                  .setChunk(t.getChunk())
+                  .setExplicit(true)
+                  .setFromPreviousProvide(true)
+                  .build();
           providedNames.put(name, provided);
           provided.addDefinition(n, t.getChunk());
         }
@@ -388,10 +401,10 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
    * <p>TODO(b/128120127): delete this method
    */
   private void processProvideFromPreviousPass(NodeTraversal t, String name, Node parent) {
-    JSChunk module = t.getChunk();
+    JSChunk chunk = t.getChunk();
     if (providedNames.containsKey(name)) {
       ProvidedName provided = providedNames.get(name);
-      provided.addDefinition(parent, module);
+      provided.addDefinition(parent, chunk);
       if (isNamespacePlaceholder(parent)) {
         // Remove this later if it is a simple object literal. Replacing the corresponding
         // ProvidedName will create a new definition.
@@ -402,11 +415,18 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     } else {
       // Record this provide created on a previous pass. This can happen if the previous pass had
       // goog.provide('foo.bar');, but all we have now is the rewritten `foo.bar = {};`.
-      registerAnyProvidedPrefixes(name, parent, module);
+      registerAnyProvidedPrefixes(name, parent, chunk);
 
-      ProvidedName provided = new ProvidedName(name, parent, module, true, true);
+      ProvidedName provided =
+          new ProvidedNameBuilder()
+              .setNamespace(name)
+              .setNode(parent)
+              .setChunk(chunk)
+              .setExplicit(true)
+              .setFromPreviousProvide(true)
+              .build();
       providedNames.put(name, provided);
-      provided.addDefinition(parent, module);
+      provided.addDefinition(parent, chunk);
     }
   }
 
@@ -517,9 +537,65 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       } else {
         providedNames.put(
             prefixNs,
-            new ProvidedName(
-                prefixNs, node, module, /* explicit= */ false, /* fromPreviousProvide= */ false));
+            new ProvidedNameBuilder()
+                .setNamespace(prefixNs)
+                .setNode(node)
+                .setChunk(module)
+                .setExplicit(false)
+                .build());
       }
+    }
+  }
+
+  private class ProvidedNameBuilder {
+    private String namespace;
+    private Node node;
+    private JSChunk chunk;
+    private boolean explicit;
+    private boolean fromPreviousProvide;
+    private boolean fromLegacyModule;
+
+    ProvidedNameBuilder setNamespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
+    /**
+     * @param node Can be null (for GOOG or an implicit name), an EXPR_RESULT for a goog.provide, or
+     *     an EXPR_RESULT or name declaration for a previously provided name.
+     */
+    ProvidedNameBuilder setNode(Node node) {
+      this.node = node;
+      return this;
+    }
+
+    ProvidedNameBuilder setChunk(JSChunk chunk) {
+      this.chunk = chunk;
+      return this;
+    }
+
+    /** @param explicit Whether this came from an actual goog.provide('a.b.c'); call */
+    ProvidedNameBuilder setExplicit(boolean explicit) {
+      this.explicit = explicit;
+      return this;
+    }
+
+    /**
+     * @param fromPreviousProvide Whether this came from a namespace created by a previous iteration
+     */
+    ProvidedNameBuilder setFromPreviousProvide(boolean fromPreviousProvide) {
+      this.fromPreviousProvide = fromPreviousProvide;
+      return this;
+    }
+
+    /** Whether this comes from a legacy goog.module */
+    ProvidedNameBuilder setFromLegacyModule(boolean fromLegacyModule) {
+      this.fromLegacyModule = fromLegacyModule;
+      return this;
+    }
+
+    ProvidedName build() {
+      return new ProvidedName(this);
     }
   }
 
@@ -546,8 +622,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // assignment or declaration for a 'previously provided' name or parent namespace of such.
     // This should only be used for source info and a place to hang namespace definitions.
     private final Node firstNode;
-    // The module where this namespace was first goog.provided, if modules exist. */
-    private final JSChunk firstModule;
+    // The chunk where this namespace was first goog.provided, if chunks exist. */
+    private final JSChunk firstChunk;
 
     // The node where the call was explicitly goog.provided. Null if the namespace is implicit.
     // If this is previously provided, this will instead be the expression or declaration marked
@@ -563,10 +639,10 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // the 'candidate definition' of 'a.b' is the GETPROP 'a.b' from the constructor declaration.
     private Node candidateDefinition = null;
 
-    // The minimum module where the provide namespace definition must appear. If child namespaces of
-    // this provide appear in multiple modules, this module must be earlier than all child
-    // namespace's modules.
-    private JSChunk minimumModule = null;
+    // The minimum chunk where the provide namespace definition must appear. If child namespaces of
+    // this provide appear in multiple chunks, this chunk must be earlier than all child
+    // namespace's chunks.
+    private JSChunk minimumChunk = null;
 
     // The replacement declaration. Null until replace() has been called.
     private Node replacementNode = null;
@@ -575,34 +651,26 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     // previous pass run. Implies this is during a hotswap pass.
     private final boolean isPreviouslyProvided;
 
-    /**
-     * Initializes a ProvidedName with some basic information, potentially to be updated later.
-     *
-     * @param node Can be null (for GOOG or an implicit name), an EXPR_RESULT for a goog.provide, or
-     *     an EXPR_RESULT or name declaration for a previously provided name.
-     * @param explicit Whether this came from an actual goog.provide('a.b.c'); call
-     * @param fromPreviousProvide Whether this came from a namespace created by a previous iteration
-     */
-    ProvidedName(
-        String namespace,
-        Node node,
-        JSChunk module,
-        boolean explicit,
-        boolean fromPreviousProvide) {
+    // Whether this comes from a goog.module with declareLegacyNamespace.
+    private final boolean fromLegacyModule;
+
+    private ProvidedName(ProvidedNameBuilder builder) {
+      Node node = builder.node;
       Preconditions.checkArgument(
           node == null
               || NodeUtil.isExprCall(node)
-              || ((fromPreviousProvide || !explicit)
+              || ((builder.fromPreviousProvide || !builder.explicit)
                   && (NodeUtil.isExprAssign(node)
                       || NodeUtil.isNameDeclaration(node)
                       || node.isExprResult() && node.getFirstChild().isQualifiedName())),
           node);
-      this.namespace = namespace;
-      this.firstNode = node;
-      this.firstModule = module;
-      this.isPreviouslyProvided = fromPreviousProvide;
+      this.namespace = builder.namespace;
+      this.firstNode = builder.node;
+      this.firstChunk = builder.chunk;
+      this.isPreviouslyProvided = builder.fromPreviousProvide;
+      this.fromLegacyModule = builder.fromLegacyModule;
 
-      addProvide(node, module, explicit);
+      addProvide(node, builder.chunk, builder.explicit);
     }
 
     /**
@@ -617,7 +685,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
      * @param node the EXPR_RESULT representing this provide or possible a VAR for a previously
      *     provided name. null if implicit.
      */
-    void addProvide(Node node, JSChunk module, boolean explicit) {
+    void addProvide(Node node, JSChunk chunk, boolean explicit) {
       if (explicit) {
         // goog.provide('name.space');
         checkState(explicitNode == null || isPreviouslyProvided);
@@ -629,7 +697,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         // goog.provide('name.space.some.child');
         hasAChildNamespace = true;
       }
-      updateMinimumModule(module);
+      updateMinimumChunk(chunk);
     }
 
     /** Whether there existed a `goog.provide('a.b');` for this name 'a.b' */
@@ -639,6 +707,10 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
     boolean isFromExterns() {
       return explicitNode.isFromExterns();
+    }
+
+    boolean isFromLegacyModule() {
+      return this.fromLegacyModule;
     }
 
     private boolean hasCandidateDefinitionNotFromPreviousPass() {
@@ -696,19 +768,19 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       checkArgument(explicitNode != node || isPreviouslyProvided);
       if ((candidateDefinition == null) || !node.isExprResult()) {
         candidateDefinition = node;
-        updateMinimumModule(module);
+        updateMinimumChunk(module);
       }
     }
 
-    private void updateMinimumModule(JSChunk newModule) {
-      if (minimumModule == null) {
-        minimumModule = newModule;
-      } else if (moduleGraph.getModuleCount() > 1) {
-        minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(minimumModule, newModule);
+    private void updateMinimumChunk(JSChunk newChunk) {
+      if (minimumChunk == null) {
+        minimumChunk = newChunk;
+      } else if (chunkGraph.getModuleCount() > 1) {
+        minimumChunk = chunkGraph.getDeepestCommonDependencyInclusive(minimumChunk, newChunk);
       } else {
         // If there is no module graph, then there must be exactly one
         // module in the program.
-        checkState(newModule == minimumModule, "Missing module graph");
+        checkState(newChunk == minimumChunk, "Missing module graph");
       }
     }
 
@@ -818,7 +890,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     /** Adds an assignment or declaration to this namespace to the AST, using the provided value */
     private void createNamespaceInitialization(Node replacement) {
       replacementNode = replacement;
-      if (firstModule == minimumModule) {
+      if (firstChunk == minimumChunk) {
         replacementNode.insertBefore(firstNode);
       } else {
         // In this case, the name was implicitly provided by two independent
@@ -826,7 +898,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         int indexOfDot = namespace.lastIndexOf('.');
         if (indexOfDot == -1) {
           // Any old place is fine.
-          compiler.getNodeForCodeInsertion(minimumModule).addChildToBack(replacementNode);
+          compiler.getNodeForCodeInsertion(minimumChunk).addChildToBack(replacementNode);
         } else {
           // Add it after the parent namespace.
           ProvidedName parentName = providedNames.get(namespace.substring(0, indexOfDot));

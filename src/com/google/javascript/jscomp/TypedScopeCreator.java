@@ -518,9 +518,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .collectProvidedNames(externs, js);
 
     for (ProvidedName name : providedNames.values()) {
-      ModuleMetadata metadata = metadataMap.getModulesByGoogNamespace().get(name.getNamespace());
       if (name.getCandidateDefinition() != null) {
-        // This name will be defined eventually. Don't worry about it.
+        // This name will be defined eventually in the source code.
         Node firstDefinitionNode = name.getCandidateDefinition();
         if (NodeUtil.isExprAssign(firstDefinitionNode)
             && firstDefinitionNode.getFirstFirstChild().isName()) {
@@ -529,14 +528,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       } else if (name.getFirstProvideCall() != null
           && NodeUtil.isExprCall(name.getFirstProvideCall())
-          && (metadata == null || !metadata.isLegacyGoogModule())) {
+          && !name.isFromLegacyModule()) {
         // This name is implicitly created by a goog.provide call; declare it in the scope once
         // reaching the provide call. The exception is legacy goog.modules, which are declared
         // once leaving the module.
         providedNamesFromCall.put(name.getFirstProvideCall(), name);
       }
 
-      if (metadata != null && metadata.isGoogProvide()) {
+      if (name.isExplicitlyProvided() && !name.isFromLegacyModule()) {
         typeRegistry.registerLegacyClosureModule(name.getNamespace());
       }
     }
