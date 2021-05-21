@@ -3370,15 +3370,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void runHotSwapPass(Node originalRoot, Node js, PassFactory passFactory) {
-    if (!passFactory.isHotSwapable()) {
-      return;
-    }
-
-    HotSwapCompilerPass pass = (HotSwapCompilerPass) passFactory.create(this);
-    if (logger.isLoggable(Level.INFO)) {
-      logger.info("Performing HotSwap for pass " + passFactory.getName());
-    }
-    pass.hotSwapScript(js, originalRoot);
+    // TODO(b/187747884) Delete this stub.
   }
 
   private PassConfig getCleanupPassConfig() {

@@ -1695,22 +1695,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory inferJsDocInfo =
       PassFactory.builderForHotSwap()
           .setName("inferJsDocInfo")
-          .setInternalFactory(
-              (compiler) ->
-                  new HotSwapCompilerPass() {
-                    @Override
-                    public void process(Node externs, Node root) {
-                      checkNotNull(topScope);
-                      checkNotNull(getTypedScopeCreator());
-
-                      new InferJSDocInfo(compiler).process(externs, root);
-                    }
-
-                    @Override
-                    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      new InferJSDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
-                    }
-                  })
+          .setInternalFactory(InferJSDocInfo::new)
           .setFeatureSetForChecks()
           .build();
 
@@ -1720,7 +1705,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.CHECK_TYPES)
           .setInternalFactory(
               (compiler) ->
-                  new HotSwapCompilerPass() {
+                  new CompilerPass() {
                     @Override
                     public void process(Node externs, Node root) {
                       checkNotNull(topScope);
@@ -1729,11 +1714,6 @@ public final class DefaultPassConfig extends PassConfig {
                       TypeCheck check = makeTypeCheck(compiler);
                       check.process(externs, root);
                       compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
-                    }
-
-                    @Override
-                    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      makeTypeCheck(compiler).check(scriptRoot, false);
                     }
                   })
           .setFeatureSetForChecks()
@@ -1842,8 +1822,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
-  private static HotSwapCompilerPass combineChecks(
-      AbstractCompiler compiler, List<Callback> callbacks) {
+  private static CompilerPass combineChecks(AbstractCompiler compiler, List<Callback> callbacks) {
     checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
   }

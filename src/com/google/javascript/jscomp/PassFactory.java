@@ -53,9 +53,6 @@ public abstract class PassFactory {
    */
   abstract Function<AbstractCompiler, ? extends CompilerPass> getInternalFactory();
 
-  /** Whether or not his factory produces {@link HotSwapCompilerPass}es. */
-  abstract boolean isHotSwapable();
-
   public abstract Builder toBuilder();
 
   PassFactory() {
@@ -81,8 +78,6 @@ public abstract class PassFactory {
     public abstract Builder setInternalFactory(
         Function<AbstractCompiler, ? extends CompilerPass> x);
 
-    abstract Builder setHotSwapable(boolean x);
-
     @ForOverride
     abstract PassFactory autoBuild();
 
@@ -100,25 +95,18 @@ public abstract class PassFactory {
 
     public final PassFactory build() {
       PassFactory result = autoBuild();
-
-      // Every pass must have a nonempty name.
       checkState(!result.getName().isEmpty());
-      if (result.isHotSwapable()) {
-        // HotSwap passes are for transpilation, not optimization, so running them in a loop
-        // makes no sense.
-        checkState(!result.isRunInFixedPointLoop());
-      }
-
       return result;
     }
   }
 
   public static Builder builder() {
-    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false).setHotSwapable(false);
+    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false);
   }
 
+  // TODO(b/187747884) Delete this.
   public static Builder builderForHotSwap() {
-    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false).setHotSwapable(true);
+    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false);
   }
 
   /** Create a no-op pass that can only run once. Used to break up loops. */
