@@ -268,7 +268,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
 
         case OPTCHAIN_GETPROP:
-          addSymbolUse(n.getString(), t.getModule(), PROPERTY);
+          addSymbolUse(n.getString(), t.getChunk(), PROPERTY);
           break;
 
         case GETPROP:
@@ -285,7 +285,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               // TODO(bradfordcsmith): We don't seem to have any tests that cover this case.
               // This class has no unit tests of its own and it is only used by
               // CrossChunkMethodMotion.
-              addGlobalUseOfSymbol(propName, t.getModule(), PROPERTY);
+              addGlobalUseOfSymbol(propName, t.getChunk(), PROPERTY);
               return;
             } else {
               if (parent.isAssign() && n == parent.getFirstChild()) {
@@ -302,7 +302,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
             }
           }
 
-          addSymbolUse(propName, t.getModule(), PROPERTY);
+          addSymbolUse(propName, t.getChunk(), PROPERTY);
           break;
 
         case OBJECTLIT:
@@ -333,7 +333,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               case MEMBER_FUNCTION_DEF:
                 if (!propNode.isQuotedString()) {
                   // May be STRING, GET, or SET, but NUMBER isn't interesting.
-                  addSymbolUse(propNode.getString(), t.getModule(), PROPERTY);
+                  addSymbolUse(propNode.getString(), t.getChunk(), PROPERTY);
                 }
                 break;
 
@@ -363,10 +363,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
               if (var.getInitialValue() != null && var.getInitialValue().isFunction()) {
                 if (t.inGlobalHoistScope()) {
                   if (!processGlobalFunctionDeclaration(t, n, var)) {
-                    addGlobalUseOfSymbol(name, t.getModule(), VAR);
+                    addGlobalUseOfSymbol(name, t.getChunk(), VAR);
                   }
                 } else {
-                  addSymbolUse(name, t.getModule(), VAR);
+                  addSymbolUse(name, t.getChunk(), VAR);
                 }
               }
 
@@ -485,12 +485,12 @@ class AnalyzePrototypeProperties implements CompilerPass {
         String name = nameNode.getString();
         getNameInfoForName(name, VAR)
             .getDeclarations()
-            .add(new GlobalFunction(nameNode, v, t.getModule()));
+            .add(new GlobalFunction(nameNode, v, t.getChunk()));
 
         // If the function name is exported, we should create an edge here
         // so that it's never removed.
         if (compiler.getCodingConvention().isExported(name) || anchorUnusedVars) {
-          addGlobalUseOfSymbol(name, t.getModule(), VAR);
+          addGlobalUseOfSymbol(name, t.getChunk(), VAR);
         }
 
         return true;
@@ -522,7 +522,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           if (NodeUtil.isExprAssign(grandParent)
               && NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
             PrototypeProperty prop =
-                new AssignmentPrototypeProperty(grandParent, maybeGetVar(t, root), t.getModule());
+                new AssignmentPrototypeProperty(grandParent, maybeGetVar(t, root), t.getChunk());
             getNameInfoForName(n.getString(), PROPERTY).getDeclarations().add(prop);
             return true;
           }
@@ -539,7 +539,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
                 String name = key.getString();
                 PrototypeProperty prop =
                     new LiteralPrototypeProperty(
-                        key.getFirstChild(), n, maybeGetVar(t, root), t.getModule());
+                        key.getFirstChild(), n, maybeGetVar(t, root), t.getChunk());
                 getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
               }
             }
@@ -568,7 +568,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               : null;
       getNameInfoForName(name, PROPERTY)
           .getDeclarations()
-          .add(new ClassMemberFunction(n, var, t.getModule()));
+          .add(new ClassMemberFunction(n, var, t.getChunk()));
     }
 
     private Var maybeGetVar(NodeTraversal t, Node maybeName) {

@@ -446,7 +446,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             Node functionCall = IR.call(IR.name("inlined_j2cl_getter"));
             n.replaceWith(functionCall);
             Reference reference =
-                new Reference(functionCall, t.getScope(), t.getModule(), InliningMode.DIRECT);
+                new Reference(functionCall, t.getScope(), t.getChunk(), InliningMode.DIRECT);
             Node inlinedCall = injector.inline(reference, null, prop.getKey.getFirstChild());
             t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
           }
@@ -468,7 +468,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
               Node functionCall = IR.call(IR.name("inlined_j2cl_setter"), assignmentValue);
               n.replaceWith(functionCall);
               Reference reference =
-                  new Reference(functionCall, t.getScope(), t.getModule(), InliningMode.BLOCK);
+                  new Reference(functionCall, t.getScope(), t.getChunk(), InliningMode.BLOCK);
               injector.maybePrepareCall(reference);
               Node inlinedCall = injector.inline(reference, null, prop.setKey.getFirstChild());
               t.getCompiler().reportChangeToEnclosingScope(inlinedCall);

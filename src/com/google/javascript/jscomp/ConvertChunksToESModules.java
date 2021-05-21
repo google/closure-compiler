@@ -346,7 +346,7 @@ final class ConvertChunksToESModules implements CompilerPass {
 
     public void visitScript(NodeTraversal t, Node script) {
       checkState(script.isScript());
-      JSChunk chunk = t.getModule();
+      JSChunk chunk = t.getChunk();
       List<JSChunk> chunkDependencies = chunk.getDependencies();
 
       crossChunkExports.putIfAbsent(chunk, new LinkedHashSet<>());
@@ -419,8 +419,8 @@ final class ConvertChunksToESModules implements CompilerPass {
     if (input == null) {
       return false;
     }
-    JSChunk definingChunk = input.getModule();
-    JSChunk referencingChunk = t.getModule();
+    JSChunk definingChunk = input.getChunk();
+    JSChunk referencingChunk = t.getChunk();
 
     if (definingChunk != referencingChunk) {
       if (NodeUtil.isLhsOfAssign(nameNode)) {

@@ -136,7 +136,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       info.occurrences.add(occurrence);
 
       // The current module.
-      JSChunk module = t.getModule();
+      JSChunk module = t.getChunk();
       if (info.occurrences.size() != 1) {
         // Check whether the current module depends on the module containing
         // the declaration.

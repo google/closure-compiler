@@ -1870,7 +1870,7 @@ public final class FunctionInjectorTest {
         new Method() {
           @Override
           public boolean call(NodeTraversal t, Node n, Node parent) {
-            Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            Reference ref = new Reference(n, t.getScope(), t.getChunk(), mode);
             Node fnBody = NodeUtil.getFunctionBody(fnNode);
             CanInlineResult result =
                 injector.canInlineReferenceToFunction(
@@ -1951,7 +1951,7 @@ public final class FunctionInjectorTest {
         new Method() {
           @Override
           public boolean call(NodeTraversal t, Node n, Node parent) {
-            Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            Reference ref = new Reference(n, t.getScope(), t.getChunk(), mode);
             Node fnBody = NodeUtil.getFunctionBody(fnNode);
             CanInlineResult canInline =
                 injector.canInlineReferenceToFunction(

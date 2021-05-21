@@ -858,14 +858,14 @@ public final class CommandLineRunnerTest {
     assertThat(lastCompiler.getExternsForTesting()).hasSize(3);
 
     CompilerInput extern = lastCompiler.getExternsForTesting().get(2);
-    assertThat(extern.getModule()).isNull();
+    assertThat(extern.getChunk()).isNull();
     assertThat(extern.isExtern()).isTrue();
     assertThat(extern.getCode()).isEqualTo(code);
 
     assertThat(lastCompiler.getInputsForTesting()).hasSize(1);
 
     CompilerInput input = lastCompiler.getInputsForTesting().get(0);
-    assertThat(input.getModule()).isNotNull();
+    assertThat(input.getChunk()).isNotNull();
     assertThat(input.isExtern()).isFalse();
     assertThat(input.getCode()).isEmpty();
   }

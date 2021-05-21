@@ -174,10 +174,10 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (parent != null && NodeUtil.isTopLevel(parent)) {
       checkState(topLevelStatementDraft == null, n);
-      topLevelStatementDraft = initializeDraftStatement(nodeTraversal.getModule(), n);
+      topLevelStatementDraft = initializeDraftStatement(t.getChunk(), n);
     }
     // If node is a new basic block, put on basic block stack
     if (isBlockBoundary(n, parent)) {

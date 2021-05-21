@@ -433,7 +433,7 @@ class GlobalNamespace
         curMetadata = null;
       }
 
-      collect(t.getModule(), t.getScope(), n);
+      collect(t.getChunk(), t.getScope(), n);
 
       return true;
     }

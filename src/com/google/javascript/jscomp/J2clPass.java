@@ -208,7 +208,7 @@ public class J2clPass implements CompilerPass {
         // TODO(goktug): Add a check that will ensure safety of this.
         Node inlinedCall =
             injector.unsafeInline(
-                new Reference(n, t.getScope(), t.getModule(), inliningMode), fnName, fnImpl);
+                new Reference(n, t.getScope(), t.getChunk(), inliningMode), fnName, fnImpl);
         // Avoid overridding original source information with the helper classes source information.
         // For example; we want a cast to point related Java statement instead of the Casts utility.
         inlinedCall.srcrefTree(n);

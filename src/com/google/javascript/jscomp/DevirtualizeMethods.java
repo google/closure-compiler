@@ -511,7 +511,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private JSChunk moduleForNode(Node node) {
     Node script = NodeUtil.getEnclosingScript(node);
     CompilerInput input = compiler.getInput(script.getInputId());
-    return input.getModule();
+    return input.getChunk();
   }
 
   private static String rewrittenMethodNameOf(String originalMethodName) {

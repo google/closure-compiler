@@ -300,8 +300,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
           instancesByModule.computeIfAbsent(
-              t.getModule(), (JSChunk k) -> new ExtractionInstanceInfo());
-          ExtractionInstanceInfo instanceInfo = instancesByModule.get(t.getModule());
+              t.getChunk(), (JSChunk k) -> new ExtractionInstanceInfo());
+          ExtractionInstanceInfo instanceInfo = instancesByModule.get(t.getChunk());
           instanceInfo.instances.add(instance);
           instanceInfo.totalDelta += instance.delta;
         }

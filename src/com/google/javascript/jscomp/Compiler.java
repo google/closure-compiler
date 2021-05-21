@@ -807,7 +807,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       for (CompilerInput i : moduleGraph.getAllInputs()) {
         if (i.getSourceFile().isWeak()) {
           checkState(
-              i.getModule() == weakModule, "Expected all weak files to be in the weak module.");
+              i.getChunk() == weakModule, "Expected all weak files to be in the weak module.");
         }
       }
     }
@@ -1442,7 +1442,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
     putCompilerInput(ast.getInputId(), newInput);
 
-    JSChunk module = oldInput.getModule();
+    JSChunk module = oldInput.getChunk();
     if (module != null) {
       module.addAfter(newInput, oldInput);
       module.remove(oldInput);
@@ -2019,7 +2019,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       externsRoot.addChildToBack(root);
       scriptNodeByFilename.put(input.getSourceFile().getName(), root);
 
-      JSChunk module = input.getModule();
+      JSChunk module = input.getChunk();
       if (module != null) {
         module.remove(input);
       }
@@ -2050,7 +2050,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Iterate a copy because hoisting modifies what we're iterating over.
     for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
       if (input.getHasNoCompileAnnotation()) {
-        input.getModule().remove(input);
+        input.getChunk().remove(input);
         staleInputs = true;
       }
     }
@@ -3263,7 +3263,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     astRoot.setDeleted(true);
     NodeUtil.markFunctionsDeleted(astRoot, this);
 
-    input.getModule().remove(input);
+    input.getChunk().remove(input);
     inputsById.remove(input.getInputId());
   }
 

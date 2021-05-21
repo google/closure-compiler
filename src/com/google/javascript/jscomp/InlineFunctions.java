@@ -202,7 +202,7 @@ class InlineFunctions implements CompilerPass {
           if (nameNode.isName()
               && nameNode.hasChildren()
               && nameNode.getFirstChild().isFunction()) {
-            maybeAddFunction(new FunctionVar(n), t.getModule());
+            maybeAddFunction(new FunctionVar(n), t.getChunk());
           }
           break;
 
@@ -212,7 +212,7 @@ class InlineFunctions implements CompilerPass {
           Preconditions.checkState(NodeUtil.isStatementBlock(parent) || parent.isLabel());
           if (NodeUtil.isFunctionDeclaration(n)) {
             Function fn = new NamedFunction(n);
-            maybeAddFunction(fn, t.getModule());
+            maybeAddFunction(fn, t.getChunk());
           }
           break;
         default:
@@ -242,7 +242,7 @@ class InlineFunctions implements CompilerPass {
           // If an interesting function was discovered, add it.
           if (fnNode != null) {
             Function fn = new FunctionExpression(fnNode, callsSeen++);
-            maybeAddFunction(fn, t.getModule());
+            maybeAddFunction(fn, t.getChunk());
             anonFns.put(fnNode, fn.getName());
           }
           break;
@@ -500,7 +500,7 @@ class InlineFunctions implements CompilerPass {
 
     @Override
     public void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState) {
-      maybeAddReference(t, functionState, callNode, t.getModule());
+      maybeAddReference(t, functionState, callNode, t.getChunk());
     }
 
     void maybeAddReference(

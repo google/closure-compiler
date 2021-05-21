@@ -280,7 +280,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     private JSChunk getRefModule(Reference ref) {
       CompilerInput input = compiler.getInput(ref.getInputId());
-      return input == null ? null : input.getModule();
+      return input == null ? null : input.getChunk();
     }
 
     /**

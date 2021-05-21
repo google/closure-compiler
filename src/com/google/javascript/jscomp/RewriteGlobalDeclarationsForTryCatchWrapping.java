@@ -112,7 +112,7 @@ class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, Compiler
     }
 
     if (NodeUtil.isFunctionDeclaration(n)) {
-      functions.put(t.getModule(), n);
+      functions.put(t.getChunk(), n);
     }
 
     if (NodeUtil.isClassDeclaration(n)) {

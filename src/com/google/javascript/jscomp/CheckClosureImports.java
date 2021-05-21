@@ -495,8 +495,8 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         checkNotNull(
             compiler.getInput(requiredInputId), "Cannot find CompilerInput for %s", requiredModule);
 
-    JSChunk requiredChunk = requiredInput.getModule();
-    JSChunk currentChunk = t.getModule();
+    JSChunk requiredChunk = requiredInput.getChunk();
+    JSChunk currentChunk = t.getChunk();
     if (currentChunk != requiredChunk && !chunkGraph.dependsOn(currentChunk, requiredChunk)) {
       compiler.report(
           JSError.make(

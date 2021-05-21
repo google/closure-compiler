@@ -510,7 +510,7 @@ public class CompilerInput extends DependencyInfo.Base {
   }
 
   /** Returns the module to which the input belongs. */
-  public JSChunk getModule() {
+  public JSChunk getChunk() {
     return module;
   }
 

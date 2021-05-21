@@ -148,7 +148,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         Node maybeLegacyNamespaceCall = googModuleCall.getNext();
         if (maybeLegacyNamespaceCall != null
             && NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(maybeLegacyNamespaceCall)) {
-          processLegacyModuleCall(closureNamespace, googModuleCall, t.getModule());
+          processLegacyModuleCall(closureNamespace, googModuleCall, t.getChunk());
         }
         return false;
       }
@@ -286,14 +286,14 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       if (providedNames.containsKey(ns)) {
         ProvidedName previouslyProvided = providedNames.get(ns);
         if (!previouslyProvided.isExplicitlyProvided() || previouslyProvided.isPreviouslyProvided) {
-          previouslyProvided.addProvide(parent, t.getModule(), true);
+          previouslyProvided.addProvide(parent, t.getChunk(), true);
         }
       } else {
-        registerAnyProvidedPrefixes(ns, parent, t.getModule());
+        registerAnyProvidedPrefixes(ns, parent, t.getChunk());
         providedNames.put(
             ns,
             new ProvidedName(
-                ns, parent, t.getModule(), /* explicit= */ true, /* fromPreviousProvide= */ false));
+                ns, parent, t.getChunk(), /* explicit= */ true, /* fromPreviousProvide= */ false));
       }
     }
   }
@@ -316,13 +316,13 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         ProvidedName pn = providedNames.get(name);
         if (pn != null) {
           n.putBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED, true);
-          pn.addDefinition(n, t.getModule());
+          pn.addDefinition(n, t.getChunk());
         } else if (n.getBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED)) {
           // We didn't find it in the providedNames, but it was previously marked as provided.
           // This implies we're in hotswap pass and the current typedef is a provided namespace.
-          ProvidedName provided = new ProvidedName(name, n, t.getModule(), true, true);
+          ProvidedName provided = new ProvidedName(name, n, t.getChunk(), true, true);
           providedNames.put(name, provided);
-          provided.addDefinition(n, t.getModule());
+          provided.addDefinition(n, t.getChunk());
         }
       }
     }
@@ -365,7 +365,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     } else {
       ProvidedName pn = providedNames.get(name);
       if (pn != null) {
-        pn.addDefinition(parent, t.getModule());
+        pn.addDefinition(parent, t.getChunk());
       }
     }
   }
@@ -388,7 +388,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
    * <p>TODO(b/128120127): delete this method
    */
   private void processProvideFromPreviousPass(NodeTraversal t, String name, Node parent) {
-    JSChunk module = t.getModule();
+    JSChunk module = t.getChunk();
     if (providedNames.containsKey(name)) {
       ProvidedName provided = providedNames.get(name);
       provided.addDefinition(parent, module);

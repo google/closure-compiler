@@ -498,7 +498,7 @@ public final class JSChunkGraph implements Serializable {
     ImmutableList<CompilerInput> allInputs = ImmutableList.copyOf(inputs);
     for (CompilerInput i : allInputs) {
       if (i.getSourceFile().isWeak()) {
-        JSChunk existingModule = i.getModule();
+        JSChunk existingModule = i.getChunk();
         if (existingModule == weakModule) {
           continue;
         }
@@ -561,7 +561,7 @@ public final class JSChunkGraph implements Serializable {
     // Figure out which sources *must* be in each module.
     ListMultimap<JSChunk, CompilerInput> entryPointInputsPerModule = LinkedListMultimap.create();
     for (CompilerInput input : entryPointInputs) {
-      JSChunk module = input.getModule();
+      JSChunk module = input.getChunk();
       checkNotNull(module);
       entryPointInputsPerModule.put(module, input);
     }
@@ -610,7 +610,7 @@ public final class JSChunkGraph implements Serializable {
               JSError.make(
                   WEAK_FILE_REACHABLE_FROM_ENTRY_POINT_ERROR, input.getSourceFile().getName()));
         }
-        JSChunk oldModule = input.getModule();
+        JSChunk oldModule = input.getChunk();
         if (oldModule == null) {
           input.setModule(module);
         } else {
@@ -633,7 +633,7 @@ public final class JSChunkGraph implements Serializable {
       for (CompilerInput i : weakInputs) {
         // Add weak inputs to the weak module in dependency order. moveMarkedWeakSources will move
         // in command line flag order.
-        checkState(i.getModule() == null);
+        checkState(i.getChunk() == null);
         i.getSourceFile().setKind(SourceKind.WEAK);
         i.setModule(weakModule);
         weakModule.add(i);
@@ -646,7 +646,7 @@ public final class JSChunkGraph implements Serializable {
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
     for (CompilerInput input : orderedInputs) {
-      JSChunk module = input.getModule();
+      JSChunk module = input.getChunk();
       if (module != null && !module.getInputs().contains(input)) {
         module.add(input);
       }
