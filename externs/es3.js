@@ -2337,6 +2337,14 @@ RegExp.prototype.source;
 RegExp.prototype.flags;
 
 /**
+ * The unicode property indicates whether or not the "u" flag is used with a regular expression.
+ *
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicode
+ */
+RegExp.prototype.unicode;
+
+/**
  * @constructor
  * @param {*=} opt_message
  * @param {*=} opt_file
