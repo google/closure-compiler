@@ -580,8 +580,22 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testNoRewrite_exportedMethod_viaCodingConvention() {
-    // no rename, leading _ indicates exported symbol
+    // no rewriting without call; regardless of leading underscore
+    testSame("a.prototype.foo = function() {};");
     testSame("a.prototype._foo = function() {};");
+
+    // renames as expected
+    test(
+        "function a() {} a.prototype.foo = function() {}; let o = new a; o.foo();",
+        lines(
+            "function a() {}",
+            "var JSCompiler_StaticMethods_foo =",
+            "function(JSCompiler_StaticMethods_foo$self) {};",
+            "let o = new a;",
+            "JSCompiler_StaticMethods_foo(o);"));
+
+    // no renaming, as leading _ indicates exported symbol
+    testSame("function a() {} a.prototype._foo = function() {}; let o = new a; o._foo();");
   }
 
   @Test
