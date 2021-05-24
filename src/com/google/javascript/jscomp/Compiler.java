@@ -82,7 +82,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
@@ -3310,72 +3309,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void setAccessorSummary(AccessorSummary summary) {
     this.accessorSummary = checkNotNull(summary);
-  }
-
-  /**
-   * Replaces one file in a hot-swap mode. The given JsAst should be made from a new version of a
-   * file that already was present in the last compile call. If the file is new, this will silently
-   * ignored.
-   *
-   * @param ast the ast of the file that is being replaced
-   */
-  public void replaceScript(JsAst ast) {
-    CompilerInput input = this.getInput(ast.getInputId());
-    replaceIncrementalSourceAst(ast);
-    Node originalRoot = checkNotNull(input.getAstRoot(this));
-
-    processNewScript(ast, originalRoot);
-  }
-
-  /**
-   * Adds a new Script AST to the compile state. If a script for the same file already exists the
-   * script will not be added, instead a call to #replaceScript should be used.
-   *
-   * @param ast the ast of the new file
-   */
-  public void addNewScript(JsAst ast) {
-    addNewSourceAst(ast);
-    Node emptyScript = new Node(Token.SCRIPT);
-    InputId inputId = ast.getInputId();
-    emptyScript.setInputId(inputId);
-    emptyScript.setStaticSourceFile(SourceFile.fromCode(inputId.getIdName(), ""));
-
-    processNewScript(ast, emptyScript);
-  }
-
-  // TODO(b/187747884): remove this function
-  private void processNewScript(JsAst ast, Node originalRoot) {
-    setFeatureSet(options.getLanguageIn().toFeatureSet());
-
-    Node js = checkNotNull(ast.getAstRoot(this));
-
-    runHotSwap(originalRoot, js, this.getCleanupPassConfig());
-
-    // Type information is not reliable for hotswap runs.
-    this.typeCheckingHasRun = false;
-    this.removeSyntheticVarsInput();
-
-    runHotSwap(originalRoot, js, this.ensureDefaultPassConfig());
-  }
-
-  /** Execute the passes from a PassConfig instance over a single replaced file. */
-  private void runHotSwap(Node originalRoot, Node js, PassConfig passConfig) {
-    for (PassFactory passFactory : passConfig.getChecks()) {
-      runHotSwapPass(originalRoot, js, passFactory);
-    }
-  }
-
-  private void runHotSwapPass(Node originalRoot, Node js, PassFactory passFactory) {
-    // TODO(b/187747884) Delete this stub.
-  }
-
-  private PassConfig getCleanupPassConfig() {
-    return new CleanupPasses(getOptions());
-  }
-
-  private void removeSyntheticVarsInput() {
-    String sourceName = Compiler.SYNTHETIC_EXTERNS;
-    removeExternInput(new InputId(sourceName));
   }
 
   @Override
