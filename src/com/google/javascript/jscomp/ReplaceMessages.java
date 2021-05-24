@@ -17,9 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -280,36 +282,19 @@ public final class ReplaceMessages extends JsMessageVisitor {
 
   /**
    * Replaces a CALL node with an inlined message value.
-   *  <p>
-   * The call tree looks something like:
+   *
+   * <p>For input that that looks like this
    * <pre>
-   * call
-   *  |-- getprop
-   *  |   |-- name 'goog'
-   *  |   +-- string 'getMsg'
-   *  |
-   *  |-- string 'Hi {$userName}! Welcome to {$product}.'
-   *  +-- objlit
-   *      |-- string_key 'userName'
-   *      |   +-- name 'someUserName'
-   *      +-- string_key 'product'
-   *          +-- call
-   *              +-- name 'getProductName'
+   *   goog.getMsg(
+   *       'Hi {$userName}! Welcome to {$product}.',
+   *       { 'userName': 'someUserName', 'product': getProductName() })
    * <pre>
-   * <p>
-   * For that example, we'd return:
+   *
+   * <p>We'd return:
    * <pre>
-   * add
-   *  |-- string 'Hi '
-   *  +-- add
-   *      |-- name someUserName
-   *      +-- add
-   *          |-- string '! Welcome to '
-   *          +-- add
-   *              |-- call
-   *              |   +-- name 'getProductName'
-   *              +-- string '.'
+   *   'Hi ' + someUserName + '! Welcome to ' + 'getProductName()' + '.'
    * </pre>
+   *
    * @param message  a message
    * @param callNode  the message's original CALL value node
    * @return a STRING node, or an ADD node that does string concatenation, if
@@ -320,18 +305,42 @@ public final class ReplaceMessages extends JsMessageVisitor {
    */
   private Node replaceCallNode(JsMessage message, Node callNode) throws MalformedException {
     checkNode(callNode, Token.CALL);
+    // `goog.getMsg`
     Node getPropNode = callNode.getFirstChild();
     checkNode(getPropNode, Token.GETPROP);
     Node stringExprNode = getPropNode.getNext();
     checkStringExprNode(stringExprNode);
+    // optional `{ key1: value, key2: value2 }` replacements
     Node objLitNode = stringExprNode.getNext();
-    Map<String, Boolean> options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
+    // optional replacement options, e.g. `{ html: true }`
+    MsgOptions options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
+
+    Map<String, Node> placeholderMap = new HashMap<>();
+    if (objLitNode != null) {
+      for (Node key = objLitNode.getFirstChild(); key != null; key = key.getNext()) {
+        checkState(key.isStringKey(), key);
+        String name = key.getString();
+        boolean isKeyAlreadySeen = placeholderMap.put(name, key.getOnlyChild()) != null;
+        if (isKeyAlreadySeen) {
+          throw new MalformedException("Duplicate placeholder name", key);
+        }
+      }
+    }
+    final ImmutableSet<String> placeholderNames = message.placeholders();
+    if (placeholderMap.isEmpty() && !placeholderNames.isEmpty()) {
+      throw new MalformedException(
+          "Empty placeholder value map for a translated message with placeholders.", callNode);
+    } else {
+      for (String placeholderName : placeholderNames) {
+        if (!placeholderMap.containsKey(placeholderName)) {
+          throw new MalformedException(
+              "Unrecognized message placeholder referenced: " + placeholderName, callNode);
+        }
+      }
+    }
 
     // Build the replacement tree.
-    Iterator<CharSequence> iterator = mergeStringParts(message.getParts()).iterator();
-    return iterator.hasNext()
-        ? constructStringExprNode(iterator, objLitNode, options, callNode)
-        : IR.string("");
+    return constructStringExprNode(mergeStringParts(message.getParts()), placeholderMap, options);
   }
 
   /**
@@ -339,50 +348,41 @@ public final class ReplaceMessages extends JsMessageVisitor {
    * consists of one or more STRING nodes, placeholder replacement value nodes (which can be
    * arbitrary expressions), and ADD nodes.
    *
-   * @param parts an iterator over message parts
-   * @param objLitNode an OBJLIT node mapping placeholder names to values
+   * @param msgParts an iterator over message parts
+   * @param placeholderMap map from placeholder names to value Nodes
    * @return the root of the constructed parse tree
-   * @throws MalformedException if {@code parts} contains a placeholder reference that does not
-   *     correspond to a valid placeholder name
    */
   private static Node constructStringExprNode(
-      Iterator<CharSequence> parts,
-      @Nullable Node objLitNode,
-      Map<String, Boolean> options,
-      Node refNode)
-      throws MalformedException {
-    checkNotNull(refNode);
+      List<CharSequence> msgParts, Map<String, Node> placeholderMap, MsgOptions options) {
 
-    CharSequence part = parts.next();
-    Node partNode = null;
+    if (msgParts.isEmpty()) {
+      return IR.string("");
+    } else {
+      Node resultNode = null;
+      for (CharSequence msgPart : msgParts) {
+        final Node partNode = createNodeForMsgPart(msgPart, options, placeholderMap);
+        resultNode = (resultNode == null) ? partNode : IR.add(resultNode, partNode);
+      }
+      return resultNode;
+    }
+  }
+
+  private static Node createNodeForMsgPart(
+      CharSequence part, MsgOptions options, Map<String, Node> placeholderMap) {
+    final Node partNode;
     if (part instanceof JsMessage.PlaceholderReference) {
       JsMessage.PlaceholderReference phRef = (JsMessage.PlaceholderReference) part;
 
-      // The translated message is null
-      if (objLitNode == null) {
-        throw new MalformedException(
-            "Empty placeholder value map for a translated message with placeholders.", refNode);
-      }
-
-      for (Node key = objLitNode.getFirstChild(); key != null; key = key.getNext()) {
-        if (key.getString().equals(phRef.getName())) {
-          Node valueNode = key.getFirstChild();
-          partNode = valueNode.cloneTree();
-        }
-      }
-
-      if (partNode == null) {
-        throw new MalformedException(
-            "Unrecognized message placeholder referenced: " + phRef.getName(), objLitNode);
-      }
+      final String placeholderName = phRef.getName();
+      partNode = checkNotNull(placeholderMap.get(placeholderName)).cloneTree();
     } else {
       // The part is just a string literal.
       String s = part.toString();
-      if (options.getOrDefault("html", false)) {
+      if (options.escapeLessThan) {
         // Note that "&" is not replaced because the translation can contain HTML entities.
         s = s.replace("<", "&lt;");
       }
-      if (options.getOrDefault("unescapeHtmlEntities", false)) {
+      if (options.unescapeHtmlEntities) {
         // Unescape entities that need to be escaped when embedding HTML or XML in data/attributes
         // of an HTML/XML document. See https://www.w3.org/TR/xml/#sec-predefined-ent.
         // Note that "&amp;" must be the last to avoid "creating" new entities.
@@ -396,17 +396,11 @@ public final class ReplaceMessages extends JsMessageVisitor {
       }
       partNode = IR.string(s);
     }
-
-    if (parts.hasNext()) {
-      return IR.add(partNode, constructStringExprNode(parts, objLitNode, options, refNode));
-    } else {
-      return partNode;
-    }
+    return partNode;
   }
 
-  private static Map<String, Boolean> getOptions(@Nullable Node optionsNode)
-      throws MalformedException {
-    Map<String, Boolean> options = new HashMap<>();
+  private static MsgOptions getOptions(@Nullable Node optionsNode) throws MalformedException {
+    MsgOptions options = new MsgOptions();
     if (optionsNode == null) {
       return options;
     }
@@ -424,14 +418,30 @@ public final class ReplaceMessages extends JsMessageVisitor {
       }
       switch (optName) {
         case "html":
+          options.escapeLessThan = value.isTrue();
+          break;
         case "unescapeHtmlEntities":
-          options.put(optName, value.isTrue());
+          options.unescapeHtmlEntities = value.isTrue();
           break;
         default:
           throw new MalformedException("Unexpected option", aNode);
       }
     }
     return options;
+  }
+
+  /** Options for escaping characters in the translated messages. */
+  private static class MsgOptions {
+    // Replace `'<'` with `'&lt;'` in the message.
+    private boolean escapeLessThan = false;
+    // Replace these escaped entities with their literal characters in the message
+    // (Overrides escapeLessThan)
+    // '&lt;' -> '<'
+    // '&gt;' -> '>'
+    // '&apos;' -> "'"
+    // '&quot;' -> '"'
+    // '&amp;' -> '&'
+    private boolean unescapeHtmlEntities = false;
   }
 
   /** Merges consecutive string parts in the list of message parts. */

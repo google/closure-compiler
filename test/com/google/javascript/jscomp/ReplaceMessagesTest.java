@@ -239,7 +239,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});",
-        "/** @desc d */\n var MSG_B='One '+ (x +' ph' )");
+        "/** @desc d */\n var MSG_B='One '+ x +' ph';");
   }
 
   @Test
@@ -289,7 +289,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
-        "/** @desc d */\n var MSG_F='#'+((a?b:c)+'.')");
+        "/** @desc d */\n var MSG_F='#'+(a?b:c)+'.'");
   }
 
   @Test
@@ -314,7 +314,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
-        "/** @desc d */\n var MSG_H = y + (', ' + (y + (' and ' + x)))");
+        "/** @desc d */\n var MSG_H = y + ', ' + y + ' and ' + x");
   }
 
   @Test
@@ -341,7 +341,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
-        "/** @desc d */\n a.b.c.MSG_J='One '+(x+' ph')");
+        "/** @desc d */\n a.b.c.MSG_J='One '+x+' ph'");
   }
 
   @Test
@@ -355,7 +355,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});",
-        "/** @desc d */\n var MSG_L='{$b}'+(' has '+1);");
+        "/** @desc d */\n var MSG_L='{$b}'+' has '+1;");
   }
 
   @Test
@@ -678,7 +678,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_B=goog.getMsg(`asdf {$measly}`, {measly: x});",
-        "/** @desc d */\n var MSG_B='One ' + (x + ' ph')");
+        "/** @desc d */\n var MSG_B='One ' + x + ' ph'");
   }
 
   @Test
@@ -706,8 +706,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             + " var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', "
             + "{'startSpan': '<span title=\"&lt;info&gt;\">', 'endSpan': '</span>'}, "
             + "{unescapeHtmlEntities: true});",
-        "/** @desc d */\n var MSG_A = '< ' + ('<span title=\"&lt;info&gt;\">' + "
-            + "('email & address' + ('</span>' + (' >'))));");
+        "/** @desc d */\n var MSG_A = '< ' + '<span title=\"&lt;info&gt;\">' + "
+            + "'email & address' + '</span>' + ' >';");
     test(
         "/** @desc d */\n"
             + " var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {},"
@@ -766,7 +766,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         "/** @desc d */\n"
             + " var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y',"
             + " 'z': 'Z'}, {unescapeHtmlEntities: true});",
-        "/** @desc d */\n var MSG_C = '<br>'+('&'+('X'+('Y'+('&ap'+('Z'+('os;'))))))");
+        "/** @desc d */\n var MSG_C = '<br>'+'&'+'X'+'Y'+'&ap'+'Z'+'os;'");
   }
 
   @Test
@@ -780,7 +780,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/** @desc d */\n var MSG_A = goog.getMsg('{$br}', {'br': '<br>'}, {html: true});",
-        "/** @desc d */\n var MSG_A='Hello &lt;'+('<br>'+'&gt;')");
+        "/** @desc d */\n var MSG_A='Hello &lt;'+'<br>'+'&gt;'");
   }
 
   private void registerMessage(JsMessage message) {
