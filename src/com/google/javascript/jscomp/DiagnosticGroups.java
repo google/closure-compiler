@@ -59,12 +59,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Named groups of DiagnosticTypes exposed by Compiler.
- */
+/** Named groups of DiagnosticTypes exposed by Compiler. */
 public class DiagnosticGroups {
-  static final DiagnosticType UNUSED =
-      DiagnosticType.warning("JSC_UNUSED", "{0}");
+  static final DiagnosticType UNUSED = DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public static final Set<String> wildcardExcludedGroups =
       ImmutableSet.of(
@@ -90,8 +87,7 @@ public class DiagnosticGroups {
     return new DiagnosticGroup(types);
   }
 
-  static DiagnosticGroup registerGroup(String name,
-      DiagnosticGroup group) {
+  static DiagnosticGroup registerGroup(String name, DiagnosticGroup group) {
     groupsByName.put(name, group);
     return group;
   }
@@ -102,8 +98,7 @@ public class DiagnosticGroups {
     return group;
   }
 
-  static DiagnosticGroup registerGroup(String name,
-      DiagnosticGroup ... groups) {
+  static DiagnosticGroup registerGroup(String name, DiagnosticGroup... groups) {
     DiagnosticGroup group = new DiagnosticGroup(name, groups);
     groupsByName.put(name, group);
     return group;
@@ -200,11 +195,11 @@ public class DiagnosticGroups {
           ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
   public static final DiagnosticGroup GLOBAL_THIS =
-      DiagnosticGroups.registerGroup("globalThis",
-          CheckGlobalThis.GLOBAL_THIS);
+      DiagnosticGroups.registerGroup("globalThis", CheckGlobalThis.GLOBAL_THIS);
 
   public static final DiagnosticGroup DEPRECATED =
-      DiagnosticGroups.registerGroup("deprecated",
+      DiagnosticGroups.registerGroup(
+          "deprecated",
           CheckAccessControls.DEPRECATED_NAME,
           CheckAccessControls.DEPRECATED_NAME_REASON,
           CheckAccessControls.DEPRECATED_PROP,
@@ -239,28 +234,25 @@ public class DiagnosticGroups {
           CheckJSDoc.JSDOC_IN_BLOCK_COMMENT);
 
   public static final DiagnosticGroup INVALID_CASTS =
-      DiagnosticGroups.registerGroup("invalidCasts",
-          TypeValidator.INVALID_CAST);
+      DiagnosticGroups.registerGroup("invalidCasts", TypeValidator.INVALID_CAST);
 
   public static final DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup(
           "strictModuleDepCheck",
           VarCheck.STRICT_MODULE_DEP_ERROR,
-          CheckGlobalNames.STRICT_MODULE_DEP_QNAME,
           CheckClosureImports.CROSS_CHUNK_REQUIRE_ERROR);
 
   public static final DiagnosticGroup VIOLATED_MODULE_DEP =
-      DiagnosticGroups.registerGroup("violatedModuleDep",
-          VarCheck.VIOLATED_MODULE_DEP_ERROR);
+      DiagnosticGroups.registerGroup("violatedModuleDep", VarCheck.VIOLATED_MODULE_DEP_ERROR);
 
   public static final DiagnosticGroup EXTERNS_VALIDATION =
-      DiagnosticGroups.registerGroup("externsValidation",
+      DiagnosticGroups.registerGroup(
+          "externsValidation",
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
           VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
   public static final DiagnosticGroup UNKNOWN_DEFINES =
-      DiagnosticGroups.registerGroup("unknownDefines",
-          ProcessDefines.UNKNOWN_DEFINE_WARNING);
+      DiagnosticGroups.registerGroup("unknownDefines", ProcessDefines.UNKNOWN_DEFINE_WARNING);
 
   public static final DiagnosticGroup TWEAKS =
       DiagnosticGroups.registerGroup(
@@ -276,7 +268,8 @@ public class DiagnosticGroups {
           TypeCheck.HIDDEN_SUPERCLASS_PROPERTY);
 
   public static final DiagnosticGroup MISSING_PROPERTIES =
-      DiagnosticGroups.registerGroup("missingProperties",
+      DiagnosticGroups.registerGroup(
+          "missingProperties",
           TypeCheck.INEXISTENT_PROPERTY,
           TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
           TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
@@ -286,34 +279,31 @@ public class DiagnosticGroups {
           "globallyMissingProperties", TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
   public static final DiagnosticGroup J2CL_CHECKS =
-      DiagnosticGroups.registerGroup("j2clChecks",
-          J2clChecksPass.J2CL_REFERENCE_EQUALITY);
+      DiagnosticGroups.registerGroup("j2clChecks", J2clChecksPass.J2CL_REFERENCE_EQUALITY);
 
   public static final DiagnosticGroup MISSING_RETURN =
-      DiagnosticGroups.registerGroup("missingReturn",
-          CheckMissingReturn.MISSING_RETURN_STATEMENT);
+      DiagnosticGroups.registerGroup("missingReturn", CheckMissingReturn.MISSING_RETURN_STATEMENT);
 
   public static final DiagnosticGroup UNDEFINED_VARIABLES =
-      DiagnosticGroups.registerGroup("undefinedVars",
-          VarCheck.UNDEFINED_VAR_ERROR);
+      DiagnosticGroups.registerGroup("undefinedVars", VarCheck.UNDEFINED_VAR_ERROR);
 
   public static final DiagnosticGroup UNDEFINED_NAMES =
       DiagnosticGroups.registerDeprecatedGroup("undefinedNames");
 
   public static final DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
-      DiagnosticGroups.registerGroup("checkDebuggerStatement",
-          CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
+      DiagnosticGroups.registerGroup(
+          "checkDebuggerStatement", CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
 
   public static final DiagnosticGroup CHECK_REGEXP =
-      DiagnosticGroups.registerGroup("checkRegExp",
-          CheckRegExp.REGEXP_REFERENCE,
-          CheckRegExp.MALFORMED_REGEXP);
+      DiagnosticGroups.registerGroup(
+          "checkRegExp", CheckRegExp.REGEXP_REFERENCE, CheckRegExp.MALFORMED_REGEXP);
 
   // NOTE(dimvar): it'd be nice to add TypedScopeCreator.ALL_DIAGNOSTICS here,
   // but we would first need to cleanup projects that would break because
   // they set --jscomp_error=checkTypes.
   public static final DiagnosticGroup CHECK_TYPES =
-      DiagnosticGroups.registerGroup("checkTypes",
+      DiagnosticGroups.registerGroup(
+          "checkTypes",
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS,
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
@@ -331,53 +321,57 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup CHECK_STATIC_OVERRIDES = CHECK_PROTOTYPAL_TYPES;
 
   public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
-      DiagnosticGroups.registerGroup("tooManyTypeParams",
-          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+      DiagnosticGroups.registerGroup(
+          "tooManyTypeParams", RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
 
   public static final DiagnosticGroup STRICT_MISSING_PROPERTIES =
-      DiagnosticGroups.registerGroup("strictMissingProperties",
+      DiagnosticGroups.registerGroup(
+          "strictMissingProperties",
           TypeCheck.STRICT_INEXISTENT_PROPERTY,
           TypeCheck.STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION,
           TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY);
 
   public static final DiagnosticGroup STRICT_PRIMITIVE_OPERATORS =
-      DiagnosticGroups.registerGroup("strictPrimitiveOperators",
-          TypeValidator.INVALID_OPERAND_TYPE);
+      DiagnosticGroups.registerGroup(
+          "strictPrimitiveOperators", TypeValidator.INVALID_OPERAND_TYPE);
 
   public static final DiagnosticGroup STRICT_CHECK_TYPES =
-      DiagnosticGroups.registerGroup("strictCheckTypes",
-          STRICT_MISSING_PROPERTIES,
-          STRICT_PRIMITIVE_OPERATORS);
+      DiagnosticGroups.registerGroup(
+          "strictCheckTypes", STRICT_MISSING_PROPERTIES, STRICT_PRIMITIVE_OPERATORS);
 
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
-      DiagnosticGroups.registerGroup("reportUnknownTypes",
-          TypeCheck.UNKNOWN_EXPR_TYPE);
+      DiagnosticGroups.registerGroup("reportUnknownTypes", TypeCheck.UNKNOWN_EXPR_TYPE);
 
   public static final DiagnosticGroup CHECK_VARIABLES =
-      DiagnosticGroups.registerGroup("checkVars",
+      DiagnosticGroups.registerGroup(
+          "checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           VariableReferenceCheck.EARLY_REFERENCE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
   public static final DiagnosticGroup CHECK_USELESS_CODE =
-      DiagnosticGroups.registerGroup("uselessCode",
+      DiagnosticGroups.registerGroup(
+          "uselessCode",
           CheckSideEffects.USELESS_CODE_ERROR,
           CheckUnreachableCode.UNREACHABLE_CODE);
 
   public static final DiagnosticGroup CONST =
-      DiagnosticGroups.registerGroup("const",
+      DiagnosticGroups.registerGroup(
+          "const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
   static final DiagnosticGroup ACCESS_CONTROLS_CONST =
-      DiagnosticGroups.registerGroup("accessControlsConst",
+      DiagnosticGroups.registerGroup(
+          "accessControlsConst",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static final DiagnosticGroup CONSTANT_PROPERTY =
-      DiagnosticGroups.registerGroup("constantProperty",
+      DiagnosticGroups.registerGroup(
+          "constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
@@ -419,7 +413,8 @@ public class DiagnosticGroups {
           ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE);
 
   public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
-      DiagnosticGroups.registerGroup("unrecognizedTypeError", // undocumented
+      DiagnosticGroups.registerGroup(
+          "unrecognizedTypeError", // undocumented
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
@@ -460,22 +455,21 @@ public class DiagnosticGroups {
 
   @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
-      DiagnosticGroups.registerGroup("duplicateMessage",
-          JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
+      DiagnosticGroups.registerGroup("duplicateMessage", JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
   @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup MESSAGE_DESCRIPTIONS =
-      DiagnosticGroups.registerGroup("msgDescriptions",
-          JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
+      DiagnosticGroups.registerGroup(
+          "msgDescriptions", JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
 
   /**
-   * Warnings that only apply to people who use MSG_ to denote
-   * messages. Note that this doesn't include warnings about
-   * proper use of goog.getMsg
+   * Warnings that only apply to people who use MSG_ to denote messages. Note that this doesn't
+   * include warnings about proper use of goog.getMsg
    */
   @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup MSG_CONVENTIONS =
-      DiagnosticGroups.registerGroup("messageConventions", // undocumented
+      DiagnosticGroups.registerGroup(
+          "messageConventions", // undocumented
           JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION,
           JsMessageVisitor.MESSAGE_HAS_NO_TEXT,
           JsMessageVisitor.MESSAGE_TREE_MALFORMED,
@@ -496,12 +490,10 @@ public class DiagnosticGroups {
           CheckJSDoc.MISPLACED_MSG_ANNOTATION);
 
   public static final DiagnosticGroup MISPLACED_MSG_ANNOTATION =
-      DiagnosticGroups.registerGroup("misplacedMsgAnnotation",
-          CheckJSDoc.MISPLACED_MSG_ANNOTATION);
+      DiagnosticGroups.registerGroup("misplacedMsgAnnotation", CheckJSDoc.MISPLACED_MSG_ANNOTATION);
 
   public static final DiagnosticGroup MISPLACED_SUPPRESS =
-      DiagnosticGroups.registerGroup("misplacedSuppress",
-          CheckJSDoc.MISPLACED_SUPPRESS);
+      DiagnosticGroups.registerGroup("misplacedSuppress", CheckJSDoc.MISPLACED_SUPPRESS);
 
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup(
@@ -523,24 +515,23 @@ public class DiagnosticGroups {
           FunctionTypeBuilder.OPTIONAL_ARG_AT_END);
 
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
-      DiagnosticGroups.registerGroup("deprecatedAnnotations",
-          CheckJSDoc.ANNOTATION_DEPRECATED);
+      DiagnosticGroups.registerGroup("deprecatedAnnotations", CheckJSDoc.ANNOTATION_DEPRECATED);
 
   public static final DiagnosticGroup UNUSED_PRIVATE_PROPERTY =
-      DiagnosticGroups.registerGroup("unusedPrivateMembers",
-          CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY);
+      DiagnosticGroups.registerGroup(
+          "unusedPrivateMembers", CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY);
 
   public static final DiagnosticGroup UNUSED_LOCAL_VARIABLE =
-      DiagnosticGroups.registerGroup("unusedLocalVariables",
-          VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
+      DiagnosticGroups.registerGroup(
+          "unusedLocalVariables", VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
 
   public static final DiagnosticGroup MISSING_CONST_PROPERTY =
       DiagnosticGroups.registerGroup(
           "jsdocMissingConst", CheckConstPrivateProperties.MISSING_CONST_PROPERTY);
 
   public static final DiagnosticGroup JSDOC_MISSING_TYPE =
-      DiagnosticGroups.registerGroup("jsdocMissingType",
-              RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "jsdocMissingType", RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
 
   public static final DiagnosticGroup UNNECESSARY_ESCAPE =
       DiagnosticGroups.registerGroup("unnecessaryEscape", RhinoErrorReporter.UNNECESSARY_ESCAPE);
@@ -662,8 +653,8 @@ public class DiagnosticGroups {
   // warnings. Not for general use. These diagnostics will most likely
   // be moved to the suspiciousCode group.
   static {
-    DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
-        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+    DiagnosticGroups.registerGroup(
+        "transitionalSuspiciousCodeWarnings", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   // This diagnostic group is intentionally absent in ParserConfig.properties.
@@ -683,7 +674,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LATE_PROVIDE =
       DiagnosticGroups.registerGroup(
           "lateProvide", // undocumented
-          CheckGlobalNames.NAME_DEFINED_LATE_WARNING,
           CheckClosureImports.LATE_PROVIDE_ERROR);
 
   public static final DiagnosticGroup DUPLICATE_NAMESPACES =

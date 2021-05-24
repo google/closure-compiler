@@ -363,14 +363,18 @@ public class CompilerOptions implements Serializable {
   // whether to skip the RemoveTypes pass
   private boolean shouldUnsafelyPreserveTypesForDebugging;
 
-  // TODO(b/187217909): deprecate this option. Currently it still is used to enable the
-  // CheckGlobalNames pass to run/not run in DefaultPassConfig.
+  @Deprecated // no-op
   public CheckLevel checkGlobalNamesLevel;
 
-  /** Checks the integrity of references to qualified global names. (e.g. "a.b") */
-  public void setCheckGlobalNamesLevel(CheckLevel level) {
-    checkGlobalNamesLevel = level;
-  }
+  /**
+   * Checks the integrity of references to qualified global names. (e.g. "a.b")
+   *
+   * <p>TODO(b/188976086): delete this flag.
+   *
+   * @deprecated no-op
+   */
+  @Deprecated // no-op
+  public void setCheckGlobalNamesLevel(CheckLevel level) {}
 
   @Deprecated public CheckLevel brokenClosureRequiresLevel;
 
@@ -1123,8 +1127,7 @@ public class CompilerOptions implements Serializable {
           // path like "blaze-out/directory/bin/some/file.js" we strip out the entire prefix,
           // resulting in a reported path of "some/file.js". For generated files, we only strip the
           // first two segments, leaving "genfiles/some/file.js".
-          Pattern.compile(
-              "^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
+          Pattern.compile("^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
 
   public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
     conformanceRemoveRegexFromPath = pattern;

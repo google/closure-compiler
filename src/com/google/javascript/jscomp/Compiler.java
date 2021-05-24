@@ -1577,10 +1577,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       symbolTable.findScopes(externsRoot, jsRoot);
     }
 
-    GlobalNamespace globalNamespace = ensureDefaultPassConfig().getGlobalNamespace();
-    if (globalNamespace != null) {
-      symbolTable.addSymbolsFrom(globalNamespace);
-    }
+    GlobalNamespace globalNamespace = new GlobalNamespace(this, this.externsRoot, this.jsRoot);
+    symbolTable.addSymbolsFrom(globalNamespace);
 
     ReferenceCollector refCollector =
         new ReferenceCollector(
@@ -3345,15 +3343,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     processNewScript(ast, emptyScript);
   }
 
+  // TODO(b/187747884): remove this function
   private void processNewScript(JsAst ast, Node originalRoot) {
     setFeatureSet(options.getLanguageIn().toFeatureSet());
 
     Node js = checkNotNull(ast.getAstRoot(this));
 
     runHotSwap(originalRoot, js, this.getCleanupPassConfig());
-    // NOTE: If hot swap passes that use GlobalNamespace are added, we will need
-    // to revisit this approach to clearing GlobalNamespaces
-    runHotSwapPass(null, null, ensureDefaultPassConfig().garbageCollectChecks);
 
     // Type information is not reliable for hotswap runs.
     this.typeCheckingHasRun = false;

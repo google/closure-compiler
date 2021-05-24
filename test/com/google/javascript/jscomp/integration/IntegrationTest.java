@@ -1954,10 +1954,20 @@ public final class IntegrationTest extends IntegrationTestCase {
         new String[] {
           "var o = {}; new o.Foo();", "/** @constructor */ o.Foo = function() {};",
         };
-    testSame(options, code);
 
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-    test(options, code, code, DiagnosticGroups.STRICT_MODULE_DEP_CHECK);
+    // No warning for this pattern. See b/188807234.
+    test(options, code, code);
+  }
+
+  @Test
+  public void testLateDefinedQualifiedName() {
+    CompilerOptions options = createCompilerOptions();
+    String code = "var a = {}; a.b.c = 0; a.b = {};";
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    // No warning for this pattern. See b/188807234.
+    testSame(options, code);
   }
 
   @Test

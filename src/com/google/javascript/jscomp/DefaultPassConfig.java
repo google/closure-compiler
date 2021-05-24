@@ -87,7 +87,7 @@ import javax.annotation.Nullable;
  * state as possible. The recommended way for a pass to leave behind some state for a subsequent
  * pass is through the compiler object. Any other state remaining here should only be used when the
  * pass config is creating the list of checks and optimizations, not after passes have started
- * executing. For example, the field namespaceForChecks should be in Compiler.
+ * executing.
  */
 public final class DefaultPassConfig extends PassConfig {
 
@@ -106,9 +106,6 @@ public final class DefaultPassConfig extends PassConfig {
   private static final java.util.regex.Pattern GLOBAL_SYMBOL_NAMESPACE_PATTERN =
       java.util.regex.Pattern.compile("^[a-zA-Z0-9$_]+$");
 
-  /** A global namespace to share across checking passes. */
-  private transient GlobalNamespace namespaceForChecks = null;
-
   /** A symbol table for registering references that get removed during preprocessing. */
   private final transient PreprocessorSymbolTable.CachedInstanceFactory
       preprocessorSymbolTableFactory = new PreprocessorSymbolTable.CachedInstanceFactory();
@@ -121,10 +118,6 @@ public final class DefaultPassConfig extends PassConfig {
 
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
-  }
-
-  GlobalNamespace getGlobalNamespace() {
-    return namespaceForChecks;
   }
 
   @Nullable
@@ -440,10 +433,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkConsts);
 
-    if (options.checkGlobalNamesLevel.isOn()) {
-      checks.add(checkGlobalNames);
-    }
-
     if (!options.getConformanceConfigs().isEmpty()) {
       checks.add(checkConformance);
     }
@@ -501,7 +490,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (!options.checksOnly) {
       checks.add(removeWeakSources);
-      checks.add(garbageCollectChecks);
       // Gather property names in externs so they can be queried by the optimizing passes.
       // See b/180424427 for why this runs in stage 1 and not stage 2.
       checks.add(gatherExternProperties);
@@ -1843,27 +1831,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
   }
 
-  /** Checks global name usage. */
-  private final PassFactory checkGlobalNames =
-      PassFactory.builder()
-          .setName("checkGlobalNames")
-          .setInternalFactory(
-              (compiler) ->
-                  new CompilerPass() {
-                    @Override
-                    public void process(Node externs, Node jsRoot) {
-                      // Create a global namespace for analysis by check passes.
-                      // Note that this class does all heavy computation lazily,
-                      // so it's OK to create it here.
-                      namespaceForChecks = new GlobalNamespace(compiler, externs, jsRoot);
-                      new CheckGlobalNames(compiler)
-                          .injectNamespace(namespaceForChecks)
-                          .process(externs, jsRoot);
-                    }
-                  })
-          .setFeatureSetForChecks()
-          .build();
-
   /** Checks that the code is ES5 strict compliant. */
   private final PassFactory checkStrictMode =
       PassFactory.builder()
@@ -1909,7 +1876,6 @@ public final class DefaultPassConfig extends PassConfig {
                     .putReplacements(getAdditionalReplacements(options))
                     .putReplacements(options.getDefineReplacements())
                     .setMode(mode)
-                    .injectNamespace(() -> namespaceForChecks)
                     .setRecognizeClosureDefines(compiler.getOptions().closurePass)
                     .build())
         .setFeatureSetForChecks()
@@ -1944,28 +1910,6 @@ public final class DefaultPassConfig extends PassConfig {
           // TODO(johnlenz): StripCode may be fooled by some newer features, like destructuring,
           // an).build();
           setFeatureSetForOptimizations()
-          .build();
-
-  /** Release references to data that is only needed during checks. */
-  final PassFactory garbageCollectChecks =
-      PassFactory.builderForHotSwap()
-          .setName("garbageCollectChecks")
-          .setInternalFactory(
-              (compiler) ->
-                  new HotSwapCompilerPass() {
-                    @Override
-                    public void process(Node externs, Node jsRoot) {
-                      // Kill the global namespace so that it can be garbage collected
-                      // after all passes are through with it.
-                      namespaceForChecks = null;
-                    }
-
-                    @Override
-                    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      process(null, null);
-                    }
-                  })
-          .setFeatureSet(FeatureSet.latest())
           .build();
 
   /** Checks that all constants are not modified */
