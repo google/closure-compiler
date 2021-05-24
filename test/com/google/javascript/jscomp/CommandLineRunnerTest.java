@@ -444,7 +444,6 @@ public final class CommandLineRunnerTest {
   public void testCheckUndefinedProperties1() {
     args.add("--warning_level=VERBOSE");
     args.add("--jscomp_error=missingProperties");
-    args.add("--jscomp_off=undefinedNames");
     test("var x = {}; var y = x.bar;", TypeCheck.INEXISTENT_PROPERTY);
   }
 
