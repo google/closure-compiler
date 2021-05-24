@@ -16,52 +16,50 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static com.google.javascript.jscomp.serialization.TypePointers.untrimOffset;
-import static java.util.stream.Collectors.joining;
+import static java.util.Arrays.stream;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import com.google.protobuf.ByteString;
+import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class SerializeTypedAstPassTest extends CompilerTestCase {
+public final class JSTypeReconserializerTest extends CompilerTestCase {
 
-  private Consumer<TypedAst> astConsumer;
   // individual test cases may override this
   private ImmutableSet<String> typesToForwardDeclare = null;
 
+  private TypePool typePool;
+  private StringPool.Builder stringPoolBuilder;
+
   // Proto fields commonly ignored in tests because hardcoding their values is brittle
+  private static final FieldDescriptor OBJECT_UUID =
+      ObjectTypeProto.getDescriptor().findFieldByName("uuid");
+  private static final FieldDescriptor OBJECT_PROPERTIES =
+      ObjectTypeProto.getDescriptor().findFieldByName("own_property");
+  private static final FieldDescriptor TYPE_OFFSET =
+      TypePointer.getDescriptor().findFieldByName("pool_offset");
   private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
-      ImmutableList.of(
-          ObjectTypeProto.getDescriptor().findFieldByName("uuid"),
-          ObjectTypeProto.getDescriptor().findFieldByName("own_property"));
+      ImmutableList.of(OBJECT_UUID, OBJECT_PROPERTIES);
 
   @Override
   @Before
@@ -74,10 +72,33 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(
-        compiler,
-        SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS,
-        astConsumer);
+    this.stringPoolBuilder = StringPool.builder();
+
+    return (externs, root) -> {
+      JSTypeReconserializer serializer =
+          JSTypeReconserializer.create(
+              compiler.getTypeRegistry(),
+              new InvalidatingTypes.Builder(compiler.getTypeRegistry())
+                  .addAllTypeMismatches(compiler.getTypeMismatches())
+                  .build(),
+              this.stringPoolBuilder,
+              SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
+
+      NodeTraversal.traverseRoots(
+          compiler,
+          new NodeTraversal.AbstractPostOrderCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (n.getJSType() != null) {
+                serializer.serializeType(n.getJSType());
+              }
+            }
+          },
+          externs,
+          root);
+
+      this.typePool = serializer.generateTypePool();
+    };
   }
 
   @Override
@@ -122,8 +143,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testObjectTypeSerializationFormat() {
-    TypedAst typedAst = compile("class Foo { m() {} } new Foo().m();");
-    List<TypeProto> typePool = typedAst.getTypePool().getTypeList();
+    List<TypeProto> typePool = compileToTypes("class Foo { m() {} } new Foo().m();");
 
     assertThat(typePool)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
@@ -131,17 +151,17 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool))
+                        .addPrototype(pointerForType("Foo.prototype"))
+                        .addInstanceType(pointerForType("Foo"))
                         .setMarkedConstructor(true)
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "prototype")))
+                        .addOwnProperty(findInStringPool("prototype")))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("Foo.prototype")
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "constructor"))
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "m")))
+                        .addOwnProperty(findInStringPool("constructor"))
+                        .addOwnProperty(findInStringPool("m")))
                 .build(),
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("Foo.prototype.m").setIsInvalidating(true))
@@ -208,7 +228,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testMultipleAnonymousTypesDoesntCrash() {
-    compile("(() => 5); (() => 'str');");
+    compileToTypes("(() => 5); (() => 'str');");
   }
 
   @Test
@@ -218,8 +238,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             lines(
                 "/** @enum {boolean|number} */", //
                 "const Foo = {};",
+                "/** @enum {string|number|!Foo} */", //
+                "const Bar = {};",
                 "",
-                "let /** !Foo|string|number */ x;"));
+                "let /** symbol|!Bar|string */ x;"));
 
     List<UnionTypeProto> unionsContainingUnions =
         typePool.stream()
@@ -239,8 +261,9 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 .setUnion(
                     UnionTypeProto.newBuilder()
                         .addUnionMember(pointerForType(PrimitiveType.BOOLEAN_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.NUMBER_TYPE))
                         .addUnionMember(pointerForType(PrimitiveType.STRING_TYPE))
+                        .addUnionMember(pointerForType(PrimitiveType.NUMBER_TYPE))
+                        .addUnionMember(pointerForType(PrimitiveType.SYMBOL_TYPE))
                         .build())
                 .build());
   }
@@ -299,17 +322,16 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testSerializeObjectLiteralTypesAsInvalidating() {
-    TypedAst typedAst = compile("const /** {x: string} */ obj = {x: ''};");
-    assertThat(typedAst.getTypePool().getTypeList())
-        .ignoringFieldDescriptors(
-            TypePointer.getDescriptor().findFieldByName("pool_offset"),
-            ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
+    List<TypeProto> typePool = compileToTypes("const /** {x: string} */ obj = {x: ''};");
+    assertThat(typePool)
+        .ignoringFieldDescriptors(TYPE_OFFSET)
+        .ignoringFieldDescriptors(OBJECT_UUID)
         .contains(
             TypeProto.newBuilder()
                 .setObject(
                     ObjectTypeProto.newBuilder()
                         .setIsInvalidating(true)
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "x")))
+                        .addOwnProperty(findInStringPool("x")))
                 .build());
   }
 
@@ -329,8 +351,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool)))
+                        .addPrototype(pointerForType("Foo.prototype"))
+                        .addInstanceType(pointerForType("Foo")))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
@@ -340,27 +362,33 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void uniquifiesTwoDifferentUnequalFunctionsWithSameName() {
+  public void reconciles_differentFunctionsWithSameJspath() {
     assertThat(
             compileToTypes(
                 lines(
                     "const ns = {};", //
+                    "",
+                    "ns.f = x => x;",
+                    "ns.f.a = 0;",
+                    "",
+                    "ns.f = (/** number */ x) => x;",
+                    "ns.f.b = 1;",
+                    "",
                     "ns.f = (/** string */ x) => x;",
-                    "/** @suppress {checkTypes} */",
-                    "ns.f = (/** number */ x) => x;")))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+                    "ns.f.c = 2;")))
+        .ignoringFieldDescriptors(OBJECT_UUID)
         .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
-        .containsAtLeast(
+        .contains(
             TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build(),
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
+                .setObject(
+                    namedObjectBuilder("ns.f")
+                        .setIsInvalidating(true)
+                        .addAllOwnProperty(findAllInStringPool("a", "b", "c")))
                 .build());
   }
 
   @Test
-  public void discardsDifferentTemplatizationsOfObject() {
+  public void discards_differentTemplatizationsOfSameRawType() {
     List<TypeProto> typePool =
         compileToTypes(
             lines(
@@ -375,8 +403,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
             TypeProto.newBuilder()
                 .setObject(
                     namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool)))
+                        .addPrototype(pointerForType("Foo.prototype"))
+                        .addInstanceType(pointerForType("Foo")))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
@@ -458,256 +486,9 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAst_constNumber() {
-    TypePointer numberType = pointerForType(PrimitiveType.NUMBER_TYPE);
-    TypedAst ast = compile("const x = 5;");
-    StringPoolProto stringPool = ast.getStringPool();
-
-    assertThat(ast.getCodeFileList().get(0))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .isEqualTo(
-            AstNode.newBuilder()
-                .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
-                .setRelativeLine(1)
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.CONST_DECLARATION)
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(findInStringPool(stringPool, "x"))
-                                .setOriginalNamePointer(findInStringPool(stringPool, "x"))
-                                .setRelativeColumn(6)
-                                .setType(numberType)
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.NUMBER_LITERAL)
-                                        .setDoubleValue(5)
-                                        .setRelativeColumn(4)
-                                        .setType(numberType)
-                                        .build())
-                                .build())
-                        .build())
-                .build());
-  }
-
-  @Test
-  public void testAst_externs() {
-    // 2 externs files, the default (empty) externs file + the source file marked with @externs
-    assertThat(compile("/** @externs */ function foo() {}").getExternFileList()).hasSize(2);
-  }
-
-  @Test
-  public void testAst_typeSummary() {
-    // @typeSummary files are omitted, leaving only 1 serialized extern file
-    assertThat(compile("/** @typeSummary */ function foo() {}").getExternFileList()).hasSize(1);
-  }
-
-  @Test
-  public void testAst_letString() {
-    TypePointer stringType = pointerForType(PrimitiveType.STRING_TYPE);
-    TypedAst ast = compile("let s = 'hello';");
-    StringPoolProto stringPool = ast.getStringPool();
-
-    assertThat(ast.getCodeFileList().get(0))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(
-            AstNode.getDescriptor().findFieldByName("relative_line"),
-            AstNode.getDescriptor().findFieldByName("relative_column"))
-        .isEqualTo(
-            AstNode.newBuilder()
-                .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.LET_DECLARATION)
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(findInStringPool(stringPool, "s"))
-                                .setOriginalNamePointer(findInStringPool(stringPool, "s"))
-                                .setType(stringType)
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(
-                                            findInStringPool(stringPool, "hello"))
-                                        .setType(stringType)
-                                        .build())
-                                .build())
-                        .build())
-                .build());
-  }
-
-  @Test
-  public void testAst_numberInCast() {
-    TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
-    assertThat(compileToAst("/** @type {?} */ (1);"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(
-            AstNode.getDescriptor().findFieldByName("relative_line"),
-            AstNode.getDescriptor().findFieldByName("relative_column"))
-        .isEqualTo(
-            AstNode.newBuilder()
-                .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.EXPRESSION_STATEMENT)
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.CAST)
-                                .setType(unknownType)
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.NUMBER_LITERAL)
-                                        .addBooleanProperty(NodeProperty.IS_PARENTHESIZED)
-                                        .addBooleanProperty(NodeProperty.COLOR_FROM_CAST)
-                                        .setDoubleValue(1)
-                                        .setType(unknownType)
-                                        .build())
-                                .build()))
-                .build());
-  }
-
-  @Test
-  public void testAst_arrowFunction() {
-    TypedAst ast = compile("() => 'hello';");
-
-    assertThat(ast.getCodeFileList().get(0))
-        .ignoringFieldDescriptors(
-            AstNode.getDescriptor().findFieldByName("relative_line"),
-            AstNode.getDescriptor().findFieldByName("type"),
-            AstNode.getDescriptor().findFieldByName("relative_column"))
-        .isEqualTo(
-            AstNode.newBuilder()
-                .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.EXPRESSION_STATEMENT)
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.FUNCTION_LITERAL)
-                                .addBooleanProperty(NodeProperty.ARROW_FN)
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.IDENTIFIER)
-                                        .setStringValuePointer(0)
-                                        .build())
-                                .addChild(
-                                    AstNode.newBuilder().setKind(NodeKind.PARAMETER_LIST).build())
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(
-                                            findInStringPool(ast.getStringPool(), "hello"))
-                                        .build())
-                                .build())
-                        .build())
-                .build());
-  }
-
-  @Test
-  public void testRewrittenGoogModule_containsOriginalNames() {
-    enableRewriteClosureCode();
-
-    TypedAst ast = compile("goog.module('a.b.c'); function f(x) {}");
-    assertThat(ast.getCodeFileList().get(0))
-        .ignoringFieldDescriptors(
-            AstNode.getDescriptor().findFieldByName("relative_line"),
-            AstNode.getDescriptor().findFieldByName("relative_column"),
-            AstNode.getDescriptor().findFieldByName("type"))
-        .isEqualTo(
-            AstNode.newBuilder()
-                .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
-                .addBooleanProperty(NodeProperty.GOOG_MODULE)
-                // `/** @const */ var module$exports$a$b$c = {};`
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.VAR_DECLARATION)
-                        .addBooleanProperty(NodeProperty.IS_NAMESPACE)
-                        .setJsdoc(OptimizationJsdoc.newBuilder().addKind(JsdocTag.JSDOC_CONST))
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(
-                                    findInStringPool(ast.getStringPool(), "module$exports$a$b$c"))
-                                .addChild(AstNode.newBuilder().setKind(NodeKind.OBJECT_LITERAL))))
-                // `function module$contents$a$b$c_f(x) {}`
-                .addChild(
-                    AstNode.newBuilder()
-                        .setKind(NodeKind.FUNCTION_LITERAL)
-                        .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f"))
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(
-                                    findInStringPool(
-                                        ast.getStringPool(), "module$contents$a$b$c_f"))
-                                .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f")))
-                        .addChild(
-                            AstNode.newBuilder()
-                                .setKind(NodeKind.PARAMETER_LIST)
-                                .addChild(
-                                    AstNode.newBuilder()
-                                        .setKind(NodeKind.IDENTIFIER)
-                                        .setStringValuePointer(
-                                            findInStringPool(ast.getStringPool(), "x"))
-                                        .setOriginalNamePointer(
-                                            findInStringPool(ast.getStringPool(), "x"))
-                                        .build()))
-                        .addChild(AstNode.newBuilder().setKind(NodeKind.BLOCK)))
-                .build());
-  }
-
-  @Test
-  public void serializesExternsFile() throws IOException {
+  public void serializesSourceOfSyntheticCodeDoesntCrash() throws IOException {
     ensureLibraryInjected("base");
-
-    TypedAst ast =
-        compileWithExterns(
-            new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
-
-    AstNode externs = ast.getExternFileList().get(0);
-    assertThat(
-            ast.getSourceFilePool()
-                .getSourceFileList()
-                .get(externs.getSourceFile() - 1)
-                .getFilename())
-        .isEqualTo("externs");
-  }
-
-  @Test
-  public void serializesSourceOfSyntheticCode() throws IOException {
-    ensureLibraryInjected("base");
-
-    TypedAst ast =
-        compileWithExterns(
-            new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
-
-    AstNode script = ast.getCodeFileList().get(0);
-    assertThat(
-            ast.getSourceFilePool()
-                .getSourceFileList()
-                .get(script.getSourceFile() - 1)
-                .getFilename())
-        .isEqualTo("testcode");
-
-    // 'base' is loaded at the beginning of the first script
-    AstNode baseLibraryStart = script.getChild(0);
-    assertThat(
-            ast.getSourceFilePool()
-                .getSourceFileList()
-                .get(baseLibraryStart.getSourceFile() - 1)
-                .getFilename())
-        .isEqualTo(" [synthetic:base] ");
-    // children of the synthetic subtree default to the root's file [synthetic:base]
-    assertThat(baseLibraryStart.getChild(0).getSourceFile()).isEqualTo(0);
-    // "let s = 'hello'" defaults to the parent's file 'testcode'
-    assertThat(script.getChild(script.getChildCount() - 1).getSourceFile()).isEqualTo(0);
+    compileToTypePool(new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
   }
 
   private ObjectTypeProto.Builder namedObjectBuilder(String className) {
@@ -720,53 +501,43 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   private List<TypeProto> compileToTypes(String source) {
-    return compile(source).getTypePool().getTypeList();
+    return compileToTypePool(source).getTypeList();
   }
 
   private TypePool compileToTypePool(String source) {
-    return compile(source).getTypePool();
+    return compileToTypePool(DEFAULT_EXTERNS, source);
   }
 
-  private AstNode compileToAst(String source) {
-    return compile(source).getCodeFileList().get(0);
-  }
-
-  private TypedAst compile(String source) {
-    return compileWithExterns(DEFAULT_EXTERNS, source);
-  }
-
-  private TypedAst compileWithExterns(String externs, String source) {
-    TypedAst[] resultAst = new TypedAst[1];
-    astConsumer = (ast) -> resultAst[0] = ast;
+  private TypePool compileToTypePool(String externs, String source) {
     testNoWarning(externs(externs), srcs(source));
-    return resultAst[0];
+    return this.typePool;
+  }
+
+  private int findInStringPool(String str) {
+    return this.stringPoolBuilder.put(str);
+  }
+
+  private ImmutableList<Integer> findAllInStringPool(String... str) {
+    return stream(str).map(this::findInStringPool).collect(toImmutableList());
   }
 
   private static TypePointer pointerForType(PrimitiveType primitive) {
     return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
   }
 
-  private static TypePointer pointerForType(String className, List<TypeProto> pool) {
-    for (int i = 0; i < pool.size(); i++) {
-      if (pool.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
+  private TypePointer pointerForType(String className) {
+    List<TypeProto> types = this.typePool.getTypeList();
+    for (int i = 0; i < types.size(); i++) {
+      if (types.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
         return TypePointer.newBuilder().setPoolOffset(untrimOffset(i)).build();
       }
     }
-    throw new AssertionError("Unable to find type '" + className + "' in " + pool);
+    throw new AssertionError("Unable to find type '" + className + "' in " + this.typePool);
   }
 
   /** Returns the types that are serialized for every compilation, even given an empty source */
   private ImmutableList<TypeProto> nativeObjects() {
     return ImmutableList.copyOf(compileToTypes(""));
-  }
-
-  /**
-   * Returns the offset of the given string in the given pool, throwing an exception if not present
-   */
-  private static int findInStringPool(StringPoolProto stringPool, String str) {
-    int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str));
-    checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
-    return offset;
   }
 
   private static List<TypeProto> getNonPrimitiveSupertypesFor(TypePool typePool, String className) {
@@ -786,51 +557,5 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
       supertypes.add(typePool.getType(trimOffset(edge.getSupertype())));
     }
     return supertypes;
-  }
-
-  private void generateDiagnosticFiles() {
-    compile(
-        lines(
-            "class Foo0 {",
-            "  w() { }",
-            "}",
-            "class Foo1 extends Foo0 {",
-            "  y() { }",
-            "}",
-            "const ns = {Foo0, Foo1};",
-            "/** @suppress {checkTypes} */",
-            "const /** !Foo1 */ typeMismatch = new Foo0();"));
-  }
-
-  @GwtIncompatible
-  private static String loadFile(Path path) {
-    try (Stream<String> lines = Files.lines(path)) {
-      return lines.collect(joining("\n"));
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
-  }
-
-  @GwtIncompatible
-  private ImmutableList<Path> debugLogFiles() {
-    try {
-      Path dir =
-          Paths.get(
-              this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
-              SerializeTypesToPointers.class.getSimpleName());
-
-      try (Stream<Path> files = Files.list(dir)) {
-        return files.collect(toImmutableList());
-      }
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
-  }
-
-  private static void assertValidJson(String src) {
-    assertThat(src).isNotEmpty();
-
-    Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
-    new Gson().fromJson(src, clazz); // Throws if invalid
   }
 }

@@ -285,8 +285,8 @@ final class JSTypeSerializer {
       // appear on the AST, optimizations need to know that at runtime these types may be present.
       if (fnType.hasInstanceType() && fnType.getInstanceType() != null) {
         objBuilder
-            .setPrototype(serializeType(fnType.getPrototype()))
-            .setInstanceType(serializeType(fnType.getInstanceType()));
+            .addPrototype(serializeType(fnType.getPrototype()))
+            .addInstanceType(serializeType(fnType.getInstanceType()));
         if (fnType.isConstructor()) {
           objBuilder.setMarkedConstructor(true);
         }

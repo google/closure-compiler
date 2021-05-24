@@ -1,0 +1,540 @@
+/*
+ * Copyright 2020 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp.serialization;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
+import static java.util.Comparator.comparingInt;
+import static java.util.Comparator.naturalOrder;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Streams;
+import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
+import com.google.javascript.rhino.ClosurePrimitive;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.UnionType;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import javax.annotation.Nullable;
+
+final class JSTypeReconserializer {
+
+  private final JSTypeRegistry registry;
+  private final SerializationOptions serializationMode;
+  private final InvalidatingTypes invalidatingTypes;
+  private final StringPool.Builder stringPoolBuilder;
+  private final JSTypeColorIdHasher hasher;
+
+  // Cache some commonly used types.
+  private final SeenTypeRecord unknownRecord;
+
+  private final IdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache = new IdentityHashMap<>();
+  private final LinkedHashMap<ColorId, SeenTypeRecord> seenTypeRecords = new LinkedHashMap<>();
+  private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
+
+  private State state = State.COLLECTING_TYPES;
+
+  // This is a one-way mapping because some JSTypes go to the same Color.
+  private static final ImmutableMap<JSTypeNative, Color> JSTYPE_NATIVE_TO_AXIOMATIC_COLOR_MAP =
+      ImmutableMap.<JSTypeNative, Color>builder()
+          // Merge all the various top/bottom-like/unknown types into a single unknown type.
+          .put(JSTypeNative.ALL_TYPE, StandardColors.UNKNOWN)
+          .put(JSTypeNative.CHECKED_UNKNOWN_TYPE, StandardColors.UNKNOWN)
+          .put(JSTypeNative.NO_OBJECT_TYPE, StandardColors.UNKNOWN)
+          .put(JSTypeNative.NO_TYPE, StandardColors.UNKNOWN)
+          .put(JSTypeNative.UNKNOWN_TYPE, StandardColors.UNKNOWN)
+          // Map all the primitives in the obvious way.
+          .put(JSTypeNative.BIGINT_TYPE, StandardColors.BIGINT)
+          .put(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN)
+          .put(JSTypeNative.NULL_TYPE, StandardColors.NULL_OR_VOID)
+          .put(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER)
+          .put(JSTypeNative.STRING_TYPE, StandardColors.STRING)
+          .put(JSTypeNative.SYMBOL_TYPE, StandardColors.SYMBOL)
+          .put(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID)
+          // Smoosh top-like objects into a single type.
+          .put(JSTypeNative.FUNCTION_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.FUNCTION_PROTOTYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.OBJECT_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.OBJECT_PROTOTYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.OBJECT_TYPE, StandardColors.TOP_OBJECT)
+          .build();
+
+  private enum State {
+    COLLECTING_TYPES,
+    GENERATING_POOL,
+    FINISHED,
+  }
+
+  private JSTypeReconserializer(
+      JSTypeRegistry registry,
+      InvalidatingTypes invalidatingTypes,
+      StringPool.Builder stringPoolBuilder,
+      SerializationOptions serializationMode) {
+    this.registry = registry;
+    this.hasher = new JSTypeColorIdHasher(registry);
+    this.invalidatingTypes = invalidatingTypes;
+    this.stringPoolBuilder = stringPoolBuilder;
+    this.serializationMode = serializationMode;
+
+    this.seedCachesWithAxiomaticTypes();
+
+    this.unknownRecord = this.seenTypeRecords.get(StandardColors.UNKNOWN.getId());
+  }
+
+  public static JSTypeReconserializer create(
+      JSTypeRegistry registry,
+      InvalidatingTypes invalidatingTypes,
+      StringPool.Builder stringPoolBuilder,
+      SerializationOptions serializationMode) {
+    JSTypeReconserializer serializer =
+        new JSTypeReconserializer(
+            registry, invalidatingTypes, stringPoolBuilder, serializationMode);
+    serializer.checkValid();
+    return serializer;
+  }
+
+  /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
+  TypePointer serializeType(JSType type) {
+    checkValid();
+    SeenTypeRecord record = recordType(type);
+    return record.pointer;
+  }
+
+  private SeenTypeRecord recordType(JSType type) {
+    final JSType forwardedType;
+    if (type.isNamedType()) {
+      forwardedType = type.toMaybeNamedType().getReferencedType();
+    } else if (type.isEnumElementType()) {
+      forwardedType = type.toMaybeEnumElementType().getPrimitiveType();
+    } else if (type.isTemplatizedType()) {
+      forwardedType = type.toMaybeTemplatizedType().getReferencedType();
+    } else if (type.isFunctionType()
+        && type.toMaybeFunctionType().getCanonicalRepresentation() != null) {
+      forwardedType = type.toMaybeFunctionType().getCanonicalRepresentation();
+    } else {
+      forwardedType = null;
+    }
+    if (forwardedType != null) {
+      return recordType(forwardedType);
+    }
+
+    if (type.isUnknownType() || type.isNoResolvedType() || type.isTemplateType()) {
+      // template types are not serialized because optimizations don't seem to care about them.
+      // serialize as the UNKNOWN_TYPE because bounded generics are unsupported
+      return this.unknownRecord;
+    }
+
+    SeenTypeRecord jstypeRecord = this.typeToRecordCache.get(type);
+    if (jstypeRecord != null) {
+      return jstypeRecord;
+    }
+
+    if (type.isUnionType()) {
+      return this.recordUnionType(type.toMaybeUnionType());
+    } else if (type.isObjectType()) {
+      return this.recordObjectType(type.toMaybeObjectType());
+    }
+
+    throw new AssertionError(type);
+  }
+
+  private SeenTypeRecord recordUnionType(UnionType type) {
+    checkNotNull(type);
+
+    LinkedHashSet<SeenTypeRecord> altRecords = new LinkedHashSet<>();
+    for (JSType altType : type.getAlternates()) {
+      SeenTypeRecord alt = this.recordType(altType);
+      if (alt.unionMembers == null) {
+        altRecords.add(alt);
+      } else {
+        // Flatten out any nested unions. They are possible due to proxy-like types.
+        altRecords.addAll(alt.unionMembers);
+      }
+    }
+
+    // Some elements of the union may be equal as Colors
+    if (altRecords.size() == 1) {
+      return Iterables.getOnlyElement(altRecords);
+    }
+
+    ColorId unionId =
+        ColorId.union(altRecords.stream().map((r) -> r.colorId).collect(toImmutableSet()));
+    SeenTypeRecord record = this.getOrCreateRecord(unionId, type);
+
+    if (record.unionMembers == null) {
+      record.unionMembers = ImmutableSet.copyOf(altRecords);
+    } else if (this.serializationMode.runValidation()) {
+      checkState(
+          altRecords.equals(record.unionMembers),
+          "Unions with same ID must have same members: %s => %s == %s",
+          unionId,
+          altRecords.stream().map((r) -> r.colorId).collect(toImmutableSet()),
+          record.unionMembers.stream().map((r) -> r.colorId).collect(toImmutableSet()));
+    }
+
+    return record;
+  }
+
+  private SeenTypeRecord recordObjectType(ObjectType type) {
+    checkNotNull(type);
+
+    ColorId id = this.hasher.hashObjectType(type);
+    SeenTypeRecord record = this.getOrCreateRecord(id, type);
+    this.addSupertypeEdges(type, record.pointer);
+
+    if (type.isFunctionType()) {
+      FunctionType fnType = type.toMaybeFunctionType();
+      if (fnType.hasInstanceType() && fnType.getInstanceType() != null) {
+        // We have to serialize these here ahead of time to avoid a ConcurrentModificationException
+        // during reconciliation.
+        this.serializeType(fnType.getInstanceType());
+        this.serializeType(fnType.getPrototype());
+      }
+    }
+
+    return record;
+  }
+
+  private void addSupertypeEdges(ObjectType subtype, TypePointer serializedSubtype) {
+    this.disambiguateEdges.putAll(serializedSubtype, ownAncestorInterfacesOf(subtype));
+    if (subtype.getImplicitPrototype() != null) {
+      TypePointer supertype = this.serializeType(subtype.getImplicitPrototype());
+      this.disambiguateEdges.put(serializedSubtype, supertype);
+    }
+  }
+
+  private SeenTypeRecord getOrCreateRecord(ColorId id, JSType jstype) {
+    checkValid();
+    checkNotNull(jstype);
+    checkState(State.COLLECTING_TYPES == this.state || State.GENERATING_POOL == this.state);
+
+    SeenTypeRecord record =
+        this.seenTypeRecords.computeIfAbsent(
+            id,
+            (unused) -> {
+              TypePointer pointer =
+                  TypePointer.newBuilder().setPoolOffset(this.seenTypeRecords.size()).build();
+              return new SeenTypeRecord(id, pointer);
+            });
+    this.typeToRecordCache.put(jstype, record);
+    record.jstypes.add(jstype);
+
+    return record;
+  }
+
+  private TypeProto reconcileUnionTypes(SeenTypeRecord seen) {
+    return TypeProto.newBuilder()
+        .setUnion(
+            UnionTypeProto.newBuilder()
+                .addAllUnionMember(
+                    seen.unionMembers.stream()
+                        .map((r) -> r.pointer)
+                        .sorted(comparingInt(TypePointer::getPoolOffset))
+                        .collect(toImmutableList()))
+                .build())
+        .build();
+  }
+
+  private TypeProto reconcileObjectTypes(SeenTypeRecord seen) {
+    LinkedHashSet<TypePointer> instancePointers = new LinkedHashSet<>();
+    LinkedHashSet<TypePointer> prototypePointers = new LinkedHashSet<>();
+    LinkedHashSet<Integer> ownProperties = new LinkedHashSet<>();
+    boolean isClosureAssert = false;
+    boolean isConstructor = false;
+    boolean isInvalidating = false;
+    boolean propertiesKeepOriginalName = false;
+    ObjectTypeProto.DebugInfo.Builder sampleDebugInfo = null;
+
+    for (JSType type : seen.jstypes) {
+      ObjectType objType = checkNotNull(type.toMaybeObjectType(), type);
+
+      if (this.serializationMode.includeDebugInfo()) {
+        // TODO(nickreid): Actually reconcile these
+        String classname = debugNameOf(objType);
+        if (classname != null) {
+          if (sampleDebugInfo == null) {
+            sampleDebugInfo = ObjectTypeProto.DebugInfo.newBuilder();
+          }
+          sampleDebugInfo
+              .setClassName(classname)
+              .setFilename(
+                  Optional.ofNullable(sourceRefFor(objType))
+                      .map(JSType.WithSourceRef::getSource)
+                      .map(Node::getSourceFileName)
+                      .orElse(""));
+        }
+      }
+
+      if (objType.isFunctionType()) {
+        FunctionType fnType = objType.toMaybeFunctionType();
+
+        // Serialize prototypes and instance types for instantiable types. Even if these types never
+        // appear on the AST, optimizations need to know that at runtime these types may be present.
+        if (fnType.hasInstanceType() && fnType.getInstanceType() != null) {
+          instancePointers.add(this.serializeType(fnType.getInstanceType()));
+          prototypePointers.add(this.serializeType(fnType.getPrototype()));
+          isConstructor |= fnType.isConstructor();
+        }
+
+        isClosureAssert |= isClosureAssert(fnType.getClosurePrimitive());
+      }
+
+      for (String ownProperty : objType.getOwnPropertyNames()) {
+        // TODO(b/169899789): consider omitting common, well-known properties like "prototype" to
+        // save space.
+        ownProperties.add(this.stringPoolBuilder.put(ownProperty));
+      }
+
+      isInvalidating |= this.invalidatingTypes.isInvalidating(objType);
+
+      /**
+       * To support legacy code, property disambiguation never renames properties of enums (e.g. 'A'
+       * in '/** @enum * / const E = {A: 0}`). In theory this would be safe to remove if we clean up
+       * code depending on the lack of renaming
+       */
+      propertiesKeepOriginalName |= objType.isEnumType();
+    }
+
+    ObjectTypeProto.Builder objectProto =
+        ObjectTypeProto.newBuilder()
+            .addAllInstanceType(instancePointers)
+            .addAllOwnProperty(ownProperties)
+            .addAllPrototype(prototypePointers)
+            .setClosureAssert(isClosureAssert)
+            .setIsInvalidating(isInvalidating)
+            .setMarkedConstructor(isConstructor)
+            .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
+            .setUuid(seen.colorId.asByteString());
+    if (sampleDebugInfo != null) {
+      objectProto.setDebugInfo(sampleDebugInfo);
+    }
+    return TypeProto.newBuilder().setObject(objectProto).build();
+  }
+
+  /**
+   * Returns the interfaces directly implemented and extended by {@code type}.
+   *
+   * <p>Some of these relationships represent type errors; however, the graph needs to contain those
+   * edges for safe disambiguation. In particular, code generated from other languages (e.g TS)
+   * might have more flexible subtyping rules.
+   */
+  private ImmutableList<TypePointer> ownAncestorInterfacesOf(ObjectType type) {
+    FunctionType ctorType = type.getConstructor();
+    if (ctorType == null) {
+      return ImmutableList.of();
+    }
+
+    return Streams.concat(
+            ctorType.getExtendedInterfaces().stream(),
+            ctorType.getOwnImplementedInterfaces().stream())
+        .map(this::serializeType)
+        .collect(toImmutableList());
+  }
+
+  /**
+   * Inserts dummy pointers corresponding to all {@link PrimitiveType}s in the type pool.
+   *
+   * <p>These types will never correspond to an actual {@link TypeProto}. Instead, all normal {@link
+   * TypePointer} offsets into the pool are offset by a number equivalent to the number of {@link
+   * PrimitiveType} enum elements.
+   */
+  private void seedCachesWithAxiomaticTypes() {
+    checkState(this.seenTypeRecords.isEmpty());
+
+    // Load all the axiomatic records in the right order without any types.
+    for (Color axiomatic : TypePointers.OFFSET_TO_AXIOMATIC_COLOR) {
+      int index = this.seenTypeRecords.size();
+      TypePointer pointer = TypePointer.newBuilder().setPoolOffset(index).build();
+      SeenTypeRecord record = new SeenTypeRecord(axiomatic.getId(), pointer);
+      this.seenTypeRecords.put(axiomatic.getId(), record);
+    }
+
+    // Add JSTypes corresponding to axiomatic IDs.
+    JSTYPE_NATIVE_TO_AXIOMATIC_COLOR_MAP.forEach(
+        (jstypeNative, axiomatic) ->
+            this.getOrCreateRecord(axiomatic.getId(), this.registry.getNativeType(jstypeNative)));
+
+    checkState(this.seenTypeRecords.size() == TypePointers.OFFSET_TO_AXIOMATIC_COLOR.size());
+  }
+
+  /** Checks that this instance is in a valid state. */
+  private void checkValid() {
+    if (!this.serializationMode.runValidation()) {
+      return;
+    }
+
+    final int totalTypeCount = this.seenTypeRecords.size();
+    for (SeenTypeRecord seen : this.seenTypeRecords.values()) {
+      int offset = seen.pointer.getPoolOffset();
+      checkState(offset >= 0);
+      checkState(
+          offset <= totalTypeCount,
+          "Found invalid pointer %s, out of a total of %s user-defined types",
+          offset,
+          totalTypeCount);
+    }
+  }
+
+  /**
+   * Generates a "type-pool" representing all the types that this class has encountered through
+   * calls to {@link #serializeType(JSType)}.
+   *
+   * <p>After generation, no new types can be added, so subsequent calls to {@link
+   * #serializeType(JSType)} can only be used to retrieve pointers to existing types in the type
+   * pool.
+   */
+  TypePool generateTypePool() {
+    checkState(this.state == State.COLLECTING_TYPES);
+    checkValid();
+    this.state = State.GENERATING_POOL;
+
+    TypePool.Builder builder = TypePool.newBuilder();
+
+    for (SeenTypeRecord seen : this.seenTypeRecords.values()) {
+      if (StandardColors.AXIOMATIC_COLORS.containsKey(seen.colorId)) {
+        checkState(isAxiomatic(seen.pointer), "Missing .type for SeenTypeRecord %s", seen);
+        continue;
+      }
+      builder.addType(
+          (seen.unionMembers != null)
+              ? this.reconcileUnionTypes(seen)
+              : this.reconcileObjectTypes(seen));
+    }
+
+    for (TypePointer subtype : this.disambiguateEdges.keySet()) {
+      for (TypePointer supertype : this.disambiguateEdges.get(subtype)) {
+        builder.addDisambiguationEdges(
+            SubtypingEdge.newBuilder().setSubtype(subtype).setSupertype(supertype));
+      }
+    }
+
+    this.state = State.FINISHED;
+    checkValid();
+    return builder.build();
+  }
+
+  /**
+   * Returns a map from {@link ObjectTypeProto#getUuid()} to the originating {@link JSType}s.
+   *
+   * <p>Only intended to be used for debug logging.
+   */
+  ImmutableMultimap<String, String> getColorIdToJSTypeMapForDebugging() {
+    ImmutableMultimap.Builder<String, String> colorIdToTypes =
+        ImmutableMultimap.<String, String>builder()
+            .orderKeysBy(naturalOrder())
+            .orderValuesBy(naturalOrder());
+    this.typeToRecordCache.forEach(
+        (jstype, record) -> {
+          colorIdToTypes.put(record.colorId.toString(), jstype.toString());
+        });
+    return colorIdToTypes.build();
+  }
+
+  private static final class SeenTypeRecord {
+    final ColorId colorId;
+    final TypePointer pointer;
+    final LinkedHashSet<JSType> jstypes = new LinkedHashSet<>();
+    @Nullable ImmutableSet<SeenTypeRecord> unionMembers = null;
+
+    SeenTypeRecord(ColorId colorId, TypePointer pointer) {
+      this.colorId = colorId;
+      this.pointer = pointer;
+    }
+  }
+
+  /**
+   * Returns whether this is some assertion call that should be removed by optimizations when
+   * --remove_closure_asserts is enabled.
+   */
+  private static boolean isClosureAssert(@Nullable ClosurePrimitive primitive) {
+    if (primitive == null) {
+      return false;
+    }
+
+    switch (primitive) {
+      case ASSERTS_TRUTHY:
+      case ASSERTS_MATCHES_RETURN:
+        return true;
+
+      case ASSERTS_FAIL: // technically an assertion function, but not removed by ClosureCodeRemoval
+        return false;
+    }
+    throw new AssertionError();
+  }
+
+  @Nullable
+  private static JSType.WithSourceRef sourceRefFor(ObjectType type) {
+    if (type.isEnumType()) {
+      return type.toMaybeEnumType();
+    } else if (type.isEnumElementType()) {
+      // EnumElementTypes are proxied to their underlying type when transformed to colors.
+      throw new AssertionError(type);
+    }
+
+    if (type.isFunctionType()) {
+      return type.toMaybeFunctionType();
+    } else if (type.isFunctionPrototypeType()) {
+      return type.getOwnerFunction();
+    } else if (type.getConstructor() != null) {
+      return type.getConstructor();
+    }
+
+    return null;
+  }
+
+  @Nullable
+  private static String debugNameOf(JSType type) {
+    ObjectType oType = type.toMaybeObjectType();
+    if (oType == null) {
+      return type.toString();
+    }
+
+    String className = oType.getReferenceName();
+    if (oType.isFunctionType()) {
+      FunctionType fnType = oType.toMaybeFunctionType();
+      Node source = fnType.getSource();
+      if (fnType.hasInstanceType() && source != null) {
+        // Render function types known to be type definitions as "(typeof Foo)". This includes types
+        // defined like "/** @constructor */ function Foo() { }" but not to those defined like
+        // "@param
+        // {function(new:Foo)}". Only the former will have a source node.
+        className = "(typeof " + className + ")";
+      }
+    }
+    return className;
+  }
+}

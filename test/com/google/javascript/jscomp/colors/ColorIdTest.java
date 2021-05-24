@@ -121,6 +121,16 @@ public final class ColorIdTest {
     assertThat(ColorId.fromUnsigned((long) -1).toString()).isEqualTo("ffffffffffffffff");
   }
 
+  @Test
+  public void roundtrip_throughByteString() {
+    assertEqualsAndRelatedMethods(A, ColorId.fromBytes(A.asByteString()));
+  }
+
+  @Test
+  public void asByteString_exactBytes() {
+    assertThat(A.asByteString()).isEqualTo(ByteString.copyFrom(bytes(0, 0, 0, 0, 0, 0, 0, 97)));
+  }
+
   private void assertEqualsAndRelatedMethods(ColorId actual, ColorId expected) {
     assertThat(actual).isEqualTo(expected);
     assertThat(actual.hashCode()).isEqualTo(expected.hashCode());

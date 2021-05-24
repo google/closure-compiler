@@ -264,8 +264,8 @@ public final class ColorPool {
                   .setClassName(info.getClassName())
                   .build();
         }
-        if (objProto.hasInstanceType()) {
-          instanceColors.add(this.lookupOrReconcileColor(shard.getId(objProto.getInstanceType())));
+        for (TypePointer p : objProto.getInstanceTypeList()) {
+          instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
         }
 
         boolean isClosureAssertBool = objProto.getClosureAssert();
@@ -276,8 +276,8 @@ public final class ColorPool {
         isConstructor |= objProto.getMarkedConstructor();
         isInvalidating |= objProto.getIsInvalidating();
         propertiesKeepOriginalName |= objProto.getPropertiesKeepOriginalName();
-        if (objProto.hasPrototype()) {
-          prototypes.add(this.lookupOrReconcileColor(shard.getId(objProto.getPrototype())));
+        for (TypePointer p : objProto.getPrototypeList()) {
+          prototypes.add(this.lookupOrReconcileColor(shard.getId(p)));
         }
         for (int i = 0; i < objProto.getOwnPropertyCount(); i++) {
           ownProperties.add(shard.stringPool.get(objProto.getOwnProperty(i)));

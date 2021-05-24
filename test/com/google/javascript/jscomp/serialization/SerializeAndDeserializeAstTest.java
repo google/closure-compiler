@@ -71,6 +71,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableCreateModuleMap();
     enableSourceInformationAnnotator();
   }
 

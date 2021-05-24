@@ -48,10 +48,10 @@ message ObjectTypeProto {
   // appearing on this type and will not completely back off optimizations.
   bool properties_keep_original_name = 4;
 
-  // Additional metadata relevant to classes and interfaces
-  TypePointer instance_type = 5;
+  // The instance types of a constructor
+  repeated TypePointer instance_type = 5;
   // If this is a constructor, its .prototype field (not the implicit prototype)
-  TypePointer prototype = 6;
+  repeated TypePointer prototype = 6;
   // Whether this was declared as either a class constructor or Closure ES5-
   // style constructor.
   bool marked_constructor = 7;

@@ -138,8 +138,8 @@ public class ColorPoolTest {
                     .setObject(
                         ObjectTypeProto.newBuilder()
                             .setUuid(ByteString.copyFromUtf8("Foo"))
-                            .setPrototype(poolPointer(0))
-                            .setInstanceType(poolPointer(1))
+                            .addPrototype(poolPointer(0))
+                            .addInstanceType(poolPointer(1))
                             .setMarkedConstructor(true)))
             .build();
     ColorPool.ShardView colorPool =
@@ -595,13 +595,13 @@ public class ColorPoolTest {
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
-                .setInstanceType(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)));
+                .addInstanceType(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)));
 
     TypePool typePool1 =
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
-                .setInstanceType(primitiveTypePointer(PrimitiveType.STRING_TYPE)));
+                .addInstanceType(primitiveTypePointer(PrimitiveType.STRING_TYPE)));
 
     // When
     ColorPool colorPool =
@@ -616,19 +616,19 @@ public class ColorPoolTest {
   }
 
   @Test
-  public void reconcile_setPrototypes() {
+  public void reconcile_addPrototypes() {
     // Given
     TypePool typePool0 =
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
-                .setPrototype(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)));
+                .addPrototype(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)));
 
     TypePool typePool1 =
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
-                .setPrototype(primitiveTypePointer(PrimitiveType.STRING_TYPE)));
+                .addPrototype(primitiveTypePointer(PrimitiveType.STRING_TYPE)));
 
     // When
     ColorPool colorPool =
