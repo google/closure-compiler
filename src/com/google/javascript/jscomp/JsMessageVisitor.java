@@ -23,6 +23,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Builder;
+import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
@@ -84,9 +85,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   public static final DiagnosticType FALLBACK_ARG_ERROR =
       DiagnosticType.error(
           "JSC_MSG_FALLBACK_ARG_ERROR", "Could not find message entry for fallback argument {0}");
-
-  private static final String PH_JS_PREFIX = "{$";
-  private static final String PH_JS_SUFFIX = "}";
 
   static final String MSG_PREFIX = "MSG_";
 
@@ -806,36 +804,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private static void parseMessageTextNode(Builder builder, Node node) throws MalformedException {
     String value = extractStringFromStringExprNode(node);
 
-    while (true) {
-      int phBegin = value.indexOf(PH_JS_PREFIX);
-      if (phBegin < 0) {
-        // Just a string literal
-        builder.appendStringPart(value);
-        return;
-      } else {
-        if (phBegin > 0) {
-          // A string literal followed by a placeholder
-          builder.appendStringPart(value.substring(0, phBegin));
-        }
-
-        // A placeholder. Find where it ends
-        int phEnd = value.indexOf(PH_JS_SUFFIX, phBegin);
-        if (phEnd < 0) {
-          throw new MalformedException(
-              "Placeholder incorrectly formatted in: " + builder.getKey(), node);
-        }
-
-        String phName = value.substring(phBegin + PH_JS_PREFIX.length(), phEnd);
-        builder.appendPlaceholderReference(phName);
-        int nextPos = phEnd + PH_JS_SUFFIX.length();
-        if (nextPos < value.length()) {
-          // Iterate on the rest of the message value
-          value = value.substring(nextPos);
-        } else {
-          // The message is parsed
-          return;
-        }
-      }
+    try {
+      builder.setMsgText(value);
+    } catch (PlaceholderFormatException e) {
+      throw new MalformedException(
+          "Placeholder incorrectly formatted in: " + builder.getKey(), node);
     }
   }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
@@ -47,6 +48,17 @@ import javax.annotation.Nullable;
  */
 @AutoValue
 public abstract class JsMessage {
+
+  private static final String PH_JS_PREFIX = "{$";
+  private static final String PH_JS_SUFFIX = "}";
+
+  /**
+   * Thrown when parsing a message string into parts fails because of a misformatted place holder.
+   */
+  public static final class PlaceholderFormatException extends Exception {
+
+    public PlaceholderFormatException() {}
+  }
 
   /**
    * Message style that could be used for JS code parsing. The enum order is from most relaxed to
@@ -133,6 +145,7 @@ public abstract class JsMessage {
   /** Gets a set of the registered placeholders in this message. */
   public abstract ImmutableSet<String> placeholders();
 
+  /** Returns a String containing the original message text. */
   @Override
   public final String toString() {
     StringBuilder sb = new StringBuilder();
@@ -256,6 +269,45 @@ public abstract class JsMessage {
     public Builder setSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
+    }
+
+    public Builder setMsgText(String msgText) throws PlaceholderFormatException {
+      checkState(this.parts.isEmpty(), "cannot parse msg text after adding parts");
+      parseMsgTextIntoParts(msgText);
+      return this;
+    }
+
+    private void parseMsgTextIntoParts(String msgText) throws PlaceholderFormatException {
+      while (true) {
+        int phBegin = msgText.indexOf(PH_JS_PREFIX);
+        if (phBegin < 0) {
+          // Just a string literal
+          appendStringPart(msgText);
+          return;
+        } else {
+          if (phBegin > 0) {
+            // A string literal followed by a placeholder
+            appendStringPart(msgText.substring(0, phBegin));
+          }
+
+          // A placeholder. Find where it ends
+          int phEnd = msgText.indexOf(PH_JS_SUFFIX, phBegin);
+          if (phEnd < 0) {
+            throw new PlaceholderFormatException();
+          }
+
+          String phName = msgText.substring(phBegin + PH_JS_PREFIX.length(), phEnd);
+          appendPlaceholderReference(phName);
+          int nextPos = phEnd + PH_JS_SUFFIX.length();
+          if (nextPos < msgText.length()) {
+            // Iterate on the rest of the message value
+            msgText = msgText.substring(nextPos);
+          } else {
+            // The message is parsed
+            return;
+          }
+        }
+      }
     }
 
     /** Appends a placeholder reference to the message */
