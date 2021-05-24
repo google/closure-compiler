@@ -709,9 +709,6 @@ public final class TypedAstDeserializer {
         case GOOG_MODULE:
           n.putBooleanProp(Node.GOOG_MODULE, true);
           continue;
-        case WAS_PREVIOUSLY_PROVIDED:
-          n.putBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED, true);
-          continue;
         case TRANSPILED:
           n.putBooleanProp(Node.TRANSPILED, true);
           continue;

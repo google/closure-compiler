@@ -307,8 +307,6 @@ enum NodeProperty {
   GOOG_MODULE = 30;
   // Attaches a FeatureSet to SCRIPT nodes.
   FEATURE_SET = 32;
-  // Indicates a namespace that was provided at some point in the past.
-  WAS_PREVIOUSLY_PROVIDED = 33;
   // Indicates that a SCRIPT represents a transpiled file
   TRANSPILED = 34;
   // For passes that work only on deleted funs.

@@ -170,8 +170,8 @@ public class Node {
     GOOG_MODULE,
     // Attaches a FeatureSet to SCRIPT nodes.
     FEATURE_SET,
-    // Indicates a namespace that was provided at some point in the past.
-    WAS_PREVIOUSLY_PROVIDED,
+    // Indicates a TypeScript abstract method or class, for use in Migrants
+    IS_TYPESCRIPT_ABSTRACT,
     // Indicates that a SCRIPT represents a transpiled file
     TRANSPILED,
     // For passes that work only on deleted funs.
@@ -261,7 +261,7 @@ public class Node {
   public static final Prop PARSE_RESULTS = Prop.PARSE_RESULTS;
   public static final Prop GOOG_MODULE = Prop.GOOG_MODULE;
   public static final Prop FEATURE_SET = Prop.FEATURE_SET;
-  public static final Prop WAS_PREVIOUSLY_PROVIDED = Prop.WAS_PREVIOUSLY_PROVIDED;
+  public static final Prop IS_TYPESCRIPT_ABSTRACT = Prop.IS_TYPESCRIPT_ABSTRACT;
   public static final Prop TRANSPILED = Prop.TRANSPILED;
   public static final Prop MODULE_ALIAS = Prop.MODULE_ALIAS;
   public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;

@@ -283,9 +283,6 @@ final class TypedAstSerializer {
     if (n.getBooleanProp(Node.GOOG_MODULE)) {
       props.add(NodeProperty.GOOG_MODULE);
     }
-    if (n.getBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED)) {
-      props.add(NodeProperty.WAS_PREVIOUSLY_PROVIDED);
-    }
     if (n.getBooleanProp(Node.TRANSPILED)) {
       props.add(NodeProperty.TRANSPILED);
     }

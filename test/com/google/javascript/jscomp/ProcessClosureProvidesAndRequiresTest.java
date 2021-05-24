@@ -39,9 +39,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link com.google.javascript.jscomp.ProcessClosureProvidesAndRequires} */
 @RunWith(JUnit4.class)
 public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
-  private String additionalCode;
-  private String additionalEndCode;
-  private boolean addAdditionalNamespace;
   private boolean preserveGoogProvidesAndRequires;
 
   private ProcessClosureProvidesAndRequires createClosureProcessorWithoutTypechecking(
@@ -66,9 +63,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    additionalCode = null;
-    additionalEndCode = null;
-    addAdditionalNamespace = false;
     preserveGoogProvidesAndRequires = false;
     enableTypeCheck();
     enableCreateModuleMap(); // necessary for the typechecker
@@ -78,53 +72,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
-      if ((additionalCode == null) && (additionalEndCode == null)) {
         verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
         ProcessClosureProvidesAndRequires processor =
             createClosureProcessorWithTypechecking(compiler, CheckLevel.ERROR, externs, root);
         processor.rewriteProvidesAndRequires(externs, root);
-      } else {
-        // Process the original code.
-        verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.OFF, compiler);
-        ProcessClosureProvidesAndRequires processor =
-            createClosureProcessorWithTypechecking(compiler, CheckLevel.OFF, externs, root);
-        processor.rewriteProvidesAndRequires(externs, root);
 
-        // Inject additional code at the beginning.
-        if (additionalCode != null) {
-          SourceFile file = SourceFile.fromCode("additionalcode", additionalCode);
-          Node scriptNode = root.getLastChild();
-          Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
-          if (addAdditionalNamespace) {
-            newScriptNode.getFirstChild().putBooleanProp(Node.IS_NAMESPACE, true);
-          }
-          while (newScriptNode.getLastChild() != null) {
-            Node lastChild = newScriptNode.getLastChild();
-            lastChild.detach();
-            lastChild.insertBefore(scriptNode.getFirstChild());
-          }
-        }
-
-        // Inject additional code at the end.
-        if (additionalEndCode != null) {
-          SourceFile file = SourceFile.fromCode("additionalendcode", additionalEndCode);
-          Node scriptNode = root.getLastChild();
-          Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
-          if (addAdditionalNamespace) {
-            newScriptNode.getFirstChild().putBooleanProp(Node.IS_NAMESPACE, true);
-          }
-          while (newScriptNode.hasChildren()) {
-            Node firstChild = newScriptNode.getFirstChild();
-            firstChild.detach();
-            scriptNode.addChildToBack(firstChild);
-          }
-        }
-
-        verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
-        processor =
-            createClosureProcessorWithTypechecking(compiler, CheckLevel.ERROR, externs, root);
-        processor.rewriteProvidesAndRequires(externs, root);
-      }
     };
   }
 
@@ -616,27 +568,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPreserveGoogProvidesAndRequires_withSecondPassRun_noDuplicateNamespaceWarning() {
-    additionalCode = "";
-    preserveGoogProvidesAndRequires = true;
-
-    //
-    //
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('foo');", //
-                "foo.baz = function() {};")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */ var foo = {};", //
-                "goog.provide('foo');",
-                "foo.baz = function() {};")));
-  }
-
-  @Test
   public void testProvideErrorCases2() {
     test(
         new TestExternsBuilder().addClosureExterns().build()
@@ -907,69 +838,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         });
   }
 
-  // Tests providing additional code with non-overlapping var namespace.
-  @Test
-  public void testSimpleAdditionalProvide() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var b={};b.B={}; /** @const */ var a={};a.A={};"));
-  }
-
-  // Same as above, but with the additional code added after the original.
-  @Test
-  public void testSimpleAdditionalProvideAtEnd() {
-    additionalEndCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={}; a.A={}; /** @const */ var b={};b.B={};"));
-  }
-
-  @Test
-  public void testSimpleAdditionalProvide_withPreserveGoogProvidesAndRequires() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    preserveGoogProvidesAndRequires = true;
-
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */ var b={};",
-                "goog.provide('b.B');",
-                "b.B={};",
-                "/** @const */ var a={};",
-                "/** @const */ a.A={};",
-                "goog.provide('a.A'); ")));
-  }
-
-  @Test
-  public void testNonNamespaceAdditionalProvide_withPreserveGoogProvidesAndRequires() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    preserveGoogProvidesAndRequires = true;
-
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.provide('a.A'); a.A = function() {}"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */ var b={};",
-                "goog.provide('b.B');",
-                "b.B={};",
-                "/** @const */ var a={};",
-                "goog.provide('a.A');",
-                "a.A = function() {};")));
-  }
-
   @Test
   public void testNamespaceInExterns() {
     // Note: This style is not recommended but the compiler sort-of supports it.
@@ -1009,48 +877,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "root.branch.Leaf = class {};")));
   }
 
-  // Tests providing additional code with non-overlapping dotted namespace.
-  @Test
-  public void testSimpleDottedAdditionalProvide() {
-    additionalCode = "goog.provide('a.b.B'); a.b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.provide('c.d.D'); c.d.D = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */",
-                "var a={};",
-                "/** @const */",
-                "a.b={};",
-                "a.b.B={};",
-                "/** @const */",
-                "var c={};",
-                "/** @const */",
-                "c.d={};",
-                "c.d.D={};")));
-  }
-
-  @Test
-  public void testAdditionalCode_onSingleNameNamespaceWithoutVar() {
-    additionalEndCode = "goog.provide('Name.child'); Name.child = 1;";
-
-    //
-    //
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('Name');", //
-                "Name = class {};")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "var Name = class {};", //
-                "Name.child = 1;")));
-  }
-
   @Test
   public void testTypedefProvide() {
     //
@@ -1074,262 +900,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "foo.Bar = /** @type {?} */ ({});",
                 "/** @typedef {!Array<string>} */ foo.Bar;",
                 "foo.Bar.Baz = {}")));
-  }
-
-  @Test
-  public void testTypedefAdditionalProvide_noChildNamespace() {
-    additionalEndCode = "goog.require('foo.Cat'); goog.require('foo.Bar');";
-
-    //
-    //
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('foo.Cat');",
-                "goog.provide('foo.Bar');",
-                "/** @typedef {!Array<string>} */",
-                "foo.Bar;",
-                "foo.Cat={};")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */ var foo={};", //
-                "/** @typedef {!Array<string>} */ foo.Bar;", //
-                "foo.Cat = {};")));
-  }
-
-  @Test
-  public void testTypedefAdditionalProvide_withChildNamespace() {
-    additionalEndCode = "goog.require('foo.Cat'); goog.require('foo.Bar');";
-
-    //
-    //
-    //
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('foo.Cat');",
-                "goog.provide('foo.Bar');",
-                "goog.provide('foo.Bar.Baz');",
-                "/** @typedef {!Array<string>} */",
-                "foo.Bar;",
-                "foo.Cat={};",
-                "foo.Bar.Baz = {};")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */ var foo={};", //
-                "foo.Bar = /** @type {?} */ ({});", //
-                "/** @typedef {!Array<string>} */ foo.Bar;", //
-                "foo.Cat = {};",
-                "foo.Bar.Baz = {};")));
-  }
-
-  // Tests providing additional code with overlapping var namespace.
-  @Test
-  public void testOverlappingAdditionalProvide() {
-    additionalCode = "goog.provide('a.B'); a.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={};a.B={};a.A={};"));
-  }
-
-  // Tests providing additional code with overlapping var namespace.
-  @Test
-  public void testOverlappingAdditionalProvideAtEnd() {
-    additionalEndCode = "goog.provide('a.B'); a.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={};a.A={};a.B={};"));
-  }
-
-  // Tests providing additional code with overlapping dotted namespace.
-  @Test
-  public void testOverlappingDottedAdditionalProvide() {
-    additionalCode = "goog.provide('a.b.B'); a.b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.provide('a.b.C'); a.b.C = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */", "var a={};", "/** @const */ a.b={};", "a.b.B={};", "a.b.C={};")));
-  }
-
-  // Tests that a require of additional code generates no error.
-  @Test
-  public void testRequireOfAdditionalProvide() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.require('b.B'); goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var b={};b.B={}; /** @const */ var a={};a.A={};"));
-  }
-
-  // Tests that a requireType of additional code generates no error.
-  @Test
-  public void testRequireTypeOfAdditionalProvide() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.requireType('b.B'); goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var b={};b.B={}; /** @const */ var a={};a.A={};"));
-  }
-
-  // Tests that a require not in additional code generates no errors (it's reported elsewhere)
-  @Test
-  public void testMissingRequireWithAdditionalProvide() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.require('b.C'); goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var b={};b.B={};/** @const */ var a={};a.A={}"));
-  }
-
-  // Tests that a requireType not in additional code generates no errors (it's reported elsewhere)
-  @Test
-  public void testMissingRequireTypeWithAdditionalProvide() {
-    additionalCode = "goog.provide('b.B'); b.B = {};";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.requireType('b.C'); goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var b={};b.B={};/** @const */ var a={};a.A={};"));
-  }
-
-  // Tests that a require in additional code generates no error.
-  @Test
-  public void testLateRequire() {
-    additionalEndCode = "goog.require('a.A');";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={}; a.A={};"));
-  }
-
-  // Tests that a requireType in additional code generates no error.
-  @Test
-  public void testLateRequireType() {
-    additionalEndCode = "goog.requireType('a.A');";
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={}; a.A={};"));
-  }
-
-  // Tests a case where code is reordered after processing provides and then
-  // provides are processed again.
-  @Test
-  public void testReorderedProvides() {
-    additionalCode = "a.B = {};"; // as if a.B was after a.A originally
-    addAdditionalNamespace = true;
-    //
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */", //
-                "var a = {};",
-                "a.B = {};",
-                "a.A = {};")));
-  }
-
-  // Another version of above.
-  @Test
-  public void testReorderedProvides2() {
-    additionalEndCode = "a.B = {};";
-    addAdditionalNamespace = true;
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.A'); a.A = {};"),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "/** @const */ var a={};a.A={};a.B={};"));
-  }
-
-  // Provide a name before the definition of the class providing the
-  // parent namespace.
-  @Test
-  public void testProvideOrder1() {
-    additionalEndCode = "";
-    addAdditionalNamespace = false;
-    // TODO(johnlenz):  This test confirms that the constructor (a.b) isn't
-    // improperly removed, but this result isn't really what we want as the
-    // reassign of a.b removes the definition of "a.b.c".
-    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('a.b');",
-                "goog.provide('a.b.c');",
-                "a.b.c;",
-                "a.b = function(x,y) {};")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */",
-                "var a = {};",
-                "a.b = {};",
-                "/** @const */",
-                "a.b.c = {};",
-                "a.b.c;",
-                "a.b = function(x,y) {};")));
-  }
-
-  // Provide a name after the definition of the class providing the
-  // parent namespace.
-  @Test
-  public void testProvideOrder2() {
-    additionalEndCode = "";
-    addAdditionalNamespace = false;
-    // TODO(johnlenz):  This test confirms that the constructor (a.b) isn't
-    // improperly removed, but this result isn't really what we want as
-    // namespace placeholders for a.b and a.b.c remain.
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('a.b');",
-                "goog.provide('a.b.c');",
-                "a.b = function(x,y) {};",
-                "a.b.c;")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */",
-                "var a = {};",
-                "a.b = {};",
-                "/** @const */",
-                "a.b.c = {};",
-                "a.b = function(x,y) {};",
-                "a.b.c;")));
   }
 
   // Provide a name after the definition of the class providing the
@@ -1356,53 +926,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideOrder3b() {
-    additionalEndCode = "";
-    addAdditionalNamespace = false;
-    // This tests a cleanly provided name, below a function namespace.
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('a.b');",
-                "a.b = function(x,y) {};",
-                "goog.provide('a.b.c');",
-                "a.b.c;")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */",
-                "var a = {};",
-                "a.b = function(x,y) {};",
-                "/** @const */",
-                "a.b.c = {};",
-                "a.b.c;")));
-  }
-
-  @Test
   public void testProvideOrder4a() {
-    test(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "goog.provide('goog.a');",
-                "goog.provide('goog.a.b');",
-                "if (x) {",
-                "  goog.a.b = 1;",
-                "} else {",
-                "  goog.a.b = 2;",
-                "}")),
-        expected(
-            new TestExternsBuilder().addClosureExterns().build(),
-            lines(
-                "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;")));
-  }
-
-  @Test
-  public void testProvideOrder4b() {
-    additionalEndCode = "";
-    addAdditionalNamespace = false;
-    // This tests a cleanly provided name, below a namespace.
     test(
         srcs(
             new TestExternsBuilder().addClosureExterns().build(),
