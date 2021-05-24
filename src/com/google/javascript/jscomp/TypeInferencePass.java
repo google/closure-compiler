@@ -54,6 +54,7 @@ class TypeInferencePass {
         AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
   }
 
+  // TODO(b/187747884): Delete this method.
   TypeInferencePass reuseTopScope(TypedScope topScope) {
     checkNotNull(topScope);
     checkState(this.topScope == null);

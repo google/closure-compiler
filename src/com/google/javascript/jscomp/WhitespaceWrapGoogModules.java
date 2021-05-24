@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
  * Replicates the effect of {@literal ClosureBundler} in whitespace-only mode and wraps goog.modules
  * in goog.loadModule calls. See comment block below.
  */
-public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
+public class WhitespaceWrapGoogModules implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -37,12 +37,11 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
       checkState(c.isScript());
-      hotSwapScript(c, null);
+      visitScript(c);
     }
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+  private void visitScript(Node scriptRoot) {
     if (!NodeUtil.isGoogModuleFile(scriptRoot)) {
       return;
     }

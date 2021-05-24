@@ -28,34 +28,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \
- * properties for functions (class constructors, wrappers, etc) annotated with
- * @ngInject. Without this pass, AngularJS will not work properly if variable
- * renaming is enabled, because the function arguments will be renamed.
- * @see http://docs.angularjs.org/tutorial/step_05#a-note-on-minification
+ * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \ properties for functions
+ * (class constructors, wrappers, etc) annotated with {@code @ngInject}. Without this pass,
+ * AngularJS will not work properly if variable renaming is enabled, because the function arguments
+ * will be renamed.
  *
- * <p>For example, the following code:</p>
+ * <p>See http://docs.angularjs.org/tutorial/step_05#a-note-on-minification
+ *
+ * <p>For example, the following code:
+ *
  * <pre><code>
  *
  * /** @ngInject * /
  * function Controller(dependency1, dependency2) {
- *   // do something
+ * // do something
  * }
  *
  * </code></pre>
  *
  * <p>will be transformed into:
+ *
  * <pre><code>
  *
  * function Controller(dependency1, dependency2) {
- *   // do something
+ * // do something
  * }
  * Controller.$inject = ['dependency1', 'dependency2'];
  *
  * </code></pre>
  *
- * <p> This pass also supports assignments of function expressions to variables
- * like:
+ * <p>This pass also supports assignments of function expressions to variables like:
+ *
  * <pre><code>
  *
  * /** @ngInject * /
@@ -70,8 +73,7 @@ import java.util.List;
  *
  * </code></pre>
  */
-class AngularPass extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
   final AbstractCompiler compiler;
 
   /** Nodes annotated with @ngInject */
@@ -108,13 +110,8 @@ class AngularPass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root, null);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     // Traverses AST looking for nodes annotated with @ngInject.
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, root, this);
     // iterates through annotated nodes adding $inject property to elements.
     for (NodeContext entry : injectables) {
       String name = entry.getName();

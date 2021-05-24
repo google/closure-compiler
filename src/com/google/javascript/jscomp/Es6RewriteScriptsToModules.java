@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Token;
 
 /** Rewrites a script which was imported as a module into an ES6 module. */
 public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /**
@@ -51,14 +51,9 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
   @Override
   public void process(Node externs, Node root) {
     for (Node file = root.getFirstChild(); file != null; file = file.getNext()) {
-      hotSwapScript(file, null);
+      checkArgument(file.isScript());
+      NodeTraversal.traverse(compiler, file, this);
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptNode, Node originalRoot) {
-    checkArgument(scriptNode.isScript());
-    NodeTraversal.traverse(compiler, scriptNode, this);
   }
 
   @Override

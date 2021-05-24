@@ -77,7 +77,7 @@ import javax.annotation.Nullable;
  * only after 'alias' is defined. In practice, the compiler will inline 'alias' anyway, at the risk
  * of 'fixing' bad code.
  */
-class ScopedAliases implements HotSwapCompilerPass {
+class ScopedAliases implements CompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
@@ -224,11 +224,6 @@ class ScopedAliases implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root, null);
-  }
-
-  @Override
-  public void hotSwapScript(Node root, Node originalRoot) {
     Traversal traversal = new Traversal();
     NodeTraversal.traverse(compiler, root, traversal);
 

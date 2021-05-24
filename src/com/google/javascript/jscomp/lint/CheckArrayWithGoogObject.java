@@ -17,8 +17,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
@@ -27,12 +27,11 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 
 /**
- * Lints against passing arrays to goog.object methods with the intention of
- * iterating over them as though with a for-in loop, which is discouraged with
- * arrays.
+ * Lints against passing arrays to goog.object methods with the intention of iterating over them as
+ * though with a for-in loop, which is discouraged with arrays.
  */
 public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+    implements CompilerPass {
   final AbstractCompiler compiler;
 
   private static final ImmutableSet<String> GOOG_OBJECT_METHODS =
@@ -120,10 +119,5 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 }

@@ -42,7 +42,7 @@ import java.util.Set;
  *
  * <p>Design and examples: https://github.com/google/closure-compiler/wiki/Polymer-Pass
  */
-final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompilerPass {
+final class PolymerPass extends ExternsSkippingCallback implements CompilerPass {
   private static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
@@ -101,15 +101,10 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
             compiler, globalNames, compiler.getModuleMetadataMap(), compiler.getModuleMap());
 
     Node externsAndJsRoot = root.getParent();
-    hotSwapScript(externsAndJsRoot, null);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, externsAndJsRoot, this);
     PolymerPassSuppressBehaviors suppressBehaviorsCallback =
         new PolymerPassSuppressBehaviors(compiler);
-    NodeTraversal.traverse(compiler, scriptRoot, suppressBehaviorsCallback);
+    NodeTraversal.traverse(compiler, externsAndJsRoot, suppressBehaviorsCallback);
   }
 
   @Override

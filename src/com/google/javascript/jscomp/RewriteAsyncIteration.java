@@ -53,7 +53,7 @@ import java.util.Set;
  * }
  * }</pre>
  */
-public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class RewriteAsyncIteration implements NodeTraversal.Callback, CompilerPass {
 
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.ASYNC_GENERATORS, Feature.FOR_AWAIT_OF);
@@ -244,28 +244,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    process(scriptRoot, /* hotSwap= */ true);
-  }
-
-  @Override
   public void process(Node externs, Node root) {
-    process(root, /* hotSwap= */ false);
-  }
-
-  /**
-   * Helper function for both HotSwapCompilerPass#hotSwapScript and CompilerPass#process.
-   *
-   * @param root Root of AST to rewrite
-   */
-  private void process(Node root, boolean hotSwap) {
     checkState(contextStack.isEmpty());
     contextStack.push(LexicalContext.newGlobalContext(root));
-    if (hotSwap) {
-      TranspilationPasses.hotSwapTranspile(compiler, root, transpiledFeatures, this);
-    } else {
-      TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    }
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
     checkState(contextStack.element().function == null);
     contextStack.remove();

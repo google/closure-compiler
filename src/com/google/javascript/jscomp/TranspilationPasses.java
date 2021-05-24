@@ -500,19 +500,9 @@ public class TranspilationPasses {
         .setName(passName)
         .setInternalFactory(
             (compiler) ->
-                new HotSwapCompilerPass() {
-                  @Override
-                  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+                ((Node externs, Node root) ->
                     maybeMarkFeaturesAsTranspiledAway(
-                        compiler, featureToRemove, moreFeaturesToRemove);
-                  }
-
-                  @Override
-                  public void process(Node externs, Node root) {
-                    maybeMarkFeaturesAsTranspiledAway(
-                        compiler, featureToRemove, moreFeaturesToRemove);
-                  }
-                })
+                        compiler, featureToRemove, moreFeaturesToRemove)))
         .setFeatureSet(FeatureSet.ES_NEXT_IN)
         .build();
   }

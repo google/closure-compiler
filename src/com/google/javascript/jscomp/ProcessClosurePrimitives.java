@@ -37,7 +37,7 @@ import java.util.Set;
  *
  * <p>Records forwardDeclared names in the internal compiler state.
  */
-class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+class ProcessClosurePrimitives extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType EXPECTED_OBJECTLIT_ERROR = DiagnosticType.error(
       "JSC_EXPECTED_OBJECTLIT_ERROR",
@@ -120,13 +120,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   public void process(Node externs, Node root) {
     // Replace and validate other Closure primitives
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    // TODO(bashir): Implement a real hot-swap version instead and make it fully
-    // consistent with the full version.
-    this.compiler.process(this);
   }
 
   @Override

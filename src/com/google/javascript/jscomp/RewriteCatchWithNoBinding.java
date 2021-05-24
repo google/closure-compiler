@@ -41,7 +41,7 @@ import com.google.javascript.rhino.Node;
  * }
  * }</pre>
  */
-final class RewriteCatchWithNoBinding implements HotSwapCompilerPass {
+final class RewriteCatchWithNoBinding implements CompilerPass {
   private static final FeatureSet TRANSPILED_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CATCH_BINDING);
   private static final String BINDING_NAME = "$jscomp$unused$catch";
@@ -65,13 +65,6 @@ final class RewriteCatchWithNoBinding implements HotSwapCompilerPass {
       n.getFirstChild().replaceWith(name.srcrefTree(n.getFirstChild()));
       t.reportCodeChange();
     }
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(
-        compiler, scriptRoot, TRANSPILED_FEATURES, new AddBindings());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }
 
   @Override

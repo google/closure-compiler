@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Checks that ES6 Modules are used correctly, and do not reference undefined keywords or features.
  */
-public final class Es6CheckModule extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+public final class Es6CheckModule extends AbstractPostOrderCallback implements CompilerPass {
   static final DiagnosticType ES6_MODULE_REFERENCES_THIS =
       DiagnosticType.warning(
           "ES6_MODULE_REFERENCES_THIS", "The body of an ES6 module cannot reference 'this'.");
@@ -40,11 +40,6 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements H
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

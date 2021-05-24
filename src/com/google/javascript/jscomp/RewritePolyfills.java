@@ -36,7 +36,7 @@ import java.util.Set;
  * <p>TODO(b/120486392): consider merging this pass with {@link InjectRuntimeLibraries} and {@link
  * InjectTranspilationRuntimeLibraries}.
  */
-public class RewritePolyfills implements HotSwapCompilerPass {
+public class RewritePolyfills implements CompilerPass {
 
   static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.disabled(
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
@@ -77,7 +77,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   }
 
   @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+  public void process(Node externs, Node root) {
     if (this.isolatePolyfills) {
       // Polyfill isolation requires a pass to run near the end of optimizations. That pass may call
       // into a library method injected in this pass. Adding an externs declaration of that library
@@ -97,7 +97,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     }
 
     this.libraries = new LinkedHashSet<>();
-    new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(scriptRoot, this::inject);
+    new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(root, this::inject);
 
     if (libraries.isEmpty()) {
       return;
@@ -134,11 +134,6 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       }
       node = next;
     }
-  }
-
-  @Override
-  public void process(Node externs, Node root) {
-    hotSwapScript(root, null);
   }
 
   private void inject(PolyfillUsage polyfillUsage) {

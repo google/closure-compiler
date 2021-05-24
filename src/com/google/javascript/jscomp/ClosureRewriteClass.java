@@ -34,11 +34,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrites "goog.defineClass" into a form that is suitable for
- * type checking and dead code elimination.
+ * Rewrites "goog.defineClass" into a form that is suitable for type checking and dead code
+ * elimination.
  */
-class ClosureRewriteClass extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerPass {
 
   // Errors
   static final DiagnosticType GOOG_CLASS_TARGET_INVALID = DiagnosticType.error(
@@ -97,12 +96,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root, null);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

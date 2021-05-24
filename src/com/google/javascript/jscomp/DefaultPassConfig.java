@@ -113,6 +113,8 @@ public final class DefaultPassConfig extends PassConfig {
   /**
    * Global state necessary for doing hotswap recompilation of files with references to processed
    * goog.modules.
+   *
+   * <p>TODO(b/187747884): Delete this.
    */
   private transient ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
@@ -934,7 +936,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory checkSideEffects =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkSideEffects")
           .setInternalFactory(
               (compiler) ->
@@ -955,7 +957,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks for code that is probably wrong (such as stray expressions). */
   private final PassFactory suspiciousCode =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("suspiciousCode")
           .setInternalFactory(
               (compiler) -> {
@@ -1123,7 +1125,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks that all goog.require()s are used. */
   private final PassFactory extraRequires =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
           .setInternalFactory(CheckExtraRequires::new)
@@ -1144,7 +1146,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Verifies JSDoc annotations are used properly and checks for ES modules. */
   private final PassFactory checkJsDocAndEs6Modules =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkJsDocAndEs6Modules")
           .setFeatureSetForChecks()
           .setInternalFactory(
@@ -1225,24 +1227,15 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Closure pre-processing pass. */
   private final PassFactory closurePrimitives =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closurePrimitives")
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 final ProcessClosurePrimitives pass = new ProcessClosurePrimitives(compiler);
-
-                return new HotSwapCompilerPass() {
-                  @Override
-                  public void process(Node externs, Node root) {
-                    pass.process(externs, root);
-                    compiler.addExportedNames(pass.getExportedVariableNames());
-                  }
-
-                  @Override
-                  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                    pass.hotSwapScript(scriptRoot, originalRoot);
-                  }
+                return (Node externs, Node root) -> {
+                  pass.process(externs, root);
+                  compiler.addExportedNames(pass.getExportedVariableNames());
                 };
               })
           .setFeatureSetForChecks()
@@ -1250,7 +1243,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Closure provide/require rewriting pass. */
   private final PassFactory closureProvidesRequires =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closureProvidesRequires")
           .setInternalFactory(
               (compiler) -> {
@@ -1266,7 +1259,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Process AngularJS-specific annotations. */
   private final PassFactory angularPass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.ANGULAR_PASS)
           .setInternalFactory(AngularPass::new)
           .setFeatureSetForChecks()
@@ -1306,7 +1299,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Applies aliases and inlines goog.scope. */
   private final PassFactory closureGoogScopeAliasesForIjs =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closureGoogScopeAliasesForIjs")
           .setInternalFactory((compiler) -> ScopedAliases.builder(compiler).build())
           .setFeatureSetForChecks()
@@ -1317,7 +1310,7 @@ public final class DefaultPassConfig extends PassConfig {
    * performed.
    */
   private final PassFactory closureGoogScopeAliases =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closureGoogScopeAliases")
           .setInternalFactory(
               (compiler) -> {
@@ -1371,7 +1364,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrites goog.defineClass */
   private final PassFactory closureRewriteClass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CLOSURE_REWRITE_CLASS)
           .setInternalFactory(ClosureRewriteClass::new)
           .setFeatureSetForChecks()
@@ -1379,7 +1372,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks of correct usage of goog.module */
   private final PassFactory closureCheckModule =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closureCheckModule")
           .setInternalFactory(
               (compiler) -> new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()))
@@ -1388,7 +1381,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrites goog.module */
   private final PassFactory closureRewriteModule =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("closureRewriteModule")
           .setInternalFactory(
               (compiler) -> {
@@ -1407,7 +1400,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
   private final PassFactory checkClosureImports =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkGoogRequires")
           .setInternalFactory(
               (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
@@ -1416,7 +1409,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrite imports for Closure Library's goog.js file to global goog references. */
   private final PassFactory rewriteGoogJsImports =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("rewriteGoogJsImports")
           .setInternalFactory(
               (compiler) ->
@@ -1567,7 +1560,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks that all variables are defined. */
   private final PassFactory checkVars =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CHECK_VARS)
           .setInternalFactory(VarCheck::new)
           .setFeatureSetForChecks()
@@ -1602,7 +1595,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks that references to variables look reasonable. */
   private final PassFactory checkVariableReferencesForTranspileOnly =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CHECK_VARIABLE_REFERENCES)
           .setInternalFactory((compiler) -> new VariableReferenceCheck(compiler, true))
           .setFeatureSetForChecks()
@@ -1610,14 +1603,14 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks that references to variables look reasonable. */
   private final PassFactory checkVariableReferences =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CHECK_VARIABLE_REFERENCES)
           .setInternalFactory(VariableReferenceCheck::new)
           .setFeatureSetForChecks()
           .build();
 
   private final PassFactory checkSuper =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkSuper")
           .setInternalFactory(CheckSuper::new)
           .setFeatureSetForChecks()
@@ -1641,35 +1634,21 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Runs type inference. */
   final PassFactory inferTypes =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.INFER_TYPES)
           .setInternalFactory(
               (compiler) ->
-                  new HotSwapCompilerPass() {
-                    @Override
-                    public void process(Node unused, Node srcRoot) {
-                      Node globalRoot = srcRoot.getParent();
+                  ((Node unused, Node srcRoot) -> {
+                    Node globalRoot = srcRoot.getParent();
 
-                      TypeInferencePass inferencePass = this.createInference();
-                      compiler.setTypeCheckingHasRun(true);
-                      DefaultPassConfig.this.topScope = inferencePass.inferAllScopes(globalRoot);
-                    }
-
-                    @Override
-                    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      this.createInference()
-                          .reuseTopScope(getTopScope())
-                          .inferAllScopes(scriptRoot);
-                    }
-
-                    /** Create a type inference pass. */
-                    private TypeInferencePass createInference() {
-                      return new TypeInferencePass(
-                          compiler,
-                          compiler.getReverseAbstractInterpreter(),
-                          getTypedScopeCreator(compiler));
-                    }
-                  })
+                    TypeInferencePass inferencePass =
+                        new TypeInferencePass(
+                            compiler,
+                            compiler.getReverseAbstractInterpreter(),
+                            getTypedScopeCreator(compiler));
+                    compiler.setTypeCheckingHasRun(true);
+                    DefaultPassConfig.this.topScope = inferencePass.inferAllScopes(globalRoot);
+                  }))
           .setFeatureSetForChecks()
           .build();
 
@@ -1681,7 +1660,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory inferJsDocInfo =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("inferJsDocInfo")
           .setInternalFactory(InferJSDocInfo::new)
           .setFeatureSetForChecks()
@@ -1689,7 +1668,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks type usage */
   private final PassFactory checkTypes =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CHECK_TYPES)
           .setInternalFactory(
               (compiler) ->
@@ -1712,7 +1691,7 @@ public final class DefaultPassConfig extends PassConfig {
    * code.
    */
   private final PassFactory checkControlFlow =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkControlFlow")
           .setInternalFactory(
               (compiler) -> {
@@ -1730,7 +1709,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks access controls. Depends on type-inference. */
   private final PassFactory checkAccessControls =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkAccessControls")
           .setInternalFactory(CheckAccessControls::new)
           .setFeatureSetForChecks()
@@ -1743,7 +1722,7 @@ public final class DefaultPassConfig extends PassConfig {
    * be added to {@link LintPassConfig} as well as this list.
    */
   private final PassFactory lintChecks =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.LINT_CHECKS)
           .setInternalFactory(
               (compiler) -> {
@@ -1772,7 +1751,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory analyzerChecks =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.ANALYZER_CHECKS)
           .setInternalFactory(
               (compiler) -> {
@@ -1797,7 +1776,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory checkRequiresAndProvidesSorted =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("checkRequiresAndProvidesSorted")
           .setInternalFactory(
               (compiler) ->
@@ -2618,7 +2597,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrites Polymer({}) */
   private final PassFactory polymerPass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("polymerPass")
           .setInternalFactory(
               (compiler) ->
@@ -2736,7 +2715,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Rewrites goog.module in whitespace only mode */
   private final PassFactory whitespaceWrapGoogModules =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("whitespaceWrapGoogModules")
           .setInternalFactory(WhitespaceWrapGoogModules::new)
           .setFeatureSetForChecks()
@@ -2757,7 +2736,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory gatherModuleMetadataPass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.GATHER_MODULE_METADATA)
           .setInternalFactory(
               (compiler) -> {
@@ -2770,7 +2749,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private final PassFactory createModuleMapPass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CREATE_MODULE_MAP)
           .setInternalFactory(
               (compiler) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
