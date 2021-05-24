@@ -97,6 +97,8 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.logForDiagnostics(
         "prop_refs",
         () ->
+            // Ensure this logging happens before invalidation. Invalidating a property
+            // destroys its list of use sites, which we need to log.
             propIndex.values().stream()
                 .map(PropertyReferenceIndexJson::new)
                 .collect(toImmutableSortedMap(naturalOrder(), (x) -> x.name, (x) -> x)));
@@ -128,13 +130,12 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .sorted(comparingInt((x) -> x.index))
                 .collect(toImmutableList()));
 
-    // Ensure this step happens after logging PropertyReferenceIndexJson. Invalidating a property
-    // destroys its list of use sites, which we need to log.
-    invalidateBasedOnType(flattener);
-
+    invalidateAllMissingPropertyAccesses(flattener);
+    invalidatePropertiesOnInvalidatingColors(flattener); // Before clustering for performance.
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
-    propIndex.values().forEach(renamer::renameUses);
+    invalidatePropertiesOnInvalidatingColors(flattener); // After clustering for correctness.
 
+    propIndex.values().forEach(renamer::renameUses);
     this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
 
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
@@ -154,17 +155,19 @@ public final class DisambiguateProperties2 implements CompilerPass {
                         : ImmutableSortedSet.copyOf(newNames.get(prop.getName()))));
   }
 
+  /**
+   * Invalidate properties that should never be renamed.
+   *
+   * <p>Expand this list as needed; it wasn't created exhaustively.
+   *
+   * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
+   * props used in strange ways by the language spec, etc.
+   *
+   * <p>TODO(b/169899789): consider instead omitting these properties entirely from the serialized
+   * colors format.
+   */
   private static void invalidateWellKnownProperties(
       LinkedHashMap<String, PropertyClustering> propIndex) {
-    /**
-     * Expand this list as needed; it wasn't created exhaustively.
-     *
-     * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
-     * props used in strange ways by the language spec, etc.
-     *
-     * <p>TODO(b/169899789): consider instead omitting these properties entirely from the serialized
-     * colors format.
-     */
     ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
     for (String name : names) {
       propIndex
@@ -173,14 +176,20 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private void invalidateBasedOnType(ColorGraphNodeFactory flattener) {
-    for (ColorGraphNode type : flattener.getAllKnownTypes()) {
-      if (type.getColor().isInvalidating()) {
-        for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
-          prop.invalidate(Invalidation.invalidatingType(type.getIndex()));
+  /**
+   * Invalidate all properties associated with invalidating Colors.
+   *
+   * <p>It's particularly important that we invalidate properties on UNKNOWN before cluster
+   * propagation. About half of all properties are referenced on UNKNOWN, so invalidating them early
+   * saves a huge amount of wasted work.
+   */
+  private static void invalidatePropertiesOnInvalidatingColors(ColorGraphNodeFactory flattener) {
+    for (ColorGraphNode node : flattener.getAllKnownTypes()) {
+      Color color = node.getColor();
+      if (color.isInvalidating()) {
+        for (PropertyClustering prop : node.getAssociatedProps().keySet()) {
+          prop.invalidate(Invalidation.invalidatingType(color));
         }
-      } else {
-        invalidateNonDeclaredPropertyAccesses(type);
       }
     }
   }
@@ -194,19 +203,21 @@ public final class DisambiguateProperties2 implements CompilerPass {
    *
    * <p>TODO(b/177695515): delete this method
    */
-  private void invalidateNonDeclaredPropertyAccesses(ColorGraphNode colorGraphNode) {
-    Color color = colorGraphNode.getColor();
-    checkArgument(
-        !color.isInvalidating(),
-        "Not applicable to invalidating types. All their properties are invalidated");
-
-    for (PropertyClustering prop : colorGraphNode.getAssociatedProps().keySet()) {
-      if (prop.isInvalidated()) {
-        continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
+  private void invalidateAllMissingPropertyAccesses(ColorGraphNodeFactory flattener) {
+    for (ColorGraphNode node : flattener.getAllKnownTypes()) {
+      Color color = node.getColor();
+      if (color.isInvalidating()) {
+        continue;
       }
 
-      if (!mayHaveProperty(color, prop.getName())) {
-        prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getIndex()));
+      for (PropertyClustering prop : node.getAssociatedProps().keySet()) {
+        if (prop.isInvalidated()) {
+          continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
+        }
+
+        if (!mayHaveProperty(color, prop.getName())) {
+          prop.invalidate(Invalidation.undeclaredAccess(color));
+        }
       }
     }
   }
@@ -219,11 +230,11 @@ public final class DisambiguateProperties2 implements CompilerPass {
    * <p>TODO(b/177695515): delete this method
    */
   private boolean mayHaveProperty(Color color, String propertyName) {
-    try {
-      if (!this.mayHavePropertySeenSet.add(color)) {
-        return false;
-      }
+    if (!this.mayHavePropertySeenSet.add(color)) {
+      return false;
+    }
 
+    try {
       if (color.isUnion()) {
         return color.getUnionElements().stream()
             .anyMatch(element -> mayHaveProperty(element, propertyName));

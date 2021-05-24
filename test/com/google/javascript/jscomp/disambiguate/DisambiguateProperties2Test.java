@@ -927,55 +927,27 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void invalidatingSubtype_doesNotInvalidatePropertyOnlyReferencedOnSupertype() {
-    // TODO(b/135045845): track mismatches through subtypes/supertypes
-    test(
+  public void propertiesAreInvalidated_onValidatedType_ifAnySubtypeIsInvalidated() {
+    testSame(
         srcs(
             lines(
                 "class FooParent {",
-                "  parent() {}",
+                "  a() {}",
                 "}",
-                "",
-                "class FooChild extends FooParent {",
-                "  child() {}",
-                "}",
+                "class FooChild extends FooParent { }",
                 "",
                 "class BarParent {",
-                "  parent() {}",
+                "  a() {}",
                 "}",
+                "class BarChild extends BarParent { }",
                 "",
-                "class BarChild extends BarParent {",
-                "  child() {}",
-                "}",
+                "const /** !FooChild */ fooChild = new BarChild();", // Mismatch
+                "const /** !FooParent */ fooParent = fooChild;", // No mismatch
+                "fooParent.a();",
                 "",
-                "/** ",
-                " * @suppress {checkTypes} intentional type error",
-                " * @type {!FooChild}",
-                " */",
-                "const fooChild = '';")),
-        expected(
-            lines(
-                "class FooParent {",
-                "  JSC$1_parent() {}",
-                "}",
-                "",
-                "class FooChild extends FooParent {",
-                "  child() {}",
-                "}",
-                "",
-                "class BarParent {",
-                "  JSC$5_parent() {}",
-                "}",
-                "",
-                "class BarChild extends BarParent {",
-                "  child() {}",
-                "}",
-                "",
-                "/** ",
-                " * @suppress {checkTypes} intentional type error",
-                " * @type {!FooChild}",
-                " */",
-                "const fooChild = '';")));
+                "class Other {",
+                "  a() { }",
+                "}")));
   }
 
   private static final class SilenceNoiseGuard extends WarningsGuard {
