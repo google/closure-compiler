@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
@@ -54,14 +53,6 @@ class TypeInferencePass {
         AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
   }
 
-  // TODO(b/187747884): Delete this method.
-  TypeInferencePass reuseTopScope(TypedScope topScope) {
-    checkNotNull(topScope);
-    checkState(this.topScope == null);
-    this.topScope = topScope;
-    return this;
-  }
-
   /**
    * Execute type inference running over part of the scope tree.
    *
@@ -92,14 +83,10 @@ class TypeInferencePass {
     // In this code, we need to build the symbol table for the inner scope in
     // order to propagate the type of ns.method in the outer scope.
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
-      if (this.topScope == null) {
-        checkState(inferenceRoot.isRoot());
-        checkState(inferenceRoot.getParent() == null);
-        this.topScope = scopeCreator.createScope(inferenceRoot, null);
-      } else {
-        checkState(inferenceRoot.isScript());
-        scopeCreator.patchGlobalScope(this.topScope, inferenceRoot);
-      }
+      checkState(inferenceRoot.isRoot());
+      checkState(inferenceRoot.getParent() == null);
+      checkState(this.topScope == null);
+      this.topScope = scopeCreator.createScope(inferenceRoot, null);
 
       NodeTraversal.builder()
           .setCompiler(compiler)
