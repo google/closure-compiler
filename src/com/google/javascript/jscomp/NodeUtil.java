@@ -5546,6 +5546,18 @@ public final class NodeUtil {
     return externsNames.build();
   }
 
+  static void createSynthesizedExternsSymbol(AbstractCompiler compiler, String nameToAdd) {
+    Node name = IR.name(nameToAdd);
+    name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    Node var = IR.var(name);
+    CompilerInput input = compiler.getSynthesizedExternsInput();
+    Node root = input.getAstRoot(compiler);
+    name.setStaticSourceFileFrom(root);
+    var.setStaticSourceFileFrom(root);
+    root.addChildToBack(var);
+    compiler.reportChangeToEnclosingScope(var);
+  }
+
   /** Recurses through a tree, marking all function nodes as changed. */
   static void markNewScopesChanged(Node node, AbstractCompiler compiler) {
     if (node.isFunction()) {

@@ -4224,6 +4224,26 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class CreateSynthesizedExternsSymbolTests extends CompilerTestCase {
+    @Override
+    protected CompilerPass getProcessor(Compiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node srcs) {
+          String expectedExtern = "TEST_NAME";
+          NodeUtil.createSynthesizedExternsSymbol(compiler, expectedExtern);
+        }
+      };
+    }
+
+    @Test
+    public void test() {
+      // setup a simple compilation job
+      testExternChanges("", "", "var TEST_NAME");
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class NodeTraversalTests {
 
     @Test

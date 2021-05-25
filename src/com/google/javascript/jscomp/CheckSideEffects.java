@@ -187,17 +187,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
 
   /** Injects JSCOMPILER_PRESEVE into the synthetic externs */
   static void addExtern(AbstractCompiler compiler) {
-    Node name = IR.name(PROTECTOR_FN);
-    name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    Node var = IR.var(name);
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    var.setJSDocInfo(builder.build());
-    CompilerInput input = compiler.getSynthesizedExternsInput();
-    Node root = input.getAstRoot(compiler);
-    name.setStaticSourceFileFrom(root);
-    var.setStaticSourceFileFrom(root);
-    root.addChildToBack(var);
-    compiler.reportChangeToEnclosingScope(var);
+    NodeUtil.createSynthesizedExternsSymbol(compiler, PROTECTOR_FN);
   }
 
   /**
