@@ -630,7 +630,7 @@ final class ClosureRewriteModule implements CompilerPass {
   // the goog.module declares itself as a legacy namespace.
   // Allows for detecting duplicate goog.module()s and for rewriting fully qualified
   // JsDoc type references to goog.module() types in legacy scripts.
-  static class GlobalRewriteState {
+  private static final class GlobalRewriteState {
     private final Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
         new HashMap<>();
     private final Multimap<Node, String> namespaceIdsByScriptNode = HashMultimap.create();
@@ -676,7 +676,7 @@ final class ClosureRewriteModule implements CompilerPass {
     }
   }
 
-  private final GlobalRewriteState rewriteState;
+  private final GlobalRewriteState rewriteState = new GlobalRewriteState();
   // All prefix namespaces from goog.provides and legacy goog.modules.
   private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
   private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
@@ -687,14 +687,12 @@ final class ClosureRewriteModule implements CompilerPass {
   ClosureRewriteModule(
       AbstractCompiler compiler,
       PreprocessorSymbolTable preprocessorSymbolTable,
-      GlobalRewriteState moduleRewriteState,
       @Nullable TypedScope globalTypedScope) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal());
 
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    this.rewriteState = moduleRewriteState != null ? moduleRewriteState : new GlobalRewriteState();
     this.preserveSugar = compiler.getOptions().shouldPreserveGoogModule();
     this.globalTypedScope = globalTypedScope;
   }

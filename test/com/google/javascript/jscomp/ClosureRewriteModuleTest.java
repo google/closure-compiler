@@ -61,7 +61,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                   .processForTesting(externs, main));
       compiler.setTypeCheckingHasRun(true);
 
-      new ClosureRewriteModule(compiler, null, null, globalTypedScope).process(externs, main);
+      new ClosureRewriteModule(compiler, null, globalTypedScope).process(externs, main);
     };
   }
 

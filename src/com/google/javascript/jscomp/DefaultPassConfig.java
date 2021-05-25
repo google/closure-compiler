@@ -110,14 +110,6 @@ public final class DefaultPassConfig extends PassConfig {
   private final transient PreprocessorSymbolTable.CachedInstanceFactory
       preprocessorSymbolTableFactory = new PreprocessorSymbolTable.CachedInstanceFactory();
 
-  /**
-   * Global state necessary for doing hotswap recompilation of files with references to processed
-   * goog.modules.
-   *
-   * <p>TODO(b/187747884): Delete this.
-   */
-  private transient ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
-
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
   }
@@ -125,12 +117,6 @@ public final class DefaultPassConfig extends PassConfig {
   @Nullable
   PreprocessorSymbolTable getPreprocessorSymbolTable() {
     return preprocessorSymbolTableFactory.getInstanceOrNull();
-  }
-
-  void maybeInitializeModuleRewriteState() {
-    if (options.allowsHotswapReplaceScript() && this.moduleRewriteState == null) {
-      this.moduleRewriteState = new ClosureRewriteModule.GlobalRewriteState();
-    }
   }
 
   @Override
@@ -1386,14 +1372,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                maybeInitializeModuleRewriteState();
-                TypedScope globalTypedScope =
-                    compiler.getOptions().allowsHotswapReplaceScript() ? null : this.getTopScope();
                 return new ClosureRewriteModule(
                     compiler,
                     preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    moduleRewriteState,
-                    globalTypedScope);
+                    this.getTopScope());
               })
           .setFeatureSetForChecks()
           .build();
