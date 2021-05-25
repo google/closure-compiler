@@ -20,9 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
-import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
-import static com.google.javascript.jscomp.serialization.TypePointers.untrimOffset;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -32,7 +29,6 @@ import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
-import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -42,7 +38,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.Before;
@@ -87,374 +82,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
       compiler.forwardDeclareType(typeName);
     }
     return compiler;
-  }
-
-  @Test
-  public void testNativeTypesAreNotSerialized() {
-    assertThat(compileToTypes("const /** bigint */ x = 1n;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** boolean */ x = false;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** number */ x = 5;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** string */ x = '';"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** symbol */ x = Symbol('x');"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** null */ x = null;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** undefined */ x = void 0;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** ? */ x = /** @type {?} */ (0);"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-    assertThat(compileToTypes("const /** * */ x = /** @type {?} */ (0);"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-  }
-
-  @Test
-  public void testObjectTypeSerializationFormat() {
-    TypedAst typedAst = compile("class Foo { m() {} } new Foo().m();");
-    List<TypeProto> typePool = typedAst.getTypePool().getTypeList();
-
-    assertThat(typePool)
-        .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(
-                    namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool))
-                        .setMarkedConstructor(true)
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "prototype")))
-                .build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
-            TypeProto.newBuilder()
-                .setObject(
-                    namedObjectBuilder("Foo.prototype")
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "constructor"))
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "m")))
-                .build(),
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("Foo.prototype.m").setIsInvalidating(true))
-                .build());
-  }
-
-  @Test
-  public void testDisambiguationEdges_pointFromInstanceToPrototype() {
-    TypePool typePool = compileToTypePool("class Foo { m() {} } new Foo().m();");
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
-  }
-
-  @Test
-  public void testDisambiguationEdges_pointFromInterfaceToPrototype() {
-    TypePool typePool =
-        compileToTypePool(
-            lines(
-                "/** @interface */ class IFoo { m() {} }", //
-                "let /** !IFoo */ x;"));
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "IFoo"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("IFoo.prototype")).build());
-  }
-
-  @Test
-  public void testDisambiguationEdges_pointFromInstanceToInterface() {
-    TypePool typePool =
-        compileToTypePool(
-            lines("/** @interface */ class IFoo {}", "/** @implements {IFoo} */ class Foo {}"));
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(
-            ObjectTypeProto.getDescriptor().findFieldByName("prototype"),
-            ObjectTypeProto.getDescriptor().findFieldByName("instance_type"))
-        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("IFoo")).build());
-  }
-
-  @Test
-  public void testDisambiguationEdges_pointFromSubctorToSuperctor() {
-    TypePool typePool = compileToTypePool("class Foo {} class Bar extends Foo {}");
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "(typeof Bar)"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(
-            ObjectTypeProto.getDescriptor().findFieldByName("prototype"),
-            ObjectTypeProto.getDescriptor().findFieldByName("instance_type"))
-        .containsExactly(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("(typeof Foo)").setMarkedConstructor(true))
-                .build());
-  }
-
-  @Test
-  public void testDisambiguationEdgesDontPointFromPrototypeToInstance() {
-    TypePool typePool = compileToTypePool("class Foo { m() {} } new Foo().m();");
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo.prototype")).isEmpty();
-  }
-
-  @Test
-  public void testMultipleAnonymousTypesDoesntCrash() {
-    compile("(() => 5); (() => 'str');");
-  }
-
-  @Test
-  public void testUnion_proxyLikeTypes_dontPreventUnionCollapsing() {
-    List<TypeProto> typePool =
-        compileToTypes(
-            lines(
-                "/** @enum {boolean|number} */", //
-                "const Foo = {};",
-                "",
-                "let /** !Foo|string|number */ x;"));
-
-    List<UnionTypeProto> unionsContainingUnions =
-        typePool.stream()
-            .filter(TypeProto::hasUnion)
-            .map(TypeProto::getUnion)
-            .filter(
-                (u) ->
-                    u.getUnionMemberList().stream()
-                        .filter((p) -> !isAxiomatic(p))
-                        .anyMatch((e) -> typePool.get(trimOffset(e)).hasUnion()))
-            .collect(toImmutableList());
-    assertThat(unionsContainingUnions).isEmpty();
-
-    assertThat(typePool)
-        .contains(
-            TypeProto.newBuilder()
-                .setUnion(
-                    UnionTypeProto.newBuilder()
-                        .addUnionMember(pointerForType(PrimitiveType.BOOLEAN_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.NUMBER_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.STRING_TYPE))
-                        .build())
-                .build());
-  }
-
-  @Test
-  public void testSerializedInstanceTypeHasClassName() {
-    assertThat(compileToTypes("/** @constructor */ function Foo() {} new Foo;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build());
-  }
-
-  @Test
-  public void testEnumElementSerializesToPrimitive() {
-    // Serialize E but treat E.A as a number
-    assertThat(compileToTypes("/** @enum {number} */ const E = {A: 0, B: 1}; E.A;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("enum{E}").setPropertiesKeepOriginalName(true))
-                .build());
-  }
-
-  @Test
-  public void testBoxableScalarTypesKeepOriginalName() {
-    // Serialize E but treat E.A as a number
-    assertThat(compileToTypes("/** @enum {number} */ const E = {A: 0, B: 1}; E.A;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("enum{E}").setPropertiesKeepOriginalName(true))
-                .build());
-  }
-
-  @Test
-  public void marksClosureAssertions() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "/** @closurePrimitive {asserts.truthy} */",
-                    "function assert(x) { if (!x) { throw new Error(); }}",
-                    "",
-                    "/** @closurePrimitive {asserts.fail} */",
-                    "function fail() { throw new Error(); }")))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(
-                    namedObjectBuilder("assert").setClosureAssert(true).setIsInvalidating(true))
-                .build(),
-            TypeProto.newBuilder()
-                .setObject(
-                    // ClosurePrimitive.ASSERTS_FAIL is not a removable Closure assertion
-                    namedObjectBuilder("fail").setClosureAssert(false).setIsInvalidating(true))
-                .build());
-  }
-
-  @Test
-  public void testSerializeObjectLiteralTypesAsInvalidating() {
-    TypedAst typedAst = compile("const /** {x: string} */ obj = {x: ''};");
-    assertThat(typedAst.getTypePool().getTypeList())
-        .ignoringFieldDescriptors(
-            TypePointer.getDescriptor().findFieldByName("pool_offset"),
-            ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
-        .contains(
-            TypeProto.newBuilder()
-                .setObject(
-                    ObjectTypeProto.newBuilder()
-                        .setIsInvalidating(true)
-                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "x")))
-                .build());
-  }
-
-  @Test
-  public void serializesTemplateTypesAsUnknown() {
-    List<TypeProto> typePool =
-        compileToTypes(
-            lines(
-                "/** @interface @template T */",
-                "class Foo {",
-                // Add in this reference to `T` so that it is seen by the serializer.
-                "  constructor() { /** @type {T} */ this.x; }",
-                "}"));
-    assertThat(typePool)
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(
-                    namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool)))
-                .build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
-    // Verify no additional objects were serialized to represent the template type: we only have
-    // the well-known types and the three TypeProtos tested for above.
-    assertThat(typePool).hasSize(nativeObjects().size() + 3);
-  }
-
-  @Test
-  public void uniquifiesTwoDifferentUnequalFunctionsWithSameName() {
-    assertThat(
-            compileToTypes(
-                lines(
-                    "const ns = {};", //
-                    "ns.f = (/** string */ x) => x;",
-                    "/** @suppress {checkTypes} */",
-                    "ns.f = (/** number */ x) => x;")))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("prototype"))
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build(),
-            TypeProto.newBuilder()
-                .setObject(namedObjectBuilder("ns.f").setIsInvalidating(true))
-                .build());
-  }
-
-  @Test
-  public void discardsDifferentTemplatizationsOfObject() {
-    List<TypeProto> typePool =
-        compileToTypes(
-            lines(
-                "/** @interface @template T */",
-                "class Foo {}",
-                "var /** !Foo<string> */ fooString;",
-                "var /** !Foo<number> */ fooNumber;"));
-
-    assertThat(typePool)
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsAtLeast(
-            TypeProto.newBuilder()
-                .setObject(
-                    namedObjectBuilder("(typeof Foo)")
-                        .addPrototype(pointerForType("Foo.prototype", typePool))
-                        .addInstanceType(pointerForType("Foo", typePool)))
-                .build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build());
-  }
-
-  @Test
-  public void doesntCrashOnFunctionWithNonObjectThisType() {
-    List<TypeProto> typePool =
-        compileToTypes(
-            lines(
-                "var /** function(new: AllType) */ x = function() {};",
-                "/** @typedef {*} */ let AllType;"));
-
-    assertThat(typePool)
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .contains(
-            TypeProto.newBuilder()
-                .setObject(
-                    ObjectTypeProto.newBuilder()
-                        .setIsInvalidating(true)
-                        .addPrototype(pointerForType(PrimitiveType.UNKNOWN_TYPE))
-                        .addInstanceType(pointerForType(PrimitiveType.UNKNOWN_TYPE))
-                        .setMarkedConstructor(true)
-                        .build())
-                .build());
-  }
-
-  @Test
-  public void supertypeListForInterface_includesIllegalExtendedTypes() {
-    String source =
-        lines(
-            "class Foo {}", //
-            "/** @interface */",
-            "class Bar {}",
-            "/** @typedef {{x: string}} */",
-            "let RecordType;",
-            "/** @interface",
-            // [JSC_CONFLICTING_EXTENDS_TYPE]: interfaces can only extend interfaces
-            " * @extends {Foo}",
-            " * @extends {Bar}",
-            " * @extends {RecordType}",
-            " * @suppress {checkTypes}",
-            "*/",
-            "class Baz {}");
-    TypePool typePool = compileToTypePool(source);
-
-    assertThat(getNonPrimitiveSupertypesFor(typePool, "Baz"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactly(
-            TypeProto.newBuilder()
-                .setObject(ObjectTypeProto.newBuilder().setIsInvalidating(true))
-                .build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Bar")).build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Baz.prototype")).build());
-  }
-
-  @Test
-  public void doesntSerializeNullOrUndefinedUnion() {
-    assertThat(compileToTypes("var /** null|undefined */ x;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-  }
-
-  @Test
-  public void doesntSerializeForwardDeclaredType() {
-    this.typesToForwardDeclare = ImmutableSet.of("forward.declared.TypeProto");
-    assertThat(compileToTypes("var /** !forward.declared.TypeProto */ x;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
-  }
-
-  @Test
-  public void doesntSerializeMissingType() {
-    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
-    assertThat(compileToTypes("var /** !missing.TypeProto */ x;"))
-        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
-        .containsExactlyElementsIn(nativeObjects());
   }
 
   @Test
@@ -710,22 +337,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     assertThat(script.getChild(script.getChildCount() - 1).getSourceFile()).isEqualTo(0);
   }
 
-  private ObjectTypeProto.Builder namedObjectBuilder(String className) {
-    return ObjectTypeProto.newBuilder()
-        .setDebugInfo(
-            ObjectTypeProto.DebugInfo.newBuilder()
-                .setClassName(className)
-                .setFilename("testcode")
-                .build());
-  }
-
-  private List<TypeProto> compileToTypes(String source) {
-    return compile(source).getTypePool().getTypeList();
-  }
-
-  private TypePool compileToTypePool(String source) {
-    return compile(source).getTypePool();
-  }
 
   private AstNode compileToAst(String source) {
     return compile(source).getCodeFileList().get(0);
@@ -746,20 +357,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
   }
 
-  private static TypePointer pointerForType(String className, List<TypeProto> pool) {
-    for (int i = 0; i < pool.size(); i++) {
-      if (pool.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
-        return TypePointer.newBuilder().setPoolOffset(untrimOffset(i)).build();
-      }
-    }
-    throw new AssertionError("Unable to find type '" + className + "' in " + pool);
-  }
-
-  /** Returns the types that are serialized for every compilation, even given an empty source */
-  private ImmutableList<TypeProto> nativeObjects() {
-    return ImmutableList.copyOf(compileToTypes(""));
-  }
-
   /**
    * Returns the offset of the given string in the given pool, throwing an exception if not present
    */
@@ -767,25 +364,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str));
     checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
     return offset;
-  }
-
-  private static List<TypeProto> getNonPrimitiveSupertypesFor(TypePool typePool, String className) {
-    ArrayList<TypeProto> supertypes = new ArrayList<>();
-    for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
-      TypeProto subtype = typePool.getType(trimOffset(edge.getSubtype()));
-      if (!subtype.hasObject()) {
-        continue;
-      }
-      ObjectTypeProto objectSubtype = subtype.getObject();
-      if (!objectSubtype.getDebugInfo().getClassName().equals(className)) {
-        continue;
-      }
-      if (isAxiomatic(edge.getSupertype())) {
-        continue; // Skip axiomatic supertpyes as they don't have a TypeProto
-      }
-      supertypes.add(typePool.getType(trimOffset(edge.getSupertype())));
-    }
-    return supertypes;
   }
 
   private void generateDiagnosticFiles() {

@@ -42,14 +42,15 @@ import java.util.IdentityHashMap;
 final class SerializeTypesToPointers {
 
   private final AbstractCompiler compiler;
-  private final JSTypeSerializer jstypeSerializer;
+  private final JSTypeReconserializer jstypeReconserializer;
   private final IdentityHashMap<JSType, TypePointer> typePointersByJstype = new IdentityHashMap<>();
   private static final Gson GSON = new Gson();
   private TypePool typePool = null;
 
-  private SerializeTypesToPointers(AbstractCompiler compiler, JSTypeSerializer jstypeSerializer) {
+  private SerializeTypesToPointers(
+      AbstractCompiler compiler, JSTypeReconserializer jstypeReconserializer) {
     this.compiler = compiler;
-    this.jstypeSerializer = jstypeSerializer;
+    this.jstypeReconserializer = jstypeReconserializer;
   }
 
   static SerializeTypesToPointers create(
@@ -60,10 +61,10 @@ final class SerializeTypesToPointers {
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .build();
-    JSTypeSerializer jsTypeSerializer =
-        JSTypeSerializer.create(
+    JSTypeReconserializer jsTypeReconserializer =
+        JSTypeReconserializer.create(
             compiler.getTypeRegistry(), invalidatingTypes, stringPoolBuilder, serializationOptions);
-    return new SerializeTypesToPointers(compiler, jsTypeSerializer);
+    return new SerializeTypesToPointers(compiler, jsTypeReconserializer);
   }
 
   void gatherTypesOnAst(Node root) {
@@ -73,13 +74,13 @@ final class SerializeTypesToPointers {
     // these types are only used when debug logging is enabled, but we always serialize them as not
     // to have a different TypePool with and without debug logging.
     for (TypeMismatch mismatch : compiler.getTypeMismatches()) {
-      jstypeSerializer.serializeType(mismatch.getFound());
-      jstypeSerializer.serializeType(mismatch.getRequired());
+      jstypeReconserializer.serializeType(mismatch.getFound());
+      jstypeReconserializer.serializeType(mismatch.getRequired());
     }
 
-    this.typePool = jstypeSerializer.generateTypePool();
+    this.typePool = jstypeReconserializer.generateTypePool();
 
-    logSerializationDebugInfo(this.jstypeSerializer, this.typePool);
+    logSerializationDebugInfo(this.jstypeReconserializer, this.typePool);
   }
 
   private class Callback extends AbstractPostOrderCallback {
@@ -88,7 +89,7 @@ final class SerializeTypesToPointers {
     public void visit(NodeTraversal t, Node n, Node parent) {
       JSType type = n.getJSType();
       if (type != null && !typePointersByJstype.containsKey(type)) {
-        typePointersByJstype.put(type, jstypeSerializer.serializeType(type));
+        typePointersByJstype.put(type, jstypeReconserializer.serializeType(type));
       }
     }
   }
@@ -101,7 +102,7 @@ final class SerializeTypesToPointers {
     return typePool;
   }
 
-  private void logSerializationDebugInfo(JSTypeSerializer serializer, TypePool typePool) {
+  private void logSerializationDebugInfo(JSTypeReconserializer serializer, TypePool typePool) {
     // Log information about how the JSTypes correspond to the colors. This may be useful later on
     // in optimizations.
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
@@ -122,7 +123,7 @@ final class SerializeTypesToPointers {
    * debug logging.
    */
   private ImmutableSet<TypeMismatchJson> logTypeMismatches(
-      Iterable<TypeMismatch> typeMismatches, JSTypeSerializer serializer, TypePool typePool) {
+      Iterable<TypeMismatch> typeMismatches, JSTypeReconserializer serializer, TypePool typePool) {
     return stream(typeMismatches)
         .map(mismatch -> TypeMismatchJson.create(mismatch, serializer, typePool))
         .collect(toImmutableSortedSet(naturalOrder()));
@@ -139,7 +140,8 @@ final class SerializeTypesToPointers {
       this.requiredColorId = required.toString();
     }
 
-    static TypeMismatchJson create(TypeMismatch x, JSTypeSerializer serializer, TypePool typePool) {
+    static TypeMismatchJson create(
+        TypeMismatch x, JSTypeReconserializer serializer, TypePool typePool) {
       TypePointer foundPointer = serializer.serializeType(x.getFound());
       TypePointer requiredPointer = serializer.serializeType(x.getRequired());
 

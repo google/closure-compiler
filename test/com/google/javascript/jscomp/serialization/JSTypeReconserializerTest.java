@@ -56,8 +56,12 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
       ObjectTypeProto.getDescriptor().findFieldByName("uuid");
   private static final FieldDescriptor OBJECT_PROPERTIES =
       ObjectTypeProto.getDescriptor().findFieldByName("own_property");
+  private static final FieldDescriptor IS_INVALIDATING =
+      ObjectTypeProto.getDescriptor().findFieldByName("is_invalidating");
+
   private static final FieldDescriptor TYPE_OFFSET =
       TypePointer.getDescriptor().findFieldByName("pool_offset");
+
   private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
       ImmutableList.of(OBJECT_UUID, OBJECT_PROPERTIES);
 
@@ -220,7 +224,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDisambiguationEdgesDontPointFromPrototypeToInstance() {
+  public void testDisambiguationEdges_dont_pointFromPrototypeToInstance() {
     TypePool typePool = compileToTypePool("class Foo { m() {} } new Foo().m();");
 
     assertThat(getNonPrimitiveSupertypesFor(typePool, "Foo.prototype")).isEmpty();
@@ -489,6 +493,118 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void serializesSourceOfSyntheticCodeDoesntCrash() throws IOException {
     ensureLibraryInjected("base");
     compileToTypePool(new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
+  }
+
+  @Test
+  public void reconcile_setInstanceColors() {
+    // When
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "class Foo { }",
+                "class Bar { }",
+                "",
+                "let /** function(new:Foo) */ x;",
+                "let /** function(new:Bar) */ y;"));
+
+    // Then
+    assertThat(typePool)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .ignoringFieldDescriptors(IS_INVALIDATING)
+        .contains(
+            TypeProto.newBuilder()
+                .setObject(
+                    ObjectTypeProto.newBuilder()
+                        .setMarkedConstructor(true)
+                        .addInstanceType(pointerForType("Foo"))
+                        .addInstanceType(pointerForType("Bar"))
+                        .addPrototype(TypePointer.getDefaultInstance()))
+                .build());
+  }
+
+  @Test
+  public void reconcile_addPrototypes_noActualTestcase() {
+    // TODO(b/185519307): Come up with a situation where this can happen.
+  }
+
+  @Test
+  public void reconcile_setOwnProperties() {
+    // When
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "var Foo = class { a() { } }", //
+                "Foo = class { b() { } }"));
+
+    // Then
+    assertThat(typePool)
+        .ignoringFieldDescriptors(OBJECT_UUID)
+        .contains(
+            TypeProto.newBuilder()
+                .setObject(
+                    namedObjectBuilder("Foo.prototype")
+                        .addOwnProperty(findInStringPool("a"))
+                        .addOwnProperty(findInStringPool("b"))
+                        .addOwnProperty(findInStringPool("constructor")))
+                .build());
+  }
+
+  @Test
+  public void reconcile_setClosureAssert() {
+    // When
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "var /** ? */ assertFoo;",
+                "",
+                "assertFoo = function(/** ? */ a) { }", //
+                "",
+                "/** @closurePrimitive {asserts.truthy} */",
+                "assertFoo = function(/** ? */ a) { }",
+                "",
+                "assertFoo = function(/** ? */ a) { }"));
+
+    // Then
+    assertThat(typePool)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .ignoringFieldDescriptors(IS_INVALIDATING)
+        .contains(
+            TypeProto.newBuilder()
+                .setObject(namedObjectBuilder("assertFoo").setClosureAssert(true))
+                .build());
+  }
+
+  @Test
+  public void reconcile_setConstructor_noActualTestcase() {
+    // TODO(b/185519307): Come up with a situation where this can happen.
+    // Being a constructor is part of the ColorId
+  }
+
+  @Test
+  public void reconcile_setInvalidating() {
+    // When
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "var /** ? */ Foo;", //
+                "",
+                "Foo = function() { };",
+                "",
+                "Foo = class { };"));
+
+    // Then
+    assertThat(typePool)
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .contains(
+            TypeProto.newBuilder()
+                .setObject(namedObjectBuilder("Foo").setIsInvalidating(true))
+                .build());
+  }
+
+  @Test
+  public void reconcile_setPropertiesKeepOriginalName_noActualTestcase() {
+    // TODO(b/185519307): Come up with a situation where this can happen.
+    // Enum types have a unique reference names format which is part of the ColorId
   }
 
   private ObjectTypeProto.Builder namedObjectBuilder(String className) {

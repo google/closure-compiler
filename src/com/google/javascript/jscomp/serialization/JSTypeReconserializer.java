@@ -44,6 +44,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -465,7 +466,14 @@ final class JSTypeReconserializer {
   private static final class SeenTypeRecord {
     final ColorId colorId;
     final TypePointer pointer;
-    final LinkedHashSet<JSType> jstypes = new LinkedHashSet<>();
+
+    /**
+     * 2021-05-25: It's faster to build a list and reconcile duplicates than to deduplicate using a
+     * set. The likely cause is that the caches head of these lists have low hit-rates for unions,
+     * and that union reconciliation doesn't actually look at most entries in this list.
+     */
+    final ArrayList<JSType> jstypes = new ArrayList<>();
+
     @Nullable ImmutableSet<SeenTypeRecord> unionMembers = null;
 
     SeenTypeRecord(ColorId colorId, TypePointer pointer) {
