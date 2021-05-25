@@ -870,6 +870,7 @@ public abstract class CompilerTestCase {
   protected final void enableClosurePass() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     closurePassEnabled = true;
+    enableCreateModuleMap(); // ProcessClosurePrimitives looks at the ModuleMetadataMap
   }
 
   protected final void enableClosurePassForExpected() {
@@ -1881,6 +1882,8 @@ public abstract class CompilerTestCase {
     }
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
+      new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
+          .process(externsRoot, mainRoot);
       new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
       new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);

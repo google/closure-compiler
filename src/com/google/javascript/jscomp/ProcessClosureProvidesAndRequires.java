@@ -36,8 +36,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Replaces goog.provide calls, removes goog.{require,requireType,forwardDeclare} calls and verifies
- * that each goog.{require,requireType} has a corresponding goog.provide.
+ * Replaces goog.provide calls and removes goog.{require,requireType,forwardDeclare} calls.
  *
  * <p>We expect all goog.modules and goog.requires in modules to have been rewritten. This is why
  * all remaining require/requireType calls must refer to a goog.provide, although the original JS
@@ -191,30 +190,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
           handleStubDefinition(t, n);
           break;
 
-        case CLASS:
-          if (t.inGlobalHoistScope() && !NodeUtil.isClassExpression(n)) {
-            String name = n.getFirstChild().getString();
-            ProvidedName pn = providedNames.get(name);
-            if (pn != null) {
-              compiler.report(
-                  JSError.make(n, ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR, name));
-            }
-          }
-          break;
-
-        case FUNCTION:
-          // If this is a declaration of a provided named function, this is an
-          // error. Hoisted functions will explode if they're provided.
-          if (t.inGlobalHoistScope() && NodeUtil.isFunctionDeclaration(n)) {
-            String name = n.getFirstChild().getString();
-            ProvidedName pn = providedNames.get(name);
-            if (pn != null) {
-              compiler.report(
-                  JSError.make(n, ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR, name));
-            }
-          }
-          break;
-
         default:
           break;
       }
@@ -231,24 +206,25 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   }
 
   /** Handles a goog.require or goog.requireType call. */
-  private void processRequireCall(Node n, Node parent) {
-    Node left = n.getFirstChild();
+  private void processRequireCall(Node call, Node parent) {
+    if (!verifyOnlyArgumentIsString(call)) {
+      return;
+    }
+    Node left = call.getFirstChild();
     Node arg = left.getNext();
-    if (verifyLastArgumentIsString(left, arg)) {
-      String ns = arg.getString();
-      ProvidedName provided = providedNames.get(ns);
+    String ns = arg.getString();
+    ProvidedName provided = providedNames.get(ns);
 
-      maybeAddNameToSymbolTable(left);
-      maybeAddNameToSymbolTable(arg);
+    maybeAddNameToSymbolTable(left);
+    maybeAddNameToSymbolTable(arg);
 
-      // Requires should be removed before further processing.
-      // Some clients run closure pass multiple times, first with
-      // the checks for broken requires turned off. In these cases, we
-      // allow broken requires to be preserved by the first run to
-      // let them be caught in the subsequent run.
-      if (!preserveGoogProvidesAndRequires && (provided != null || requiresLevel.isOn())) {
-        requiresToBeRemoved.add(parent);
-      }
+    // Requires should be removed before further processing.
+    // Some clients run closure pass multiple times, first with
+    // the checks for broken requires turned off. In these cases, we
+    // allow broken requires to be preserved by the first run to
+    // let them be caught in the subsequent run.
+    if (!preserveGoogProvidesAndRequires && (provided != null || requiresLevel.isOn())) {
+      requiresToBeRemoved.add(parent);
     }
   }
 
@@ -267,32 +243,33 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   }
 
   /** Handles a goog.provide call. */
-  private void processProvideCall(NodeTraversal t, Node n, Node parent) {
-    checkState(n.isCall());
-    Node left = n.getFirstChild();
+  private void processProvideCall(NodeTraversal t, Node call, Node parent) {
+    checkState(call.isCall());
+    if (!verifyOnlyArgumentIsString(call)) {
+      return;
+    }
+    Node left = call.getFirstChild();
     Node arg = left.getNext();
-    if (verifyProvide(left, arg)) {
-      String ns = arg.getString();
+    String ns = arg.getString();
 
-      maybeAddNameToSymbolTable(left);
-      maybeAddNameToSymbolTable(arg);
+    maybeAddNameToSymbolTable(left);
+    maybeAddNameToSymbolTable(arg);
 
-      if (providedNames.containsKey(ns)) {
-        ProvidedName previouslyProvided = providedNames.get(ns);
-        if (!previouslyProvided.isExplicitlyProvided()) {
-          previouslyProvided.addProvide(parent, t.getChunk(), true);
-        }
-      } else {
-        registerAnyProvidedPrefixes(ns, parent, t.getChunk());
-        providedNames.put(
-            ns,
-            new ProvidedNameBuilder()
-                .setNamespace(ns)
-                .setNode(parent)
-                .setChunk(t.getChunk())
-                .setExplicit(true)
-                .build());
+    if (providedNames.containsKey(ns)) {
+      ProvidedName previouslyProvided = providedNames.get(ns);
+      if (!previouslyProvided.isExplicitlyProvided()) {
+        previouslyProvided.addProvide(parent, t.getChunk(), true);
       }
+    } else {
+      registerAnyProvidedPrefixes(ns, parent, t.getChunk());
+      providedNames.put(
+          ns,
+          new ProvidedNameBuilder()
+              .setNamespace(ns)
+              .setNode(parent)
+              .setChunk(t.getChunk())
+              .setExplicit(true)
+              .build());
     }
   }
 
@@ -351,36 +328,10 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       return;
     }
 
-      ProvidedName pn = providedNames.get(name);
-      if (pn != null) {
-        pn.addDefinition(parent, t.getChunk());
-      }
-
-  }
-
-  /**
-   * Verifies that a provide method call has exactly one argument, and that it's a string literal
-   * and that the contents of the string are valid JS tokens. Reports a compile error if it doesn't.
-   *
-   * @return Whether the argument checked out okay
-   */
-  private boolean verifyProvide(Node methodName, Node arg) {
-    if (!verifyLastArgumentIsString(methodName, arg)) {
-      return false;
+    ProvidedName pn = providedNames.get(name);
+    if (pn != null) {
+      pn.addDefinition(parent, t.getChunk());
     }
-
-    if (!NodeUtil.isValidQualifiedName(
-        compiler.getOptions().getLanguageIn().toFeatureSet(), arg.getString())) {
-      compiler.report(
-          JSError.make(
-              arg,
-              ProcessClosurePrimitives.INVALID_PROVIDE_ERROR,
-              arg.getString(),
-              compiler.getOptions().getLanguageIn().toString()));
-      return false;
-    }
-
-    return true;
   }
 
   /** Marks a goog.forwardDeclare call for removal. */
@@ -397,54 +348,13 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   }
 
   /**
-   * Verifies that a method call has exactly one argument, and that it's a string literal. Reports a
-   * compile error if it doesn't.
+   * Verifies that a method call has exactly one argument, and that it's a string literal.
    *
    * @return Whether the argument checked out okay
    */
-  private boolean verifyLastArgumentIsString(Node methodName, Node arg) {
-    return verifyNotNull(methodName, arg)
-        && verifyOfType(methodName, arg, Token.STRINGLIT)
-        && verifyIsLast(methodName, arg);
-  }
-
-  /** @return Whether the argument checked out okay */
-  private boolean verifyNotNull(Node methodName, Node arg) {
-    if (arg == null) {
-      compiler.report(
-          JSError.make(
-              methodName,
-              ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR,
-              methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
-  /** @return Whether the argument checked out okay */
-  private boolean verifyOfType(Node methodName, Node arg, Token desiredType) {
-    if (arg.getToken() != desiredType) {
-      compiler.report(
-          JSError.make(
-              methodName,
-              ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR,
-              methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
-  }
-
-  /** @return Whether the argument checked out okay */
-  private boolean verifyIsLast(Node methodName, Node arg) {
-    if (arg.getNext() != null) {
-      compiler.report(
-          JSError.make(
-              methodName,
-              ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR,
-              methodName.getQualifiedName()));
-      return false;
-    }
-    return true;
+  private boolean verifyOnlyArgumentIsString(Node call) {
+    Node arg = call.getSecondChild();
+    return arg != null && arg.isStringLit() && arg.getNext() == null;
   }
 
   /**
@@ -705,29 +615,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       // Handle the case where there is a duplicate definition for an explicitly
       // provided symbol.
       if (hasCandidateDefinitionNotFromPreviousPass() && explicitNode != null) {
-        JSDocInfo info;
-        if (candidateDefinition.isExprResult()) {
-          info = candidateDefinition.getFirstChild().getJSDocInfo();
-        } else {
-          info = candidateDefinition.getJSDocInfo();
-        }
-
-        // Validate that the namespace is not declared as a generic object type.
-        if (info != null) {
-          JSTypeExpression expr = info.getType();
-          if (expr != null) {
-            Node n = expr.getRoot();
-            if (n.getToken() == Token.BANG) {
-              n = n.getFirstChild();
-            }
-            if (n.isStringLit()
-                && !n.hasChildren() // templated object types are ok.
-                && n.getString().equals("Object")) {
-              compiler.report(
-                  JSError.make(candidateDefinition, ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE));
-            }
-          }
-        }
 
         // Does this need a VAR keyword?
         replacementNode = candidateDefinition;
