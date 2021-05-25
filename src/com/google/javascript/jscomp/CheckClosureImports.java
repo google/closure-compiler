@@ -193,7 +193,6 @@ final class CheckClosureImports implements CompilerPass {
   private final Checker checker;
   private final Set<String> namespacesSeen;
   private final JSChunkGraph chunkGraph;
-  private boolean inHotSwap = false;
 
   CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
@@ -472,9 +471,7 @@ final class CheckClosureImports implements CompilerPass {
 
   private void verifyRequireOrder(
       String namespace, Node call, NodeTraversal t, ModuleMetadata requiredModule) {
-    if (!inHotSwap && !namespacesSeen.contains(namespace)) {
-      // Since hot swap passes run one file at a time, namespacesSeen will not include
-      // any provides earlier than this current file.
+    if (!namespacesSeen.contains(namespace)) {
       t.report(call, LATE_PROVIDE_ERROR, namespace);
       return;
     }

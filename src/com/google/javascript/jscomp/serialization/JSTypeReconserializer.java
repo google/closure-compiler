@@ -458,9 +458,7 @@ final class JSTypeReconserializer {
             .orderKeysBy(naturalOrder())
             .orderValuesBy(naturalOrder());
     this.typeToRecordCache.forEach(
-        (jstype, record) -> {
-          colorIdToTypes.put(record.colorId.toString(), jstype.toString());
-        });
+        (jstype, record) -> colorIdToTypes.put(record.colorId.toString(), jstype.toString()));
     return colorIdToTypes.build();
   }
 

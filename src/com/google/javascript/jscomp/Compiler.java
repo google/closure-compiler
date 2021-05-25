@@ -411,7 +411,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Debug logging is not enabled, so use stderr
       final PrintStream err = System.err;
       err.println("==== Externs ====");
-      err.println(externs.toString());
+      err.println(externs);
       err.println("==== Inputs ====");
       // To get a pretty-printed JSON module graph, change this line to
       //
@@ -422,9 +422,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // compiled with J2CL, so we can permanently improve this.
       err.println(Iterables.toString(moduleGraph.getAllInputs()));
       err.println("==== CompilerOptions ====");
-      err.println(options.toString());
+      err.println(options);
       err.println("==== WarningsGuard ====");
-      err.println(warningsGuard.toString());
+      err.println(warningsGuard);
     } else {
       // Log to separate files for convenience.
       logToFile("externs.log", () -> externs.toString());
