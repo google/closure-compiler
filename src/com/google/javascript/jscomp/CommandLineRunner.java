@@ -651,8 +651,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
                 + "ECMASCRIPT_2015, ECMASCRIPT_2016, "
                 + "ECMASCRIPT_2017, ECMASCRIPT_2018, ECMASCRIPT_2019, ECMASCRIPT_2020, STABLE, "
-                + "ECMASCRIPT_NEXT (latest features supported),"
-                + "ECMASCRIPT_NEXT_IN (latest features supported for input, but not output yet)")
+                + "ECMASCRIPT_NEXT (latest features supported)")
     private String languageIn = "STABLE";
 
     @Option(
@@ -661,7 +660,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             "Sets the language spec to which output should conform. "
                 + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
                 + "ECMASCRIPT_2015, ECMASCRIPT_2016, ECMASCRIPT_2017, "
-                + "ECMASCRIPT_2018, ECMASCRIPT_2019, STABLE")
+                + "ECMASCRIPT_2018, ECMASCRIPT_2019, ECMASCRIPT_2020, STABLE")
     private String languageOut = "STABLE";
 
     @Option(
