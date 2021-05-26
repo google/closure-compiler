@@ -2449,7 +2449,7 @@ public class Node {
     public static final int THROWS = 8;
 
     private static final int USED_BITS_MASK = (1 << 4) - 1;
-    private static final int NO_SIDE_EFFECTS = 0;
+    public static final int NO_SIDE_EFFECTS = 0;
     public static final int ALL_SIDE_EFFECTS =
         MUTATES_GLOBAL_STATE | MUTATES_THIS | MUTATES_ARGUMENTS | THROWS;
 

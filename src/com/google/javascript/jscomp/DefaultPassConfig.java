@@ -1261,12 +1261,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ReplaceMessages(
-                      compiler,
-                      options.messageBundle,
-                      /* allow messages with goog.getMsg */
-                      JsMessage.Style.CLOSURE,
-                      /* if we can't find a translation, don't worry about it. */
-                      false))
+                          compiler,
+                          options.messageBundle,
+                          /* allow messages with goog.getMsg */
+                          JsMessage.Style.CLOSURE,
+                          /* if we can't find a translation, don't worry about it. */
+                          false)
+                      .getFullReplacementPass())
           .setFeatureSetForOptimizations()
           .build();
 

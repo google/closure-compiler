@@ -807,6 +807,12 @@ final class AstFactory {
     return result;
   }
 
+  public Node createQuotedStringKey(String key, Node value) {
+    Node result = IR.stringKey(key, value);
+    result.setQuotedString();
+    return result;
+  }
+
   /** Creates an object-literal with zero or more elements and a specific type. */
   Node createObjectLit(@Nullable JSType jsType, Node... elements) {
     Node result = IR.objectlit(elements);
