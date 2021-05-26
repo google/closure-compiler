@@ -64,7 +64,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   }
 
   private final PassFactory gatherModuleMetadataPass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.GATHER_MODULE_METADATA)
           .setInternalFactory(
               (compiler) ->
@@ -117,7 +117,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
           .build();
 
   private final PassFactory closureRewriteClass =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName(PassNames.CLOSURE_REWRITE_CLASS)
           .setInternalFactory(ClosureRewriteClass::new)
           .setFeatureSet(FeatureSet.latest())

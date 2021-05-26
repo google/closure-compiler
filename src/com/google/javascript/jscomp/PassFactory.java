@@ -104,11 +104,6 @@ public abstract class PassFactory {
     return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false);
   }
 
-  // TODO(b/187747884) Delete this.
-  public static Builder builderForHotSwap() {
-    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false);
-  }
-
   /** Create a no-op pass that can only run once. Used to break up loops. */
   public static PassFactory createEmptyPass(String name) {
     return builder()

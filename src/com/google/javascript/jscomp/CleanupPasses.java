@@ -24,6 +24,8 @@ import java.util.List;
 
 /**
  * Provides passes that should be run before hot-swap/incremental builds.
+ *
+ * <p>TODO(b/187747884): Delete this class?
  */
 class CleanupPasses extends PassConfig {
 
@@ -44,7 +46,7 @@ class CleanupPasses extends PassConfig {
   }
 
   final PassFactory fieldCleanupPassFactory =
-      PassFactory.builderForHotSwap()
+      PassFactory.builder()
           .setName("FieldCleanupPassFactory")
           .setInternalFactory(FieldCleanupPass::new)
           .setFeatureSet(ES5)
