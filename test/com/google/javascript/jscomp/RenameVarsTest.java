@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -1045,9 +1044,6 @@ public final class RenameVarsTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      new GatherModuleMetadata(
-              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
-          .process(externs, root);
       ProcessClosurePrimitives closurePass = new ProcessClosurePrimitives(compiler);
       closurePass.process(externs, root);
       renameVars =

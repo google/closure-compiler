@@ -16,6 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -317,6 +321,16 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProvidedDeclaredFunctionError() {
+    testError("goog.provide('foo'); function foo(){}", FUNCTION_NAMESPACE_ERROR);
+  }
+
+  @Test
+  public void testProvidedDeclaredClassError() {
+    testError("goog.provide('foo'); class foo {}", CLASS_NAMESPACE_ERROR);
+  }
+
+  @Test
   public void testRemovalMultipleAssignment1() {
     test(
         srcs(
@@ -551,6 +565,49 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "/** @const */ var foo={};", //
                 "/** @const */ foo.bar = {};",
                 "goog.provide('foo');")));
+  }
+
+  @Test
+  public void testProvideErrorCases2() {
+    test(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo'); /** @type {Object} */ var foo = {};",
+        new TestExternsBuilder().addClosureExterns().build() + "/** @type {Object} */ var foo={};",
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo'); /** @type {!Object} */ var foo = {};",
+        new TestExternsBuilder().addClosureExterns().build() + "/** @type {!Object} */ var foo={};",
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo.bar'); /** @type {Object} */ foo.bar = {};",
+        new TestExternsBuilder().addClosureExterns().build()
+            + "/** @const */ var foo = {}; /** @type {Object} */ foo.bar = {};",
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo.bar'); /** @type {!Object} */ foo.bar = {};",
+        new TestExternsBuilder().addClosureExterns().build()
+            + "/** @const */ var foo={}; /** @type {!Object} */ foo.bar={};",
+        warning(WEAK_NAMESPACE_TYPE));
+
+    test(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo'); /** @type {Object<string>} */ var foo = {};",
+        new TestExternsBuilder().addClosureExterns().build()
+            + "/** @type {Object<string>} */ var foo={};");
+  }
+
+  @Test
+  public void testProvideValidObjectType() {
+    test(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.provide('foo'); /** @type {Object<string>} */ var foo = {};"),
+        expected(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "/** @type {Object<string>} */ var foo = {};"));
   }
 
   @Test
@@ -885,6 +942,20 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
             new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;")));
+  }
+
+  @Test
+  public void testInvalidProvide() {
+    test(
+        srcs(new TestExternsBuilder().addClosureExterns().build(), "goog.provide('a.class');"),
+        expected(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "/** @const */ var a = {}; /** @const */ a.class = {};"));
+    testError("goog.provide('class.a');", INVALID_PROVIDE_ERROR);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
+    testError("goog.provide('a.class');", INVALID_PROVIDE_ERROR);
+    testError("goog.provide('class.a');", INVALID_PROVIDE_ERROR);
   }
 
   @Test

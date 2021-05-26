@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_MODULE_ID;
 import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
 
 import com.google.common.collect.ImmutableList;
@@ -126,15 +127,8 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     test(srcs("goog.provide(' ');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
     test(srcs("goog.provide('a..b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
 
-    test(srcs("goog.provide('ā');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    testSame(srcs("goog.provide('ā');"));
     testSame(srcs("goog.provide('a');"));
-
-    testSame(srcs("goog.provide('a.class');"));
-    test(srcs("goog.provide('class.a');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
-
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
-    testError(srcs("goog.provide('a.class');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
-    testError(srcs("goog.provide('class.a');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
   }
 
   @Test
@@ -157,8 +151,8 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     test(srcs("goog.module('a. .b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
     test(srcs("goog.module('a.-.b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
 
-    test(srcs("goog.module('0');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
-    test(srcs("goog.module('ā');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.module('0');"), error(INVALID_MODULE_ID));
+    test(srcs("goog.module('ā');"), error(INVALID_MODULE_ID));
 
     testSame(srcs("goog.module('a');"));
     testSame(srcs("goog.module('a0');"));

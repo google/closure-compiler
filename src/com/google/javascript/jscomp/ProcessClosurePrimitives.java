@@ -16,20 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.TOO_MANY_ARGUMENTS_ERROR;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Performs some Closure-specific simplifications including rewriting goog.base, goog.addDependency.
@@ -115,13 +108,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
 
   private final Set<String> exportedVariables = new HashSet<>();
 
-  private final ImmutableMap<String, ModuleMetadata> closureModules;
-
   ProcessClosurePrimitives(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.closureModules =
-        checkNotNull(compiler.getModuleMetadataMap(), "Need to run GatherModuleMetadata")
-            .getModulesByGoogNamespace();
   }
 
   Set<String> getExportedVariableNames() {
@@ -145,68 +133,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         }
         break;
 
-      case FUNCTION:
-      case CLASS:
-        if (!t.inGlobalHoistScope()) {
-          return;
-        }
-        if (!NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isClassDeclaration(n)) {
-          return;
-        }
-        String name = n.getFirstChild().getString();
-        ModuleMetadata pn = this.closureModules.get(name);
-        if (pn != null && pn.isGoogProvide()) {
-          compiler.report(
-              JSError.make(
-                  n, n.isClass() ? CLASS_NAMESPACE_ERROR : FUNCTION_NAMESPACE_ERROR, name));
-        }
-        break;
-
-      case EXPR_RESULT:
-        if (!n.getFirstChild().isAssign() || !n.getFirstFirstChild().isQualifiedName()) {
-          break;
-        }
-        String lhs = n.getFirstFirstChild().getQualifiedName();
-        checkPossibleGoogProvideInit(lhs, n.getFirstChild().getJSDocInfo(), n);
-        break;
-      case VAR:
-      case CONST:
-      case LET:
-        if (!n.getFirstChild().isName()) {
-          break;
-        }
-        checkPossibleGoogProvideInit(n.getFirstChild().getString(), n.getJSDocInfo(), n);
-        break;
-
       default:
         break;
-    }
-  }
-
-  private void checkPossibleGoogProvideInit(
-      String namespace, @Nullable JSDocInfo info, Node definition) {
-    if (info == null) {
-      return;
-    }
-
-    ModuleMetadata metadata = this.closureModules.get(namespace);
-    if (metadata == null || !metadata.isGoogProvide()) {
-      return;
-    }
-
-    // Validate that the namespace is not declared as a generic object type.
-    JSTypeExpression expr = info.getType();
-    if (expr == null) {
-      return;
-    }
-    Node n = expr.getRoot();
-    if (n.getToken() == Token.BANG) {
-      n = n.getFirstChild();
-    }
-    if (n.isStringLit()
-        && !n.hasChildren() // templated object types are ok.
-        && n.getString().equals("Object")) {
-      compiler.report(JSError.make(definition, WEAK_NAMESPACE_TYPE));
     }
   }
 
@@ -225,7 +153,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
     // when we see a provides/requires, and don't worry about
     // reporting the change when we actually do the replacement.
     String methodName = callee.getString();
-    Node arg = callee.getNext();
     switch (methodName) {
       case "inherits":
         // Note: inherits is allowed in local scope
@@ -233,6 +160,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         break;
       case "exportSymbol":
         // Note: exportSymbol is allowed in local scope
+        Node arg = callee.getNext();
         if (arg.isStringLit()) {
           String argString = arg.getString();
           int dot = argString.indexOf('.');
