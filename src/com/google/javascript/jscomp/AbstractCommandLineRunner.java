@@ -568,14 +568,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param files A list of flag entries indicates js and zip file names.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent stdin. If true, '-'
    *     is only allowed to appear once.
-   * @param jsModuleSpecs A list js module specs.
+   * @param jsChunkSpecs A list chunk specs.
    * @return An array of inputs
    */
   @GwtIncompatible("Unnecessary")
   private List<SourceFile> createInputs(
-      List<FlagEntry<JsSourceType>> files, boolean allowStdIn, List<JsModuleSpec> jsModuleSpecs)
+      List<FlagEntry<JsSourceType>> files, boolean allowStdIn, List<JsChunkSpec> jsChunkSpecs)
       throws IOException {
-    return createInputs(files, /* jsonFiles= */ null, allowStdIn, jsModuleSpecs);
+    return createInputs(files, /* jsonFiles= */ null, allowStdIn, jsChunkSpecs);
   }
 
   /**
@@ -583,16 +583,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *
    * @param files A list of flag entries indicates js and zip file names.
    * @param jsonFiles A list of json encoded files.
-   * @param jsModuleSpecs A list js module specs.
+   * @param jsChunkSpecs A list chunk specs.
    * @return An array of inputs
    */
   @GwtIncompatible("Unnecessary")
   private List<SourceFile> createInputs(
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles,
-      List<JsModuleSpec> jsModuleSpecs)
+      List<JsChunkSpec> jsChunkSpecs)
       throws IOException {
-    return createInputs(files, jsonFiles, /* allowStdIn= */ false, jsModuleSpecs);
+    return createInputs(files, jsonFiles, /* allowStdIn= */ false, jsChunkSpecs);
   }
 
   /**
@@ -604,7 +604,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @param jsonFiles A list of json encoded files.
    * @param allowStdIn Whether '-' is allowed appear as a filename to represent stdin. If true, '-'
    *     is only allowed to appear once.
-   * @param jsModuleSpecs A list js module specs.
+   * @param jsChunkSpecs A list chunk specs.
    * @return An array of inputs
    */
   @GwtIncompatible("Unnecessary")
@@ -612,14 +612,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles,
       boolean allowStdIn,
-      List<JsModuleSpec> jsModuleSpecs)
+      List<JsChunkSpec> jsChunkSpecs)
       throws IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
-    int jsModuleIndex = 0;
-    JsModuleSpec jsModuleSpec = Iterables.getFirst(jsModuleSpecs, null);
+    int jsChunkIndex = 0;
+    JsChunkSpec jsChunkSpec = Iterables.getFirst(jsChunkSpecs, null);
     int cumulatedInputFilesExpected =
-        jsModuleSpec == null ? Integer.MAX_VALUE : jsModuleSpec.getNumInputs();
+        jsChunkSpec == null ? Integer.MAX_VALUE : jsChunkSpec.getNumInputs();
     for (int i = 0; i < files.size(); i++) {
       FlagEntry<JsSourceType> file = files.get(i);
       String filename = file.value;
@@ -638,8 +638,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           }
 
           inputs.addAll(newFiles);
-          if (jsModuleSpec != null) {
-            jsModuleSpec.numJsFiles += newFiles.size() - 1;
+          if (jsChunkSpec != null) {
+            jsChunkSpec.numJsFiles += newFiles.size() - 1;
           }
         }
       } else if (!"-".equals(filename)) {
@@ -668,10 +668,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         usingStdin = true;
       }
       if (i >= cumulatedInputFilesExpected - 1) {
-        jsModuleIndex++;
-        if (jsModuleIndex < jsModuleSpecs.size()) {
-          jsModuleSpec = jsModuleSpecs.get(jsModuleIndex);
-          cumulatedInputFilesExpected += jsModuleSpec.getNumInputs();
+        jsChunkIndex++;
+        if (jsChunkIndex < jsChunkSpecs.size()) {
+          jsChunkSpec = jsChunkSpecs.get(jsChunkIndex);
+          cumulatedInputFilesExpected += jsChunkSpec.getNumInputs();
         }
       }
     }
@@ -748,7 +748,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /** Creates JS source code inputs from a list of files. */
   @GwtIncompatible("Unnecessary")
   private List<SourceFile> createSourceInputs(
-      List<JsModuleSpec> jsModuleSpecs,
+      List<JsChunkSpec> jsChunkSpecs,
       List<FlagEntry<JsSourceType>> files,
       List<JsonFileSpec> jsonFiles,
       List<String> moduleRoots)
@@ -762,15 +762,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       files = ImmutableList.of(new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
     }
 
-    for (JSError error : deduplicateIjsFiles(files, moduleRoots, !jsModuleSpecs.isEmpty())) {
+    for (JSError error : deduplicateIjsFiles(files, moduleRoots, !jsChunkSpecs.isEmpty())) {
       compiler.report(error);
     }
 
     try {
       if (jsonFiles != null) {
-        return createInputs(files, jsonFiles, jsModuleSpecs);
+        return createInputs(files, jsonFiles, jsChunkSpecs);
       } else {
-        return createInputs(files, true, jsModuleSpecs);
+        return createInputs(files, true, jsChunkSpecs);
       }
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --js flag. " + e.getMessage());
@@ -785,20 +785,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       externFiles.add(new FlagEntry<JsSourceType>(JsSourceType.EXTERN, file));
     }
     try {
-      return createInputs(externFiles, false, new ArrayList<JsModuleSpec>());
+      return createInputs(externFiles, false, new ArrayList<JsChunkSpec>());
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --externs flag. " + e.getMessage());
     }
   }
 
   /**
-   * Creates module objects from a list of js module specifications.
+   * Creates module objects from a list of chunk specifications.
    *
-   * @param specs A list of js module specifications, not null or empty.
+   * @param specs A list of chunk specifications, not null or empty.
    * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
-  public static List<JSChunk> createJsModules(List<JsModuleSpec> specs, List<SourceFile> inputs)
+  public static List<JSChunk> createJsModules(List<JsChunkSpec> specs, List<SourceFile> inputs)
       throws IOException {
     checkState(specs != null);
     checkState(!specs.isEmpty());
@@ -809,7 +809,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     Map<String, Integer> modulesFileCountMap = new LinkedHashMap<>();
     int numJsFilesExpected = 0;
     int minJsFilesRequired = 0;
-    for (JsModuleSpec spec : specs) {
+    for (JsChunkSpec spec : specs) {
       if (modulesByName.containsKey(spec.name)) {
         throw new FlagUsageException("Duplicate module name: " + spec.name);
       }
@@ -876,7 +876,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       int numJsFiles = modulesFileCountMap.get(moduleName);
       JSChunk module = modulesByName.get(moduleName);
 
-      // Check if the first js module specified 'auto' for the number of files
+      // Check if the first chunk specified 'auto' for the number of files
       if (moduleIndex == moduleNames.size() - 1 && numJsFiles == -1) {
         numJsFiles = numJsFilesLeft;
       }
@@ -1164,9 +1164,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       config.module.remove(0);
     }
 
-    List<JsModuleSpec> jsModuleSpecs = new ArrayList<>();
+    List<JsChunkSpec> jsChunkSpecs = new ArrayList<>();
     for (int i = 0; i < config.module.size(); i++) {
-      jsModuleSpecs.add(JsModuleSpec.create(config.module.get(i), i == 0));
+      jsChunkSpecs.add(JsChunkSpec.create(config.module.get(i), i == 0));
     }
     List<JsonFileSpec> jsonFiles = null;
 
@@ -1206,18 +1206,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     compiler.initOptions(options);
 
     List<SourceFile> inputs =
-        createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
-    if (!jsModuleSpecs.isEmpty()) {
+        createSourceInputs(jsChunkSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
+    if (!jsChunkSpecs.isEmpty()) {
       if (isInTestMode()) {
         modules = modulesSupplierForTesting.get();
       } else {
         if (JsonStreamMode.IN.equals(config.jsonStreamMode)
             || JsonStreamMode.NONE.equals(config.jsonStreamMode)) {
-          for (JsModuleSpec m : jsModuleSpecs) {
+          for (JsChunkSpec m : jsChunkSpecs) {
             checkModuleName(m.getName());
           }
         }
-        modules = createJsModules(jsModuleSpecs, inputs);
+        modules = createJsModules(jsChunkSpecs, inputs);
       }
       for (JSChunk m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
@@ -1255,7 +1255,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (createCommonJsModules) {
-      // For CommonJS modules construct modules from actual inputs.
+      // For Commonchunks construct modules from actual inputs.
       modules = ImmutableList.copyOf(compiler.getModules());
       for (JSChunk m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
@@ -2500,9 +2500,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     private String moduleOutputPathPrefix = "";
 
     /**
-     * Prefix for filenames of compiled JS modules.
-     * {@code <module-name>.js} will be appended to this prefix. Directories
-     * will be created as needed. Use with --module
+     * Prefix for filenames of compiled chunks. {@code <module-name>.js} will be appended to this
+     * prefix. Directories will be created as needed. Use with --module
      */
     public CommandLineConfig setModuleOutputPathPrefix(String moduleOutputPathPrefix) {
       this.moduleOutputPathPrefix = moduleOutputPathPrefix;
@@ -2705,33 +2704,25 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     private boolean transformAMDToCJSModules = false;
 
-    /**
-     * Set whether to transform AMD to CommonJS modules.
-     */
-    public CommandLineConfig setTransformAMDToCJSModules(
-        boolean transformAMDToCJSModules) {
+    /** Set whether to transform AMD to Commonchunks. */
+    public CommandLineConfig setTransformAMDToCJSModules(boolean transformAMDToCJSModules) {
       this.transformAMDToCJSModules = transformAMDToCJSModules;
       return this;
     }
 
     private boolean processCommonJSModules = false;
 
-    /**
-     * Sets whether to process CommonJS modules.
-     */
-    public CommandLineConfig setProcessCommonJSModules(
-        boolean processCommonJSModules) {
+    /** Sets whether to process Commonchunks. */
+    public CommandLineConfig setProcessCommonJSModules(boolean processCommonJSModules) {
       this.processCommonJSModules = processCommonJSModules;
       return this;
     }
 
     private List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
-    /**
-     * Sets the module roots.
-     */
-    public CommandLineConfig setModuleRoots(List<String> jsModuleRoots) {
-      this.moduleRoots = jsModuleRoots;
+    /** Sets the module roots. */
+    public CommandLineConfig setModuleRoots(List<String> jsChunkRoots) {
+      this.moduleRoots = jsChunkRoots;
       return this;
     }
 
@@ -2899,10 +2890,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
-  /**
-   * Represents a specification for a js module.
-   */
-  public static class JsModuleSpec {
+  /** Represents a specification for a serving chunk. */
+  public static class JsChunkSpec {
     private final String name;
     // Number of input files, including js and zip files.
     private final int numInputs;
@@ -2910,7 +2899,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     // Number of input js files. All zip files should be expanded.
     private int numJsFiles;
 
-    private JsModuleSpec(String name, int numInputs, ImmutableList<String> deps) {
+    private JsChunkSpec(String name, int numInputs, ImmutableList<String> deps) {
       this.name = name;
       this.numInputs = numInputs;
       this.deps = deps;
@@ -2920,15 +2909,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     /**
      * @param specString The spec format is: <code>name:num-js-files[:[dep,...][:]]</code>. Module
      *     names must not contain the ':' character.
-     * @param isFirstModule Whether the spec is for the first module.
-     * @return A parsed js module spec.
+     * @param isFirstChunk Whether the spec is for the first module.
+     * @return A parsed chunk spec.
      */
-    public static JsModuleSpec create(String specString, boolean isFirstModule) {
+    public static JsChunkSpec create(String specString, boolean isFirstChunk) {
       // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
       String[] parts = specString.split(":");
       if (parts.length < 2 || parts.length > 4) {
-        throw new FlagUsageException("Expected 2-4 colon-delimited parts in "
-            + "js module spec: " + specString);
+        throw new FlagUsageException(
+            "Expected 2-4 colon-delimited parts in " + "chunk spec: " + specString);
       }
 
       // Parse module name.
@@ -2952,7 +2941,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         // A size of 'auto' is only allowed on the base module if
         // and it must also be the first module
         if (parts.length == 2 && "auto".equals(parts[1])) {
-          if (!isFirstModule) {
+          if (!isFirstChunk) {
             throw new FlagUsageException("Invalid JS file count '" + parts[1]
                 + "' for module: " + name + ". Only the first module may specify "
                 + "a size of 'auto' and it must have no dependencies.");
@@ -2963,7 +2952,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         }
       }
 
-      return new JsModuleSpec(name, numInputs, ImmutableList.copyOf(deps));
+      return new JsChunkSpec(name, numInputs, ImmutableList.copyOf(deps));
     }
 
     public String getName() {
