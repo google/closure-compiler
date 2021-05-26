@@ -3513,19 +3513,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
 
-    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
-      public CompilerObjectInputStream(InputStream in) throws IOException {
-        super(in);
-      }
-
-      @Override
-      public AbstractCompiler getCompiler() {
-        return Compiler.this;
-      }
-    }
-
-    // Do not close the input stream, caller is responsible for closing it.
-    final ObjectInputStream objectInputStream = new CompilerObjectInputStream(inputStream);
     CompilerState compilerState =
         runInCompilerThread(
             new Callable<CompilerState>() {
@@ -3533,7 +3520,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               public CompilerState call() throws Exception {
                 Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
                 logger.fine("Deserializing the CompilerState");
-                CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+                // Do not close the input stream, caller is responsible for closing it.
+                CompilerState compilerState =
+                    (CompilerState) new ObjectInputStream(inputStream).readObject();
                 logger.fine("Finished deserializing CompilerState");
                 logger.fine("Deserializing the TypedAst");
                 CodedInputStream codedInput = CodedInputStream.newInstance(inputStream);
