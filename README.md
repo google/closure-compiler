@@ -289,7 +289,7 @@ yarn compile [...args]
 ### Contributor code of conduct
 
 However you choose to contribute, please abide by our
-[code of conduct](https://github.com/closure-compiler/code_of_conduct.md) to
+[code of conduct](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md) to
 keep our community a healthy and welcoming place.
 
 ### Reporting a bug
