@@ -1945,7 +1945,7 @@ Atomics.sub = function(typedArray, index, value) {};
  * @param {number} index
  * @param {number} value
  * @param {number=} timeout
- * @return {String}
+ * @return {string}
  */
 Atomics.wait = function(typedArray, index, value, timeout) {};
 
