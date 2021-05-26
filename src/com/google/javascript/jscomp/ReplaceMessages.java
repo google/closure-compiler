@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORM
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
@@ -35,7 +36,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,33 +119,112 @@ public final class ReplaceMessages {
     @Override
     protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       try {
-        final Node callNode = definition.getMessageNode();
-        checkArgument(callNode.isCall(), callNode);
-        // `goog.getMsg('message string', {<substitutions>}, {<options>})`
-        final Node googGetMsg = callNode.getFirstChild();
-        final Node originalMessageString = checkNotNull(googGetMsg.getNext());
-        final Node placeholdersNode = originalMessageString.getNext();
-        final Node optionsNode = placeholdersNode == null ? null : placeholdersNode.getNext();
-        final MsgOptions msgOptions = getOptions(optionsNode);
-
-        // Construct
-        // `__jscomp_define_msg__({<msg properties}, {<substitutions>}, {<options>})`
-        final Node newCallee =
-            astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE).srcref(googGetMsg);
-        final Node msgPropertiesNode =
-            createMsgPropertiesNode(message, msgOptions).srcrefTree(originalMessageString);
-        Node newCallNode = astFactory.createCall(newCallee, msgPropertiesNode).srcref(callNode);
-        // If the result of this call (the message) is unused, there is no reason for optimizations
-        // to preserve it.
-        newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
-        if (placeholdersNode != null) {
-          newCallNode.addChildToBack(placeholdersNode.detach());
+        final Node origValueNode = definition.getMessageNode();
+        switch (origValueNode.getToken()) {
+          case CALL:
+            // This is the currently preferred form.
+            // `MSG_A = goog.getMsg('hello, {$name}', {name: getName()}, {html: true})`
+            protectGetMsgCall(origValueNode, message);
+            break;
+          case STRINGLIT:
+          case ADD:
+            // a legacy format
+            // `MSG_A = 'abc' + 'def';`
+            protectStringLiteralOrConcatMsg(origValueNode, message);
+            break;
+          case FUNCTION:
+            protectLegacyFunctionMsg(origValueNode, message);
+            break;
+          default:
+            throw new MalformedException(
+                "Expected FUNCTION, STRING, ADD, or CALL node; found: " + origValueNode,
+                origValueNode);
         }
-        callNode.replaceWith(newCallNode);
-        compiler.reportChangeToEnclosingScope(newCallNode);
       } catch (MalformedException e) {
         compiler.report(JSError.make(e.getNode(), MESSAGE_TREE_MALFORMED, e.getMessage()));
       }
+    }
+
+    private void protectGetMsgCall(Node callNode, JsMessage message) throws MalformedException {
+      checkArgument(callNode.isCall(), callNode);
+      // `goog.getMsg('message string', {<substitutions>}, {<options>})`
+      final Node googGetMsg = callNode.getFirstChild();
+      final Node originalMessageString = checkNotNull(googGetMsg.getNext());
+      final Node placeholdersNode = originalMessageString.getNext();
+      final Node optionsNode = placeholdersNode == null ? null : placeholdersNode.getNext();
+      final MsgOptions msgOptions = getOptions(optionsNode);
+
+      // Construct
+      // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
+      final Node newCallee =
+          astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE).srcref(googGetMsg);
+      final Node msgPropertiesNode =
+          createMsgPropertiesNode(message, msgOptions).srcrefTree(originalMessageString);
+      Node newCallNode = astFactory.createCall(newCallee, msgPropertiesNode).srcref(callNode);
+      // If the result of this call (the message) is unused, there is no reason for optimizations
+      // to preserve it.
+      newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
+      if (placeholdersNode != null) {
+        newCallNode.addChildToBack(placeholdersNode.detach());
+      }
+      callNode.replaceWith(newCallNode);
+      compiler.reportChangeToEnclosingScope(newCallNode);
+    }
+
+    private void protectStringLiteralOrConcatMsg(Node valueNode, JsMessage message) {
+      final Node msgProps = createMsgPropertiesNode(message, new MsgOptions());
+      final Node newCallNode =
+          astFactory
+              .createCall(astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE), msgProps)
+              .srcrefTreeIfMissing(valueNode);
+      newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
+      valueNode.replaceWith(newCallNode);
+      compiler.reportChangeToEnclosingScope(newCallNode);
+    }
+
+    private void protectLegacyFunctionMsg(Node functionNode, JsMessage message) {
+      // `MSG_X = function(name1, name2) { return expressionUsingName1AndName2; };`
+      // NOTE: The JsMessageVisitor code will have examined the return value and constructed a
+      // message string with placeholders matching the parameter names.
+      checkArgument(functionNode.isFunction(), functionNode);
+      final Node paramListNode = functionNode.getSecondChild();
+      final Node origBlock = paramListNode.getNext();
+      // NOTE: JsMessageVisitor would have thrown a MalformedException before reaching this point
+      // if the function body were not a single return statement.
+      final Node returnNode = origBlock.getOnlyChild();
+      final Node origValueNode = returnNode.getOnlyChild();
+
+      // Convert to
+      // ```javascript
+      // MSG_X = function(name1, name2) {
+      //     return __jscomp_define_msg__({<msg properties>}, {<substitutions>});
+      // };
+      // ```
+      final Node newCallee = astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE);
+      final Node msgPropertiesNode = createMsgPropertiesNode(message, new MsgOptions());
+      // Convert the parameter list into a simple placeholders object
+      // ```javascript
+      // {
+      //   'name1': name1,
+      //   'name2': name2
+      // }
+      // ```
+      QuotedKeyObjectLitBuilder placeholderObjLlitBuilder = new QuotedKeyObjectLitBuilder();
+      for (Node paramName = paramListNode.getFirstChild();
+          paramName != null;
+          paramName = paramName.getNext()) {
+        // Just assert here, because JsMessageVisitor should have already reported it if the
+        // parameter list were malformed.
+        checkState(paramName.isName(), paramName);
+        placeholderObjLlitBuilder.addNode(paramName.getString(), paramName.cloneNode());
+      }
+      final Node placeholderNode = placeholderObjLlitBuilder.build();
+      final Node newValueNode =
+          astFactory
+              .createCall(newCallee, msgPropertiesNode, placeholderNode)
+              .srcrefTreeIfMissing(origValueNode);
+      origValueNode.replaceWith(newValueNode);
+      compiler.reportChangeToChangeScope(functionNode);
     }
 
     @Override
@@ -517,8 +596,7 @@ public final class ReplaceMessages {
       Node oldBlockNode = argListNode.getNext();
       checkNode(oldBlockNode, Token.BLOCK);
 
-      Iterator<CharSequence> iterator = message.getParts().iterator();
-      Node valueNode = constructAddOrStringNode(iterator, argListNode);
+      Node valueNode = constructAddOrStringNode(message.getParts(), argListNode);
       Node newBlockNode = IR.block(IR.returnNode(valueNode));
 
       if (!newBlockNode.isEquivalentTo(
@@ -538,19 +616,28 @@ public final class ReplaceMessages {
      * will contain only STRING nodes, NAME nodes (corresponding to placeholder references), and/or
      * ADD nodes used to combine the other two types.
      *
-     * @param partsIterator an iterator over message parts
+     * @param parts the message parts
      * @param argListNode a PARAM_LIST node whose children are valid placeholder names
      * @return the root of the constructed parse tree
      * @throws MalformedException if {@code partsIterator} contains a placeholder reference that
      *     does not correspond to a valid argument in the arg list
      */
-    private Node constructAddOrStringNode(Iterator<CharSequence> partsIterator, Node argListNode)
+    private Node constructAddOrStringNode(ImmutableList<CharSequence> parts, Node argListNode)
         throws MalformedException {
-      if (!partsIterator.hasNext()) {
+      if (parts.isEmpty()) {
         return IR.string("");
       }
 
-      CharSequence part = partsIterator.next();
+      Node resultNode = null;
+      for (CharSequence part : parts) {
+        final Node partNode = constructLegacyFunctionMsgPart(argListNode, part);
+        resultNode = resultNode == null ? partNode : IR.add(resultNode, partNode);
+      }
+      return resultNode;
+    }
+
+    private Node constructLegacyFunctionMsgPart(Node argListNode, CharSequence part)
+        throws MalformedException {
       Node partNode = null;
       if (part instanceof JsMessage.PlaceholderReference) {
         JsMessage.PlaceholderReference phRef = (JsMessage.PlaceholderReference) part;
@@ -576,12 +663,7 @@ public final class ReplaceMessages {
         // The part is just a string literal.
         partNode = IR.string(part.toString());
       }
-
-      if (partsIterator.hasNext()) {
-        return IR.add(partNode, constructAddOrStringNode(partsIterator, argListNode));
-      } else {
-        return partNode;
-      }
+      return partNode;
     }
 
     /**

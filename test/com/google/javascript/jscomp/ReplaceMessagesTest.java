@@ -91,29 +91,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   private void multiPhaseTest(String originalJs, String protectedJs, String expectedJs) {
     // The PROTECT_MSGS mode needs to add externs for the protection functions.
     allowExternsChanges();
-    style = RELAX;
     testMode = TestMode.FULL_REPLACE;
     test(originalJs, expectedJs);
     testMode = TestMode.PROTECT_MSGS;
     test(originalJs, protectedJs);
     testMode = TestMode.REPLACE_PROTECTED_MSGS;
     test(protectedJs, expectedJs);
-  }
-
-  /**
-   * Test method to use for legacy formatted messages.
-   *
-   * @param originalJs The original, input JS code
-   * @param expectedJs What the code should look like after message definitions are is protected
-   *     from mangling during optimizations, but before they are replaced with the localized message
-   *     data.
-   */
-  private void legacyTest(String originalJs, String expectedJs) {
-    // TODO(bradfordcsmith): Do we need to handle this legacy case for the new post-optimizations
-    //     replacements?
-    testMode = TestMode.FULL_REPLACE;
-    style = LEGACY;
-    test(originalJs, expectedJs);
   }
 
   @Override
@@ -784,9 +767,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testSimpleMessageReplacementMissing() {
-    legacyTest(
-        "/** @desc d */\n var MSG_E = 'd*6a0@z>t';", //
-        "/** @desc d */\n var MSG_E = 'd*6a0@z>t'");
+    style = LEGACY;
+    multiPhaseTest(
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = 'd*6a0@z>t';"), //
+        lines(
+            "/** @desc d */", //
+            "var MSG_E =",
+            "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"d*6a0@z\\x3et\"});"),
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = 'd*6a0@z>t'"));
   }
 
   @Test
@@ -831,14 +823,36 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionReplacementMissing() {
-    legacyTest("var MSG_F = function() {return 'asdf'};", "var MSG_F = function() {return'asdf'}");
+    style = LEGACY;
+    multiPhaseTest(
+        "var MSG_F = function() {return 'asdf'};", //
+        lines(
+            "var MSG_F = function() {", //
+            "  return __jscomp_define_msg__(",
+            "      {",
+            "        \"key\":\"MSG_F\",",
+            "        \"msg_text\":\"asdf\"",
+            "      },",
+            "      {});",
+            "};"),
+        "var MSG_F = function() {return'asdf'}");
   }
 
   @Test
   public void testFunctionWithParamReplacementMissing() {
-    legacyTest(
-        "var MSG_G = function(measly) {return 'asdf' + measly};",
-        "var MSG_G=function(measly){return'asdf'+measly}");
+    style = LEGACY;
+    multiPhaseTest(
+        "var MSG_G = function(measly) { return 'asdf' + measly};",
+        lines(
+            "var MSG_G = function(measly) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_G\",",
+            "          \"msg_text\":\"asdf{$measly}\"",
+            "        },",
+            "        {\"measly\":measly});",
+            "    };"),
+        "var MSG_G = function(measly) { return 'asdf' + measly}");
   }
 
   @Test
@@ -868,63 +882,114 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntaxConcat() {
+    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
-    legacyTest("var MSG_A = 'abc' + 'def';", "var MSG_A='Hi\\nthere'");
+    multiPhaseTest(
+        "var MSG_A = 'abc' + 'def';", //
+        "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"abcdef\"});",
+        "var MSG_A = 'Hi\\nthere'");
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntax() {
+    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
-    legacyTest("var MSG_A = 'd*6a0@z>t';", "var MSG_A='Hi\\nthere'");
+    multiPhaseTest(
+        "var MSG_A = 'd*6a0@z>t';", //
+        "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"d*6a0@z\\x3et\"});",
+        "var MSG_A='Hi\\nthere'");
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersFunctionSyntax() {
+    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_B").appendStringPart("Hi\nthere").build());
-    legacyTest(
-        "var MSG_B = function() {return 'asdf'};", "var MSG_B=function(){return'Hi\\nthere'}");
+    multiPhaseTest(
+        "var MSG_B = function() {return 'asdf'};", //
+        lines(
+            "var MSG_B = function() {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_B\",",
+            "          \"msg_text\":\"asdf\"",
+            "        },",
+            "        {});",
+            "};"),
+        "var MSG_B=function(){return'Hi\\nthere'}");
   }
 
   @Test
   public void testLegacyStyleOnePlaceholder() {
+    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_C")
             .appendStringPart("One ")
             .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
-    legacyTest(
+    multiPhaseTest(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
-        "var MSG_C=function(measly){return'One '+(measly+' ph')}");
+        lines(
+            "var MSG_C = function(measly) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_C\",",
+            "          \"msg_text\":\"asdf{$measly}\"",
+            "        },",
+            "        {\"measly\":measly});",
+            "};"),
+        "var MSG_C=function(measly){ return 'One ' + measly + ' ph'; }");
   }
 
   @Test
   public void testLegacyStyleTwoPlaceholders() {
+    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_D")
             .appendPlaceholderReference("dick")
             .appendStringPart(" and ")
             .appendPlaceholderReference("jane")
             .build());
-    legacyTest(
-        "var MSG_D = function(jane, dick) {return jane + dick};",
-        "var MSG_D=function(jane,dick){return dick+(' and '+jane)}");
+    multiPhaseTest(
+        "var MSG_D = function(jane, dick) {return jane + dick};", //
+        lines(
+            "var MSG_D = function(jane, dick) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_D\",",
+            "          \"msg_text\":\"{$jane}{$dick}\"",
+            "        },",
+            "        {\"jane\":jane, \"dick\":dick});",
+            "};",
+            ""),
+        "var MSG_D = function(jane,dick) { return dick + ' and ' + jane; }");
   }
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerCamelCase() {
+    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_E")
             .appendStringPart("Sum: $")
             .appendPlaceholderReference("amtEarned")
             .build());
-    legacyTest(
+    multiPhaseTest(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
+        lines(
+            "var MSG_E = function(amtEarned) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_E\",",
+            "          \"msg_text\":\"{$amtEarned}x\"",
+            "        },",
+            "        {\"amtEarned\":amtEarned});",
+            "};"),
         "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}");
   }
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
+    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_F")
             .appendStringPart("Sum: $")
@@ -932,8 +997,17 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     // Placeholder named in lower-underscore case (discouraged nowadays)
-    legacyTest(
+    multiPhaseTest(
         "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
+        lines(
+            "var MSG_F = function(amt_earned) {",
+            "    return __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_F\",",
+            "          \"msg_text\":\"{$amt_earned}x\"",
+            "        },",
+            "        {\"amt_earned\":amt_earned});",
+            "};"),
         "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}");
   }
 
