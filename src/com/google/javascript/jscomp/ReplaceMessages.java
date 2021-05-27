@@ -424,9 +424,7 @@ public final class ReplaceMessages {
       final Node secondMsgKeyNode = firstMsgValue.getNext();
       final String secondMsgKey = secondMsgKeyNode.getString();
       final Node secondMsgValue = secondMsgKeyNode.getNext();
-      final ProtectedMsgFallback protectedMsgFallback =
-          new ProtectedMsgFallback(n, firstMsgKey, firstMsgValue, secondMsgKey, secondMsgValue);
-      return protectedMsgFallback;
+      return new ProtectedMsgFallback(n, firstMsgKey, firstMsgValue, secondMsgKey, secondMsgValue);
     }
   }
 
@@ -984,14 +982,12 @@ public final class ReplaceMessages {
             throw new IllegalStateException("unknown protected message key: " + strKey);
         }
       }
-      ProtectedJsMessage protectedJsMessage =
-          new ProtectedJsMessage(
-              jsMessageBuilder.build(idGenerator),
-              node,
-              substitutionsNode,
-              escapeLessThanOption,
-              unescapeHtmlEntitiesOption);
-      return protectedJsMessage;
+      return new ProtectedJsMessage(
+          jsMessageBuilder.build(idGenerator),
+          node,
+          substitutionsNode,
+          escapeLessThanOption,
+          unescapeHtmlEntitiesOption);
     }
   }
 }
