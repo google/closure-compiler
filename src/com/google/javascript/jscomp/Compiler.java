@@ -508,8 +508,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Initializes the instance state needed for a compile job. */
-  public final <T1 extends SourceFile, T2 extends SourceFile> void init(
-      List<T1> externs, List<T2> sources, CompilerOptions options) {
+  public final void init(
+      List<SourceFile> externs, List<SourceFile> sources, CompilerOptions options) {
     JSChunk module = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     for (SourceFile source : sources) {
       module.add(new CompilerInput(source));
@@ -522,8 +522,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Initializes the instance state needed for a compile job if the sources are in modules. */
-  public <T extends SourceFile> void initModules(
-      List<T> externs, List<JSChunk> modules, CompilerOptions options) {
+  public void initModules(
+      List<SourceFile> externs, List<JSChunk> modules, CompilerOptions options) {
     initOptions(options);
 
     checkFirstModule(modules);
@@ -579,7 +579,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private <T extends SourceFile> List<CompilerInput> makeExternInputs(List<T> externSources) {
+  private List<CompilerInput> makeExternInputs(List<SourceFile> externSources) {
     List<CompilerInput> inputs = new ArrayList<>(externSources.size());
     for (SourceFile file : externSources) {
       inputs.add(new CompilerInput(file, /* isExtern= */ true));
@@ -678,8 +678,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>NOTE: All methods called here must be public, because client code must be able to replicate
    * and customize this.
    */
-  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
-      List<T1> externs, List<T2> inputs, CompilerOptions options) {
+  public Result compile(
+      List<SourceFile> externs, List<SourceFile> inputs, CompilerOptions options) {
     // The compile method should only be called once.
     checkState(jsRoot == null);
 
@@ -734,8 +734,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>NOTE: All methods called here must be public, because client code must be able to replicate
    * and customize this.
    */
-  public <T extends SourceFile> Result compileModules(
-      List<T> externs, List<JSChunk> modules, CompilerOptions options) {
+  public Result compileModules(
+      List<SourceFile> externs, List<JSChunk> modules, CompilerOptions options) {
     // The compile method should only be called once.
     checkState(jsRoot == null);
 
@@ -3392,7 +3392,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return moduleLoader;
   }
 
-  private synchronized void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
+  private synchronized void addFilesToSourceMap(Iterable<SourceFile> files) {
     // synchronized annotation guards concurrent access to sourceMap during parsing.
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
