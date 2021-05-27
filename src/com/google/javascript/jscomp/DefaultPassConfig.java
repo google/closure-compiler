@@ -83,11 +83,15 @@ import javax.annotation.Nullable;
 /**
  * Pass factories and meta-data for native JSCompiler passes.
  *
- * <p>NOTE(dimvar): this needs some non-trivial refactoring. The pass config should use as little
+ * <p>NOTE(johnlenz): this needs some non-trivial refactoring. The pass config should use as little
  * state as possible. The recommended way for a pass to leave behind some state for a subsequent
  * pass is through the compiler object. Any other state remaining here should only be used when the
  * pass config is creating the list of checks and optimizations, not after passes have started
  * executing.
+ *
+ * <p>The general goal is for this class to be as minimal as possible. Option validation should
+ * occur before this class configures the compiler, business logic should live here (passes should
+ * not be inlined, etc).
  */
 public final class DefaultPassConfig extends PassConfig {
 
@@ -96,11 +100,6 @@ public final class DefaultPassConfig extends PassConfig {
 
   /* Constant name for Closure's locale */
   private static final String CLOSURE_LOCALE_CONSTANT_NAME = "goog.LOCALE";
-
-  static final DiagnosticType CANNOT_USE_PROTOTYPE_AND_VAR =
-      DiagnosticType.error(
-          "JSC_CANNOT_USE_PROTOTYPE_AND_VAR",
-          "Rename prototypes and inline variables cannot be used together.");
 
   // Miscellaneous errors.
   private static final java.util.regex.Pattern GLOBAL_SYMBOL_NAMESPACE_PATTERN =
