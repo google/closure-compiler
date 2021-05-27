@@ -1558,10 +1558,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return this.colorRegistry != null;
   }
 
+  private TypedScopeCreator typedScopeCreator;
+
   @Override
-  // Only used by jsdev
-  public TypedScopeCreator getTypedScopeCreator() {
-    return getPassConfig().getTypedScopeCreator();
+  public ScopeCreator getTypedScopeCreator() {
+    if (this.typedScopeCreator == null) {
+      checkState(
+          !this.hasTypeCheckingRun(),
+          // This could throw when calling "getTypedScopeCreator()" during the optimizations phase
+          // when JSTypes have been converted to optimization colors
+          "Attempted to re-initialize TypedScopeCreator after it had been cleared");
+      this.typedScopeCreator = new TypedScopeCreator(this);
+    }
+    return this.typedScopeCreator;
+  }
+
+  @Override
+  void clearTypedScopeCreator() {
+    this.typedScopeCreator = null;
   }
 
   DefaultPassConfig ensureDefaultPassConfig() {
@@ -1575,10 +1589,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public SymbolTable buildKnownSymbolTable() {
     SymbolTable symbolTable = new SymbolTable(this, getTypeRegistry());
 
-    TypedScopeCreator typedScopeCreator = getTypedScopeCreator();
-    if (typedScopeCreator != null) {
-      symbolTable.addScopes(typedScopeCreator.getAllMemoizedScopes());
-      symbolTable.addSymbolsFrom(typedScopeCreator);
+    if (this.typedScopeCreator != null) {
+      symbolTable.addScopes(this.typedScopeCreator.getAllMemoizedScopes());
+      symbolTable.addSymbolsFrom(this.typedScopeCreator);
     } else {
       symbolTable.findScopes(externsRoot, jsRoot);
     }
@@ -1610,9 +1623,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return symbolTable;
   }
 
+  private TypedScope topScope = null;
+
   @Override
   public TypedScope getTopScope() {
-    return getPassConfig().getTopScope();
+    return this.topScope;
+  }
+
+  @Override
+  void setTopScope(TypedScope x) {
+    checkState(x == null || x.getParent() == null, x);
+    this.topScope = x;
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -32,45 +31,8 @@ public abstract class PassConfig {
   // Used by the subclasses.
   protected final CompilerOptions options;
 
-  private TypedScopeCreator typedScopeCreator;
-
-  /** The global typed scope. */
-  TypedScope topScope = null;
-
   public PassConfig(CompilerOptions options) {
     this.options = options;
-  }
-
-  void clearTypedScopeCreator() {
-    typedScopeCreator = null;
-  }
-
-  void clearTopTypedScope() {
-    topScope = null;
-  }
-
-  /** Gets the scope creator for typed scopes. */
-  TypedScopeCreator getTypedScopeCreator() {
-    return this.typedScopeCreator;
-  }
-
-  TypedScopeCreator getTypedScopeCreator(AbstractCompiler compiler) {
-    if (this.typedScopeCreator == null) {
-      checkState(
-          !compiler.hasTypeCheckingRun(),
-          // This could throw when calling "getTypedScopeCreator()" during the optimizations phase
-          // when JSTypes have been converted to optimization colors
-          "Attempted to re-initialize TypedScopeCreator after it had been cleared");
-      this.typedScopeCreator = new TypedScopeCreator(compiler);
-    }
-    return this.typedScopeCreator;
-  }
-
-  /**
-   * Gets the global scope, with type information.
-   */
-  TypedScope getTopScope() {
-    return topScope;
   }
 
   /**
@@ -138,21 +100,6 @@ public abstract class PassConfig {
       lastPass = passName;
     }
     return graph;
-  }
-
-  /**
-   * Create a type-checking pass.
-   */
-  final TypeCheck makeTypeCheck(AbstractCompiler compiler) {
-    return new TypeCheck(
-            compiler,
-            compiler.getReverseAbstractInterpreter(),
-            compiler.getTypeRegistry(),
-            topScope,
-            typedScopeCreator)
-        .reportUnknownTypes(options.enables(DiagnosticGroup.forType(TypeCheck.UNKNOWN_EXPR_TYPE)))
-        .reportMissingProperties(
-            !options.disables(DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
   }
 
   /**
@@ -224,24 +171,6 @@ public abstract class PassConfig {
 
     @Override protected List<PassFactory> getTranspileOnlyPasses() {
       return delegate.getTranspileOnlyPasses();
-    }
-
-    @Override TypedScopeCreator getTypedScopeCreator() {
-      return delegate.getTypedScopeCreator();
-    }
-
-    @Override TypedScope getTopScope() {
-      return delegate.getTopScope();
-    }
-
-    @Override
-    void clearTypedScopeCreator() {
-      delegate.clearTypedScopeCreator();
-    }
-
-    @Override
-    void clearTopTypedScope() {
-      delegate.clearTopTypedScope();
     }
   }
 }

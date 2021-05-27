@@ -167,11 +167,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void forwardDeclareType(String typeName);
 
-  /** Gets a memoized scope creator with type information. Only used by jsdev. */
+  /** Gets a memoized scope creator with type information. */
   abstract ScopeCreator getTypedScopeCreator();
+
+  abstract void clearTypedScopeCreator();
 
   /** Gets the top scope. */
   public abstract TypedScope getTopScope();
+
+  /** Sets the top scope. */
+  abstract void setTopScope(TypedScope x);
 
   /** Report an error or warning. */
   public abstract void report(JSError error);

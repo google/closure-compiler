@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
@@ -1375,7 +1374,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return new ClosureRewriteModule(
                     compiler,
                     preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    this.getTopScope());
+                    compiler.getTopScope());
               })
           .setFeatureSetForChecks()
           .build();
@@ -1602,7 +1601,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory clearTypedScopeCreatorPass =
       PassFactory.builder()
           .setName("clearTypedScopeCreatorPass")
-          .setInternalFactory((compiler) -> new ClearTypedScopeCreator())
+          .setInternalFactory((compiler) -> (externs, root) -> compiler.clearTypedScopeCreator())
           .setFeatureSetForChecks()
           .build();
 
@@ -1610,7 +1609,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory clearTopTypedScopePass =
       PassFactory.builder()
           .setName("clearTopTypedScopePass")
-          .setInternalFactory((compiler) -> new ClearTopTypedScope())
+          .setInternalFactory((compiler) -> (externs, root) -> compiler.setTopScope(null))
           .setFeatureSetForChecks()
           .build();
 
@@ -1627,9 +1626,9 @@ public final class DefaultPassConfig extends PassConfig {
                         new TypeInferencePass(
                             compiler,
                             compiler.getReverseAbstractInterpreter(),
-                            getTypedScopeCreator(compiler));
+                            (TypedScopeCreator) compiler.getTypedScopeCreator());
                     compiler.setTypeCheckingHasRun(true);
-                    DefaultPassConfig.this.topScope = inferencePass.inferAllScopes(globalRoot);
+                    compiler.setTopScope(inferencePass.inferAllScopes(globalRoot));
                   }))
           .setFeatureSetForChecks()
           .build();
@@ -1654,16 +1653,22 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.CHECK_TYPES)
           .setInternalFactory(
               (compiler) ->
-                  new CompilerPass() {
-                    @Override
-                    public void process(Node externs, Node root) {
-                      checkNotNull(topScope);
-                      checkNotNull(getTypedScopeCreator());
-
-                      TypeCheck check = makeTypeCheck(compiler);
-                      check.process(externs, root);
-                      compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
-                    }
+                  (externs, root) -> {
+                    TypeCheck check =
+                        new TypeCheck(
+                                compiler,
+                                compiler.getReverseAbstractInterpreter(),
+                                compiler.getTypeRegistry(),
+                                compiler.getTopScope(),
+                                (TypedScopeCreator) compiler.getTypedScopeCreator())
+                            .reportUnknownTypes(
+                                options.enables(
+                                    DiagnosticGroup.forType(TypeCheck.UNKNOWN_EXPR_TYPE)))
+                            .reportMissingProperties(
+                                !options.disables(
+                                    DiagnosticGroup.forType(TypeCheck.INEXISTENT_PROPERTY)));
+                    check.process(externs, root);
+                    compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
                   })
           .setFeatureSetForChecks()
           .build();
@@ -1774,22 +1779,6 @@ public final class DefaultPassConfig extends PassConfig {
   private static CompilerPass combineChecks(AbstractCompiler compiler, List<Callback> callbacks) {
     checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
-  }
-
-  /** A compiler pass that clears typed scope creator (and non-global scopes cached there) */
-  class ClearTypedScopeCreator implements CompilerPass {
-    @Override
-    public void process(Node externs, Node root) {
-      clearTypedScopeCreator();
-    }
-  }
-
-  /** A compiler pass that clears the global scope. */
-  class ClearTopTypedScope implements CompilerPass {
-    @Override
-    public void process(Node externs, Node root) {
-      clearTopTypedScope();
-    }
   }
 
   /** Checks that the code is ES5 strict compliant. */
