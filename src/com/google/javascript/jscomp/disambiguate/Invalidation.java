@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
-import com.google.javascript.jscomp.colors.Color;
-
 /**
  * Describes one way in which a property became invalidated.
  *
@@ -32,12 +30,12 @@ class Invalidation {
     return WELL_KNOWN_PROPERTY;
   }
 
-  static Invalidation invalidatingType(Color reciever) {
-    return new WithRecieverType(Reason.INVALIDATING_TYPE, reciever);
+  static Invalidation invalidatingType(int recieverType) {
+    return new WithRecieverType(Reason.INVALIDATING_TYPE, recieverType);
   }
 
-  static Invalidation undeclaredAccess(Color reciever) {
-    return new WithRecieverType(Reason.UNDECLARED_ACCESS, reciever);
+  static Invalidation undeclaredAccess(int recieverType) {
+    return new WithRecieverType(Reason.UNDECLARED_ACCESS, recieverType);
   }
 
   private enum Reason {
@@ -57,11 +55,11 @@ class Invalidation {
 
   /** Anonymous classes are not serialized correctly by GSON. */
   private static final class WithRecieverType extends Invalidation {
-    final String recieverId;
+    final int recieverType;
 
-    WithRecieverType(Reason reason, Color receiver) {
+    WithRecieverType(Reason reason, int recieverType) {
       super(reason);
-      this.recieverId = receiver.getId().toString();
+      this.recieverType = recieverType;
     }
   }
 
