@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
