@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.junit.Before;
 
 /**
@@ -183,6 +184,8 @@ public abstract class CompilerTestCase {
   private LanguageMode acceptedLanguage;
 
   private LanguageMode languageOut;
+
+  private Integer browserFeaturesetYear;
 
   /** How to interpret ES6 module imports */
   private ModuleLoader.ResolutionMode moduleResolutionMode;
@@ -631,6 +634,7 @@ public abstract class CompilerTestCase {
     this.gatherExternPropertiesEnabled = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.NO_TRANSPILE;
+    this.browserFeaturesetYear = null;
     this.multistageCompilation = false;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
@@ -667,6 +671,10 @@ public abstract class CompilerTestCase {
     options.setLanguageIn(acceptedLanguage);
     options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
+    if (browserFeaturesetYear != null) {
+      // Must be set after languageOut, because it must override languageOut.
+      options.setBrowserFeaturesetYear(browserFeaturesetYear);
+    }
     options.setModuleResolutionMode(moduleResolutionMode);
     options.setParseJsDocDocumentation(parseJsDocDocumentation);
     options.setPreserveTypeAnnotations(true);
@@ -765,6 +773,11 @@ public abstract class CompilerTestCase {
   protected final void setLanguageOut(LanguageMode langOut) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.languageOut = langOut;
+  }
+
+  protected final void setBrowserFeaturesetYear(@Nullable Integer year) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.browserFeaturesetYear = year;
   }
 
   protected final void setModuleResolutionMode(ModuleLoader.ResolutionMode moduleResolutionMode) {
@@ -1685,19 +1698,21 @@ public abstract class CompilerTestCase {
             .isEqualTo(externsRoot);
       }
 
-      if (!codeChange && !externsChange) {
-        assertWithMessage("compiler.reportCodeChange() was called " + "even though nothing changed")
-            .that(hasCodeChanged)
-            .isFalse();
-      } else {
-        assertWithMessage(
-                "compiler.reportCodeChange() should have been called."
-                    + "\nOriginal: "
-                    + mainRootClone.toStringTree()
-                    + "\nNew: "
-                    + mainRoot.toStringTree())
-            .that(hasCodeChanged)
-            .isTrue();
+      if (checkAstChangeMarking) {
+        if (!codeChange && !externsChange) {
+          assertWithMessage("compiler.reportCodeChange() was called even though nothing changed")
+              .that(hasCodeChanged)
+              .isFalse();
+        } else {
+          assertWithMessage(
+                  "compiler.reportCodeChange() should have been called."
+                      + "\nOriginal: "
+                      + mainRootClone.toStringTree()
+                      + "\nNew: "
+                      + mainRoot.toStringTree())
+              .that(hasCodeChanged)
+              .isTrue();
+        }
       }
 
       if (expected != null) {

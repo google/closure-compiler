@@ -101,6 +101,10 @@ public final class FeatureSet implements Serializable {
       ES2020_MODULES.without(
           // https://kangax.github.io/compat-table/es2016plus/
           // Regexp lookbehind is missing in Safari 14.
+          // IMPORTANT: There is special casing for this feature and the ones excluded for
+          // BROWSER_2020 above in RewritePolyfills.
+          // If future Browser FeatureSet Year definitions have to remove any other features, then
+          // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           Feature.REGEXP_LOOKBEHIND);
 
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());

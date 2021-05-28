@@ -413,8 +413,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "var string = {}; string.endsWith = function() {}; string.endsWith('x');",
         "es6/string/endswith");
     testInjects(
-        "var string = {endsWith: function() {}}; string.endsWith('x');",
-        "es6/string/endswith");
+        "var string = {endsWith: function() {}}; string.endsWith('x');", "es6/string/endswith");
     testInjects(
         "var string = {}; string.endsWith = function() {}; "
             + "string.foo = function() { return string.endsWith('x'); };",
@@ -519,6 +518,34 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
             "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');",
             "var set = new Set();",
             ""));
+  }
+
+  @Test
+  public void testRegexFeatureSetException() {
+    // Tests the special casing done to handle the fact that Safari has lagged behind on
+    // implementation of some regex features, which messes with the way polyfills are linked
+    // with the feature set of the specification that added them.
+
+    // Promise.prototype.finally was added in ES_2018
+    addLibrary("Promise.prototype.finally", "es_2018", "es3", "es6/promise/finally");
+
+    // input is assumed to contain features from the ES_2020 spec
+    setAcceptedLanguage(ES_2020);
+
+    // The output is required to work for the latest browsers as of early 2020
+    // This will set an output `FeatureSet` that does not include some regex features that are
+    // part of ES_2018, so ES_2018 will not be "supported", and could cause a polyfill
+    // that is part of ES_2018 to be included. We have special casing to avoid this.
+    setBrowserFeaturesetYear(2020);
+
+    // the change marking check will report an error because:
+    // 1. We add the polyfill code to the SCRIPT node
+    // 2. We then strip out the polyfill
+    // 3. We mark the SCRIPT node as changed, but it ended up the same as it started.
+    disableValidateAstChangeMarking();
+
+    // The polyfill is not included even though the output feature set is not a super set of ES_2018
+    testSame("Promise.resolve(1).finally(console.log('done'));");
   }
 
   @Test

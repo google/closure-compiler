@@ -21,11 +21,13 @@ import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Injects polyfill libraries to ensure that ES6+ library functions are available.
@@ -38,9 +40,10 @@ import java.util.Set;
  */
 public class RewritePolyfills implements CompilerPass {
 
-  static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.disabled(
-      "JSC_INSUFFICIENT_OUTPUT_VERSION",
-      "Built-in ''{0}'' not supported in output version {1}");
+  static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR =
+      DiagnosticType.disabled(
+          "JSC_INSUFFICIENT_OUTPUT_VERSION",
+          "Built-in ''{0}'' not supported in output version {1}");
 
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
@@ -118,22 +121,53 @@ public class RewritePolyfills implements CompilerPass {
   // that already contains the library) is the same or lower than languageOut.
   private void removeUnneededPolyfills(Node parent, Node runtimeEnd) {
     Node node = parent.getFirstChild();
+    // The target environment is assumed to support the features in this set.
+    final FeatureSet outputFeatureSet = compiler.getOptions().getOutputFeatureSet();
     while (node != null && node != runtimeEnd) {
+      // look up the next node now, because we may be removing this one.
       Node next = node.getNext();
-      if (NodeUtil.isExprCall(node)) {
-        Node call = node.getFirstChild();
-        Node name = call.getFirstChild();
-        if (name.matchesQualifiedName("$jscomp.polyfill")) {
-          final String nativeVersionStr = name.getNext().getNext().getNext().getString();
-          final FeatureSet outputFeatureSet = compiler.getOptions().getOutputFeatureSet();
-          if (outputFeatureSet.contains(FeatureSet.valueOf(nativeVersionStr))) {
-            NodeUtil.removeChild(parent, node);
-            NodeUtil.markFunctionsDeleted(node, compiler);
-          }
-        }
+      FeatureSet polyfillSupportedFeatureSet = getPolyfillSupportedFeatureSet(node);
+      if (polyfillSupportedFeatureSet != null
+          && outputFeatureSet.contains(polyfillSupportedFeatureSet)) {
+        NodeUtil.removeChild(parent, node);
+        NodeUtil.markFunctionsDeleted(node, compiler);
       }
       node = next;
     }
+  }
+
+  /**
+   * If the given `Node` is a polyfill definition, return the `FeatureSet` which should be
+   * considered to already include that polyfill (making it unnecessary).
+   *
+   * <p>Otherwise, return `null`.
+   */
+  @Nullable
+  private FeatureSet getPolyfillSupportedFeatureSet(Node maybePolyfill) {
+    FeatureSet polyfillSupportFeatureSet = null;
+    if (NodeUtil.isExprCall(maybePolyfill)) {
+      Node call = maybePolyfill.getFirstChild();
+      Node name = call.getFirstChild();
+      if (name.matchesQualifiedName("$jscomp.polyfill")) {
+        final String nativeVersionStr = name.getNext().getNext().getNext().getString();
+        polyfillSupportFeatureSet = FeatureSet.valueOf(nativeVersionStr);
+        // Safari has been really slow to implement these regex features, even though it has
+        // kept on top of the features we polyfill, so we want to ignore the regex features
+        // when deciding whether the polyfill should be considered "already supported" in the
+        // target environment.
+        // NOTE: This special case seems reasonable for now, but if further divergence occurs
+        // we should consider doing a more direct solution by having the polyfill definitions
+        // report names of `FeatureSet` values representing browser `FeatureSet` year instead of
+        // spec release year.
+        polyfillSupportFeatureSet =
+            polyfillSupportFeatureSet.without(
+                Feature.REGEXP_FLAG_S,
+                Feature.REGEXP_LOOKBEHIND,
+                Feature.REGEXP_NAMED_GROUPS,
+                Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+      }
+    }
+    return polyfillSupportFeatureSet;
   }
 
   private void inject(PolyfillUsage polyfillUsage) {
