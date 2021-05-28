@@ -40,12 +40,4 @@ public interface SourceAst {
 
   /** Returns the source file the generated AST represents. */
   public SourceFile getSourceFile();
-
-  /**
-   * Sets the source file the generated AST represents. This can be called after
-   * deserializing if access to the source file is needed. If a different file
-   * is provided than that with which this was created, an IllegalStateException
-   * will be thrown.
-   */
-  public void setSourceFile(SourceFile file);
 }

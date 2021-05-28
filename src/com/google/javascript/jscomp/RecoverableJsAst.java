@@ -95,11 +95,4 @@ public class RecoverableJsAst implements SourceAst {
       return realSource.getSourceFile();
     }
   }
-
-  @Override
-  public void setSourceFile(SourceFile file) {
-    // Explicitly forbid this operation through this interface; this
-    // RecoverableJsAst is a proxy view only.
-    throw new UnsupportedOperationException();
-  }
 }

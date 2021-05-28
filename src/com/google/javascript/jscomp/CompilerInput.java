@@ -150,10 +150,6 @@ public class CompilerInput extends DependencyInfo.Base {
     return ast.getSourceFile();
   }
 
-  public void setSourceFile(SourceFile file) {
-    ast.setSourceFile(file);
-  }
-
   /** Sets an abstract compiler for doing parsing. */
   public void setCompiler(AbstractCompiler compiler) {
     this.compiler = compiler;

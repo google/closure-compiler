@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -37,7 +36,7 @@ public class JsAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
   private final InputId inputId;
-  private SourceFile sourceFile;
+  private final SourceFile sourceFile;
   private final String fileName;
   private Node root;
   private FeatureSet features;
@@ -49,10 +48,7 @@ public class JsAst implements SourceAst {
   }
 
   public JsAst(Node root) {
-    SourceFile sourceFile = checkNotNull((SourceFile) root.getStaticSourceFile());
-    this.inputId = new InputId(sourceFile.getName());
-    this.sourceFile = sourceFile;
-    this.fileName = sourceFile.getName();
+    this(checkNotNull((SourceFile) root.getStaticSourceFile()));
     this.root = root;
   }
 
@@ -82,12 +78,6 @@ public class JsAst implements SourceAst {
   @Override
   public SourceFile getSourceFile() {
     return sourceFile;
-  }
-
-  @Override
-  public void setSourceFile(SourceFile file) {
-    checkState(fileName.equals(file.getName()));
-    sourceFile = file;
   }
 
   public FeatureSet getFeatures(AbstractCompiler compiler) {

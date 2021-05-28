@@ -84,10 +84,4 @@ public final class SyntheticAst implements SourceAst {
   public SourceFile getSourceFile() {
     return sourceFile;
   }
-
-  @Override
-  public void setSourceFile(SourceFile file) {
-    throw new IllegalStateException(
-        "Cannot set a source file for a synthetic AST");
-  }
 }
