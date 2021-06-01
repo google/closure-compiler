@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 /**
  * Generates an AST for a JavaScript source file.
@@ -37,28 +39,37 @@ public class JsAst implements SourceAst {
 
   private final InputId inputId;
   private final SourceFile sourceFile;
-  private final String fileName;
+  private final Supplier<Node> immutableRootSource;
+
   private Node root;
   private FeatureSet features;
 
   public JsAst(SourceFile sourceFile) {
-    this.inputId = new InputId(sourceFile.getName());
-    this.sourceFile = sourceFile;
-    this.fileName = sourceFile.getName();
+    this(sourceFile, null);
   }
 
-  public JsAst(Node root) {
-    this(checkNotNull((SourceFile) root.getStaticSourceFile()));
-    this.root = root;
+  public JsAst(SourceFile sourceFile, Supplier<Node> immutableRootSource) {
+    this.inputId = new InputId(sourceFile.getName());
+    this.sourceFile = sourceFile;
+    this.immutableRootSource = immutableRootSource;
   }
 
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
-    if (!isParsed()) {
-      parse(compiler);
-      root.setInputId(inputId);
+    if (this.isParsed()) {
+      return this.root;
     }
-    return checkNotNull(root);
+
+    if (this.immutableRootSource != null) {
+      this.root = this.immutableRootSource.get();
+      this.features = (FeatureSet) this.root.getProp(Node.FEATURE_SET);
+    } else {
+      this.parse(compiler);
+    }
+    checkState(identical(this.root.getStaticSourceFile(), this.sourceFile));
+    this.root.setInputId(this.inputId);
+
+    return this.root;
   }
 
   @Override
@@ -142,6 +153,8 @@ public class JsAst implements SourceAst {
   }
 
   private void parse(AbstractCompiler compiler) {
+    checkState(this.immutableRootSource == null);
+
     RecordingReporterProxy reporter = new RecordingReporterProxy(
         compiler.getDefaultErrorReporter());
 
