@@ -239,7 +239,6 @@ public class CompilerOptions implements Serializable {
    */
   private boolean assumeStrictThis;
 
-  private boolean allowHotswapReplaceScript = false;
   private boolean preserveDetailedSourceInfo = false;
   private boolean preserveNonJSDocComments = false;
   private boolean continueAfterErrors = false;
@@ -1036,7 +1035,7 @@ public class CompilerOptions implements Serializable {
    * being removed
    */
   public boolean shouldProtectHiddenSideEffects() {
-    return protectHiddenSideEffects && !checksOnly && !allowHotswapReplaceScript;
+    return protectHiddenSideEffects && !checksOnly;
   }
 
   /**
@@ -1888,14 +1887,6 @@ public class CompilerOptions implements Serializable {
     return this.propertiesThatMustDisambiguate;
   }
 
-  public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
-    this.allowHotswapReplaceScript = allowRecompilation;
-  }
-
-  boolean allowsHotswapReplaceScript() {
-    return allowHotswapReplaceScript;
-  }
-
   public void setPreserveDetailedSourceInfo(boolean preserveDetailedSourceInfo) {
     this.preserveDetailedSourceInfo = preserveDetailedSourceInfo;
   }
@@ -2661,7 +2652,6 @@ public class CompilerOptions implements Serializable {
         .omitNullValues()
         .add("aliasAllStrings", aliasAllStrings)
         .add("aliasHandler", getAliasTransformationHandler())
-        .add("allowHotswapReplaceScript", allowsHotswapReplaceScript())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
         .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)

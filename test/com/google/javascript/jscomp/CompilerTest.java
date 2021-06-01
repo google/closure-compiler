@@ -109,7 +109,6 @@ public final class CompilerTest {
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
     options.setContinueAfterErrors(true);
-    options.setAllowHotswapReplaceScript(true);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
     Compiler compiler = new Compiler();
     compiler.init(ImmutableList.<SourceFile>of(), inputs, options);

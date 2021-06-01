@@ -371,7 +371,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
-    if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
+    if (!options.preservesDetailedSourceInfo()) {
       checks.add(clearTypedScopeCreatorPass);
     }
 
@@ -390,7 +390,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
-    if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
+    if (!options.preservesDetailedSourceInfo()) {
       checks.add(clearTopTypedScopePass);
     }
 

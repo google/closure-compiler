@@ -69,7 +69,6 @@ public final class SymbolTableTest {
     options.setChecksOnly(true);
     options.setPreserveDetailedSourceInfo(true);
     options.setContinueAfterErrors(true);
-    options.setAllowHotswapReplaceScript(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
   }
