@@ -154,6 +154,14 @@ public final class TypeSubject extends Subject {
     return this;
   }
 
+  public void isResolved() {
+    check("isResolved()").that(actualNonNull().isResolved()).isTrue();
+  }
+
+  public void isUnresolved() {
+    check("isResolved()").that(actualNonNull().isResolved()).isFalse();
+  }
+
   /**
    * Returns a {@code TypeSubject} that is the type of the property with name propName,
    * to make assertions about the objectType's property Type message.
