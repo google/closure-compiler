@@ -108,6 +108,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
   // For convenience
   private final ObjectType unknownType;
+  private final JSType numberAdditionSupertype;
 
   TypeInference(
       AbstractCompiler compiler,
@@ -124,13 +125,22 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     this.compiler = checkNotNull(compiler);
     this.registry = checkNotNull(compiler.getTypeRegistry());
     this.reverseInterpreter = checkNotNull(reverseInterpreter);
-    this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
     this.moduleImportResolver =
         new ModuleImportResolver(
             compiler.getModuleMap(), scopeCreator.getNodeToScopeMapper(), this.registry);
     this.containerScope = syntacticScope;
     this.scopeCreator = checkNotNull(scopeCreator);
     this.assertionFunctionLookup = checkNotNull(assertionFunctionLookup);
+
+    this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
+    this.numberAdditionSupertype =
+        registry.createUnionType(
+            VOID_TYPE,
+            NULL_TYPE,
+            NUMBER_TYPE,
+            NUMBER_OBJECT_TYPE,
+            BOOLEAN_TYPE,
+            BOOLEAN_OBJECT_TYPE);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
@@ -1757,14 +1767,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   private boolean isAddedAsNumber(JSType type) {
-    return type.isSubtypeOf(
-        registry.createUnionType(
-            VOID_TYPE,
-            NULL_TYPE,
-            NUMBER_TYPE,
-            NUMBER_OBJECT_TYPE,
-            BOOLEAN_TYPE,
-            BOOLEAN_OBJECT_TYPE));
+    return type.isSubtypeOf(this.numberAdditionSupertype);
   }
 
   private FlowScope traverseHook(Node n, FlowScope scope) {
