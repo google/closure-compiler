@@ -49,8 +49,8 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
   public static final DiagnosticType OVERRIDE_WITHOUT_ALL_TYPES =
       DiagnosticType.error(
           "JSC_OVERRIDE_WITHOUT_ALL_TYPES",
-          "The @override functions/properties must have param and return types specified. Here is"
-              + " the replacement JSDoc for this function/property \n"
+          "must have param and return types specified. Here is"
+              + " the replacement JSDoc for this function or property \n"
               + "{0}");
 
   public CheckMissingOverrideTypes(AbstractCompiler compiler) {
