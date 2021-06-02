@@ -19,12 +19,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.BASE_CLASS_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJECTLIT_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +43,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    enableCreateModuleMap();
 
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
@@ -48,6 +52,51 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ProcessClosurePrimitives(compiler);
+  }
+
+  @Test
+  public void testProvide_weakNamespaceError() {
+    test(
+        srcs("goog.provide('foo'); /** @type {Object} */ var foo = {};"),
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        srcs("goog.provide('foo'); /** @type {!Object} */ var foo = {};"),
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        srcs("goog.provide('foo.bar'); /** @type {Object} */ foo.bar = {};"),
+        warning(WEAK_NAMESPACE_TYPE));
+    test(
+        srcs("goog.provide('foo.bar'); /** @type {!Object} */ foo.bar = {};"),
+        warning(WEAK_NAMESPACE_TYPE));
+
+    testNoWarning("goog.provide('foo'); /** @type {Object<string>} */ var foo = {};");
+
+    testNoWarning(externs("/** @type {!Object} */ var foo = {};"), srcs("goog.provide('foo');"));
+  }
+
+  @Test
+  public void testProvideValidObjectType() {
+    testNoWarning(srcs("goog.provide('foo'); /** @type {Object<string>} */ var foo = {};"));
+  }
+
+  @Test
+  public void testProvidedDeclaredFunctionError() {
+    testError("goog.provide('foo'); function foo(){}", FUNCTION_NAMESPACE_ERROR);
+  }
+
+  @Test
+  public void testProvidedDeclaredFunctionError_ignoredInExterns() {
+    testNoWarning(externs(" function foo(){}"), srcs("goog.provide('foo');"));
+  }
+
+  @Test
+  public void testProvidedDeclaredClassError() {
+    testError("goog.provide('foo'); class foo {}", CLASS_NAMESPACE_ERROR);
+  }
+
+  @Test
+  public void testProvidedDeclaredClassError_ignoredInExterns() {
+    testNoWarning(externs("class foo {}"), srcs("goog.provide('foo');"));
   }
 
   @Test

@@ -28,6 +28,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -24922,6 +24923,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
         .isEqualTo(0);
+
+    new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER).process(externs, jsRoot);
 
     // For processing goog.forwardDeclare for forward typedefs.
     new ProcessClosurePrimitives(compiler).process(externs, jsRoot);
