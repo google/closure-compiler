@@ -26,11 +26,12 @@ import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ShowByPathWarningsGuard.ShowType;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -65,7 +66,7 @@ public final class WarningsGuardTest {
     assertThat(includeGuard.level(makeError(null))).isNull();
     assertThat(includeGuard.level(makeError(null, WARNING))).isNull();
 
-    assertThat(includeGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
+    assertThat(includeGuard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -84,7 +85,7 @@ public final class WarningsGuardTest {
     assertThat(excludeGuard.level(makeError(null))).isNull();
     assertThat(excludeGuard.level(makeError(null, WARNING))).isNull();
 
-    assertThat(excludeGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
+    assertThat(excludeGuard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -95,7 +96,7 @@ public final class WarningsGuardTest {
     assertThat(guard.level(makeError("foo/hello.js", OFF))).isNull();
     assertThat(guard.level(makeError("bar.js", ERROR))).isEqualTo(ERROR);
 
-    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
+    assertThat(guard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -111,7 +112,7 @@ public final class WarningsGuardTest {
     assertThat(strictGuard.level(makeError(null))).isNull();
     assertThat(strictGuard.level(makeError(null, WARNING))).isNull();
 
-    assertThat(strictGuard.disables(DiagnosticGroups.DEPRECATED)).isFalse();
+    assertThat(strictGuard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -124,11 +125,6 @@ public final class WarningsGuardTest {
           public CheckLevel level(JSError error) {
             return error.getSourceName().equals("123456") ? ERROR : null;
           }
-
-          @Override
-          public boolean disables(DiagnosticGroup otherGroup) {
-            return false;
-          }
         };
 
     WarningsGuard g2 =
@@ -138,11 +134,6 @@ public final class WarningsGuardTest {
           @Override
           public CheckLevel level(JSError error) {
             return error.getLineNumber() == 12 ? WARNING : null;
-          }
-
-          @Override
-          public boolean disables(DiagnosticGroup otherGroup) {
-            return true;
           }
         };
 
@@ -154,7 +145,7 @@ public final class WarningsGuardTest {
     assertThat(guard.level(makeError("12345", 12))).isEqualTo(WARNING);
     assertThat(guard.level(makeError("12345", 13))).isNull();
 
-    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isTrue();
+    assertThat(guard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -207,10 +198,13 @@ public final class WarningsGuardTest {
         diagnosticGuard1, strictGuard, diagnosticGuard2, pathGuard2,
         diagnosticGuard3);
 
-    List<WarningsGuard> guards = guard.getGuards();
+    SortedSet<WarningsGuard> guards = guard.getGuards();
     assertThat(guards).hasSize(6);
-    for (int i = 1; i < 6; i++) {
-      assertThat(guards.get(i).getPriority()).isAtLeast(guards.get(i - 1).getPriority());
+
+    int prevPriority = Integer.MIN_VALUE;
+    for (WarningsGuard g : guards) {
+      assertThat(g.getPriority()).isAtLeast(prevPriority);
+      prevPriority = g.getPriority();
     }
   }
 
@@ -228,10 +222,8 @@ public final class WarningsGuardTest {
     guardB.addGuard(visibilityWarning);
     guardB.addGuard(visibilityOff);
 
-    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
-    assertThat(guardA.enables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
-    assertThat(guardB.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
-    assertThat(guardB.enables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
+    assertThat(guardA.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.TRUE);
+    assertThat(guardB.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.FALSE);
   }
 
   @Test
@@ -251,7 +243,7 @@ public final class WarningsGuardTest {
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
     guardA.addGuard(visibilityOff);
 
-    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
+    assertThat(guardA.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.FALSE);
   }
 
   @Test
@@ -265,7 +257,7 @@ public final class WarningsGuardTest {
     guardA.addGuard(visibilityWarning);
     guardA.addGuard(visibilityOff);
 
-    assertThat(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS)).isTrue();
+    assertThat(guardA.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.FALSE);
   }
 
   @Test
@@ -275,10 +267,8 @@ public final class WarningsGuardTest {
 
     assertThat(guard.level(makeError("foo", DETERMINISTIC_TEST))).isEqualTo(ERROR);
 
-    assertThat(guard.disables(DiagnosticGroups.CHECK_TYPES)).isFalse();
-
-    assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
-    assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.CHECK_TYPES)).isEqualTo(Tri.TRUE);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.MESSAGE_DESCRIPTIONS)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -286,10 +276,8 @@ public final class WarningsGuardTest {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, OFF);
 
-    assertThat(guard.disables(DiagnosticGroups.CHECK_TYPES)).isTrue();
-
-    assertNotEnables(guard, DiagnosticGroups.CHECK_TYPES);
-    assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.CHECK_TYPES)).isEqualTo(Tri.FALSE);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.MESSAGE_DESCRIPTIONS)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -297,14 +285,10 @@ public final class WarningsGuardTest {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.DEPRECATED, OFF);
 
-    assertThat(guard.disables(DiagnosticGroups.DEPRECATED)).isTrue();
-    assertThat(guard.disables(DiagnosticGroups.VISIBILITY)).isFalse();
-    assertThat(guard.disables(DiagnosticGroups.ACCESS_CONTROLS)).isFalse();
-
-    assertNotEnables(guard, DiagnosticGroups.DEPRECATED);
-    assertNotEnables(guard, DiagnosticGroups.VISIBILITY);
-    assertNotEnables(guard, DiagnosticGroups.ACCESS_CONTROLS);
-    assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.DEPRECATED)).isEqualTo(Tri.FALSE);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.VISIBILITY)).isEqualTo(Tri.UNKNOWN);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.ACCESS_CONTROLS)).isEqualTo(Tri.UNKNOWN);
+    assertThat(guard.mustRunChecks(DiagnosticGroups.MESSAGE_DESCRIPTIONS)).isEqualTo(Tri.UNKNOWN);
   }
 
   @Test
@@ -456,15 +440,6 @@ public final class WarningsGuardTest {
       }
     }
     return null;
-  }
-
-  private static void assertEnables(WarningsGuard guard, DiagnosticGroup type) {
-    assertThat(new ComposeWarningsGuard(guard).enables(type)).isTrue();
-  }
-
-  private static void assertNotEnables(WarningsGuard guard,
-      DiagnosticGroup type) {
-    assertThat(new ComposeWarningsGuard(guard).enables(type)).isFalse();
   }
 
   private static JSError makeError(String sourcePath) {

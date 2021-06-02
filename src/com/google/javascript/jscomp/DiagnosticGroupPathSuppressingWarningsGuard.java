@@ -16,34 +16,33 @@
 
 package com.google.javascript.jscomp;
 
+import javax.annotation.Nullable;
+
 /**
  * A warnings guard that suppresses warnings for a particular diagnostic group for a file that
  * contains the specified substring.
  */
-public class DiagnosticGroupPathSuppressingWarningsGuard extends DiagnosticGroupWarningsGuard {
+public final class DiagnosticGroupPathSuppressingWarningsGuard extends WarningsGuard {
+  private final DiagnosticGroup group;
   private final String part;
 
-  public DiagnosticGroupPathSuppressingWarningsGuard(DiagnosticGroup type, String part) {
-    super(type, CheckLevel.OFF);
+  public DiagnosticGroupPathSuppressingWarningsGuard(DiagnosticGroup group, String part) {
+    this.group = group;
     this.part = part;
   }
 
-  /** Does not suppress all warnings of any type. */
-  @Override public boolean disables(DiagnosticGroup type) {
-    return false;
-  }
-
   /** Does not touch warnings in other paths. */
-  @Override public CheckLevel level(JSError error) {
-    return error.getSourceName() != null && error.getSourceName().contains(part)
-        ? super.level(error)
-        /** suppress */
-        : null
-    /** proceed */
-    ;
+  @Override
+  @Nullable
+  public CheckLevel level(JSError error) {
+    if (error.getSourceName() == null || !error.getSourceName().contains(this.part)) {
+      return null;
+    }
+    return this.group.matches(error) ? CheckLevel.OFF : null;
   }
 
-  @Override public String toString() {
-    return super.toString() + "(" + part + ")";
+  @Override
+  public String toString() {
+    return this.group + "(" + this.part + ")";
   }
 }

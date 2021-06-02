@@ -99,18 +99,6 @@ public final class DiagnosticGroup implements Serializable {
     return types.contains(type);
   }
 
-  /**
-   * Returns whether all of the types in the given group are in this group.
-   */
-  boolean isSubGroup(DiagnosticGroup group) {
-    for (DiagnosticType type : group.types) {
-      if (!matches(type)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   /** Returns all the types in this group. */
   public ImmutableSet<DiagnosticType> getTypes() {
     return types;

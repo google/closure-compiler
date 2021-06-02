@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-/**
- * Sets the level for a particular DiagnosticGroup.
- */
-public class DiagnosticGroupWarningsGuard extends WarningsGuard {
+import com.google.javascript.jscomp.base.Tri;
+import javax.annotation.Nullable;
+
+/** Sets the level for a particular DiagnosticGroup. */
+public final class DiagnosticGroupWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   private final DiagnosticGroup group;
@@ -32,25 +33,18 @@ public class DiagnosticGroupWarningsGuard extends WarningsGuard {
   }
 
   @Override
+  @Nullable
   public CheckLevel level(JSError error) {
-    return group.matches(error) ? level : null;
+    return this.group.matches(error) ? this.level : null;
   }
 
   @Override
-  public boolean disables(DiagnosticGroup otherGroup) {
-    return !level.isOn() && group.isSubGroup(otherGroup);
-  }
-
-  @Override
-  public boolean enables(DiagnosticGroup otherGroup) {
-    if (level.isOn()) {
-      for (DiagnosticType type : otherGroup.getTypes()) {
-        if (group.matches(type)) {
-          return true;
-        }
-      }
+  public Tri mustRunChecks(DiagnosticGroup otherGroup) {
+    if (this.level.isOn()) {
+      return otherGroup.getTypes().stream().anyMatch(this.group::matches) ? Tri.TRUE : Tri.UNKNOWN;
+    } else {
+      return otherGroup.getTypes().stream().allMatch(this.group::matches) ? Tri.FALSE : Tri.UNKNOWN;
     }
-    return false;
   }
 
   @Override

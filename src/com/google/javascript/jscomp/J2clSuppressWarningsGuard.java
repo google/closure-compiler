@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import javax.annotation.Nullable;
+
 /** A warnings guard that suppresses some warnings incompatible with J2CL. */
-public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
+public final class J2clSuppressWarningsGuard extends WarningsGuard {
 
   // TODO(b/128554878): Cleanup and document all file level suppressions for J2CL generated code.
   private static final DiagnosticGroup DEFAULT_J2CL_SUPRRESIONS =
@@ -40,21 +42,14 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
           DiagnosticGroups.STRICT_MISSING_PROPERTIES,
           DiagnosticGroups.forName("transitionalSuspiciousCodeWarnings"));
 
-  public J2clSuppressWarningsGuard() {
-    super(DEFAULT_J2CL_SUPRRESIONS, CheckLevel.OFF);
-  }
-
   @Override
-  public boolean disables(DiagnosticGroup type) {
-    // Do not suppress all warnings of any type.
-    return false;
-  }
-
-  @Override
+  @Nullable
   public CheckLevel level(JSError error) {
-    boolean isJ2clSource =
-        error.getSourceName() != null && error.getSourceName().endsWith(".java.js");
-    return isJ2clSource ? super.level(error) /* suppress */ : null /* proceed */;
+    if (error.getSourceName() == null || !error.getSourceName().endsWith(".java.js")) {
+      return null;
+    }
+
+    return DEFAULT_J2CL_SUPRRESIONS.matches(error) ? CheckLevel.OFF : null;
   }
 
   @Override

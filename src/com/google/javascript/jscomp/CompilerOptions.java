@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
+import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
@@ -1422,13 +1423,13 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Whether the warnings guard in this Options object enables the given group of warnings. */
-  boolean enables(DiagnosticGroup type) {
-    return this.warningsGuard.enables(type);
+  boolean enables(DiagnosticGroup group) {
+    return this.warningsGuard.mustRunChecks(group) == Tri.TRUE;
   }
 
   /** Whether the warnings guard in this Options object disables the given group of warnings. */
-  boolean disables(DiagnosticGroup type) {
-    return this.warningsGuard.disables(type);
+  boolean disables(DiagnosticGroup group) {
+    return this.warningsGuard.mustRunChecks(group) == Tri.FALSE;
   }
 
   /** Configure the given type of warning to the given level. */
