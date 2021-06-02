@@ -860,12 +860,28 @@ public class NodeTraversal {
       return;
     }
 
-    if (NodeUtil.createsBlockScope(n)) {
+    boolean createsBlockScope = NodeUtil.createsBlockScope(n);
+    if (createsBlockScope) {
       pushScope(n);
-      traverseChildren(n);
+    }
+
+    /**
+     * Intentiionally inlined call to traverseChildren.
+     *
+     * <p>Calling traverseChildren here would double the maximum stack depth seen during
+     * compilation. That can cause stack overflows on some very deep ASTs (e.g. b/188616350).
+     * Inlining side-steps the issue.
+     */
+    for (Node child = n.getFirstChild(); child != null; ) {
+      // child could be replaced, in which case our child node
+      // would no longer point to the true next
+      Node next = child.getNext();
+      traverseBranch(child, n);
+      child = next;
+    }
+
+    if (createsBlockScope) {
       popScope();
-    } else {
-      traverseChildren(n);
     }
 
     currentNode = n;
