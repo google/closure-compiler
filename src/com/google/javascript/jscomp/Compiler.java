@@ -1437,54 +1437,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return inputsById.put(id, input);
   }
 
-  /** Replace a source input dynamically. Intended for incremental re-compilation. */
-  void replaceIncrementalSourceAst(JsAst ast) {
-    CompilerInput oldInput = getInput(ast.getInputId());
-    checkNotNull(oldInput, "No input to replace: %s", ast.getInputId().getIdName());
-    Node newRoot = checkNotNull(ast.getAstRoot(this));
-    Node oldRoot = oldInput.getAstRoot(this);
-    oldRoot.replaceWith(newRoot);
-
-    CompilerInput newInput = new CompilerInput(ast);
-    putCompilerInput(ast.getInputId(), newInput);
-
-    JSChunk module = oldInput.getChunk();
-    if (module != null) {
-      module.addAfter(newInput, oldInput);
-      module.remove(oldInput);
-    }
-
-    // Verify the input id is set properly.
-    checkState(newInput.getInputId().equals(oldInput.getInputId()));
-    InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
-    checkState(newInput.getInputId().equals(inputIdOnAst));
-  }
-
-  /**
-   * Add a new source input dynamically. Intended for incremental compilation.
-   *
-   * @param ast the JS Source to add.
-   * @throws IllegalStateException if an input for this ast already exists.
-   */
-  void addNewSourceAst(JsAst ast) {
-    CompilerInput oldInput = getInput(ast.getInputId());
-    if (oldInput != null) {
-      throw new IllegalStateException("Input already exists: " + ast.getInputId().getIdName());
-    }
-    Node newRoot = checkNotNull(ast.getAstRoot(this));
-    getRoot().getLastChild().addChildToBack(newRoot);
-
-    CompilerInput newInput = new CompilerInput(ast);
-
-    // TODO(tylerg): handle this for multiple modules at some point.
-    JSChunk firstModule = Iterables.getFirst(getModules(), null);
-    if (firstModule.getName().equals(JSChunk.STRONG_MODULE_NAME)) {
-      firstModule.add(newInput);
-    }
-
-    putCompilerInput(ast.getInputId(), newInput);
-  }
-
   /**
    * Gets the graph of JS source modules.
    *
