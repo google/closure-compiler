@@ -341,6 +341,9 @@ public class CompilerOptions implements Serializable {
   /** Returns localized replacement for MSG_* variables */
   public MessageBundle messageBundle = null;
 
+  /** Whether we should report an error if a message is absent from a bundle. */
+  private boolean strictMessageReplacement;
+
   // --------------------------------
   // Checks
   // --------------------------------
@@ -1361,6 +1364,7 @@ public class CompilerOptions implements Serializable {
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
     printSourceAfterEachPass = false;
+    strictMessageReplacement = false;
   }
 
   /** @return Whether to attempt to remove unused class properties */
@@ -2646,6 +2650,14 @@ public class CompilerOptions implements Serializable {
     return (CompilerOptions) new java.io.ObjectInputStream(objectInputStream).readObject();
   }
 
+  public void setStrictMessageReplacement(boolean strictMessageReplacement) {
+    this.strictMessageReplacement = strictMessageReplacement;
+  }
+
+  public boolean getStrictMessageReplacement() {
+    return this.strictMessageReplacement;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -2809,6 +2821,7 @@ public class CompilerOptions implements Serializable {
         .add("sourceMapFormat", sourceMapFormat)
         .add("sourceMapLocationMappings", sourceMapLocationMappings)
         .add("sourceMapOutputPath", sourceMapOutputPath)
+        .add("strictMessageReplacement", strictMessageReplacement)
         .add("stripNamePrefixes", stripNamePrefixes)
         .add("stripNameSuffixes", stripNameSuffixes)
         .add("stripTypes", stripTypes)

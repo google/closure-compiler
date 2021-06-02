@@ -1263,8 +1263,7 @@ public final class DefaultPassConfig extends PassConfig {
                           options.messageBundle,
                           /* allow messages with goog.getMsg */
                           JsMessage.Style.CLOSURE,
-                          /* if we can't find a translation, don't worry about it. */
-                          false)
+                          options.getStrictMessageReplacement())
                       .getFullReplacementPass())
           .setFeatureSetForOptimizations()
           .build();
