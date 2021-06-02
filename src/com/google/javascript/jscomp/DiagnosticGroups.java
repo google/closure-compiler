@@ -158,7 +158,6 @@ public class DiagnosticGroups {
           + "strictPrimitiveOperators, "
           + "suspiciousCode, "
           + "typeInvalidation, "
-          + "undefinedNames, "
           + "undefinedVars, "
           + "underscore, "
           + "unknownDefines, "
@@ -286,9 +285,6 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars", VarCheck.UNDEFINED_VAR_ERROR);
-
-  public static final DiagnosticGroup UNDEFINED_NAMES =
-      DiagnosticGroups.registerDeprecatedGroup("undefinedNames");
 
   public static final DiagnosticGroup DEBUGGER_STATEMENT_PRESENT =
       DiagnosticGroups.registerGroup(
@@ -433,7 +429,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "missingSourcesWarnings",
           REPORT_UNKNOWN_TYPES,
-          UNDEFINED_NAMES,
           UNDEFINED_VARIABLES,
           MISSING_PROVIDE,
           DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),

@@ -362,19 +362,6 @@ public class CompilerOptions implements Serializable {
   // whether to skip the RemoveTypes pass
   private boolean shouldUnsafelyPreserveTypesForDebugging;
 
-  @Deprecated // no-op
-  public CheckLevel checkGlobalNamesLevel;
-
-  /**
-   * Checks the integrity of references to qualified global names. (e.g. "a.b")
-   *
-   * <p>TODO(b/188976086): delete this flag.
-   *
-   * @deprecated no-op
-   */
-  @Deprecated // no-op
-  public void setCheckGlobalNamesLevel(CheckLevel level) {}
-
   @Deprecated public CheckLevel brokenClosureRequiresLevel;
 
   /**
@@ -1261,7 +1248,6 @@ public class CompilerOptions implements Serializable {
     checkSuspiciousCode = false;
     checkTypes = false;
     shouldUnsafelyPreserveTypesForDebugging = false;
-    checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
     computeFunctionSideEffects = false;
     extraAnnotationNames = null;
@@ -2673,7 +2659,6 @@ public class CompilerOptions implements Serializable {
         .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
         .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
         .add("checkDeterminism", getCheckDeterminism())
-        .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
         .add("checksOnly", checksOnly)
         .add("checkSuspiciousCode", checkSuspiciousCode)
         .add("checkSymbols", checkSymbols)
