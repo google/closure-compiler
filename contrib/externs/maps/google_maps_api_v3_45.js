@@ -8082,8 +8082,7 @@ google.maps.WebglOverlayView.prototype.getMap = function() {};
 
 /**
  * Implement this method to fetch or create intermediate data structures before
- * the overlay is drawn; use for structures that don’t require immediate access
- * to the WebGL
+ * the overlay is drawn that don’t require immediate access to the WebGL
  * rendering context.
  * @return {undefined}
  */
