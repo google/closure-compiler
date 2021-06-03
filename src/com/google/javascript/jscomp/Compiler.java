@@ -2752,13 +2752,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Report an internal error. */
   @Override
   void throwInternalError(String message, Throwable cause) {
-    String finalMessage = "INTERNAL COMPILER ERROR.\nPlease report this problem.\n\n" + message;
-
-    RuntimeException e = new RuntimeException(finalMessage, cause);
-    if (cause != null) {
-      e.setStackTrace(cause.getStackTrace());
-    }
-    throw e;
+    throw new RuntimeException(
+        "INTERNAL COMPILER ERROR.\nPlease report this problem.\n\n" + message, cause);
   }
 
   /** Gets the number of errors. */
