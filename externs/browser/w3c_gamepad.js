@@ -89,3 +89,25 @@ GamepadButton.prototype.pressed;  // read-only
  * @type {number}
  */
 GamepadButton.prototype.value;  // read-only
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://w3c.github.io/gamepad/#gamepadeventinit-dictionary
+ */
+function GamepadEventInit() {}
+
+/** @const {Gamepad} */
+GamepadEventInit.prototype.gamepad;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {GamepadEventInit=} gamepadEventInit
+ * @extends {Event}
+ * @see https://w3c.github.io/gamepad/#gamepadevent-interface
+ */
+function GamepadEvent(type, gamepadEventInit) {}
+
+/** @const {Gamepad} */
+GamepadEvent.prototype.gamepad;
