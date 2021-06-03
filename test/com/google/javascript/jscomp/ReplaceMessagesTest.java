@@ -17,12 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.JsMessage.Style.LEGACY;
-import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
+import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
+import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.HashMap;
@@ -59,14 +58,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   // Messages returned from fake bundle, keyed by `JsMessage.id`.
   private Map<String, JsMessage> messages;
-  private Style style;
   private boolean strictReplacement;
   private TestMode testMode = TestMode.FULL_REPLACE;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     final ReplaceMessages replaceMessages =
-        new ReplaceMessages(compiler, new SimpleMessageBundle(), style, strictReplacement);
+        new ReplaceMessages(compiler, new SimpleMessageBundle(), CLOSURE, strictReplacement);
     switch (testMode) {
       case FULL_REPLACE:
         return replaceMessages.getFullReplacementPass();
@@ -99,6 +97,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     test(protectedJs, expectedJs);
   }
 
+  /**
+   * The primary test method to use in this file.
+   *
+   * @param originalJs The original, input JS code
+   * @param protectedJs What the code should look like after message definitions are is protected
+   *     from mangling during optimizations, but before they are replaced with the localized message
+   *     data.
+   * @param expectedJs What the code should look like after full replacement with localized messages
+   * @param diagnosticType expected warning
+   */
+  private void multiPhaseTestWarning(
+      String originalJs, String protectedJs, String expectedJs, DiagnosticType diagnosticType) {
+    // The PROTECT_MSGS mode needs to add externs for the protection functions.
+    allowExternsChanges();
+    testMode = TestMode.FULL_REPLACE;
+    testWarning(originalJs, diagnosticType);
+    testMode = TestMode.PROTECT_MSGS;
+    testWarning(originalJs, diagnosticType);
+    testMode = TestMode.REPLACE_PROTECTED_MSGS;
+    test(protectedJs, expectedJs);
+  }
+
   @Override
   protected int getNumRepetitions() {
     // No longer valid on the second run.
@@ -111,7 +131,6 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     super.setUp();
     messages = new HashMap<>();
     strictReplacement = false;
-    style = RELAX;
   }
 
   @Test
@@ -767,8 +786,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testSimpleMessageReplacementMissing() {
-    style = LEGACY;
-    multiPhaseTest(
+    multiPhaseTestWarning(
         lines(
             "/** @desc d */", //
             "var MSG_E = 'd*6a0@z>t';"), //
@@ -778,7 +796,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"d*6a0@z\\x3et\"});"),
         lines(
             "/** @desc d */", //
-            "var MSG_E = 'd*6a0@z>t'"));
+            "var MSG_E = 'd*6a0@z>t'"),
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
@@ -800,16 +819,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testStrictModeAndMessageReplacementAbsentInBundle() {
-    style = Style.LEGACY;
 
     strictReplacement = true;
-    testError("var MSG_E = 'Hello';", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+    testError(
+        "var MSG_E = goog.getMsg('Hello');", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
   public void testStrictModeAndMessageReplacementAbsentInNonEmptyBundle() {
-    style = Style.LEGACY;
-
     registerMessage(
         new JsMessage.Builder("MSG_J")
             .appendStringPart("One ")
@@ -818,13 +835,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     strictReplacement = true;
-    testError("var MSG_E = 'Hello';", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+    testError(
+        "var MSG_E = goog.getMsg('Hello');", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
   public void testFunctionReplacementMissing() {
-    style = LEGACY;
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_F = function() {return 'asdf'};", //
         lines(
             "var MSG_F = function() {", //
@@ -835,13 +852,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "      },",
             "      {});",
             "};"),
-        "var MSG_F = function() {return'asdf'}");
+        "var MSG_F = function() {return'asdf'}",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testFunctionWithParamReplacementMissing() {
-    style = LEGACY;
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_G = function(measly) { return 'asdf' + measly};",
         lines(
             "var MSG_G = function(measly) {",
@@ -852,7 +869,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        },",
             "        {\"measly\":measly});",
             "    };"),
-        "var MSG_G = function(measly) { return 'asdf' + measly}");
+        "var MSG_G = function(measly) { return 'asdf' + measly}",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
@@ -882,29 +900,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntaxConcat() {
-    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_A = 'abc' + 'def';", //
         "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"abcdef\"});",
-        "var MSG_A = 'Hi\\nthere'");
+        "var MSG_A = 'Hi\\nthere'",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntax() {
-    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_A = 'd*6a0@z>t';", //
         "var MSG_A = __jscomp_define_msg__({\"key\":\"MSG_A\", \"msg_text\":\"d*6a0@z\\x3et\"});",
-        "var MSG_A='Hi\\nthere'");
+        "var MSG_A='Hi\\nthere'",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersFunctionSyntax() {
-    style = LEGACY;
     registerMessage(new JsMessage.Builder("MSG_B").appendStringPart("Hi\nthere").build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_B = function() {return 'asdf'};", //
         lines(
             "var MSG_B = function() {",
@@ -915,19 +932,19 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        },",
             "        {});",
             "};"),
-        "var MSG_B=function(){return'Hi\\nthere'}");
+        "var MSG_B=function(){return'Hi\\nthere'}",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStyleOnePlaceholder() {
-    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_C")
             .appendStringPart("One ")
             .appendPlaceholderReference("measly")
             .appendStringPart(" ph")
             .build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
         lines(
             "var MSG_C = function(measly) {",
@@ -938,19 +955,19 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        },",
             "        {\"measly\":measly});",
             "};"),
-        "var MSG_C=function(measly){ return 'One ' + measly + ' ph'; }");
+        "var MSG_C=function(measly){ return 'One ' + measly + ' ph'; }",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStyleTwoPlaceholders() {
-    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_D")
             .appendPlaceholderReference("dick")
             .appendStringPart(" and ")
             .appendPlaceholderReference("jane")
             .build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_D = function(jane, dick) {return jane + dick};", //
         lines(
             "var MSG_D = function(jane, dick) {",
@@ -962,18 +979,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {\"jane\":jane, \"dick\":dick});",
             "};",
             ""),
-        "var MSG_D = function(jane,dick) { return dick + ' and ' + jane; }");
+        "var MSG_D = function(jane,dick) { return dick + ' and ' + jane; }",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerCamelCase() {
-    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_E")
             .appendStringPart("Sum: $")
             .appendPlaceholderReference("amtEarned")
             .build());
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
         lines(
             "var MSG_E = function(amtEarned) {",
@@ -984,12 +1001,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        },",
             "        {\"amtEarned\":amtEarned});",
             "};"),
-        "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}");
+        "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
-    style = LEGACY;
     registerMessage(
         new JsMessage.Builder("MSG_F")
             .appendStringPart("Sum: $")
@@ -997,7 +1014,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     // Placeholder named in lower-underscore case (discouraged nowadays)
-    multiPhaseTest(
+    multiPhaseTestWarning(
         "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
         lines(
             "var MSG_F = function(amt_earned) {",
@@ -1008,22 +1025,21 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        },",
             "        {\"amt_earned\":amt_earned});",
             "};"),
-        "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}");
+        "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}",
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test
   public void testLegacyStyleBadPlaceholderReferenceInReplacement() {
-    style = Style.LEGACY;
-
     registerMessage(
         new JsMessage.Builder("MSG_B")
             .appendStringPart("Ola, ")
             .appendPlaceholderReference("chimp")
             .build());
 
-    testError(
+    testWarning(
         "var MSG_B = function(chump) {return chump + 'x'};",
-        JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+        MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
   }
 
   @Test

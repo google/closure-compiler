@@ -71,7 +71,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           "JSC_MSG_ORPHANED_NODE",
           MSG_FUNCTION_NAME + "() function could be used only with MSG_* property or variable");
 
-  static final DiagnosticType MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX =
+  public static final DiagnosticType MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX =
       DiagnosticType.warning(
           "JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
           "message not initialized using " + MSG_FUNCTION_NAME);
