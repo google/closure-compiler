@@ -387,7 +387,7 @@ public class ColorPoolTest {
   }
 
   @Test
-  public void throwsExceptionOnTypeWithoutKindCase() {
+  public void throwsException_onTypeWithoutKindCase() {
     TypePool typePool = TypePool.newBuilder().addType(TypeProto.getDefaultInstance()).build();
 
     assertThrows(
@@ -399,7 +399,7 @@ public class ColorPoolTest {
   }
 
   @Test
-  public void throwsExceptionOnSerializedUnionOfSingleElement() {
+  public void throwsException_onSerializedUnionOfSingleElement() {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
@@ -418,7 +418,7 @@ public class ColorPoolTest {
   }
 
   @Test
-  public void throwsExceptionOnOutOfBoundsStringPoolOffset() {
+  public void throwsException_onOutOfBoundsStringPoolOffset() {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
@@ -433,22 +433,11 @@ public class ColorPoolTest {
         () -> ColorPool.fromOnlyShard(typePool, StringPool.empty()));
   }
 
-  private static Color.Builder createObjectColorBuilder() {
-    return Color.singleBuilder().setId(fromAscii(""));
-  }
-
   @Test
-  public void union_whoseMembersHaveSameId_becomesThatMember() {
+  public void throwsException_onDuplicateIdsInSinglePool() {
     // Given
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(
-                TypeProto.newBuilder()
-                    .setUnion(
-                        UnionTypeProto.newBuilder()
-                            .addUnionMember(poolPointer(1))
-                            .addUnionMember(poolPointer(2))
-                            .build()))
             .addType(
                 TypeProto.newBuilder()
                     .setObject(
@@ -459,15 +448,14 @@ public class ColorPoolTest {
                         ObjectTypeProto.newBuilder().setUuid(TEST_ID.asByteString()).build()))
             .build();
 
-    // When
-    ColorPool.Builder colorPoolBuilder = ColorPool.builder();
-    ColorPool.ShardView shard = colorPoolBuilder.addShard(typePool, StringPool.empty());
-    ColorPool colorPool = colorPoolBuilder.build();
+    // When & Then
+    assertThrows(
+        MalformedTypedAstException.class,
+        () -> ColorPool.fromOnlyShard(typePool, StringPool.empty()));
+  }
 
-    // Then
-    assertThat(colorPool.getColor(TEST_ID).isUnion()).isFalse();
-    assertThat(shard.getColor(poolPointer(0))).isSameInstanceAs(shard.getColor(poolPointer(1)));
-    assertThat(shard.getColor(poolPointer(0))).isSameInstanceAs(shard.getColor(poolPointer(2)));
+  private static Color.Builder createObjectColorBuilder() {
+    return Color.singleBuilder().setId(fromAscii(""));
   }
 
   @Test
@@ -492,37 +480,6 @@ public class ColorPoolTest {
           MalformedTypedAstException.class,
           () -> ColorPool.builder().addShardAnd(typePool, StringPool.empty()).build());
     }
-  }
-
-  @Test
-  public void reconcile_sameId_sameShard() {
-    // Given
-    StringPool stringPool = StringPool.builder().putAnd("hello").putAnd("world").build();
-    TypePool typePool =
-        TypePool.newBuilder()
-            .addType(
-                TypeProto.newBuilder()
-                    .setObject(
-                        ObjectTypeProto.newBuilder()
-                            .setUuid(TEST_ID.asByteString())
-                            .addOwnProperty(1)
-                            .build()))
-            .addType(
-                TypeProto.newBuilder()
-                    .setObject(
-                        ObjectTypeProto.newBuilder()
-                            .setUuid(TEST_ID.asByteString())
-                            .addOwnProperty(2)
-                            .build()))
-            .build();
-
-    // When
-    ColorPool colorPool = ColorPool.fromOnlyShard(typePool, stringPool);
-
-    // Then
-    assertThat(colorPool.getColor(TEST_ID))
-        .hasOwnPropertiesSetThat()
-        .containsExactly("hello", "world");
   }
 
   @Test

@@ -26,13 +26,11 @@ import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomati
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static com.google.javascript.jscomp.serialization.TypePointers.untrimOffset;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
@@ -44,7 +42,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -128,8 +125,7 @@ public final class ColorPool {
     private final ColorRegistry.Builder registry = ColorRegistry.builder();
 
     // Like a 3D table, (ColorId, ShardView, index) => TypeProto
-    private final LinkedHashMap<ColorId, ListMultimap<ShardView, TypeProto>> idToProto =
-        new LinkedHashMap<>();
+    private final HashBasedTable<ColorId, ShardView, TypeProto> idToProto = HashBasedTable.create();
 
     private final ArrayDeque<ColorId> reconcliationDebugStack = new ArrayDeque<>();
 
@@ -160,18 +156,16 @@ public final class ColorPool {
       for (ShardView shard : this.indexToShard) {
         for (int i = 0; i < shard.typePool.getTypeCount(); i++) {
           ColorId id = shard.trimmedOffsetToId.get(i);
-          // TODO(b/185519307): Serialization shouldn't put duplicate IDs in a TypePool.
-          ListMultimap<ShardView, TypeProto> row =
-              this.idToProto.computeIfAbsent(id, ColorPool::createListMultimap);
-          addProtoDroppingRedundantUnions(row.get(shard), shard.typePool.getType(i));
+          this.idToProto.put(id, shard, shard.typePool.getType(i));
         }
       }
 
       for (ColorId id : StandardColors.AXIOMATIC_COLORS.keySet()) {
-        checkWellFormed(!this.idToProto.containsKey(id), id);
+        checkWellFormed(
+            !this.idToProto.containsRow(id), "Found serialized definiton for axiomatic color", id);
       }
 
-      for (ColorId id : this.idToProto.keySet()) {
+      for (ColorId id : this.idToProto.rowKeySet()) {
         this.lookupOrReconcileColor(id);
       }
 
@@ -205,14 +199,14 @@ public final class ColorPool {
             throw new MalformedTypedAstException(
                 "Cyclic Color structure detected: "
                     + this.reconcliationDebugStack.stream()
-                        .map(this.idToProto::get)
-                        .map(Multimap::asMap)
+                        .map(this.idToProto::row)
+                        .map(ImmutableMap::copyOf)
                         .collect(toImmutableList()));
           }
           return existing;
         }
 
-        ListMultimap<ShardView, TypeProto> viewToProto = this.idToProto.get(id);
+        Map<ShardView, TypeProto> viewToProto = this.idToProto.row(id);
         TypeProto sample = Iterables.getFirst(viewToProto.values(), null);
         checkNotNull(sample, id);
 
@@ -238,8 +232,7 @@ public final class ColorPool {
       }
     }
 
-    private Color reconcileObjectProtos(
-        ColorId id, ListMultimap<ShardView, TypeProto> viewToProto) {
+    private Color reconcileObjectProtos(ColorId id, Map<ShardView, TypeProto> viewToProto) {
       DebugInfo sampleDebugInfo = DebugInfo.EMPTY;
       ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
       ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
@@ -249,7 +242,7 @@ public final class ColorPool {
       boolean isInvalidating = false;
       boolean propertiesKeepOriginalName = false;
 
-      for (Map.Entry<ShardView, TypeProto> entry : viewToProto.entries()) {
+      for (Map.Entry<ShardView, TypeProto> entry : viewToProto.entrySet()) {
         ShardView shard = entry.getKey();
         TypeProto proto = entry.getValue();
 
@@ -270,7 +263,9 @@ public final class ColorPool {
 
         boolean isClosureAssertBool = objProto.getClosureAssert();
         checkWellFormed(
-            isClosureAssert.toBoolean(isClosureAssertBool) == isClosureAssertBool, objProto);
+            isClosureAssert.toBoolean(isClosureAssertBool) == isClosureAssertBool,
+            "Inconsistent values for closure_assert",
+            objProto);
         isClosureAssert = Tri.forBoolean(isClosureAssertBool);
 
         isConstructor |= objProto.getMarkedConstructor();
@@ -297,7 +292,7 @@ public final class ColorPool {
           .build();
     }
 
-    private Color reconcileUnionProtos(ColorId id, ListMultimap<ShardView, TypeProto> viewToProto) {
+    private Color reconcileUnionProtos(ColorId id, Map<ShardView, TypeProto> viewToProto) {
       LinkedHashSet<Color> union = new LinkedHashSet<>();
       viewToProto.forEach(
           (shard, proto) -> {
@@ -305,7 +300,7 @@ public final class ColorPool {
             for (TypePointer memberPointer : proto.getUnion().getUnionMemberList()) {
               ColorId memberId = shard.getId(memberPointer);
               Color member = this.lookupOrReconcileColor(memberId);
-              checkWellFormed(!member.isUnion(), proto);
+              checkWellFormed(!member.isUnion(), "Reconciling union with non-union", proto);
               union.add(member);
             }
           });
@@ -340,7 +335,8 @@ public final class ColorPool {
           break;
         case UNION:
           {
-            checkWellFormed(proto.getUnion().getUnionMemberCount() > 1, proto);
+            checkWellFormed(
+                proto.getUnion().getUnionMemberCount() > 1, "Union has too few members", proto);
             LinkedHashSet<ColorId> members = new LinkedHashSet<>();
             for (TypePointer memberPointer : proto.getUnion().getUnionMemberList()) {
               int offset = memberPointer.getPoolOffset();
@@ -348,7 +344,7 @@ public final class ColorPool {
                   isAxiomatic(offset)
                       ? OFFSET_TO_AXIOMATIC_COLOR.get(offset).getId()
                       : ids[trimOffset(offset)];
-              checkWellFormed(memberId != null, proto);
+              checkWellFormed(memberId != null, "Union member not found", proto);
               members.add(memberId);
             }
             ids[i] = ColorId.union(members);
@@ -359,44 +355,22 @@ public final class ColorPool {
       }
     }
 
+    LinkedHashSet<ColorId> seenIds = new LinkedHashSet<>();
+    for (int i = 0; i < ids.length; i++) {
+      TypeProto proto = typePool.getType(i);
+      checkWellFormed(seenIds.add(ids[i]), "Duplicate ID in single shard", proto);
+    }
+
     return ImmutableList.copyOf(ids);
   }
 
   private static TypePointer validatePointer(TypePointer p, ShardView shard) {
     int offset = p.getPoolOffset();
-    checkWellFormed(0 <= offset && offset < untrimOffset(shard.trimmedOffsetToId.size()), p);
+    checkWellFormed(
+        0 <= offset && offset < untrimOffset(shard.trimmedOffsetToId.size()),
+        "Pointer offset outside of shard",
+        p);
     return p;
-  }
-
-  private static <K, V> ListMultimap<K, V> createListMultimap(Object unused) {
-    return MultimapBuilder.linkedHashKeys().arrayListValues(1).build();
-  }
-
-  /**
-   * Don't let unions and object mix under the same ID.
-   *
-   * <p>TODO(b/185519307): Because TypePool protos are allowed to have multiple entries with the
-   * same ID (are not pre-reconciled) it can happen that there are unions who's elements all have
-   * the same ID. In turn, this means that the union has that same ID, because the set of member IDs
-   * has size = 1. Those unions are filtered out here prevent self-cycles when instantiating Colors.
-   *
-   * <p>For this to work, it is also assumed that accidental ID collisions never happen.
-   * Reconciliation in general depends on this assumption.
-   */
-  private static void addProtoDroppingRedundantUnions(List<TypeProto> current, TypeProto proto) {
-    if (current.isEmpty()) {
-      current.add(proto);
-      return;
-    }
-
-    if (proto.hasUnion()) {
-      return;
-    }
-
-    if (current.size() == 1 && current.get(0).hasUnion()) {
-      current.clear();
-    }
-    current.add(proto);
   }
 
   private static final Color PENDING_COLOR =
