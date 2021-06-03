@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToInt32;
 import static com.google.javascript.jscomp.base.JSCompDoubles.ecmascriptToUint32;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -206,6 +207,17 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               result = min(result, d);
             }
             replacement = result;
+            break;
+          }
+        case "imul":
+          {
+            if (args.size() < 2) {
+              replacement = 0d;
+            } else {
+              // Ignore args3+
+              replacement =
+                  (double) (ecmascriptToInt32(args.get(0)) * ecmascriptToInt32(args.get(1)));
+            }
             break;
           }
         default: // fall out

@@ -449,6 +449,20 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldMathFunctions_imul() {
+    foldSame("Math.imul(Math.random(),2)");
+    fold("Math.imul(-1,1)", "-1");
+    fold("Math.imul(2,2)", "4");
+    fold("Math.imul(2)", "0");
+    fold("Math.imul(2,3,5)", "6");
+    fold("Math.imul(0xfffffffe, 5)", "-10");
+    fold("Math.imul(0xffffffff, 5)", "-5");
+    fold("Math.imul(0xfffffffffffff34f, 0xfffffffffff342)", "13369344");
+    fold("Math.imul(0xfffffffffffff34f, -0xfffffffffff342)", "-13369344");
+    fold("Math.imul(NaN, 2)", "0");
+  }
+
+  @Test
   public void testFoldMathFunctions_ceil() {
     foldSame("Math.ceil(Math.random())");
 
