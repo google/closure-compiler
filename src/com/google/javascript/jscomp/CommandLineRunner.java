@@ -749,7 +749,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Specifies whether standard input and output streams will be "
                 + "a JSON array of sources. Each source will be an object of the "
-                + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
+                + "form {path: filename, src: file_contents, source_map: srcmap_contents }. "
                 + "Intended for use by stream-based build systems such as gulpjs. "
                 + "Options: NONE, IN, OUT, BOTH. Defaults to NONE.")
     private CompilerOptions.JsonStreamMode jsonStreamMode = CompilerOptions.JsonStreamMode.NONE;

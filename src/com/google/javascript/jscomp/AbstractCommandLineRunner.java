@@ -36,6 +36,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
@@ -63,6 +66,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1516,17 +1520,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   void outputJsonStream() throws IOException {
     try (JsonWriter jsonWriter =
         new JsonWriter(new BufferedWriter(new OutputStreamWriter(defaultJsOutput, UTF_8)))) {
-      jsonWriter.beginArray();
-      for (JsonFileSpec jsonFile : this.filesToStreamOut) {
-        jsonWriter.beginObject();
-        jsonWriter.name("src").value(jsonFile.getSrc());
-        jsonWriter.name("path").value(jsonFile.getPath());
-        if (!Strings.isNullOrEmpty(jsonFile.getSourceMap())) {
-          jsonWriter.name("source_map").value(jsonFile.getSourceMap());
-        }
-        jsonWriter.endObject();
-      }
-      jsonWriter.endArray();
+      Gson gsonOut = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+      Type filesCollectionType = new TypeToken<List<JsChunkSpec>>() {}.getType();
+      gsonOut.toJson(this.filesToStreamOut, filesCollectionType, jsonWriter);
     }
   }
 
@@ -2785,10 +2781,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /** Representation of a source file from an encoded json stream input */
   @GwtIncompatible("Unnecessary")
   public static class JsonFileSpec {
-    private final String src;
-    private final String path;
-    private String sourceMap;
+    @Nullable private final String src;
+    @Nullable private final String path;
+
     @Nullable
+    @SerializedName(
+        value = "source_map",
+        alternate = {"sourceMap"})
+    private String sourceMap;
+
+    @Nullable
+    @SerializedName(
+        value = "webpack_id",
+        alternate = {"webpackId"})
     private final String webpackId;
 
     // Graal requires a non-arg constructor for use with GSON

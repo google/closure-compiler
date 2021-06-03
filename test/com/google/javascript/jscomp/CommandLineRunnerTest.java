@@ -2383,6 +2383,61 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testJsonStreamSourceMapUnderscore() {
+    String inputSourceMap =
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"one.out.js\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
+            + "OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;\",\n"
+            + "\"sources\":[\"one.js\"],\n"
+            + "\"names\":[\"log\",\"a\",\"console\"]\n"
+            + "}";
+    inputSourceMap = inputSourceMap.replace("\"", "\\\"");
+    String inputString =
+        "[{"
+            + "\"src\": \"function log(a){console.log(a)}log(\\\"one.js\\\");\", "
+            + "\"path\":\"one.out.js\", "
+            // input JSON with `source_map` field instead of `sourceMap`
+            + "\"source_map\": \""
+            + inputSourceMap
+            + "\" }]";
+    args.add("--json_streams=BOTH");
+    args.add("--js_output_file=bar.js");
+    args.add("--apply_input_source_maps");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      assertWithMessage("Unexpected exception " + e).fail();
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output)
+        .isEqualTo(
+            "[{\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n"
+                + "\",\"path\":\"bar.js\",\"source_map\":\"{\\n"
+                + "\\\"version\\\":3,\\n"
+                + "\\\"file\\\":\\\"bar.js\\\",\\n"
+                + "\\\"lineCount\\\":1,\\n"
+                + "\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
+                + "OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\\",\\n"
+                + "\\\"sources\\\":[\\\"one.js\\\"],\\n"
+                + "\\\"names\\\":[\\\"log\\\",\\\"a\\\",\\\"console\\\"]\\n"
+                + "}\\n"
+                + "\"}]");
+  }
+
+  @Test
   public void testJsonStreamAllowsAnyChunkName() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
