@@ -75,6 +75,27 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED = "";
 
   @Test
+  public void testSubstituteEs6Syntax() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("testExterns.js", new TestExternsBuilder().addConsole().build()));
+
+    // This is a regression test to confirm both that SubstituteEs6Syntax switches to object
+    // literal shorthand here and that it correctly reports that it has added that feature.
+    // IntegrationTestCase runs `ValidityCheck` to report an error if a feature usage gets added to
+    // the AST without that addition being recorded.
+    test(
+        options,
+        "console.log({console: console});", //
+        "console.log({console});");
+  }
+
+  @Test
   public void testNewDotTargetTranspilation() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

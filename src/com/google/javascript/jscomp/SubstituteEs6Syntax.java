@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -26,6 +27,7 @@ import com.google.javascript.rhino.Node;
 class SubstituteEs6Syntax extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private boolean objectLiteralShorthandWasAdded = false;
 
   public SubstituteEs6Syntax(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -47,6 +49,13 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements CompilerP
       case STRING_KEY:
         if (n.getFirstChild().isName() && n.getFirstChild().getString().equals(n.getString())) {
           n.setShorthandProperty(true);
+          objectLiteralShorthandWasAdded = true;
+        }
+        break;
+      case SCRIPT:
+        if (objectLiteralShorthandWasAdded) {
+          NodeUtil.addFeatureToScript(n, Feature.EXTENDED_OBJECT_LITERALS, compiler);
+          objectLiteralShorthandWasAdded = false; // false for the next script
         }
         break;
       default:
