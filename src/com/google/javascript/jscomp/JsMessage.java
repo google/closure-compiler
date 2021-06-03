@@ -69,20 +69,6 @@ public abstract class JsMessage {
     RELAX, // You allowed to use legacy code but it would be reported as warn
     CLOSURE; // Any legacy code is prohibited
 
-    /**
-     * Calculates current messages {@link Style} based on the given arguments.
-     *
-     * @param useClosure if true then use closure style, otherwise not
-     * @param allowLegacyMessages if true then allow legacy messages otherwise not
-     * @return the message style based on the given arguments
-     */
-    static Style getFromParams(boolean useClosure, boolean allowLegacyMessages) {
-      if (useClosure) {
-        return allowLegacyMessages ? RELAX : CLOSURE;
-      } else {
-        return LEGACY;
-      }
-    }
   }
 
   private static final String MESSAGE_REPRESENTATION_FORMAT = "{$%s}";
