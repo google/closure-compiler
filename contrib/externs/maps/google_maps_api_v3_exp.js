@@ -3183,11 +3183,12 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * <code>pixelOffset</code> (see InfoWindowOptions). The
  * <code>anchorPoint</code> is the offset from the anchor&#39;s position to the
  * tip of the InfoWindow.
- * @param {(?google.maps.Map|?google.maps.StreetViewPanorama)=} map
+ * @param {(?google.maps.Map|?google.maps.StreetViewPanorama|?google.maps.InfoWindowOpenOptions)=}
+ *     options
  * @param {?google.maps.MVCObject=} anchor
  * @return {undefined}
  */
-google.maps.InfoWindow.prototype.open = function(map, anchor) {};
+google.maps.InfoWindow.prototype.open = function(options, anchor) {};
 
 /**
  * @param {string|Node} content
@@ -3212,6 +3213,28 @@ google.maps.InfoWindow.prototype.setPosition = function(position) {};
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setZIndex = function(zIndex) {};
+
+/**
+ * Options for opening an InfoWindow
+ * @record
+ */
+google.maps.InfoWindowOpenOptions = function() {};
+
+/**
+ * If anchor is non-null, position this InfoWindow at the top-center of the
+ * anchor, instead of at the given latlng. The InfoWindow will be rendered on
+ * the same Map or StreetView as the anchor.
+ * @type {?google.maps.MVCObject|undefined}
+ */
+google.maps.InfoWindowOpenOptions.prototype.anchor;
+
+/**
+ * Whether or not focus should be moved inside the InfoWindow when it is opened.
+ * When unset or set to <code>null</code> or <code>undefined</code>, a heuristic
+ * will be used to decide whether focus should be moved or not.
+ * @type {?boolean|undefined}
+ */
+google.maps.InfoWindowOpenOptions.prototype.shouldFocus;
 
 /**
  * InfoWindowOptions object used to define the properties that can be set on a
@@ -8083,8 +8106,7 @@ google.maps.WebglOverlayView.prototype.getMap = function() {};
 /**
  * Implement this method to fetch or create intermediate data structures before
  * the overlay is drawn; use for structures that don’t require immediate access
- * to the WebGL
- * rendering context.
+ * to the WebGL rendering context.
  * @return {undefined}
  */
 google.maps.WebglOverlayView.prototype.onAdd = function() {};
