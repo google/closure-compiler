@@ -1350,7 +1350,7 @@ Date.parse = function(date) {};
 
 /**
  * @param {number} year
- * @param {number} month
+ * @param {number=} opt_month
  * @param {number=} opt_date
  * @param {number=} opt_hours
  * @param {number=} opt_minute
@@ -1360,7 +1360,7 @@ Date.parse = function(date) {};
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/UTC
  */
-Date.UTC = function(year, month,
+Date.UTC = function(year, opt_month,
                     opt_date, opt_hours, opt_minute, opt_second, opt_ms) {};
 
 /**
