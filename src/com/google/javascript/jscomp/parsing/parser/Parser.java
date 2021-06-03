@@ -661,11 +661,11 @@ public class Parser {
             || (peek(1, TokenType.STAR) && peekPropertyNameOrComputedProp(2)));
   }
 
-  private ParseTree parseClassMemberDeclaration() {
-    return parseClassMemberDeclaration(getClassElementDefaults());
+  private ParseTree parseMethodDeclaration() {
+    return parseMethodDeclaration(new PartialClassElement(getTreeStartLocation()));
   }
 
-  private ParseTree parseClassMemberDeclaration(PartialClassElement partial) {
+  private ParseTree parseMethodDeclaration(PartialClassElement partial) {
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
 
     ParseTree nameExpr;
@@ -708,6 +708,11 @@ public class Parser {
     } else {
       return new ComputedPropertyMethodTree(getTreeLocation(partial.start), nameExpr, function);
     }
+  }
+
+  private ParseTree parseClassMemberDeclaration(PartialClassElement partial) {
+    // TODO(b/189993301): Add logic to handle class fields here.
+    return parseMethodDeclaration(partial);
   }
 
   private ParseTree parseAsyncMethod() {
@@ -1963,7 +1968,7 @@ public class Parser {
       } else if (peekAsyncMethod()) {
         return parseAsyncMethod();
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
-        return parseClassMemberDeclaration();
+        return parseMethodDeclaration();
       } else {
         return parsePropertyNameAssignment();
       }
@@ -1994,7 +1999,7 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       // parseMethodDeclaration will consume the '*'.
-      return parseClassMemberDeclaration();
+      return parseMethodDeclaration();
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
