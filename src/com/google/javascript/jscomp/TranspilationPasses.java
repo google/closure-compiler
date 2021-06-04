@@ -451,26 +451,6 @@ public class TranspilationPasses {
     }
   }
 
-  /**
-   * Hot-swap ES6+ transpilations if the input language needs transpilation from certain features,
-   * on any JS file that has features not present in the compiler's output language mode.
-   *
-   * @param compiler An AbstractCompiler
-   * @param scriptRoot The SCRIPT root for the JS file.
-   * @param featureSet Ignored
-   * @param callbacks The callbacks that should be invoked if the file has ES2015 features.
-   */
-  static void hotSwapTranspile(
-      AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
-    FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
-    if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
-      for (Callback callback : callbacks) {
-        scriptRoot.putBooleanProp(Node.TRANSPILED, true);
-        NodeTraversal.traverse(compiler, scriptRoot, callback);
-      }
-    }
-  }
-
   static void maybeMarkFeaturesAsTranspiledAway(
       AbstractCompiler compiler, FeatureSet transpiledFeatures) {
     // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
