@@ -512,13 +512,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    *
    * @param externProperties The set of property names defined in externs.
    */
-  abstract void setExternProperties(Set<String> externProperties);
+  abstract void setExternProperties(ImmutableSet<String> externProperties);
 
   /**
    * Gets the names of the properties defined in externs or null if GatherExternProperties pass was
    * not run yet.
    */
-  abstract Set<String> getExternProperties();
+  public abstract ImmutableSet<String> getExternProperties();
 
   /**
    * Adds a {@link SourceMapInput} for the given {@code sourceFileName}, to be used for error

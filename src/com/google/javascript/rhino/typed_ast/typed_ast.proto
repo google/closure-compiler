@@ -20,6 +20,7 @@ message TypedAst {
   repeated AstNode code_file = 4;
 
   SourceFilePool source_file_pool = 5;
+  ExternsSummary externs_summary = 6;
 }
 
 message StringPoolProto {
@@ -29,6 +30,10 @@ message StringPoolProto {
 
   // The number of codepoints in the longest pool entry.
   int32 max_length = 2;
+}
+
+message ExternsSummary {
+  repeated int32 prop_name_ptr = 1;
 }
 
 message AstNode {

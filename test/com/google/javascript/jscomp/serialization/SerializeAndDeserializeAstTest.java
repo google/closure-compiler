@@ -430,6 +430,25 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(number.getSourceFileName()).isEqualTo("testcode");
   }
 
+  @Test
+  public void includesExternsSummary() throws IOException {
+    enableGatherExternProperties();
+
+    DeserializedAst ast =
+        this.testAndReturnResult(
+            externs(
+                lines(
+                    "class Foo {", //
+                    // Ensure JSDoc properties are included (b/180424427)
+                    "  /** @param {{arg: string}} x */",
+                    "  method(x) { }",
+                    "}")),
+            srcs(""),
+            expected(""));
+
+    assertThat(ast.getExternProperties()).containsAtLeast("method", "arg");
+  }
+
   @Override
   public void testSame(String code) {
     this.test(code, code);

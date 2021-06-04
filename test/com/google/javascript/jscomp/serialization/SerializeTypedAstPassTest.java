@@ -337,6 +337,25 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     assertThat(script.getChild(script.getChildCount() - 1).getSourceFile()).isEqualTo(0);
   }
 
+  @Test
+  public void serializesExternProperties() throws IOException {
+    enableGatherExternProperties();
+
+    TypedAst ast =
+        compileWithExterns(
+            lines(
+                "class Foo {", //
+                // Ensure JSDoc properties are included (b/180424427)
+                "  /** @param {{arg: string}} x */",
+                "  method(x) { }",
+                "}"),
+            "");
+    StringPoolProto stringPool = ast.getStringPool();
+
+    assertThat(ast.getExternsSummary().getPropNamePtrList())
+        .containsAtLeast(
+            findInStringPool(stringPool, "method"), findInStringPool(stringPool, "arg"));
+  }
 
   private AstNode compileToAst(String source) {
     return compile(source).getCodeFileList().get(0);

@@ -93,6 +93,15 @@ final class TypedAstSerializer {
                     .map(SourceFile::getProto)
                     .collect(toImmutableList()))
             .build();
+
+    if (this.compiler.getExternProperties() != null) {
+      ExternsSummary.Builder externsSummary = ExternsSummary.newBuilder();
+      for (String prop : this.compiler.getExternProperties()) {
+        externsSummary.addPropNamePtr(this.stringPool.put(prop));
+      }
+      builder.setExternsSummary(externsSummary);
+    }
+
     return builder
         .setTypePool(typePool)
         .setStringPool(this.stringPool.build().toProto())

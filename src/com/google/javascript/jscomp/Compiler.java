@@ -275,7 +275,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private volatile double progress = 0.0;
   private String lastPassName;
 
-  private Set<String> externProperties = null;
+  private ImmutableSet<String> externProperties = null;
   private AccessorSummary accessorSummary = null;
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
@@ -3263,12 +3263,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void setExternProperties(Set<String> externProperties) {
+  void setExternProperties(ImmutableSet<String> externProperties) {
     this.externProperties = externProperties;
   }
 
   @Override
-  Set<String> getExternProperties() {
+  public ImmutableSet<String> getExternProperties() {
     return externProperties;
   }
 
@@ -3414,7 +3414,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean typeCheckingHasRun;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
-    private final Set<String> externProperties;
     private final JSChunkGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
@@ -3434,7 +3433,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.lifeCycleStage = compiler.getLifeCycleStage();
-      this.externProperties = compiler.externProperties;
       this.moduleGraph = compiler.moduleGraph;
       this.uniqueNameId = compiler.uniqueNameId;
       this.uniqueIdSupplier = compiler.uniqueIdSupplier;
@@ -3515,7 +3513,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.clear();
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     setLifeCycleStage(compilerState.lifeCycleStage);
-    externProperties = compilerState.externProperties;
     moduleGraph = compilerState.moduleGraph;
     uniqueNameId = compilerState.uniqueNameId;
     uniqueIdSupplier = compilerState.uniqueIdSupplier;
@@ -3534,6 +3531,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Restore TypedAST and related fields
     TypedAstDeserializer.DeserializedAst deserializedAst =
         TypedAstDeserializer.deserialize(compilerState.typedAst);
+    externProperties = deserializedAst.getExternProperties();
     externAndJsRoot = deserializedAst.getRoot();
     externsRoot = externAndJsRoot.getFirstChild();
     jsRoot = externAndJsRoot.getLastChild();

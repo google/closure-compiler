@@ -24,7 +24,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * Gathers property names defined in externs.
@@ -34,14 +33,16 @@ import java.util.Set;
  * want to collect the new names as well.
  */
 final class GatherExternProperties extends AbstractPostOrderCallback implements CompilerPass {
-  private final Set<String> externProperties;
   private final AbstractCompiler compiler;
+
+  private final LinkedHashSet<String> externProperties = new LinkedHashSet<>();
 
   GatherExternProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.externProperties = compiler.getExternProperties() == null
-        ? new LinkedHashSet<String>()
-        : new LinkedHashSet<String>(compiler.getExternProperties());
+
+    if (compiler.getExternProperties() != null) {
+      this.externProperties.addAll(compiler.getExternProperties());
+    }
   }
 
   @Override
