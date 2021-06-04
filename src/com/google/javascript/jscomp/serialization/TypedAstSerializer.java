@@ -510,6 +510,13 @@ final class TypedAstSerializer {
       case DYNAMIC_IMPORT:
         return NodeKind.DYNAMIC_IMPORT;
 
+      case ASSIGN_OR:
+        return NodeKind.ASSIGN_OR;
+      case ASSIGN_AND:
+        return NodeKind.ASSIGN_AND;
+      case ASSIGN_COALESCE:
+        return NodeKind.ASSIGN_COALESCE;
+
       case CAST:
         return NodeKind.CAST;
 

@@ -119,6 +119,10 @@ public enum Token {
   ASSIGN_MOD, // %=
   ASSIGN_EXPONENT, // **=
 
+  ASSIGN_OR, //logical or assignment (||=)
+  ASSIGN_AND, //logical and assignment (&&=)
+  ASSIGN_COALESCE, //logical nullish coalesce assignment (??=)
+
   HOOK, // conditional (?:)
   OR, // logical or (||)
   AND, // logical and (&&)
@@ -352,6 +356,9 @@ public enum Token {
       case ASSIGN_RSH:
       case ASSIGN_SUB:
       case ASSIGN_URSH:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case BITAND:
       case BITOR:
       case BITXOR:

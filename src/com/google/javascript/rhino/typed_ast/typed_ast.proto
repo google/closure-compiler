@@ -159,7 +159,10 @@ enum NodeKind {
   OPTCHAIN_ELEMENT_ACCESS = 278;
   COALESCE = 279;
   DYNAMIC_IMPORT = 280;
-  // Next expression: 281
+  ASSIGN_OR = 281;
+  ASSIGN_AND = 282;
+  ASSIGN_COALESCE = 283;
+  // Next expression: 284
 
   // Statements
   BREAK_STATEMENT = 400;

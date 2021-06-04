@@ -129,6 +129,11 @@ public enum TokenType {
   SLASH_EQUAL("/="),
   POUND("#"),
 
+  // Logical Assignment Punctuators
+  AND_EQUAL("&&="),
+  OR_EQUAL("||="),
+  QUESTION_QUESTION_EQUAL("??="),
+
   // 7.8 Literals
   NULL,
   TRUE,

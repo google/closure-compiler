@@ -202,6 +202,17 @@ public final class ScriptNodeDeserializer {
         case DYNAMIC_IMPORT:
           this.addScriptFeature(Feature.DYNAMIC_IMPORT);
           return;
+
+        case ASSIGN_OR:
+          // TODO (user): add script feature for assign_or
+          break;
+        case ASSIGN_AND:
+          // TODO (user): add script feature for assign_and
+          break;
+        case ASSIGN_COALESCE:
+          // TODO (user): add script feature for assign_coalesce
+          break;
+
         case FOR:
           if (node.isForOf()) {
             this.addScriptFeature(Feature.FOR_OF);
@@ -446,6 +457,13 @@ public final class ScriptNodeDeserializer {
         return new Node(Token.COALESCE);
       case DYNAMIC_IMPORT:
         return new Node(Token.DYNAMIC_IMPORT);
+
+      case ASSIGN_OR:
+        return new Node(Token.ASSIGN_OR);
+      case ASSIGN_AND:
+        return new Node(Token.ASSIGN_AND);
+      case ASSIGN_COALESCE:
+        return new Node(Token.ASSIGN_COALESCE);
 
       case CAST:
         return new Node(Token.CAST);
