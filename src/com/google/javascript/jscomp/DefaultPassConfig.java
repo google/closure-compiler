@@ -499,14 +499,26 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(typesToColors);
 
-    // i18n
-    // If you want to customize the compiler to use a different i18n pass,
-    // you can create a PassConfig that calls replacePassFactory
-    // to replace this.
+    boolean mustRunReplaceProtectedMessagesPass = false;
     if (options.replaceMessagesWithChromeI18n) {
+      checkState(
+          !options.shouldDoLateLocalization(),
+          "late localization is not available for chrome i18n");
       passes.add(replaceMessagesForChrome);
     } else if (options.messageBundle != null) {
-      passes.add(replaceMessages);
+      if (options.shouldDoLateLocalization()) {
+        // With late localization we protect the messages from mangling by optimizations now,
+        // then actually replace them after optimizations.
+        // The purpose of doing this is to separate localization from optimization so we can
+        // optimize just once for all locales.
+        passes.add(getProtectMessagesPass());
+        mustRunReplaceProtectedMessagesPass = true;
+      } else {
+        // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
+        // smaller if you replace messages before optimizing, but if we can change that, it would
+        // be good to drop this early replacement entirely.
+        passes.add(getFullReplaceMessagesPass());
+      }
     }
 
     // Defines in code always need to be processed.
@@ -819,6 +831,13 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getOutputFeatureSet().contains(ES2015)) {
       passes.add(optimizeToEs6);
     }
+
+    if (mustRunReplaceProtectedMessagesPass) {
+      // TODO(b/188585306): Move this into a third stage of compilation that can be run
+      // independently on the results of optimizations.
+      passes.add(getReplaceProtectedMessagesPass());
+    }
+
     // must run after ast validity check as modules may not be allowed in the output feature set
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
@@ -1250,23 +1269,61 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /**
-   * The default i18n pass. A lot of the options are not configurable, because ReplaceMessages has a
-   * lot of legacy logic.
+   * Return the form of `replaceMessages` that does the replacement all at once, and which must run
+   * before optimizations.
    */
-  private final PassFactory replaceMessages =
-      PassFactory.builder()
-          .setName(PassNames.REPLACE_MESSAGES)
-          .setInternalFactory(
-              (compiler) ->
-                  new ReplaceMessages(
-                          compiler,
-                          options.messageBundle,
-                          /* allow messages with goog.getMsg */
-                          JsMessage.Style.CLOSURE,
-                          options.getStrictMessageReplacement())
-                      .getFullReplacementPass())
-          .setFeatureSetForOptimizations()
-          .build();
+  private PassFactory getFullReplaceMessagesPass() {
+    return PassFactory.builder()
+        .setName(PassNames.REPLACE_MESSAGES)
+        .setInternalFactory(
+            (compiler) ->
+                new ReplaceMessages(
+                        compiler,
+                        options.messageBundle,
+                        /* allow messages with goog.getMsg */
+                        JsMessage.Style.CLOSURE,
+                        options.getStrictMessageReplacement())
+                    .getFullReplacementPass())
+        .setFeatureSetForOptimizations()
+        .build();
+  }
+
+  /**
+   * Return the pass that protects messages from mangling, so they can be found and replaced after
+   * optimizations.
+   */
+  private PassFactory getProtectMessagesPass() {
+    return PassFactory.builder()
+        .setName("protectMessages")
+        .setInternalFactory(
+            (compiler) ->
+                new ReplaceMessages(
+                        compiler,
+                        options.messageBundle,
+                        /* allow messages with goog.getMsg */
+                        JsMessage.Style.CLOSURE,
+                        options.getStrictMessageReplacement())
+                    .getMsgProtectionPass())
+        .setFeatureSetForOptimizations()
+        .build();
+  }
+
+  /** Return the pass that identifies protected messages and completes their replacement. */
+  private PassFactory getReplaceProtectedMessagesPass() {
+    return PassFactory.builder()
+        .setName("replaceProtectedMessages")
+        .setInternalFactory(
+            (compiler) ->
+                new ReplaceMessages(
+                        compiler,
+                        options.messageBundle,
+                        /* allow messages with goog.getMsg */
+                        JsMessage.Style.CLOSURE,
+                        options.getStrictMessageReplacement())
+                    .getReplacementCompletionPass())
+        .setFeatureSetForOptimizations()
+        .build();
+  }
 
   private final PassFactory replaceMessagesForChrome =
       PassFactory.builder()

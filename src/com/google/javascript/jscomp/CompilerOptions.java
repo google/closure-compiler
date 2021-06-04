@@ -691,6 +691,16 @@ public class CompilerOptions implements Serializable {
   /** Compiling locale */
   public String locale;
 
+  /**
+   * If true, then perform localization passes as late as possible.
+   *
+   * <p>At the moment this only affects when `ReplaceMessages` does the work of inserting the
+   * localized form of declared messages from the message bundle.
+   *
+   * <p>TODO(johnlenz): Use this option to control late substitution of other locale-specific code.
+   */
+  private boolean doLateLocalization;
+
   /** Sets the special "COMPILED" value to true */
   public boolean markAsCompiled;
 
@@ -1303,6 +1313,7 @@ public class CompilerOptions implements Serializable {
     syntheticBlockStartMarker = null;
     syntheticBlockEndMarker = null;
     locale = null;
+    doLateLocalization = false;
     markAsCompiled = false;
     closurePass = false;
     preserveClosurePrimitives = false;
@@ -2211,6 +2222,14 @@ public class CompilerOptions implements Serializable {
 
   public void setLocale(String locale) {
     this.locale = locale;
+  }
+
+  public void setDoLateLocalization(boolean doLateLocalization) {
+    this.doLateLocalization = doLateLocalization;
+  }
+
+  public boolean shouldDoLateLocalization() {
+    return this.doLateLocalization;
   }
 
   public void setMarkAsCompiled(boolean markAsCompiled) {

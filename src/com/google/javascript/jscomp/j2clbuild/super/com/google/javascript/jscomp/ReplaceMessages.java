@@ -27,4 +27,12 @@ final class ReplaceMessages {
   public CompilerPass getFullReplacementPass() {
     return (externs, root) -> {};
   }
+
+  public CompilerPass getMsgProtectionPass() {
+    return (externs, root) -> {};
+  }
+
+  public CompilerPass getReplacementCompletionPass() {
+    return (externs, root) -> {};
+  }
 }
