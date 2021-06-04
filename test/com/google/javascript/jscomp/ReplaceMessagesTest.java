@@ -98,7 +98,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   /**
-   * The primary test method to use in this file.
+   * Test for warnings that apply to both the full replace and the initial protection of messages.
    *
    * @param originalJs The original, input JS code
    * @param protectedJs What the code should look like after message definitions are is protected
@@ -117,6 +117,64 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     testWarning(originalJs, diagnosticType);
     testMode = TestMode.REPLACE_PROTECTED_MSGS;
     test(protectedJs, expectedJs);
+  }
+
+  /**
+   * Test for errors that are detected before attempting to look up the messages in the bundle.
+   *
+   * @param originalJs The original, input JS code
+   * @param diagnosticType expected error
+   */
+  private void multiPhaseTestPreLookupError(String originalJs, DiagnosticType diagnosticType) {
+    // The PROTECT_MSGS mode needs to add externs for the protection functions.
+    allowExternsChanges();
+    testMode = TestMode.FULL_REPLACE;
+    testError(originalJs, diagnosticType);
+    testMode = TestMode.PROTECT_MSGS;
+    testError(originalJs, diagnosticType);
+  }
+
+  /**
+   * Test for errors that are detected after attempting to look up the messages in the bundle.
+   *
+   * @param originalJs The original, input JS code
+   * @param protectedJs What the code should look like after message definitions are is protected
+   *     from mangling during optimizations, but before they are replaced with the localized message
+   *     data.
+   * @param diagnosticType expected error
+   */
+  private void multiPhaseTestPostLookupError(
+      String originalJs, String protectedJs, DiagnosticType diagnosticType) {
+    // The PROTECT_MSGS mode needs to add externs for the protection functions.
+    allowExternsChanges();
+    testMode = TestMode.FULL_REPLACE;
+    testError(originalJs, diagnosticType);
+    testMode = TestMode.PROTECT_MSGS;
+    test(originalJs, protectedJs);
+    testMode = TestMode.REPLACE_PROTECTED_MSGS;
+    testError(protectedJs, diagnosticType);
+  }
+
+  /**
+   * Test for errors that are detected before attempting to look up the messages in the bundle.
+   *
+   * @param originalJs The original, input JS code
+   * @param protectedJs What the code should look like after message definitions are is protected
+   *     from mangling during optimizations, but before they are replaced with the localized message
+   *     data.
+   * @param diagnosticType expected error
+   * @param description text expected to be in the error message
+   */
+  private void multiPhaseTestPostLookupError(
+      String originalJs, String protectedJs, DiagnosticType diagnosticType, String description) {
+    // The PROTECT_MSGS mode needs to add externs for the protection functions.
+    allowExternsChanges();
+    testMode = TestMode.FULL_REPLACE;
+    testError(originalJs, diagnosticType, description);
+    testMode = TestMode.PROTECT_MSGS;
+    test(originalJs, protectedJs);
+    testMode = TestMode.REPLACE_PROTECTED_MSGS;
+    testError(protectedJs, diagnosticType, description);
   }
 
   @Override
@@ -310,7 +368,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendStringPart("!")
             .build((meaning, messageParts) -> "1984"));
 
-    testError(
+    multiPhaseTestPostLookupError(
         lines(
             "/**",
             " * @desc B desc",
@@ -318,6 +376,22 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             " * @alternateMessageId 1984",
             " */",
             "var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});"),
+        lines(
+            "/**", //
+            " * @desc B desc",
+            " * @meaning B meaning",
+            " * @alternateMessageId 1984",
+            " */",
+            "var MSG_A =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":    \"MSG_A\",",
+            "          \"alt_id\": \"1984\",",
+            "          \"meaning\":\"B meaning\",",
+            "          \"msg_text\":\"Hello, {$name}!\"",
+            "        },",
+            "        {name:name});",
+            ""),
         ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS);
   }
 
@@ -819,10 +893,17 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testStrictModeAndMessageReplacementAbsentInBundle() {
-
     strictReplacement = true;
-    testError(
-        "var MSG_E = goog.getMsg('Hello');", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+    multiPhaseTestPostLookupError(
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = goog.getMsg('Hello');",
+            ""),
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"Hello\"});",
+            ""),
+        ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
@@ -835,8 +916,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     strictReplacement = true;
-    testError(
-        "var MSG_E = goog.getMsg('Hello');", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+    multiPhaseTestPostLookupError(
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = goog.getMsg('Hello');"),
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"Hello\"});"),
+        ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
@@ -875,7 +962,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testPlaceholderNameInLowerUnderscoreCase() {
-    testError(
+    multiPhaseTestPreLookupError(
         "var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});", MESSAGE_TREE_MALFORMED);
   }
 
@@ -883,15 +970,35 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testBadPlaceholderReferenceInReplacement() {
     registerMessage(new JsMessage.Builder("MSG_K").appendPlaceholderReference("amount").build());
 
-    testError("var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});", MESSAGE_TREE_MALFORMED);
+    multiPhaseTestPostLookupError(
+        lines(
+            "/** @desc d */", //
+            "var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});",
+            ""),
+        lines(
+            "/** @desc d */", //
+            "var MSG_K =",
+            "    __jscomp_define_msg__(",
+            "        { \"key\":\"MSG_K\", \"msg_text\":\"Hi {$jane}\" },",
+            "        {jane: x});",
+            ""),
+        MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testEmptyObjLit() {
     registerMessage(new JsMessage.Builder("MSG_E").appendPlaceholderReference("amount").build());
 
-    testError(
-        "/** @desc d */\nvar MSG_E = goog.getMsg('');",
+    multiPhaseTestPostLookupError(
+        lines(
+            "/** @desc d */", //
+            "var MSG_E = goog.getMsg('no placeholders');",
+            ""),
+        lines(
+            "/** @desc d */", //
+            "var MSG_E =",
+            "    __jscomp_define_msg__({\"key\":\"MSG_E\", \"msg_text\":\"no placeholders\"});",
+            ""),
         MESSAGE_TREE_MALFORMED,
         "Message parse tree malformed. "
             + "Empty placeholder value map for a translated message "
@@ -1050,12 +1157,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .appendStringPart("!")
             .build());
 
-    testError("var MSG_A = goog.getMsg('{$a}');", MESSAGE_TREE_MALFORMED);
+    multiPhaseTestPreLookupError("var MSG_A = goog.getMsg('{$a}');", MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testBadFallbackSyntax1() {
-    testError(
+    multiPhaseTestPreLookupError(
         lines(
             "/** @desc d */\n",
             "var MSG_A = goog.getMsg('asdf');",
@@ -1065,13 +1172,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax2() {
-    testError(
+    multiPhaseTestPreLookupError(
         "var x = goog.getMsgWithFallback('abc', 'bcd');", JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
   public void testBadFallbackSyntax3() {
-    testError(
+    multiPhaseTestPreLookupError(
         lines(
             "/** @desc d */\n",
             "var MSG_A = goog.getMsg('asdf');"
@@ -1081,7 +1188,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax4() {
-    testError(
+    multiPhaseTestPreLookupError(
         lines(
             "/** @desc d */\n",
             "var MSG_A = goog.getMsg('asdf');"
@@ -1091,7 +1198,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax5() {
-    testError(
+    multiPhaseTestPreLookupError(
         lines(
             "/** @desc d */\n",
             "var MSG_A = goog.getMsg('asdf');"
@@ -1101,7 +1208,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax6() {
-    testError(
+    multiPhaseTestPreLookupError(
         lines(
             "/** @desc d */\n",
             "var MSG_A = goog.getMsg('asdf');"
@@ -1313,7 +1420,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     // Only allow template literals that are constant strings
     registerMessage(new JsMessage.Builder("MSG_C").appendStringPart("Hi\nthere").build());
 
-    testError(
+    multiPhaseTestPreLookupError(
         "/** @desc d */\n var MSG_C = goog.getMsg(`asdf ${42}`);",
         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }

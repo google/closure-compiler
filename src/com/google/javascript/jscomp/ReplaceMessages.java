@@ -156,8 +156,9 @@ public final class ReplaceMessages {
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
+      final String protectionFunctionName = DEFINE_MSG_CALLEE;
       final Node newCallee =
-          astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE).srcref(googGetMsg);
+          createProtectionFunctionCallee(protectionFunctionName).srcref(googGetMsg);
       final Node msgPropertiesNode =
           createMsgPropertiesNode(message, msgOptions).srcrefTree(originalMessageString);
       Node newCallNode = astFactory.createCall(newCallee, msgPropertiesNode).srcref(callNode);
@@ -171,11 +172,19 @@ public final class ReplaceMessages {
       compiler.reportChangeToEnclosingScope(newCallNode);
     }
 
+    private Node createProtectionFunctionCallee(String protectionFunctionName) {
+      final Node callee = astFactory.createNameWithUnknownType(protectionFunctionName);
+      // The name is declared constant in the externs definition we created, so all references
+      // to it must also be marked as constant for consistency's sake.
+      callee.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      return callee;
+    }
+
     private void protectStringLiteralOrConcatMsg(Node valueNode, JsMessage message) {
       final Node msgProps = createMsgPropertiesNode(message, new MsgOptions());
       final Node newCallNode =
           astFactory
-              .createCall(astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE), msgProps)
+              .createCall(createProtectionFunctionCallee(DEFINE_MSG_CALLEE), msgProps)
               .srcrefTreeIfMissing(valueNode);
       newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
       valueNode.replaceWith(newCallNode);
@@ -200,7 +209,7 @@ public final class ReplaceMessages {
       //     return __jscomp_define_msg__({<msg properties>}, {<substitutions>});
       // };
       // ```
-      final Node newCallee = astFactory.createNameWithUnknownType(DEFINE_MSG_CALLEE);
+      final Node newCallee = createProtectionFunctionCallee(DEFINE_MSG_CALLEE);
       final Node msgPropertiesNode = createMsgPropertiesNode(message, new MsgOptions());
       // Convert the parameter list into a simple placeholders object
       // ```javascript
@@ -231,7 +240,7 @@ public final class ReplaceMessages {
     void processMessageFallback(Node callNode, JsMessage message1, JsMessage message2) {
       final Node originalCallee = checkNotNull(callNode.getFirstChild(), callNode);
       final Node fallbackCallee =
-          astFactory.createNameWithUnknownType(FALLBACK_MSG_CALLEE).srcref(originalCallee);
+          createProtectionFunctionCallee(FALLBACK_MSG_CALLEE).srcref(originalCallee);
 
       final Node originalFirstArg = checkNotNull(originalCallee.getNext(), callNode);
       final Node firstMsgKey = astFactory.createString(message1.getKey()).srcref(originalFirstArg);
@@ -343,6 +352,7 @@ public final class ReplaceMessages {
     void visitMsgDefinition(ProtectedJsMessage protectedJsMessage) {
       try {
         final JsMessage originalMsg = protectedJsMessage.jsMessage;
+        final Node nodeToReplace = protectedJsMessage.definitionNode;
         final JsMessage translatedMsg =
             lookupMessage(protectedJsMessage.definitionNode, bundle, originalMsg);
         final JsMessage msgToUse;
@@ -351,6 +361,10 @@ public final class ReplaceMessages {
           // Remember that this one got translated in case it is used in a fallback.
           translatedMsgKeys.add(originalMsg.getKey());
         } else {
+          if (strictReplacement) {
+            compiler.report(
+                JSError.make(nodeToReplace, BUNDLE_DOES_NOT_HAVE_THE_MESSAGE, originalMsg.getId()));
+          }
           msgToUse = originalMsg;
         }
         final MsgOptions msgOptions = new MsgOptions();
@@ -358,10 +372,22 @@ public final class ReplaceMessages {
         msgOptions.unescapeHtmlEntities = protectedJsMessage.unescapeHtmlEntities;
         final Map<String, Node> placeholderMap =
             createPlaceholderNodeMap(protectedJsMessage.substitutionsNode);
+        final ImmutableSet<String> placeholderNames = msgToUse.placeholders();
+        if (placeholderMap.isEmpty() && !placeholderNames.isEmpty()) {
+          throw new MalformedException(
+              "Empty placeholder value map for a translated message with placeholders.",
+              nodeToReplace);
+        } else {
+          for (String placeholderName : placeholderNames) {
+            if (!placeholderMap.containsKey(placeholderName)) {
+              throw new MalformedException(
+                  "Unrecognized message placeholder referenced: " + placeholderName, nodeToReplace);
+            }
+          }
+        }
         final Node finalMsgConstructionExpression =
             constructStringExprNode(
                 mergeStringParts(msgToUse.getParts()), placeholderMap, msgOptions);
-        final Node nodeToReplace = protectedJsMessage.definitionNode;
         finalMsgConstructionExpression.srcrefTreeIfMissing(nodeToReplace);
         nodeToReplace.replaceWith(finalMsgConstructionExpression);
         compiler.reportChangeToEnclosingScope(finalMsgConstructionExpression);
