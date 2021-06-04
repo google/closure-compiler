@@ -102,7 +102,6 @@ final class NonEsModuleProcessor implements ModuleProcessor {
           .boundNames(ImmutableMap.of())
           .localNameToLocalExport(ImmutableMap.of())
           .closureNamespace(namespace)
-          .unresolvedModule(this)
           .build();
     }
 

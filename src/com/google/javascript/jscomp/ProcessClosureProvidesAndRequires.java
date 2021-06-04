@@ -42,9 +42,6 @@ import javax.annotation.Nullable;
  * all remaining require/requireType calls must refer to a goog.provide, although the original JS
  * code may contain goog.requires of a goog.module.
  *
- * <p>This is designed to work during a hotswap pass, under the assumption that no rewriting has
- * been done of goog.provides and definitions other than this pass.
- *
  * <p>This also annotates all provided namespace definitions `a.b = {};` with {@link
  * Node#IS_NAMESPACE} so that later passes know they refer to a goog.provide'd namespace.
  *

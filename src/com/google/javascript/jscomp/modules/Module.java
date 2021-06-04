@@ -98,13 +98,6 @@ public abstract class Module {
   @Nullable
   public abstract String closureNamespace();
 
-  /**
-   * The unresolved module this module was made from. Needed for hotswap functionality - the Module
-   * may not have all the information needed to be made into an UnresolvedModule again, so instead
-   * store it.
-   */
-  abstract UnresolvedModule unresolvedModule();
-
   /** Creates a new builder. */
   public static Builder builder() {
     return new AutoValue_Module.Builder();
@@ -127,8 +120,6 @@ public abstract class Module {
     public abstract Builder localNameToLocalExport(ImmutableMap<String, Export> value);
 
     public abstract Builder closureNamespace(@Nullable String value);
-
-    public abstract Builder unresolvedModule(UnresolvedModule value);
 
     public abstract Module build();
   }

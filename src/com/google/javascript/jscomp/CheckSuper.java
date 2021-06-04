@@ -19,9 +19,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
-import java.util.Deque;
 import javax.annotation.Nullable;
 
 /**
@@ -87,26 +87,35 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public void process(Node externs, Node root) {
+
     NodeTraversal.traverse(compiler, root, this);
+    checkState(this.contextStack.isEmpty(), ImmutableList.of(this.contextStack));
   }
 
-  private final Deque<Context> contextStack = new ArrayDeque<>();
+  private final ArrayDeque<Context> contextStack = new ArrayDeque<>();
 
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    if (contextStack.isEmpty()) {
-      // should only happen on very first call to shouldTraverse on root node or hotswapped
-      // script.
-      checkState(n.isRoot() || n.isScript(), n);
-      contextStack.push(new SuperNotAllowedContext(n));
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    switch (n.getToken()) {
+      case ROOT:
+        checkState(this.contextStack.isEmpty());
+        this.contextStack.push(new SuperNotAllowedContext(n));
+        break;
+
+      case FUNCTION:
+        {
+          Context currentContext = contextStack.peek();
+          Context newContext = getContextForFunctionNode(currentContext, n);
+          if (newContext != currentContext) {
+            this.contextStack.push(newContext);
+          }
+        }
+        break;
+
+      default:
+        break;
     }
-    if (n.isFunction()) {
-      Context currentContext = contextStack.peek();
-      Context newContext = getContextForFunctionNode(currentContext, n);
-      if (newContext != currentContext) {
-        contextStack.push(newContext);
-      }
-    }
+
     return true;
   }
 
@@ -129,23 +138,38 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     Context currentContext = checkNotNull(contextStack.peek());
-    if (n.isSuper()) {
-      if (isSuperConstructorCall(n)) {
-        currentContext.visitSuperConstructorCall(t, n);
-      } else if (isSuperPropertyAccess(n)) {
-        currentContext.visitSuperPropertyAccess(t, n);
-      } else {
-        // super used some way other than `super()`, `super.prop`, or `super[expr]`.
-        t.report(n, INVALID_SUPER_USAGE);
-      }
-    } else if (n.isThis()) {
-      currentContext.visitThis(t, n);
-    } else if (n.isReturn()) {
-      currentContext.visitReturn(t, n);
+
+    switch (n.getToken()) {
+      case SUPER:
+        if (isSuperConstructorCall(n)) {
+          currentContext.visitSuperConstructorCall(t, n);
+        } else if (isSuperPropertyAccess(n)) {
+          currentContext.visitSuperPropertyAccess(t, n);
+        } else {
+          // super used some way other than `super()`, `super.prop`, or `super[expr]`.
+          t.report(n, INVALID_SUPER_USAGE);
+        }
+        break;
+
+      case THIS:
+        currentContext.visitThis(t, n);
+        break;
+
+      case RETURN:
+        currentContext.visitReturn(t, n);
+        break;
+
+      case ROOT:
+        checkState(this.contextStack.size() == 1);
+        break;
+
+      default:
+        break;
     }
+
     if (n == currentContext.getContextNode()) {
       currentContext.visitContextNode(t);
-      contextStack.pop();
+      this.contextStack.pop();
     }
   }
 

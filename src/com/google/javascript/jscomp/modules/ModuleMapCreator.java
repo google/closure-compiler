@@ -71,7 +71,6 @@ public class ModuleMapCreator implements CompilerPass {
               .localNameToLocalExport(ImmutableMap.of())
               .path(path)
               .metadata(metadata)
-              .unresolvedModule(this)
               .build();
         }
 

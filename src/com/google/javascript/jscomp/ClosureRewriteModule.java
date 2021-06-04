@@ -1665,10 +1665,6 @@ final class ClosureRewriteModule implements CompilerPass {
         syntheticExterns.putIfAbsent(lhs.getString(), lhs);
       }
     }
-
-    // Clear the queue so that repeated reportUnrecognizedRequires() invocations in hotswap compiles
-    // only report new problems.
-    unrecognizedRequires.clear();
   }
 
   private void safeSetString(Node n, String newString) {

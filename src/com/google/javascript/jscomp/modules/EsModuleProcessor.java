@@ -55,15 +55,9 @@ import javax.annotation.Nullable;
  * module related checks.
  *
  * <p>This information is stored outside of any {@link Scope} because it should never be
- * recalculated. Recalculation is prevented for the following reasons:
+ * recalculated because it is expensive.
  *
- * <ul>
- *   <li>Calculation is expensive.
- *   <li>When ES modules are hotswapped, we want the original information, not the "current"
- *       information, because it would show no other ES modules.
- * </ul>
- *
- * <a
+ * <p><a
  * href="https://www.ecma-international.org/ecma-262/9.0/index.html#sec-source-text-module-records">
  * Suggested reading</a>
  */
@@ -346,7 +340,6 @@ public final class EsModuleProcessor implements Callback, ModuleProcessor {
                 .metadata(metadata)
                 .path(path)
                 .localNameToLocalExport(ImmutableMap.copyOf(localNameToLocalExport))
-                .unresolvedModule(this)
                 .build();
       }
 
