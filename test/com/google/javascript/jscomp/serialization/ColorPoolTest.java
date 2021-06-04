@@ -434,6 +434,34 @@ public class ColorPoolTest {
   }
 
   @Test
+  public void throwsException_onIdenticalPools() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid(ByteString.copyFromUtf8("Foo"))))
+            .build();
+    ColorPool.Builder builder = ColorPool.builder().addShardAnd(typePool, StringPool.empty());
+
+    assertThrows(Exception.class, () -> builder.addShard(typePool, StringPool.empty()));
+  }
+
+  @Test
+  public void throwsException_onIdenticalPools_exceptDefaultInstance() {
+    // Given
+    ColorPool.Builder builder = ColorPool.builder();
+    ColorPool.ShardView shard = builder.addShard(TypePool.getDefaultInstance(), StringPool.empty());
+
+    // When
+    ColorPool.ShardView otherShard =
+        builder.addShard(TypePool.getDefaultInstance(), StringPool.empty());
+
+    // Then
+    assertThat(shard).isSameInstanceAs(otherShard);
+  }
+
+  @Test
   public void throwsException_onDuplicateIdsInSinglePool() {
     // Given
     TypePool typePool =
@@ -454,9 +482,6 @@ public class ColorPoolTest {
         () -> ColorPool.fromOnlyShard(typePool, StringPool.empty()));
   }
 
-  private static Color.Builder createObjectColorBuilder() {
-    return Color.singleBuilder().setId(fromAscii(""));
-  }
 
   @Test
   public void uuid_mustBeSet() {
@@ -805,6 +830,10 @@ public class ColorPoolTest {
   }
 
   private static final ColorId TEST_ID = ColorId.fromUnsigned(100);
+
+  private static Color.Builder createObjectColorBuilder() {
+    return Color.singleBuilder().setId(fromAscii(""));
+  }
 
   private static TypePool singleObjectPool(ObjectTypeProto.Builder builder) {
     return TypePool.newBuilder().addType(TypeProto.newBuilder().setObject(builder.build())).build();
