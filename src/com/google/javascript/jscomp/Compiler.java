@@ -94,9 +94,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2884,11 +2884,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         && resultOriginalPath.equals(resolvedSourceMap.sourceMapPath)) {
       relativePath = resolvedSourceMap.relativePath;
     } else {
-      relativePath =
-          Paths.get(sourceMapOriginalPath)
-              .resolveSibling(resultOriginalPath)
-              .normalize()
-              .toString();
+      relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
       SourceFile source = getSourceFileByName(relativePath);
       if (source == null && !isNullOrEmpty(resultOriginalPath)) {
         source =
@@ -3596,6 +3592,47 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void setModuleMap(ModuleMap moduleMap) {
     this.moduleMap = moduleMap;
+  }
+
+  /**
+   * Simplistic implementation of the java.nio.file.Path resolveSibling method that always uses "/"
+   * regardless of platform. This is required for consistency of path handling when using input
+   * source maps, which are expected to always use "/".
+   *
+   * <p>If `toPath` is already absolute, just return it.
+   *
+   * <p>Otherwise, strip the filename off of `fromPath` and logically replaces it with `toPath`.
+   * Then normalize the path by resolving and removing any "." or ".." elements.
+   *
+   * @param fromPath - must be a file (not directory)
+   * @param toPath - must be a file (not directory)
+   * @return `toPath` adjusted so that it has the same parent directory as `fromPath`
+   */
+  private static String resolveSibling(String fromPath, String toPath) {
+    // If the destination is an absolute path, nothing to do.
+    if (toPath.startsWith("/")) {
+      return toPath;
+    }
+
+    List<String> fromPathParts = new ArrayList<>(Arrays.asList(fromPath.split("/")));
+    List<String> toPathParts = new ArrayList<>(Arrays.asList(toPath.split("/")));
+    if (!fromPathParts.isEmpty()) {
+      fromPathParts.remove(fromPathParts.size() - 1);
+    }
+
+    while (!fromPathParts.isEmpty() && !toPathParts.isEmpty()) {
+      if (toPathParts.get(0).equals(".")) {
+        toPathParts.remove(0);
+      } else if (toPathParts.get(0).equals("..")) {
+        toPathParts.remove(0);
+        fromPathParts.remove(fromPathParts.size() - 1);
+      } else {
+        break;
+      }
+    }
+
+    fromPathParts.addAll(toPathParts);
+    return String.join("/", fromPathParts);
   }
 
   public void resetAndIntitializeSourceMap() {
