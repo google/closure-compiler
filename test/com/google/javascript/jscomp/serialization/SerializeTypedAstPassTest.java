@@ -361,7 +361,11 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
    * Returns the offset of the given string in the given pool, throwing an exception if not present
    */
   private static int findInStringPool(StringPoolProto stringPool, String str) {
-    int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str));
+    if (str.isEmpty()) {
+      return 0;
+    }
+
+    int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str)) + 1;
     checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
     return offset;
   }
