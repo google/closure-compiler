@@ -2051,6 +2051,31 @@ function WeakRef(value) {}
 WeakRef.prototype.deref = function() {};
 
 /**
+ * @constructor
+ * @struct
+ * @param {function(HELDVALUE)} cleanupCallback
+ * @template TARGET, HELDVALUE, TOKEN
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
+ */
+function FinalizationRegistry(cleanupCallback) {}
+
+/**
+ * @param {TARGET} target
+ * @param {HELDVALUE} heldValue
+ * @param {TOKEN=} unregisterToken
+ * @return {void}
+ */
+FinalizationRegistry.prototype.register =
+    function(target, heldValue, unregisterToken) {};
+
+/**
+ * @param {TOKEN} unregisterToken
+ * @return {void}
+ */
+FinalizationRegistry.prototype.unregister = function(unregisterToken) {};
+
+/**
  * @type {!Global}
  */
 var globalThis;
