@@ -60,18 +60,6 @@ public final class ReplaceMessages {
           "JSC_INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS",
           "Alternate message ID={0} placeholders ({1}) differs from {2} placeholders ({3}).");
 
-  /**
-   * `goog.getMsg()` calls will be converted into a call to this method which is defined in
-   * synthetic externs.
-   */
-  public static final String DEFINE_MSG_CALLEE = "__jscomp_define_msg__";
-
-  /**
-   * `goog.getMsgWithFallback(MSG_NEW, MSG_OLD)` will be converted into a call to this method which
-   * is defined in * synthetic externs.
-   */
-  public static final String FALLBACK_MSG_CALLEE = "__jscomp_msg_fallback__";
-
   private final AbstractCompiler compiler;
   private final MessageBundle bundle;
   private final JsMessage.Style style;
@@ -109,8 +97,9 @@ public final class ReplaceMessages {
     @Override
     public void process(Node externs, Node root) {
       // Add externs declarations for the function names we use in our replacements.
-      NodeUtil.createSynthesizedExternsSymbol(compiler, DEFINE_MSG_CALLEE);
-      NodeUtil.createSynthesizedExternsSymbol(compiler, FALLBACK_MSG_CALLEE);
+      NodeUtil.createSynthesizedExternsSymbol(compiler, ReplaceMessagesConstants.DEFINE_MSG_CALLEE);
+      NodeUtil.createSynthesizedExternsSymbol(
+          compiler, ReplaceMessagesConstants.FALLBACK_MSG_CALLEE);
 
       // JsMessageVisitor.process() does the traversal that calls the processX() methods below.
       super.process(externs, root);
@@ -156,7 +145,7 @@ public final class ReplaceMessages {
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
-      final String protectionFunctionName = DEFINE_MSG_CALLEE;
+      final String protectionFunctionName = ReplaceMessagesConstants.DEFINE_MSG_CALLEE;
       final Node newCallee =
           createProtectionFunctionCallee(protectionFunctionName).srcref(googGetMsg);
       final Node msgPropertiesNode =
@@ -184,7 +173,9 @@ public final class ReplaceMessages {
       final Node msgProps = createMsgPropertiesNode(message, new MsgOptions());
       final Node newCallNode =
           astFactory
-              .createCall(createProtectionFunctionCallee(DEFINE_MSG_CALLEE), msgProps)
+              .createCall(
+                  createProtectionFunctionCallee(ReplaceMessagesConstants.DEFINE_MSG_CALLEE),
+                  msgProps)
               .srcrefTreeIfMissing(valueNode);
       newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
       valueNode.replaceWith(newCallNode);
@@ -209,7 +200,8 @@ public final class ReplaceMessages {
       //     return __jscomp_define_msg__({<msg properties>}, {<substitutions>});
       // };
       // ```
-      final Node newCallee = createProtectionFunctionCallee(DEFINE_MSG_CALLEE);
+      final Node newCallee =
+          createProtectionFunctionCallee(ReplaceMessagesConstants.DEFINE_MSG_CALLEE);
       final Node msgPropertiesNode = createMsgPropertiesNode(message, new MsgOptions());
       // Convert the parameter list into a simple placeholders object
       // ```javascript
@@ -240,7 +232,8 @@ public final class ReplaceMessages {
     void processMessageFallback(Node callNode, JsMessage message1, JsMessage message2) {
       final Node originalCallee = checkNotNull(callNode.getFirstChild(), callNode);
       final Node fallbackCallee =
-          createProtectionFunctionCallee(FALLBACK_MSG_CALLEE).srcref(originalCallee);
+          createProtectionFunctionCallee(ReplaceMessagesConstants.FALLBACK_MSG_CALLEE)
+              .srcref(originalCallee);
 
       final Node originalFirstArg = checkNotNull(originalCallee.getNext(), callNode);
       final Node firstMsgKey = astFactory.createString(message1.getKey()).srcref(originalFirstArg);
@@ -440,7 +433,7 @@ public final class ReplaceMessages {
         return null;
       }
       final Node callee = n.getFirstChild();
-      if (!callee.matchesName(FALLBACK_MSG_CALLEE)) {
+      if (!callee.matchesName(ReplaceMessagesConstants.FALLBACK_MSG_CALLEE)) {
         return null;
       }
       checkState(n.hasXChildren(5), "bad message fallback call: %s", n);
@@ -959,7 +952,7 @@ public final class ReplaceMessages {
         return null;
       }
       final Node calleeNode = checkNotNull(node.getFirstChild(), node);
-      if (!calleeNode.matchesName(DEFINE_MSG_CALLEE)) {
+      if (!calleeNode.matchesName(ReplaceMessagesConstants.DEFINE_MSG_CALLEE)) {
         return null;
       }
       final Node propertiesNode = checkNotNull(calleeNode.getNext(), calleeNode);

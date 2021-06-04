@@ -113,6 +113,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
         // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
         // within template literals with template substitutions.
         return false;
+      case CALL:
+        return !ReplaceMessagesConstants.isProtectedMessage(n);
       default:
         return true;
     }

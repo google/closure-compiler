@@ -17,20 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link AliasStrings}.
- *
- */
+/** Tests for {@link AliasStrings}. */
 @RunWith(JUnit4.class)
 public final class AliasStringsTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
-  private static final Set<String> ALL_STRINGS = null;
 
   private boolean hashReduction = false;
 
@@ -62,26 +57,53 @@ public final class AliasStringsTest extends CompilerTestCase {
             "const AB = `${A}aliasable string${B}`"));
   }
 
+  @Test
+  public void testProtectedMessage() {
+    test(
+        lines(
+            "const A = 'aliasable string';",
+            "const B = 'aliasable string';",
+            "var MSG_A =",
+            "    " + ReplaceMessagesConstants.DEFINE_MSG_CALLEE + "(",
+            "        {",
+            "          \"key\":    \"MSG_A\",",
+            "          \"msg_text\":\"aliasable string\",",
+            "        });",
+            ""),
+        lines(
+            "var $$S_aliasable$20string = 'aliasable string';",
+            "const A = $$S_aliasable$20string;",
+            "const B = $$S_aliasable$20string;",
+            "var MSG_A =",
+            "    " + ReplaceMessagesConstants.DEFINE_MSG_CALLEE + "(",
+            "        {",
+            "          \"key\":    \"MSG_A\",",
+            // This string is left unmolested instead of using an alias,
+            // because `ReplaceMessages` needs the literal string here.
+            "          \"msg_text\":\"aliasable string\",",
+            "        });",
+            ""));
+  }
 
   @Test
   public void testLongStableAlias() {
     // Check long strings get a hash code
 
-    test("a='Antidisestablishmentarianism';" +
-         "b='Antidisestablishmentarianism';",
-         "var $$S_Antidisestablishment_e428eaa9=" +
-         "  'Antidisestablishmentarianism';"      +
-         "a=$$S_Antidisestablishment_e428eaa9;"   +
-         "b=$$S_Antidisestablishment_e428eaa9");
+    test(
+        "a='Antidisestablishmentarianism';" + "b='Antidisestablishmentarianism';",
+        "var $$S_Antidisestablishment_e428eaa9="
+            + "  'Antidisestablishmentarianism';"
+            + "a=$$S_Antidisestablishment_e428eaa9;"
+            + "b=$$S_Antidisestablishment_e428eaa9");
 
     // Check that small changes give different hash codes
 
-    test("a='AntidisestablishmentarianIsm';" +
-         "b='AntidisestablishmentarianIsm';",
-         "var $$S_Antidisestablishment_e4287289=" +
-         "  'AntidisestablishmentarianIsm';"      +
-         "a=$$S_Antidisestablishment_e4287289;"   +
-         "b=$$S_Antidisestablishment_e4287289");
+    test(
+        "a='AntidisestablishmentarianIsm';" + "b='AntidisestablishmentarianIsm';",
+        "var $$S_Antidisestablishment_e4287289="
+            + "  'AntidisestablishmentarianIsm';"
+            + "a=$$S_Antidisestablishment_e4287289;"
+            + "b=$$S_Antidisestablishment_e4287289");
 
     // TODO(user): check that hash code collisions are handled.
   }
@@ -93,20 +115,19 @@ public final class AliasStringsTest extends CompilerTestCase {
     // Check that hash code collisions generate different alias
     // variable names
 
-    test("f('Antidisestablishmentarianism');"  +
-         "f('Antidisestablishmentarianism');"  +
-         "f('Antidisestablishmentarianismo');" +
-         "f('Antidisestablishmentarianismo');",
-
-         "var $$S_Antidisestablishment_0="     +
-         "  'Antidisestablishmentarianism';"   +
-         "var $$S_Antidisestablishment_0_1="   +
-         "  'Antidisestablishmentarianismo';"  +
-
-         "f($$S_Antidisestablishment_0);"      +
-         "f($$S_Antidisestablishment_0);"      +
-         "f($$S_Antidisestablishment_0_1);"    +
-         "f($$S_Antidisestablishment_0_1);");
+    test(
+        "f('Antidisestablishmentarianism');"
+            + "f('Antidisestablishmentarianism');"
+            + "f('Antidisestablishmentarianismo');"
+            + "f('Antidisestablishmentarianismo');",
+        "var $$S_Antidisestablishment_0="
+            + "  'Antidisestablishmentarianism';"
+            + "var $$S_Antidisestablishment_0_1="
+            + "  'Antidisestablishmentarianismo';"
+            + "f($$S_Antidisestablishment_0);"
+            + "f($$S_Antidisestablishment_0);"
+            + "f($$S_Antidisestablishment_0_1);"
+            + "f($$S_Antidisestablishment_0_1);");
   }
 
   @Test
