@@ -96,7 +96,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Before
   public void setUp() throws Exception {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.UNSUPPORTED;
     parsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
     strictMode = STRICT;
     isIdeMode = false;
@@ -535,7 +535,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testNumericSeparatorWarning() {
     mode = LanguageMode.ECMASCRIPT_2020;
     parseWarning(
-        "1_000", requiresLanguageModeMessage(LanguageMode.ES_NEXT_IN, Feature.NUMERIC_SEPARATOR));
+        "1_000", requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.NUMERIC_SEPARATOR));
   }
 
   @Test

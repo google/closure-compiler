@@ -48,7 +48,7 @@ public final class FeatureSetTest {
   @Test
   public void testEsOrdering() {
     assertFS(FeatureSet.ALL).contains(FeatureSet.ES_UNSUPPORTED);
-    assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT);
+    assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2020).contains(FeatureSet.ES2019);
@@ -74,57 +74,37 @@ public final class FeatureSetTest {
   @Test
   public void testVersionForDebugging() {
     // ES_NEXT, ES_UNSUPPORTED are tested separately - see below
-    assertThat(FeatureSet.ES3.versionForDebugging()).isEqualTo("es3");
-    assertThat(FeatureSet.ES5.versionForDebugging()).isEqualTo("es5");
-    assertThat(FeatureSet.ES2015.versionForDebugging()).isEqualTo("es6");
-    assertThat(FeatureSet.ES2015_MODULES.versionForDebugging()).isEqualTo("es6");
-    assertThat(FeatureSet.ES2016.versionForDebugging()).isEqualTo("es7");
-    assertThat(FeatureSet.ES2016_MODULES.versionForDebugging()).isEqualTo("es7");
-    assertThat(FeatureSet.ES2017.versionForDebugging()).isEqualTo("es8");
-    assertThat(FeatureSet.ES2017_MODULES.versionForDebugging()).isEqualTo("es8");
-    assertThat(FeatureSet.ES2018.versionForDebugging()).isEqualTo("es9");
-    assertThat(FeatureSet.ES2018_MODULES.versionForDebugging()).isEqualTo("es9");
-    assertThat(FeatureSet.ES2019.versionForDebugging()).isEqualTo("es_2019");
-    assertThat(FeatureSet.ES2019_MODULES.versionForDebugging()).isEqualTo("es_2019");
-    assertThat(FeatureSet.ES2020.versionForDebugging()).isEqualTo("es_2020");
-    assertThat(FeatureSet.ES2020_MODULES.versionForDebugging()).isEqualTo("es_2020");
-    assertThat(FeatureSet.ALL.versionForDebugging()).isEqualTo("all");
+    assertThat(FeatureSet.ES3.version()).isEqualTo("es3");
+    assertThat(FeatureSet.ES5.version()).isEqualTo("es5");
+    assertThat(FeatureSet.ES2015.version()).isEqualTo("es6");
+    assertThat(FeatureSet.ES2015_MODULES.version()).isEqualTo("es6");
+    assertThat(FeatureSet.ES2016.version()).isEqualTo("es7");
+    assertThat(FeatureSet.ES2016_MODULES.version()).isEqualTo("es7");
+    assertThat(FeatureSet.ES2017.version()).isEqualTo("es8");
+    assertThat(FeatureSet.ES2017_MODULES.version()).isEqualTo("es8");
+    assertThat(FeatureSet.ES2018.version()).isEqualTo("es9");
+    assertThat(FeatureSet.ES2018_MODULES.version()).isEqualTo("es9");
+    assertThat(FeatureSet.ES2019.version()).isEqualTo("es_2019");
+    assertThat(FeatureSet.ES2019_MODULES.version()).isEqualTo("es_2019");
+    assertThat(FeatureSet.ES2020.version()).isEqualTo("es_2020");
+    assertThat(FeatureSet.ES2020_MODULES.version()).isEqualTo("es_2020");
+    assertThat(FeatureSet.ALL.version()).isEqualTo("all");
   }
 
   @Test
-  public void testEsNext() {
-    // ES_NEXT currently has no feature, hence ES_2020 will be returned by versionForDebugging().
-    // This will change when new features are added to ES_NEXT/ES_2021, so this test case will
-    // then have to change.
-    // This is on purpose so the test case serves as documentation that we intentionally
-    // have ES_NEXT the same as or different from the latest supported ES version.
-    assertThat(FeatureSet.ES_NEXT.versionForDebugging()).isEqualTo("es_2020");
+  public void testEsNextAndNewer() {
+    // ES_NEXT, ES_NEXT_IN, and ES_UNSUPPORTED are moving targets that may or may not have any
+    // unique features.  If any of these `FeatureSet`s are identical to a lower FeatureSet,
+    // `version()` will return the lowest equivalent version that contains features.
+    // This could be es_XXX, es_next, etc. and will change as new features are added and removed
+    // from these `FeatureSet`s.
+    assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_next");
   }
 
   @Test
-  public void testEsNextIn() {
-    // ES_NEXT_IN currently has one or more features that are not in other feature sets, so its name
-    // will be returned by versionForDebugging().
-    // This will change when those features are added to ES_NEXT/ES_XXXX, so this test case will
-    // then have to change.
-    // This is on purpose so the test case serves as documentation that we intentionally
-    // have ES_NEXT_IN the same as or different from the latest supported ES version.
-    assertThat(FeatureSet.ES_NEXT_IN.versionForDebugging()).isEqualTo("es_next_in");
-  }
 
-  @Test
-  public void testEsUnsupported() {
-    // ES_UNSUPPORTED is currently has the same features as ES_NEXT_IN, so versionForDebugging()
-    // will
-    // return es_next_in
-    // This will change when new features are added to ES_NEXT/ES_UNSUPPORTED, so this test case
-    // will then have to change.
-    // This is on purpose so the test case serves as documentation that we intentionally
-    // have ES_UNSUPPORTED the same as or different from ES_NEXT
-    assertThat(FeatureSet.ES_UNSUPPORTED.versionForDebugging()).isEqualTo("es_next_in");
-  }
-
-  @Test
   public void testValueOf() {
     assertFS(FeatureSet.valueOf("es3")).equals(FeatureSet.ES3);
     assertFS(FeatureSet.valueOf("es5")).equals(FeatureSet.ES5);

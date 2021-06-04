@@ -79,12 +79,13 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2020 = ES2020_MODULES.without(Feature.MODULES);
 
-  // "highest" output level
+  // Set of all fully supported features, even those part of language versions not fully supported
   public static final FeatureSet ES_NEXT = ES2020_MODULES.with(LangVersion.ES_NEXT.features());
 
-  // "highest" input level; for features that can be transpiled but lack optimization/pass through
+  // Set of features fully supported in checks, even those not fully supported in optimizations
   public static final FeatureSet ES_NEXT_IN = ES_NEXT.with(LangVersion.ES_NEXT_IN.features());
 
+  // Set of all features that can be parsed, even those not yet fully supported in checks.
   public static final FeatureSet ES_UNSUPPORTED =
       ES_NEXT_IN.with(LangVersion.ES_UNSUPPORTED.features());
 
@@ -215,8 +216,13 @@ public final class FeatureSet implements Serializable {
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
     OPTIONAL_CHAINING("Optional chaining", LangVersion.ES2020),
 
-    // ES_NEXT_IN
-    NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT_IN),
+    // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
+    // fully supported
+    NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT), // Part of ES2021
+
+    // ES_NEXT_IN: Features fully supported in checks, but not yet fully supported in optimizations
+
+    // ES_UNSUPORTED: Features that we can parse, but not yet supported in all checks
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
     // to the CodeGenerator that it should handle type syntax.
