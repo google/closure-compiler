@@ -1211,6 +1211,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     List<SourceFile> inputs =
         createSourceInputs(jsChunkSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
+
+    List<String> typedAstInputFilenames = config.typedAstInputFilenames;
+    if (!typedAstInputFilenames.isEmpty()) {
+      initTypedAstFilesystem(externs, inputs, typedAstInputFilenames);
+    }
+
     if (!jsChunkSpecs.isEmpty()) {
       if (isInTestMode()) {
         modules = modulesSupplierForTesting.get();
@@ -1249,6 +1255,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       result = instrumentForCoverage();
     } else if (saveAfterChecksFilename != null) {
       result = performStage1andSave(saveAfterChecksFilename);
+    } else if (!typedAstInputFilenames.isEmpty()) {
+      result = parseAndPerformStage2();
     } else if (continueSavedCompilationFilename != null) {
       result = restoreAndPerformStage2(continueSavedCompilationFilename);
       if (modules != null) {
@@ -1299,6 +1307,49 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     result = compiler.getResult();
     return result;
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private void initTypedAstFilesystem(
+      List<SourceFile> externs, List<SourceFile> sources, List<String> filenames) {
+    ArrayList<BufferedInputStream> typedAstStreams = new ArrayList<>();
+    try {
+      for (String filename : filenames) {
+        typedAstStreams.add(new BufferedInputStream(new FileInputStream(filename)));
+      }
+
+      compiler.initTypedAstFilesystem(externs, sources, typedAstStreams);
+
+      IOException lastException = null;
+      for (BufferedInputStream stream : typedAstStreams) {
+        try {
+          stream.close();
+        } catch (IOException e) {
+          lastException = e;
+        }
+      }
+      if (lastException != null) {
+        throw lastException;
+      }
+    } catch (IOException e) {
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, String.join(",", filenames)));
+    }
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private Result parseAndPerformStage2() {
+    try {
+      compiler.parseForCompilation();
+      if (!compiler.hasErrors()) {
+        compiler.stage2Passes();
+        compiler.performPostCompilationTasks();
+      }
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    return compiler.getResult();
   }
 
   @GwtIncompatible("Unnecessary")
@@ -2322,6 +2373,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     String getContinueSavedCompilationFileName() {
       return continueSavedCompilationFileName;
+    }
+
+    private ImmutableList<String> typedAstInputFilenames = ImmutableList.of();
+
+    public CommandLineConfig setTypedAstInputFilenames(List<String> fileNames) {
+      this.typedAstInputFilenames = ImmutableList.copyOf(fileNames);
+      return this;
     }
 
     private String saveAfterChecksFileName = null;

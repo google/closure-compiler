@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -71,8 +72,12 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
+import com.google.javascript.jscomp.serialization.AstNode;
+import com.google.javascript.jscomp.serialization.ColorPool;
+import com.google.javascript.jscomp.serialization.ScriptNodeDeserializer;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
+import com.google.javascript.jscomp.serialization.StringPool;
 import com.google.javascript.jscomp.serialization.TypedAst;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
@@ -152,7 +157,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private PassConfig passes = null;
 
   // The externs inputs
-  private List<CompilerInput> externs;
+  private final ArrayList<CompilerInput> externs = new ArrayList<>();
 
   // The source module graph, denoting dependencies between chunks.
   private JSChunkGraph moduleGraph;
@@ -514,12 +519,67 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  private ImmutableMap<SourceFile, JsAst> typedAstFilesystem;
+
+  private CompilerInput createInputConsideringTypedAstFilesystem(
+      SourceFile file, boolean isExtern) {
+    if (this.typedAstFilesystem == null) {
+      return new CompilerInput(file, isExtern);
+    }
+
+    JsAst ast = this.typedAstFilesystem.get(file);
+    checkNotNull(ast, "TypedAST filesystem initialized, but missing requested file: %s", file);
+    return new CompilerInput(ast, isExtern);
+  }
+
+  @GwtIncompatible
+  public final void initTypedAstFilesystem(
+      List<SourceFile> externs,
+      List<SourceFile> sources,
+      List<? extends InputStream> typedAstStreams) {
+    ImmutableMap<String, SourceFile> filePool =
+        Streams.concat(externs.stream(), sources.stream())
+            .collect(toImmutableMap(SourceFile::getName, (x) -> x));
+    ArrayList<TypedAst> typedAstProtos = this.deserializeTypedAsts(typedAstStreams);
+
+    ColorPool.Builder colorPoolBuilder = ColorPool.builder();
+    LinkedHashMap<SourceFile, JsAst> typedAstFilesystem = new LinkedHashMap<>();
+    ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
+
+    for (TypedAst typedAstProto : typedAstProtos) {
+      ImmutableList<SourceFile> fileShard =
+          typedAstProto.getSourceFilePool().getSourceFileList().stream()
+              .map((p) -> filePool.get(p.getFilename()))
+              .collect(toImmutableList());
+      StringPool stringShard = StringPool.fromProto(typedAstProto.getStringPool());
+      ColorPool.ShardView colorShard =
+          colorPoolBuilder.addShard(typedAstProto.getTypePool(), stringShard);
+
+      for (int x : typedAstProto.getExternsSummary().getPropNamePtrList()) {
+        externProperties.add(stringShard.get(x));
+      }
+
+      for (AstNode scriptProto :
+          Iterables.concat(typedAstProto.getExternFileList(), typedAstProto.getCodeFileList())) {
+        SourceFile file = fileShard.get(scriptProto.getSourceFile() - 1);
+        ScriptNodeDeserializer deserializer =
+            new ScriptNodeDeserializer(scriptProto, stringShard, colorShard, fileShard);
+        JsAst ast = new JsAst(file, deserializer::deserializeNew);
+        typedAstFilesystem.put(file, ast);
+      }
+    }
+
+    this.externProperties = externProperties.build();
+    this.setColorRegistry(colorPoolBuilder.build().getRegistry());
+    this.typedAstFilesystem = ImmutableMap.copyOf(typedAstFilesystem);
+  }
+
   /** Initializes the instance state needed for a compile job. */
   public final void init(
       List<SourceFile> externs, List<SourceFile> sources, CompilerOptions options) {
     JSChunk module = new JSChunk(JSChunk.STRONG_MODULE_NAME);
     for (SourceFile source : sources) {
-      module.add(new CompilerInput(source));
+      module.add(this.createInputConsideringTypedAstFilesystem(source, /* isExtern */ false));
     }
 
     List<JSChunk> modules = new ArrayList<>(1);
@@ -535,7 +595,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     checkFirstModule(modules);
 
-    this.externs = makeExternInputs(externs);
+    this.externs.clear();
+    for (SourceFile file : externs) {
+      this.externs.add(this.createInputConsideringTypedAstFilesystem(file, /* isExtern */ true));
+    }
 
     // Generate the module graph, and report any errors in the module specification as errors.
     try {
@@ -584,14 +647,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
     }
-  }
-
-  private List<CompilerInput> makeExternInputs(List<SourceFile> externSources) {
-    List<CompilerInput> inputs = new ArrayList<>(externSources.size());
-    for (SourceFile file : externSources) {
-      inputs.add(new CompilerInput(file, /* isExtern= */ true));
-    }
-    return inputs;
   }
 
   private static final DiagnosticType EMPTY_MODULE_LIST_ERROR =
@@ -3425,8 +3480,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
-    // non-final since it doesn't use java serialization
-    private TypedAst typedAst = null;
 
     CompilerState(Compiler compiler) {
       this.featureSet = checkNotNull(compiler.featureSet);
@@ -3484,28 +3537,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     CompilerState compilerState =
         runInCompilerThread(
-            new Callable<CompilerState>() {
-              @Override
-              public CompilerState call() throws Exception {
-                Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
-                logger.fine("Deserializing the CompilerState");
+            () -> {
+              Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
+              logger.fine("Deserializing the CompilerState");
+              try {
                 // Do not close the input stream, caller is responsible for closing it.
-                CompilerState compilerState =
-                    (CompilerState) new ObjectInputStream(inputStream).readObject();
+                return (CompilerState) new ObjectInputStream(inputStream).readObject();
+              } finally {
                 logger.fine("Finished deserializing CompilerState");
-                logger.fine("Deserializing the TypedAst");
-                CodedInputStream codedInput = CodedInputStream.newInstance(inputStream);
-                // Set the recursion limit higher as some projects have deeply nested ASTs
-                codedInput.setRecursionLimit(3000);
-                compilerState.typedAst =
-                    TypedAst.newBuilder()
-                        .mergeFrom(codedInput, ExtensionRegistry.getEmptyRegistry())
-                        .build();
-                logger.fine("Finished deserializing the TypedAst");
                 stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
-                return compilerState;
               }
             });
+    TypedAst typedAst =
+        Iterables.getOnlyElement(this.deserializeTypedAsts(ImmutableList.of(inputStream)));
 
     featureSet = compilerState.featureSet;
     scriptNodeByFilename.clear();
@@ -3530,14 +3574,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // Restore TypedAST and related fields
     TypedAstDeserializer.DeserializedAst deserializedAst =
-        TypedAstDeserializer.deserialize(compilerState.typedAst);
+        TypedAstDeserializer.deserialize(typedAst);
     externProperties = deserializedAst.getExternProperties();
     externAndJsRoot = deserializedAst.getRoot();
     externsRoot = externAndJsRoot.getFirstChild();
     jsRoot = externAndJsRoot.getLastChild();
     inputsById.clear();
     inputsById.putAll(deserializedAst.getInputsById());
-    externs = new ArrayList<>();
+    externs.clear();
     for (Node script : externsRoot.children()) {
       InputId id = script.getInputId();
       CompilerInput input = inputsById.get(id);
@@ -3559,6 +3603,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (tracker != null) {
       tracker.updateAfterDeserialize(jsRoot);
     }
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private ArrayList<TypedAst> deserializeTypedAsts(List<? extends InputStream> typedAstStreams) {
+    return runInCompilerThread(
+        () -> {
+          ArrayList<TypedAst> typedAstProtos = new ArrayList<>();
+          for (InputStream stream : typedAstStreams) {
+            // Restore TypedAST and related fields
+            CodedInputStream codedInput = CodedInputStream.newInstance(stream);
+            // Set the recursion limit higher as some projects have deeply nested ASTs
+            codedInput.setRecursionLimit(3000);
+            typedAstProtos.add(
+                TypedAst.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry()));
+          }
+          return typedAstProtos;
+        });
   }
 
   /** Returns the module type for the provided namespace. */

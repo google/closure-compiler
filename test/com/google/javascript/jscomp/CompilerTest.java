@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
@@ -37,6 +38,11 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.serialization.AstNode;
+import com.google.javascript.jscomp.serialization.NodeKind;
+import com.google.javascript.jscomp.serialization.SourceFilePool;
+import com.google.javascript.jscomp.serialization.StringPool;
+import com.google.javascript.jscomp.serialization.TypedAst;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
@@ -47,6 +53,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -2675,5 +2682,94 @@ public final class CompilerTest {
     System.runFinalization();
 
     assertThat(registryWeakReference.get()).isNull();
+  }
+
+  @Test
+  public void testTypedAstFilesystem_extraInputFilesAvailable() {
+    // Given
+    SourceFile file1 = SourceFile.fromCode("test1.js", "");
+    SourceFile file2 = SourceFile.fromCode("test2.js", "");
+
+    TypedAst typedAst =
+        TypedAst.newBuilder()
+            .setStringPool(StringPool.empty().toProto())
+            .setSourceFilePool(
+                SourceFilePool.newBuilder()
+                    .addSourceFile(file1.getProto())
+                    .addSourceFile(file2.getProto()))
+            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
+            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(2))
+            .build();
+    ImmutableList<InputStream> typedAstStreams =
+        ImmutableList.of(new ByteArrayInputStream(typedAst.toByteArray()));
+
+    Compiler compiler = new Compiler();
+
+    // When
+    compiler.initTypedAstFilesystem(
+        ImmutableList.of(), ImmutableList.of(file1, file2), typedAstStreams);
+    compiler.init(ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions());
+    compiler.parse();
+
+    // Then
+    Node script = compiler.getRoot().getSecondChild().getFirstChild();
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
+  }
+
+  @Test
+  public void testTypedAstFilesystem_someInputFilesUnavailable_crashes() {
+    // Given
+    SourceFile file = SourceFile.fromCode("test.js", "");
+    ImmutableList<InputStream> typedAstStreams = ImmutableList.of();
+    Compiler compiler = new Compiler();
+
+    // When
+    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(), typedAstStreams);
+
+    // Then
+    Exception e =
+        assertThrows(
+            Exception.class,
+            () -> compiler.init(ImmutableList.of(), ImmutableList.of(file), new CompilerOptions()));
+    assertThat(e).hasMessageThat().containsMatch("missing .* test.js");
+  }
+
+  @Test
+  public void testTypedAstFilesystem_someAvailableFilesDuplicated_usesLastCopy() {
+    // Given
+    SourceFile file = SourceFile.fromCode("test.js", "");
+
+    TypedAst typedAst0 =
+        TypedAst.newBuilder()
+            .setStringPool(StringPool.empty().toProto())
+            .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(file.getProto()))
+            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
+            .build();
+    TypedAst typedAst1 =
+        TypedAst.newBuilder()
+            .setStringPool(StringPool.empty().toProto())
+            .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(file.getProto()))
+            .addCodeFile(
+                AstNode.newBuilder()
+                    .setKind(NodeKind.SOURCE_FILE)
+                    .setSourceFile(1)
+                    .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION)))
+            .build();
+    ImmutableList<InputStream> typedAstStreams =
+        ImmutableList.of(
+            new ByteArrayInputStream(typedAst0.toByteArray()),
+            new ByteArrayInputStream(typedAst1.toByteArray()));
+
+    Compiler compiler = new Compiler();
+
+    // When
+    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(file), typedAstStreams);
+    compiler.init(ImmutableList.of(), ImmutableList.of(file), new CompilerOptions());
+    compiler.parse();
+
+    // Then
+    Node script = compiler.getRoot().getSecondChild().getFirstChild();
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file);
+    assertThat(script.hasChildren()).isTrue();
   }
 }
