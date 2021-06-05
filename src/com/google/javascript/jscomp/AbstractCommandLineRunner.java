@@ -1012,7 +1012,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
               ImmutableList.copyOf(compiler.getModuleGraph().getAllModules()));
     }
 
-    maybeCreateDirsForPath(fileName);
+    if (!isOutputInJson()) {
+      maybeCreateDirsForPath(fileName);
+    }
     String baseName = new File(fileName).getName();
     writeOutput(
         out,
@@ -1523,7 +1525,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (isOutputInJson()) {
       this.filesToStreamOut.add(createJsonFile(options, marker, escaper));
     } else {
-      if (!config.jsOutputFile.isEmpty()) {
+      if (!config.jsOutputFile.isEmpty() && !isOutputInJson()) {
         maybeCreateDirsForPath(config.jsOutputFile);
       }
 
@@ -1582,7 +1584,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       throws IOException {
     parsedModuleWrappers = parseModuleWrappers(
         config.moduleWrapper, modules);
-    maybeCreateDirsForPath(config.moduleOutputPathPrefix);
+    if (!isOutputInJson()) {
+      maybeCreateDirsForPath(config.moduleOutputPathPrefix);
+    }
 
     // If the source map path is in fact a pattern for each
     // module, create a stream per-module. Otherwise, create
