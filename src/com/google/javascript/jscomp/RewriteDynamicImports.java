@@ -17,9 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.DYNAMIC_IMPORT_CALLBACK_FN;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.ModuleRenaming.GlobalizedModuleName;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -63,7 +65,13 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
   static final DiagnosticType DYNAMIC_IMPORT_ALIASING_REQUIRED =
       DiagnosticType.warning(
           "JSC_DYNAMIC_IMPORT_ALIASING_REQUIRED",
-          "Dynamic Import Expressions should be aliased for for language level");
+          "Dynamic import expressions should be aliased for for language level. " +
+              "Use the --dynamic_import_alias flag.");
+
+  static final DiagnosticType DYNAMIC_IMPORT_INVALID_ALIAS =
+      DiagnosticType.error(
+          "JSC_DYNAMIC_IMPORT_INVALID_ALIAS",
+          "Dynamic import alias is not a valid name");
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -85,6 +93,11 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     this.shouldWrapDynamicImportCallbacks = chunkOutputType == ChunkOutputType.ES_MODULES;
   }
 
+  final private boolean aliasIsValid() {
+    return alias != null &&
+        (alias.equals("import") || NodeUtil.isValidQualifiedName(compiler.getFeatureSet(), alias));
+  }
+
   @Override
   public void process(Node externs, Node root) {
     dynamicImportsRemoved = false;
@@ -98,6 +111,9 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     if (dynamicImportsRemoved) {
       // This pass removes dynamic import, but adds arrow functions.
       compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.DYNAMIC_IMPORT));
+      if (this.requiresAliasing && aliasIsValid()) {
+        NodeTraversal.traverse(compiler, externs, new AliasInjectingTraversal());
+      }
     }
     if (arrowFunctionsAdded) {
       compiler.setFeatureSet(compiler.getFeatureSet().with(Feature.ARROW_FUNCTIONS));
@@ -148,8 +164,10 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
         }
       }
     }
-    if (this.alias != null) {
+    if (aliasIsValid()) {
       aliasDynamicImport(t, n);
+    } else if (this.alias != null) {
+      t.report(n, DYNAMIC_IMPORT_INVALID_ALIAS);
     } else if (requiresAliasing) {
       t.report(n, DYNAMIC_IMPORT_ALIASING_REQUIRED);
     }
@@ -356,5 +374,83 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     wrappingFunctionDefinition.srcrefTree(externsRoot);
     externsRoot.addChildToBack(wrappingFunctionDefinition);
     compiler.reportChangeToEnclosingScope(wrappingFunctionDefinition);
+  }
+
+  /**
+   * A shallow traversal class for the externs to inject the alias.
+   *
+   * Later passes require the names to be defined. For simple name aliases first check
+   * for an existing definition. Qualified name aliases check for an existing definition of the
+   * root name only.
+   */
+  private class AliasInjectingTraversal extends NodeTraversal.AbstractPreOrderCallback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      checkState(aliasIsValid());
+
+      // If the extern is a simple name and already declared, there is nothing to do
+      if (NodeUtil.isValidSimpleName(alias) && t.getScope().getVar(alias) != null) {
+        return false;
+      }
+
+      // Create the type of the import function
+      JSTypeRegistry registry = compiler.getTypeRegistry();
+      JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      JSType promiseType = registry.getNativeType(JSTypeNative.PROMISE_TYPE);
+      TemplatizedType promiseTemplatizedType =
+          registry.createTemplatizedType(promiseType.toObjectType(), ImmutableList.of(unknownType));
+      JSType stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
+
+      Node externsRoot = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+      // "import" is not a valid JS name and will not parse. However we can manually create it
+      // and inject it into the externs.
+      if (alias.equals("import") || NodeUtil.isValidSimpleName(alias)) {
+        Node aliasNode =
+            astFactory.createFunction(
+                alias,
+                astFactory.createParamList("specifier"),
+                astFactory.createBlock(),
+                registry.createFunctionType(promiseTemplatizedType, stringType));
+        aliasNode.srcrefTree(externsRoot);
+        externsRoot.addChildToBack(aliasNode);
+      } else {
+        String aliasRootName = NodeUtil.getRootOfQualifiedName(alias);
+        Var aliasVar = t.getScope().getVar(aliasRootName);
+        // If the namespace root is defined, just assume the whole name is properly defined.
+        // This may need revisited in the future, but checking if the full qualified name
+        // is properly defined is difficult here. As long as the root of the qualified name is
+        // defined, other passes seem be ok even with missing properties.
+        if (aliasVar != null) {
+          return false;
+        }
+        Node aliasRootNode =
+            astFactory.createSingleVarNameDeclaration(aliasRootName, astFactory.createObjectLit());
+        aliasRootNode.srcrefTree(externsRoot);
+        externsRoot.addChildToBack(aliasRootNode);
+
+        // Define the rest of the parts of the name
+        String[] aliasNameParts = alias.split("\\.");
+        for (int i = 1; i < aliasNameParts.length; i++) {
+          aliasRootName = aliasRootName + "." + aliasNameParts[i];
+          Node qName = astFactory.createQName(t.getScope(), aliasRootName);
+          Node assignedValue;
+          if (i == aliasNameParts.length - 1) {
+            assignedValue =
+                astFactory.createFunction(
+                    "",
+                    astFactory.createParamList("specifier"),
+                    astFactory.createBlock(),
+                    registry.createFunctionType(promiseTemplatizedType, stringType));
+          } else {
+            assignedValue = astFactory.createObjectLit();
+          }
+          Node expr = astFactory.exprResult(astFactory.createAssign(qName, assignedValue));
+          expr.srcrefTree(externsRoot);
+          externsRoot.addChildToBack(expr);
+        }
+      }
+      compiler.reportChangeToChangeScope(externsRoot);
+      return false;
+    }
   }
 }

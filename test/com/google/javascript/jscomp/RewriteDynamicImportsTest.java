@@ -16,17 +16,22 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.DYNAMIC_IMPORT_CALLBACK_FN;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 import static com.google.javascript.jscomp.RewriteDynamicImports.DYNAMIC_IMPORT_ALIASING_REQUIRED;
+import static com.google.javascript.jscomp.RewriteDynamicImports.DYNAMIC_IMPORT_INVALID_ALIAS;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -450,5 +455,163 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
                         "        .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => module$i0));"))));
 
     test(srcs(new JSChunk[] {actualChunk0, actualChunk1}), expectedSrcs);
+  }
+
+  @Test
+  public void aliasExternInjectedSimple() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "import_";
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
+
+    testExternChanges(
+        "",
+        new JSChunk[] {actualChunk0, actualChunk1},
+        "function import_(specifier) {}",
+        (DiagnosticType[]) null);
+  }
+
+  @Test
+  public void aliasExternInjectedSimpleImport() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "import";
+
+    // "import" is not a valid JS identifier name and will not parse.
+    // Instead, we have to manually check the AST for the expected name.
+    Compiler compiler = createCompiler();
+    CompilerOptions options = getOptions();
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode(GENERATED_EXTERNS_NAME, "")),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                GENERATED_SRC_NAME,
+                "var external = 'url'; const nsPromise = import(external);")),
+        options);
+    compiler.parseInputs();
+    new GatherModuleMetadata(
+        compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
+    new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
+    assertThat(compiler.getErrors()).isEmpty();
+    Node externsAndJs = compiler.getRoot();
+    Node externs = externsAndJs.getFirstChild();
+    Node root = externsAndJs.getLastChild();
+    compiler.beforePass(this.getName());
+    getProcessor(compiler).process(externs, root);
+
+    Node syntheticExternsAtEnd = externs.getLastChild();
+    assertThat(syntheticExternsAtEnd).isNotNull();
+    assertThat(syntheticExternsAtEnd.isScript()).isTrue();
+    Node injectedAlias = syntheticExternsAtEnd.getFirstChild();
+    assertThat(injectedAlias).isNotNull();
+    assertThat(injectedAlias.isFunction()).isTrue();
+    assertThat(injectedAlias.getFirstChild().isName()).isTrue();
+    assertThat(injectedAlias.getFirstChild().getString()).isEqualTo("import");
+  }
+
+  @Test
+  public void aliasExternInjectedSimpleAlreadyDefined() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "import_";
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
+
+    testExternChanges(
+        "function import_() {}",
+        new JSChunk[] {actualChunk0, actualChunk1},
+        "function import_() {}",
+        (DiagnosticType[]) null);
+  }
+
+  @Test
+  public void aliasExternInjectedQualified() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "foo.import";
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
+
+    testExternChanges(
+        "",
+        new JSChunk[] {actualChunk0, actualChunk1},
+        "var foo = {}; foo.import = function(specifier) {};",
+        (DiagnosticType[]) null);
+  }
+
+  @Test
+  public void aliasExternInjectedQualifiedAlreadyDefinedComplete() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "foo.import";
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
+
+    testExternChanges(
+        "var foo = {}; foo.import = function(specifier) {};",
+        new JSChunk[] {actualChunk0, actualChunk1},
+        "var foo = {}; foo.import = function(specifier) {};",
+        (DiagnosticType[]) null);
+  }
+
+  @Test
+  public void aliasExternInjectedQualifiedAlreadyDefinedPartial() {
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    this.dynamicImportAlias = "foo.import";
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "const nsPromise = import('./i0.js');"));
+
+    testExternChanges(
+        "var foo = {};",
+        new JSChunk[] {actualChunk0, actualChunk1},
+        "var foo = {};",
+        (DiagnosticType[]) null);
+  }
+
+  @Test
+  public void invalidAliasSimpleName() {
+    this.dynamicImportAlias = "fo'oo";
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
+
+    testError(srcs(new JSChunk[] {actualChunk0, actualChunk1}), DYNAMIC_IMPORT_INVALID_ALIAS);
+  }
+
+  @Test
+  public void invalidAliasQualifiedName() {
+    this.dynamicImportAlias = "foo.bar['chunk']";
+    language = LanguageMode.ECMASCRIPT_2015;
+    languageIn = LanguageMode.ECMASCRIPT_NEXT;
+    JSChunk actualChunk0 = new JSChunk("chunk0");
+    actualChunk0.add(SourceFile.fromCode("i0.js", "const a = 1; export default a;"));
+
+    JSChunk actualChunk1 = new JSChunk("chunk1");
+    actualChunk1.add(SourceFile.fromCode("i1.js", "import('./i0.js');"));
+
+    testError(srcs(new JSChunk[] {actualChunk0, actualChunk1}), DYNAMIC_IMPORT_INVALID_ALIAS);
   }
 }
