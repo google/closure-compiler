@@ -57,6 +57,9 @@ class InferConsts implements CompilerPass {
   }
 
   private void considerVar(Var v, ReferenceCollection refCollection) {
+    if (v.isImplicitGoogNamespace()) {
+      return; // no name node for provided variables.
+    }
     Node nameNode = v.getNameNode();
     JSDocInfo docInfo = v.getJSDocInfo();
     if (docInfo != null && docInfo.isConstant()) {
@@ -75,6 +78,9 @@ class InferConsts implements CompilerPass {
   private static boolean isInferredConst(Var v, ReferenceCollection refCollection) {
     Node nameNode = v.getNameNode();
     if (nameNode == null || refCollection == null || !refCollection.isAssignedOnceInLifetime()) {
+      return false;
+    }
+    if (v.isImplicitGoogNamespace()) {
       return false;
     }
     Token declarationType = v.declarationType();

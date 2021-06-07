@@ -86,6 +86,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
 
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
@@ -5376,7 +5378,7 @@ public final class NodeUtil {
   public static boolean isGoogModuleCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
-      return (target.matchesQualifiedName("goog.module"));
+      return GOOG_MODULE.matches(target);
     }
     return false;
   }
@@ -5402,6 +5404,8 @@ public final class NodeUtil {
   }
 
   static boolean isBundledGoogModuleCall(Node n) {
+    // TODO(lharker): take an EXPR_RESULT to align with NodeUtil.isGoogModuleCall and
+    // NodeUtil.isGoogProvideCall.
     if (!(n.isCall()
         && n.hasTwoChildren()
         && n.getFirstChild().matchesQualifiedName("goog.loadModule"))) {

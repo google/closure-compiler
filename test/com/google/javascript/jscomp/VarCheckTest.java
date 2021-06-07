@@ -1047,7 +1047,7 @@ public final class VarCheckTest extends CompilerTestCase {
     checkSynthesizedExtern(
         "var goog; goog.provide('a.b'); a.b.C = class {};",
         "",
-        "var a;" + VAR_CHECK_EXTERNS + "var goog;goog.provide('a.b');a.b.C = class {};");
+        VAR_CHECK_EXTERNS + "var goog;goog.provide('a.b');a.b.C = class {};");
   }
 
   @Test
@@ -1130,6 +1130,56 @@ public final class VarCheckTest extends CompilerTestCase {
             lines(
                 new TestExternsBuilder().addClosureExterns().build(), //
                 "goog.provide('foo.bar');"),
+            SourceKind.WEAK));
+
+    strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+
+    test(
+        srcs(
+            new JSChunk[] {
+              strongModule, weakModule,
+            }),
+        error(VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
+  public void testReferenceToWeakNamespaceRoot_fromStrongFile_synthesizesExtern() {
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    weakModule.addDependency(strongModule);
+
+    weakModule.add(
+        SourceFile.fromCode(
+            "weak.js",
+            lines(
+                new TestExternsBuilder().addClosureExterns().build(), //
+                "goog.provide('foo.bar');"),
+            SourceKind.WEAK));
+
+    strongModule.add(
+        SourceFile.fromCode(
+            "strong.js", lines("/** @suppress {undefinedVars} */", "foo();"), SourceKind.STRONG));
+
+    testExternChanges(
+        "", // input externs
+        new JSChunk[] {
+          strongModule, weakModule,
+        },
+        "var foo;" + VAR_CHECK_EXTERNS);
+  }
+
+  @Test
+  public void testReferenceToWeakModuleNamespaceRoot_fromStrongFile() {
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    weakModule.addDependency(strongModule);
+
+    weakModule.add(
+        SourceFile.fromCode(
+            "weak.js",
+            lines(
+                new TestExternsBuilder().addClosureExterns().build(), //
+                "goog.module('foo.bar'); goog.module.declareLegacyNamespace();"),
             SourceKind.WEAK));
 
     strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));

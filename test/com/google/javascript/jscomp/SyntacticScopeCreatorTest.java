@@ -1280,4 +1280,58 @@ public final class SyntacticScopeCreatorTest {
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
     assertScope(moduleScope).declares("exports").directly();
   }
+
+  @Test
+  public void testGoogProvideOfNameInScope() {
+    Node root = getRoot("goog.provide('foo');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).declares("foo").directly();
+  }
+
+  @Test
+  public void testGoogProvideOfNamespaceInScope() {
+    Node root = getRoot("goog.provide('foo.bar');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+  }
+
+  @Test
+  public void testLegacyGoogModuleNamespaceInScope() {
+    Node root = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertScope(moduleScope).declares("foo").on(globalScope);
+  }
+
+  @Test
+  public void testBundledLegacyGoogModuleNamespaceInScope() {
+    Node root =
+        getRoot(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('foo.bar');",
+                "  goog.module.declareLegacyNamespace();",
+                "  return exports;",
+                "});"));
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+  }
+
+  @Test
+  public void testNonLegacyGoogModuleNamespace_notInScope() {
+    Node root = getRoot("goog.module('foo.bar');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).doesNotDeclare("foo");
+  }
 }
