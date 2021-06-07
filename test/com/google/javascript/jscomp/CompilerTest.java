@@ -53,6 +53,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -1188,39 +1189,119 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setStrictModeInput(true);
-    options.setEmitUseStrict(true);
+    options.setEmitUseStrict(false);
     options.setPreserveDetailedSourceInfo(true);
-    options.setCheckTypes(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     compiler.init(
         Collections.singletonList(
             SourceFile.fromCode(
                 "externs.js",
-                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};"))),
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    ""))),
         Collections.singletonList(
             SourceFile.fromCode(
                 "input.js",
-                Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"))),
+                lines(
+                    "function f() { return 2; }", //
+                    "console.log(f());",
+                    ""))),
         options);
 
     compiler.parse();
     compiler.check();
 
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    compiler.saveState(byteArrayOutputStream);
-    byteArrayOutputStream.close();
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
     compiler.options = options;
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-      compiler.restoreState(byteArrayInputStream);
-    }
+    restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performOptimizations();
     String source = compiler.toSource();
-    assertThat(source).isEqualTo("'use strict';console.log(2);");
+    assertThat(source).isEqualTo("console.log(2);");
+  }
+
+  @Test
+  public void testCheckSaveRestore3Stages() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setEmitUseStrict(false);
+    options.setPreserveDetailedSourceInfo(true);
+    // Late localization happens in stage 3, so this forces stage 3 to actually have some
+    // effect on the AST.
+    options.setDoLateLocalization(true);
+    // Supply a message bundle to trigger the replaceStrings pass.
+    // We don't need to actually translate anything, though.
+    options.setMessageBundle(new EmptyMessageBundle());
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    compiler.init(
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    ""))),
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "input.js",
+                lines(
+                    "/** @desc greeting */", //
+                    "const MSG_HELLO = goog.getMsg('hello');",
+                    "function f() { return MSG_HELLO; }",
+                    "console.log(f());",
+                    ""))),
+        options);
+
+    compiler.parse();
+    compiler.check();
+
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
+    restoreCompilerState(compiler, stateAfterChecks);
+
+    compiler.performOptimizations();
+    String source = compiler.toSource();
+    assertThat(source)
+        .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+
+    final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
+    restoreCompilerState(compiler, stateAfterOptimizations);
+
+    compiler.performFinalizations();
+    source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(\"hello\");");
+  }
+
+  private void restoreCompilerState(Compiler compiler, byte[] stateAfterChecks)
+      throws IOException, ClassNotFoundException {
+    try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(stateAfterChecks)) {
+      compiler.restoreState(byteArrayInputStream);
+    } catch (Exception e) {
+      throw new AssertionError("restoring compiler state failed", e);
+    }
+  }
+
+  private byte[] getSavedCompilerState(Compiler compiler) throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    compiler.saveState(outputStream);
+    outputStream.close();
+    return outputStream.toByteArray();
   }
 
   @Test
@@ -1262,10 +1343,7 @@ public final class CompilerTest {
 
     compiler = new Compiler(new TestErrorManager());
     compiler.options = options;
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-      compiler.restoreState(byteArrayInputStream);
-    }
+    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
     compiler.performOptimizations();
     String source = compiler.toSource();
@@ -2252,10 +2330,7 @@ public final class CompilerTest {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       compiler.saveState(byteArrayOutputStream);
       byteArrayOutputStream.close();
-      try (ByteArrayInputStream byteArrayInputStream =
-          new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-        compiler.restoreState(byteArrayInputStream);
-      }
+      restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
     }
 
     compiler.performOptimizations();

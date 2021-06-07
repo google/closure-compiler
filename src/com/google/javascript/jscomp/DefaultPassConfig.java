@@ -825,18 +825,22 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(optimizeToEs6);
     }
 
-    if (options.shouldRunReplaceProtectedMessagesPass()) {
-      // TODO(b/188585306): Move this into a third stage of compilation that can be run
-      // independently on the results of optimizations.
-      passes.add(getReplaceProtectedMessagesPass());
-    }
-
     // must run after ast validity check as modules may not be allowed in the output feature set
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);
+    return passes;
+  }
+
+  @Override
+  protected List<PassFactory> getFinalizations() {
+    List<PassFactory> passes = new ArrayList<>();
+
+    if (options.shouldRunReplaceProtectedMessagesPass()) {
+      passes.add(getReplaceProtectedMessagesPass());
+    }
     return passes;
   }
 

@@ -1256,9 +1256,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     } else if (saveAfterChecksFilename != null) {
       result = performStage1andSave(saveAfterChecksFilename);
     } else if (!typedAstInputFilenames.isEmpty()) {
-      result = parseAndPerformStage2();
+      result = parseAndPerformStages2and3();
     } else if (continueSavedCompilationFilename != null) {
-      result = restoreAndPerformStage2(continueSavedCompilationFilename);
+      result = restoreAndPerformStages2and3(continueSavedCompilationFilename);
       if (modules != null) {
         modules = ImmutableList.copyOf(compiler.getModules());
       }
@@ -1337,11 +1337,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result parseAndPerformStage2() {
+  private Result parseAndPerformStages2and3() {
     try {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         compiler.stage2Passes();
+        if (!compiler.hasErrors()) {
+          compiler.stage3Passes();
+        }
         compiler.performPostCompilationTasks();
       }
     } finally {
@@ -1353,13 +1356,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result restoreAndPerformStage2(String filename) {
+  private Result restoreAndPerformStages2and3(String filename) {
     Result result;
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
           compiler.stage2Passes();
+        if (!compiler.hasErrors()) {
+          compiler.stage3Passes();
+        }
       }
       compiler.performPostCompilationTasks();
     } catch (IOException | ClassNotFoundException e) {
@@ -1382,6 +1388,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.stage1Passes();
         if (!compiler.hasErrors()) {
           compiler.stage2Passes();
+          if (!compiler.hasErrors()) {
+            compiler.stage3Passes();
+          }
         }
         compiler.performPostCompilationTasks();
       }

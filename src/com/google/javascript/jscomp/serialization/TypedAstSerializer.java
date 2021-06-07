@@ -64,7 +64,7 @@ final class TypedAstSerializer {
     checkArgument(jsRoot.isRoot());
 
     final TypePool typePool;
-    if (this.compiler.hasTypeCheckingRun()) {
+    if (this.compiler.hasTypeCheckingRun() && !this.compiler.isTypeRegistryCleared()) {
       SerializeTypesToPointers typeSerializer =
           SerializeTypesToPointers.create(this.compiler, this.stringPool, this.serializationMode);
       typeSerializer.gatherTypesOnAst(jsRoot.getParent());
