@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -126,9 +127,33 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAst_typeSummary() {
-    // @typeSummary files are omitted, leaving only 1 serialized extern file
-    assertThat(compile("/** @typeSummary */ function foo() {}").getExternFileList()).hasSize(1);
+  public void testAst_typeSummaryFiles_areNotSerialized_orSearchedForTypes() {
+    enableCreateModuleMap();
+
+    Externs closureExterns = externs(new TestExternsBuilder().addClosureExterns().build());
+    SourceFile mandatorySource = SourceFile.fromCode("mandatory.js", "/* mandatory source */");
+
+    TypedAst typeSummaryAst =
+        compile(
+            closureExterns,
+            srcs(
+                mandatorySource,
+                SourceFile.fromCode(
+                    "foo.i.js",
+                    lines(
+                        "/** @fileoverview @typeSummary */", //
+                        "",
+                        "goog.loadModule(function(exports) {",
+                        "  goog.module('a.Foo');",
+                        "  class Foo { }",
+                        "  exports = Foo;",
+                        "});"))));
+    TypedAst emptySummary =
+        compile(
+            closureExterns, //
+            srcs(mandatorySource));
+
+    assertThat(typeSummaryAst).isEqualTo(emptySummary);
   }
 
   @Test
@@ -365,11 +390,15 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     return compileWithExterns(DEFAULT_EXTERNS, source);
   }
 
-  private TypedAst compileWithExterns(String externs, String source) {
+  private TypedAst compile(TestPart... parts) {
     TypedAst[] resultAst = new TypedAst[1];
     astConsumer = (ast) -> resultAst[0] = ast;
-    testNoWarning(externs(externs), srcs(source));
+    test(parts);
     return resultAst[0];
+  }
+
+  private TypedAst compileWithExterns(String externs, String source) {
+    return compile(externs(externs), srcs(source));
   }
 
   private static TypePointer pointerForType(PrimitiveType primitive) {

@@ -83,6 +83,9 @@ final class TypedAstSerializer {
       builder.addExternFile(serializeScriptNode(script));
     }
     for (Node script = jsRoot.getFirstChild(); script != null; script = script.getNext()) {
+      if (NodeUtil.isFromTypeSummary(script)) {
+        continue;
+      }
       builder.addCodeFile(serializeScriptNode(script));
     }
 
