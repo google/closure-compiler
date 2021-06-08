@@ -114,6 +114,9 @@ public abstract class CompilerTestCase {
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode;
 
+  /** Whether to rewrite Closure code before the test is run. */
+  private boolean rewriteClosureProvides;
+
   /**
    * If true, run type checking together with the pass being tested. A separate flag controls
    * whether type checking runs before or after the pass.
@@ -822,6 +825,7 @@ public abstract class CompilerTestCase {
   protected final void enableTypeCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeCheckEnabled = true;
+    enableCreateModuleMap();
   }
 
   /**
@@ -908,6 +912,13 @@ public abstract class CompilerTestCase {
   protected final void disableRewriteClosureCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = false;
+  }
+
+  /** Rewrite goog.provides */
+  protected final void enableRewriteClosureProvides() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.rewriteClosureProvides = true;
+    enableCreateModuleMap();
   }
 
   /**
@@ -1512,8 +1523,6 @@ public abstract class CompilerTestCase {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
-          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
-              .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1545,6 +1554,14 @@ public abstract class CompilerTestCase {
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
+        }
+
+        // Only rewrite provides once, if asked.
+        if (rewriteClosureProvides && i == 0) {
+          recentChange.reset();
+          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+              .process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
         if (inferConsts && i == 0) {
@@ -1900,6 +1917,9 @@ public abstract class CompilerTestCase {
       new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
           .process(externsRoot, mainRoot);
       new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
+    }
+
+    if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);
     }

@@ -251,6 +251,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "goog.forwardDeclare('D')", //
             "f(class extends D { f() { super.g() } })"),
         lines(
+            "goog.forwardDeclare('D')", //
             "/** @constructor",
             " * @extends {D}",
             " */",
@@ -313,6 +314,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  convert(x) {}",
             "}"),
         lines(
+            "goog.forwardDeclare('X');",
+            "goog.forwardDeclare('Y');",
             "/**",
             " * Converts Xs to Ys.",
             " * @interface",
@@ -427,6 +430,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  convert(x) {}",
             "}"),
         lines(
+            "goog.forwardDeclare('X');",
+            "goog.forwardDeclare('Y');",
             "/**",
             " * @record",
             " */",
@@ -1098,6 +1103,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "goog.forwardDeclare('D');",
             "/** @constructor @extends {D} */",
             "let C = function(str, n) {",
             "  var $jscomp$super$this;",
@@ -1168,6 +1174,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
+            "goog.forwardDeclare('D');",
             "/** @constructor @extends {D} */",
             "let C = function(str, n) {",
             "  var $jscomp$super$this;",

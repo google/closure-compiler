@@ -1197,6 +1197,10 @@ public class CompilerOptions implements Serializable {
     return this.enableModuleRewriting && !this.rewriteModulesBeforeTypechecking;
   }
 
+  boolean shouldRewriteModules() {
+    return this.enableModuleRewriting;
+  }
+
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ResolutionMode moduleResolutionMode;
 

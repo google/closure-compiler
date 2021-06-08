@@ -2966,6 +2966,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testDynamicImport() {
+    ignoreWarnings(DiagnosticGroups.MODULE_LOAD);
     assertNoPureCalls("import('./module.js')");
     assertNoPureCalls("function doImport() { import('./module.js'); } doImport();");
   }

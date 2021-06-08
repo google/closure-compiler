@@ -193,7 +193,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.closurePass) {
       checks.add(closureRewriteModule);
     }
-    // TODO(b/141389184): include processClosureProvidesAndRequires here
   }
 
   @Override
@@ -310,9 +309,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
-      if (options.shouldRewriteModulesBeforeTypechecking()) {
-        checks.add(closureProvidesRequires);
-      }
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
@@ -377,9 +373,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldRewriteModulesAfterTypechecking()) {
       addModuleRewritingPasses(checks, options);
-      if (options.closurePass) {
-        checks.add(closureProvidesRequires);
-      }
     }
 
     // Dynamic import rewriting must always occur after type checking
@@ -479,6 +472,10 @@ public final class DefaultPassConfig extends PassConfig {
       // Gather property names in externs so they can be queried by the optimizing passes.
       // See b/180424427 for why this runs in stage 1 and not stage 2.
       checks.add(gatherExternProperties);
+    }
+
+    if (options.closurePass && options.shouldRewriteModules()) {
+      checks.add(closureProvidesRequires);
     }
 
     assertAllOneTimePasses(checks);

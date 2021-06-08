@@ -874,12 +874,14 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoUndeclaredVarWhenUsingClosurePass() {
+  public void testUndeclaredVarForGoog() {
     enableClosurePass();
     enableRewriteClosureCode();
     // We don't want to get goog as an undeclared var here.
-    testError(
-        "goog.require('namespace.Class1');\n", ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE);
+    test(
+        srcs("goog.require('namespace.Class1');\n"),
+        error(ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE),
+        error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test

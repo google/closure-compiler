@@ -276,7 +276,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
       "",
       lines(
           CLOSURE_BOILERPLATE_UNCOMPILED,
-          "var foo = {};",
+          "goog.provide('foo.bar');",
           "/** @define {foo.bar} */ foo.bar = {};"),
     };
     test(options, input, output, warnings);
