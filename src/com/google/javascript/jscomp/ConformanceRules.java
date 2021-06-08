@@ -611,8 +611,8 @@ public final class ConformanceRules {
 
     private static boolean isRootOfQualifiedNameGlobal(NodeTraversal t, Node n) {
       String rootName = NodeUtil.getRootOfQualifiedName(n).getQualifiedName();
-      Var v = t.getScope().getVar(rootName);
-      return v != null && v.isGlobal();
+      Var v = checkNotNull(t.getScope().getVar(rootName), "Missing var for %s", rootName);
+      return v.isGlobal();
     }
   }
 

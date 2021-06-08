@@ -643,6 +643,29 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedName_googProvided() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'foo.bar'\n"
+            + "  error_message: 'foo.bar is not allowed'\n"
+            + "  allowlist: 'SRC1'\n"
+            + "}";
+
+    testWarning(
+        srcs(
+            SourceFile.fromCode("SRC1", "goog.provide('foo.bar');"),
+            SourceFile.fromCode("SRC2", "alert(foo.bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testWarning(
+        srcs(
+            SourceFile.fromCode("SRC1", "goog.provide('foo.bar'); foo.bar = {};"),
+            SourceFile.fromCode("SRC2", "alert(foo.bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testInferredConstCheck() {
     configuration =
         lines(

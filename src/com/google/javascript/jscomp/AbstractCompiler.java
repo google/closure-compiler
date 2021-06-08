@@ -154,6 +154,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Whether the AST has been annotated with optimization colors. */
   public abstract boolean hasOptimizationColors();
 
+  /**
+   * Returns `true` when type checking has run, but the type registry has been cleared.
+   *
+   * <p>See also `clearJSTypeRegistry()`.
+   */
+  public abstract boolean isTypeRegistryCleared();
+
   /** Gets a central registry of type information from the compiled JS. */
   public abstract JSTypeRegistry getTypeRegistry();
 

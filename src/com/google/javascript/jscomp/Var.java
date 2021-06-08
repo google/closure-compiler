@@ -29,8 +29,14 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
   static final String ARGUMENTS = "arguments";
   static final String EXPORTS = "exports";
 
-  Var(String name, Node nameNode, Scope scope, int index, CompilerInput input) {
-    super(name, nameNode, scope, index, input);
+  Var(
+      String name,
+      Node nameNode,
+      Scope scope,
+      int index,
+      CompilerInput input,
+      boolean isImplicitGoogNamespace) {
+    super(name, nameNode, scope, index, input, isImplicitGoogNamespace);
     if (nameNode != null) {
       switch (nameNode.getToken()) {
         case MODULE_BODY:
@@ -41,6 +47,20 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
           throw new IllegalArgumentException("Invalid name node " + nameNode);
       }
     }
+  }
+
+  static Var createImplicitGoogNamespace(String name, Scope scope, Node definition) {
+    Var var =
+        new Var(
+            name,
+            /* nameNode= */ null,
+            scope,
+            -1,
+            /* input= */ null, /* isImplicitGoogNamespace */
+            true);
+
+    var.addImplicitGoogNamespaceDefinition(definition);
+    return var;
   }
 
   @Override

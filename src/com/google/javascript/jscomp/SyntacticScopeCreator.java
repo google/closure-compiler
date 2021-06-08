@@ -244,9 +244,32 @@ public final class SyntacticScopeCreator implements ScopeCreator {
           break;
 
         case MODULE_BODY:
-          // Module bodies are not part of global scope.
+          // Module bodies are not part of global scope, but may declare an implicit goog namespace.
           if (hoistScope.isGlobal()) {
+            Node expr = n.getFirstChild();
+            if (expr != null && isLegacyGoogModule(expr)) {
+              declareImplicitGoogNamespaceFromCall(hoistScope, expr);
+            }
             return;
+          }
+          break;
+
+        case EXPR_RESULT:
+          if (!n.getParent().isScript()) {
+            break;
+          }
+          if (NodeUtil.isGoogProvideCall(n)) {
+            declareImplicitGoogNamespaceFromCall(hoistScope.getGlobalScope(), n);
+          } else if (NodeUtil.isBundledGoogModuleCall(n.getFirstChild())
+              && n.getFirstChild().getSecondChild().isFunction()) {
+            // e.g.
+            // goog.loadModule(function(exports) {
+            //   goog.module('foo.bar');
+            Node fn = n.getFirstChild().getSecondChild();
+            Node moduleCall = NodeUtil.getFunctionBody(fn).getFirstChild();
+            if (isLegacyGoogModule(moduleCall)) {
+              declareImplicitGoogNamespaceFromCall(hoistScope.getGlobalScope(), moduleCall);
+            }
           }
           break;
 
@@ -287,8 +310,14 @@ public final class SyntacticScopeCreator implements ScopeCreator {
       // TODO(johnlenz): Hash lookups are not free and building scopes are already expensive.
       // Restructure the scope building to avoid this check.
       Var v = s.getOwnSlot(name);
-      if (v != null && v.getNode() == n) {
-        return;
+      if (v != null) {
+        if (v.getNode() == n) {
+          return;
+        } else if (v.isImplicitGoogNamespace()) {
+          // this is replacing an implicit provide. treat this as the actual declaration.
+          s.undeclare(v);
+          v = null;
+        }
       }
 
       CompilerInput input = compiler.getInput(inputId);
@@ -302,6 +331,28 @@ public final class SyntacticScopeCreator implements ScopeCreator {
       }
     }
 
+    /**
+     * Declares the implicit namespace 'a' from 'goog.provide('a.b.c');
+     *
+     * <p>Explicit syntactical definitions like 'var a = {};' supersede this definition if present.
+     *
+     * @param exprCall a goog.module or goog.provide call
+     */
+    private void declareImplicitGoogNamespaceFromCall(Scope s, Node exprCall) {
+      Node namespaceNode = exprCall.getFirstChild().getSecondChild();
+      if (namespaceNode == null || !namespaceNode.isString()) {
+        // invalid call missing an argument, we warn elsewhere
+        return;
+      }
+      String namespace = namespaceNode.getString();
+      String root = NodeUtil.getRootOfQualifiedName(namespace);
+
+      if (root.isEmpty()) {
+        return;
+      }
+      s.declareImplicitGoogNamespaceIfAbsent(root, namespaceNode);
+    }
+
     // Function body declarations are not allowed to shadow
     // function parameters.
     private static boolean isShadowingAllowed(String name, Scope s) {
@@ -310,6 +361,13 @@ public final class SyntacticScopeCreator implements ScopeCreator {
         return maybeParam == null || !maybeParam.isParam();
       }
       return true;
+    }
+
+    private static boolean isLegacyGoogModule(Node n) {
+      if (!NodeUtil.isGoogModuleCall(n)) {
+        return false;
+      }
+      return n.getNext() != null && NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(n.getNext());
     }
   }
 

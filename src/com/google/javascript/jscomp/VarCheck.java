@@ -18,9 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
@@ -30,7 +28,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -95,8 +92,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
-  private static final Node googLoadModule = IR.getprop(IR.name("goog"), "loadModule");
-  private static final Node googProvide = IR.getprop(IR.name("goog"), "provide");
   private static final Node googForwardDeclare = IR.getprop(IR.name("goog"), "forwardDeclare");
 
   // Vars that still need to be declared in externs. These will be declared
@@ -114,19 +109,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
   private RedeclarationCheckHandler dupHandler;
 
-  /**
-   * The roots of all `goog.provide`d namespaces mapping to the strength of the strongest file that
-   * provides them.
-   *
-   * <p>This also includes `goog.module.declareLegacyNamespace` namespaces.
-   *
-   * <p>The default value is an empty map in case the check is run without collecting provided
-   * namespaces. In that case, we assume none exist, which is the most conservative option.
-   */
-  private ImmutableMap<String, SourceKind> namespaceRootsToMaxStrength = ImmutableMap.of();
-
-  private final boolean closurePass;
-
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
   }
@@ -136,7 +118,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
     this.strictExternCheck = compiler.getErrorLevel(
         JSError.make("", 0, 0, UNDEFINED_EXTERN_VAR_ERROR)) == CheckLevel.ERROR;
     this.validityCheck = validityCheck;
-    this.closurePass = compiler.getOptions() != null && compiler.getOptions().closurePass;
   }
 
   /**
@@ -155,10 +136,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     ScopeCreator scopeCreator = createScopeCreator();
-
-    if (closurePass) {
-      gatherImplicitVars(compiler.getRoot());
-    }
 
     // Don't run externs-checking in sanity check mode. Normalization will
     // remove duplicate VAR declarations, which will make
@@ -201,7 +178,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
   /** Validates that a NAME node does not refer to an undefined name. */
   private void checkName(NodeTraversal t, Node n, Node parent) {
     String varName = n.getString();
-    SourceKind useStrength = strengthOf(n);
 
     // Only a function can have an empty name.
     if (varName.isEmpty()) {
@@ -248,20 +224,19 @@ class VarCheck implements ScopedCallback, CompilerPass {
         return;
       }
 
-      SourceKind defStrength = this.namespaceRootsToMaxStrength.get(varName);
-      if (defStrength == null) {
-        // Fall though.
-        // No namespace declares this var.
-      } else if (useStrength.equals(SourceKind.STRONG) && defStrength.equals(SourceKind.WEAK)) {
-        // Fall though.
-        // This use will be retained but its definition will be deleted.
-      } else {
-        return; // Assume this var is declared as a namespace.
-      }
-
       this.handleUndeclaredVariableRef(t, n);
       scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
 
+      return;
+    }
+
+    if (var.isImplicitGoogNamespace()) {
+      SourceKind useStrength = strengthOf(n);
+      SourceKind defStrength = getProvideStrength(var);
+      if (useStrength.equals(SourceKind.STRONG) && defStrength.equals(SourceKind.WEAK)) {
+        // This use will be retained but its definition will be deleted.
+        this.handleUndeclaredVariableRef(t, n);
+      }
       return;
     }
 
@@ -311,6 +286,26 @@ class VarCheck implements ScopedCallback, CompilerPass {
     return source.getKind();
   }
 
+  private SourceKind getProvideStrength(Var provide) {
+    checkState(provide.isImplicitGoogNamespace());
+
+    SourceKind strength = SourceKind.WEAK;
+    for (Node provideDefinition : provide.getImplicitGoogNamespaceDefinitions()) {
+      strength = strongerOf(strength, strengthOf(provideDefinition));
+    }
+    return strength;
+  }
+
+  private static SourceKind strongerOf(SourceKind left, SourceKind right) {
+    if (left.equals(SourceKind.STRONG) || right.equals(SourceKind.STRONG)) {
+      return SourceKind.STRONG;
+    } else if (left.equals(SourceKind.EXTERN) || right.equals(SourceKind.EXTERN)) {
+      // Externs are strgoner because they aren't deleted.
+      return SourceKind.EXTERN;
+    }
+    return SourceKind.WEAK;
+  }
+
   private void handleUndeclaredVariableRef(NodeTraversal t, Node n) {
     checkState(n.isName());
 
@@ -332,80 +327,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
       throw new IllegalStateException("Unexpected variable " + varName);
     } else {
       createSynthesizedExternVar(varName);
-    }
-  }
-
-  private void gatherImplicitVars(Node root) {
-    GatherImplicitClosureGlobals closureGlobals = new GatherImplicitClosureGlobals();
-    NodeTraversal.traverse(compiler, root, closureGlobals);
-    namespaceRootsToMaxStrength = ImmutableMap.copyOf(closureGlobals.roots);
-  }
-
-  /** Looks for goog.provided roots and legacy goog.modules (including in goog.loadModules). */
-  private static final class GatherImplicitClosureGlobals extends AbstractPreOrderCallback {
-    private final LinkedHashMap<String, SourceKind> roots = new LinkedHashMap<>();
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Don't traverse the entire AST. We just need to find goog.provides and legacy goog.modules.
-      switch (n.getToken()) {
-        case MODULE_BODY:
-          if (parent.getBooleanProp(Node.GOOG_MODULE)) {
-            addGoogModuleIfLegacy(n);
-          }
-          return false;
-        case EXPR_RESULT:
-          Node call = n.getOnlyChild();
-          if (!call.isCall()) {
-            return false;
-          }
-          Node target = call.getFirstChild();
-          Node arg = target.getNext();
-          if (arg == null) {
-            return false;
-          }
-          if (target.matchesQualifiedName(googProvide)) {
-            addRootNs(arg);
-          } else if (target.matchesQualifiedName(googLoadModule) && arg.isFunction()) {
-            addGoogModuleIfLegacy(NodeUtil.getFunctionBody(arg));
-          }
-          return false;
-        case SCRIPT:
-        case ROOT:
-          return true;
-        default:
-          return false;
-      }
-    }
-
-    private void addGoogModuleIfLegacy(Node googModuleBody) {
-      Node googModuleCall = googModuleBody.getFirstChild();
-      if (googModuleCall == null || !NodeUtil.isExprCall(googModuleCall)) {
-        return; // This is bad code, but another pass reports the error.
-      }
-      Node legacyNamespace = googModuleCall.getNext();
-      if (legacyNamespace != null
-          && NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(legacyNamespace)) {
-        addRootNs(googModuleCall.getFirstChild().getSecondChild());
-      }
-    }
-
-    private void addRootNs(Node nsArg) {
-      String fullNs = nsArg.getString();
-      int indexOfDot = fullNs.indexOf('.');
-      String rootName = (indexOfDot == -1) ? fullNs : fullNs.substring(0, indexOfDot);
-
-      this.roots.merge(rootName, strengthOf(nsArg), this::strongerOf);
-    }
-
-    private SourceKind strongerOf(SourceKind left, SourceKind right) {
-      if (left.equals(SourceKind.STRONG) || right.equals(SourceKind.STRONG)) {
-        return SourceKind.STRONG;
-      } else if (left.equals(SourceKind.EXTERN) || right.equals(SourceKind.EXTERN)) {
-        // Externs are strgoner because they aren't deleted.
-        return SourceKind.EXTERN;
-      }
-      return SourceKind.WEAK;
     }
   }
 
@@ -538,9 +459,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
                 // of goog.
                 return;
               }
-              if (!namespaceRootsToMaxStrength.containsKey(n.getString())) {
-                t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
-              }
+              t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
               varsToDeclareInExterns.add(n.getString());
             }
             return;

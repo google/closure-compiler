@@ -53,6 +53,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -106,13 +107,12 @@ public final class CompilerTest {
 
   @Test
   public void testCyclicalDependencyInInputs() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "gin", "goog.provide('gin'); goog.require('tonic'); var gin = {};"),
-        SourceFile.fromCode("tonic",
-            "goog.provide('tonic'); goog.require('gin'); var tonic = {};"),
-        SourceFile.fromCode(
-            "mix", "goog.require('gin'); goog.require('tonic');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("gin", "goog.provide('gin'); goog.require('tonic'); var gin = {};"),
+            SourceFile.fromCode(
+                "tonic", "goog.provide('tonic'); goog.require('gin'); var tonic = {};"),
+            SourceFile.fromCode("mix", "goog.require('gin'); goog.require('tonic');"));
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
     options.setContinueAfterErrors(true);
@@ -156,8 +156,8 @@ public final class CompilerTest {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = new Compiler();
     SourceFile externs = SourceFile.fromCode("externs.js", "");
-    SourceFile input = SourceFile.fromCode("input.js",
-        "(function (undefined) { alert(undefined); })();");
+    SourceFile input =
+        SourceFile.fromCode("input.js", "(function (undefined) { alert(undefined); })();");
     compiler.compile(externs, input, options);
   }
 
@@ -168,15 +168,16 @@ public final class CompilerTest {
   @Test
   public void testInputSourceMaps() throws Exception {
     FilePosition originalSourcePosition = new FilePosition(17, 25);
-    ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
-        normalize("generated_js/example.js"),
-        sourcemap(
-            normalize("generated_js/example.srcmap"),
-            normalize("../original/source.html"),
-            originalSourcePosition));
+    ImmutableMap<String, SourceMapInput> inputSourceMaps =
+        ImmutableMap.of(
+            normalize("generated_js/example.js"),
+            sourcemap(
+                normalize("generated_js/example.srcmap"),
+                normalize("../original/source.html"),
+                originalSourcePosition));
     String origSourceName = normalize("original/source.html");
-    List<SourceFile> originalSources = ImmutableList.of(
-        SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
+    List<SourceFile> originalSources =
+        ImmutableList.of(SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
 
     CompilerOptions options = new CompilerOptions();
     options.inputSourceMaps = inputSourceMaps;
@@ -195,11 +196,16 @@ public final class CompilerTest {
     assertThat(compiler.getSourceLine(origSourceName, 1)).isEqualTo("<div ng-show='foo()'>");
   }
 
-  private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
-      FilePosition originalSourcePosition) throws Exception {
+  private SourceMapInput sourcemap(
+      String sourceMapPath, String originalSource, FilePosition originalSourcePosition)
+      throws Exception {
     SourceMapGeneratorV3 sourceMap = new SourceMapGeneratorV3();
-    sourceMap.addMapping(originalSource, "testSymbolName", originalSourcePosition,
-        new FilePosition(1, 1), new FilePosition(100, 1));
+    sourceMap.addMapping(
+        originalSource,
+        "testSymbolName",
+        originalSourcePosition,
+        new FilePosition(1, 1),
+        new FilePosition(100, 1));
     StringBuilder output = new StringBuilder();
     sourceMap.appendTo(output, "unused.js");
 
@@ -358,12 +364,8 @@ public final class CompilerTest {
   @Test
   public void testApplyInputSourceMaps() throws Exception {
     FilePosition originalSourcePosition = new FilePosition(17, 25);
-    ImmutableMap<String, SourceMapInput> inputSourceMaps = ImmutableMap.of(
-        "input.js",
-        sourcemap(
-            "input.js.map",
-            "input.ts",
-            originalSourcePosition));
+    ImmutableMap<String, SourceMapInput> inputSourceMaps =
+        ImmutableMap.of("input.js", sourcemap("input.js.map", "input.ts", originalSourcePosition));
 
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
@@ -371,8 +373,10 @@ public final class CompilerTest {
     options.inputSourceMaps = inputSourceMaps;
     options.applyInputSourceMaps = true;
     Compiler compiler = new Compiler();
-    compiler.compile(EMPTY_EXTERNS.get(0),
-        SourceFile.fromCode("input.js", "// Unmapped line\nvar x = 1;\nalert(x);"), options);
+    compiler.compile(
+        EMPTY_EXTERNS.get(0),
+        SourceFile.fromCode("input.js", "// Unmapped line\nvar x = 1;\nalert(x);"),
+        options);
     assertThat(compiler.toSource()).isEqualTo("var x=1;alert(x);");
     SourceMap sourceMap = compiler.getSourceMap();
     StringWriter out = new StringWriter();
@@ -397,13 +401,14 @@ public final class CompilerTest {
     options.sourceMapOutputPath = "fake/source_map_path.js.map";
     options.applyInputSourceMaps = true;
     options.sourceMapIncludeSourcesContent = true;
-    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
-        + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    String code =
+        SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     Compiler compiler = new Compiler();
     SourceFile sourceFile = SourceFile.fromCode("temp/path/input.js", code);
     compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
-    assertThat(compiler.toSource()).isEqualTo(
-        "var X=function(){function X(input){this.y=input}return X}();console.log(new X(1));");
+    assertThat(compiler.toSource())
+        .isEqualTo(
+            "var X=function(){function X(input){this.y=input}return X}();console.log(new X(1));");
     SourceMap sourceMap = compiler.getSourceMap();
     StringWriter out = new StringWriter();
     sourceMap.appendTo(out, "source.js.map");
@@ -419,8 +424,8 @@ public final class CompilerTest {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.applyInputSourceMaps = true;
     options.sourceMapIncludeSourcesContent = true;
-    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
-        + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    String code =
+        SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     Compiler compiler = new Compiler();
     SourceFile sourceFile = SourceFile.fromCode("input.js", code);
     compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
@@ -441,9 +446,8 @@ public final class CompilerTest {
     options.setPrintInputDelimiter(true);
 
     String fileOverview = "/** @fileoverview Foo */";
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("i1", ""),
-        SourceFile.fromCode("i2", fileOverview));
+    List<SourceFile> inputs =
+        ImmutableList.of(SourceFile.fromCode("i1", ""), SourceFile.fromCode("i2", fileOverview));
 
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
     assertThat(result.success).isTrue();
@@ -462,8 +466,8 @@ public final class CompilerTest {
     CompilerOptions options = createNewFlagBasedOptions();
 
     // Default is warning.
-    compiler.compile(SourceFile.fromCode("extern.js", ""),
-        SourceFile.fromCode("test.js", badJsDoc), options);
+    compiler.compile(
+        SourceFile.fromCode("extern.js", ""), SourceFile.fromCode("test.js", badJsDoc), options);
     assertThat(compiler.getWarnings()).hasSize(1);
     assertThat(compiler.getErrors()).isEmpty();
   }
@@ -478,10 +482,9 @@ public final class CompilerTest {
 
     CompilerOptions options = createNewFlagBasedOptions();
 
-    options.setWarningLevel(
-        DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.OFF);
-    compiler.compile(SourceFile.fromCode("extern.js", ""),
-        SourceFile.fromCode("test.js", badJsDoc), options);
+    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.OFF);
+    compiler.compile(
+        SourceFile.fromCode("extern.js", ""), SourceFile.fromCode("test.js", badJsDoc), options);
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(compiler.getErrors()).isEmpty();
   }
@@ -497,10 +500,9 @@ public final class CompilerTest {
 
     CompilerOptions options = createNewFlagBasedOptions();
 
-    options.setWarningLevel(
-        DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.ERROR);
-    compiler.compile(SourceFile.fromCode("extern.js", ""),
-        SourceFile.fromCode("test.js", badJsDoc), options);
+    options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC, CheckLevel.ERROR);
+    compiler.compile(
+        SourceFile.fromCode("extern.js", ""), SourceFile.fromCode("test.js", badJsDoc), options);
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(compiler.getErrors()).hasSize(1);
   }
@@ -509,9 +511,8 @@ public final class CompilerTest {
   public void testNormalInputs() {
     CompilerOptions options = new CompilerOptions();
     Compiler compiler = new Compiler();
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("in1", ""),
-        SourceFile.fromCode("in2", ""));
+    List<SourceFile> inputs =
+        ImmutableList.of(SourceFile.fromCode("in1", ""), SourceFile.fromCode("in2", ""));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(compiler.getInput(new InputId("externs")).isExtern()).isTrue();
@@ -526,8 +527,7 @@ public final class CompilerTest {
     modules.get(1).add(SourceFile.fromCode("in2", ""));
 
     Compiler compiler = new Compiler();
-    compiler.initModules(
-        ImmutableList.<SourceFile>of(), modules, new CompilerOptions());
+    compiler.initModules(ImmutableList.<SourceFile>of(), modules, new CompilerOptions());
 
     modules.get(1).add(SourceFile.fromCode("in3", ""));
     assertThat(compiler.getInput(new InputId("in3"))).isNull();
@@ -538,10 +538,11 @@ public final class CompilerTest {
   @Test
   public void testMalformedFunctionInExterns() {
     // Just verify that no exceptions are thrown (see bug 910619).
-    new Compiler().compile(
-        ImmutableList.of(SourceFile.fromCode("externs", "function f {}")),
-        ImmutableList.of(SourceFile.fromCode("foo", "")),
-        new CompilerOptions());
+    new Compiler()
+        .compile(
+            ImmutableList.of(SourceFile.fromCode("externs", "function f {}")),
+            ImmutableList.of(SourceFile.fromCode("foo", "")),
+            new CompilerOptions());
   }
 
   @Test
@@ -559,9 +560,9 @@ public final class CompilerTest {
 
   @Test
   public void testFileoverviewTwice() {
-    List<SourceFile> input = ImmutableList.of(
-        SourceFile.fromCode("foo",
-            "/** @fileoverview */ var x; /** @fileoverview */ var y;"));
+    List<SourceFile> input =
+        ImmutableList.of(
+            SourceFile.fromCode("foo", "/** @fileoverview */ var x; /** @fileoverview */ var y;"));
     assertThat(new Compiler().compile(EMPTY_EXTERNS, input, new CompilerOptions()).success)
         .isTrue();
   }
@@ -612,7 +613,7 @@ public final class CompilerTest {
             + "var x;",
         "/*\n Another license  Your favorite license goes here */\n",
         null);
-   }
+  }
 
   // Make sure things work even with @license and @fileoverview in the
   // same comment.
@@ -781,7 +782,7 @@ public final class CompilerTest {
             "/** @license Your favorite license goes here */",
             "/** @license Another license */",
             "var x;"),
-        "/*\n Another license  Your favorite license goes here */\n" ,
+        "/*\n Another license  Your favorite license goes here */\n",
         null);
   }
 
@@ -802,28 +803,22 @@ public final class CompilerTest {
   @Test
   public void testLicenseInTree() {
     test(
-        lines(
-            "var a = function() {",
-            "+ /** @license Your favorite license goes here */",
-            " 1;};"),
+        lines("var a = function() {", "+ /** @license Your favorite license goes here */", " 1;};"),
         "/*\n Your favorite license goes here */\n",
         null);
   }
 
   @Test
   public void testMultipleUniqueLicenses() {
-    String js1 = "/** @license One license here */\n"
-                 + "var x;";
-    String js2 = "/** @license Another license here */\n"
-                 + "var y;";
-    String expected = "/*\n One license here */\n"
-                      + "/*\n Another license here */\n";
+    String js1 = "/** @license One license here */\n" + "var x;";
+    String js2 = "/** @license Another license here */\n" + "var y;";
+    String expected = "/*\n One license here */\n" + "/*\n Another license here */\n";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode1", js1),
-        SourceFile.fromCode("testcode2", js2));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode1", js1), SourceFile.fromCode("testcode2", js2));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
@@ -832,21 +827,21 @@ public final class CompilerTest {
 
   @Test
   public void testMultipleIdenticalLicenses() {
-    String js1 = "/** @license Identical license here */\n"
-                 + "var x;";
-    String js2 = "/** @license Identical license here */\n"
-                 + "var y;";
-    String js3 = "/** @license Identical license here */\n"
-                 + "var z;\n"
-                 + "/** @license Identical license here */";
+    String js1 = "/** @license Identical license here */\n" + "var x;";
+    String js2 = "/** @license Identical license here */\n" + "var y;";
+    String js3 =
+        "/** @license Identical license here */\n"
+            + "var z;\n"
+            + "/** @license Identical license here */";
     String expected = "/*\n Identical license here */\n";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode1", js1),
-        SourceFile.fromCode("testcode2", js2),
-        SourceFile.fromCode("bundled", js3));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("testcode1", js1),
+            SourceFile.fromCode("testcode2", js2),
+            SourceFile.fromCode("bundled", js3));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
@@ -881,33 +876,28 @@ public final class CompilerTest {
   public void testDefineOverriding1() {
     List<String> defines =
         ImmutableList.of(
-            "COMPILED",
-            "DEF_TRUE=true",
-            "DEF_FALSE=false",
-            "DEF_NUMBER=5.5",
-            "DEF_STRING='bye'");
-    Map<String, Node> expected = ImmutableMap.of(
-        "COMPILED", new Node(Token.TRUE),
-        "DEF_TRUE", new Node(Token.TRUE),
-        "DEF_FALSE", new Node(Token.FALSE),
-        "DEF_NUMBER", Node.newNumber(5.5),
-        "DEF_STRING", Node.newString("bye"));
+            "COMPILED", "DEF_TRUE=true", "DEF_FALSE=false", "DEF_NUMBER=5.5", "DEF_STRING='bye'");
+    Map<String, Node> expected =
+        ImmutableMap.of(
+            "COMPILED", new Node(Token.TRUE),
+            "DEF_TRUE", new Node(Token.TRUE),
+            "DEF_FALSE", new Node(Token.FALSE),
+            "DEF_NUMBER", Node.newNumber(5.5),
+            "DEF_STRING", Node.newString("bye"));
     assertDefineOverrides(expected, defines);
   }
 
   @Test
   public void testDefineOverriding2() {
     List<String> defines = ImmutableList.of("DEF_STRING='='");
-    Map<String, Node> expected = ImmutableMap.of(
-        "DEF_STRING", Node.newString("="));
+    Map<String, Node> expected = ImmutableMap.of("DEF_STRING", Node.newString("="));
     assertDefineOverrides(expected, defines);
   }
 
   @Test
   public void testDefineOverriding3() {
     List<String> defines = ImmutableList.of("a.DEBUG");
-    Map<String, Node> expected = ImmutableMap.of(
-        "a.DEBUG", new Node(Token.TRUE));
+    Map<String, Node> expected = ImmutableMap.of("a.DEBUG", new Node(Token.TRUE));
     assertDefineOverrides(expected, defines);
   }
 
@@ -940,8 +930,7 @@ public final class CompilerTest {
     assertWithMessage(defines + " didn't fail").fail();
   }
 
-  static void assertDefineOverrides(Map<String, Node> expected,
-      List<String> defines) {
+  static void assertDefineOverrides(Map<String, Node> expected, List<String> defines) {
     CompilerOptions options = new CompilerOptions();
     AbstractCommandLineRunner.createDefineReplacements(defines, options);
     Map<String, Node> actual = options.getDefineReplacements();
@@ -962,8 +951,7 @@ public final class CompilerTest {
   static Result test(String js, String expected, DiagnosticType error) {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode", js));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     if (error == null) {
@@ -1030,8 +1018,7 @@ public final class CompilerTest {
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
 
     String js = "var goog, x; goog.exportSymbol('a', x);";
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode", js));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(result.success).isTrue();
@@ -1048,20 +1035,16 @@ public final class CompilerTest {
     options.setGenerateExports(true);
 
     String js = "var goog; /** @export */ var a={};";
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode", js));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol(\"a\",c);");
   }
 
-  private static final DiagnosticType TEST_ERROR =
-      DiagnosticType.error("TEST_ERROR", "Test error");
+  private static final DiagnosticType TEST_ERROR = DiagnosticType.error("TEST_ERROR", "Test error");
 
-  /**
-   * Simple error manager that tracks whether anything was reported/output.
-   */
+  /** Simple error manager that tracks whether anything was reported/output. */
   private static class TestErrorManager implements ErrorManager {
     private boolean output = false;
     private int warningCount = 0;
@@ -1079,7 +1062,8 @@ public final class CompilerTest {
     }
 
     // Methods we don't care about
-    @Override public void generateReport() {}
+    @Override
+    public void generateReport() {}
 
     @Override
     public int getErrorCount() {
@@ -1101,7 +1085,8 @@ public final class CompilerTest {
       return ImmutableList.of();
     }
 
-    @Override public void setTypedPercent(double typedPercent) {}
+    @Override
+    public void setTypedPercent(double typedPercent) {}
 
     @Override
     public double getTypedPercent() {
@@ -1109,19 +1094,14 @@ public final class CompilerTest {
     }
   }
 
-  private boolean hasOutput(
-      String showWarningsOnlyFor,
-      String path,
-      CheckLevel level) {
+  private boolean hasOutput(String showWarningsOnlyFor, String path, CheckLevel level) {
     TestErrorManager errorManager = new TestErrorManager();
     Compiler compiler = new Compiler(errorManager);
     CompilerOptions options = createNewFlagBasedOptions();
     if (showWarningsOnlyFor != null) {
-      options.addWarningsGuard(
-          new ShowByPathWarningsGuard(showWarningsOnlyFor));
+      options.addWarningsGuard(new ShowByPathWarningsGuard(showWarningsOnlyFor));
     }
-    compiler.init(ImmutableList.<SourceFile>of(),
-        ImmutableList.<SourceFile>of(), options);
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
 
     compiler.report(JSError.make(path, 1, 1, level, TEST_ERROR));
 
@@ -1137,23 +1117,26 @@ public final class CompilerTest {
     final boolean[] before = new boolean[1];
     final boolean[] after = new boolean[1];
 
-    options.addCustomPass(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
-                     new CompilerPass() {
-                       @Override public void process(Node externs, Node root) {
-                         before[0] = true;
-                       }
-                     });
+    options.addCustomPass(
+        CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            before[0] = true;
+          }
+        });
 
-    options.addCustomPass(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP,
-                     new CompilerPass() {
-                       @Override public void process(Node externs, Node root) {
-                         after[0] = true;
-                       }
-                     });
+    options.addCustomPass(
+        CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP,
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            after[0] = true;
+          }
+        });
 
     String js = "var x = 1;";
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("testcode", js));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode", js));
     compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertThat(before[0]).isTrue(); // should run these custom passes
@@ -1206,43 +1189,119 @@ public final class CompilerTest {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setStrictModeInput(true);
-    options.setEmitUseStrict(true);
+    options.setEmitUseStrict(false);
     options.setPreserveDetailedSourceInfo(true);
-    options.setCheckTypes(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     compiler.init(
         Collections.singletonList(
-            SourceFile.fromCode("externs.js",
-                Joiner.on('\n').join(
-                    "",
-                    "var console = {};",
-                    " console.log = function() {};"))),
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    ""))),
         Collections.singletonList(
-            SourceFile.fromCode("input.js",
-                Joiner.on('\n').join(
-                    "",
-                    "function f() { return 2; }",
-                    "console.log(f());"))),
+            SourceFile.fromCode(
+                "input.js",
+                lines(
+                    "function f() { return 2; }", //
+                    "console.log(f());",
+                    ""))),
         options);
 
     compiler.parse();
     compiler.check();
 
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    compiler.saveState(byteArrayOutputStream);
-    byteArrayOutputStream.close();
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
     compiler.options = options;
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-      compiler.restoreState(byteArrayInputStream);
-    }
+    restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performOptimizations();
     String source = compiler.toSource();
-    assertThat(source).isEqualTo("'use strict';console.log(2);");
+    assertThat(source).isEqualTo("console.log(2);");
+  }
+
+  @Test
+  public void testCheckSaveRestore3Stages() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setEmitUseStrict(false);
+    options.setPreserveDetailedSourceInfo(true);
+    // Late localization happens in stage 3, so this forces stage 3 to actually have some
+    // effect on the AST.
+    options.setDoLateLocalization(true);
+    // Supply a message bundle to trigger the replaceStrings pass.
+    // We don't need to actually translate anything, though.
+    options.setMessageBundle(new EmptyMessageBundle());
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    compiler.init(
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    ""))),
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "input.js",
+                lines(
+                    "/** @desc greeting */", //
+                    "const MSG_HELLO = goog.getMsg('hello');",
+                    "function f() { return MSG_HELLO; }",
+                    "console.log(f());",
+                    ""))),
+        options);
+
+    compiler.parse();
+    compiler.check();
+
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
+    restoreCompilerState(compiler, stateAfterChecks);
+
+    compiler.performOptimizations();
+    String source = compiler.toSource();
+    assertThat(source)
+        .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+
+    final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
+    restoreCompilerState(compiler, stateAfterOptimizations);
+
+    compiler.performFinalizations();
+    source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(\"hello\");");
+  }
+
+  private void restoreCompilerState(Compiler compiler, byte[] stateAfterChecks)
+      throws IOException, ClassNotFoundException {
+    try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(stateAfterChecks)) {
+      compiler.restoreState(byteArrayInputStream);
+    } catch (Exception e) {
+      throw new AssertionError("restoring compiler state failed", e);
+    }
+  }
+
+  private byte[] getSavedCompilerState(Compiler compiler) throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    compiler.saveState(outputStream);
+    outputStream.close();
+    return outputStream.toByteArray();
   }
 
   @Test
@@ -1284,10 +1343,7 @@ public final class CompilerTest {
 
     compiler = new Compiler(new TestErrorManager());
     compiler.options = options;
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-      compiler.restoreState(byteArrayInputStream);
-    }
+    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
     compiler.performOptimizations();
     String source = compiler.toSource();
@@ -1831,28 +1887,32 @@ public final class CompilerTest {
   public void testAddIndexProvider_ThenGetIndex() {
     Compiler compiler = new Compiler();
 
-    compiler.addIndexProvider(new IndexProvider<String>() {
-      @Override
-      public String get() {
-        // Normally some shared index would be constructed/updated/returned here.
-        return "String";
-      }
+    compiler.addIndexProvider(
+        new IndexProvider<String>() {
+          @Override
+          public String get() {
+            // Normally some shared index would be constructed/updated/returned here.
+            return "String";
+          }
 
-      @Override
-      public Class<String> getType() {
-        return String.class;
-      }});
-    compiler.addIndexProvider(new IndexProvider<Double>() {
-      @Override
-      public Double get() {
-        // Normally some shared index would be constructed/updated/returned here.
-        return Double.MAX_VALUE;
-      }
+          @Override
+          public Class<String> getType() {
+            return String.class;
+          }
+        });
+    compiler.addIndexProvider(
+        new IndexProvider<Double>() {
+          @Override
+          public Double get() {
+            // Normally some shared index would be constructed/updated/returned here.
+            return Double.MAX_VALUE;
+          }
 
-      @Override
-      public Class<Double> getType() {
-        return Double.class;
-      }});
+          @Override
+          public Class<Double> getType() {
+            return Double.class;
+          }
+        });
 
     // Have registered providers.
     assertThat(compiler.getIndex(String.class)).isEqualTo("String");
@@ -1994,10 +2054,7 @@ public final class CompilerTest {
       orderedInputs.add(input.getName());
     }
 
-    assertThat(orderedInputs)
-        .containsExactly(
-            "/b.js", "/c.js", "/a.js", "/entry.js")
-        .inOrder();
+    assertThat(orderedInputs).containsExactly("/b.js", "/c.js", "/a.js", "/entry.js").inOrder();
   }
 
   @Test
@@ -2273,10 +2330,7 @@ public final class CompilerTest {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       compiler.saveState(byteArrayOutputStream);
       byteArrayOutputStream.close();
-      try (ByteArrayInputStream byteArrayInputStream =
-          new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
-        compiler.restoreState(byteArrayInputStream);
-      }
+      restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
     }
 
     compiler.performOptimizations();

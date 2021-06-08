@@ -474,6 +474,15 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogProvide_ok() {
+    assertNoWarning("goog.provide('foo');");
+    assertNoWarning("goog.provide('foo'); foo = 0;");
+    assertNoWarning("goog.provide('foo'); var foo = 0;");
+    assertNoWarning("goog.provide('foo.bar');");
+    assertNoWarning("goog.provide('foo.bar'); foo.bar = 0;");
+  }
+
+  @Test
   public void testUndeclaredLet() {
     assertEarlyReferenceError("if (a) { x = 3; let x;}");
 

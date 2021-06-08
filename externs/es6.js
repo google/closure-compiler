@@ -309,6 +309,14 @@ String.prototype.normalize = function(opt_form) {};
 String.prototype.startsWith = function(searchString, opt_position) {};
 
 /**
+ * @param {!RegExp|string} searchValue
+ * @param {?string|function(string, ...?):*} replacement
+ * @return {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replaceAll
+ */
+String.prototype.replaceAll = function(searchValue, replacement) {};
+
+/**
  * @param {string} searchString
  * @param {number=} opt_position
  * @return {boolean}

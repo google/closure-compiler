@@ -64,7 +64,7 @@ final class TypedAstSerializer {
     checkArgument(jsRoot.isRoot());
 
     final TypePool typePool;
-    if (this.compiler.hasTypeCheckingRun()) {
+    if (this.compiler.hasTypeCheckingRun() && !this.compiler.isTypeRegistryCleared()) {
       SerializeTypesToPointers typeSerializer =
           SerializeTypesToPointers.create(this.compiler, this.stringPool, this.serializationMode);
       typeSerializer.gatherTypesOnAst(jsRoot.getParent());
@@ -83,6 +83,9 @@ final class TypedAstSerializer {
       builder.addExternFile(serializeScriptNode(script));
     }
     for (Node script = jsRoot.getFirstChild(); script != null; script = script.getNext()) {
+      if (NodeUtil.isFromTypeSummary(script)) {
+        continue;
+      }
       builder.addCodeFile(serializeScriptNode(script));
     }
 

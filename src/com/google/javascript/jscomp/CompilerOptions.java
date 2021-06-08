@@ -655,7 +655,7 @@ public class CompilerOptions implements Serializable {
   // --------------------------------
 
   /** Replace UI strings with chrome.i18n.getMessage calls. Used by Chrome extensions/apps. */
-  boolean replaceMessagesWithChromeI18n;
+  private boolean replaceMessagesWithChromeI18n;
 
   String tcProjectId;
 
@@ -671,6 +671,26 @@ public class CompilerOptions implements Serializable {
 
     this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
     this.tcProjectId = tcProjectId;
+  }
+
+  /**
+   * Should we run the pass that does replacement of the chrome-specific `chrome.i18n.getMessage()`
+   * translatable message definitions?
+   *
+   * <p>This form of l10n is incompatible with our standard `goog.getMsg()` messages.
+   */
+  public boolean shouldRunReplaceMessagesForChrome() {
+    if (replaceMessagesWithChromeI18n) {
+      checkState(
+          messageBundle == null || messageBundle instanceof EmptyMessageBundle,
+          "When replacing messages with chrome.i18n.getMessage, a message bundle should not be"
+              + " specified.");
+      checkState(
+          !doLateLocalization, "Late localization is not supported for chrome.i18n.getMessage");
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /** Inserts run-time type assertions for debugging. */
@@ -2228,8 +2248,41 @@ public class CompilerOptions implements Serializable {
     this.doLateLocalization = doLateLocalization;
   }
 
-  public boolean shouldDoLateLocalization() {
-    return this.doLateLocalization;
+  /**
+   * Should we run the pass that does replacement of translatable messages all at once just before
+   * optimizations?
+   */
+  public boolean shouldRunFullReplaceMessagesPass() {
+    return shouldRunReplaceMessagesPass() && !doLateLocalization;
+  }
+
+  /**
+   * Should we run the pass that wraps translatable messages in function calls to protect them from
+   * mangling by optimizations, so they can be found and replaced later?
+   */
+  public boolean shouldRunProtectMessagesPass() {
+    return shouldRunSplitReplaceMessagesPass();
+  }
+
+  /**
+   * Should we run the pass that finds translatable messages that were wrapped in function calls to
+   * protect them from mangling by optimizations and replaces them with the localized messages?
+   */
+  public boolean shouldRunReplaceProtectedMessagesPass() {
+    return shouldRunSplitReplaceMessagesPass();
+  }
+
+  /**
+   * Should we run the split form of `ReplaceMessages` that first protects messages, then later
+   * replaces them?
+   */
+  private boolean shouldRunSplitReplaceMessagesPass() {
+    return shouldRunReplaceMessagesPass() && doLateLocalization;
+  }
+
+  /** Should we run any form of the `ReplaceMessages` pass? */
+  private boolean shouldRunReplaceMessagesPass() {
+    return !shouldRunReplaceMessagesForChrome() && messageBundle != null;
   }
 
   public void setMarkAsCompiled(boolean markAsCompiled) {

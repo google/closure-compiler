@@ -499,26 +499,19 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(typesToColors);
 
-    boolean mustRunReplaceProtectedMessagesPass = false;
-    if (options.replaceMessagesWithChromeI18n) {
-      checkState(
-          !options.shouldDoLateLocalization(),
-          "late localization is not available for chrome i18n");
+    if (options.shouldRunReplaceMessagesForChrome()) {
       passes.add(replaceMessagesForChrome);
-    } else if (options.messageBundle != null) {
-      if (options.shouldDoLateLocalization()) {
-        // With late localization we protect the messages from mangling by optimizations now,
-        // then actually replace them after optimizations.
-        // The purpose of doing this is to separate localization from optimization so we can
-        // optimize just once for all locales.
-        passes.add(getProtectMessagesPass());
-        mustRunReplaceProtectedMessagesPass = true;
-      } else {
-        // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
-        // smaller if you replace messages before optimizing, but if we can change that, it would
-        // be good to drop this early replacement entirely.
-        passes.add(getFullReplaceMessagesPass());
-      }
+    } else if (options.shouldRunFullReplaceMessagesPass()) {
+      // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
+      // smaller if you replace messages before optimizing, but if we can change that, it would
+      // be good to drop this early replacement entirely.
+      passes.add(getFullReplaceMessagesPass());
+    } else if (options.shouldRunProtectMessagesPass()) {
+      // With late localization we protect the messages from mangling by optimizations now,
+      // then actually replace them after optimizations.
+      // The purpose of doing this is to separate localization from optimization so we can
+      // optimize just once for all locales.
+      passes.add(getProtectMessagesPass());
     }
 
     // Defines in code always need to be processed.
@@ -832,18 +825,22 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(optimizeToEs6);
     }
 
-    if (mustRunReplaceProtectedMessagesPass) {
-      // TODO(b/188585306): Move this into a third stage of compilation that can be run
-      // independently on the results of optimizations.
-      passes.add(getReplaceProtectedMessagesPass());
-    }
-
     // must run after ast validity check as modules may not be allowed in the output feature set
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);
+    return passes;
+  }
+
+  @Override
+  protected List<PassFactory> getFinalizations() {
+    List<PassFactory> passes = new ArrayList<>();
+
+    if (options.shouldRunReplaceProtectedMessagesPass()) {
+      passes.add(getReplaceProtectedMessagesPass());
+    }
     return passes;
   }
 
@@ -1922,8 +1919,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkConsts =
       PassFactory.builder()
           .setName("checkConsts")
-          .setInternalFactory(
-              (compiler) -> new ConstCheck(compiler, compiler.getModuleMetadataMap()))
+          .setInternalFactory(ConstCheck::new)
           .setFeatureSetForChecks()
           .build();
 

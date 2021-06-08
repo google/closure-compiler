@@ -762,6 +762,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           stage1Passes();
           if (!hasErrors()) {
             stage2Passes();
+            if (!hasErrors()) {
+              stage3Passes();
+            }
           }
         }
         performPostCompilationTasks();
@@ -818,6 +821,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           stage1Passes();
           if (!hasErrors()) {
             stage2Passes();
+            if (!hasErrors()) {
+              stage3Passes();
+            }
           }
         }
         performPostCompilationTasks();
@@ -877,6 +883,27 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           if (options.shouldOptimize()) {
             performOptimizations();
           }
+          return null;
+        });
+  }
+
+  /**
+   * Perform compiler passes for stage 3 of compilation.
+   *
+   * <p>Stage 3 consists primarily of localization passes.
+   *
+   * <p>{@code stage2Passes()} must be called before this method is called.
+   *
+   * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
+   * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
+   */
+  public void stage3Passes() {
+    checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
+    checkState(!hasErrors());
+    checkState(!options.getInstrumentForCoverageOnly());
+    runInCompilerThread(
+        () -> {
+          performFinalizations();
           return null;
         });
   }
@@ -1520,6 +1547,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     typeRegistry = null;
     typeValidator = null;
     abstractInterpreter = null;
+  }
+
+  @Override
+  public boolean isTypeRegistryCleared() {
+    return typeCheckingHasRun && typeRegistry == null;
   }
 
   @Override
@@ -2497,6 +2529,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     phaseOptimizer = createPhaseOptimizer();
     phaseOptimizer.consume(optimizations);
+    phaseOptimizer.process(externsRoot, jsRoot);
+    phaseOptimizer = null;
+  }
+
+  void performFinalizations() {
+    List<PassFactory> finalizations = getPassConfig().getFinalizations();
+    if (finalizations.isEmpty()) {
+      return;
+    }
+
+    phaseOptimizer = createPhaseOptimizer();
+    phaseOptimizer.consume(finalizations);
     phaseOptimizer.process(externsRoot, jsRoot);
     phaseOptimizer = null;
   }
