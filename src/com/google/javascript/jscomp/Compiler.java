@@ -439,7 +439,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       err.println(warningsGuard);
     } else {
       // Log to separate files for convenience.
-      logToFile("externs.log", () -> externs.toString());
+      logToFile("externs.log", externs::toString);
       // To get a pretty-printed JSON module graph, change the string generation expression to
       //
       // new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson())

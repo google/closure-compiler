@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import org.junit.Test;
@@ -34,7 +35,7 @@ public final class StringPoolTest {
 
   @Test
   public void emptyPool_serializesToDefaultProto() {
-    assertThat(StringPool.empty().toProto()).isEqualTo(StringPoolProto.getDefaultInstance());
+    assertThat(StringPool.empty().toProto()).isEqualToDefaultInstance();
   }
 
   @Test
