@@ -83,6 +83,7 @@ String.prototype.normalize es6 es6
 String.prototype.padEnd es8 es3 es6/string/padend
 String.prototype.padStart es8 es3 es6/string/padstart
 String.prototype.repeat es6 es3 es6/string/repeat
+String.prototype.replaceAll es_next es3 es6/string/replaceall
 String.prototype.startsWith es6 es3 es6/string/startswith
 String.prototype.trimEnd es_2019 es3 es6/string/trimend
 String.prototype.trimLeft es_2019 es3 es6/string/trimstart
