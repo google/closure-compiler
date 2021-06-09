@@ -800,7 +800,7 @@ class IRFactory {
     return location.column;
   }
 
-  String languageFeatureWarningMessage(Feature feature) {
+  static String languageFeatureWarningMessage(Feature feature) {
     LanguageMode forFeature = LanguageMode.minimumRequiredFor(feature);
 
     if (forFeature == LanguageMode.UNSUPPORTED) {

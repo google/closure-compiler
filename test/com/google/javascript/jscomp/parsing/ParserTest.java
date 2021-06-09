@@ -6364,19 +6364,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertWithMessage("Node %s has unexpected JSDocInfo %s", node, info).that(info).isNull();
   }
 
+  @Deprecated
   private static String getRequiresEs6Message(Feature feature) {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2015, feature);
   }
 
+  @Deprecated
   private static String getRequiresEs2018Message(Feature feature) {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2018, feature);
   }
 
+  @Deprecated
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
-    return "This language feature is only supported for "
-        + languageMode
-        + " mode or better: "
-        + feature;
+    return requiresLanguageModeMessage(feature);
+  }
+
+  private static String requiresLanguageModeMessage(Feature feature) {
+    return IRFactory.languageFeatureWarningMessage(feature);
   }
 
   private static Node script(Node stmt) {
