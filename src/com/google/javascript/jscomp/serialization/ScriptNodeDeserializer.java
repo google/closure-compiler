@@ -202,17 +202,11 @@ public final class ScriptNodeDeserializer {
         case DYNAMIC_IMPORT:
           this.addScriptFeature(Feature.DYNAMIC_IMPORT);
           return;
-
         case ASSIGN_OR:
-          // TODO (user): add script feature for assign_or
-          break;
         case ASSIGN_AND:
-          // TODO (user): add script feature for assign_and
-          break;
         case ASSIGN_COALESCE:
-          // TODO (user): add script feature for assign_coalesce
-          break;
-
+          this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
+          return;
         case FOR:
           if (node.isForOf()) {
             this.addScriptFeature(Feature.FOR_OF);

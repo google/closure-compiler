@@ -6314,26 +6314,50 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testAssignOR() {
-    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
     Node tree = parse("x||=y");
     assertNode(tree.getFirstChild())
         .isEqualTo(IR.exprResult(IR.assignOr(IR.name("x"), IR.name("y"))));
   }
 
   @Test
+  public void testAssignOr_es2020() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+
+    parseWarning("x||=y", requiresLanguageModeMessage(Feature.LOGICAL_ASSIGNMENT));
+  }
+
+  @Test
   public void testAssignAnd() {
-    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
     Node tree = parse("x&&=y");
     assertNode(tree.getFirstChild())
         .isEqualTo(IR.exprResult(IR.assignAnd(IR.name("x"), IR.name("y"))));
   }
 
   @Test
+  public void testAssignAnd_es2020() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+
+    parseWarning("x&&=y", requiresLanguageModeMessage(Feature.LOGICAL_ASSIGNMENT));
+  }
+
+  @Test
   public void testAssignCoalesce() {
-    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
     Node tree = parse("x??=y");
     assertNode(tree.getFirstChild())
         .isEqualTo(IR.exprResult(IR.assignCoalesce(IR.name("x"), IR.name("y"))));
+  }
+
+  @Test
+  public void testAssignCoalesce_es2020() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+
+    parseWarning("x??=y", requiresLanguageModeMessage(Feature.LOGICAL_ASSIGNMENT));
   }
 
   @Test

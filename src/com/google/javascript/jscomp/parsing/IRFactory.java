@@ -1626,15 +1626,22 @@ class IRFactory {
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
       if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
-        if (exprNode.operator.type == TokenType.STAR_STAR
-            || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
-          maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
-        } else if (exprNode.operator.type == TokenType.QUESTION_QUESTION) {
-          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+        switch (exprNode.operator.type) {
+          case STAR_STAR:
+          case STAR_STAR_EQUAL:
+            maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+            break;
+          case QUESTION_QUESTION:
+            maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+            break;
+          case OR_EQUAL:
+          case AND_EQUAL:
+          case QUESTION_QUESTION_EQUAL:
+            maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
+            break;
+          default:
+            break;
         }
-        // TODO (user): add for each new logical assignment operator:
-        // else if (exprNode.operator.type = TokenType.OR_EQUAL)
-        // { maybeWarnForFeature(exprNode, ...); } ?
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
@@ -1652,16 +1659,22 @@ class IRFactory {
       Node current = null;
       Node previous = null;
       while (exprTree != null) {
-        if (exprTree.operator.type == TokenType.STAR_STAR
-            || exprTree.operator.type == TokenType.STAR_STAR_EQUAL) {
-          maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
+        switch (exprTree.operator.type) {
+          case STAR_STAR:
+          case STAR_STAR_EQUAL:
+            maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
+            break;
+          case QUESTION_QUESTION:
+            maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
+            break;
+          case OR_EQUAL:
+          case AND_EQUAL:
+          case QUESTION_QUESTION_EQUAL:
+            maybeWarnForFeature(exprTree, Feature.LOGICAL_ASSIGNMENT);
+            break;
+          default:
+            break;
         }
-        if (exprTree.operator.type == TokenType.QUESTION_QUESTION) {
-          maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
-        }
-        // TODO (user): add for each new logical assignment operator:
-        // if (exprNode.operator.type = TokenType.OR_EQUAL)
-        // { maybeWarnForFeature(exprNode, ...); } ?
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
         // deep and because we have already checked that there isn't any JSDoc we can traverse
