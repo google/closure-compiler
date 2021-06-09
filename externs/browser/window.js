@@ -174,7 +174,7 @@ function setTimeout(callback, opt_delay, callbackParams) {}
 function hasOwnProperty (propertyName) {}
 
 /**
- * @param {function()} callback
+ * @param {function():void} callback
  * @return {undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/queueMicrotask
  * @see https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#microtask-queuing
