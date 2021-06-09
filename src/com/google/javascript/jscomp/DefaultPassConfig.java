@@ -474,7 +474,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(gatherExternProperties);
     }
 
-    if (options.closurePass && options.shouldRewriteModules()) {
+    if (options.closurePass
+        && (!options.checksOnly || options.shouldRewriteProvidesInChecksOnly())) {
       checks.add(closureProvidesRequires);
     }
 

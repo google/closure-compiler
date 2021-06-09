@@ -3708,8 +3708,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}); // goog.scope\n";
     String expectedCode =
         ""
-            + "/** @const */ var foo = {};\n"
-            + "/** @const */ foo.bar = {};\n"
             + "goog.provide('foo.bar');\n"
             + "goog.require('baz.qux.Quux');\n"
             + "goog.require('foo.ScopedType');\n"

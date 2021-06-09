@@ -71,6 +71,7 @@ public final class SymbolTableTest {
     options.setContinueAfterErrors(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    options.setBadRewriteProvidesInChecksOnlyThatWeWantToGetRidOf(true);
   }
 
   /**
