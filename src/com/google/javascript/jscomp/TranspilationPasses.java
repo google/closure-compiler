@@ -19,10 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2020;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -53,7 +49,7 @@ public class TranspilationPasses {
                       preprocessorTableFactory.getInstanceOrNull(),
                       compiler.getTopScope());
                 })
-            .setFeatureSet(ES_NEXT_IN)
+            .setFeatureSetForChecks()
             .build());
   }
 
@@ -191,7 +187,7 @@ public class TranspilationPasses {
                       .rewriteSuperPropertyReferencesWithoutSuper(
                           !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
                       .build())
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteAsyncIteration =
@@ -206,77 +202,77 @@ public class TranspilationPasses {
                       .rewriteSuperPropertyReferencesWithoutSuper(
                           !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
                       .build())
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteObjectSpread =
       PassFactory.builder()
           .setName("rewriteObjectSpread")
           .setInternalFactory(RewriteObjectSpread::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteCatchWithNoBinding =
       PassFactory.builder()
           .setName("rewriteCatchWithNoBinding")
           .setInternalFactory(RewriteCatchWithNoBinding::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteNewDotTarget =
       PassFactory.builder()
           .setName("rewriteNewDotTarget")
           .setInternalFactory(RewriteNewDotTarget::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory removeTrailingCommaFromParamList =
       PassFactory.builder()
           .setName("removeTrailingCommaFromParamList")
           .setInternalFactory(RemoveTrailingCommaFromParamList::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
       PassFactory.builder()
           .setName("reportBigIntTranspilationUnsupported")
           .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
-          .setFeatureSet(ES2020)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteExponentialOperator =
       PassFactory.builder()
           .setName("rewriteExponentialOperator")
           .setInternalFactory(Es7RewriteExponentialOperator::new)
-          .setFeatureSet(ES2018)
+          .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory es6NormalizeShorthandProperties =
       PassFactory.builder()
           .setName("es6NormalizeShorthandProperties")
           .setInternalFactory(Es6NormalizeShorthandProperties::new)
-          .setFeatureSet(ES2018)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory es6RewriteClassExtends =
       PassFactory.builder()
           .setName(PassNames.ES6_REWRITE_CLASS_EXTENDS)
           .setInternalFactory(Es6RewriteClassExtendsExpressions::new)
-          .setFeatureSet(ES2018)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory es6ExtractClasses =
       PassFactory.builder()
           .setName(PassNames.ES6_EXTRACT_CLASSES)
           .setInternalFactory(Es6ExtractClasses::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory es6RewriteClass =
       PassFactory.builder()
           .setName("Es6RewriteClass")
           .setInternalFactory(Es6RewriteClass::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory getEs6RewriteDestructuring(ObjectDestructuringRewriteMode rewriteMode) {
@@ -287,7 +283,7 @@ public class TranspilationPasses {
                 new Es6RewriteDestructuring.Builder(compiler)
                     .setDestructuringRewriteMode(rewriteMode)
                     .build())
-        .setFeatureSet(ES2018)
+        .setFeatureSetForChecks()
         .build();
   }
 
@@ -295,14 +291,14 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("Es6RenameVariablesInParamLists")
           .setInternalFactory(Es6RenameVariablesInParamLists::new)
-          .setFeatureSet(ES2018)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory es6RewriteArrowFunction =
       PassFactory.builder()
           .setName("Es6RewriteArrowFunction")
           .setInternalFactory(Es6RewriteArrowFunction::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewritePolyfills =
@@ -328,7 +324,7 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("es6ConvertSuper")
           .setInternalFactory(Es6ConvertSuper::new)
-          .setFeatureSet(ES2018)
+          .setFeatureSetForChecks()
           .build();
 
   /** Injects runtime library code needed for transpiled ES2015+ code. */
@@ -336,7 +332,7 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("es6InjectRuntimeLibraries")
           .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
-          .setFeatureSet(ES_NEXT_IN)
+          .setFeatureSetForChecks()
           .build();
 
   /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
@@ -349,7 +345,7 @@ public class TranspilationPasses {
 
   /**
    * Does the main ES2015 to ES3 conversion. There are a few other passes which run before this one,
-   * to convert constructs which are not converted by this pass. This pass can run after NTI
+   * to convert constructs which are not converted by this pass.
    */
   static final PassFactory lateConvertEs6ToEs3 =
       PassFactory.builder()
@@ -362,43 +358,42 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("es6ForOf")
           .setInternalFactory(Es6ForOfConverter::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewriteBlockScopedFunctionDeclaration =
       PassFactory.builder()
           .setName("Es6RewriteBlockScopedFunctionDeclaration")
           .setInternalFactory(Es6RewriteBlockScopedFunctionDeclaration::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewriteBlockScopedDeclaration =
       PassFactory.builder()
           .setName("Es6RewriteBlockScopedDeclaration")
           .setInternalFactory(Es6RewriteBlockScopedDeclaration::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewriteGenerators =
       PassFactory.builder()
           .setName("rewriteGenerators")
           .setInternalFactory(Es6RewriteGenerators::new)
-          .setFeatureSet(ES2017)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewriteOptionalChainingOperator =
       PassFactory.builder()
           .setName("rewriteOptionalChainingOperator")
           .setInternalFactory(RewriteOptionalChainingOperator::new)
-          // TODO(b/161166856) change to ES2020 when optional chaining moves there.
-          .setFeatureSet(ES_NEXT_IN)
+          .setFeatureSetForChecks()
           .build();
 
   static final PassFactory rewriteNullishCoalesceOperator =
       PassFactory.builder()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .setFeatureSet(ES2020)
+          .setFeatureSetForChecks()
           .build();
 
   /**
@@ -483,7 +478,7 @@ public class TranspilationPasses {
                 ((Node externs, Node root) ->
                     maybeMarkFeaturesAsTranspiledAway(
                         compiler, featureToRemove, moreFeaturesToRemove)))
-        .setFeatureSet(FeatureSet.ES_NEXT_IN)
+        .setFeatureSetForChecks()
         .build();
   }
 }
