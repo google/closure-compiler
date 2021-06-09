@@ -460,6 +460,10 @@ public class Scanner {
       case '?':
         if (peek('?')) { // see ??
           nextChar();
+          if (peek('=')) {
+            nextChar();
+            return createToken(TokenType.QUESTION_QUESTION_EQUAL, beginToken);
+          }
           return createToken(TokenType.QUESTION_QUESTION, beginToken);
         }
         if (peek('.')) { // see ?.
@@ -598,6 +602,10 @@ public class Scanner {
         switch (peekChar()) {
           case '&':
             nextChar();
+            if (peek('=')) {
+              nextChar();
+              return createToken(TokenType.AND_EQUAL, beginToken);
+            }
             return createToken(TokenType.AND, beginToken);
           case '=':
             nextChar();
@@ -609,6 +617,10 @@ public class Scanner {
         switch (peekChar()) {
           case '|':
             nextChar();
+            if (peek('=')) {
+              nextChar();
+              return createToken(TokenType.OR_EQUAL, beginToken);
+            }
             return createToken(TokenType.OR, beginToken);
           case '=':
             nextChar();

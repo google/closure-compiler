@@ -100,7 +100,7 @@ public final class FeatureSetTest {
     // from these `FeatureSet`s.
     assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
     assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next");
-    assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_unsupported");
   }
 
   @Test

@@ -6313,6 +6313,30 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testAssignOR() {
+    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    Node tree = parse("x||=y");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.assignOr(IR.name("x"), IR.name("y"))));
+  }
+
+  @Test
+  public void testAssignAnd() {
+    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    Node tree = parse("x&&=y");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.assignAnd(IR.name("x"), IR.name("y"))));
+  }
+
+  @Test
+  public void testAssignCoalesce() {
+    // expectFeatures(Feature.LOGICAL_ASSIGNMENT);
+    Node tree = parse("x??=y");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.assignCoalesce(IR.name("x"), IR.name("y"))));
+  }
+
+  @Test
   public void testNoDuplicateComments_arrow_fn() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;

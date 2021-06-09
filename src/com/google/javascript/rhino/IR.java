@@ -575,6 +575,21 @@ public class IR {
     return binaryOp(Token.SUB, expr1, expr2);
   }
 
+  /** "||=" */
+  public static Node assignOr(Node expr1, Node expr2) {
+    return binaryOp(Token.ASSIGN_OR, expr1, expr2);
+  }
+
+  /** "&&=" */
+  public static Node assignAnd(Node expr1, Node expr2) {
+    return binaryOp(Token.ASSIGN_AND, expr1, expr2);
+  }
+
+  /** "??=" */
+  public static Node assignCoalesce(Node expr1, Node expr2) {
+    return binaryOp(Token.ASSIGN_COALESCE, expr1, expr2);
+  }
+
   // TODO(johnlenz): the rest of the ops
 
   // literals
@@ -840,6 +855,9 @@ public class IR {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case AWAIT:
       case BIGINT:
       case BITAND:

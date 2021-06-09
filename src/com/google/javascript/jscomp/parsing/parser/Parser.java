@@ -2527,6 +2527,9 @@ public class Parser {
       case AMPERSAND_EQUAL:
       case CARET_EQUAL:
       case BAR_EQUAL:
+      case OR_EQUAL:
+      case AND_EQUAL:
+      case QUESTION_QUESTION_EQUAL:
         return true;
       default:
         return false;

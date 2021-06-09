@@ -1660,6 +1660,9 @@ class IRFactory {
         } else if (exprNode.operator.type == TokenType.QUESTION_QUESTION) {
           maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
         }
+        // TODO (user): add for each new logical assignment operator:
+        // else if (exprNode.operator.type = TokenType.OR_EQUAL)
+        // { maybeWarnForFeature(exprNode, ...); } ?
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
@@ -1684,6 +1687,9 @@ class IRFactory {
         if (exprTree.operator.type == TokenType.QUESTION_QUESTION) {
           maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
         }
+        // TODO (user): add for each new logical assignment operator:
+        // if (exprNode.operator.type = TokenType.OR_EQUAL)
+        // { maybeWarnForFeature(exprNode, ...); } ?
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
         // deep and because we have already checked that there isn't any JSDoc we can traverse
@@ -3480,6 +3486,13 @@ class IRFactory {
         return Token.AND;
       case QUESTION_QUESTION:
         return Token.COALESCE;
+
+      case OR_EQUAL:
+        return Token.ASSIGN_OR;
+      case AND_EQUAL:
+        return Token.ASSIGN_AND;
+      case QUESTION_QUESTION_EQUAL:
+        return Token.ASSIGN_COALESCE;
 
       default:
         throw new IllegalStateException(String.valueOf(token));
