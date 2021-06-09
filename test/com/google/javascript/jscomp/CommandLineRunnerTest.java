@@ -153,6 +153,126 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void test3StageCompile() throws Exception {
+    // Create a temporary directory to hold inputs and outputs
+    final File testDir = java.nio.file.Files.createTempDirectory("testDir").toFile();
+
+    // Create a message bundle to use
+    File msgBundle = new File(testDir, "messages.xtb");
+    final ImmutableList<String> lines =
+        ImmutableList.of(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<!DOCTYPE translationbundle SYSTEM \"translationbundle.dtd\">",
+            "<translationbundle lang=\"es\">",
+            "<translation id=\"6289482750305328564\">hola</translation>",
+            "</translationbundle>",
+            "");
+    writeLinesToFile(msgBundle, lines);
+
+    // Create test externs with a definition for goog.getMsg().
+    final File externsFile = new File(testDir, "externs.js");
+    writeLinesToFile(
+        externsFile,
+        "/**",
+        " * @fileoverview test externs",
+        " * @externs",
+        " */",
+        "var goog = {};",
+        "/**",
+        " * @nosideeffects",
+        " * @param {string} msg",
+        " * @param {Object=} placeholderReplacements",
+        " * @param {Object=} options",
+        " * @return {string}",
+        " */",
+        "goog.getMsg = function(msg, placeholderReplacements, options) {};");
+
+    // Create an input file
+    File srcFile = new File(testDir, "input.js");
+    writeLinesToFile(
+        srcFile,
+        "/** @desc greeting */",
+        "const MSG_HELLO = goog.getMsg('hello');",
+        "console.log(MSG_HELLO);");
+
+    // Create a path for the stage 1 output
+    File stage1Save = new File(testDir, "stage1.save");
+
+    ImmutableList<String> commonFlags =
+        ImmutableList.of(
+            "--compilation_level=ADVANCED_OPTIMIZATIONS",
+            "--translations_file",
+            msgBundle.toString(),
+            "--late_localization=true",
+            "--js",
+            externsFile.toString(),
+            "--js",
+            srcFile.toString());
+
+    // Run the compiler to generate the stage 1 save file
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            createStringArray(commonFlags, "--save_stage1_to_file", stage1Save.toString()));
+    assertThat(runner.doRun()).isEqualTo(0);
+
+    assertThat(runner.getCompiler().toSource())
+        .isEqualTo("var MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
+
+    // Create a path for the stage 2 output
+    File stage2Save = new File(testDir, "stage2.save");
+    // run the compiler to generate the stage 2 save file
+    runner =
+        new CommandLineRunner(
+            createStringArray(
+                commonFlags,
+                "--restore_stage1_from_file",
+                stage1Save.toString(),
+                "--save_stage2_to_file",
+                stage2Save.toString()));
+    assertThat(runner.doRun()).isEqualTo(0);
+
+    // During stage 2 the message is wrapped in a function call to protect it from mangling by
+    // optimizations.
+    assertThat(runner.getCompiler().toSource())
+        .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+
+    // Create a path for the final output
+    File compiledFile = new File(testDir, "compiled.js");
+
+    // run the compiler to generate the final output
+    runner =
+        new CommandLineRunner(
+            createStringArray(
+                commonFlags,
+                "--restore_stage2_from_file",
+                stage2Save.toString(),
+                "--js_output_file",
+                compiledFile.toString()));
+    assertThat(runner.doRun()).isEqualTo(0);
+
+    // During stage 3 the message is actually replaced and the output written to the compiled
+    // output file.
+    final String compiledJs =
+        new String(java.nio.file.Files.readAllBytes(compiledFile.toPath()), UTF_8);
+    assertThat(compiledJs).isEqualTo("console.log(\"hola\");\n");
+  }
+
+  private String[] createStringArray(Iterable<String> someStrings, String... additionalStrings) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.addAll(someStrings);
+    builder.add(additionalStrings);
+    return builder.build().toArray(new String[] {});
+  }
+
+  private void writeLinesToFile(File file, String... lines) throws IOException {
+    writeLinesToFile(file, ImmutableList.copyOf(lines));
+  }
+
+  private void writeLinesToFile(File file, Iterable<String> lines) throws IOException {
+    java.nio.file.Files.write(file.toPath(), lines, UTF_8);
+  }
+
+  @Test
   public void testUnknownAnnotation() {
     args.add("--warning_level=VERBOSE");
     test("/** @unknownTag */ function f() {}", RhinoErrorReporter.BAD_JSDOC_ANNOTATION);

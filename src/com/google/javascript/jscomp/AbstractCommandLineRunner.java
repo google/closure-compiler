@@ -1232,8 +1232,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       compiler.printConfig();
     }
 
-    String saveAfterChecksFilename = config.getSaveAfterChecksFileName();
-    String continueSavedCompilationFilename = config.getContinueSavedCompilationFileName();
     if (config.skipNormalOutputs) {
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
       compiler.orderInputsWithLargeStack();
@@ -1243,12 +1241,22 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       result = compiler.getResult();
     } else if (options.getInstrumentForCoverageOnly()) {
       result = instrumentForCoverage();
-    } else if (saveAfterChecksFilename != null) {
-      result = performStage1andSave(saveAfterChecksFilename);
+    } else if (config.shouldSaveAfterStage1()) {
+      result = performStage1andSave(config.getSaveCompilationStateToFilename());
     } else if (!typedAstInputFilenames.isEmpty()) {
       result = parseAndPerformStages2and3();
-    } else if (continueSavedCompilationFilename != null) {
-      result = restoreAndPerformStages2and3(continueSavedCompilationFilename);
+    } else if (config.shouldRestoreAndPerformStage2AndSave()) {
+      result =
+          restoreAndPerformStage2AndSave(
+              config.getContinueSavedCompilationFileName(),
+              config.getSaveCompilationStateToFilename());
+    } else if (config.shouldRestoreAndPerformStages2And3()) {
+      result = restoreAndPerformStages2and3(config.getContinueSavedCompilationFileName());
+      if (modules != null) {
+        modules = ImmutableList.copyOf(compiler.getModules());
+      }
+    } else if (config.shouldRestoreAndPerformStage3()) {
+      result = restoreAndPerformStage3(config.getContinueSavedCompilationFileName());
       if (modules != null) {
         modules = ImmutableList.copyOf(compiler.getModules());
       }
@@ -1345,8 +1353,34 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
+  private Result restoreAndPerformStage2AndSave(String inputFilename, String outputFilename) {
+    try (BufferedInputStream serializedInputStream =
+        new BufferedInputStream(new FileInputStream(inputFilename))) {
+      compiler.restoreState(serializedInputStream);
+      if (!compiler.hasErrors()) {
+        compiler.stage2Passes();
+        if (!compiler.hasErrors()) {
+          try (BufferedOutputStream serializedOutputStream =
+              new BufferedOutputStream(new FileOutputStream(outputFilename))) {
+            compiler.saveState(serializedOutputStream);
+          } catch (IOException e) {
+            compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, outputFilename));
+          }
+          compiler.performPostCompilationTasks();
+        }
+      }
+    } catch (IOException | ClassNotFoundException e) {
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, inputFilename));
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    return compiler.getResult();
+  }
+
+  @GwtIncompatible("Unnecessary")
   private Result restoreAndPerformStages2and3(String filename) {
-    Result result;
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
@@ -1364,8 +1398,26 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // exception somewhere.
       compiler.generateReport();
     }
-    result = compiler.getResult();
-    return result;
+    return compiler.getResult();
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private Result restoreAndPerformStage3(String filename) {
+    try (BufferedInputStream serializedInputStream =
+        new BufferedInputStream(new FileInputStream(filename))) {
+      compiler.restoreState(serializedInputStream);
+      if (!compiler.hasErrors()) {
+        compiler.stage3Passes();
+      }
+      compiler.performPostCompilationTasks();
+    } catch (IOException | ClassNotFoundException e) {
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    return compiler.getResult();
   }
 
   @GwtIncompatible("Unnecessary")
@@ -2333,16 +2385,98 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
+    /**
+     * When non-null specifies a file containing saved compiler state to restore and continue
+     * compiling.
+     */
     private String continueSavedCompilationFileName = null;
 
+    /**
+     * When > 0 indicates the stage at which compilation stopped for the compilation state that is
+     * being restored from a save file.
+     */
+    private int restoredCompilationStage = -1;
+
+    /**
+     * When > 0 indicates the stage at which compilation should stop and the compilation state be
+     * stored into a save file.
+     */
+    private int saveAfterCompilationStage = -1;
+
     /** Set the compiler to resume a saved compilation state from a file. */
-    public CommandLineConfig setContinueSavedCompilationFileName(String fileName) {
-      continueSavedCompilationFileName = fileName;
+    public CommandLineConfig setContinueSavedCompilationFileName(
+        String fileName, int restoredCompilationStage) {
+      if (fileName != null) {
+        checkArgument(
+            restoredCompilationStage > 0 && restoredCompilationStage < 3,
+            "invalid compilation stage: %s",
+            restoredCompilationStage);
+        continueSavedCompilationFileName = fileName;
+        this.restoredCompilationStage = restoredCompilationStage;
+      }
       return this;
+    }
+
+    boolean shouldSaveAfterStage1() {
+      if (saveCompilationStateToFilename != null && saveAfterCompilationStage == 1) {
+        checkState(
+            restoredCompilationStage < 0,
+            "cannot perform stage 1 after restoring from stage %s",
+            restoredCompilationStage);
+        checkState(
+            continueSavedCompilationFileName == null,
+            "cannot restore a saved compilation and also save after stage 1");
+        return true;
+      } else {
+        return false;
+      }
     }
 
     String getContinueSavedCompilationFileName() {
       return continueSavedCompilationFileName;
+    }
+
+    boolean shouldRestoreAndPerformStages2And3() {
+      // We have a saved compilations state to restore
+      return shouldContinueCompilation()
+          // the restored compilation stopped at stage 1
+          && restoredCompilationStage == 1
+          // we want to complete the rest of the compilation stages
+          && saveAfterCompilationStage < 0;
+    }
+
+    private boolean shouldContinueCompilation() {
+      if (continueSavedCompilationFileName != null) {
+        checkState(
+            restoredCompilationStage > 0 && restoredCompilationStage < 3,
+            "invalid restored compilation stage: %s",
+            restoredCompilationStage);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    boolean shouldRestoreAndPerformStage2AndSave() {
+      // We have a saved compilations state to restore
+      return shouldContinueCompilation()
+          // the restored compilation stopped at stage 1
+          && restoredCompilationStage == 1
+          // we want to stop and save after stage 2
+          && saveAfterCompilationStage == 2;
+    }
+
+    boolean shouldRestoreAndPerformStage3() {
+      if (shouldContinueCompilation() && restoredCompilationStage == 2) {
+        // We have a saved compilations state from stage 2 to restore and continue
+        checkState(
+            saveAfterCompilationStage < 0,
+            "request to save after stage %s is invalid when restoring from stage 2",
+            saveAfterCompilationStage);
+        return true;
+      } else {
+        return false;
+      }
     }
 
     private ImmutableList<String> typedAstInputFilenames = ImmutableList.of();
@@ -2352,16 +2486,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private String saveAfterChecksFileName = null;
+    private String saveCompilationStateToFilename = null;
 
     /** Set the compiler to perform the first phase and save the intermediate result to a file. */
-    public CommandLineConfig setSaveAfterChecksFileName(String fileName) {
-      saveAfterChecksFileName = fileName;
+    public CommandLineConfig setSaveCompilationStateToFilename(
+        String fileName, int saveAfterCompilationStage) {
+      saveCompilationStateToFilename = fileName;
+      this.saveAfterCompilationStage = saveAfterCompilationStage;
       return this;
     }
 
-    public String getSaveAfterChecksFileName() {
-      return saveAfterChecksFileName;
+    public String getSaveCompilationStateToFilename() {
+      return saveCompilationStateToFilename;
     }
 
     private final List<String> module = new ArrayList<>();
