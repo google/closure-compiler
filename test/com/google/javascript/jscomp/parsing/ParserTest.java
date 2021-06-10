@@ -813,6 +813,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(memberFn).hasLineno(3);
     assertNode(memberFn).hasCharno(9);
     assertNode(memberFn).hasLength(3); // "fn2"
+    assertNode(memberFn).isStatic();
 
     fn = memberFn.getFirstChild();
     assertNode(fn).hasType((Token.FUNCTION));
@@ -2596,6 +2597,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(classMembers).hasType(Token.CLASS_MEMBERS);
     computedProp = classMembers.getOnlyChild();
     assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    assertNode(computedProp).isStatic();
     bigint = computedProp.getFirstChild();
     assertNode(bigint).hasType(Token.BIGINT);
     assertNode(bigint).isBigInt(bigintValue);

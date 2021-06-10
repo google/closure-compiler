@@ -249,6 +249,11 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject isStatic() {
+    check("isStatic()").that(actual.isStaticMember()).isTrue();
+    return this;
+  }
+
   public NodeSubject hasTrailingComma() {
     check("hasTrailingComma()").that(actual.hasTrailingComma()).isTrue();
     return this;
