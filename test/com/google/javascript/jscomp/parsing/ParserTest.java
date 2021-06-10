@@ -4136,13 +4136,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testInvalid_classSyntax_staticPropAssignmentInClass() {
-    expectFeatures();
-    strictMode = SLOPPY;
-    parseError("class Foo { static someStaticProp = 'someVal' };", "'(' expected");
-  }
-
-  @Test
   public void testSetter_ObjectLiteral_Es3() {
     expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
@@ -5159,6 +5152,194 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testSingleFieldNoInitializerNoSemicolon() {
+    Node n = parse("class C{ field }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+  }
+
+  @Test
+  public void testSingleFieldWithInitializerNoSemicolon() {
+    // check for automatic semicolon insertion
+    Node n = parse("class C{field = 2}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
+  public void testSingleFieldNoInitializerWithSemicolon() {
+    Node n = parse("class C{ field; }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+  }
+
+  @Test
+  public void testSingleFieldWithInitializerWithSemicolon() {
+    Node n = parse("class C{field = dog;}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("dog"));
+  }
+
+  @Test
+  public void testSingleComputedFieldNoInitializerNoSemicolon() {
+    // check for automatic semicolon insertion
+    Node n = parse("class C{['field']}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+  }
+
+  @Test
+  public void testSingleComputedFieldWithInitializerNoSemicolon() {
+    // check for automatic semicolon insertion
+    Node n = parse("class C{['field'] = 2}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getLastChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
+  public void testSingleComputedFieldNoInitializerWithSemicolon() {
+    Node n = parse("class C{['field'];}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+  }
+
+  @Test
+  public void testSingleComputedFieldWithInitializerWithSemicolon() {
+    Node n = parse("class C{['field'] = dog;}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getLastChild()).isEqualTo(IR.name("dog"));
+  }
+
+  @Test
+  public void testMultipleFieldsNoInitializerNoLineBreakNoSemicolon() {
+    parseError("class C{ a b c }", "Semi-colon expected");
+  }
+
+  @Test
+  public void testMultipleFieldsNoInitializerWithLineBreakNoSemicolon() {
+    Node n = parse("class C{ a \n b \n c }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("a");
+    assertNode(n.getSecondChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getSecondChild()).hasStringThat().isEqualTo("b");
+    assertNode(n.getLastChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getLastChild()).hasStringThat().isEqualTo("c");
+  }
+
+  @Test
+  public void testMultipleFieldsNoLineBreakNoSemicolon() {
+    parseError("class C{ a = 2 b = 4 c = 5}", "Semi-colon expected");
+  }
+
+  @Test
+  public void testMultipleFieldsWithLineBreakNoSemicolon() {
+    // check for automatic semicolon insertion
+    Node n = parse("class C{ a = 2 \n b = 4 \n c = 5}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("a");
+    assertNode(n.getFirstFirstChild()).isEqualTo(IR.number(2.0));
+    assertNode(n.getSecondChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getSecondChild()).hasStringThat().isEqualTo("b");
+    assertNode(n.getSecondChild().getFirstChild()).isEqualTo(IR.number(4.0));
+    assertNode(n.getLastChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getLastChild()).hasStringThat().isEqualTo("c");
+    assertNode(n.getLastChild().getFirstChild()).isEqualTo(IR.number(5.0));
+  }
+
+  @Test
+  public void testMultipleFieldsNoLineBreakWithSemicolon() {
+    Node n = parse("class C{field = 2; hi = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getFirstFirstChild()).isEqualTo(IR.number(2.0));
+    assertNode(n.getSecondChild()).hasStringThat().isEqualTo("hi");
+    assertNode(n.getSecondChild().getFirstChild()).isEqualTo(IR.number(3.0));
+  }
+
+  @Test
+  public void testMultipleFieldsWithLineBreakWithSemicolon() {
+    Node n = parse("class C{field = 2; \n hi = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getFirstFirstChild()).isEqualTo(IR.number(2.0));
+    assertNode(n.getSecondChild()).hasStringThat().isEqualTo("hi");
+    assertNode(n.getSecondChild().getFirstChild()).isEqualTo(IR.number(3.0));
+  }
+
+  @Test
+  public void testMultipleComputedFieldsNoLineBreakNoSemicolon() {
+    // tree is parsed correctly even though it looks weird
+    Node n = parse("class C{ ['a'] = 2 ['b'] = 4 ['c'] = 5}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.COMPUTED_FIELD_DEF);
+  }
+
+  @Test
+  public void testMultipleComputedFieldsWithLineBreakNoSemicolon() {
+    // tree is parsed correctly even though it looks weird
+    Node n = parse("class C{ ['a'] = 2 \n ['b'] = 4 \n ['c'] = 5}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.COMPUTED_FIELD_DEF);
+  }
+
+  @Test
+  public void testMultipleComputedFieldsNoLineBreakWithSemicolon() {
+    Node n = parse("class C{['field'] = 2; ['hi'] = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getFirstChild().getLastChild()).isEqualTo(IR.number(2.0));
+    assertNode(n.getSecondChild()).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getSecondChild().getFirstChild()).hasStringThat().isEqualTo("hi");
+    assertNode(n.getSecondChild().getLastChild()).isEqualTo(IR.number(3.0));
+  }
+
+  @Test
+  public void testMultipleComputedFieldsWithLineBreaksWithSemicolons() {
+    Node n = parse("class C{['field'] = 2; \n ['hi'] = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstFirstChild()).hasStringThat().isEqualTo("field");
+    assertNode(n.getFirstChild().getLastChild()).isEqualTo(IR.number(2.0));
+    assertNode(n.getSecondChild()).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getSecondChild().getFirstChild()).hasStringThat().isEqualTo("hi");
+    assertNode(n.getSecondChild().getLastChild()).isEqualTo(IR.number(3.0));
+  }
+
+  @Test
+  public void testMultipleMixedFieldsNoLineBreakWithSemicolon() {
+    Node n = parse("class C{  b = 4; ['a'] = 2 }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+    assertNode(n.getSecondChild()).hasType(Token.COMPUTED_FIELD_DEF);
+  }
+
+  @Test
+  public void testMultipleMixedFieldsNoLineBreakNoSemicolon() {
+    parseError("class C{ ['a'] = 2 b = 4}", "Semi-colon expected");
+
+    // tree is parsed correctly even though it looks weird
+    Node n = parse("class C{b = 4 ['a'] = 2 }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+  }
+
+  @Test
+  public void testMultipleMixedFieldsWithLineBreakNoSemicolon() {
+    // tree is parsed correctly even though it looks weird
+    Node n = parse("class C{b = 4 \n ['a'] = 2 }").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).hasType(Token.MEMBER_FIELD_DEF);
+  }
+
+  @Test
+  public void testStaticFields() {
+    Node n = parse("class C{static field = 2;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+
+    n = parse("class C{static field = 2; hi = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+
+    n = parse("class C{static field = 2; static hi = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+    assertNode(n.getSecondChild()).isStatic();
+  }
+
+  @Test
   public void testSuper1() {
     expectFeatures(Feature.SUPER);
     strictMode = SLOPPY;
@@ -5598,14 +5779,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectFeatures();
     parse("o={async:false}");
-    parseError("class C{async};", "'(' expected");
+    parse("class C{async};"); // class field
 
     // newline after 'async' forces it to be the property name
     mode = LanguageMode.ECMASCRIPT_2017;
     parseError("o={async\nm(){}}", "'}' expected");
     parseError("o={static async\nm(){}}", "Cannot use keyword in short object literal");
-    parseError("class C{async\nm(){}}", "'(' expected");
-    parseError("class C{static async\nm(){}}", "'(' expected");
+    parse("class C{async\nm(){}}"); // class field
+    parse("class C{static async\nm(){}}"); // class field
   }
 
   @Test

@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertySetterTree;
@@ -65,6 +66,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FieldDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForAwaitOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
@@ -1530,6 +1532,38 @@ class IRFactory {
       return result;
     }
 
+    // class fields: general case
+    Node processField(FieldDeclarationTree tree) {
+      // TODO(user): maybeWarnForFeature
+
+      Node node = newStringNode(Token.MEMBER_FIELD_DEF, tree.name.value);
+      if (tree.initializer != null) {
+        Node initializer = transform(tree.initializer);
+        node.addChildToBack(initializer);
+        setLength(node, tree.location.start, tree.location.end);
+      }
+
+      node.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
+
+      return node;
+    }
+
+    // class fields: computed property fields
+    Node processComputedPropertyField(ComputedPropertyFieldTree tree) {
+      // TODO(user): maybeWarnForFeature
+
+      Node key = transform(tree.property);
+
+      Node node =
+          (tree.initializer != null)
+              ? newNode(Token.COMPUTED_FIELD_DEF, key, transform(tree.initializer))
+              : newNode(Token.COMPUTED_FIELD_DEF, key);
+
+      node.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
+
+      return node;
+    }
+
     Node processFormalParameterList(FormalParameterListTree tree) {
       Node params = newNode(Token.PARAM_LIST);
       params.setTrailingComma(tree.hasTrailingComma);
@@ -2879,6 +2913,12 @@ class IRFactory {
         case ARGUMENT_LIST:
         default:
           break;
+
+          // ES2022
+        case FIELD_DECLARATION:
+          return processField(node.asFieldDeclaration());
+        case COMPUTED_PROPERTY_FIELD:
+          return processComputedPropertyField(node.asComputedPropertyField());
       }
       return processIllegalToken(node);
     }

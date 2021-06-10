@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -37,6 +39,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertySetterTree;
@@ -51,6 +54,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FieldDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForAwaitOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
@@ -152,7 +156,6 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class Parser {
-
   /** Indicates the type of function currently being parsed. */
   private enum FunctionFlavor {
     NORMAL(false, false),
@@ -571,11 +574,9 @@ public class Parser {
 
   private ImmutableList<ParseTree> parseClassElements() {
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
-
     while (true) {
       Token token = peekToken();
       if (token.type == TokenType.SEMI_COLON) {
-        // Ignore extraneous semicolons in class bodies.
         eat(TokenType.SEMI_COLON);
         continue;
       } else {
@@ -611,9 +612,27 @@ public class Parser {
     final SourcePosition start;
 
     boolean isStatic = false;
+    IdentifierToken name;
+    ParseTree nameExpr;
 
     PartialClassElement(SourcePosition start) {
       this.start = start;
+    }
+
+    void setName(IdentifierToken name) {
+      this.name = name;
+    }
+
+    IdentifierToken getName() {
+      return name;
+    }
+
+    void setNameExpr(ParseTree nameExpr) {
+      this.nameExpr = nameExpr;
+    }
+
+    ParseTree getNameExpr() {
+      return nameExpr;
     }
   }
 
@@ -661,20 +680,12 @@ public class Parser {
             || (peek(1, TokenType.STAR) && peekPropertyNameOrComputedProp(2)));
   }
 
-  private ParseTree parseMethodDeclaration() {
-    return parseMethodDeclaration(new PartialClassElement(getTreeStartLocation()));
-  }
-
-  private ParseTree parseMethodDeclaration(PartialClassElement partial) {
-    boolean isGenerator = eatOpt(TokenType.STAR) != null;
-
-    ParseTree nameExpr;
-    IdentifierToken name;
+  private PartialClassElement parseClassElementName(PartialClassElement partial) {
     if (peekPropertyName(0)) {
       if (peekIdOrKeyword()) {
-        nameExpr = null;
-        name = eatIdOrKeywordAsId();
-        if (Keywords.isKeyword(name.value)) {
+        partial.setNameExpr(null);
+        partial.setName(eatIdOrKeywordAsId());
+        if (Keywords.isKeyword(partial.getName().value)) {
           recordFeatureUsed(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
@@ -682,37 +693,75 @@ public class Parser {
         // { 123() {} }
         // Treat these as if they were computed properties.
         // TODO(b/123769080): Stop making this assumption!
-        name = null;
-        nameExpr = parseLiteralExpression();
+        partial.setName(null);
+        partial.setNameExpr(parseLiteralExpression());
       }
     } else {
-      nameExpr = parseComputedPropertyName();
-      name = null;
+      partial.setNameExpr(parseComputedPropertyName());
+      partial.setName(null);
+    }
+    return partial;
+  }
+
+  private ParseTree parseFieldDefinition(PartialClassElement partial) {
+    ParseTree initializer = null;
+    if (peek(TokenType.EQUAL)) {
+      initializer = parseInitializer(Expression.NORMAL);
     }
 
-    // Member function.
+    eatPossiblyImplicitSemiColon();
+    if (partial.getName() != null) {
+      checkState(partial.getNameExpr() == null);
+      return new FieldDeclarationTree(
+          getTreeLocation(partial.start), partial.getName(), partial.isStatic, initializer);
+    } else {
+      return new ComputedPropertyFieldTree(
+          getTreeLocation(partial.start), partial.getNameExpr(), partial.isStatic, initializer);
+    }
+  }
+
+  private ParseTree parseMethodDefinition(PartialClassElement partial, boolean isGenerator) {
     FunctionDeclarationTree.Kind kind;
-    if (nameExpr == null) {
+    if (partial.getNameExpr() == null) {
       kind = FunctionDeclarationTree.Kind.MEMBER;
     } else {
       kind = FunctionDeclarationTree.Kind.EXPRESSION;
     }
 
     FunctionDeclarationTree.Builder builder =
-        FunctionDeclarationTree.builder(kind).setName(name).setStatic(partial.isStatic);
+        FunctionDeclarationTree.builder(kind)
+            .setName(partial.getName())
+            .setStatic(partial.isStatic);
     parseFunctionTail(builder, isGenerator ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
 
     ParseTree function = builder.build(getTreeLocation(partial.start));
     if (kind == FunctionDeclarationTree.Kind.MEMBER) {
       return function;
     } else {
-      return new ComputedPropertyMethodTree(getTreeLocation(partial.start), nameExpr, function);
+      return new ComputedPropertyMethodTree(
+          getTreeLocation(partial.start), partial.getNameExpr(), function);
     }
   }
 
+  private ParseTree parseMethodDeclaration() {
+    return parseMethodDeclaration(new PartialClassElement(getTreeStartLocation()));
+  }
+
+  private ParseTree parseMethodDeclaration(PartialClassElement partial) {
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
+    partial = parseClassElementName(partial);
+    return parseMethodDefinition(partial, isGenerator);
+  }
+
   private ParseTree parseClassMemberDeclaration(PartialClassElement partial) {
-    // TODO(b/189993301): Add logic to handle class fields here.
-    return parseMethodDeclaration(partial);
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
+    partial = parseClassElementName(partial);
+
+    if (peekType(0) == TokenType.OPEN_PAREN) {
+      return parseMethodDefinition(partial, isGenerator);
+    } else {
+      return parseFieldDefinition(partial);
+    }
   }
 
   private ParseTree parseAsyncMethod() {
