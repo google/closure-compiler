@@ -56,6 +56,9 @@ UADataValues.prototype.model;
 /** @type {string} */
 UADataValues.prototype.uaFullVersion;
 
+/** @type {string} */
+UADataValues.prototype.bitness;
+
 /**
  * @see https://wicg.github.io/ua-client-hints/#navigatoruadata
  * @record
