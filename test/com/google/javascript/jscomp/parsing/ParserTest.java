@@ -3359,6 +3359,49 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testFileoverview_firstOneWins() {
+    isIdeMode = true;
+
+    Node n =
+        parse(
+            lines(
+                "/** @fileoverview First */", //
+                "/** @fileoverview Second */"));
+
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("First");
+  }
+
+  @Test
+  public void testFileoverview_firstOneWins_implicitFileoverview() {
+    isIdeMode = true;
+
+    Node n =
+        parse(
+            lines(
+                "/** @externs */", //
+                "/** @fileoverview Second */"));
+
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().isExterns()).isTrue();
+    assertThat(n.getJSDocInfo().getFileOverview()).isNull();
+  }
+
+  @Test
+  public void testFileoverview_firstOneWins_suppressionsAccumulate() {
+    isIdeMode = true;
+
+    Node n =
+        parse(
+            lines(
+                "/** @fileoverview @suppress {const} */", //
+                "/** @fileoverview @suppress {checkTypes} */"));
+
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getSuppressions()).containsExactly("const", "checkTypes");
+  }
+
+  @Test
   public void testImportantComment() {
     isIdeMode = true;
 

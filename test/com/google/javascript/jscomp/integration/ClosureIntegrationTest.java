@@ -1005,6 +1005,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
 
     test(
         options,
@@ -1017,7 +1018,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
               "foo.baz = function() { return foo.bar[0]; }"),
         },
         new String[] {
-          "/** @return {number} */ foo.baz = function() { return foo.bar[0]; }",
+          lines(
+              "goog.provide('foo.baz');",
+              "",
+              "/** @return {number} */",
+              "foo.baz = function() { return foo.bar[0]; }"),
         });
   }
 
@@ -1026,6 +1031,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
 
     test(
         options,

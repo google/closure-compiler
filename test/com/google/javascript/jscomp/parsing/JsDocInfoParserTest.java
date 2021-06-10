@@ -66,14 +66,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
-  private JSDocInfo.Builder fileLevelJsDocBuilder = null;
+  private JSDocInfo.Builder licenseBuilder = null;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT = "Missing type declaration.";
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   @Before
   public void setUp() throws Exception {
-    fileLevelJsDocBuilder = null;
+    licenseBuilder = null;
     extraAnnotations =
         new HashSet<>(
             ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
@@ -1993,37 +1993,37 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParsePreserve() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
+    this.licenseBuilder = JSDocInfo.builder();
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    JSDocInfo info = this.licenseBuilder.build(true);
     assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   @Test
   public void testParseLicense() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
+    this.licenseBuilder = JSDocInfo.builder();
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    JSDocInfo info = this.licenseBuilder.build(true);
     assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   @Test
   public void testParseLicenseAscii() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
+    this.licenseBuilder = JSDocInfo.builder();
     String comment = "@license Foo\n *   Bar\n\n  Baz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    JSDocInfo info = this.licenseBuilder.build(true);
     assertThat(info.getLicense()).isEqualTo(" Foo\n   Bar\n\n  Baz");
   }
 
   @Test
   public void testParseLicenseWithAnnotation() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
+    this.licenseBuilder = JSDocInfo.builder();
     String comment = "@license Foo \n * @author Charlie Brown */";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    JSDocInfo info = this.licenseBuilder.build(true);
     assertThat(info.getLicense()).isEqualTo(" Foo \n @author Charlie Brown ");
   }
 
@@ -5781,8 +5781,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JsDocInfoParser jsdocParser =
         new JsDocInfoParser(stream(comment), comment, 0, templateNode, config, errorReporter);
 
-    if (fileLevelJsDocBuilder != null) {
-      jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
+    if (licenseBuilder != null) {
+      jsdocParser.setLicenseBuilder(licenseBuilder);
     }
 
     jsdocParser.parse();

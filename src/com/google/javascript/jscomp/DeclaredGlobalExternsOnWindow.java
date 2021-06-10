@@ -118,9 +118,6 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
         && !NodeUtil.isStatementBlock(parent)) {
       return false;
     }
-    if (n.isScript() && NodeUtil.isFromTypeSummary(n)) {
-      return false;
-    }
     return true;
   }
 

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
 
@@ -221,10 +222,10 @@ class IRFactory {
 
   private final Set<Comment> parsedComments = new HashSet<>();
 
-  // @license text gets appended onto the fileLevelJsDocBuilder as found,
+  // @license text gets appended onto the licenseBuilder as found,
   // and stored in JSDocInfo for placeholder node.
-  final JSDocInfo.Builder fileLevelJsDocBuilder;
-  JSDocInfo fileOverviewInfo = null;
+  private final JSDocInfo.Builder licenseBuilder = JSDocInfo.builder();
+  private JSDocInfo firstFileoverview = null;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
@@ -251,9 +252,8 @@ class IRFactory {
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     if (config.jsDocParsingMode().shouldParseDescriptions()) {
-      this.fileLevelJsDocBuilder.parseDocumentation();
+      this.licenseBuilder.parseDocumentation();
     }
 
     // Sometimes this will be null in tests.
@@ -538,24 +538,15 @@ class IRFactory {
   }
 
   private void setFileOverviewJsDoc(Node irNode) {
-    // Only after we've seen all @fileoverview entries, attach the
-    // last one to the root node, and copy the found license strings
-    // to that node.
-    JSDocInfo rootNodeJsDoc = fileLevelJsDocBuilder.build();
-    if (rootNodeJsDoc != null) {
-      irNode.setJSDocInfo(rootNodeJsDoc);
+    JSDocInfo.Builder fileoverview =
+        (this.firstFileoverview == null) ? JSDocInfo.builder() : this.firstFileoverview.toBuilder();
+
+    JSDocInfo lisence = this.licenseBuilder.build();
+    if (lisence != null) {
+      fileoverview.recordLicense(lisence.getLicense());
     }
 
-    if (fileOverviewInfo != null) {
-      JSDocInfo jsdoc = irNode.getJSDocInfo();
-      if (jsdoc != null && jsdoc.getLicense() != null) {
-        JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(fileOverviewInfo);
-        builder.recordLicense(jsdoc.getLicense());
-        fileOverviewInfo = builder.build();
-      }
-
-      irNode.setJSDocInfo(fileOverviewInfo);
-    }
+    irNode.setJSDocInfo(fileoverview.build(false));
   }
 
   Node transformBlock(ParseTree node) {
@@ -573,14 +564,23 @@ class IRFactory {
 
   /** @return true if the jsDocParser represents a fileoverview. */
   private boolean handlePossibleFileOverviewJsDoc(JsDocInfoParser jsDocParser) {
-    if (jsDocParser.getFileOverviewJSDocInfo() != fileOverviewInfo) {
-      fileOverviewInfo = jsDocParser.getFileOverviewJSDocInfo();
-      if (fileOverviewInfo.isExterns()) {
-        this.currentFileIsExterns = true;
-      }
-      return true;
+    JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
+    if (identical(newFileoverview, this.firstFileoverview)) {
+      return false;
     }
-    return false;
+
+    if (this.firstFileoverview == null) {
+      this.firstFileoverview = newFileoverview;
+      this.currentFileIsExterns = newFileoverview.isExterns();
+    } else {
+      if (!newFileoverview.getSuppressions().isEmpty()) {
+        JSDocInfo.Builder mergeSuppressions = this.firstFileoverview.toBuilder();
+        mergeSuppressions.recordSuppressions(newFileoverview.getSuppressions());
+        this.firstFileoverview = mergeSuppressions.build();
+      }
+    }
+
+    return true;
   }
 
   private void handlePossibleFileOverviewJsDoc(Comment comment) {
@@ -890,8 +890,8 @@ class IRFactory {
             templateNode,
             config,
             errorReporter);
-    jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
-    jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
+    jsdocParser.setLicenseBuilder(this.licenseBuilder);
+    jsdocParser.setFileOverviewJSDocInfo(this.firstFileoverview);
     if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
       jsdocParser.parseImportantComment();
     } else {

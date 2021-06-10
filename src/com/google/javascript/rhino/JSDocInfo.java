@@ -2327,7 +2327,7 @@ public class JSDocInfo implements Serializable {
      * flag set to {@code true}.
      */
     public boolean recordExterns() {
-      return !checkBit(Bit.TYPE_SUMMARY) && populateBit(Bit.EXTERNS, true);
+      return populateBit(Bit.EXTERNS, true);
     }
 
     /**
@@ -2335,7 +2335,8 @@ public class JSDocInfo implements Serializable {
      * JSDocInfo#isTypeSummary()} flag set to {@code true}.
      */
     public boolean recordTypeSummary() {
-      return !checkBit(Bit.EXTERNS) && populateBit(Bit.TYPE_SUMMARY, true);
+      populateBit(Bit.EXTERNS, true); // Type summaries are a subset of externs.
+      return populateBit(Bit.TYPE_SUMMARY, true);
     }
 
     /**

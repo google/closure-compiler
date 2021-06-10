@@ -3373,6 +3373,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testIjsWithDestructuringTypeWorks() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
     // To enable type-checking
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -3392,6 +3393,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testTypeSummaryWithTypedefAliasWorks() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
     options.setClosurePass(true);
     // To enable type-checking
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);

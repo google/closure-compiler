@@ -131,16 +131,14 @@ public final class JsDocInfoParser {
   private static final Set<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
-  private JSDocInfo.Builder fileLevelJsDocBuilder;
+  private JSDocInfo.Builder licenseBuilder;
 
   /**
    * Sets the JsDocBuilder for the file-level (root) node of this parse. The parser uses the builder
    * to append any preserve annotations it encounters in JsDoc comments.
-   *
-   * @param fileLevelJsDocBuilder
    */
-  void setFileLevelJsDocBuilder(JSDocInfo.Builder fileLevelJsDocBuilder) {
-    this.fileLevelJsDocBuilder = fileLevelJsDocBuilder;
+  void setLicenseBuilder(JSDocInfo.Builder licenseBuilder) {
+    this.licenseBuilder = licenseBuilder;
   }
 
   /**
@@ -303,8 +301,8 @@ public final class JsDocInfoParser {
     // so we need to add one here so they will be identical
     String license = " " + info.string;
 
-    if (fileLevelJsDocBuilder != null) {
-      fileLevelJsDocBuilder.addLicense(license);
+    if (licenseBuilder != null) {
+      licenseBuilder.addLicense(license);
     } else if (jsdocBuilder.shouldParseDocumentation()) {
       jsdocBuilder.recordBlockDescription(license);
     } else {
@@ -528,8 +526,8 @@ public final class JsDocInfoParser {
           String preserve = preserveInfo.string;
 
           if (preserve.length() > 0) {
-            if (fileLevelJsDocBuilder != null) {
-              fileLevelJsDocBuilder.addLicense(preserve);
+            if (licenseBuilder != null) {
+              licenseBuilder.addLicense(preserve);
             }
           }
 
