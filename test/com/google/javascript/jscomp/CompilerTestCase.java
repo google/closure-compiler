@@ -1919,11 +1919,6 @@ public abstract class CompilerTestCase {
       new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
     }
 
-    if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
-      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
-          .process(externsRoot, mainRoot);
-    }
-
     if (rewriteClosureCode) {
       new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
       new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
@@ -1932,6 +1927,11 @@ public abstract class CompilerTestCase {
 
     if (transpileEnabled && !compiler.hasErrors()) {
       transpileToEs5(compiler, externsRoot, mainRoot);
+    }
+
+    if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
+      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+          .process(externsRoot, mainRoot);
     }
     return mainRoot;
   }
