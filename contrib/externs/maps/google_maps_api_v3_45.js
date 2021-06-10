@@ -3229,6 +3229,13 @@ google.maps.InfoWindowOpenOptions = function() {};
 google.maps.InfoWindowOpenOptions.prototype.anchor;
 
 /**
+ * The map or panorama on which to render this InfoWindow or
+ * InfoWindowOpenOptions object.
+ * @type {?google.maps.Map|?google.maps.StreetViewPanorama|undefined}
+ */
+google.maps.InfoWindowOpenOptions.prototype.map;
+
+/**
  * Whether or not focus should be moved inside the InfoWindow when it is opened.
  * When unset or set to <code>null</code> or <code>undefined</code>, a heuristic
  * will be used to decide whether focus should be moved or not.
@@ -8105,8 +8112,8 @@ google.maps.WebglOverlayView.prototype.getMap = function() {};
 
 /**
  * Implement this method to fetch or create intermediate data structures before
- * the overlay is drawn; use for structures that don’t require immediate access
- * to the WebGL rendering context.
+ * the overlay is drawn that don’t require immediate access to the WebGL
+ * rendering context.
  * @return {undefined}
  */
 google.maps.WebglOverlayView.prototype.onAdd = function() {};
