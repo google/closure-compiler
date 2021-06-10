@@ -234,7 +234,10 @@ enum NodeKind {
   QUOTED_SETTER_DEF = 631;
 
   MODULE_BODY = 632;
-  // Next other: 633
+  FIELD_DECLARATION = 633;
+  COMPUTED_PROP_FIELD = 634;
+
+  // Next other: 635
 
   CAST = 800;
 }

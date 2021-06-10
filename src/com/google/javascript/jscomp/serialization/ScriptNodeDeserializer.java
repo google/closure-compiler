@@ -232,6 +232,7 @@ public final class ScriptNodeDeserializer {
         case MEMBER_FUNCTION_DEF:
           this.addScriptFeature(Feature.MEMBER_DECLARATIONS);
           return;
+          // TODO(user): add Feature for PUBLIC_CLASS_FIELDS
         case SUPER:
           this.addScriptFeature(Feature.SUPER);
           return;
@@ -522,6 +523,10 @@ public final class ScriptNodeDeserializer {
         return new Node(Token.CLASS_MEMBERS);
       case METHOD_DECLARATION:
         return Node.newString(Token.MEMBER_FUNCTION_DEF, getString(n));
+      case FIELD_DECLARATION:
+        return Node.newString(Token.MEMBER_FIELD_DEF, getString(n));
+      case COMPUTED_PROP_FIELD:
+        return new Node(Token.COMPUTED_FIELD_DEF);
       case PARAMETER_LIST:
         return new Node(Token.PARAM_LIST);
       case RENAMABLE_STRING_KEY:

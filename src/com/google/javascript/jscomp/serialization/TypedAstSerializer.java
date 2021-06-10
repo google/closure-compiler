@@ -592,6 +592,10 @@ final class TypedAstSerializer {
         return NodeKind.CLASS_MEMBERS;
       case MEMBER_FUNCTION_DEF:
         return NodeKind.METHOD_DECLARATION;
+      case MEMBER_FIELD_DEF:
+        return NodeKind.FIELD_DECLARATION;
+      case COMPUTED_FIELD_DEF:
+        return NodeKind.COMPUTED_PROP_FIELD;
       case PARAM_LIST:
         return NodeKind.PARAMETER_LIST;
       case STRING_KEY:
