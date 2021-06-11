@@ -2744,24 +2744,27 @@ public final class CompilerTest {
     SourceFile file1 = SourceFile.fromCode("test1.js", "");
     SourceFile file2 = SourceFile.fromCode("test2.js", "");
 
-    TypedAst typedAst =
-        TypedAst.newBuilder()
-            .setStringPool(StringPool.empty().toProto())
-            .setSourceFilePool(
-                SourceFilePool.newBuilder()
-                    .addSourceFile(file1.getProto())
-                    .addSourceFile(file2.getProto()))
-            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
-            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(2))
+    TypedAst.List typedAstList =
+        TypedAst.List.newBuilder()
+            .addTypedAsts(
+                TypedAst.newBuilder()
+                    .setStringPool(StringPool.empty().toProto())
+                    .setSourceFilePool(
+                        SourceFilePool.newBuilder()
+                            .addSourceFile(file1.getProto())
+                            .addSourceFile(file2.getProto()))
+                    .addCodeFile(
+                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
+                    .addCodeFile(
+                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(2)))
             .build();
-    ImmutableList<InputStream> typedAstStreams =
-        ImmutableList.of(new ByteArrayInputStream(typedAst.toByteArray()));
+    InputStream typedAstListStream = new ByteArrayInputStream(typedAstList.toByteArray());
 
     Compiler compiler = new Compiler();
 
     // When
     compiler.initTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file1, file2), typedAstStreams);
+        ImmutableList.of(), ImmutableList.of(file1, file2), typedAstListStream);
     compiler.init(ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions());
     compiler.parse();
 
@@ -2774,11 +2777,11 @@ public final class CompilerTest {
   public void testTypedAstFilesystem_someInputFilesUnavailable_crashes() {
     // Given
     SourceFile file = SourceFile.fromCode("test.js", "");
-    ImmutableList<InputStream> typedAstStreams = ImmutableList.of();
+    InputStream typedAstListStream = new ByteArrayInputStream(new byte[0]);
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(), typedAstStreams);
+    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(), typedAstListStream);
 
     // Then
     Exception e =
@@ -2809,15 +2812,18 @@ public final class CompilerTest {
                     .setSourceFile(1)
                     .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION)))
             .build();
-    ImmutableList<InputStream> typedAstStreams =
-        ImmutableList.of(
-            new ByteArrayInputStream(typedAst0.toByteArray()),
-            new ByteArrayInputStream(typedAst1.toByteArray()));
+    InputStream typedAstListStream =
+        new ByteArrayInputStream(
+            TypedAst.List.newBuilder()
+                .addTypedAsts(typedAst0)
+                .addTypedAsts(typedAst1)
+                .build()
+                .toByteArray());
 
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(file), typedAstStreams);
+    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(file), typedAstListStream);
     compiler.init(ImmutableList.of(), ImmutableList.of(file), new CompilerOptions());
     compiler.parse();
 

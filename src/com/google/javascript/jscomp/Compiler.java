@@ -75,7 +75,6 @@ import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.ColorPool;
 import com.google.javascript.jscomp.serialization.ScriptNodeDeserializer;
-import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.jscomp.serialization.StringPool;
 import com.google.javascript.jscomp.serialization.TypedAst;
@@ -534,13 +533,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @GwtIncompatible
   public final void initTypedAstFilesystem(
-      List<SourceFile> externs,
-      List<SourceFile> sources,
-      List<? extends InputStream> typedAstStreams) {
+      List<SourceFile> externs, List<SourceFile> sources, InputStream typedAstListStream) {
     ImmutableMap<String, SourceFile> filePool =
         Streams.concat(externs.stream(), sources.stream())
             .collect(toImmutableMap(SourceFile::getName, (x) -> x));
-    ArrayList<TypedAst> typedAstProtos = this.deserializeTypedAsts(typedAstStreams);
+    List<TypedAst> typedAstProtos = this.deserializeTypedAsts(typedAstListStream);
 
     ColorPool.Builder colorPoolBuilder = ColorPool.builder();
     LinkedHashMap<SourceFile, JsAst> typedAstFilesystem = new LinkedHashMap<>();
@@ -3559,15 +3556,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @GwtIncompatible("ObjectOutputStream")
   public void saveState(OutputStream outputStream) throws IOException {
     // Do not close the outputstream, caller is responsible for closing it.
-    final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
     runInCompilerThread(
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
-          objectOutputStream.writeObject(new CompilerState(Compiler.this));
+          new ObjectOutputStream(outputStream).writeObject(new CompilerState(this));
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
-          SerializationOptions options = SerializationOptions.SKIP_DEBUG_INFO;
-          new SerializeTypedAstPass(Compiler.this, options, outputStream)
+          SerializeTypedAstPass.createFromOutputStream(this, outputStream)
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
           return null;
@@ -3592,8 +3587,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
               }
             });
-    TypedAst typedAst =
-        Iterables.getOnlyElement(this.deserializeTypedAsts(ImmutableList.of(inputStream)));
+    TypedAst typedAst = Iterables.getOnlyElement(this.deserializeTypedAsts(inputStream));
 
     featureSet = compilerState.featureSet;
     scriptNodeByFilename.clear();
@@ -3650,19 +3644,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @GwtIncompatible("ObjectInputStream")
-  private ArrayList<TypedAst> deserializeTypedAsts(List<? extends InputStream> typedAstStreams) {
+  private List<TypedAst> deserializeTypedAsts(InputStream typedAstsStream) {
     return runInCompilerThread(
         () -> {
-          ArrayList<TypedAst> typedAstProtos = new ArrayList<>();
-          for (InputStream stream : typedAstStreams) {
-            // Restore TypedAST and related fields
-            CodedInputStream codedInput = CodedInputStream.newInstance(stream);
-            // Set the recursion limit higher as some projects have deeply nested ASTs
-            codedInput.setRecursionLimit(3000);
-            typedAstProtos.add(
-                TypedAst.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry()));
-          }
-          return typedAstProtos;
+          // Restore TypedAST and related fields
+          CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
+          // Set the recursion limit higher as some projects have deeply nested ASTs
+          codedInput.setRecursionLimit(3000);
+          return TypedAst.List.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry())
+              .getTypedAstsList();
         });
   }
 

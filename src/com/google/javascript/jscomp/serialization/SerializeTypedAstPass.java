@@ -65,7 +65,7 @@ public final class SerializeTypedAstPass implements CompilerPass {
     Consumer<TypedAst> toOutputStream =
         ast -> {
           try {
-            ast.writeTo(out);
+            TypedAst.List.newBuilder().addTypedAsts(ast).build().writeTo(out);
           } catch (IOException e) {
             throw new IllegalArgumentException("Cannot write to stream", e);
           }
@@ -77,7 +77,7 @@ public final class SerializeTypedAstPass implements CompilerPass {
     Consumer<TypedAst> toPath =
         ast -> {
           try (OutputStream out = Files.newOutputStream(outputPath)) {
-            ast.writeTo(out);
+            TypedAst.List.newBuilder().addTypedAsts(ast).build().writeTo(out);
           } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create TypedAst output file", e);
           }

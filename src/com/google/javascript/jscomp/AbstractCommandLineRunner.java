@@ -1202,9 +1202,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     List<SourceFile> inputs =
         createSourceInputs(jsChunkSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
 
-    List<String> typedAstInputFilenames = config.typedAstInputFilenames;
-    if (!typedAstInputFilenames.isEmpty()) {
-      initTypedAstFilesystem(externs, inputs, typedAstInputFilenames);
+    @Nullable String typedAstListInputFilename = config.typedAstListInputFilename;
+    if (typedAstListInputFilename != null) {
+      initTypedAstFilesystem(externs, inputs, typedAstListInputFilename);
     }
 
     if (!jsChunkSpecs.isEmpty()) {
@@ -1243,7 +1243,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       result = instrumentForCoverage();
     } else if (config.shouldSaveAfterStage1()) {
       result = performStage1andSave(config.getSaveCompilationStateToFilename());
-    } else if (!typedAstInputFilenames.isEmpty()) {
+    } else if (typedAstListInputFilename != null) {
       result = parseAndPerformStages2and3();
     } else if (config.shouldRestoreAndPerformStage2AndSave()) {
       result =
@@ -1308,28 +1308,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   @GwtIncompatible("Unnecessary")
   private void initTypedAstFilesystem(
-      List<SourceFile> externs, List<SourceFile> sources, List<String> filenames) {
-    ArrayList<BufferedInputStream> typedAstStreams = new ArrayList<>();
-    try {
-      for (String filename : filenames) {
-        typedAstStreams.add(new BufferedInputStream(new FileInputStream(filename)));
-      }
-
-      compiler.initTypedAstFilesystem(externs, sources, typedAstStreams);
-
-      IOException lastException = null;
-      for (BufferedInputStream stream : typedAstStreams) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          lastException = e;
-        }
-      }
-      if (lastException != null) {
-        throw lastException;
-      }
+      List<SourceFile> externs, List<SourceFile> sources, String filename) {
+    try (BufferedInputStream typedAstListStream =
+        new BufferedInputStream(new FileInputStream(filename))) {
+      compiler.initTypedAstFilesystem(externs, sources, typedAstListStream);
     } catch (IOException e) {
-      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, String.join(",", filenames)));
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
     }
   }
 
@@ -2479,10 +2463,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    private ImmutableList<String> typedAstInputFilenames = ImmutableList.of();
+    @Nullable private String typedAstListInputFilename;
 
-    public CommandLineConfig setTypedAstInputFilenames(List<String> fileNames) {
-      this.typedAstInputFilenames = ImmutableList.copyOf(fileNames);
+    public CommandLineConfig setTypedAstListInputFilename(@Nullable String fileName) {
+      this.typedAstListInputFilename = fileName;
       return this;
     }
 

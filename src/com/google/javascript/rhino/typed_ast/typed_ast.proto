@@ -21,6 +21,10 @@ message TypedAst {
 
   SourceFilePool source_file_pool = 5;
   ExternsSummary externs_summary = 6;
+
+  message List {
+    repeated TypedAst typed_asts = 1;
+  }
 }
 
 message StringPoolProto {
