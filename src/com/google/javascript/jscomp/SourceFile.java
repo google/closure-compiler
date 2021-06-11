@@ -66,16 +66,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   private static final String UTF8_BOM = "\uFEFF";
 
   /**
-   * A JavaScript source code provider.
-   *
-   * <p>The value should be cached so that the source text stays consistent throughout a single
-   * compile.
-   */
-  public interface Generator {
-    String getCode() throws IOException;
-  }
-
-  /**
    * Number of lines in the region returned by {@link #getRegion(int)}.
    * This length must be odd.
    */
