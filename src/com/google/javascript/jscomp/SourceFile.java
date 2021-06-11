@@ -602,7 +602,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     private Charset charset = UTF_8;
     private String originalPath = null;
 
-    public Builder() {}
+    private Builder() {}
 
     /** Set the source kind. */
     public Builder withKind(SourceKind kind) {
