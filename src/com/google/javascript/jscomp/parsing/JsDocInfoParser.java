@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -131,14 +132,17 @@ public final class JsDocInfoParser {
   private static final Set<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
-  private JSDocInfo.Builder licenseBuilder;
+  @Nullable private String licenseText;
 
-  /**
-   * Sets the JsDocBuilder for the file-level (root) node of this parse. The parser uses the builder
-   * to append any preserve annotations it encounters in JsDoc comments.
-   */
-  void setLicenseBuilder(JSDocInfo.Builder licenseBuilder) {
-    this.licenseBuilder = licenseBuilder;
+  private void setLicenseTextMonotonic(String x) {
+    checkNotNull(x);
+    checkState(this.licenseText == null);
+    this.licenseText = x;
+  }
+
+  @Nullable
+  String getLicenseText() {
+    return this.licenseText;
   }
 
   /**
@@ -301,9 +305,8 @@ public final class JsDocInfoParser {
     // so we need to add one here so they will be identical
     String license = " " + info.string;
 
-    if (licenseBuilder != null) {
-      licenseBuilder.addLicense(license);
-    } else if (jsdocBuilder.shouldParseDocumentation()) {
+    this.setLicenseTextMonotonic(license);
+    if (jsdocBuilder.shouldParseDocumentation()) {
       jsdocBuilder.recordBlockDescription(license);
     } else {
       jsdocBuilder.recordBlockDescription("");
@@ -526,9 +529,7 @@ public final class JsDocInfoParser {
           String preserve = preserveInfo.string;
 
           if (preserve.length() > 0) {
-            if (licenseBuilder != null) {
-              licenseBuilder.addLicense(preserve);
-            }
+            this.setLicenseTextMonotonic(preserve);
           }
 
           token = preserveInfo.token;

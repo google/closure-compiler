@@ -224,9 +224,7 @@ class IRFactory {
 
   private final Set<Comment> parsedComments = new HashSet<>();
 
-  // @license text gets appended onto the licenseBuilder as found,
-  // and stored in JSDocInfo for placeholder node.
-  private final JSDocInfo.Builder licenseBuilder = JSDocInfo.builder();
+  private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
   private JSDocInfo firstFileoverview = null;
 
   // Use a template node for properties set on all nodes to minimize the
@@ -253,10 +251,6 @@ class IRFactory {
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
-
-    if (config.jsDocParsingMode().shouldParseDescriptions()) {
-      this.licenseBuilder.parseDocumentation();
-    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -543,9 +537,8 @@ class IRFactory {
     JSDocInfo.Builder fileoverview =
         (this.firstFileoverview == null) ? JSDocInfo.builder() : this.firstFileoverview.toBuilder();
 
-    JSDocInfo lisence = this.licenseBuilder.build();
-    if (lisence != null) {
-      fileoverview.recordLicense(lisence.getLicense());
+    if (!this.licenseBuilder.isEmpty()) {
+      fileoverview.recordLicense(String.join("", this.licenseBuilder));
     }
 
     irNode.setJSDocInfo(fileoverview.build(false));
@@ -566,6 +559,10 @@ class IRFactory {
 
   /** @return true if the jsDocParser represents a fileoverview. */
   private boolean handlePossibleFileOverviewJsDoc(JsDocInfoParser jsDocParser) {
+    if (jsDocParser.getLicenseText() != null) {
+      this.licenseBuilder.add(jsDocParser.getLicenseText());
+    }
+
     JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
     if (identical(newFileoverview, this.firstFileoverview)) {
       return false;
@@ -892,7 +889,6 @@ class IRFactory {
             templateNode,
             config,
             errorReporter);
-    jsdocParser.setLicenseBuilder(this.licenseBuilder);
     jsdocParser.setFileOverviewJSDocInfo(this.firstFileoverview);
     if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
       jsdocParser.parseImportantComment();
