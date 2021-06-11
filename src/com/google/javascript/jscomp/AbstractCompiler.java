@@ -45,8 +45,10 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -695,4 +697,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * rewriting has not occurred.
    */
   abstract void mergeSyntheticCodeInput();
+
+  /**
+   * Storage for i18n data extracted from the compilation set, to use for localization of the
+   * compilation late in the compilation process.
+   */
+  abstract void setLocaleSubstitutionData(
+      ArrayList<LinkedHashMap<String, Node>> localeDataValueMap);
+
+  /**
+   * Retrieve extracted i18n data extracted, to use for localization of the compilation late in the
+   * compilation process.
+   */
+  abstract ArrayList<LinkedHashMap<String, Node>> getLocaleSubstitutionData();
 }

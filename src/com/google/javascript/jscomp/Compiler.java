@@ -197,6 +197,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private ImmutableMap<String, String> inputPathByWebpackId;
 
+  private ArrayList<LinkedHashMap<String, Node>> localeDataValueMap;
+
   /**
    * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
@@ -3295,6 +3297,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void mergeSyntheticCodeInput() {
     this.removeSyntheticCodeInput(/* mergeContentIntoFirstInput= */ true);
+  }
+
+  @Override
+  void setLocaleSubstitutionData(ArrayList<LinkedHashMap<String, Node>> localeDataValueMap) {
+    this.localeDataValueMap = localeDataValueMap;
+  }
+
+  @Override
+  ArrayList<LinkedHashMap<String, Node>> getLocaleSubstitutionData() {
+    return localeDataValueMap;
   }
 
   /**
