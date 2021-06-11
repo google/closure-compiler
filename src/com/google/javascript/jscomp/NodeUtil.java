@@ -178,12 +178,14 @@ public final class NodeUtil {
         return getBooleanValue(n.getLastChild());
 
       case AND:
+      case ASSIGN_AND:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
           return lhs.and(rhs);
         }
       case OR:
+      case ASSIGN_OR:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
@@ -200,6 +202,7 @@ public final class NodeUtil {
           }
         }
       case COALESCE:
+      case ASSIGN_COALESCE:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
@@ -1315,6 +1318,9 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case ASSIGN:
         return 1;
       case YIELD:
@@ -1488,6 +1494,9 @@ public final class NodeUtil {
       case AND:
       case OR:
       case COALESCE:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
         return and(getKnownValueType(n.getFirstChild()), getKnownValueType(n.getLastChild()));
       case HOOK:
         return and(getKnownValueType(n.getSecondChild()), getKnownValueType(n.getLastChild()));
@@ -1797,6 +1806,11 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * Returns true if the operator is an assignment type operator. Note: The logical assignments
+   * (i.e. ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE) follow short-circuiting behavior, and the RHS may
+   * not always be evaluated. They are still considered AssignmentOps (may be optimized).
+   */
   public static boolean isAssignmentOp(Node n) {
     switch (n.getToken()) {
       case ASSIGN:
@@ -1812,6 +1826,9 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
         return true;
       default:
         break;
@@ -3656,6 +3673,12 @@ public final class NodeUtil {
         return "/=";
       case ASSIGN_MOD:
         return "%=";
+      case ASSIGN_OR:
+        return "||=";
+      case ASSIGN_AND:
+        return "&&=";
+      case ASSIGN_COALESCE:
+        return "??=";
       case VOID:
         return "void";
       case TYPEOF:
@@ -5111,6 +5134,9 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case DESTRUCTURING_LHS:
         return n.getNext();
       case VAR:

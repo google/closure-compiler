@@ -2691,6 +2691,10 @@ public class Node {
     return this.token == Token.AND;
   }
 
+  public final boolean isAssignAnd() {
+    return this.token == Token.ASSIGN_AND;
+  }
+
   public final boolean isArrayLit() {
     return this.token == Token.ARRAYLIT;
   }
@@ -2979,6 +2983,10 @@ public class Node {
     return this.token == Token.COALESCE;
   }
 
+  public final boolean isAssignNullishCoalesce() {
+    return this.token == Token.ASSIGN_COALESCE;
+  }
+
   public final boolean isNumber() {
     return this.token == Token.NUMBER;
   }
@@ -3005,6 +3013,10 @@ public class Node {
 
   public final boolean isOr() {
     return this.token == Token.OR;
+  }
+
+  public final boolean isAssignOr() {
+    return this.token == Token.ASSIGN_OR;
   }
 
   public final boolean isParamList() {

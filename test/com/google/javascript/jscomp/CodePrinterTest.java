@@ -277,6 +277,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testLogicalAssignmentOperator() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrintSame("x||=y");
+    assertPrintSame("x&&=y");
+    assertPrintSame("x??=y");
+  }
+
+  @Test
   public void testObjectLiteralWithSpread() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("({...{}})");

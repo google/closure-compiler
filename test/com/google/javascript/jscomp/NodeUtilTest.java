@@ -323,6 +323,20 @@ public final class NodeUtilTest {
             {"true&&true", Tri.TRUE},
             {"true&&false", Tri.FALSE},
 
+            // Logical assignments
+            {"a||(a=true)", Tri.TRUE},
+            {"a||(a=false)", Tri.UNKNOWN},
+            {"a||=true", Tri.TRUE},
+            {"a||=false", Tri.UNKNOWN},
+            {"a&&(a=true)", Tri.UNKNOWN},
+            {"a&&(a=false)", Tri.FALSE},
+            {"a&&=true", Tri.UNKNOWN},
+            {"a&&=false", Tri.FALSE},
+            {"a??(a=true)", Tri.UNKNOWN},
+            {"a??=true", Tri.UNKNOWN},
+            {"a??(a=false)", Tri.UNKNOWN},
+            {"a??=false", Tri.UNKNOWN},
+
             // Assignment ops other than ASSIGN are unknown.
             {"a *= 2", Tri.UNKNOWN},
 
