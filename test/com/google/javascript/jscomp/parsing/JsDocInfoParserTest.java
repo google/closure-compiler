@@ -5208,6 +5208,30 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseLocaleFile() {
+    JSDocInfo jsDocInfo = parse("@localeFile */");
+    assertThat(jsDocInfo.isLocaleFile()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleObject() {
+    JSDocInfo jsDocInfo = parse("@localeObject */");
+    assertThat(jsDocInfo.isLocaleObject()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleSelect() {
+    JSDocInfo jsDocInfo = parse("@localeSelect */");
+    assertThat(jsDocInfo.isLocaleSelect()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleValue() {
+    JSDocInfo jsDocInfo = parse("@localeValue */");
+    assertThat(jsDocInfo.isLocaleValue()).isTrue();
+  }
+
+  @Test
   public void testParseCollapsibleOrBreakMyCode() {
     JSDocInfo jsDocInfo = parse("@collapsibleOrBreakMyCode */");
     assertThat(jsDocInfo.isCollapsibleOrBreakMyCode()).isTrue();

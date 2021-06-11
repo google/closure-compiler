@@ -1162,4 +1162,18 @@ public final class CheckJsDocTest extends CompilerTestCase {
     // No warning for regular JSDoc.
     testSame(lines("function f() {", "/** Some value. */", "return 5;", "}"));
   }
+
+  @Test
+  public void testLocaleFileOnScriptOK() {
+    testSame(
+        lines(
+            "/** @fileoverview", //
+            " * @localeFile",
+            " */"));
+  }
+
+  @Test
+  public void testLocaleFileNotOnScriptIsNotAllowed() {
+    testWarning("/** @fileoverview */ /** @localeFile */ var x;", MISPLACED_ANNOTATION);
+  }
 }

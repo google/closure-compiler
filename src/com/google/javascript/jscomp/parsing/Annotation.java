@@ -49,6 +49,10 @@ enum Annotation {
   INTERFACE,
   LENDS,
   LICENSE, // same as preserve
+  LOCALE_FILE,
+  LOCALE_OBJECT,
+  LOCALE_SELECT,
+  LOCALE_VALUE,
   MEANING,
   MIXIN_CLASS,
   MIXIN_FUNCTION,
@@ -117,6 +121,10 @@ enum Annotation {
           .put("record", Annotation.RECORD)
           .put("lends", Annotation.LENDS)
           .put("license", Annotation.LICENSE)
+          .put("localeFile", Annotation.LOCALE_FILE)
+          .put("localeObject", Annotation.LOCALE_OBJECT)
+          .put("localeSelect", Annotation.LOCALE_SELECT)
+          .put("localeValue", Annotation.LOCALE_VALUE)
           .put("meaning", Annotation.MEANING)
           .put("mixinClass", Annotation.MIXIN_CLASS)
           .put("mixinFunction", Annotation.MIXIN_FUNCTION)

@@ -693,6 +693,30 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case LOCALE_FILE:
+          if (!jsdocBuilder.recordLocaleFile()) {
+            addParserWarning("msg.jsdoc.localefile");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_OBJECT:
+          if (!jsdocBuilder.recordLocaleObject()) {
+            addParserWarning("msg.jsdoc.localeobject");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_SELECT:
+          if (!jsdocBuilder.recordLocaleSelect()) {
+            addParserWarning("msg.jsdoc.localeselect");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_VALUE:
+          if (!jsdocBuilder.recordLocaleValue()) {
+            addParserWarning("msg.jsdoc.localevalue");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case PURE_OR_BREAK_MY_CODE:
           if (!jsdocBuilder.recordPureOrBreakMyCode()) {
             addParserWarning("msg.jsdoc.pureorbreakmycode");

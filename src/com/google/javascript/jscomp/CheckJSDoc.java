@@ -152,6 +152,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateImplicitCast(n, info);
     validateClosurePrimitive(n, info);
     validateReturnJsDoc(n, info);
+    validateLocaleFile(n, info);
+  }
+
+  private void validateLocaleFile(Node n, JSDocInfo info) {
+    if (info == null || !info.isLocaleFile()) {
+      return;
+    }
+
+    if (!n.isScript()) {
+      reportMisplaced(n, "localeFile", "localeFile must be in the fileoverview");
+    }
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {

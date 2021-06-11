@@ -47,7 +47,13 @@ public final class JsdocSerializer {
     if (jsdoc == null) {
       return null;
     }
+
     OptimizationJsdoc.Builder builder = OptimizationJsdoc.newBuilder();
+
+    if (jsdoc.hasFileOverview()) {
+      builder.addKind(JsdocTag.JSDOC_FILEOVERVIEW);
+    }
+
     if (jsdoc.getLicense() != null) {
       builder.setLicenseText(jsdoc.getLicense());
     }
@@ -58,6 +64,20 @@ public final class JsdocSerializer {
     if (jsdoc.isNoCollapse()) {
       builder.addKind(JsdocTag.JSDOC_NO_COLLAPSE);
     }
+
+    if (jsdoc.isLocaleFile()) {
+      builder.addKind(JsdocTag.JSDOC_LOCALE_FILE);
+    }
+    if (jsdoc.isLocaleObject()) {
+      builder.addKind(JsdocTag.JSDOC_LOCALE_OBJECT);
+    }
+    if (jsdoc.isLocaleSelect()) {
+      builder.addKind(JsdocTag.JSDOC_LOCALE_SELECT);
+    }
+    if (jsdoc.isLocaleValue()) {
+      builder.addKind(JsdocTag.JSDOC_LOCALE_VALUE);
+    }
+
     if (jsdoc.isPureOrBreakMyCode()) {
       builder.addKind(JsdocTag.JSDOC_PURE_OR_BREAK_MY_CODE);
     }
@@ -212,6 +232,19 @@ public final class JsdocSerializer {
         case JSDOC_NO_INLINE:
           builder.recordNoInline();
           continue;
+        case JSDOC_LOCALE_FILE:
+          builder.recordLocaleFile();
+          continue;
+        case JSDOC_LOCALE_OBJECT:
+          builder.recordLocaleObject();
+          continue;
+        case JSDOC_LOCALE_SELECT:
+          builder.recordLocaleSelect();
+          continue;
+        case JSDOC_LOCALE_VALUE:
+          builder.recordLocaleValue();
+          continue;
+
         case JSDOC_PURE_OR_BREAK_MY_CODE:
           builder.recordPureOrBreakMyCode();
           continue;
@@ -271,6 +304,10 @@ public final class JsdocSerializer {
           // moved to stage 1.
         case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
           suppressions.add("messageConventions");
+          continue;
+
+        case JSDOC_FILEOVERVIEW:
+          builder.recordFileOverview("");
           continue;
 
         case JSDOC_UNSPECIFIED:
