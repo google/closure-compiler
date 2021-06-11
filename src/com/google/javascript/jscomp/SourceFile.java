@@ -474,9 +474,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         .withKind(kind)
         .withCharset(inputCharset)
         .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .buildFromZipEntry(
-            new ZipEntryReader(
-                absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/")));
+        .buildFromZipEntry(absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/"));
   }
 
   @GwtIncompatible("java.io.File")
@@ -552,14 +550,14 @@ public final class SourceFile implements StaticSourceFile, Serializable {
             .withKind(sourceKind)
             .buildFromFile(pathOnDisk);
       case ZIP_ENTRY:
-        return SourceFile.builder()
-            .withKind(sourceKind)
-            .withCharset(toCharset(protoSourceFile.getZipEntry().getCharset()))
-            .withOriginalPath(protoSourceFile.getFilename())
-            .buildFromZipEntry(
-                new ZipEntryReader(
-                    protoSourceFile.getZipEntry().getZipPath(),
-                    protoSourceFile.getZipEntry().getEntryName()));
+        {
+          SourceFileProto.ZipEntryOnDisk zipEntry = protoSourceFile.getZipEntry();
+          return SourceFile.builder()
+              .withKind(sourceKind)
+              .withCharset(toCharset(protoSourceFile.getZipEntry().getCharset()))
+              .withOriginalPath(protoSourceFile.getFilename())
+              .buildFromZipEntry(zipEntry.getZipPath(), zipEntry.getEntryName());
+        }
       case LOADER_NOT_SET:
         break;
     }
@@ -594,10 +592,10 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   /**
    * A builder interface for source files.
    *
-   * Allows users to customize the Charset, and the original path of
-   * the source file (if it differs from the path on disk).
+   * <p>Allows users to customize the Charset, and the original path of the source file (if it
+   * differs from the path on disk).
    */
-  public static class Builder {
+  public static final class Builder {
     private SourceKind kind = SourceKind.STRONG;
     private Charset charset = UTF_8;
     private String originalPath = null;
@@ -652,10 +650,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @GwtIncompatible("java.io.File")
-    public SourceFile buildFromZipEntry(ZipEntryReader zipEntryReader) {
-      checkNotNull(zipEntryReader);
+    public SourceFile buildFromZipEntry(String zipName, String entryName) {
+      checkNotNull(zipName);
+      checkNotNull(entryName);
       checkNotNull(charset);
-      return new SourceFile(new CodeLoader.AtZip(zipEntryReader, charset), originalPath, kind);
+      return new SourceFile(new CodeLoader.AtZip(zipName, entryName, charset), originalPath, kind);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
@@ -785,23 +784,26 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     @GwtIncompatible("java.io.File")
     static final class AtZip extends CodeLoader {
       private static final long serialVersionUID = 1L;
-      private final ZipEntryReader zipEntryReader;
+      private final String zipName;
+      private final String entryName;
       private final String serializableCharset;
 
-      AtZip(ZipEntryReader zipEntryReader, Charset c) {
+      AtZip(String zipName, String entryName, Charset c) {
         super();
+        this.zipName = zipName;
+        this.entryName = entryName;
         this.serializableCharset = c.name();
-        this.zipEntryReader = zipEntryReader;
       }
 
       @Override
       String loadUncachedCode() throws IOException {
-        return zipEntryReader.read(this.getCharset());
+        return CharStreams.toString(this.openUncachedReader());
       }
 
       @Override
       Reader openUncachedReader() throws IOException {
-        return zipEntryReader.getReader(this.getCharset());
+        return new InputStreamReader(
+            JSCompZipFileCache.getEntryStream(this.zipName, this.entryName), this.getCharset());
       }
 
       private Charset getCharset() {
@@ -814,8 +816,8 @@ public final class SourceFile implements StaticSourceFile, Serializable {
             .setFilename(fileName)
             .setZipEntry(
                 ZipEntryOnDisk.newBuilder()
-                    .setEntryName(this.zipEntryReader.getEntryName())
-                    .setZipPath(this.zipEntryReader.getZipPath())
+                    .setEntryName(this.entryName)
+                    .setZipPath(this.zipName)
                     // save space by not serializing UTF_8 (the default charset)
                     .setCharset(this.getCharset().equals(UTF_8) ? "" : this.serializableCharset)
                     .build());

@@ -20,13 +20,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.io.CharStreams;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Serializable;
-import java.nio.charset.Charset;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,9 +37,17 @@ import java.util.zip.ZipFile;
  * time by re-reading the zip for each entry.
  */
 @GwtIncompatible("java.util.zip.ZipFile")
-public final class ZipEntryReader implements Serializable {
+final class JSCompZipFileCache {
 
-  private static final long serialVersionUID = 1L;
+  /**
+   * Return a stream for an entry.
+   *
+   * <p>We expose a stream rather than something like a ZipEntry to avoid possible cache-freshness
+   * issues. Callers must read the stream "quickly" and may only do so once.
+   */
+  static InputStream getEntryStream(String zipName, String entryName) throws IOException {
+    return zipFileCache.getUnchecked(zipName).getEntryStream(entryName);
+  }
 
   private static final int ZIP_CACHE_SIZE =
       Integer.parseInt(System.getProperty("jscomp.zipfile.cachesize", "1000"));
@@ -68,7 +71,7 @@ public final class ZipEntryReader implements Serializable {
                 }
               });
 
-  private static class CachedZipFile {
+  private static final class CachedZipFile {
     private final Path path;
     private ZipFile zipFile;
     private volatile FileTime lastModified;
@@ -77,9 +80,9 @@ public final class ZipEntryReader implements Serializable {
       this.path = Paths.get(zipName);
     }
 
-    private Reader getReader(String entryName, Charset charset) throws IOException {
+    InputStream getEntryStream(String entryName) throws IOException {
       refreshIfNeeded();
-      return new InputStreamReader(zipFile.getInputStream(zipFile.getEntry(entryName)), charset);
+      return this.zipFile.getInputStream(this.zipFile.getEntry(entryName));
     }
 
     private void refreshIfNeeded() throws IOException {
@@ -108,29 +111,7 @@ public final class ZipEntryReader implements Serializable {
     }
   }
 
-  private final String zipPath;
-  private final String entryName;
-
-  public ZipEntryReader(String zipPath, String entryName) {
-    this.zipPath = zipPath;
-    this.entryName = entryName;
-  }
-
-  public Reader getReader(Charset charset) throws IOException {
-    CachedZipFile zipFile = zipFileCache.getUnchecked(zipPath);
-    return new BufferedReader(zipFile.getReader(entryName, charset));
-  }
-
-  public String read(Charset charset) throws IOException {
-    CachedZipFile zipFile = zipFileCache.getUnchecked(zipPath);
-    return CharStreams.toString(zipFile.getReader(entryName, charset));
-  }
-
-  String getZipPath() {
-    return this.zipPath;
-  }
-
-  String getEntryName() {
-    return this.entryName;
+  private JSCompZipFileCache() {
+    throw new AssertionError();
   }
 }
