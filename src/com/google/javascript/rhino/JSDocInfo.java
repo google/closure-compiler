@@ -73,7 +73,6 @@ import javax.annotation.Nullable;
  *
  * <p>Constructing {@link JSDocInfo} objects is simplified by {@link JSDocInfo.Builder} which
  * provides early incompatibility detection.
- *
  */
 public class JSDocInfo implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -1179,7 +1178,7 @@ public class JSDocInfo implements Serializable {
 
   @Override
   public String toString() {
-    return "JSDocInfo";
+    return toStringVerbose();
   }
 
   @VisibleForTesting
@@ -1187,6 +1186,13 @@ public class JSDocInfo implements Serializable {
     MoreObjects.ToStringHelper helper =
         MoreObjects.toStringHelper(this)
             .add("bitset", (propertyBits == 0) ? null : Long.toHexString(propertyBits));
+
+    for (Bit b : Bit.values()) {
+      if (checkBit(b)) {
+        helper.add("bit:" + b.name, true);
+      }
+    }
+
     long bits = propertyKeysBitset;
     int index = 0;
     while (bits > 0) {
@@ -1194,6 +1200,7 @@ public class JSDocInfo implements Serializable {
       bits &= ~(1L << low);
       helper = helper.add(Property.values[low].name, propertyValues.get(index++));
     }
+
     return helper.omitNullValues().toString();
   }
 
