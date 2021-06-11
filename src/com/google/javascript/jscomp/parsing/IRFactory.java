@@ -1534,7 +1534,7 @@ class IRFactory {
 
     // class fields: general case
     Node processField(FieldDeclarationTree tree) {
-      // TODO(user): maybeWarnForFeature
+      maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
 
       Node node = newStringNode(Token.MEMBER_FIELD_DEF, tree.name.value);
       if (tree.initializer != null) {
@@ -1550,7 +1550,7 @@ class IRFactory {
 
     // class fields: computed property fields
     Node processComputedPropertyField(ComputedPropertyFieldTree tree) {
-      // TODO(user): maybeWarnForFeature
+      maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
 
       Node key = transform(tree.property);
 

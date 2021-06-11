@@ -5340,6 +5340,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testClassField_es2020() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
+    parseWarning("class C{field = 2;}", requiresLanguageModeMessage(Feature.PUBLIC_CLASS_FIELDS));
+  }
+
+  @Test
+  public void testClassComputedField_es2020() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
+    parseWarning("class C{['a'] = 2;}", requiresLanguageModeMessage(Feature.PUBLIC_CLASS_FIELDS));
+  }
+
+  @Test
   public void testSuper1() {
     expectFeatures(Feature.SUPER);
     strictMode = SLOPPY;
@@ -5769,7 +5783,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInvalidAsyncMethod() {
-    mode = LanguageMode.ECMASCRIPT_2015;
     strictMode = SLOPPY;
     expectFeatures(Feature.MEMBER_DECLARATIONS);
     // 'async' allowed as a name
@@ -5779,12 +5792,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectFeatures();
     parse("o={async:false}");
-    parse("class C{async};"); // class field
-
     // newline after 'async' forces it to be the property name
-    mode = LanguageMode.ECMASCRIPT_2017;
     parseError("o={async\nm(){}}", "'}' expected");
     parseError("o={static async\nm(){}}", "Cannot use keyword in short object literal");
+
+    expectFeatures(Feature.PUBLIC_CLASS_FIELDS);
+    parse("class C{async};"); // class field
     parse("class C{async\nm(){}}"); // class field
     parse("class C{static async\nm(){}}"); // class field
   }
