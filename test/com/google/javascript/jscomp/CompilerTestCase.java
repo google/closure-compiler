@@ -867,7 +867,7 @@ public abstract class CompilerTestCase {
   protected final void enableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
-    // passes in stage 2 never have acesses to a script's feature set.
+    // passes in stage 2 never have accesses to a script's feature set.
     scriptFeatureValidationEnabled = false;
   }
 
