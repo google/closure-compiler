@@ -1602,6 +1602,21 @@ Array.prototype.flatMap = function(callback, thisArg) {};
 Array.prototype.flat = function(depth) {};
 
 /**
+ * @param {!Iterable<*>} errors
+ * @param {string} message
+ * @constructor
+ * @extends {Error}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError
+ */
+var AggregateError = function(errors, message) {};
+
+/** @type {!Array<!Error>} */
+AggregateError.prototype.errors;
+
+/** @type {string} */
+AggregateError.prototype.message;
+
+/**
  * @param {!Object} obj
  * @return {!Array<symbol>}
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-object.getownpropertysymbols

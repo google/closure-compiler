@@ -21,3 +21,5 @@
 'require es6/promise/promise';
 'require es6/promise/allSettled';
 'require es6/promise/finally';
+'require es6/promise/any';
+'require es6/promise/aggregateerror';

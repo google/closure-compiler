@@ -353,6 +353,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
    */
   static final ImmutableSet<String> REQUIRED_SYMBOLS =
       ImmutableSet.of(
+          "AggregateError",
           "Array",
           "Error",
           "Float32Array",
