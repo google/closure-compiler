@@ -34,10 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * CodeGenerator generates codes from a parse tree, sending it to the specified
- * CodeConsumer.
- */
+/** CodeGenerator generates codes from a parse tree, sending it to the specified CodeConsumer. */
 public class CodeGenerator {
   private static final String LT_ESCAPED = "\\x3c";
   private static final String GT_ESCAPED = "\\x3e";
@@ -97,9 +94,7 @@ public class CodeGenerator {
     add("/** @fileoverview @typeSummary */\n");
   }
 
-  /**
-   * Insert a ECMASCRIPT 5 strict annotation.
-   */
+  /** Insert a ECMASCRIPT 5 strict annotation. */
   public void tagAsStrict() {
     add("'use strict';");
     cc.endLine();
@@ -940,9 +935,9 @@ public class CodeGenerator {
           if (isIndirectEval(first)
               || (node.getBooleanProp(Node.FREE_CALL) && NodeUtil.isNormalOrOptChainGet(first))) {
             add("(0,");
-          addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
-          add(")");
-        } else {
+            addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
+            add(")");
+          } else {
             if (needsParens) {
               add("(");
             }
@@ -950,13 +945,13 @@ public class CodeGenerator {
             if (needsParens) {
               add(")");
             }
-        }
+          }
 
-        Node args = first.getNext();
-        add("(");
-        addList(args);
-        add(")");
-        break;
+          Node args = first.getNext();
+          add("(");
+          addList(args);
+          add(")");
+          break;
         }
 
       case IF:
@@ -1572,15 +1567,19 @@ public class CodeGenerator {
   }
 
   /**
-   * We could use addList recursively here, but sometimes we produce
-   * very deeply nested operators and run out of stack space, so we
-   * just unroll the recursion when possible.
+   * We could use addList recursively here, but sometimes we produce very deeply nested operators
+   * and run out of stack space, so we just unroll the recursion when possible.
    *
-   * We assume nodes are left-recursive.
+   * <p>We assume nodes are left-recursive.
    */
   private void unrollBinaryOperator(
-      Node n, Token op, String opStr, Context context,
-      Context rhsContext, int leftPrecedence, int rightPrecedence) {
+      Node n,
+      Token op,
+      String opStr,
+      Context context,
+      Context rhsContext,
+      int leftPrecedence,
+      int rightPrecedence) {
     Node firstNonOperator = n.getFirstChild();
     while (firstNonOperator.getToken() == op) {
       firstNonOperator = firstNonOperator.getFirstChild();
@@ -1624,22 +1623,19 @@ public class CodeGenerator {
     return Double.NaN;
   }
 
-  /**
-   * @return Whether the name is an indirect eval.
-   */
+  /** @return Whether the name is an indirect eval. */
   private static boolean isIndirectEval(Node n) {
     return n.isName() && "eval".equals(n.getString()) && !n.getBooleanProp(Node.DIRECT_EVAL);
   }
 
   /**
-   * Adds a block or expression, substituting a VOID with an empty statement.
-   * This is used for "for (...);" and "if (...);" type statements.
+   * Adds a block or expression, substituting a VOID with an empty statement. This is used for "for
+   * (...);" and "if (...);" type statements.
    *
    * @param n The node to print.
    * @param context The context to determine how the node should be printed.
    */
-  private void addNonEmptyStatement(
-      Node n, Context context, boolean allowNonBlockChild) {
+  private void addNonEmptyStatement(Node n, Context context, boolean allowNonBlockChild) {
     Node nodeToProcess = n;
 
     if (!allowNonBlockChild && !n.isBlock()) {
@@ -1662,7 +1658,7 @@ public class CodeGenerator {
 
       if (count == 1) {
         // Preserve the block only if needed or requested.
-        //'let', 'const', etc are not allowed by themselves in "if" and other
+        // 'let', 'const', etc are not allowed by themselves in "if" and other
         // structures. Also, hack around a IE6/7 browser bug that needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
         boolean alwaysWrapInBlock = cc.shouldPreserveExtraBlocks();
@@ -1687,8 +1683,7 @@ public class CodeGenerator {
   }
 
   /**
-   * @return Whether the Node is a DO or a declaration that is only allowed
-   * in restricted contexts.
+   * @return Whether the Node is a DO or a declaration that is only allowed in restricted contexts.
    */
   private static boolean isBlockDeclOrDo(Node n) {
     if (n.isLabel()) {
@@ -1776,8 +1771,8 @@ public class CodeGenerator {
     addList(firstInList, true, Context.OTHER, separator);
   }
 
-  void addList(Node firstInList, boolean isArrayOrFunctionArgument,
-      Context lhsContext, String separator) {
+  void addList(
+      Node firstInList, boolean isArrayOrFunctionArgument, Context lhsContext, String separator) {
     if (firstInList == null) {
       return;
     }
@@ -1787,8 +1782,7 @@ public class CodeGenerator {
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
       } else {
         cc.addOp(separator, true);
-        addExpr(n, isArrayOrFunctionArgument ? 1 : 0,
-            getContextForNoInOperator(lhsContext));
+        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, getContextForNoInOperator(lhsContext));
       }
     }
     if (prettyPrint
@@ -1803,10 +1797,10 @@ public class CodeGenerator {
     // Object literal property names don't have to be quoted if they are not JavaScript keywords.
     boolean mustBeQuoted =
         n.isQuotedString()
-        || (quoteKeywordProperties && TokenStream.isKeyword(key))
-        || !TokenStream.isJSIdentifier(key)
-        // do not encode literally any non-literal characters that were Unicode escaped.
-        || !NodeUtil.isLatin(key);
+            || (quoteKeywordProperties && TokenStream.isKeyword(key))
+            || !TokenStream.isJSIdentifier(key)
+            // do not encode literally any non-literal characters that were Unicode escaped.
+            || !NodeUtil.isLatin(key);
     if (!mustBeQuoted) {
       // Check if the property is eligible to be printed as shorthand.
       if (n.isShorthandProperty()) {
@@ -1947,8 +1941,12 @@ public class CodeGenerator {
     // could count the quotes and pick the optimal quote character
     for (int i = 0; i < s.length(); i++) {
       switch (s.charAt(i)) {
-        case '"': doubleq++; break;
-        case '\'': singleq++; break;
+        case '"':
+          doubleq++;
+          break;
+        case '\'':
+          singleq++;
+          break;
         default: // skip non-quote characters
       }
     }
@@ -1992,7 +1990,9 @@ public class CodeGenerator {
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       switch (c) {
-        case '\0': sb.append("\\x00"); break;
+        case '\0':
+          sb.append("\\x00");
+          break;
         case '\u000B':
           if (useSlashV) {
             sb.append("\\v");
@@ -2000,17 +2000,37 @@ public class CodeGenerator {
             sb.append("\\x0B");
           }
           break;
-        // From the SingleEscapeCharacter grammar production.
-        case '\b': sb.append("\\b"); break;
-        case '\f': sb.append("\\f"); break;
-        case '\n': sb.append("\\n"); break;
-        case '\r': sb.append("\\r"); break;
-        case '\t': sb.append("\\t"); break;
-        case '\\': sb.append(backslashEscape); break;
-        case '\"': sb.append(doublequoteEscape); break;
-        case '\'': sb.append(singlequoteEscape); break;
-        case '$': sb.append(dollarEscape); break;
-        case '`': sb.append(backtickEscape); break;
+          // From the SingleEscapeCharacter grammar production.
+        case '\b':
+          sb.append("\\b");
+          break;
+        case '\f':
+          sb.append("\\f");
+          break;
+        case '\n':
+          sb.append("\\n");
+          break;
+        case '\r':
+          sb.append("\\r");
+          break;
+        case '\t':
+          sb.append("\\t");
+          break;
+        case '\\':
+          sb.append(backslashEscape);
+          break;
+        case '\"':
+          sb.append(doublequoteEscape);
+          break;
+        case '\'':
+          sb.append(singlequoteEscape);
+          break;
+        case '$':
+          sb.append(dollarEscape);
+          break;
+        case '`':
+          sb.append(backtickEscape);
+          break;
 
         case '=':
           // '=' is a syntactically significant regexp character.
@@ -2174,8 +2194,7 @@ public class CodeGenerator {
   }
   /**
    * @param maxCount The maximum number of children to look for.
-   * @return The number of children of this node that are non empty up to
-   * maxCount.
+   * @return The number of children of this node that are non empty up to maxCount.
    */
   private static int getNonEmptyChildCount(Node n, int maxCount) {
     int i = 0;
@@ -2206,9 +2225,8 @@ public class CodeGenerator {
   }
 
   /**
-   * Information on the current context. Used for disambiguating special cases.
-   * For example, a "{" could indicate the start of an object literal or a
-   * block, depending on the current context.
+   * Information on the current context. Used for disambiguating special cases. For example, a "{"
+   * could indicate the start of an object literal or a block, depending on the current context.
    */
   public enum Context {
     STATEMENT,
@@ -2266,8 +2284,8 @@ public class CodeGenerator {
   }
 
   /**
-   * If we're in a IN_FOR_INIT_CLAUSE, we can't permit in operators in the
-   * expression.  Pass on the IN_FOR_INIT_CLAUSE flag through subexpressions.
+   * If we're in a IN_FOR_INIT_CLAUSE, we can't permit in operators in the expression. Pass on the
+   * IN_FOR_INIT_CLAUSE flag through subexpressions.
    */
   private static Context getContextForNoInOperator(Context context) {
     return (context.inForInInitClause() ? context : Context.OTHER);
