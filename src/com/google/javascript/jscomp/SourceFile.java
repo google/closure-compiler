@@ -527,12 +527,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   }
 
   @GwtIncompatible("java.io.Reader")
-  public static SourceFile fromReader(String fileName, Reader r)
-      throws IOException {
-    return builder().buildFromReader(fileName, r);
-  }
-
-  @GwtIncompatible("java.io.Reader")
   public static SourceFile fromProto(SourceFileProto protoSourceFile) {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
     switch (protoSourceFile.getLoaderCase()) {
@@ -667,11 +661,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     @GwtIncompatible("java.io.InputStream")
     public SourceFile buildFromInputStream(String fileName, InputStream s) throws IOException {
       return buildFromCode(fileName, CharStreams.toString(new InputStreamReader(s, charset)));
-    }
-
-    @GwtIncompatible("java.io.Reader")
-    public SourceFile buildFromReader(String fileName, Reader r) throws IOException {
-      return buildFromCode(fileName, CharStreams.toString(r));
     }
   }
 
