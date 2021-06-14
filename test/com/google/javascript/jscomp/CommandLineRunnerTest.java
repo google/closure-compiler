@@ -203,7 +203,6 @@ public final class CommandLineRunnerTest {
             "--compilation_level=ADVANCED_OPTIMIZATIONS",
             "--translations_file",
             msgBundle.toString(),
-            "--late_localization=true",
             "--js",
             externsFile.toString(),
             "--js",

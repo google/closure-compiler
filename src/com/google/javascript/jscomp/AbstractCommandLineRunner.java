@@ -1197,6 +1197,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       compiler.initWebpackMap(emptyMap);
     }
 
+    options.setDoLateLocalization(config.shouldDoLateLocalization());
+
     compiler.initOptions(options);
 
     List<SourceFile> inputs =
@@ -2461,6 +2463,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       } else {
         return false;
       }
+    }
+
+    boolean shouldDoLateLocalization() {
+      // The point of doing a 3-stage compilation is to save localization work for last, so
+      // we avoid doing checks and optimizations separately for every locale.
+      // If we aren't doing a 3-stage compilation, then late localization is just doing more work
+      // for a possibly-bigger compiled output (because code gets added after optimizations have
+      // already executed).
+      return shouldRestoreAndPerformStage2AndSave() || shouldRestoreAndPerformStage3();
     }
 
     @Nullable private String typedAstListInputFilename;

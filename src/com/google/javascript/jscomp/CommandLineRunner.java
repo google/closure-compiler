@@ -701,13 +701,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String translationsFile = "";
 
     @Option(
-        name = "--late_localization",
-        handler = BooleanOptionHandler.class,
-        hidden = true,
-        usage = "Do localization work in stage 3 after optimizations.")
-    private boolean lateLocalization = false;
-
-    @Option(
         name = "--translations_project",
         hidden = true,
         usage =
@@ -1925,8 +1918,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       options.messageBundle = new EmptyMessageBundle();
       options.setWarningLevel(DiagnosticGroups.MSG_CONVENTIONS, CheckLevel.OFF);
     }
-
-    options.setDoLateLocalization(flags.lateLocalization);
 
     options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));
 
