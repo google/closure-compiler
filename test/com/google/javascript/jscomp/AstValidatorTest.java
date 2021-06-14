@@ -366,7 +366,6 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Since we're building the AST by hand, there won't be any types on it.
     enableTypeInfoValidation = false;
 
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     Node n = new Node(Token.IMPORT_META);
     expectValid(n, Check.EXPRESSION);
   }
@@ -1188,16 +1187,22 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_nullishCoalesceOp() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
-
     testFeatureValidation("x ?? y", Feature.NULL_COALESCE_OP);
     testFeatureValidation("x ?? y ?? z", Feature.NULL_COALESCE_OP);
   }
 
   @Test
-  public void testFeatureValidation_optChain() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+  public void testFeatureValidation_logicalAssignmentOp() {
+    // TODO (user): re-enable TypeInfoValidation and TypeCheck
+    enableTypeInfoValidation = false;
+    disableTypeCheck();
+    testFeatureValidation("x ||= y", Feature.LOGICAL_ASSIGNMENT);
+    testFeatureValidation("x &&= y", Feature.LOGICAL_ASSIGNMENT);
+    testFeatureValidation("x ??= y", Feature.LOGICAL_ASSIGNMENT);
+  }
 
+  @Test
+  public void testFeatureValidation_optChain() {
     testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);
     testFeatureValidation("x?.()", Feature.OPTIONAL_CHAINING);
     testFeatureValidation("x?.[1]", Feature.OPTIONAL_CHAINING);

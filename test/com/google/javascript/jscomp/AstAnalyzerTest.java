@@ -25,6 +25,9 @@ import static com.google.javascript.rhino.Token.ARRAYLIT;
 import static com.google.javascript.rhino.Token.ARRAY_PATTERN;
 import static com.google.javascript.rhino.Token.ASSIGN;
 import static com.google.javascript.rhino.Token.ASSIGN_ADD;
+import static com.google.javascript.rhino.Token.ASSIGN_AND;
+import static com.google.javascript.rhino.Token.ASSIGN_COALESCE;
+import static com.google.javascript.rhino.Token.ASSIGN_OR;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.BIGINT;
 import static com.google.javascript.rhino.Token.BITOR;
@@ -241,6 +244,9 @@ public final class AstAnalyzerTest {
           kase().js("a[0][i=4]").token(GETELEM).expect(true),
           kase().js("a?.[0][i=4]").token(OPTCHAIN_GETELEM).expect(true),
           kase().js("a += 3").token(ASSIGN_ADD).expect(true),
+          kase().js("a ||= b").token(ASSIGN_OR).expect(true),
+          kase().js("a &&= b").token(ASSIGN_AND).expect(true),
+          kase().js("a ??= b").token(ASSIGN_COALESCE).expect(true),
           kase().js("a, b, z += 4").token(COMMA).expect(true),
           kase().js("a ? c : d++").token(HOOK).expect(true),
           kase().js("a ?? b++").token(COALESCE).expect(true),
