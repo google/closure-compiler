@@ -2915,6 +2915,116 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testClassField() {
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  x;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  x=2;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  x=2;",
+            "  y=3;",
+            "}",
+            ""));
+    assertPrettyPrint(
+        lines(
+            "class C {", //
+            "  x=2",
+            "  y=3",
+            "}",
+            ""),
+        lines(
+            "class C {", //
+            "  x=2;",
+            "  y=3;",
+            "}",
+            ""));
+    assertPrettyPrint(
+        "class C {x=2;y=3}",
+        lines(
+            "class C {", //
+            "  x=2;",
+            "  y=3;",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassFieldCheckState() {
+    assertPrettyPrintSame(
+        lines(
+            "/** @interface */ ", //
+            "class C {",
+            "  x;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "/** @record */ ", //
+            "class C {",
+            "  x;",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testComputedClassFieldLiteralStringNumber() {
+    assertPrettyPrint(
+        "class C { 'str' = 2;}",
+        lines(
+            "class C {", //
+            "  [\"str\"]=2;",
+            "}",
+            ""));
+    assertPrettyPrint(
+        "class C { 1 = 2;}",
+        lines(
+            "class C {", //
+            "  [1]=2;",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testComputedClassField() {
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  [x];",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  [x]=2;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  [x]=2;",
+            "  y=3;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  [x]=2;",
+            "  [y]=3;",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testSuper() {
     assertPrintSame("class C extends foo(){}");
     assertPrintSame("class C extends m.foo(){}");

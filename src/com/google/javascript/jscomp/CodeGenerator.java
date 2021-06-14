@@ -650,6 +650,38 @@ public class CodeGenerator {
           break;
         }
 
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
+        {
+          checkState(node.getParent().isClassMembers());
+          if (node.getBooleanProp(Node.STATIC_MEMBER)) {
+            add("static ");
+          }
+          Node init = null;
+          switch (type) {
+            case MEMBER_FIELD_DEF:
+              String propertyName = node.getString();
+              add(propertyName);
+              init = first;
+              break;
+            case COMPUTED_FIELD_DEF:
+              add("[");
+              // Must use addExpr() with a priority of 1, because comma expressions aren't allowed.
+              // https://www.ecma-international.org/ecma-262/9.0/index.html#prod-ComputedPropertyName
+              addExpr(first, 1, Context.OTHER);
+              add("]");
+              init = node.getSecondChild();
+              break;
+            default:
+              break;
+          }
+          if (init != null) {
+            add("=");
+            addExpr(init, 1, Context.OTHER);
+          }
+          add(";");
+          break;
+        }
       case SCRIPT:
       case MODULE_BODY:
       case BLOCK:

@@ -2951,6 +2951,14 @@ public class Node {
     return this.token == Token.MEMBER_VARIABLE_DEF;
   }
 
+  public final boolean isMemberFieldDef() {
+    return this.token == Token.MEMBER_FIELD_DEF;
+  }
+
+  public final boolean isComputedFieldDef() {
+    return this.token == Token.COMPUTED_FIELD_DEF;
+  }
+
   public final boolean isModuleBody() {
     return this.token == Token.MODULE_BODY;
   }
