@@ -5327,6 +5327,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testComputedFieldStringLit() {
+    Node n = parse("class C {'x' = 2;}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasType(Token.STRINGLIT);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("x");
+    assertNode(n.getLastChild()).hasType(Token.NUMBER);
+    assertNode(n.getLastChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
+  public void testComputedFieldName() {
+    Node n = parse("class C {[a] = 2;}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasType(Token.NAME);
+    assertNode(n.getFirstChild()).hasStringThat().isEqualTo("a");
+    assertNode(n.getLastChild()).hasType(Token.NUMBER);
+    assertNode(n.getLastChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
+  public void testComputedFieldNumber() {
+    Node n = parse("class C{1 = 2;}").getFirstChild().getLastChild().getFirstChild();
+    assertNode(n).hasType(Token.COMPUTED_FIELD_DEF);
+    assertNode(n.getFirstChild()).hasType(Token.NUMBER);
+    assertNode(n.getFirstChild()).isEqualTo(IR.number(1.0));
+    assertNode(n.getLastChild()).hasType(Token.NUMBER);
+    assertNode(n.getLastChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
   public void testStaticFields() {
     Node n = parse("class C{static field = 2;}").getFirstChild().getLastChild();
     assertNode(n.getFirstChild()).isStatic();
