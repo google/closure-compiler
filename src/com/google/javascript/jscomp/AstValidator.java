@@ -859,6 +859,12 @@ public final class AstValidator implements CompilerPass {
       case COMPUTED_PROP:
         validateComputedPropClassMethod(n);
         break;
+      case MEMBER_FIELD_DEF:
+        validateClassField(n);
+        break;
+      case COMPUTED_FIELD_DEF:
+        validateComputedPropClassField(n);
+        break;
       case INDEX_SIGNATURE:
         validateChildCount(n);
         validateChildless(n.getFirstChild());
@@ -879,6 +885,22 @@ public final class AstValidator implements CompilerPass {
       validateFunctionSignature(function);
     } else {
       validateFunctionExpression(function);
+    }
+  }
+
+  private void validateClassField(Node n) {
+    validateFeature(Feature.PUBLIC_CLASS_FIELDS, n);
+    validateNonEmptyString(n);
+    if (n.getFirstChild() != null) {
+      validateExpression(n.getFirstChild());
+    }
+  }
+
+  private void validateComputedPropClassField(Node n) {
+    validateFeature(Feature.PUBLIC_CLASS_FIELDS, n);
+    validateExpression(n.getFirstChild());
+    if (n.getSecondChild() != null) {
+      validateExpression(n.getSecondChild());
     }
   }
 

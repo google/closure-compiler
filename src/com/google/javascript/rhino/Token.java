@@ -298,6 +298,8 @@ public enum Token {
       case TRY:
       case VAR:
       case YIELD:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         return -1;
       case EMPTY:
       case FALSE:

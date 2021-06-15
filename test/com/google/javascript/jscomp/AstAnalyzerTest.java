@@ -35,6 +35,7 @@ import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.COALESCE;
 import static com.google.javascript.rhino.Token.COMMA;
+import static com.google.javascript.rhino.Token.COMPUTED_FIELD_DEF;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
 import static com.google.javascript.rhino.Token.DEFAULT_VALUE;
@@ -53,6 +54,7 @@ import static com.google.javascript.rhino.Token.IF;
 import static com.google.javascript.rhino.Token.INC;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
+import static com.google.javascript.rhino.Token.MEMBER_FIELD_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
@@ -578,6 +580,18 @@ public final class AstAnalyzerTest {
           // MEMBER_FUNCTION_DEF
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("({ a(x) {} })"),
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("class C { a(x) {} }"),
+
+          // MEMBER_FIELD_DEF
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x=2; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x \n y }"),
+
+          // COMPUTED_FIELD_DEF
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { [x]; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { ['x']=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 'x'=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 1=2; }"),
 
           // SUPER calls
           kase().expect(false).token(SUPER).js("super()"),

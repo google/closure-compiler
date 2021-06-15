@@ -114,8 +114,8 @@ public final class AstValidatorTest extends CompilerTestCase {
     Node members = new Node(Token.CLASS_MEMBERS);
     c.addChildToBack(members);
     expectValid(c, Check.STATEMENT);
-    Node method1 = new Node(
-        Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
+    Node method1 =
+        new Node(Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
     members.addChildToBack(method1);
     expectInvalid(c, Check.STATEMENT);
 
@@ -127,6 +127,53 @@ public final class AstValidatorTest extends CompilerTestCase {
     members.addChildToBack(method2);
 
     expectInvalid(c, Check.STATEMENT);
+  }
+
+  @Test
+  public void testClassField() {
+    enableTypeInfoValidation = false;
+    disableTypeCheck();
+    valid("class C {x}");
+    valid("class C {x = 2}");
+    valid("class C {x = 2;}");
+    valid("class C {x; y;}");
+    valid(
+        lines(
+            "class C {", //
+            "  x",
+            "  y",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassComputedField() {
+    enableTypeInfoValidation = false;
+    disableTypeCheck();
+    valid("class C { [x]; }");
+    valid("class C { ['x']=2; }");
+    valid("class C { 'x'=2; }");
+    valid("class C { 1=2; }");
+    valid(
+        lines(
+            "class C {", //
+            "  [x]=2",
+            "  y = 4",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testFeatureValidation_classField() {
+    enableTypeInfoValidation = false;
+    disableTypeCheck();
+    testFeatureValidation(
+        lines(
+            "class C {", //
+            "  x=2;",
+            "}",
+            ""),
+        Feature.PUBLIC_CLASS_FIELDS);
   }
 
   @Test
@@ -377,11 +424,8 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     JSDocInfo.Builder jsdoc = JSDocInfo.builder();
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
-    Node n = IR.exprResult(
-        new Node(
-            Token.ASSIGN,
-            IR.cast(IR.name("x"), jsdoc.build()),
-            IR.number(0)));
+    Node n =
+        IR.exprResult(new Node(Token.ASSIGN, IR.cast(IR.name("x"), jsdoc.build()), IR.number(0)));
     expectValid(n, Check.STATEMENT);
   }
 
@@ -697,13 +741,14 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
-    Node n = IR.assign(
-        new Node(Token.OBJECT_PATTERN, new Node(Token.ARRAY_PATTERN)), IR.objectlit());
+    Node n =
+        IR.assign(new Node(Token.OBJECT_PATTERN, new Node(Token.ARRAY_PATTERN)), IR.objectlit());
     expectInvalid(n, Check.EXPRESSION);
 
-    n = IR.assign(
-        new Node(Token.ARRAY_PATTERN, IR.computedProp(IR.string("x"), IR.number(1))),
-        IR.objectlit());
+    n =
+        IR.assign(
+            new Node(Token.ARRAY_PATTERN, IR.computedProp(IR.string("x"), IR.number(1))),
+            IR.objectlit());
     expectInvalid(n, Check.EXPRESSION);
 
     Node stringkey = IR.stringKey("x");
@@ -1351,8 +1396,8 @@ public final class AstValidatorTest extends CompilerTestCase {
   /**
    * Tests that AstValidator checks for the given feature in the AST
    *
-   * <p>This will raise an error if a) the AST parsed from {@code code} lacks {@code feature}, or
-   * b) AstValidator does not validate {@code feature}'s presence in the AST.
+   * <p>This will raise an error if a) the AST parsed from {@code code} lacks {@code feature}, or b)
+   * AstValidator does not validate {@code feature}'s presence in the AST.
    */
   private void testFeatureValidation(String code, Feature feature) {
     valid(code);
