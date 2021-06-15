@@ -40,10 +40,11 @@ public final class JsdocSerializer {
    * @return a new JSDocInfo object or null if no serializable fields are found
    */
   public static JSDocInfo convertJSDocInfoForOptimizations(JSDocInfo jsdoc) {
-    return deserializeJsdoc(serializeJsdoc(jsdoc));
+    StringPool.Builder stringPool = StringPool.builder();
+    return deserializeJsdoc(serializeJsdoc(jsdoc, stringPool), stringPool.build());
   }
 
-  static OptimizationJsdoc serializeJsdoc(JSDocInfo jsdoc) {
+  static OptimizationJsdoc serializeJsdoc(JSDocInfo jsdoc, StringPool.Builder stringPool) {
     if (jsdoc == null) {
       return null;
     }
@@ -55,7 +56,7 @@ public final class JsdocSerializer {
     }
 
     if (jsdoc.getLicense() != null) {
-      builder.setLicenseText(jsdoc.getLicense());
+      builder.setLicenseTextPointer(stringPool.put(jsdoc.getLicense()));
     }
 
     if (jsdoc.isNoInline()) {
@@ -143,13 +144,13 @@ public final class JsdocSerializer {
       builder.addKind(JsdocTag.JSDOC_HIDDEN);
     }
     if (jsdoc.getDescription() != null) {
-      builder.setDescription(jsdoc.getDescription());
+      builder.setDescriptionPointer(stringPool.put(jsdoc.getDescription()));
     }
     if (jsdoc.getAlternateMessageId() != null) {
-      builder.setAlternateMessageId(jsdoc.getAlternateMessageId());
+      builder.setAlternateMessageIdPointer(stringPool.put(jsdoc.getAlternateMessageId()));
     }
     if (jsdoc.getMeaning() != null) {
-      builder.setMeaning(jsdoc.getMeaning());
+      builder.setMeaningPointer(stringPool.put(jsdoc.getMeaning()));
     }
     if (jsdoc.getSuppressions().contains("messageConventions")) {
       builder.addKind(JsdocTag.JSDOC_SUPPRESS_MESSAGE_CONVENTION);
@@ -194,23 +195,23 @@ public final class JsdocSerializer {
 
   private static final JSTypeExpression placeholderType = createPlaceholderType();
 
-  static JSDocInfo deserializeJsdoc(OptimizationJsdoc serializedJsdoc) {
+  static JSDocInfo deserializeJsdoc(OptimizationJsdoc serializedJsdoc, StringPool stringPool) {
     if (serializedJsdoc == null) {
       return null;
     }
     JSDocInfo.Builder builder = JSDocInfo.builder();
-    String license = serializedJsdoc.getLicenseText();
-    if (!license.isEmpty()) {
-      builder.addLicense(license);
+    if (serializedJsdoc.getLicenseTextPointer() != 0) {
+      builder.addLicense(stringPool.get(serializedJsdoc.getLicenseTextPointer()));
     }
-    if (!serializedJsdoc.getMeaning().isEmpty()) {
-      builder.recordMeaning(serializedJsdoc.getMeaning());
+    if (serializedJsdoc.getMeaningPointer() != 0) {
+      builder.recordMeaning(stringPool.get(serializedJsdoc.getMeaningPointer()));
     }
-    if (!serializedJsdoc.getDescription().isEmpty()) {
-      builder.recordDescription(serializedJsdoc.getDescription());
+    if (serializedJsdoc.getDescriptionPointer() != 0) {
+      builder.recordDescription(stringPool.get(serializedJsdoc.getDescriptionPointer()));
     }
-    if (!serializedJsdoc.getAlternateMessageId().isEmpty()) {
-      builder.recordAlternateMessageId(serializedJsdoc.getAlternateMessageId());
+    if (serializedJsdoc.getAlternateMessageIdPointer() != 0) {
+      builder.recordAlternateMessageId(
+          stringPool.get(serializedJsdoc.getAlternateMessageIdPointer()));
     }
 
     TreeSet<String> modifies = new TreeSet<>();
