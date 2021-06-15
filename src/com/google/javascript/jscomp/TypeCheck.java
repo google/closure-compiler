@@ -662,13 +662,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitYield(t, n);
         break;
 
-      case SUPER:
-      case NEW_TARGET:
-      case IMPORT_META:
-      case AWAIT:
-        ensureTyped(n);
-        break;
-
       case DEC:
       case INC:
         left = n.getFirstChild();
@@ -1003,26 +996,27 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
         // These nodes are typed during the type inference.
+      case SUPER:
+      case NEW_TARGET:
+      case IMPORT_META:
+      case AWAIT:
       case AND:
       case HOOK:
-      case OBJECTLIT:
       case OR:
       case COALESCE:
-        if (n.getJSType() != null) { // If we didn't run type inference.
-          ensureTyped(n);
+        ensureTyped(n);
+        break;
+
+      case OBJECTLIT:
+        // If this is an enum, then give that type to the objectlit as well.
+        if (parent.getJSType() instanceof EnumType) {
+          ensureTyped(n, parent.getJSType());
         } else {
-          // If this is an enum, then give that type to the objectlit as well.
-          if (n.isObjectLit() && (parent.getJSType() instanceof EnumType)) {
-            ensureTyped(n, parent.getJSType());
-          } else {
-            ensureTyped(n);
-          }
+          ensureTyped(n);
         }
-        if (n.isObjectLit()) {
-          JSType typ = getJSType(n);
-          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            visitObjectOrClassLiteralKey(key, n, typ);
-          }
+        JSType typ = getJSType(n);
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          visitObjectOrClassLiteralKey(key, n, typ);
         }
         break;
 
