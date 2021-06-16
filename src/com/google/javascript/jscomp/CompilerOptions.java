@@ -1185,7 +1185,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Experimental option to disable all Closure and ES module rewriting
+   * Experimental option to disable all Closure and ES module and goog.provide rewriting
    *
    * <p>Use at your own risk - disabling module rewriting is not fully tested yet.
    */
@@ -1208,7 +1208,9 @@ public class CompilerOptions implements Serializable {
   }
 
   boolean shouldRewriteProvidesInChecksOnly() {
-    return this.rewriteProvidesInChecksOnly;
+    // Disabling module rewriting automatically disables provide rewriting, as provide rewriting
+    // must happen after module rewriting.
+    return this.rewriteProvidesInChecksOnly && this.shouldRewriteModules();
   }
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */

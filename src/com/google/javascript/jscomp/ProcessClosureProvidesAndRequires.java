@@ -603,6 +603,10 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
      * with a duplicate definition, then make sure that definition becomes a declaration.
      */
     private void replace() {
+      checkState(
+          !this.isFromLegacyModule(),
+          "Cannot rewrite provides without having rewritten goog.modules, found %s",
+          firstNode);
       if (firstNode == null) {
         // Don't touch the base case ('goog').
         replacementNode = candidateDefinition;
