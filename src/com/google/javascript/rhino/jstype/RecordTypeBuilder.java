@@ -47,7 +47,7 @@ import java.util.HashMap;
  * A builder for record types.
  *
  */
-public class RecordTypeBuilder {
+public final class RecordTypeBuilder {
   private boolean isEmpty = true;
   private boolean isDeclared = true;
   private final JSTypeRegistry registry;

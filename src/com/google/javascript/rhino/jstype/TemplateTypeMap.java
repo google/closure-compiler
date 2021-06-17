@@ -51,7 +51,7 @@ import java.util.Set;
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for
  * cloning/extending the map.
  */
-public class TemplateTypeMap {
+public final class TemplateTypeMap {
 
   // The TemplateType keys of the map.
   private final ImmutableList<TemplateType> templateKeys;

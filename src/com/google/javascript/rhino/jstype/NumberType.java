@@ -45,7 +45,7 @@ import com.google.javascript.jscomp.base.Tri;
  * Number type.
  *
  */
-public class NumberType extends ValueType {
+public final class NumberType extends ValueType {
   NumberType(JSTypeRegistry registry) {
     super(registry);
   }

@@ -88,10 +88,8 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     this.input = input;
   }
 
-
-  // Non-final for jsdev tests
   @Override
-  public String getName() {
+  public final String getName() {
     return name;
   }
 
@@ -150,8 +148,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return index;
   }
 
-  // Non-final for jsdev tests
-  public boolean isGlobal() {
+  public final boolean isGlobal() {
     return scope.isGlobal();
   }
 
@@ -188,14 +185,12 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return NodeUtil.getRValueOfLValue(this.getNode());
   }
 
-  // Non-final for jsdev tests
-  public Node getNameNode() {
+  public final Node getNameNode() {
     return this.getNode();
   }
 
-  // Non-final for jsdev tests
   @Override
-  public JSDocInfo getJSDocInfo() {
+  public final JSDocInfo getJSDocInfo() {
     return this.getNode() == null ? null : NodeUtil.getBestJSDocInfo(this.getNode());
   }
 

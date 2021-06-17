@@ -45,7 +45,7 @@ import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import java.util.ArrayList;
 
 /** A builder for the list representing FunctionType Parameters */
-public class FunctionParamBuilder {
+public final class FunctionParamBuilder {
 
   private final JSTypeRegistry registry;
   private final ArrayList<Parameter> parameters = new ArrayList<>();

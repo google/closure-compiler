@@ -277,9 +277,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
    * function scope contains "a". When looking up "a.b" in the function scope, AbstractScope::getVar
    * returns "a.b". This method returns null because the global "a" is shadowed.
    */
-  // Non-final for JSDev
   @Override
-  public TypedVar getVar(String name) {
+  public final TypedVar getVar(String name) {
     TypedVar ownSlot = getOwnSlot(name);
     if (ownSlot != null) {
       // Micro-optimization: variables declared directly in this scope cannot have been shadowed.

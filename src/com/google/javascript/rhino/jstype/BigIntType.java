@@ -42,7 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.jscomp.base.Tri;
 
 /** BigInt type. */
-public class BigIntType extends ValueType {
+public final class BigIntType extends ValueType {
   BigIntType(JSTypeRegistry registry) {
     super(registry);
   }

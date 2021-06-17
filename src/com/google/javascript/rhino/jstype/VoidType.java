@@ -43,8 +43,9 @@ import com.google.javascript.jscomp.base.Tri;
 
 /**
  * Void type whose only element is the {@code undefined} value.
+ *
  */
-public class VoidType extends ValueType {
+public final class VoidType extends ValueType {
   VoidType(JSTypeRegistry registry) {
     super(registry);
   }

@@ -44,10 +44,10 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
 /**
- * The type of individual elements of an enum type
- * (see {@link EnumType}).
+ * The type of individual elements of an enum type (see {@link EnumType}).
+ *
  */
-public class EnumElementType extends ObjectType {
+public final class EnumElementType extends ObjectType {
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM_ELEMENT;
 
   /**
