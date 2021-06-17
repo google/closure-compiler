@@ -626,6 +626,63 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testLogicalAssignment() {
+    // TODO(b/162085766): will be reincorporated in next CLs
+    // testTypes("/**@type {?} */var a; /** @type {?} */ var b; a||=b;");
+    // testTypes("/**@type {?} */var a; /** @type {?} */ var b; a&&=b;");
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a??=b;");
+  }
+
+  @Test
+  public void testAssignCoalesceToNonNumeric() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {null} x",
+            " * @return {string}",
+            " */",
+            " function assignCoalesce(x) {",
+            "   x ??= 'a';",
+            "   return x;",
+            " };"));
+  }
+
+  @Test
+  public void testAssignCoalesceToNumeric() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {null} x",
+            " * @return {number}",
+            " */",
+            " function assignCoalesce(x) {",
+            "   x ??= 10;",
+            "   return x;",
+            " };"));
+  }
+
+  @Test
+  public void testAssignCoalesceNoAssign() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @return {string}",
+            " */",
+            " function assignCoalesce(x) {",
+            "   x ??= 5;",
+            "   return x;",
+            " };"));
+  }
+
+  @Test
+  public void testAssignCoalesceRHS() {
+    testTypes("/** @type {string|undefined} */ var a; a ??= 0;");
+    // TODO(b/162085766): Verify RHS is valid and add type check support for:
+    // lines("assignment", "found   : number", "expected: string|undefined"));
+  }
+
+  @Test
   public void optChain() {
     // TODO(b/151248857): Calculate the appropriate type here
     testTypes("/**@type {?} */var x = a?.b;");

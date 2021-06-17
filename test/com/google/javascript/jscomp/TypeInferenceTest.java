@@ -2560,6 +2560,84 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAssignCoalesceToNonNumeric() {
+    assuming("x", NULL_TYPE);
+    inFunction("x ??= '5';");
+    verify("x", STRING_TYPE);
+
+    inFunction("var y; y ??= (25 + '5');");
+    verify("y", STRING_TYPE);
+
+    inFunction("var y; y ??= true;");
+    verify("y", BOOLEAN_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceToNumeric() {
+    assuming("x", NULL_TYPE);
+    inFunction("x ??= 10;");
+    verify("x", NUMBER_TYPE);
+
+    inFunction("var y = null; y ??= 20");
+    verify("y", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceNoAssign() {
+    assuming("x", STRING_TYPE);
+    inFunction("x ??= 10;");
+    verify("x", STRING_TYPE);
+
+    inFunction("var y; y = 10; y ??= 'foo';");
+    verify("y", NUMBER_TYPE);
+
+    inFunction("var y = false; y ??= 'foo';");
+    verify("y", BOOLEAN_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceNullOperands() {
+    assuming("x", NULL_TYPE);
+    inFunction("x ??= null");
+    verify("x", NULL_TYPE);
+
+    inFunction("var y; y ??= null");
+    verify("y", NULL_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceRHSAssignment() {
+    // since lhs is null, ??= executes rhs;
+    // precision can be improved in the future for `y` to expect a number and not undefined,
+    // but this is currently in accordance with the AST and not an oversight.
+    // TODO (user): result of rhs given non-null lhs could be more precise
+    inFunction("var y; var x = null; x ??= (y = 6)");
+    verify("y", createUnionType(VOID_TYPE, NUMBER_TYPE));
+    verify("x", NUMBER_TYPE);
+
+    // ??= does not execute rhs
+    inFunction("var y; var x = true; x ??= (y = 'a' + 6)");
+    verify("y", VOID_TYPE);
+    verify("x", BOOLEAN_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceRemoveNull() {
+    // copied this over from a nullish coalesce test
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("x ??= 3");
+    verify("x", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testAssignCoalesceJoin() {
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("var y = ''; x ??= (y = x, 1)");
+    verify("y", createNullableType(STRING_TYPE));
+    verify("x", NUMBER_TYPE);
+  }
+
+  @Test
   public void testComparison() {
     inFunction("var x = 'foo'; var y = (x = 3) < 4;");
     verify("x", NUMBER_TYPE);
@@ -3956,3 +4034,4 @@ public final class TypeInferenceTest {
     assuming(fullName, fnType);
   }
 }
+

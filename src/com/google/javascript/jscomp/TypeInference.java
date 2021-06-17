@@ -634,6 +634,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         scope = traverseOr(n, scope).getJoinedFlowScope();
         break;
 
+      case ASSIGN_COALESCE:
       case COALESCE:
         scope = traverseNullishCoalesce(n, scope);
         break;
@@ -1803,7 +1804,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   private FlowScope traverseNullishCoalesce(Node n, FlowScope scope) {
-    checkArgument(n.isNullishCoalesce());
+    checkArgument(n.isNullishCoalesce() || n.isAssignNullishCoalesce());
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
 
@@ -1817,18 +1818,20 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     JSType leftType = left.getJSType();
     JSType rightType = right.getJSType();
 
+    JSType type = unknownType;
     if (leftType != null) {
       if (!leftType.isNullable() && !leftType.isVoidable()) {
-        n.setJSType(leftType);
+        type = leftType;
       } else if (rightType != null) {
-        n.setJSType(registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType));
-        return join(scope, scopeAfterTraverseRight);
-      } else {
-        n.setJSType(unknownType);
+        type = registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType);
+        scope = join(scope, scopeAfterTraverseRight);
+        // Assignment occurs if lhs is null
+        if (n.isAssignNullishCoalesce()) {
+          scope = updateScopeForAssignment(scope, left, type, AssignmentType.ASSIGN);
+        }
       }
-    } else {
-      n.setJSType(unknownType);
     }
+    n.setJSType(type);
     return scope;
   }
 
