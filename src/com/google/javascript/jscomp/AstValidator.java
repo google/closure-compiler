@@ -891,7 +891,7 @@ public final class AstValidator implements CompilerPass {
   private void validateClassField(Node n) {
     validateFeature(Feature.PUBLIC_CLASS_FIELDS, n);
     validateNonEmptyString(n);
-    if (n.getFirstChild() != null) {
+    if (n.hasChildren()) {
       validateExpression(n.getFirstChild());
     }
   }
