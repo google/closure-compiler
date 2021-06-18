@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -28,9 +27,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -45,7 +43,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   // null if not an implicit goog namespace; otherwise starts out as an ArrayList then is frozen
   // into an ImmutableList.
-  private List<Node> implicitGoogDefinitions;
+  private SourceKind implicitGoogNamespaceStrength;
 
   /** Input source */
   private final CompilerInput input;
@@ -73,15 +71,15 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       @Nullable S scope,
       int index,
       @Nullable CompilerInput input,
-      boolean isImplicitGoogNamespace) {
+      @Nullable Node implicitGoogNamespaceDefinition) {
     checkArgument(index >= -1, index);
     this.name = checkNotNull(name);
-    if (isImplicitGoogNamespace) {
+    if (implicitGoogNamespaceDefinition != null) {
       this.nameNode = null;
-      this.implicitGoogDefinitions = new ArrayList<>();
+      this.implicitGoogNamespaceStrength = strengthOf(implicitGoogNamespaceDefinition);
     } else {
       this.nameNode = nameNode;
-      this.implicitGoogDefinitions = null;
+      this.implicitGoogNamespaceStrength = null;
     }
     this.scope = scope;
     this.index = index;
@@ -286,33 +284,42 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
    * syntactical definition
    */
   final boolean isImplicitGoogNamespace() {
-    return this.implicitGoogDefinitions != null;
+    return this.implicitGoogNamespaceStrength != null;
   }
 
   /**
    * Indicates this namespace was provided at the given node
    *
-   * <p>Cannot be called after the first {@link getImplicitGoogNamespaceDefinitions} call, which
-   * freezes the list of definitions.
-   *
    * @param definition the STRINGLIT in a goog.provide or goog.module call
    */
   final void addImplicitGoogNamespaceDefinition(Node definition) {
     checkState(this.isImplicitGoogNamespace(), this);
-    checkState(
-        this.implicitGoogDefinitions instanceof ArrayList,
-        "Called addImplicitGoogNamespaceDefinition after getImplicitGoogNamespaceDefinitions on %s",
-        this);
-    this.implicitGoogDefinitions.add(definition);
+    this.implicitGoogNamespaceStrength =
+        strongerOf(this.implicitGoogNamespaceStrength, strengthOf(definition));
   }
 
-  final ImmutableList<Node> getImplicitGoogNamespaceDefinitions() {
+  /** Returns the strongest kind of all definitions of this namespace */
+  final SourceKind getImplicitGoogNamespaceStrength() {
     checkState(this.isImplicitGoogNamespace(), this);
-    // freeze the set to avoid making multiple copies. no-op if this.implicitGoogDefinitions is
-    // already immutable.
-    ImmutableList<Node> immutableDefinitions = ImmutableList.copyOf(this.implicitGoogDefinitions);
-    this.implicitGoogDefinitions = immutableDefinitions;
+    return this.implicitGoogNamespaceStrength;
+  }
 
-    return immutableDefinitions;
+  private static final SourceKind strengthOf(Node n) {
+    StaticSourceFile source = n.getStaticSourceFile();
+    if (source == null) {
+      return SourceKind.EXTERN;
+    }
+
+    return source.getKind();
+  }
+
+  private static SourceKind strongerOf(SourceKind left, SourceKind right) {
+    if (left.equals(SourceKind.STRONG) || right.equals(SourceKind.STRONG)) {
+      return SourceKind.STRONG;
+    } else if (left.equals(SourceKind.EXTERN) || right.equals(SourceKind.EXTERN)) {
+      // Externs are stronger because they aren't deleted.
+      return SourceKind.EXTERN;
+    }
+    return SourceKind.WEAK;
   }
 }

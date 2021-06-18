@@ -230,13 +230,11 @@ class VarCheck implements ScopedCallback, CompilerPass {
       return;
     }
 
-    if (var.isImplicitGoogNamespace()) {
-      SourceKind useStrength = strengthOf(n);
-      SourceKind defStrength = getProvideStrength(var);
-      if (useStrength.equals(SourceKind.STRONG) && defStrength.equals(SourceKind.WEAK)) {
-        // This use will be retained but its definition will be deleted.
-        this.handleUndeclaredVariableRef(t, n);
-      }
+    if (var.isImplicitGoogNamespace()
+        && var.getImplicitGoogNamespaceStrength().equals(SourceKind.WEAK)
+        && strengthOf(n).equals(SourceKind.STRONG)) {
+      // This use will be retained but its definition will be deleted.
+      this.handleUndeclaredVariableRef(t, n);
       return;
     }
 
@@ -284,26 +282,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
     }
 
     return source.getKind();
-  }
-
-  private SourceKind getProvideStrength(Var provide) {
-    checkState(provide.isImplicitGoogNamespace());
-
-    SourceKind strength = SourceKind.WEAK;
-    for (Node provideDefinition : provide.getImplicitGoogNamespaceDefinitions()) {
-      strength = strongerOf(strength, strengthOf(provideDefinition));
-    }
-    return strength;
-  }
-
-  private static SourceKind strongerOf(SourceKind left, SourceKind right) {
-    if (left.equals(SourceKind.STRONG) || right.equals(SourceKind.STRONG)) {
-      return SourceKind.STRONG;
-    } else if (left.equals(SourceKind.EXTERN) || right.equals(SourceKind.EXTERN)) {
-      // Externs are strgoner because they aren't deleted.
-      return SourceKind.EXTERN;
-    }
-    return SourceKind.WEAK;
   }
 
   private void handleUndeclaredVariableRef(NodeTraversal t, Node n) {

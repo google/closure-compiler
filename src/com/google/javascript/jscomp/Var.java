@@ -20,6 +20,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
+import javax.annotation.Nullable;
 
 /**
  * Used by {@code Scope} to store information about variables.
@@ -35,8 +36,8 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
       Scope scope,
       int index,
       CompilerInput input,
-      boolean isImplicitGoogNamespace) {
-    super(name, nameNode, scope, index, input, isImplicitGoogNamespace);
+      @Nullable Node implicitGoogNamespaceDefinition) {
+    super(name, nameNode, scope, index, input, implicitGoogNamespaceDefinition);
     if (nameNode != null) {
       switch (nameNode.getToken()) {
         case MODULE_BODY:
@@ -50,16 +51,7 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
   }
 
   static Var createImplicitGoogNamespace(String name, Scope scope, Node definition) {
-    Var var =
-        new Var(
-            name,
-            /* nameNode= */ null,
-            scope,
-            -1,
-            /* input= */ null, /* isImplicitGoogNamespace */
-            true);
-
-    var.addImplicitGoogNamespaceDefinition(definition);
+    Var var = new Var(name, /* nameNode= */ null, scope, -1, /* input= */ null, definition);
     return var;
   }
 

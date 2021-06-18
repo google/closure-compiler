@@ -82,7 +82,13 @@ public final class Scope extends AbstractScope<Scope, Var> {
     // Make sure that it's declared only once
     checkState(getOwnSlot(name) == null);
     Var var =
-        new Var(name, nameNode, this, getVarCount(), input, /* isImplicitGoogNamespace= */ false);
+        new Var(
+            name,
+            nameNode,
+            this,
+            getVarCount(),
+            input,
+            /* implicitGoogNamespaceDefinition= */ null);
     declareInternal(name, var);
     return var;
   }
@@ -116,6 +122,6 @@ public final class Scope extends AbstractScope<Scope, Var> {
         this,
         /* index= */ -1,
         /* input= */ null,
-        /* isImplicitGoogNamespace= */ false);
+        /* implicitGoogNamespaceDefinition= */ null);
   }
 }

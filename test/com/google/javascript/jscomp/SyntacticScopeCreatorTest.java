@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
 import org.junit.Test;
@@ -1286,6 +1287,7 @@ public final class SyntacticScopeCreatorTest {
     Node root = getRoot("goog.provide('foo');");
     Scope globalScope = scopeCreator.createScope(root, null);
     assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isTrue();
   }
 
   @Test
@@ -1333,5 +1335,13 @@ public final class SyntacticScopeCreatorTest {
     Scope globalScope = scopeCreator.createScope(root, null);
 
     assertScope(globalScope).doesNotDeclare("foo");
+  }
+
+  @Test
+  public void testGoogProvideDeclaresStrength() {
+    Node root = getRoot("goog.provide('foo');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertThat(globalScope.getVar("foo").getImplicitGoogNamespaceStrength())
+        .isEqualTo(SourceKind.STRONG);
   }
 }
