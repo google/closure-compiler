@@ -1543,6 +1543,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // Validate value is assignable to the key type.
     JSType keyType = getJSType(key);
+    String propertyName = NodeUtil.getObjectLitKeyName(key);
 
     JSType allowedValueType = keyType;
     if (allowedValueType.isEnumElementType()) {
@@ -1551,37 +1552,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     boolean valid =
         validator.expectCanAssignToPropertyOf(
-            key, rightType, allowedValueType, owner, NodeUtil.getObjectLitKeyName(key));
+            key, rightType, allowedValueType, owner, propertyName);
     if (valid) {
       ensureTyped(key, rightType);
     } else {
       ensureTyped(key);
     }
 
-    // Validate that the key type is assignable to the object property type.
-    // This is necessary as the owner may have been cast to a non-literal
-    // object type.
-    // TODO(johnlenz): consider introducing a CAST node to the AST (or
-    // perhaps a parentheses node).
-
-    JSType objlitType = getJSType(owner);
-    ObjectType type = ObjectType.cast(objlitType.restrictByNotNullOrUndefined());
-    if (type != null) {
-      String property = NodeUtil.getObjectLitKeyName(key);
-      if (owner.isClass()) {
-        checkPropertyInheritanceOnClassMember(key, property, type.toMaybeFunctionType());
-      } else {
-        checkPropertyInheritanceOnPrototypeLitKey(key, property, type);
-      }
-      // TODO(lharker): add a unit test for the following if case or remove it.
-      // Removing the check doesn't break any unit tests, but it does have coverage in
-      // our coverage report.
-      if (type.hasProperty(property)
-          && !type.isPropertyTypeInferred(property)
-          && !propertyIsImplicitCast(type, property)) {
-        validator.expectCanAssignToPropertyOf(
-            key, keyType, type.getPropertyType(property), owner, property);
-      }
+    // Validate inheritance for classes and object literals used as prototypes
+    if (owner.isClass()) {
+      FunctionType classConstructorType = owner.getJSType().assertFunctionType();
+      checkPropertyInheritanceOnClassMember(key, propertyName, classConstructorType);
+    } else if (ownerType.toMaybeObjectType() != null) {
+      checkPropertyInheritanceOnPrototypeLitKey(key, propertyName, ownerType.toMaybeObjectType());
     }
   }
 
