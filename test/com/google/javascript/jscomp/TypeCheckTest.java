@@ -628,9 +628,64 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testLogicalAssignment() {
     // TODO(b/162085766): will be reincorporated in next CLs
-    // testTypes("/**@type {?} */var a; /** @type {?} */ var b; a||=b;");
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a||=b;");
     // testTypes("/**@type {?} */var a; /** @type {?} */ var b; a&&=b;");
     testTypes("/**@type {?} */var a; /** @type {?} */ var b; a??=b;");
+  }
+
+  @Test
+  public void testAssignOrToNonNumeric() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {null|undefined} x",
+            " * @return {string}",
+            " */",
+            " function assignOr(x) {",
+            "   x ||= 'a';",
+            "   return x;",
+            " };"));
+    // The precision of this test can be improved.
+    // Boolean type is treated as {true, false}.
+    testTypes(
+        lines(
+            "/**",
+            " * @param {boolean} x",
+            " * @return {boolean|string}",
+            " */",
+            " function assignOr(x) {",
+            "   x = true;",
+            "   x ||= 'a';",
+            "   return x;",
+            " };"));
+  }
+
+  @Test
+  public void testAssignOrToNumeric() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {null} x",
+            " * @return {number}",
+            " */",
+            " function assignOr(x) {",
+            "   x ||= 10;",
+            "   return x;",
+            " };"));
+  }
+
+  @Test
+  public void testAssignOrMayOrMayNotAssign() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @return {string|number}",
+            " */",
+            " function assignOr(x) {",
+            "   x ||= 5;",
+            "   return x;",
+            " };"));
   }
 
   @Test

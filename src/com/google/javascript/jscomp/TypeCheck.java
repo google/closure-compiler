@@ -1006,6 +1006,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case HOOK:
       case OR:
       case COALESCE:
+      case ASSIGN_OR:
       case ASSIGN_COALESCE:
         ensureTyped(n);
         break;

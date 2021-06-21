@@ -2560,6 +2560,68 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAssignOrToNonNumeric() {
+    // This is in line with the existing type-inferencing logic for
+    // or/and, since any boolean type is treated as {true, false},
+    // but there can be improvement in precision here
+    inFunction("var y = false; y ||= (25 + '5');");
+    verify("y", createUnionType(STRING_TYPE, BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void testAssignOrToNumeric() {
+    // This in line with the existing type-inferencing logic for
+    // or/and, since any boolean type is treated as {true, false},
+    // but there can be improvement in precision here
+    inFunction("var y = false; y ||= 20");
+    verify("y", createUnionType(NUMBER_TYPE, BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void testAssignOrNoAssign() {
+    // The two examples below show imprecision of || operator
+    // The resulting type of Node n is (boolean|string), when it can be
+    // more precise by verifying `x` as a string
+    inFunction("var x; var y; y = false; x = (y || 'foo');");
+    verify("x", createUnionType(BOOLEAN_TYPE, STRING_TYPE));
+
+    // Short-circuiting should occur, as `a` is a truthy value,
+    // `c` would be assigned true, and `b` would remain undefined.
+    // To be more precise, `c` may be verified as a BOOLEAN_TYPE,
+    // `a` a BOOLEAN_TYPE, and `b` a VOID_TYPE.
+    // The actual behavior considers `a` (a BOOLEAN_TYPE) to be {true, false},
+    // and states that `c` can be (boolean|string).
+    inFunction("var a; var b; var c; a = true; c = (a || (b = 'foo'));");
+    verify("c", createUnionType(BOOLEAN_TYPE, STRING_TYPE));
+    verify("a", BOOLEAN_TYPE);
+    verify("b", createUnionType(VOID_TYPE, STRING_TYPE));
+
+    // This test should not assign the string to `y` and
+    // should verify `y` as BOOLEAN_TYPE (true).
+    inFunction("var y; y = true; y ||= 'foo';");
+    verify("y", createUnionType(BOOLEAN_TYPE, STRING_TYPE));
+  }
+
+  @Test
+  public void testAssignOrToBooleanEitherAbsoluteFalseOrTrue() {
+    assuming("x", NULL_TYPE);
+    inFunction("x ||= 'foo';");
+    verify("x", STRING_TYPE);
+
+    assuming("y", OBJECT_TYPE);
+    inFunction("y ||= 'foo';");
+    verify("y", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testAssignOrLHSFalsyRHSTruthy() {
+    assuming("x", NULL_TYPE);
+    assuming("obj", OBJECT_TYPE);
+    inFunction("x ||= obj;");
+    verify("x", OBJECT_TYPE);
+  }
+
+  @Test
   public void testAssignCoalesceToNonNumeric() {
     assuming("x", NULL_TYPE);
     inFunction("x ??= '5';");
@@ -2610,7 +2672,6 @@ public final class TypeInferenceTest {
     // since lhs is null, ??= executes rhs;
     // precision can be improved in the future for `y` to expect a number and not undefined,
     // but this is currently in accordance with the AST and not an oversight.
-    // TODO (user): result of rhs given non-null lhs could be more precise
     inFunction("var y; var x = null; x ??= (y = 6)");
     verify("y", createUnionType(VOID_TYPE, NUMBER_TYPE));
     verify("x", NUMBER_TYPE);

@@ -630,6 +630,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         scope = traverseAnd(n, scope).getJoinedFlowScope();
         break;
 
+      case ASSIGN_OR:
+        scope = traverseAssignOr(n, scope);
+        break;
       case OR:
         scope = traverseOr(n, scope).getJoinedFlowScope();
         break;
@@ -2256,7 +2259,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   private BooleanOutcomePair traverseAnd(Node n, FlowScope scope) {
-    return traverseShortCircuitingBinOp(n, scope);
+    Node left = n.getFirstChild();
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
+    return traverseShortCircuitingBinOp(n, left, leftOutcome);
   }
 
   private FlowScope traverseChildren(Node n, FlowScope scope) {
@@ -2519,18 +2524,34 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     }
   }
 
-  private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
-    return traverseShortCircuitingBinOp(n, scope);
+  private FlowScope traverseAssignOr(Node n, FlowScope scope) {
+    Node left = n.getFirstChild();
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
+    BooleanOutcomePair outcome = traverseShortCircuitingBinOp(n, left, leftOutcome);
+
+    FlowScope outcomeJoinedFlowScope = outcome.getJoinedFlowScope();
+
+    if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(true)) {
+      // n is || and lhs is true, so assignment does not occur
+      return outcomeJoinedFlowScope;
+    }
+    return updateScopeForAssignment(
+        outcomeJoinedFlowScope, n.getFirstChild(), n.getJSType(), AssignmentType.ASSIGN);
   }
 
-  private BooleanOutcomePair traverseShortCircuitingBinOp(Node n, FlowScope scope) {
-    checkArgument(n.isAnd() || n.isOr());
-    boolean nIsAnd = n.isAnd();
+  private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
     Node left = n.getFirstChild();
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
+    return traverseShortCircuitingBinOp(n, left, leftOutcome);
+  }
+
+  private BooleanOutcomePair traverseShortCircuitingBinOp(
+      Node n, Node left, BooleanOutcomePair leftOutcome) {
+    checkArgument(n.isAnd() || n.isOr() || n.isAssignOr());
+    boolean nIsAnd = n.isAnd();
     Node right = n.getLastChild();
 
     // type the left node
-    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
     JSType leftType = left.getJSType();
 
     // reverse abstract interpret the left node to produce the correct
