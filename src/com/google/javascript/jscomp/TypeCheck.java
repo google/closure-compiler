@@ -895,6 +895,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case STRING_KEY:
       case MEMBER_FUNCTION_DEF:
       case COMPUTED_PROP:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
       case LABEL:
       case LABEL_NAME:
       case SWITCH:
@@ -1489,7 +1491,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * definition <code>key() { ... }</code> If the <code>lvalue</code> is a prototype modification,
    * we change the schema of the object type it is referring to.
    *
-   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, or COMPUTED_PROPERTY node
+   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, COMPUTED_PROPERTY,
+   *     MEMBER_FIELD_DEF, or COMPUTED_FIELD_DEF node
    * @param owner the parent node, either OBJECTLIT or CLASS_MEMBERS
    * @param ownerType the instance type of the enclosing object/class
    */
@@ -1502,7 +1505,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Validate computed properties similarly to how we validate GETELEMs.
-    if (key.isComputedProp()) {
+    if (key.isComputedProp() || key.isComputedFieldDef()) {
       validator.expectIndexMatch(key, ownerType, getJSType(key.getFirstChild()));
       return;
     }
@@ -1536,6 +1539,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // For getter and setter property definitions the
     // r-value type != the property type.
     Node rvalue = key.getFirstChild();
+    if (rvalue == null) {
+      ensureTyped(key);
+      return;
+    }
     JSType rightType = getObjectLitKeyTypeFromValueType(key, getJSType(rvalue));
     if (rightType == null) {
       rightType = getNativeType(UNKNOWN_TYPE);
@@ -1543,8 +1550,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // Validate value is assignable to the key type.
     JSType keyType = getJSType(key);
-    String propertyName = NodeUtil.getObjectLitKeyName(key);
-
+    String propertyName = NodeUtil.getObjectOrClassLitKeyName(key);
     JSType allowedValueType = keyType;
     if (allowedValueType.isEnumElementType()) {
       allowedValueType = allowedValueType.toMaybeEnumElementType().getPrimitiveType();

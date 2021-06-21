@@ -1655,7 +1655,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     scope = traverse(n.getSecondChild(), scope);
     Node classMembers = NodeUtil.getClassMembers(n);
     for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
-      if (member.isComputedProp()) {
+      if (member.isComputedProp() || member.isComputedFieldDef()) {
         scope = traverse(member.getFirstChild(), scope);
       }
     }
@@ -1701,7 +1701,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         break;
       }
 
-      String memberName = NodeUtil.getObjectLitKeyName(key);
+      String memberName = NodeUtil.getObjectOrClassLitKeyName(key);
       if (memberName != null) {
         JSType rawValueType = key.getFirstChild().getJSType();
         JSType valueType = TypeCheck.getObjectLitKeyTypeFromValueType(key, rawValueType);

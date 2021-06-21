@@ -3510,6 +3510,7 @@ public final class NodeUtil {
    *
    * @param node A node
    */
+  // TODO(b/189993301): should fields be added to this method?
   static boolean mayBeObjectLitKey(Node node) {
     switch (node.getToken()) {
       case STRING_KEY:
@@ -3537,8 +3538,8 @@ public final class NodeUtil {
    *
    * @param key A node
    */
-  static String getObjectLitKeyName(Node key) {
-    Node keyNode = getObjectLitKeyNode(key);
+  static String getObjectOrClassLitKeyName(Node key) {
+    Node keyNode = getObjectOrClassLitKeyNode(key);
     if (keyNode != null) {
       return keyNode.getString();
     }
@@ -3550,15 +3551,20 @@ public final class NodeUtil {
    *
    * @param key A node
    */
-  static Node getObjectLitKeyNode(Node key) {
+  static Node getObjectOrClassLitKeyNode(Node key) {
     switch (key.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
         return key;
       case COMPUTED_PROP:
-        return key.getFirstChild().isStringLit() ? key.getFirstChild() : null;
+      case COMPUTED_FIELD_DEF:
+        return key.getFirstChild()
+                .isStringLit() // TODO(b/189993301): may be an issue with non string lits
+            ? key.getFirstChild()
+            : null;
       default:
         break;
     }
@@ -5155,6 +5161,7 @@ public final class NodeUtil {
     return null;
   }
 
+  // TODO(b/189993301): do I have to add logic for class fields in these LValue functions?
   /** Get the owner of the given l-value node. */
   static Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
@@ -5190,7 +5197,7 @@ public final class NodeUtil {
       if (owner != null) {
         String ownerName = getBestLValueName(owner);
         if (ownerName != null) {
-          String key = getObjectLitKeyName(lValue);
+          String key = getObjectOrClassLitKeyName(lValue);
           return TokenStream.isJSIdentifier(key) ? ownerName + "." + key : null;
         }
       }

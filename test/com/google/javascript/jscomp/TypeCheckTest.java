@@ -23012,6 +23012,77 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassField() {
+    testTypes("class C { x=2; }");
+    testTypes("class C { x; }");
+    testTypes("class C { x }");
+    testTypes("class C { /** @type {string|undefined} */ x;}");
+  }
+
+  @Test
+  public void testClassFieldDictError() {
+    testTypes("/** @dict */ class C { x=2; }", "Illegal key, the class is a dict");
+  }
+
+  @Test
+  public void testClassFieldUnrestricted() {
+    testTypes("/** @unrestricted */ class C { x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldTypeError() {
+    testTypes(
+        lines("class C {", "  /** @type {string} */ ", "  x = 2;", "}"),
+        lines(
+            "assignment to property x of function", //
+            "found   : number",
+            "required: string"));
+    // TODO(b/189993301): change error message to specify class name instead of function
+  }
+
+  // TODO(b/189993301):  erroring on duplicate class field declarations, e.g.
+  // class C { /** @type {string} */ x = ''; constructor() { /** @type {number} */ this.x = 1; } }
+  // class C { /** @type {string} */ x = ''; /** @type {number} */ x = 0; }
+
+  // TODO(b/189993301): do we do type inference & typechecking in the initializer? e.g.
+  //     /**
+  //       * @param {string} s
+  //       * @return {string}
+  //       */
+  //      const stringIdentity = (s) => s;
+  //      class C { x = stringIdentity(0); } // expect some error "param 1 of stringIdentity does
+  // not match"
+  // or
+  //    /** @param {number|undefined} */
+  //    function f(y) {
+  //      class C { /** @type {string} */ x = y ?? 0; } // expect error "found number expected
+  // string"
+  //   }
+
+  @Test
+  public void testClassComputedField() {
+    testTypes("/** @dict */ class C { [x]=2; }");
+    testTypes("/** @dict */ class C { 'x' = 2; }");
+    testTypes("/** @dict */ class C { 1 = 2; }");
+
+    testTypes("/** @unrestricted */ class C { [x]=2; }");
+    testTypes("/** @unrestricted */ class C { 'x' = 2; }");
+    testTypes("/** @unrestricted */ class C { 1 = 2; }");
+  }
+
+  @Test
+  public void testClassComputedFieldNoInitializer() {
+    testTypes("/** @dict */ class C { [x]; }");
+    testTypes("/** @dict */ class C { 'x' }");
+    testTypes("/** @dict */ class C { 1 }");
+  }
+
+  @Test
+  public void testClassComputedFieldError() {
+    testTypes("class C { [x] = 2; }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
   public void testBigIntLiteralProperty() {
     testTypesWithExterns(new TestExternsBuilder().addBigInt().build(), "(1n).toString()");
   }
