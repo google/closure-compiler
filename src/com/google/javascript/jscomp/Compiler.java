@@ -1491,29 +1491,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  // Where to put a new synthetic externs file.
-  private enum SyntheticExternsPosition {
-    START,
-    END
-  }
-
-  CompilerInput newExternInput(InputId inputId, SyntheticExternsPosition pos) {
-    SourceAst ast = new SyntheticAst(inputId);
-    CompilerInput input = new CompilerInput(ast, true);
-    Node root = checkNotNull(ast.getAstRoot(this));
-    putCompilerInput(inputId, input);
-    if (pos == SyntheticExternsPosition.START) {
-      externsRoot.addChildToFront(root);
-      externs.add(0, input);
-    } else {
-      externsRoot.addChildToBack(root);
-      externs.add(input);
-    }
-    scriptNodeByFilename.put(input.getSourceFile().getName(), root);
-    return input;
-  }
-
-  CompilerInput putCompilerInput(InputId id, CompilerInput input) {
+  private CompilerInput putCompilerInput(InputId id, CompilerInput input) {
     input.setCompiler(this);
     return inputsById.put(id, input);
   }
@@ -2577,12 +2555,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
 
-  /**
-   * Name of the synthetic input that holds synthesized externs which must be at the end of the
-   * externs AST.
-   */
-  static final String SYNTHETIC_EXTERNS_AT_END = "{SyntheticVarsAtEnd}";
-
   /** Prefix of the generated file name for synthetic injected libraries */
   static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
 
@@ -2590,8 +2562,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       new InputId(SYNTHETIC_CODE_PREFIX + "input]");
 
   private static final InputId SYNTHESIZED_EXTERNS_INPUT_ID = new InputId(SYNTHETIC_EXTERNS);
-  private static final InputId SYNTHESIZED_EXTERNS_INPUT_AT_END_ID =
-      new InputId(SYNTHETIC_EXTERNS_AT_END);
 
   @Override
   void addChangeHandler(CodeChangeHandler handler) {
@@ -3253,12 +3223,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   CompilerInput getSynthesizedExternsInput() {
-    CompilerInput synthesizedExternsInput = this.inputsById.get(SYNTHESIZED_EXTERNS_INPUT_ID);
-    if (synthesizedExternsInput == null) {
-      synthesizedExternsInput =
-          newExternInput(SYNTHESIZED_EXTERNS_INPUT_ID, SyntheticExternsPosition.START);
+    CompilerInput input = this.inputsById.get(SYNTHESIZED_EXTERNS_INPUT_ID);
+    if (input == null) {
+      SourceAst ast = new SyntheticAst(SYNTHESIZED_EXTERNS_INPUT_ID);
+      input = new CompilerInput(ast, true);
+      Node root = checkNotNull(ast.getAstRoot(this));
+      putCompilerInput(SYNTHESIZED_EXTERNS_INPUT_ID, input);
+      externsRoot.addChildToFront(root);
+      externs.add(0, input);
+      scriptNodeByFilename.put(input.getSourceFile().getName(), root);
     }
-    return synthesizedExternsInput;
+    return input;
   }
 
   @Override
@@ -3341,17 +3316,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     input.getChunk().remove(input);
     inputsById.remove(input.getInputId());
-  }
-
-  @Override
-  CompilerInput getSynthesizedExternsInputAtEnd() {
-    CompilerInput synthesizedExternsInputAtEnd =
-        this.inputsById.get(SYNTHESIZED_EXTERNS_INPUT_AT_END_ID);
-    if (synthesizedExternsInputAtEnd == null) {
-      synthesizedExternsInputAtEnd =
-          newExternInput(SYNTHESIZED_EXTERNS_INPUT_AT_END_ID, SyntheticExternsPosition.END);
-    }
-    return synthesizedExternsInputAtEnd;
   }
 
   @Override

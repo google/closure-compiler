@@ -67,7 +67,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     return (externs, root) -> {
       // Synthetic definition of $jscomp$lookupPolyfilledValue
       compiler
-          .getSynthesizedExternsInputAtEnd()
+          .getSynthesizedExternsInput()
           .getAstRoot(compiler)
           .addChildToBack(IR.var(IR.name("$jscomp$lookupPolyfilledValue")));
       addPolyfillInjection(compiler.getNodeForCodeInsertion(/* module= */ null), compiler);

@@ -352,7 +352,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
             astFactory.createBlock(),
             registry.createFunctionType(templateT, templateT));
 
-    Node externsRoot = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+    Node externsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     wrappingFunctionDefinition.srcrefTree(externsRoot);
     externsRoot.addChildToBack(wrappingFunctionDefinition);
     compiler.reportChangeToEnclosingScope(wrappingFunctionDefinition);

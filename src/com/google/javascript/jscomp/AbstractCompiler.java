@@ -477,12 +477,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract CompilerInput getSynthesizedExternsInput();
 
   /**
-   * @return a CompilerInput that can be modified to add additional extern definitions to the end of
-   *     the externs AST
-   */
-  abstract CompilerInput getSynthesizedExternsInputAtEnd();
-
-  /**
    * @return a number in [0,1] range indicating an approximate progress of the last compile. Note
    *     this should only be used as a hint and no assumptions should be made on accuracy, even a
    *     completed compile may choose not to set this to 1.0 at the end.

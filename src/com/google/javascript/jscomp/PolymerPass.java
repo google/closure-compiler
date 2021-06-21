@@ -208,7 +208,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     }
 
     if (this.externsInsertionRef == null) {
-      this.externsInsertionRef = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+      this.externsInsertionRef = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     }
 
     return this.externsInsertionRef;
