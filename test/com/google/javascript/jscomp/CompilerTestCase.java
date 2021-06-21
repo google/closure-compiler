@@ -1559,7 +1559,7 @@ public abstract class CompilerTestCase {
         // Only rewrite provides once, if asked.
         if (rewriteClosureProvides && i == 0) {
           recentChange.reset();
-          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+          new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
               .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1930,7 +1930,7 @@ public abstract class CompilerTestCase {
     }
 
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
-      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+      new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);
     }
     return mainRoot;

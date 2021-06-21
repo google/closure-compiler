@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Replaces goog.provide calls and removes goog.{require,requireType,forwardDeclare} calls.
@@ -60,7 +59,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
   private final CheckLevel requiresLevel;
-  private final PreprocessorSymbolTable preprocessorSymbolTable;
   // If this is true, rewriting will not remove any goog.provide or goog.require calls
   private final boolean preserveGoogProvidesAndRequires;
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
@@ -72,11 +70,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
-      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       CheckLevel requiresLevel,
       boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
-    this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.chunkGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
@@ -212,9 +208,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     String ns = arg.getString();
     ProvidedName provided = providedNames.get(ns);
 
-    maybeAddNameToSymbolTable(left);
-    maybeAddNameToSymbolTable(arg);
-
     // Requires should be removed before further processing.
     // Some clients run closure pass multiple times, first with
     // the checks for broken requires turned off. In these cases, we
@@ -248,9 +241,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     Node left = call.getFirstChild();
     Node arg = left.getNext();
     String ns = arg.getString();
-
-    maybeAddNameToSymbolTable(left);
-    maybeAddNameToSymbolTable(arg);
 
     if (providedNames.containsKey(ns)) {
       ProvidedName previouslyProvided = providedNames.get(ns);
@@ -337,7 +327,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
 
     List<String> typeDeclarations = convention.identifyTypeDeclarationCall(n);
 
-    if (typeDeclarations != null && typeDeclarations.size() == 1) {
+    if (!preserveGoogProvidesAndRequires
+        && typeDeclarations != null
+        && typeDeclarations.size() == 1) {
       // Forward declaration was recorded and we can remove the call.
       Node toRemove = parent.isExprResult() ? parent : parent.getParent();
       forwardDeclaresToRemove.add(toRemove);
@@ -825,12 +817,5 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       value = value.getOnlyChild();
     }
     return value.isObjectLit() && !value.hasChildren();
-  }
-
-  /** Add the given qualified name node to the symbol table. */
-  private void maybeAddNameToSymbolTable(Node name) {
-    if (preprocessorSymbolTable != null) {
-      preprocessorSymbolTable.addReference(name);
-    }
   }
 }

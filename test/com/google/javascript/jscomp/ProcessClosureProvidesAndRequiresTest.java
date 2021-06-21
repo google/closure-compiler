@@ -43,7 +43,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   private ProcessClosureProvidesAndRequires createClosureProcessor(
       Compiler compiler, CheckLevel requireCheckLevel) {
     return new ProcessClosureProvidesAndRequires(
-        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires);
+        compiler, requireCheckLevel, preserveGoogProvidesAndRequires);
   }
 
   @Override

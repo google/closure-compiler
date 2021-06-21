@@ -505,7 +505,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     Map<String, ProvidedName> providedNames =
         new ProcessClosureProvidesAndRequires(
                 compiler,
-                /* preprocessorSymbolTable= */ null,
                 CheckLevel.OFF,
                 /* preserveGoogProvidesAndRequires= */ true)
             .collectProvidedNames(externs, js);

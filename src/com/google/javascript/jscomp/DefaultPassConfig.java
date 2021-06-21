@@ -1245,10 +1245,8 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("closureProvidesRequires")
           .setInternalFactory(
               (compiler) -> {
-                preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 return new ProcessClosureProvidesAndRequires(
                     compiler,
-                    preprocessorSymbolTableFactory.getInstanceOrNull(),
                     options.brokenClosureRequiresLevel,
                     options.shouldPreservesGoogProvidesAndRequires());
               })

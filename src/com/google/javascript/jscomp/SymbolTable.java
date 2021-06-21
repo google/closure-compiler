@@ -54,6 +54,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -334,7 +335,7 @@ public final class SymbolTable {
 
     UnionType unionType = type.toMaybeUnionType();
     if (unionType != null) {
-      List<Symbol> result = new ArrayList<>(2);
+      ImmutableList.Builder<Symbol> result = ImmutableList.builder();
       for (JSType alt : unionType.getAlternates()) {
         // Our type system never has nested unions.
         Symbol altSym = getSymbolForTypeHelper(alt, true);
@@ -342,7 +343,7 @@ public final class SymbolTable {
           result.add(altSym);
         }
       }
-      return result;
+      return result.build();
     }
     Symbol result = getSymbolForTypeHelper(type, true);
     return result == null ? ImmutableList.of() : ImmutableList.of(result);
@@ -839,7 +840,7 @@ public final class SymbolTable {
     //
     // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
     // that point to the exact same type instance.
-    Map<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
+    IdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
     for (Symbol s : allTypes) {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
@@ -1001,11 +1002,7 @@ public final class SymbolTable {
     ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
         collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseRoots(
-        compiler,
-        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
-        externs,
-        root);
+    NodeTraversal.traverseRoots(compiler, new VisibilityCollector(visibilityMap), externs, root);
   }
 
   /**
@@ -1155,6 +1152,64 @@ public final class SymbolTable {
           }
         };
     NodeTraversal.traverseRoots(compiler, collectSuper, externs, root);
+  }
+
+  /**
+   * Connects goog.module/goog.provide calls with goog.require/goog.requireType. For each
+   * goog.module/goog.provide call creates a symbol and all goog.require/goog.requireType added as
+   * references.
+   */
+  void fillGoogProvideModuleRequires(Node externs, Node root) {
+    // small optimization to keep symbols created within this function for fast access instead of
+    // going through SymbolTable.getSymbolForName() every time.
+    Map<String, Symbol> declaredNamespaces = new HashMap<>();
+    NodeTraversal.Callback traverse =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (!n.isCall()) {
+              return;
+            }
+            Node left = n.getFirstChild();
+            Node arg = n.getSecondChild();
+            // We want only nodes of type `goog.xyz('somestring')`.
+            if (!(left.isGetProp()
+                    && left.getFirstChild().isName()
+                    && left.getFirstChild().getString().equals("goog"))
+                || arg == null
+                || !arg.isStringLit()) {
+              return;
+            }
+            String namespaceName = "ns$" + arg.getString();
+            switch (left.getString()) {
+              case "module":
+              case "provide":
+                Symbol ns =
+                    declareSymbol(
+                        namespaceName,
+                        /* type= */ null,
+                        /* inferred= */ false,
+                        getGlobalScope(),
+                        arg,
+                        /* info= */ null);
+                declaredNamespaces.put(namespaceName, ns);
+                break;
+              case "require":
+              case "requireType":
+              case "forwardDeclare":
+                Symbol symbol = declaredNamespaces.get(namespaceName);
+                // We expect that namespace was already processed by that point, but in some broken
+                // code it might be missing. In which case just skip it.
+                if (symbol != null) {
+                  symbol.defineReferenceAt(arg);
+                }
+                break;
+              default:
+                // do nothing. Some other goog.xyz call.
+            }
+          }
+        };
+    NodeTraversal.traverseRoots(compiler, traverse, externs, root);
   }
 
   /*
@@ -1863,13 +1918,9 @@ public final class SymbolTable {
   /** Collects the visibility information for each name/property. */
   private class VisibilityCollector extends NodeTraversal.AbstractPostOrderCallback {
     private final ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap;
-    private final CodingConvention codingConvention;
 
-    private VisibilityCollector(
-        ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
-        CodingConvention codingConvention) {
+    private VisibilityCollector(ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
       this.fileVisibilityMap = fileVisibilityMap;
-      this.codingConvention = codingConvention;
     }
 
     @Override
