@@ -855,7 +855,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("anything;");
   }
 
-
   @Test
   public void testReportLooseTypeViolations() {
     configuration =
