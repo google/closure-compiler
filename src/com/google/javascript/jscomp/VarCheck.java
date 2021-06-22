@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -195,19 +194,6 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
     Scope scope = t.getScope();
     Var var = scope.getVar(varName);
-    Scope varScope = var != null ? var.getScope() : null;
-
-    // Check if this variable is reference in the externs, if so mark it as a duplicate.
-    if (varScope != null
-        && varScope.isGlobal()
-        && (parent.isVar() || NodeUtil.isFunctionDeclaration(parent))
-        && varsToDeclareInExterns.contains(varName)) {
-      createSynthesizedExternVar(varName);
-
-      JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
-      builder.addSuppression("duplicate");
-      n.setJSDocInfo(builder.build());
-    }
 
     // Check that the var has been declared.
     if (var == null) {
