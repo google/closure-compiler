@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -226,7 +226,7 @@ public final class PhaseOptimizerTest {
 
     // Error will be converted to warning by a `WarningsGuard`.
     assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }
 
@@ -238,7 +238,7 @@ public final class PhaseOptimizerTest {
     assertPasses("testPassFactory");
 
     assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }
 
@@ -297,8 +297,4 @@ public final class PhaseOptimizerTest {
       }
     };
   }
-
-  private static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_CORRESPONDENCE =
-      Correspondence.from(
-          (actual, expected) -> actual.getType().equals(expected), "has diagnostic");
 }

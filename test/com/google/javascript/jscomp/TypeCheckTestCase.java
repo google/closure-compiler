@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -32,7 +32,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.List;
-import java.util.Objects;
 import org.junit.Before;
 
 abstract class TypeCheckTestCase extends CompilerTypeTestCase {
@@ -200,14 +199,14 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     if (isError) {
       assertWithMessage("Regarding errors:")
           .that(compiler.getErrors())
-          .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
+          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
           .containsExactlyElementsIn(expectedTypes)
           .inOrder();
       assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
     } else {
       assertWithMessage("Regarding warnings:")
           .that(compiler.getWarnings())
-          .comparingElementsUsing(DIAGNOSTIC_TYPE_EQUALITY)
+          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
           .containsExactlyElementsIn(expectedTypes)
           .inOrder();
       assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
@@ -342,8 +341,4 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
       this.scope = scope;
     }
   }
-
-  private static final Correspondence<JSError, DiagnosticType> DIAGNOSTIC_TYPE_EQUALITY =
-      Correspondence.from(
-          (error, type) -> Objects.equals(error.getType(), type), "has diagnostic type equal to");
 }

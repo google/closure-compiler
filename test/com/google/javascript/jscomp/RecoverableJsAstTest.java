@@ -17,19 +17,18 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Jimfs;
-import com.google.common.truth.Correspondence;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +41,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class RecoverableJsAstTest {
   private Path tempFile;
-  private FileSystem fs;
 
   @Before
   public void setup() throws IOException {
@@ -183,9 +181,4 @@ public class RecoverableJsAstTest {
     Node externsRoot = root.getFirstChild();
     return externsRoot.getNext();
   }
-
-  private static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
-      Correspondence.from(
-          (error, description) -> Objects.equals(error.getDescription(), description),
-          "has description equal to");
 }
