@@ -820,6 +820,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case ASSIGN:
+      case ASSIGN_COALESCE:
         visitAssign(t, n);
         typeable = false;
         break;
@@ -1007,7 +1008,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case OR:
       case COALESCE:
       case ASSIGN_OR:
-      case ASSIGN_COALESCE:
         ensureTyped(n);
         break;
 

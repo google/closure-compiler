@@ -699,7 +699,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " function assignCoalesce(x) {",
             "   x ??= 'a';",
             "   return x;",
-            " };"));
+            " };"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: null"));
   }
 
   @Test
@@ -713,7 +717,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " function assignCoalesce(x) {",
             "   x ??= 10;",
             "   return x;",
-            " };"));
+            " };"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: null"));
   }
 
   @Test
@@ -727,14 +735,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " function assignCoalesce(x) {",
             "   x ??= 5;",
             "   return x;",
-            " };"));
+            " };"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: string"));
   }
 
   @Test
   public void testAssignCoalesceRHS() {
-    testTypes("/** @type {string|undefined} */ var a; a ??= 0;");
-    // TODO(b/162085766): Verify RHS is valid and add type check support for:
-    // lines("assignment", "found   : number", "expected: string|undefined"));
+    testTypes(
+        "/** @type {string|undefined} */ var a; a ??= 0;",
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: (string|undefined)"));
   }
 
   @Test
