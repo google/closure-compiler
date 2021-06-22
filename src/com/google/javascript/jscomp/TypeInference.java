@@ -37,7 +37,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -2178,7 +2177,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     // Try to infer the template types
     Map<TemplateType, JSType> bindings =
         new InvocationTemplateTypeMatcher(this.registry, fnType, scope.getTypeOfThis(), n).match();
-    Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
+    Map<TemplateType, JSType> inferred = new LinkedHashMap<>();
     for (TemplateType key : keys) {
       inferred.put(key, bindings.getOrDefault(key, unknownType));
     }
