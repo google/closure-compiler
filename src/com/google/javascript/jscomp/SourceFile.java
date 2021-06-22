@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -48,10 +49,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.annotation.Nullable;
 
 /**
  * An abstract representation of a source file that provides access to language-neutral features.
@@ -64,8 +64,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final String UTF8_BOM = "\uFEFF";
-
-  private static final String BANG_SLASH = "!" + Platform.getFileSeperator();
 
   /**
    * Number of lines in the region returned by {@link #getRegion(int)}.
@@ -434,15 +432,33 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return sourceFiles;
   }
 
+  private static final String BANG_SLASH = "!/";
+
+  private static boolean isZipEntry(String path) {
+    return path.contains(".zip!" + Platform.getFileSeperator())
+        && (path.endsWith(".js") || path.endsWith(".js.map"));
+  }
+
+  @GwtIncompatible("java.io.File")
+  private static SourceFile fromZipEntry(String zipURL, Charset inputCharset, SourceKind kind) {
+    checkArgument(isZipEntry(zipURL));
+    String[] components =
+        zipURL.split(Pattern.quote(BANG_SLASH.replace("/", Platform.getFileSeperator())));
+    try {
+      String zipPath = components[0];
+      String relativePath = components[1];
+      return fromZipEntry(zipPath, zipPath, relativePath, inputCharset, kind);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @GwtIncompatible("java.io.File")
   public static SourceFile fromZipEntry(
       String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
       throws MalformedURLException {
-    return builder()
-        .withCharset(inputCharset)
-        .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .withZipEntryPath(absoluteZipPath, entryPath)
-        .build();
+    return fromZipEntry(
+        originalZipPath, absoluteZipPath, entryPath, inputCharset, SourceKind.STRONG);
   }
 
   @GwtIncompatible("java.io.File")
@@ -458,41 +474,40 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         .withKind(kind)
         .withCharset(inputCharset)
         .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .withZipEntryPath(absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/"))
-        .build();
+        .buildFromZipEntry(absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/"));
   }
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset charset, SourceKind kind) {
-    return builder().withPath(fileName).withCharset(charset).withKind(kind).build();
+    return builder().withKind(kind).withCharset(charset).buildFromFile(fileName);
   }
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset charset) {
-    return builder().withPath(fileName).withCharset(charset).build();
+    return fromFile(fileName, charset, SourceKind.STRONG);
   }
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName) {
-    return builder().withPath(fileName).build();
+    return fromFile(fileName, UTF_8);
   }
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromPath(Path path, Charset charset, SourceKind kind) {
-    return builder().withPath(path).withCharset(charset).withKind(kind).build();
+    return builder().withKind(kind).withCharset(charset).buildFromPath(path);
   }
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromPath(Path path, Charset charset) {
-    return builder().withPath(path).withCharset(charset).build();
+    return fromPath(path, charset, SourceKind.STRONG);
   }
 
   public static SourceFile fromCode(String fileName, String code, SourceKind kind) {
-    return builder().withPath(fileName).withKind(kind).withContent(code).build();
+    return builder().withKind(kind).buildFromCode(fileName, code);
   }
 
   public static SourceFile fromCode(String fileName, String code) {
-    return builder().withPath(fileName).withContent(code).build();
+    return fromCode(fileName, code, SourceKind.STRONG);
   }
 
   /**
@@ -502,13 +517,13 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("java.io.InputStream")
   public static SourceFile fromInputStream(String fileName, InputStream s)
       throws IOException {
-    return builder().withPath(fileName).withContent(s).build();
+    return builder().buildFromInputStream(fileName, s);
   }
 
   @GwtIncompatible("java.io.InputStream")
-  public static SourceFile fromInputStream(String fileName, InputStream s, Charset charset)
-      throws IOException {
-    return builder().withPath(fileName).withCharset(charset).withContent(s).build();
+  public static SourceFile fromInputStream(String fileName, InputStream s,
+      Charset charset) throws IOException {
+    return builder().withCharset(charset).buildFromInputStream(fileName, s);
   }
 
   @GwtIncompatible("java.io.Reader")
@@ -527,17 +542,15 @@ public final class SourceFile implements StaticSourceFile, Serializable {
             .withCharset(toCharset(protoSourceFile.getFileOnDisk().getCharset()))
             .withOriginalPath(protoSourceFile.getFilename())
             .withKind(sourceKind)
-            .withPath(pathOnDisk)
-            .build();
+            .buildFromFile(pathOnDisk);
       case ZIP_ENTRY:
         {
           SourceFileProto.ZipEntryOnDisk zipEntry = protoSourceFile.getZipEntry();
           return SourceFile.builder()
               .withKind(sourceKind)
+              .withCharset(toCharset(protoSourceFile.getZipEntry().getCharset()))
               .withOriginalPath(protoSourceFile.getFilename())
-              .withCharset(toCharset(zipEntry.getCharset()))
-              .withZipEntryPath(zipEntry.getZipPath(), zipEntry.getEntryName())
-              .build();
+              .buildFromZipEntry(zipEntry.getZipPath(), zipEntry.getEntryName());
         }
       case LOADER_NOT_SET:
         break;
@@ -581,12 +594,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     private Charset charset = UTF_8;
     private String originalPath = null;
 
-    private String path = null;
-    private Path pathWithFilesystem = null;
-    private String zipEntryPath = null;
-
-    private Supplier<String> lazyContent = null;
-
     private Builder() {}
 
     /** Set the source kind. */
@@ -601,42 +608,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
-    public Builder withPath(String path) {
-      return this.withPathInternal(path, null);
-    }
-
-    public Builder withPath(Path path) {
-      return this.withPathInternal(path.toString(), path);
-    }
-
-    public Builder withContent(String x) {
-      this.lazyContent = x::toString;
-      return this;
-    }
-
-    @GwtIncompatible
-    public Builder withContent(InputStream x) {
-      this.lazyContent =
-          () -> {
-            checkState(this.charset != null);
-            try {
-              return CharStreams.toString(new InputStreamReader(x, this.charset));
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          };
-      return this;
-    }
-
-    public Builder withZipEntryPath(String zipPath, String entryPath) {
-      checkState(zipPath.endsWith(".zip"), zipPath);
-
-      this.path = zipPath;
-      this.zipEntryPath = entryPath;
-
-      return this;
-    }
-
     /**
      * Sets a name for this source file that does not need to correspond to a path on disk.
      *
@@ -644,59 +615,52 @@ public final class SourceFile implements StaticSourceFile, Serializable {
      * generated files with unstable artifact prefixes.
      *
      * <p>The name must still be unique.
+     *
+     * <p>Required for `buildFromZipEntry`. Optional for `buildFromFile` and `buildFromPath`.
+     * Forbidden for `buildFromInputStream`, `buildFromReader`, and `buildFromCode`, as those
+     * methods already take a source name that does not need to correspond to anything on disk.
      */
     public Builder withOriginalPath(String originalPath) {
       this.originalPath = originalPath;
       return this;
     }
 
-    public SourceFile build() {
-      String displayPath =
-          (this.originalPath != null)
-              ? this.originalPath
-              : ((this.zipEntryPath == null)
-                  ? this.path
-                  : this.path + BANG_SLASH + this.zipEntryPath);
-
-      if (this.lazyContent != null) {
-        return new SourceFile(
-            new CodeLoader.Preloaded(this.lazyContent.get()), displayPath, this.kind);
-      }
-
-      if (this.zipEntryPath != null) {
-        return new SourceFile(
-            new CodeLoader.AtZip(this.path, this.zipEntryPath, this.charset),
-            displayPath,
-            this.kind);
-      }
-
-      return new SourceFile(
-          new CodeLoader.OnDisk(
-              (this.pathWithFilesystem != null) ? this.pathWithFilesystem : Paths.get(this.path),
-              this.charset),
-          displayPath,
-          this.kind);
-    }
-
-    private Builder withPathInternal(String path, @Nullable Path pathWithFilesystem) {
-      int bangSlashIndex = path.indexOf(BANG_SLASH);
-      if (bangSlashIndex < 0) {
-        // Path instances have an implicit reference to a FileSystem. Make sure to preserve it.
-        this.path = path;
-        this.pathWithFilesystem = pathWithFilesystem;
-      } else {
-        this.withZipEntryPath(
-            path.substring(0, bangSlashIndex),
-            path.substring(bangSlashIndex + BANG_SLASH.length()));
-      }
-
-      return this;
-    }
-
-    @Deprecated
     @GwtIncompatible("java.io.File")
     public SourceFile buildFromFile(String fileName) {
-      return this.withPath(fileName).build();
+      return buildFromPath(Paths.get(fileName));
+    }
+
+    @GwtIncompatible("java.io.File")
+    public SourceFile buildFromPath(Path path) {
+      checkNotNull(path);
+      checkNotNull(charset);
+      if (isZipEntry(path.toString())) {
+        return fromZipEntry(path.toString(), charset, kind);
+      }
+      return new SourceFile(
+          new CodeLoader.OnDisk(path, charset),
+          originalPath != null ? originalPath : path.toString(),
+          kind);
+    }
+
+    @GwtIncompatible("java.io.File")
+    public SourceFile buildFromZipEntry(String zipName, String entryName) {
+      checkNotNull(zipName);
+      checkNotNull(entryName);
+      checkNotNull(charset);
+      return new SourceFile(new CodeLoader.AtZip(zipName, entryName, charset), originalPath, kind);
+    }
+
+    public SourceFile buildFromCode(String fileName, String code) {
+      checkState(
+          originalPath == null,
+          "originalPath argument is ignored in favor of fileName for buildFromCode");
+      return new SourceFile(new CodeLoader.Preloaded(code), fileName, kind);
+    }
+
+    @GwtIncompatible("java.io.InputStream")
+    public SourceFile buildFromInputStream(String fileName, InputStream s) throws IOException {
+      return buildFromCode(fileName, CharStreams.toString(new InputStreamReader(s, charset)));
     }
   }
 
@@ -710,9 +674,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
      * <p>The implementation may be a slow operation such as reading from a file. SourceFile
      * guarantees that this method is only called under synchronization.
      */
-    String loadUncachedCode() throws IOException {
-      throw new AssertionError();
-    }
+    abstract String loadUncachedCode() throws IOException;
 
     /**
      * Return a Reader for the source text of this file from its original storage.
@@ -750,6 +712,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
     }
 
+    @GwtIncompatible("com.google.common.io.CharStreams")
     static final class OnDisk extends CodeLoader {
       private static final long serialVersionUID = 1L;
 
@@ -765,7 +728,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         try (Reader r = this.openUncachedReader()) {
           return CharStreams.toString(r);
@@ -776,18 +738,15 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return Files.newBufferedReader(this.relativePath, this.getCharset());
       }
 
-      @GwtIncompatible
       private void writeObject(ObjectOutputStream out) throws Exception {
         out.defaultWriteObject();
         out.writeObject(this.relativePath.toString());
       }
 
-      @GwtIncompatible
       private void readObject(ObjectInputStream in) throws Exception {
         in.defaultReadObject();
         this.relativePath = Paths.get((String) in.readObject());
@@ -811,6 +770,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
     }
 
+    @GwtIncompatible("java.io.File")
     static final class AtZip extends CodeLoader {
       private static final long serialVersionUID = 1L;
       private final String zipName;
@@ -825,13 +785,11 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       @Override
-      @GwtIncompatible
       String loadUncachedCode() throws IOException {
         return CharStreams.toString(this.openUncachedReader());
       }
 
       @Override
-      @GwtIncompatible
       Reader openUncachedReader() throws IOException {
         return new InputStreamReader(
             JSCompZipFileCache.getEntryStream(this.zipName, this.entryName), this.getCharset());
