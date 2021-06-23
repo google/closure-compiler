@@ -596,7 +596,7 @@ public final class SymbolTable {
     return ref != null
         && ref.getNode() != null
         && ref.getNode().getStaticSourceFile() != null
-        && !Compiler.SYNTHETIC_EXTERNS.equals(ref.getNode().getStaticSourceFile().getName())
+        && !NodeUtil.isInSyntheticScript(ref.getNode())
         // Typechecking assigns implicitly goog.provided names a declaration node of the expr:
         // For example, 'some' and 'some.name' in 'goog.provide('some.name.child');' have their
         // declaration node set to the entire call node. Use the actual declaration instead.

@@ -2546,12 +2546,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType = new LinkedHashMap<>();
 
-  /** Name of the synthetic input that holds synthesized externs. */
-  static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
-
+  private static final InputId SYNTHETIC_EXTERNS_INPUT_ID = new InputId(" [synthetic:externs] ");
   private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
-
-  private static final InputId SYNTHESIZED_EXTERNS_INPUT_ID = new InputId(SYNTHETIC_EXTERNS);
 
   @Override
   void addChangeHandler(CodeChangeHandler handler) {
@@ -3213,12 +3209,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   CompilerInput getSynthesizedExternsInput() {
-    CompilerInput input = this.inputsById.get(SYNTHESIZED_EXTERNS_INPUT_ID);
+    CompilerInput input = this.inputsById.get(SYNTHETIC_EXTERNS_INPUT_ID);
     if (input == null) {
-      SourceAst ast = new SyntheticAst(SYNTHESIZED_EXTERNS_INPUT_ID);
+      SourceAst ast = new SyntheticAst(SYNTHETIC_EXTERNS_INPUT_ID);
       input = new CompilerInput(ast, true);
       Node root = checkNotNull(ast.getAstRoot(this));
-      putCompilerInput(SYNTHESIZED_EXTERNS_INPUT_ID, input);
+      putCompilerInput(SYNTHETIC_EXTERNS_INPUT_ID, input);
       externsRoot.addChildToFront(root);
       externs.add(0, input);
       scriptNodeByFilename.put(input.getSourceFile().getName(), root);
