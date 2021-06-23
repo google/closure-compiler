@@ -238,11 +238,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void setExternExports(String externExports);
 
-  /** Prefix of the generated file name for synthetic injected libraries */
-  static final String SYNTHETIC_CODE_PREFIX = "[synthetic:";
+  /** Parses code for injecting. */
+  public abstract Node parseSyntheticCode(String code);
 
   /** Parses code for injecting, and associate it with a given source file. */
-  public abstract Node parseSyntheticCode(String filename, String code);
+  abstract Node parseSyntheticCode(String filename, String code);
 
   /** Parses code for testing. */
   @VisibleForTesting

@@ -102,7 +102,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
       syntheticCode.append("');\n");
     }
 
-    Node codeRoot = compiler.parseSyntheticCode("injected_polyfills", syntheticCode.toString());
+    Node codeRoot = compiler.parseSyntheticCode(syntheticCode.toString());
     parent.addChildrenToFront(codeRoot.removeChildren());
     compiler.reportChangeToEnclosingScope(parent);
   }

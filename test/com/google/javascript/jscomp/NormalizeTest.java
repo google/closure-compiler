@@ -765,7 +765,7 @@ public final class NormalizeTest extends CompilerTestCase {
     options.setEmitUseStrict(false);
     compiler.init(new ArrayList<SourceFile>(), new ArrayList<SourceFile>(), options);
     String code = "function f(x) {} function g(x) {}";
-    Node ast = compiler.parseSyntheticCode("testNormalizeSyntheticCode", code);
+    Node ast = compiler.parseSyntheticCode(code);
     Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
     assertThat(compiler.toSource(ast))
         .isEqualTo("function f(x$jscomp$prefix_0){}function g(x$jscomp$prefix_1){}");

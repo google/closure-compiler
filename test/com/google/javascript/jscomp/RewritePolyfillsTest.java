@@ -93,7 +93,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
           // super method just records library in `injected`
           super.ensureLibraryInjected(library, force);
           Node parent = getNodeForCodeInsertion(null);
-          Node ast = parseSyntheticCode(library, injectableLibraries.get(library));
+          Node ast = parseSyntheticCode(injectableLibraries.get(library));
           Node lastChild = ast.getLastChild();
           Node firstChild = ast.removeChildren();
           // Any newly added functions must be marked as changed.

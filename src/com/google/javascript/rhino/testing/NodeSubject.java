@@ -149,8 +149,8 @@ public final class NodeSubject extends Subject {
       // are different.
       facts.addAll(
           new TextDiffFactsBuilder("AST diff")
-              .expectedText(mismatch.expected.toStringTree())
-              .actualText(mismatch.actual.toStringTree())
+              .expectedText(expected.toStringTree())
+              .actualText(actual.toStringTree())
               .build());
     } else {
       facts.addAll(

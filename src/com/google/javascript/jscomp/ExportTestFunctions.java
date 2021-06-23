@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.regex.Pattern;
@@ -98,7 +98,7 @@ public class ExportTestFunctions implements CompilerPass {
               if (n.getFirstChild().isName()) {
                 exportTestFunctionAsSymbol(nodeName, parent);
               } else {
-                exportTestFunctionAsProperty(firstChild, n);
+                exportTestFunctionAsProperty(nodeName, parent, n, grandparent);
               }
             }
           } else if (lastChild.isClass()) {
@@ -238,28 +238,28 @@ public class ExportTestFunctions implements CompilerPass {
     compiler.reportChangeToEnclosingScope(expression);
   }
 
+
   // Adds exportProperty() of the test function name on the prototype object
-  private void exportTestFunctionAsProperty(Node fullyQualifiedFunctionName, Node node) {
-    checkState(fullyQualifiedFunctionName.isGetProp(), fullyQualifiedFunctionName);
+  private void exportTestFunctionAsProperty(String fullyQualifiedFunctionName,
+      Node parent, Node node, Node scriptNode) {
 
     String testFunctionName =
         NodeUtil.getPrototypePropertyName(node.getFirstChild());
     if (node.getFirstChild().getQualifiedName().startsWith("window.")) {
       testFunctionName = node.getFirstChild().getQualifiedName().substring("window.".length());
     }
+    String objectName = fullyQualifiedFunctionName.substring(0,
+        fullyQualifiedFunctionName.lastIndexOf('.'));
+    String exportCallStr = SimpleFormat.format("%s(%s, '%s', %s);",
+        exportPropertyFunction, objectName, testFunctionName,
+        fullyQualifiedFunctionName);
 
-    Node exportCall =
-        IR.call(
-            NodeUtil.newQName(this.compiler, this.exportPropertyFunction),
-            fullyQualifiedFunctionName.getOnlyChild().cloneTree(),
-            IR.string(testFunctionName),
-            fullyQualifiedFunctionName.cloneTree());
-    exportCall.putBooleanProp(Node.FREE_CALL, exportCall.getFirstChild().isName());
+    Node exportCall = this.compiler.parseSyntheticCode(exportCallStr)
+        .removeChildren();
+    exportCall.srcrefTree(scriptNode);
 
-    Node export = IR.exprResult(exportCall).srcrefTree(node);
-
-    export.insertAfter(node.getParent());
-    compiler.reportChangeToEnclosingScope(export);
+    scriptNode.addChildrenAfter(exportCall, parent);
+    compiler.reportChangeToEnclosingScope(exportCall);
   }
 
   /**

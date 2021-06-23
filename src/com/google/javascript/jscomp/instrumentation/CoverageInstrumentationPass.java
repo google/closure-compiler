@@ -77,9 +77,7 @@ public class CoverageInstrumentationPass implements CompilerPass {
     // Make subsequent usages of "window" and "window.top" work in a Web Worker context.
     script.addChildToFront(
         compiler
-            .parseSyntheticCode(
-                "coverage_instrumentation_header",
-                "if (!self.window) { self.window = self; self.window.top = self; }")
+            .parseSyntheticCode("if (!self.window) { self.window = self; self.window.top = self; }")
             .removeFirstChild()
             .srcrefTreeIfMissing(script));
   }
