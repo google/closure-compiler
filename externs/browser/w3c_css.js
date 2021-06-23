@@ -1256,9 +1256,21 @@ CSSProperties.prototype.color;
 
 /**
  * @type {string}
+ * @see http://www.w3.org/TR/css-contain-2/#contain-property
+ */
+CSSProperties.prototype.contain;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-content
  */
 CSSProperties.prototype.content;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css-contain-2/#content-visibility
+ */
+CSSProperties.prototype.contentVisibility;
 
 /**
  * @type {string}
