@@ -136,7 +136,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
     if (!noStubFunctions && !hasStubDeclaration && idGenerator
         .hasGeneratedAnyIds()) {
       // Declare stub functions in the top-most chunk.
-      Node declarations = compiler.parseSyntheticCode(STUB_DECLARATIONS);
+      Node declarations = compiler.parseSyntheticCode("chunk_method_stubbing", STUB_DECLARATIONS);
       NodeUtil.markNewScopesChanged(declarations, compiler);
       Node firstScript = compiler.getNodeForCodeInsertion(null);
       firstScript.addChildrenToFront(declarations.removeChildren());

@@ -238,11 +238,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void setExternExports(String externExports);
 
-  /** Parses code for injecting. */
-  public abstract Node parseSyntheticCode(String code);
-
   /** Parses code for injecting, and associate it with a given source file. */
-  abstract Node parseSyntheticCode(String filename, String code);
+  public abstract Node parseSyntheticCode(String filename, String code);
 
   /** Parses code for testing. */
   @VisibleForTesting

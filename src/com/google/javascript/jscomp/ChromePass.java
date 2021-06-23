@@ -197,7 +197,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private void createAndInsertObjectsForQualifiedName(Node scriptChild, String namespace) {
     List<Node> objectsForQualifiedName = createObjectsForQualifiedName(namespace);
     for (Node n : objectsForQualifiedName) {
-      n.insertBefore(scriptChild);
+      n.srcrefTree(scriptChild).insertBefore(scriptChild);
     }
     if (!objectsForQualifiedName.isEmpty()) {
       compiler.reportChangeToEnclosingScope(scriptChild);
@@ -291,15 +291,14 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   }
 
   private void createObjectIfNew(List<Node> objects, String name, boolean needVar) {
-    if (!createdObjects.contains(name)) {
-      objects.add(createJsNode((needVar ? "var " : "") + name + " = " + name + " || {};"));
-      createdObjects.add(name);
+    if (createdObjects.contains(name)) {
+      return;
     }
-  }
+    createdObjects.add(name);
 
-  private Node createJsNode(String code) {
-    // The parent node after parseSyntheticCode() is SCRIPT node, we need to get rid of it.
-    return compiler.parseSyntheticCode(code).removeFirstChild();
+    Node v = NodeUtil.newQName(this.compiler, name);
+    Node lhs = IR.or(v.cloneTree(), IR.objectlit());
+    objects.add(needVar ? IR.var(v, lhs) : IR.exprResult(IR.assign(v, lhs)));
   }
 
   private class RenameInternalsToExternalsCallback extends AbstractPostOrderCallback {
