@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -26,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
@@ -82,7 +85,8 @@ final class JSCompZipFileCache {
 
     InputStream getEntryStream(String entryName) throws IOException {
       refreshIfNeeded();
-      return this.zipFile.getInputStream(this.zipFile.getEntry(entryName));
+      ZipEntry entry = checkNotNull(this.zipFile.getEntry(entryName), "%s!/%s", path, entryName);
+      return this.zipFile.getInputStream(entry);
     }
 
     private void refreshIfNeeded() throws IOException {

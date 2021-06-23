@@ -246,7 +246,8 @@ public final class PolyfillUsageFinderTest {
       }
 
       private Builder forSourceLines(String... srcLines) {
-        final SourceFile srcFile = SourceFile.builder().buildFromCode("src.js", lines(srcLines));
+        final SourceFile srcFile =
+            SourceFile.builder().withPath("src.js").withContent(lines(srcLines)).build();
         final CompilerOptions options = new CompilerOptions();
         // Don't include `"use strict";` when printing the AST as source text
         options.setEmitUseStrict(false);
