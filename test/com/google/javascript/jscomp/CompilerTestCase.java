@@ -1735,13 +1735,10 @@ public abstract class CompilerTestCase {
 
       if (expected != null) {
         if (!compareSyntheticCode) {
-          // remove code in files starting with [synthetic:
           Node scriptRoot = mainRoot.getFirstChild();
-          Node child = scriptRoot.getFirstChild();
-          while (child != null) {
+          for (Node child = scriptRoot.getFirstChild(); child != null; ) {
             Node nextChild = child.getNext();
-            String sourceFile = child.getSourceFileName();
-            if (sourceFile != null && sourceFile.startsWith(Compiler.SYNTHETIC_CODE_PREFIX)) {
+            if (NodeUtil.isInSyntheticScript(child)) {
               child.detach();
             }
             child = nextChild;

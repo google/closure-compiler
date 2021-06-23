@@ -2183,17 +2183,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private int syntheticCodeId = 0;
-
   @Override
-  public Node parseSyntheticCode(String js) {
-    return parseSyntheticCode(" [synthetic:" + (++syntheticCodeId) + "] ", js);
-  }
-
-  @Override
-  Node parseSyntheticCode(String fileName, String js) {
+  public Node parseSyntheticCode(String fileName, String js) {
     initCompilerOptionsIfTesting();
-    SourceFile source = SourceFile.fromCode(fileName, js);
+    SourceFile source = SourceFile.fromCode(SYNTHETIC_CODE_PREFIX + fileName + "]", js);
     addFilesToSourceMap(ImmutableList.of(source));
     return parseCodeHelper(source);
   }
@@ -2556,11 +2549,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
 
-  /** Prefix of the generated file name for synthetic injected libraries */
-  static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
-
   private static final InputId SYNTHETIC_CODE_INPUT_ID =
-      new InputId(SYNTHETIC_CODE_PREFIX + "input]");
+      new InputId(AbstractCompiler.SYNTHETIC_CODE_PREFIX + "input]");
 
   private static final InputId SYNTHESIZED_EXTERNS_INPUT_ID = new InputId(SYNTHETIC_EXTERNS);
 
@@ -3369,7 +3359,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Load/parse the code.
     String originalCode =
         ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
-    Node ast = parseSyntheticCode(SYNTHETIC_CODE_PREFIX + resourceName + "] ", originalCode);
+    Node ast = this.parseSyntheticCode(resourceName, originalCode);
 
     // Look for string literals of the form 'require foo bar' or 'declare baz''.
     // As we process each one, remove it from its parent.
