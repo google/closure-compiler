@@ -1244,12 +1244,11 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("closureProvidesRequires")
           .setInternalFactory(
-              (compiler) -> {
-                return new ProcessClosureProvidesAndRequires(
-                    compiler,
-                    options.brokenClosureRequiresLevel,
-                    options.shouldPreservesGoogProvidesAndRequires());
-              })
+              (compiler) ->
+                  new ProcessClosureProvidesAndRequires(
+                      compiler,
+                      options.brokenClosureRequiresLevel,
+                      options.shouldPreservesGoogProvidesAndRequires()))
           .setFeatureSetForChecks()
           .build();
 

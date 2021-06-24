@@ -51,8 +51,7 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
   }
 
   static Var createImplicitGoogNamespace(String name, Scope scope, Node definition) {
-    Var var = new Var(name, /* nameNode= */ null, scope, -1, /* input= */ null, definition);
-    return var;
+    return new Var(name, /* nameNode= */ null, scope, -1, /* input= */ null, definition);
   }
 
   @Override
