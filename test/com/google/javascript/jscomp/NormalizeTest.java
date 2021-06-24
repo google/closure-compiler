@@ -69,7 +69,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testNullishCoalesce() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     test("var a = x ?? y, b = foo()", "var a = x ?? y; var b = foo()");
     test(
         lines(
