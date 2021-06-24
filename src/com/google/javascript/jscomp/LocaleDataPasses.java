@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
@@ -76,9 +77,17 @@ final class LocaleDataPasses {
     }
   }
 
+  private static class LocaleDataImpl implements LocaleData {
+    ArrayList<LinkedHashMap<String, Node>> data;
+
+    LocaleDataImpl(ArrayList<LinkedHashMap<String, Node>> data) {
+      this.data = data;
+    }
+  }
+
   static class ExtractAndProtect implements CompilerPass {
     private final AbstractCompiler compiler;
-    private ArrayList<LinkedHashMap<String, Node>> valueMaps;
+    private LocaleData localeData;
 
     ExtractAndProtect(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -91,12 +100,12 @@ final class LocaleDataPasses {
       ExtractAndProtectLocaleData localeDataCallback = new ExtractAndProtectLocaleData(compiler);
       NodeTraversal.traverse(compiler, root, localeDataCallback);
 
-      valueMaps = localeDataCallback.getLocaleValuesDataMaps();
+      localeData = localeDataCallback.getLocaleValuesDataMaps();
     }
 
-    public ArrayList<LinkedHashMap<String, Node>> getLocaleValuesDataMaps() {
-      checkNotNull(valueMaps, "process must be called before getLocaleValuesDataMaps");
-      return valueMaps;
+    public LocaleData getLocaleValuesDataMaps() {
+      checkNotNull(localeData, "process must be called before getLocaleValuesDataMaps");
+      return localeData;
     }
   }
 
@@ -139,8 +148,8 @@ final class LocaleDataPasses {
     }
 
     /** Returns the data structure used by "LocaleSubstitutions". */
-    public ArrayList<LinkedHashMap<String, Node>> getLocaleValuesDataMaps() {
-      return valueMaps;
+    public LocaleData getLocaleValuesDataMaps() {
+      return new LocaleDataImpl(valueMaps);
     }
 
     public void process(Node externs, Node root) {
@@ -651,13 +660,12 @@ final class LocaleDataPasses {
     private final ArrayList<LinkedHashMap<String, Node>> localeValueMap;
     private final String locale;
 
-    LocaleSubstitutions(
-        AbstractCompiler compiler,
-        String locale,
-        ArrayList<LinkedHashMap<String, Node>> localeValueMap) {
+    LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {
       this.compiler = compiler;
       this.locale = normalizeLocale(checkNotNull(locale));
-      this.localeValueMap = checkNotNull(localeValueMap);
+      checkNotNull(localeData);
+      checkState(localeData instanceof LocaleDataImpl);
+      this.localeValueMap = ((LocaleDataImpl) localeData).data;
     }
 
     private String normalizeLocale(String locale) {
