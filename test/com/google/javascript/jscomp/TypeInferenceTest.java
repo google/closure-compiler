@@ -2560,15 +2560,6 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testAssignOrToNonNumeric() {
-    // This is in line with the existing type-inferencing logic for
-    // or/and, since any boolean type is treated as {true, false},
-    // but there can be improvement in precision here
-    inFunction("var y = false; y ||= (25 + '5');");
-    verify("y", createUnionType(STRING_TYPE, BOOLEAN_TYPE));
-  }
-
-  @Test
   public void testAssignOrToNumeric() {
     // This in line with the existing type-inferencing logic for
     // or/and, since any boolean type is treated as {true, false},
@@ -2622,16 +2613,45 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testAssignCoalesceToNonNumeric() {
+  public void testAssignAndToNumeric() {
+    // This in line with the existing type-inferencing logic for
+    // or/and, since any boolean type is treated as {true, false},
+    // but there can be improvement in precision here
+    inFunction("var y = true; y &&= 20");
+    verify("y", createUnionType(NUMBER_TYPE, BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void testAssignAndNoAssign() {
+    // This example below show imprecision of && operator
+    // The resulting type of Node n is (boolean|string), when it can be
+    // more precise by verifying `x` as a boolean type (true).
+    inFunction("var x = true && 'foo';");
+    verify("x", createUnionType(BOOLEAN_TYPE, STRING_TYPE));
+
+    // This test should not assign the string to `y` and
+    // should verify `y` as BOOLEAN_TYPE (false).
+    inFunction("var y = false; y &&= 'foo';");
+    verify("y", createUnionType(BOOLEAN_TYPE, STRING_TYPE));
+  }
+
+  @Test
+  public void testAssignAndToBooleanEitherAbsoluteFalseOrTrue() {
     assuming("x", NULL_TYPE);
-    inFunction("x ??= '5';");
-    verify("x", STRING_TYPE);
+    inFunction("x &&= 'foo';");
+    verify("x", NULL_TYPE);
 
-    inFunction("var y; y ??= (25 + '5');");
+    assuming("y", OBJECT_TYPE);
+    inFunction("y &&= 'foo';");
     verify("y", STRING_TYPE);
+  }
 
-    inFunction("var y; y ??= true;");
-    verify("y", BOOLEAN_TYPE);
+  @Test
+  public void testAssignAndLHSTruthyRHSFalsy() {
+    assuming("x", OBJECT_TYPE);
+    assuming("null", NULL_TYPE);
+    inFunction("x &&= null;");
+    verify("x", NULL_TYPE);
   }
 
   @Test
@@ -2639,9 +2659,6 @@ public final class TypeInferenceTest {
     assuming("x", NULL_TYPE);
     inFunction("x ??= 10;");
     verify("x", NUMBER_TYPE);
-
-    inFunction("var y = null; y ??= 20");
-    verify("y", NUMBER_TYPE);
   }
 
   @Test
@@ -2649,26 +2666,10 @@ public final class TypeInferenceTest {
     assuming("x", STRING_TYPE);
     inFunction("x ??= 10;");
     verify("x", STRING_TYPE);
-
-    inFunction("var y; y = 10; y ??= 'foo';");
-    verify("y", NUMBER_TYPE);
-
-    inFunction("var y = false; y ??= 'foo';");
-    verify("y", BOOLEAN_TYPE);
   }
 
   @Test
-  public void testAssignCoalesceNullOperands() {
-    assuming("x", NULL_TYPE);
-    inFunction("x ??= null");
-    verify("x", NULL_TYPE);
-
-    inFunction("var y; y ??= null");
-    verify("y", NULL_TYPE);
-  }
-
-  @Test
-  public void testAssignCoalesceRHSAssignment() {
+  public void testAssignCoalesceRHSAssignmentScope() {
     // since lhs is null, ??= executes rhs;
     // precision can be improved in the future for `y` to expect a number and not undefined,
     // but this is currently in accordance with the AST and not an oversight.
@@ -2680,14 +2681,6 @@ public final class TypeInferenceTest {
     inFunction("var y; var x = true; x ??= (y = 'a' + 6)");
     verify("y", VOID_TYPE);
     verify("x", BOOLEAN_TYPE);
-  }
-
-  @Test
-  public void testAssignCoalesceRemoveNull() {
-    // copied this over from a nullish coalesce test
-    assuming("x", createNullableType(NUMBER_TYPE));
-    inFunction("x ??= 3");
-    verify("x", NUMBER_TYPE);
   }
 
   @Test

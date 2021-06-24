@@ -627,114 +627,35 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testLogicalAssignment() {
-    // TODO(b/162085766): will be reincorporated in next CLs
     testTypes("/**@type {?} */var a; /** @type {?} */ var b; a||=b;");
-    // testTypes("/**@type {?} */var a; /** @type {?} */ var b; a&&=b;");
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a&&=b;");
     testTypes("/**@type {?} */var a; /** @type {?} */ var b; a??=b;");
   }
 
   @Test
   public void testAssignOrToNonNumeric() {
-    testTypes(
-        lines(
-            "/**",
-            " * @param {null|undefined} x",
-            " * @return {string}",
-            " */",
-            " function assignOr(x) {",
-            "   x ||= 'a';",
-            "   return x;",
-            " };"));
     // The precision of this test can be improved.
     // Boolean type is treated as {true, false}.
     testTypes(
         lines(
-            "/**",
-            " * @param {boolean} x",
-            " * @return {boolean|string}",
-            " */",
+            "/** @param {boolean} x */", //
             " function assignOr(x) {",
-            "   x = true;",
             "   x ||= 'a';",
-            "   return x;",
-            " };"));
+            " };"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: boolean"));
   }
 
-  @Test
-  public void testAssignOrToNumeric() {
-    testTypes(
-        lines(
-            "/**",
-            " * @param {null} x",
-            " * @return {number}",
-            " */",
-            " function assignOr(x) {",
-            "   x ||= 10;",
-            "   return x;",
-            " };"));
-  }
 
   @Test
   public void testAssignOrMayOrMayNotAssign() {
     testTypes(
         lines(
-            "/**",
-            " * @param {string} x",
-            " * @return {string|number}",
-            " */",
+            "/** @param {string} x */", //
             " function assignOr(x) {",
             "   x ||= 5;",
-            "   return x;",
-            " };"));
-  }
-
-  @Test
-  public void testAssignCoalesceToNonNumeric() {
-    testTypes(
-        lines(
-            "/**",
-            " * @param {null} x",
-            " * @return {string}",
-            " */",
-            " function assignCoalesce(x) {",
-            "   x ??= 'a';",
-            "   return x;",
-            " };"),
-        lines(
-            "assignment", //
-            "found   : string",
-            "required: null"));
-  }
-
-  @Test
-  public void testAssignCoalesceToNumeric() {
-    testTypes(
-        lines(
-            "/**",
-            " * @param {null} x",
-            " * @return {number}",
-            " */",
-            " function assignCoalesce(x) {",
-            "   x ??= 10;",
-            "   return x;",
-            " };"),
-        lines(
-            "assignment", //
-            "found   : number",
-            "required: null"));
-  }
-
-  @Test
-  public void testAssignCoalesceNoAssign() {
-    testTypes(
-        lines(
-            "/**",
-            " * @param {string} x",
-            " * @return {string}",
-            " */",
-            " function assignCoalesce(x) {",
-            "   x ??= 5;",
-            "   return x;",
             " };"),
         lines(
             "assignment", //
@@ -743,7 +664,47 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testAssignCoalesceRHS() {
+  public void testAssignAndCheckRHSValid() {
+    testTypes(
+        lines(
+            "/** @type {string|undefined} */", //
+            "var a; a &&= 0;"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: (string|undefined)"));
+  }
+
+  @Test
+  public void testAssignAndRHSNotExecuted() {
+    testTypes(
+        lines(
+            "let /** null */", //
+            "n = null;",
+            "n &&= 'str';"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: null"));
+  }
+
+  @Test
+  public void testAssignCoalesceNoAssign() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {string} x */",
+            " function assignCoalesce(x) {",
+            "   x ??= 5;",
+            " };"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testAssignCoalesceCheckRHSValid() {
     testTypes(
         "/** @type {string|undefined} */ var a; a ??= 0;",
         lines(

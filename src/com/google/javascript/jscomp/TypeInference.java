@@ -625,13 +625,15 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         scope = traverseClass(n, scope);
         break;
 
+      case ASSIGN_AND:
+      case ASSIGN_OR:
+        scope = traverseShortCircuitingBinOpAssignment(n, scope);
+        break;
+
       case AND:
         scope = traverseAnd(n, scope).getJoinedFlowScope();
         break;
 
-      case ASSIGN_OR:
-        scope = traverseAssignOr(n, scope);
-        break;
       case OR:
         scope = traverseOr(n, scope).getJoinedFlowScope();
         break;
@@ -2528,31 +2530,34 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     }
   }
 
-  private FlowScope traverseAssignOr(Node n, FlowScope scope) {
-    Node left = n.getFirstChild();
-    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
-    BooleanOutcomePair outcome = traverseShortCircuitingBinOp(n, left, leftOutcome);
-
-    FlowScope outcomeJoinedFlowScope = outcome.getJoinedFlowScope();
-
-    if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(true)) {
-      // n is || and lhs is true, so assignment does not occur
-      return outcomeJoinedFlowScope;
-    }
-    return updateScopeForAssignment(
-        outcomeJoinedFlowScope, n.getFirstChild(), n.getJSType(), AssignmentType.ASSIGN);
-  }
-
   private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
     Node left = n.getFirstChild();
     BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
     return traverseShortCircuitingBinOp(n, left, leftOutcome);
   }
 
+  private FlowScope traverseShortCircuitingBinOpAssignment(Node n, FlowScope scope) {
+    Node left = n.getFirstChild();
+    boolean nIsAnd = n.isAssignAnd();
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
+    BooleanOutcomePair outcome = traverseShortCircuitingBinOp(n, left, leftOutcome);
+
+    FlowScope outcomeJoinedFlowScope = outcome.getJoinedFlowScope();
+
+    if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(!nIsAnd)) {
+      // Either n is && and lhs has a toBooleanOutcome of false,
+      // or n is || and lhs has a toBooleanOutcome of true, so assignment does not occur
+      // The scope is otherwise updated according to the result of an assignment.
+      return outcomeJoinedFlowScope;
+    }
+    return updateScopeForAssignment(
+        outcomeJoinedFlowScope, n.getFirstChild(), n.getJSType(), AssignmentType.ASSIGN);
+  }
+
   private BooleanOutcomePair traverseShortCircuitingBinOp(
       Node n, Node left, BooleanOutcomePair leftOutcome) {
-    checkArgument(n.isAnd() || n.isOr() || n.isAssignOr());
-    boolean nIsAnd = n.isAnd();
+    checkArgument(n.isAnd() || n.isOr() || n.isAssignAnd() || n.isAssignOr());
+    boolean nIsAnd = n.isAnd() || n.isAssignAnd();
     Node right = n.getLastChild();
 
     // type the left node
