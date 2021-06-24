@@ -3549,7 +3549,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
               }
             });
+
+    Tracer tracer = newTracer("deserializeTypedAst");
     TypedAst typedAst = Iterables.getOnlyElement(this.deserializeTypedAsts(inputStream));
+    TypedAstDeserializer.DeserializedAst deserializedAst =
+        TypedAstDeserializer.deserialize(typedAst);
+    stopTracer(tracer, "deserializeTypedAst");
 
     featureSet = compilerState.featureSet;
     scriptNodeByFilename.clear();
@@ -3573,8 +3578,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     changeStamp = compilerState.changeStamp;
 
     // Restore TypedAST and related fields
-    TypedAstDeserializer.DeserializedAst deserializedAst =
-        TypedAstDeserializer.deserialize(typedAst);
     externProperties = deserializedAst.getExternProperties();
     externAndJsRoot = deserializedAst.getRoot();
     externsRoot = externAndJsRoot.getFirstChild();
