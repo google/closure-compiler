@@ -23084,9 +23084,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testClassField() {
     testTypes("class C { x=2; }");
-    testTypes("class C { x; }");
-    testTypes("class C { x }");
-    testTypes("class C { /** @type {string|undefined} */ x;}");
+    testTypes("class D { x; }");
+    testTypes("class E { x }");
+    testTypes("class F { /** @type {string|undefined} */ x;}");
   }
 
   @Test
@@ -23100,34 +23100,88 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testClassFieldTypeError() {
+  public void testClassFieldTypeError1() {
     testTypes(
-        lines("class C {", "  /** @type {string} */ ", "  x = 2;", "}"),
         lines(
-            "assignment to property x of function", //
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of C", //
             "found   : number",
             "required: string"));
-    // TODO(b/189993301): change error message to specify class name instead of function
   }
 
-  // TODO(b/189993301):  erroring on duplicate class field declarations, e.g.
-  // class C { /** @type {string} */ x = ''; constructor() { /** @type {number} */ this.x = 1; } }
-  // class C { /** @type {string} */ x = ''; /** @type {number} */ x = 0; }
+  @Test
+  public void testClassFieldTypeError2() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @type {string} */",
+            "  x = '';",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.x = 1;",
+            "  }",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
 
-  // TODO(b/189993301): do we do type inference & typechecking in the initializer? e.g.
-  //     /**
-  //       * @param {string} s
-  //       * @return {string}
-  //       */
-  //      const stringIdentity = (s) => s;
-  //      class C { x = stringIdentity(0); } // expect some error "param 1 of stringIdentity does
-  // not match"
-  // or
-  //    /** @param {number|undefined} */
-  //    function f(y) {
-  //      class C { /** @type {string} */ x = y ?? 0; } // expect error "found number expected
-  // string"
-  //   }
+  @Test
+  public void testClassFieldTypeError3() {
+    testTypes(
+        lines(
+            "const obj = {};", //
+            "obj.C = class {",
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of obj.C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassDuplicateFieldError() {
+    testTypes(
+        "class C { /** @type {string} */ dog = ''; /** @type {number} */ dog = 0; }",
+        "Class field dog is duplicated");
+  }
+
+  @Test
+  public void testClassInitializerTypeInitializer() {
+    testTypes(
+        lines(
+            "/** @param {number|undefined} y */ ", //
+            "function f(y) {",
+            "class C { /** @type {string} */ x = y ?? 0; }",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassInitializerTypeInference() {
+    testTypes(
+        lines(
+            "/**", //
+            " * @param {string} s",
+            " * @return {string}",
+            " */",
+            "const stringIdentity = (s) => s;",
+            "class C { x = stringIdentity(0); }"),
+        lines(
+            "actual parameter 1 of stringIdentity does not match formal parameter", //
+            "found   : number",
+            "required: string"));
+  }
 
   @Test
   public void testClassComputedField() {

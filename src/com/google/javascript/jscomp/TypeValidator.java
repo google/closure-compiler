@@ -579,13 +579,15 @@ class TypeValidator implements Serializable {
    */
   boolean expectCanAssignToPropertyOf(
       Node n, JSType rightType, JSType leftType, Node owner, String propName) {
+    Supplier<String> typeNameSupplier;
+    if (n.isMemberFieldDef()) {
+      FunctionType classType = n.getGrandparent().getJSType().assertFunctionType();
+      typeNameSupplier = () -> classType.getInstanceType().toString();
+    } else {
+      typeNameSupplier = () -> typeRegistry.getReadableTypeName(owner);
+    }
     return expectCanAssignToPropertyOf(
-        n,
-        rightType,
-        leftType,
-        getJSType(owner),
-        () -> typeRegistry.getReadableTypeName(owner),
-        propName);
+        n, rightType, leftType, getJSType(owner), typeNameSupplier, propName);
   }
 
   /**
@@ -638,7 +640,6 @@ class TypeValidator implements Serializable {
           return true;
         }
       }
-
       mismatch(
           n,
           "assignment to property " + propName + " of " + typeNameSupplier.get(),

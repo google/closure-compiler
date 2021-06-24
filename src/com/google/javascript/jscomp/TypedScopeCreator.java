@@ -162,6 +162,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_DYNAMIC_EXTENDS_WITHOUT_JSDOC",
           "The right-hand side of an extends clause must be a qualified name, or else @extends must"
               + " be specified in JSDoc");
+  static final DiagnosticType DUPLICATE_CLASS_FIELD =
+      DiagnosticType.warning("DUPLICATE_CLASS_FIELD", "Class field {0} is duplicated");
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -3478,7 +3480,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       } else {
         type = getDeclaredType(n.getJSDocInfo(), n, n.getFirstChild(), null);
       }
-
+      if (ownerType.hasOwnProperty(n.getString())) {
+        report(JSError.make(n, DUPLICATE_CLASS_FIELD, n.getString()));
+      }
       ownerType.defineDeclaredProperty(n.getString(), type, n);
       n.setJSType(type);
     }
