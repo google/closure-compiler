@@ -3211,7 +3211,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   CompilerInput getSynthesizedExternsInput() {
     CompilerInput input = this.inputsById.get(SYNTHETIC_EXTERNS_INPUT_ID);
     if (input == null) {
-      SourceAst ast = new SyntheticAst(SYNTHETIC_EXTERNS_INPUT_ID);
+      JsAst ast = new JsAst(SourceFile.fromCode(SYNTHETIC_EXTERNS_INPUT_ID.getIdName(), ""));
       input = new CompilerInput(ast, true);
       Node root = checkNotNull(ast.getAstRoot(this));
       putCompilerInput(SYNTHETIC_EXTERNS_INPUT_ID, input);
@@ -3232,7 +3232,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(
         !this.inputsById.containsKey(SYNTHETIC_CODE_INPUT_ID),
         "Already initialized synthetic input");
-    SourceAst ast = new SyntheticAst(SYNTHETIC_CODE_INPUT_ID.getIdName());
+    JsAst ast = new JsAst(SourceFile.fromCode(SYNTHETIC_CODE_INPUT_ID.getIdName(), ""));
     if (inputsById.containsKey(ast.getInputId())) {
       throw new IllegalStateException("Conflicting synthetic id name");
     }
