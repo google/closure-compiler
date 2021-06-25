@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -76,6 +75,7 @@ import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.ColorPool;
 import com.google.javascript.jscomp.serialization.ScriptNodeDeserializer;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
+import com.google.javascript.jscomp.serialization.SourceFileProto;
 import com.google.javascript.jscomp.serialization.StringPool;
 import com.google.javascript.jscomp.serialization.TypedAst;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer;
@@ -534,22 +534,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @GwtIncompatible
-  public final void initTypedAstFilesystem(
-      List<SourceFile> externs, List<SourceFile> sources, InputStream typedAstListStream) {
-    ImmutableMap<String, SourceFile> filePool =
-        Streams.concat(externs.stream(), sources.stream())
-            .collect(toImmutableMap(SourceFile::getName, (x) -> x));
+  public final ImmutableMap<String, SourceFile> initTypedAstFilesystem(
+      InputStream typedAstListStream) {
+    checkState(this.typedAstFilesystem == null);
+
     List<TypedAst> typedAstProtos = this.deserializeTypedAsts(typedAstListStream);
 
     ColorPool.Builder colorPoolBuilder = ColorPool.builder();
+    LinkedHashMap<String, SourceFile> filePoolBuilder = new LinkedHashMap<>();
     LinkedHashMap<SourceFile, JsAst> typedAstFilesystem = new LinkedHashMap<>();
     ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
 
     for (TypedAst typedAstProto : typedAstProtos) {
-      ImmutableList<SourceFile> fileShard =
-          typedAstProto.getSourceFilePool().getSourceFileList().stream()
-              .map((p) -> filePool.get(p.getFilename()))
-              .collect(toImmutableList());
+      ArrayList<SourceFile> fileShard = new ArrayList<>();
+      for (SourceFileProto p : typedAstProto.getSourceFilePool().getSourceFileList()) {
+        fileShard.add(
+            filePoolBuilder.computeIfAbsent(p.getFilename(), (n) -> SourceFile.fromProto(p)));
+      }
+
       StringPool stringShard = StringPool.fromProto(typedAstProto.getStringPool());
       ColorPool.ShardView colorShard =
           colorPoolBuilder.addShard(typedAstProto.getTypePool(), stringShard);
@@ -561,16 +563,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       for (AstNode scriptProto :
           Iterables.concat(typedAstProto.getExternFileList(), typedAstProto.getCodeFileList())) {
         SourceFile file = fileShard.get(scriptProto.getSourceFile() - 1);
-        ScriptNodeDeserializer deserializer =
-            new ScriptNodeDeserializer(scriptProto, stringShard, colorShard, fileShard);
-        JsAst ast = new JsAst(file, deserializer::deserializeNew);
-        typedAstFilesystem.put(file, ast);
+        typedAstFilesystem.computeIfAbsent(
+            file,
+            (f) -> {
+              ScriptNodeDeserializer deserializer =
+                  new ScriptNodeDeserializer(
+                      scriptProto, stringShard, colorShard, ImmutableList.copyOf(fileShard));
+              return new JsAst(file, deserializer::deserializeNew);
+            });
       }
     }
 
     this.externProperties = externProperties.build();
     this.setColorRegistry(colorPoolBuilder.build().getRegistry());
     this.typedAstFilesystem = ImmutableMap.copyOf(typedAstFilesystem);
+
+    return ImmutableMap.copyOf(filePoolBuilder);
   }
 
   /** Initializes the instance state needed for a compile job. */

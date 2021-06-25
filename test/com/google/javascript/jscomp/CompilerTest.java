@@ -2763,14 +2763,15 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(
-        ImmutableList.of(), ImmutableList.of(file1, file2), typedAstListStream);
-    compiler.init(ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions());
+    ImmutableMap<String, SourceFile> filesystem =
+        compiler.initTypedAstFilesystem(typedAstListStream);
+    SourceFile newFile1 = filesystem.get(file1.getName());
+    compiler.init(ImmutableList.of(), ImmutableList.of(newFile1), new CompilerOptions());
     compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
-    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(newFile1);
   }
 
   @Test
@@ -2781,7 +2782,7 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(), typedAstListStream);
+    compiler.initTypedAstFilesystem(typedAstListStream);
 
     // Then
     Exception e =
@@ -2792,7 +2793,7 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testTypedAstFilesystem_someAvailableFilesDuplicated_usesLastCopy() {
+  public void testTypedAstFilesystem_someAvailableFilesDuplicated_usesFirstCopy() {
     // Given
     SourceFile file = SourceFile.fromCode("test.js", "");
 
@@ -2823,13 +2824,15 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(ImmutableList.of(), ImmutableList.of(file), typedAstListStream);
-    compiler.init(ImmutableList.of(), ImmutableList.of(file), new CompilerOptions());
+    ImmutableMap<String, SourceFile> filesystem =
+        compiler.initTypedAstFilesystem(typedAstListStream);
+    SourceFile newFile = filesystem.get(file.getName());
+    compiler.init(ImmutableList.of(), ImmutableList.of(newFile), new CompilerOptions());
     compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
-    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file);
-    assertThat(script.hasChildren()).isTrue();
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(newFile);
+    assertThat(script.hasChildren()).isFalse();
   }
 }
