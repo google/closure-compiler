@@ -3147,7 +3147,7 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
 
 /**
  * An overlay that looks like a bubble and is often connected to a marker.
- * @param {google.maps.InfoWindowOptions=} opts
+ * @param {?google.maps.InfoWindowOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -3160,13 +3160,14 @@ google.maps.InfoWindow = function(opts) {};
 google.maps.InfoWindow.prototype.close = function() {};
 
 /**
- * @return {string|Node} The content of this InfoWindow. The same string or Node
- *     that was previously set as the content.
+ * @return {string|?Node|undefined} The content of this InfoWindow. The same
+ *     string or Node that was previously set as the content.
  */
 google.maps.InfoWindow.prototype.getContent = function() {};
 
 /**
- * @return {google.maps.LatLng} The LatLng position of this InfoWindow.
+ * @return {?google.maps.LatLng|undefined} The LatLng position of this
+ *     InfoWindow.
  */
 google.maps.InfoWindow.prototype.getPosition = function() {};
 
@@ -3200,20 +3201,21 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
 google.maps.InfoWindow.prototype.open = function(options, anchor) {};
 
 /**
- * @param {string|Node} content The content to be displayed by this InfoWindow.
+ * @param {(string|?Node)=} content The content to be displayed by this
+ *     InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
 
 /**
- * @param {google.maps.InfoWindowOptions} options
+ * @param {?google.maps.InfoWindowOptions=} options
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} position The LatLng
- *     position at which to display this InfoWindow.
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} position The
+ *     LatLng position at which to display this InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setPosition = function(position) {};
@@ -9036,8 +9038,9 @@ google.maps.places = {};
  * attaches to an input element of type <code>text</code>, and listens for text
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
- * @param {!HTMLInputElement} inputField
- * @param {?google.maps.places.AutocompleteOptions=} opts
+ * @param {!HTMLInputElement} inputField The <code>&lt;input&gt;</code> text
+ *     field to which the <code>Autocomplete</code> should be attached.
+ * @param {?google.maps.places.AutocompleteOptions=} opts Options.
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -9045,7 +9048,7 @@ google.maps.places.Autocomplete = function(inputField, opts) {};
 
 /**
  * Returns the bounds to which predictions are biased.
- * @return {!google.maps.LatLngBounds|undefined}
+ * @return {!google.maps.LatLngBounds|undefined} The biasing bounds.
  */
 google.maps.places.Autocomplete.prototype.getBounds = function() {};
 
@@ -9061,7 +9064,7 @@ google.maps.places.Autocomplete.prototype.getFields = function() {};
  * Returns the details of the Place selected by user if the details were
  * successfully retrieved. Otherwise returns a stub Place object, with the
  * <code>name</code> property set to the current value of the input field.
- * @return {!google.maps.places.PlaceResult}
+ * @return {!google.maps.places.PlaceResult} The Place selected by the user.
  */
 google.maps.places.Autocomplete.prototype.getPlace = function() {};
 
@@ -9069,7 +9072,7 @@ google.maps.places.Autocomplete.prototype.getPlace = function() {};
  * Sets the preferred area within which to return Place results. Results are
  * biased towards, but not restricted to, this area.
  * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
- *     bounds
+ *     bounds The biasing bounds.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
@@ -9078,7 +9081,8 @@ google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
  * Sets the component restrictions. Component restrictions are used to restrict
  * predictions to only those within the parent component. For example, the
  * country.
- * @param {?google.maps.places.ComponentRestrictions} restrictions
+ * @param {?google.maps.places.ComponentRestrictions} restrictions The
+ *     restrictions to use.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(
@@ -9105,7 +9109,7 @@ google.maps.places.Autocomplete.prototype.setOptions = function(options) {};
  * href="https://developers.google.com/maps/documentation/places/web-service/supported_types#table3">
  * developer&#39;s guide</a>. If no type is specified, all types will be
  * returned. The <code>setTypes</code> method accepts a single element array.
- * @param {?Array<string>} types
+ * @param {?Array<string>} types The types of predictions to be included.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setTypes = function(types) {};
@@ -9261,9 +9265,12 @@ google.maps.places.AutocompleteService = function() {};
 /**
  * Retrieves place autocomplete predictions based on the supplied autocomplete
  * request.
- * @param {!google.maps.places.AutocompletionRequest} request
+ * @param {!google.maps.places.AutocompletionRequest} request The autocompletion
+ *     request.
  * @param {(function(?Array<!google.maps.places.AutocompletePrediction>,
- *     !google.maps.places.PlacesServiceStatus): void)=} callback
+ *     !google.maps.places.PlacesServiceStatus): void)=} callback A callback
+ *     accepting an array of AutocompletePrediction objects and a
+ *     PlacesServiceStatus value as argument.
  * @return {!Promise<!google.maps.places.AutocompleteResponse>}
  */
 google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
@@ -9272,9 +9279,12 @@ google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
 /**
  * Retrieves query autocomplete predictions based on the supplied query
  * autocomplete request.
- * @param {!google.maps.places.QueryAutocompletionRequest} request
+ * @param {!google.maps.places.QueryAutocompletionRequest} request The query
+ *     autocompletion request.
  * @param {function(?Array<!google.maps.places.QueryAutocompletePrediction>,
- *     !google.maps.places.PlacesServiceStatus): void} callback
+ *     !google.maps.places.PlacesServiceStatus): void} callback A callback
+ *     accepting an array of QueryAutocompletePrediction objects and a
+ *     PlacesServiceStatus value as argument.
  * @return {undefined}
  */
 google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
