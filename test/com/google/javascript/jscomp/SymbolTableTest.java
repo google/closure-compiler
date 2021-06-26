@@ -1508,6 +1508,25 @@ public final class SymbolTableTest {
     assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
   }
 
+  @Test
+  public void testMethodUsageWithBadRewriteDisable() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "goog.module('some.module');",
+                "class Apple {eat(){}}",
+                "const /** !Apple */ apple = new Apple();",
+                "apple.eat();"),
+            "");
+    for (Symbol symbol : getVars(table)) {
+      if (symbol.getName().equals("eat")) {
+        // TODO(b/1914393990): there should be 2 references to 'eat()', on line 2 and line 4.
+        assertThat(table.getReferences(symbol)).hasSize(1);
+      }
+    }
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertThat(ordering.compare(first, first)).isEqualTo(0);
     assertThat(ordering.compare(second, second)).isEqualTo(0);
