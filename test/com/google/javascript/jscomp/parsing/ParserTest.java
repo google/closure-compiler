@@ -5357,7 +5357,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testStaticFields() {
+  public void testStaticClassFields() {
     Node n = parse("class C{static field = 2;}").getFirstChild().getLastChild();
     assertNode(n.getFirstChild()).isStatic();
 
@@ -5367,6 +5367,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
     n = parse("class C{static field = 2; static hi = 3;}").getFirstChild().getLastChild();
     assertNode(n.getFirstChild()).isStatic();
     assertNode(n.getSecondChild()).isStatic();
+  }
+
+  @Test
+  public void testStaticClassComputedFields() {
+    Node n = parse("class C{static ['field'] = 2;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+
+    n = parse("class C{static ['field'] = 2; ['hi'] = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+
+    n = parse("class C{static ['field'] = 2; static ['hi'] = 3;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+    assertNode(n.getSecondChild()).isStatic();
+
+    n = parse("class C{static 'hi' = 2;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
+
+    n = parse("class C{static 1 = 2;}").getFirstChild().getLastChild();
+    assertNode(n.getFirstChild()).isStatic();
   }
 
   @Test

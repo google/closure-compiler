@@ -2977,6 +2977,43 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testClassFieldStatic() {
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static x;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static x=2;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static x=2;",
+            "  static y=3;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "/** @interface */ ", //
+            "class C {",
+            "  static x;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "/** @record */ ", //
+            "class C {",
+            "  static x;",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testComputedClassFieldLiteralStringNumber() {
     assertPrettyPrint(
         "class C { 'str' = 2;}",
@@ -3020,6 +3057,36 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "class C {", //
             "  [x]=2;",
             "  [y]=3;",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testComputedClassFieldStatic() {
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static [x];",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static [x]=2;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static [x]=2;",
+            "  static y=3;",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {", //
+            "  static [x]=2;",
+            "  static [y]=3;",
             "}",
             ""));
   }

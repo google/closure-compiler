@@ -23044,10 +23044,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testClassField() {
-    testTypes("class C { x=2; }");
-    testTypes("class D { x; }");
-    testTypes("class E { x }");
-    testTypes("class F { /** @type {string|undefined} */ x;}");
+    testTypes("class A { x=2; }");
+    testTypes("class B { x; }");
+    testTypes("class C { x }");
+    testTypes("class D { /** @type {string|undefined} */ x;}");
+  }
+
+  @Test
+  public void testClassFieldStatic() {
+    testTypes("class A { static x=2; }");
+    testTypes("class B { static x; }");
+    testTypes("class C { static x }");
+    testTypes("class D { static /** @type {string|undefined} */ x;}");
   }
 
   @Test
@@ -23056,8 +23064,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassFieldStaticDictError() {
+    testTypes("/** @dict */ class C { static x=2; }", "Illegal key, the class is a dict");
+  }
+
+  @Test
   public void testClassFieldUnrestricted() {
     testTypes("/** @unrestricted */ class C { x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldStaticUnrestricted() {
+    testTypes("/** @unrestricted */ class C { static x = 2; }");
   }
 
   @Test
@@ -23067,6 +23085,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "class C {", //
             "  /** @type {string} */ ",
             "  x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassFieldStaticTypeError1() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  static x = 2;",
             "}"),
         lines(
             "assignment to property x of C", //
@@ -23108,10 +23140,37 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassFieldStaticTypeError3() {
+    testTypes(
+        lines(
+            "const obj = {};", //
+            "obj.C = class {",
+            "  /** @type {string} */ ",
+            "  static x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of obj.C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
   public void testClassDuplicateFieldError() {
     testTypes(
         "class C { /** @type {string} */ dog = ''; /** @type {number} */ dog = 0; }",
         "Class field dog is duplicated");
+  }
+
+  @Test
+  public void testClassDuplicateStaticFieldError() {
+    testTypes(
+        "class C { static /** @type {string} */ dog = ''; static /** @type {number} */ dog = 0; }",
+        "Class field dog is duplicated");
+  }
+
+  @Test
+  public void testClassDuplicateOneStaticFieldNoError() {
+    testTypes("class C {dog = 2; static dog = 'hi';}");
   }
 
   @Test
@@ -23156,6 +23215,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassComputedFieldStatic() {
+    testTypes("/** @dict */ class C { static [x]=2; }");
+    testTypes("/** @dict */ class C { static 'x' = 2; }");
+    testTypes("/** @dict */ class C { static 1 = 2; }");
+
+    testTypes("/** @unrestricted */ class C { static [x]=2; }");
+    testTypes("/** @unrestricted */ class C { static 'x' = 2; }");
+    testTypes("/** @unrestricted */ class C { static 1 = 2; }");
+  }
+
+  @Test
   public void testClassComputedFieldNoInitializer() {
     testTypes("/** @dict */ class C { [x]; }");
     testTypes("/** @dict */ class C { 'x' }");
@@ -23163,8 +23233,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassComputedFieldNoInitializerStatic() {
+    testTypes("/** @dict */ class C { static [x]; }");
+    testTypes("/** @dict */ class C { static 'x' }");
+    testTypes("/** @dict */ class C { static 1 }");
+  }
+
+  @Test
   public void testClassComputedFieldError() {
     testTypes("class C { [x] = 2; }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
+  public void testClassComputedFieldErrorStatic() {
+    testTypes("class C { static [x] = 2; }", "Cannot do '[]' access on a struct");
   }
 
   @Test

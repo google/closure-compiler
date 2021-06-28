@@ -3263,6 +3263,39 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithStaticField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @type {string} */",
+            "  static a = 'hi';",
+            "  /** @type {symbol|undefined} */",
+            "  static b;",
+            "  static c = 0;",
+            "  static d;",
+            "  /** @type {string|null} */",
+            "  static e = null;",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+
+    assertType(fooCtor).hasDeclaredProperty("a");
+    assertType(fooCtor.getPropertyType("a")).isString();
+
+    assertType(fooCtor).hasDeclaredProperty("b");
+    assertType(fooCtor.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
+
+    assertType(fooCtor).hasDeclaredProperty("c");
+    assertType(fooCtor.getPropertyType("c")).isUnknown();
+
+    assertType(fooCtor).hasDeclaredProperty("d");
+    assertType(fooCtor.getPropertyType("d")).isUnknown();
+
+    assertType(fooCtor).hasDeclaredProperty("e");
+    assertType(fooCtor.getPropertyType("e")).toStringIsEqualTo("(null|string)");
+  }
+
+  @Test
   public void testClassExpressionAssignment() {
     testSame("var Foo = class Bar {}");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));

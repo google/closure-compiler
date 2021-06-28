@@ -131,8 +131,6 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testClassField() {
-    enableTypeInfoValidation = false;
-    disableTypeCheck();
     valid("class C {x}");
     valid("class C {x = 2}");
     valid("class C {x = 2;}");
@@ -147,30 +145,70 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassComputedField() {
-    enableTypeInfoValidation = false;
-    disableTypeCheck();
-    valid("class C { [x]; }");
-    valid("class C { ['x']=2; }");
-    valid("class C { 'x'=2; }");
-    valid("class C { 1=2; }");
+  public void testClassFieldStatic() {
+    valid("class C {static x}");
+    valid("class C {static x = 2}");
+    valid("class C {static x = 2;}");
+    valid("class C {static x; static y;}");
     valid(
         lines(
             "class C {", //
+            "  static x",
+            "  static y",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassComputedField() {
+    valid("/** @dict */ class C { [x]; }");
+    valid("/** @dict */ class C { ['x']=2; }");
+    valid("/** @dict */ class C { 'x'=2; }");
+    valid("/** @dict */ class C { 1=2; }");
+    valid(
+        lines(
+            "/** @unrestricted */", //
+            "class C {",
             "  [x]=2",
-            "  y = 4",
+            "  static y = 4",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassComputedFieldStatic() {
+    valid("/** @dict */ class C { static [x]; }");
+    valid("/** @dict */ class C { static ['x']=2; }");
+    valid("/** @dict */ class C { static 'x'=2; }");
+    valid("/** @dict */ class C { static 1=2; }");
+    valid(
+        lines(
+            "/** @unrestricted */", //
+            "class C {",
+            "  static [x]=2",
+            "  static y = 4",
             "}",
             ""));
   }
 
   @Test
   public void testFeatureValidation_classField() {
-    enableTypeInfoValidation = false;
-    disableTypeCheck();
     testFeatureValidation(
         lines(
             "class C {", //
             "  x=2;",
+            "}",
+            ""),
+        Feature.PUBLIC_CLASS_FIELDS);
+  }
+
+  @Test
+  public void testFeatureValidation_classComputedField() {
+    testFeatureValidation(
+        lines(
+            "/** @dict */", //
+            "class C {", //
+            "  [x]=2;",
             "}",
             ""),
         Feature.PUBLIC_CLASS_FIELDS);

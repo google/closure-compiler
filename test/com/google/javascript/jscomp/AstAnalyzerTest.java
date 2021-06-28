@@ -586,12 +586,20 @@ public final class AstAnalyzerTest {
           kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x; }"),
           kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x }"),
           kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x \n y }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x=2; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x \n static y }"),
 
           // COMPUTED_FIELD_DEF
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { [x]; }"),
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { ['x']=2; }"),
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 'x'=2; }"),
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 1=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static [x]; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static ['x']=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static 'x'=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static 1=2; }"),
 
           // SUPER calls
           kase().expect(false).token(SUPER).js("super()"),
