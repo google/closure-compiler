@@ -1938,16 +1938,25 @@ public abstract class CompilerTestCase {
   }
 
   protected void testExternChanges(String extern, String input, String expectedExtern) {
+    testExternChanges(extern, input, expected(expectedExtern), (DiagnosticType[]) null);
+  }
+
+  protected void testExternChanges(String extern, String input, Expected expectedExtern) {
     testExternChanges(extern, input, expectedExtern, (DiagnosticType[]) null);
   }
 
   protected void testExternChanges(
       String input, String expectedExtern, DiagnosticType... warnings) {
-    testExternChanges("", input, expectedExtern, warnings);
+    testExternChanges("", input, expected(expectedExtern), warnings);
   }
 
   protected void testExternChanges(
       String extern, String input, String expectedExtern, DiagnosticType... warnings) {
+    testExternChanges(extern, input, expected(expectedExtern), warnings);
+  }
+
+  protected void testExternChanges(
+      String extern, String input, Expected expectedExtern, DiagnosticType... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
@@ -1968,6 +1977,11 @@ public abstract class CompilerTestCase {
 
   private void testExternChangesInternal(
       Compiler compiler, String expectedExtern, DiagnosticType... warnings) {
+    testExternChangesInternal(compiler, expected(expectedExtern), warnings);
+  }
+
+  private void testExternChangesInternal(
+      Compiler compiler, Expected expectedExterns, DiagnosticType... warnings) {
     compiler.parseInputs();
 
     if (createModuleMap) {
@@ -1984,7 +1998,7 @@ public abstract class CompilerTestCase {
 
     Node externs = externsAndJs.getFirstChild();
 
-    Node expected = compiler.parseTestCode(expectedExtern);
+    Node expectedRoot = parseExpectedJs(expectedExterns);
     assertThat(compiler.getErrors()).isEmpty();
 
     // Call "beforePass" as some passes ask for the index of the current pass being run and expect
@@ -2006,20 +2020,15 @@ public abstract class CompilerTestCase {
       // Expected output parsed without implied block.
       checkState(externs.isRoot());
       checkState(compareJsDoc);
-      checkState(
-          externs.hasOneChild(), "Compare as tree only works when output has a single script.");
-      externs = externs.getFirstChild();
 
-      Node expectedRoot = parseExpectedJs(expectedExtern);
       expectedRoot.detach();
-      expectedRoot = expectedRoot.getFirstChild();
 
       assertNode(externs)
           .usingSerializer(createPrettyPrinter(compiler))
           .isEqualIncludingJsDocTo(expectedRoot);
     } else {
       String externsCode = compiler.toSource(externs);
-      String expectedCode = compiler.toSource(expected);
+      String expectedCode = compiler.toSource(expectedRoot);
       assertThat(externsCode).isEqualTo(expectedCode);
     }
 

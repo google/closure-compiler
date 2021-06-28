@@ -66,17 +66,16 @@ final class PolymerClassRewriter {
               + " {0}:{2}:{1}.\n"
               + "Rename the local PolymerElement to avoid shadowing the PolymerElement externs.");
 
-  private final Node polymerElementExterns;
+  private final Node externsInsertionRef;
   boolean propertySinkExternInjected = false;
 
   PolymerClassRewriter(
       AbstractCompiler compiler,
-      Node polymerElementExterns,
       int polymerVersion,
       PolymerExportPolicy polymerExportPolicy,
       boolean propertyRenamingEnabled) {
     this.compiler = compiler;
-    this.polymerElementExterns = polymerElementExterns;
+    this.externsInsertionRef = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     this.polymerVersion = polymerVersion;
     this.polymerExportPolicy = polymerExportPolicy;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
@@ -152,12 +151,15 @@ final class PolymerClassRewriter {
     }
   }
 
-  /** Returns a SCRIPT node in which to insert new global declarations */
+  /**
+   * Returns a SCRIPT node in which to insert new global declarations
+   *
+   * <p>New globals are put in the externs if converting a @typeSummary and in source code
+   * otherwise.
+   */
   private Node getNodeForInsertion(Node enclosingScript) {
     if (NodeUtil.isFromTypeSummary(enclosingScript)) {
-      return polymerElementExterns.isScript()
-          ? polymerElementExterns
-          : polymerElementExterns.getParent();
+      return externsInsertionRef;
     } else {
       return compiler.getNodeForCodeInsertion(null);
     }
@@ -1121,14 +1123,9 @@ final class PolymerClassRewriter {
       block.addChildToBack(setterExprNode);
     }
 
-    block.srcrefTreeIfMissing(polymerElementExterns);
-
-    Node scopeRoot = polymerElementExterns;
-    if (!scopeRoot.isScript()) {
-      scopeRoot = scopeRoot.getParent();
-    }
+    block.srcrefTreeIfMissing(externsInsertionRef);
     Node stmts = block.removeChildren();
-    scopeRoot.addChildrenToBack(stmts);
+    externsInsertionRef.addChildrenToBack(stmts);
 
     compiler.reportChangeToEnclosingScope(stmts);
   }
