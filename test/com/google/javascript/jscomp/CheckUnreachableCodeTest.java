@@ -341,6 +341,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("var C; C = class{func(){}}");
     testSame("let C; C = class{func(){}}");
     assertUnreachable("var C = class{func(){if (true){return;} x = 1;}}");
+    assertUnreachable("class C {x = function(){if(true) {return;} x=1;}}");
   }
 
   @Test
