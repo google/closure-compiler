@@ -1668,6 +1668,7 @@ class IRFactory {
           case AND_EQUAL:
           case QUESTION_QUESTION_EQUAL:
             maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
+            maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
             break;
           default:
             break;
@@ -1701,6 +1702,7 @@ class IRFactory {
           case AND_EQUAL:
           case QUESTION_QUESTION_EQUAL:
             maybeWarnForFeature(exprTree, Feature.LOGICAL_ASSIGNMENT);
+            maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
             break;
           default:
             break;

@@ -449,8 +449,13 @@ class Normalize implements CompilerPass {
       }
 
       if (NodeUtil.isCompoundAssignmentOp(n)) {
-        normalizeAssignShorthand(n);
+        if (NodeUtil.isLogicalAssignmentOp(n)) {
+          normalizeLogicalAssignShorthand(n);
+        } else {
+          normalizeAssignShorthand(n);
+        }
       }
+
     }
 
     // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
@@ -638,17 +643,37 @@ class Normalize implements CompilerPass {
     }
 
     private void normalizeAssignShorthand(Node shorthand) {
-      if (shorthand.getFirstChild().isName()) {
-        Node name = shorthand.getFirstChild();
-        shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
-        Node insertPoint = IR.empty();
-        shorthand.replaceWith(insertPoint);
-        Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
-        assign.setJSDocInfo(shorthand.getJSDocInfo());
-        shorthand.setJSDocInfo(null);
-        insertPoint.replaceWith(assign);
-        compiler.reportChangeToEnclosingScope(assign);
+      if (!shorthand.getFirstChild().isName()) {
+        return;
       }
+      Node name = shorthand.getFirstChild();
+      shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
+      Node insertPoint = IR.empty();
+      shorthand.replaceWith(insertPoint);
+      Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
+      assign.setJSDocInfo(shorthand.getJSDocInfo());
+      shorthand.setJSDocInfo(null);
+      insertPoint.replaceWith(assign);
+      compiler.reportChangeToEnclosingScope(assign);
+    }
+
+    private void normalizeLogicalAssignShorthand(Node shorthand) {
+      if (!shorthand.getFirstChild().isName()) {
+        return;
+      }
+      Node name = shorthand.getFirstChild();
+      Node last = shorthand.getLastChild();
+      name.detach();
+      last.detach();
+      Node insertPoint = IR.empty();
+      shorthand.replaceWith(insertPoint);
+      Node logicalOp = IR.assign(name.cloneNode().srcref(name), last).srcref(shorthand);
+      Node assign =
+          new Node(NodeUtil.getOpFromAssignmentOp(shorthand), name, logicalOp).srcref(shorthand);
+      assign.setJSDocInfo(shorthand.getJSDocInfo());
+      shorthand.setJSDocInfo(null);
+      insertPoint.replaceWith(assign);
+      compiler.reportChangeToEnclosingScope(assign);
     }
 
     /**

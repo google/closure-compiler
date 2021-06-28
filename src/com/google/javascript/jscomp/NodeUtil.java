@@ -1836,6 +1836,19 @@ public final class NodeUtil {
     return false;
   }
 
+  /** Returns true if the operator is a logical assignment type operator. */
+  public static boolean isLogicalAssignmentOp(Node n) {
+    switch (n.getToken()) {
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
+        return true;
+      default:
+        break;
+    }
+    return false;
+  }
+
   public static boolean isCompoundAssignmentOp(Node n) {
     return isAssignmentOp(n) && !n.isAssign();
   }
@@ -1866,6 +1879,12 @@ public final class NodeUtil {
         return Token.DIV;
       case ASSIGN_MOD:
         return Token.MOD;
+      case ASSIGN_OR:
+        return Token.OR;
+      case ASSIGN_AND:
+        return Token.AND;
+      case ASSIGN_COALESCE:
+        return Token.COALESCE;
       default:
         break;
     }

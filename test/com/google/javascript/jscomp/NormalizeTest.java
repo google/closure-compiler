@@ -299,6 +299,18 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAssignShorthandDontNormalizeWhenLHSNotName() {
+    testSame("obj.x += 1;");
+  }
+
+  @Test
+  public void testLogicalAssignShorthand() {
+    test("x ||= 1;", "x || (x = 1);");
+    test("x &&= 1;", "x && (x = 1);");
+    test("x ??= 1;", "x ?? (x = 1);");
+  }
+
+  @Test
   public void testDuplicateVarInExterns() {
     test(
         externs("var extern;"),
