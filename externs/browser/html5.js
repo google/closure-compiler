@@ -5709,3 +5709,100 @@ Element.prototype.focus = function(options) {};
  * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-blur
  */
 Element.prototype.blur = function() {};
+
+/**
+ * @see https://www.w3.org/TR/CSP3/#securitypolicyviolationevent
+ *
+ * @constructor
+ * @extends {Event}
+ *
+ * @param {string} type
+ * @param {SecurityPolicyViolationEventInit=}
+ *     opt_securityPolicyViolationEventInitDict
+ */
+function SecurityPolicyViolationEvent(
+    type, opt_securityPolicyViolationEventInitDict) {}
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.documentURI;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.referrer;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.blockedURI;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.effectiveDirective;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.violatedDirective;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.originalPolicy;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.sourceFile;
+
+/** @const {string} */
+SecurityPolicyViolationEvent.prototype.sample;
+
+/**
+ * @see https://www.w3.org/TR/CSP3/#enumdef-securitypolicyviolationeventdisposition
+ * @const {string}
+ */
+SecurityPolicyViolationEvent.prototype.disposition;
+
+/** @const {number} */
+SecurityPolicyViolationEvent.prototype.statusCode;
+
+/** @const {number} */
+SecurityPolicyViolationEvent.prototype.lineNumber;
+
+/** @const {number} */
+SecurityPolicyViolationEvent.prototype.columnNumber;
+
+
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/CSP3/#dictdef-securitypolicyviolationeventinit
+ */
+function SecurityPolicyViolationEventInit() {}
+
+/** @type {string} */
+SecurityPolicyViolationEventInit.prototype.documentURI;
+
+/** @type {undefined|string} */
+SecurityPolicyViolationEventInit.prototype.referrer;
+
+/** @type {undefined|string} */
+SecurityPolicyViolationEventInit.prototype.blockedURI;
+
+/** @type {string} */
+SecurityPolicyViolationEventInit.prototype.disposition;
+
+/** @type {string} */
+SecurityPolicyViolationEventInit.prototype.effectiveDirective;
+
+/** @type {string} */
+SecurityPolicyViolationEventInit.prototype.violatedDirective;
+
+/** @type {string} */
+SecurityPolicyViolationEventInit.prototype.originalPolicy;
+
+/** @type {undefined|string} */
+SecurityPolicyViolationEventInit.prototype.sourceFile;
+
+/** @type {undefined|string} */
+SecurityPolicyViolationEventInit.prototype.sample;
+
+/** @type {number} */
+SecurityPolicyViolationEventInit.prototype.statusCode;
+
+/** @type {undefined|number} */
+SecurityPolicyViolationEventInit.prototype.lineNumber;
+
+/** @type {undefined|number} */
+SecurityPolicyViolationEventInit.prototype.columnNumber;
