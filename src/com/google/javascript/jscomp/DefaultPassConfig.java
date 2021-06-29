@@ -25,12 +25,14 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+import com.google.javascript.jscomp.LocaleDataPasses.ExtractAndProtect;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
@@ -499,17 +501,23 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldRunReplaceMessagesForChrome()) {
       passes.add(replaceMessagesForChrome);
-    } else if (options.shouldRunFullReplaceMessagesPass()) {
-      // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
-      // smaller if you replace messages before optimizing, but if we can change that, it would
-      // be good to drop this early replacement entirely.
-      passes.add(getFullReplaceMessagesPass());
-    } else if (options.shouldRunProtectMessagesPass()) {
-      // With late localization we protect the messages from mangling by optimizations now,
-      // then actually replace them after optimizations.
-      // The purpose of doing this is to separate localization from optimization so we can
-      // optimize just once for all locales.
-      passes.add(getProtectMessagesPass());
+    } else if (options.shouldRunReplaceMessagesPass()) {
+      if (options.doLateLocalization()) {
+        // With late localization we protect the messages from mangling by optimizations now,
+        // then actually replace them after optimizations.
+        // The purpose of doing this is to separate localization from optimization so we can
+        // optimize just once for all locales.
+        passes.add(getProtectMessagesPass());
+      } else {
+        // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
+        // smaller if you replace messages before optimizing, but if we can change that, it would
+        // be good to drop this early replacement entirely.
+        passes.add(getFullReplaceMessagesPass());
+      }
+    }
+
+    if (options.doLateLocalization()) {
+      passes.add(protectLocaleData);
     }
 
     // Defines in code always need to be processed.
@@ -836,8 +844,11 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getFinalizations() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.shouldRunReplaceProtectedMessagesPass()) {
-      passes.add(getReplaceProtectedMessagesPass());
+    if (options.doLateLocalization()) {
+      if (options.shouldRunReplaceMessagesPass()) {
+        passes.add(getReplaceProtectedMessagesPass());
+      }
+      passes.add(substituteLocaleData);
     }
     return passes;
   }
@@ -2606,7 +2617,7 @@ public final class DefaultPassConfig extends PassConfig {
       additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());
     }
 
-    if (options.closurePass && options.locale != null) {
+    if (options.closurePass && options.locale != null && !options.doLateLocalization()) {
       additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME, IR.string(options.locale));
     }
 
@@ -2824,5 +2835,47 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getOptions().getDynamicImportAlias(),
                       compiler.getOptions().getChunkOutputType()))
+          .build();
+
+  /** Replace locale values with stubs that can survive optimizations and be replaced afterwards. */
+  private final PassFactory protectLocaleData =
+      PassFactory.builder()
+          .setName("protectLocaleData")
+          .setInternalFactory(
+              (compiler) ->
+                  new CompilerPass() {
+                    @Override
+                    public void process(Node externs, Node root) {
+                      compiler.setLocaleSubstitutionData(
+                          runLocaleDataProtect(compiler, externs, root));
+                    }
+                  })
+          .setFeatureSetForOptimizations()
+          .build();
+
+  LocaleData runLocaleDataProtect(AbstractCompiler compiler, Node externs, Node root) {
+    LocaleDataPasses.ExtractAndProtect pass = new ExtractAndProtect(compiler);
+
+    pass.process(externs, root);
+    return pass.getLocaleValuesDataMaps();
+  }
+
+  /** Replace locale data stubs with the values for a locale. */
+  private final PassFactory substituteLocaleData =
+      PassFactory.builder()
+          .setName("SubstituteLocaleData")
+          .setInternalFactory(
+              (compiler) ->
+                  new CompilerPass() {
+                    @Override
+                    public void process(Node externs, Node root) {
+                      new LocaleDataPasses.LocaleSubstitutions(
+                              compiler,
+                              compiler.getOptions().locale,
+                              compiler.getLocaleSubstitutionData())
+                          .process(externs, root);
+                    }
+                  })
+          .setFeatureSetForOptimizations()
           .build();
 }

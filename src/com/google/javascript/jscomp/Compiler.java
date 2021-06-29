@@ -3532,6 +3532,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           new ObjectOutputStream(outputStream).writeObject(new CompilerState(this));
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
+          LocaleDataPasses.addLocaleDataToAST(this, this.getLocaleSubstitutionData());
           SerializeTypedAstPass.createFromOutputStream(this, outputStream)
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
@@ -3590,6 +3591,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externAndJsRoot = deserializedAst.getRoot();
     externsRoot = externAndJsRoot.getFirstChild();
     jsRoot = externAndJsRoot.getLastChild();
+    setLocaleSubstitutionData(LocaleDataPasses.reconstituteLocaleDataFromAST(this));
     inputsById.clear();
     inputsById.putAll(deserializedAst.getInputsById());
     externs.clear();

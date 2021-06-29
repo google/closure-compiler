@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.SideEffectFlags;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A compiler pass to collect locale data for substitution at a later stage of the compilation,
@@ -95,6 +96,10 @@ final class LocaleDataPasses {
 
     @Override
     public void process(Node externs, Node root) {
+      // Create the extern symbol
+      NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
+      NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
+
       ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
       NodeTraversal.traverse(compiler, root, protectLocaleCallback);
       ExtractAndProtectLocaleData localeDataCallback = new ExtractAndProtectLocaleData(compiler);
@@ -150,12 +155,6 @@ final class LocaleDataPasses {
     /** Returns the data structure used by "LocaleSubstitutions". */
     public LocaleData getLocaleValuesDataMaps() {
       return new LocaleDataImpl(valueMaps);
-    }
-
-    public void process(Node externs, Node root) {
-      // Create the extern symbol
-      NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
-      NodeTraversal.traverse(compiler, root, this);
     }
 
     @Override
@@ -581,9 +580,10 @@ final class LocaleDataPasses {
         // Populate the value maps to store locale specific values.
         valueMaps.add(new LinkedHashMap<>());
         checkState(valueMaps.size() - 1 == valueNumber);
-        Node replacement =
-            NodeUtil.newCallNode(IR.name(LOCALE_VALUE_REPLACEMENT), IR.number(valueNumber))
-                .srcrefTree(n);
+
+        Node callTarget = IR.name(LOCALE_VALUE_REPLACEMENT);
+        callTarget.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        Node replacement = NodeUtil.newCallNode(callTarget, IR.number(valueNumber)).srcrefTree(n);
 
         replacement.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
         n.replaceWith(replacement);
@@ -616,12 +616,6 @@ final class LocaleDataPasses {
       this.compiler = compiler;
     }
 
-    public void process(Node externs, Node root) {
-      // Create the extern symbol
-      NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
-      NodeTraversal.traverse(compiler, root, this);
-    }
-
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return !replaced;
@@ -635,7 +629,9 @@ final class LocaleDataPasses {
           && n.matchesQualifiedName(qnameForGoogLocale)) {
 
         Node value = parent.getLastChild();
-        value.replaceWith(IR.name(GOOG_LOCALE_REPLACEMENT));
+        Node replacement = IR.name(GOOG_LOCALE_REPLACEMENT);
+        replacement.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+        value.replaceWith(replacement);
         compiler.reportChangeToEnclosingScope(parent);
 
         // Mark the value as found.  The definition should be early in the traversal so
@@ -662,7 +658,8 @@ final class LocaleDataPasses {
 
     LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {
       this.compiler = compiler;
-      this.locale = normalizeLocale(checkNotNull(locale));
+      // Use the "default" locale if not otherwise set.
+      this.locale = normalizeLocale(locale == null ? "en" : locale);
       checkNotNull(localeData);
       checkState(localeData instanceof LocaleDataImpl);
       this.localeValueMap = ((LocaleDataImpl) localeData).data;
@@ -703,5 +700,79 @@ final class LocaleDataPasses {
     private Node lookupValue(String locale, int valueIndex) {
       return localeValueMap.get(valueIndex).get(locale);
     }
+  }
+
+  /**
+   * Hack things a bit and stuff some data into the AST in order to serialize it. It will be removed
+   * when deserializing.
+   */
+  public static void addLocaleDataToAST(AbstractCompiler compiler, LocaleData localeData) {
+    ArrayList<LinkedHashMap<String, Node>> data =
+        localeData == null ? null : ((LocaleDataImpl) localeData).data;
+
+    // Serialize locale data as:
+    //   [{...},{...}]
+    // Where each object is
+    //   {"locale": value, "otherLocale": otherValue}
+    Node arr = IR.arraylit();
+    if (data != null) {
+      for (LinkedHashMap<String, Node> localeValueEntry : data) {
+        Node obj = IR.objectlit();
+        arr.addChildToBack(obj);
+        for (Map.Entry<String, Node> entry : localeValueEntry.entrySet()) {
+          String locale = entry.getKey();
+          Node value = entry.getValue();
+
+          obj.addChildToBack(IR.quotedStringKey(locale, value));
+        }
+      }
+    }
+
+    Node stmt = IR.var(IR.name("__JSC_LOCALE_DATA__"), arr);
+
+    Node root = compiler.getJsRoot();
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    stmt.srcrefTreeIfMissing(script);
+
+    script.addChildToFront(stmt);
+  }
+
+  /** Remove LocaleData prepended in the AST for serialization, remove it and restore the AST. */
+  public static LocaleData reconstituteLocaleDataFromAST(AbstractCompiler compiler) {
+    ArrayList<LinkedHashMap<String, Node>> localeData = new ArrayList<>();
+
+    // Remove the first expression which is expected to be an array literal,
+    // Where every entry is an object literal where the key is the locale
+    // and the data is value
+
+    Node root = compiler.getJsRoot();
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+
+    // Remove it from the AST.
+    Node stmt = script.getFirstChild().detach();
+    checkState(stmt.isVar());
+
+    Node nameNode = stmt.getFirstChild();
+    checkState(nameNode.isName());
+
+    Node arrlit = nameNode.getLastChild();
+    checkState(arrlit.isArrayLit());
+
+    for (Node obj = arrlit.getFirstChild(); obj != null; obj = obj.getNext()) {
+      checkState(obj.isObjectLit());
+      LinkedHashMap<String, Node> map = new LinkedHashMap<>();
+      localeData.add(map);
+      for (Node member = obj.getFirstChild(); member != null; member = member.getNext()) {
+        checkState(member.isStringKey());
+        String locale = member.getString();
+        Node value = member.getFirstChild().detach();
+
+        map.put(locale, value);
+      }
+    }
+
+    return new LocaleDataImpl(localeData);
   }
 }

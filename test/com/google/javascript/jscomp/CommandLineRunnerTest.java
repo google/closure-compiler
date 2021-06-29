@@ -215,7 +215,9 @@ public final class CommandLineRunnerTest {
     assertThat(runner.doRun()).isEqualTo(0);
 
     assertThat(runner.getCompiler().toSource())
-        .isEqualTo("var MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
+        .isEqualTo(
+            "var __JSC_LOCALE_DATA__=[];var"
+                + " MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
 
     // Create a path for the stage 2 output
     File stage2Save = new File(testDir, "stage2.save");
@@ -233,7 +235,8 @@ public final class CommandLineRunnerTest {
     // During stage 2 the message is wrapped in a function call to protect it from mangling by
     // optimizations.
     assertThat(runner.getCompiler().toSource())
-        .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+        .isEqualTo(
+            "var __JSC_LOCALE_DATA__=[];console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
 
     // Create a path for the final output
     File compiledFile = new File(testDir, "compiled.js");

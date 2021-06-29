@@ -2265,40 +2265,12 @@ public class CompilerOptions implements Serializable {
     this.doLateLocalization = doLateLocalization;
   }
 
-  /**
-   * Should we run the pass that does replacement of translatable messages all at once just before
-   * optimizations?
-   */
-  public boolean shouldRunFullReplaceMessagesPass() {
-    return shouldRunReplaceMessagesPass() && !doLateLocalization;
-  }
-
-  /**
-   * Should we run the pass that wraps translatable messages in function calls to protect them from
-   * mangling by optimizations, so they can be found and replaced later?
-   */
-  public boolean shouldRunProtectMessagesPass() {
-    return shouldRunSplitReplaceMessagesPass();
-  }
-
-  /**
-   * Should we run the pass that finds translatable messages that were wrapped in function calls to
-   * protect them from mangling by optimizations and replaces them with the localized messages?
-   */
-  public boolean shouldRunReplaceProtectedMessagesPass() {
-    return shouldRunSplitReplaceMessagesPass();
-  }
-
-  /**
-   * Should we run the split form of `ReplaceMessages` that first protects messages, then later
-   * replaces them?
-   */
-  private boolean shouldRunSplitReplaceMessagesPass() {
-    return shouldRunReplaceMessagesPass() && doLateLocalization;
+  public boolean doLateLocalization() {
+    return doLateLocalization;
   }
 
   /** Should we run any form of the `ReplaceMessages` pass? */
-  private boolean shouldRunReplaceMessagesPass() {
+  public boolean shouldRunReplaceMessagesPass() {
     return !shouldRunReplaceMessagesForChrome() && messageBundle != null;
   }
 

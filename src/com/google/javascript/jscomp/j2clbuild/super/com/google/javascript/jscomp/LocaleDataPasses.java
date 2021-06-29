@@ -16,9 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 // ** GWT compatible no-op replacement for {@code LocaleDataPasses} */
 final class LocaleDataPasses {
@@ -32,16 +31,13 @@ final class LocaleDataPasses {
     @Override
     public void process(Node externs, Node root) {}
 
-    public ArrayList<LinkedHashMap<String, Node>> getLocaleValuesDataMaps() {
-      return new ArrayList<>();
+    public LocaleData getLocaleValuesDataMaps() {
+      return new LocaleData() {};
     }
   }
 
   static class LocaleSubstitutions implements CompilerPass {
-    LocaleSubstitutions(
-        AbstractCompiler compiler,
-        String locale,
-        ArrayList<LinkedHashMap<String, Node>> localeValueMap) {}
+    LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {}
 
     public void process(Node externs, Node root) {}
   }
