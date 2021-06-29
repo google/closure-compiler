@@ -744,20 +744,17 @@ class Normalize implements CompilerPass {
     }
 
     /**
-     * Remove the parent VAR. There are three cases that need to be handled:
-     *   1) "var a = b;" which is replaced with "a = b"
-     *   2) "label:var a;" which is replaced with "label:;". Ideally, the
-     *      label itself would be removed but that is not possible in the
-     *      context in which "onRedeclaration" is called.
-     *   3) "for (var a in b) ..." which is replaced with "for (a in b)..."
-     *      Cases we don't need to handle are VARs with multiple children,
-     *      which have already been split into separate declarations, so there
-     *      is no need to handle that here, and "for (var a;;);", which has
-     *      been moved out of the loop.
-     *      The result of this is that in each case the parent node is replaced
-     *      which is generally dangerous in a traversal but is fine here with
-     *      the scope creator, as the next node of interest is the parent's
-     *      next sibling.
+     * Remove the parent VAR. There is only one case that need to be handled: "var a = b;" which is
+     * replaced with "a = b"
+     *
+     * <p>Cases we don't need to handle are VARs with multiple children, which have already been
+     * split into separate declarations, so there is no need to handle that here; "for (var
+     * a;;);"/"for (var a of b)"/"for (var a in b)", which have been moved out of the loop; and
+     * "LABEL: var x;" which has been put in a BLOCK
+     *
+     * <p>The result of this is that in each case the parent node is replaced which is generally
+     * dangerous in a traversal but is fine here with the scope creator, as the next node of
+     * interest is the parent's next sibling.
      */
     private void replaceVarWithAssignment(Node n, Node parent, Node grandparent) {
       if (n.hasChildren()) {
@@ -773,20 +770,9 @@ class Normalize implements CompilerPass {
         parent.replaceWith(statement);
         reportCodeChange("Duplicate VAR declaration", statement);
       } else {
-        // It is an empty reference remove it.
-        if (NodeUtil.isStatementBlock(grandparent)) {
-          parent.detach();
-        } else if (grandparent.isForIn() || grandparent.isForOf()) {
-          // This is the "for (var a in b)..." case.  We don't need to worry
-          // about initializers in "for (var a;;)..." as those are moved out
-          // as part of the other normalizations.
-          n.detach();
-          parent.replaceWith(n);
-        } else {
-          // We should never get here. LABELs with a single VAR statement should
-          // already have been normalized to have a BLOCK.
-          checkState(grandparent.isLabel(), grandparent);
-        }
+        // It is an empty reference. Remove it.
+        checkState(NodeUtil.isStatementBlock(grandparent), grandparent);
+        parent.detach();
         reportCodeChange("Duplicate VAR declaration", grandparent);
       }
     }

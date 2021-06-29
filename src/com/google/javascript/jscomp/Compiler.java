@@ -1479,26 +1479,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return inputsById.get(id);
   }
 
-  /**
-   * Removes an input file from AST.
-   *
-   * @param id The id of the input to be removed.
-   */
-  protected void removeExternInput(InputId id) {
-    CompilerInput input = getInput(id);
-    if (input == null) {
-      return;
-    }
-    checkState(input.isExtern(), "Not an extern input: %s", input.getName());
-    scriptNodeByFilename.remove(input.getSourceFile().getName());
-    inputsById.remove(id);
-    externs.remove(input);
-    Node root = checkNotNull(input.getAstRoot(this));
-    if (root != null) {
-      root.detach();
-    }
-  }
-
   private CompilerInput putCompilerInput(InputId id, CompilerInput input) {
     input.setCompiler(this);
     return inputsById.put(id, input);
