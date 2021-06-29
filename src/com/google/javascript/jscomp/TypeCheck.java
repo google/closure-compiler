@@ -37,6 +37,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static java.util.stream.Collectors.joining;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -102,11 +103,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   public static final DiagnosticType INEXISTENT_PROPERTY =
       DiagnosticType.warning("JSC_INEXISTENT_PROPERTY", "Property {0} never defined on {1}");
 
+  @VisibleForTesting
+  static final String POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION =
+      "\n\n"
+          + "This property is accessed on a \"loose\" type, but is not defined anywhere in the"
+          + " program, so it must not exist."
+      ;
+
   // disabled by default. This one only makes sense if you're using
   // well-typed externs.
   static final DiagnosticType POSSIBLE_INEXISTENT_PROPERTY =
       DiagnosticType.disabled(
-          "JSC_POSSIBLE_INEXISTENT_PROPERTY", "Property {0} never defined on {1}");
+          "JSC_POSSIBLE_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}"
+              + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION.replace("'", "''"));
 
   static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
       DiagnosticType.warning(
