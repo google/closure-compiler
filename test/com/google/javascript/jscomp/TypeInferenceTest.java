@@ -121,6 +121,7 @@ public final class TypeInferenceTest {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
+    options.setLanguageIn(CompilerOptions.LanguageMode.UNSUPPORTED);
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();

@@ -160,6 +160,8 @@ public final class AstAnalyzerTest {
       options.setStrictModeInput(false);
       options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
 
+      options.setLanguageIn(CompilerOptions.LanguageMode.UNSUPPORTED);
+
       compiler = new Compiler();
       compiler.initOptions(options);
 
