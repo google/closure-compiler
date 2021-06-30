@@ -253,6 +253,7 @@ class CheckAccessControls implements Callback, CompilerPass {
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
       case COMPUTED_PROP:
         {
           Node grandparent = parent.getParent();
@@ -445,9 +446,7 @@ class CheckAccessControls implements Callback, CompilerPass {
     if (objectType != null) {
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
-
       if (deprecationInfo != null) {
-
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
               JSError.make(
@@ -1291,6 +1290,7 @@ class CheckAccessControls implements Callback, CompilerPass {
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
         {
           switch (parent.getToken()) {
             case OBJECTLIT:
