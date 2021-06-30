@@ -99,7 +99,7 @@ public final class FeatureSetTest {
     // This could be es_XXX, es_next, etc. and will change as new features are added and removed
     // from these `FeatureSet`s.
     assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
-    assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next_in");
     assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_unsupported");
   }
 
