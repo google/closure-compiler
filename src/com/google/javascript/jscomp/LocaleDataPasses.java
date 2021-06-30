@@ -751,7 +751,7 @@ final class LocaleDataPasses {
     checkState(script.isScript());
 
     // Remove it from the AST.
-    Node stmt = script.getFirstChild().detach();
+    Node stmt = script.removeFirstChild();
     checkState(stmt.isVar());
 
     Node nameNode = stmt.getFirstChild();
@@ -767,7 +767,7 @@ final class LocaleDataPasses {
       for (Node member = obj.getFirstChild(); member != null; member = member.getNext()) {
         checkState(member.isStringKey());
         String locale = member.getString();
-        Node value = member.getFirstChild().detach();
+        Node value = member.removeFirstChild();
 
         map.put(locale, value);
       }

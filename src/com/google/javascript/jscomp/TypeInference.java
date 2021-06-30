@@ -1661,7 +1661,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
       if (member.isComputedProp()
           || member.isComputedFieldDef()
-          || (member.isMemberFieldDef() && member.getFirstChild() != null)) {
+          || (member.isMemberFieldDef() && member.hasChildren())) {
         scope = traverse(member.getFirstChild(), scope);
         if (member.isComputedFieldDef() && member.getSecondChild() != null) {
           scope = traverse(member.getSecondChild(), scope);

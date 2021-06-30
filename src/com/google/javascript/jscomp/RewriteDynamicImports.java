@@ -322,7 +322,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     checkNotNull(this.alias);
     final Node aliasNode = astFactory.createQNameWithUnknownType(this.alias);
     aliasNode.setOriginalName("import");
-    final Node moduleSpecifier = dynamicImport.getFirstChild().detach();
+    final Node moduleSpecifier = dynamicImport.removeFirstChild();
     Node importAliasCall =
         astFactory.createCall(aliasNode, moduleSpecifier).srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
