@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Walks the AST looking for usages of qualified names, and 'goog.require's of those names. Then,
@@ -49,6 +50,12 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
   // that shadows an unused require in that file will cause the extra require warning to be missed.
   private final Set<String> usages = new HashSet<>();
 
+  /**
+   * This is only relevant for the standalone CheckExtraRequires run. This is used to restrict the
+   * linter rule only for the modules listed in this set
+   */
+  @Nullable private final ImmutableSet<String> requiresToRemove;
+
   public static final DiagnosticType EXTRA_REQUIRE_WARNING =
       DiagnosticType.disabled(
           "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
@@ -58,8 +65,15 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       ImmutableSet.of(
           "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
 
-  public CheckExtraRequires(AbstractCompiler compiler) {
+  /**
+   * @param requiresToRemove providing a non-null set to this parameter will result in only removing
+   *     the goog.requires that are in this set. If this is null, it will attempt to remove all the
+   *     unnecessary requires.
+   */
+  public CheckExtraRequires(
+      AbstractCompiler compiler, @Nullable ImmutableSet<String> requiresToRemove) {
     this.compiler = compiler;
+    this.requiresToRemove = requiresToRemove;
   }
 
   @Override
@@ -132,7 +146,8 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     for (Map.Entry<String, Node> entry : requires.entrySet()) {
       String require = entry.getKey();
       Node call = entry.getValue();
-      if (!usages.contains(require)) {
+      if (!usages.contains(require)
+          && (requiresToRemove == null || requiresToRemove.contains(require))) {
         reportExtraRequireWarning(call, require);
       }
     }

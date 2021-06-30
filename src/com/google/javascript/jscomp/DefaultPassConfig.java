@@ -1137,7 +1137,8 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
-          .setInternalFactory(CheckExtraRequires::new)
+          .setInternalFactory(
+              (compiler) -> new CheckExtraRequires(compiler, options.getUnusedImportsToRemove()))
           .build();
 
   private final PassFactory checkMissingRequires =

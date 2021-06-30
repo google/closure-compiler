@@ -54,7 +54,7 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckExtraRequires(compiler);
+    return new CheckExtraRequires(compiler, null);
   }
 
   @Test

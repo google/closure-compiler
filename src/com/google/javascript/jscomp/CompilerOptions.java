@@ -855,6 +855,12 @@ public class CompilerOptions implements Serializable {
   boolean assumeForwardDeclaredForMissingTypes = false;
 
   /**
+   * A Set of goog.requires to be removed. If null, ALL of the unused goog.requires will be counted
+   * as a candidate to be removed.
+   */
+  @Nullable ImmutableSet<String> unusedImportsToRemove;
+
+  /**
    * If {@code true}, considers all missing types to be forward declared (useful for partial
    * compilation).
    */
@@ -2580,6 +2586,15 @@ public class CompilerOptions implements Serializable {
     this.preventLibraryInjection = preventLibraryInjection;
   }
 
+  public void setUnusedImportsToRemove(@Nullable ImmutableSet<String> unusedImportsToRemove) {
+    this.unusedImportsToRemove = unusedImportsToRemove;
+  }
+
+  @Nullable
+  public ImmutableSet<String> getUnusedImportsToRemove() {
+    return this.unusedImportsToRemove;
+  }
+
   public void setInstrumentForCoverageOption(InstrumentOption instrumentForCoverageOption) {
     this.instrumentForCoverageOption = checkNotNull(instrumentForCoverageOption);
   }
@@ -2882,6 +2897,7 @@ public class CompilerOptions implements Serializable {
         .add("tweakProcessing", getTweakProcessing())
         .add("emitUseStrict", emitUseStrict)
         .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
+        .add("unusedImportsToRemove", unusedImportsToRemove)
         .add("variableRenaming", variableRenaming)
         .add("warningsGuard", getWarningsGuard())
         .add("wrapGoogModulesForWhitespaceOnly", wrapGoogModulesForWhitespaceOnly)
