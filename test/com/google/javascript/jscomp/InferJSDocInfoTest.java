@@ -679,6 +679,30 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Test
+  public void testJSDocIsPropagatedToClassField() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /**",
+                "   * I'm a field.",
+                "   * @const",
+                "   */",
+                "   field = 5;",
+                "}",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+
+    // Then
+    assertThat(xType.getPropertyJSDocInfo("field").getBlockDescription()).isEqualTo("I'm a field.");
+  }
+
+  @Test
   public void testJSDocIsNotPropagatedFromSuppressionsOnFieldProperties_Es5() {
     // Given
     testSame(

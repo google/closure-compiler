@@ -4740,7 +4740,9 @@ public final class NodeUtil {
   static boolean isConstantDeclaration(JSDocInfo info, Node node) {
     if (isObjectLitKey(node)
         || (node.getParent().isAssign() && node.isFirstChildOf(node.getParent()))
-        || (node.getParent().isExprResult() && isNormalGet(node))) {
+        || (node.getParent().isExprResult() && isNormalGet(node))
+        || node.isMemberFieldDef()
+        || node.isComputedFieldDef()) {
       return info != null && info.isConstant();
     }
     checkArgument(node.isName(), node);

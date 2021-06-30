@@ -161,6 +161,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
         {
           JSDocInfo typeDoc = n.getJSDocInfo();
           if (typeDoc == null) {

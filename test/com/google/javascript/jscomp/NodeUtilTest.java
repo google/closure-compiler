@@ -2646,6 +2646,21 @@ public final class NodeUtilTest {
       assertIsConstantDeclaration(false, getNameNodeFrom("var FOO = 1;", "FOO"));
 
       assertIsConstantDeclaration(true, constructInferredConstantDeclaration());
+
+      assertIsConstantDeclaration(
+          false, parse("class C {x = 2;}").getFirstChild().getLastChild().getFirstChild());
+      assertIsConstantDeclaration(
+          true,
+          parse("class C {/** @const */ x = 2;}").getFirstChild().getLastChild().getFirstChild());
+
+      assertIsConstantDeclaration(
+          false, parse("class C { [x] = 2;}").getFirstChild().getLastChild().getFirstChild());
+      assertIsConstantDeclaration(
+          true,
+          parse("class C { /** @const */ [x] = 2;}")
+              .getFirstChild()
+              .getLastChild()
+              .getFirstChild());
     }
 
     @Test

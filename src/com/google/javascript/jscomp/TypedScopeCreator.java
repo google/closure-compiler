@@ -3474,12 +3474,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     void defineMemberField(Node n) {
       ObjectType ownerType = determineOwnerTypeForClassMember(n);
-      JSType type;
-      if (n.getJSDocInfo() == null) {
-        type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      } else {
-        type = getDeclaredType(n.getJSDocInfo(), n, n.getFirstChild(), null);
-      }
+      JSType declaredType =
+          n.getJSDocInfo() != null
+              ? getDeclaredType(n.getJSDocInfo(), n, n.getFirstChild(), null)
+              : null;
+      JSType type = declaredType != null ? declaredType : getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
       if (ownerType.hasOwnProperty(n.getString())) {
         report(JSError.make(n, DUPLICATE_CLASS_FIELD, n.getString()));
       }

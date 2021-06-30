@@ -3296,6 +3296,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithDeprecatedField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @deprecated There is a madness to this method */",
+            "  a = 'hi';",
+            "}"));
+  }
+
+  @Test
+  public void testClassDeclarationWithDeprecatedComputedField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @deprecated There is a madness to this method */",
+            "  ['a'] = 'hi';",
+            "}"));
+  }
+
+  @Test
   public void testClassExpressionAssignment() {
     testSame("var Foo = class Bar {}");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
