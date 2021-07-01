@@ -2513,7 +2513,7 @@ google.maps.Geocoder = function() {};
  * Geocode a request.
  * @param {!google.maps.GeocoderRequest} request
  * @param {?(function(?Array<!google.maps.GeocoderResult>,
- *     !google.maps.GeocoderStatus): void)} callback
+ *     !google.maps.GeocoderStatus): void)=} callback
  * @return {!Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
@@ -4580,7 +4580,7 @@ google.maps.MapOptions.prototype.keyboardShortcuts;
  * The unique identifier that represents a single instance of a Google Map. You
  * can create Map IDs and update a style associated with a Map ID at any time in
  * the Google Cloud Console <a
- * href="https://console.cloud.google.com/google/maps-apis/client-maps">Maps
+ * href="https://console.cloud.google.com/google/maps-apis/studio/maps">Maps
  * Management page</a> without changing embedded JSON styling in your
  * application code.
  * @type {?string|undefined}
