@@ -1654,25 +1654,30 @@ class IRFactory {
       return node;
     }
 
+    private void markBinaryExpressionFeatures(BinaryOperatorTree exprNode) {
+      switch (exprNode.operator.type) {
+        case STAR_STAR:
+        case STAR_STAR_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+          break;
+        case QUESTION_QUESTION:
+          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+          break;
+        case QUESTION_QUESTION_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+          // fall through
+        case OR_EQUAL:
+        case AND_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
+          break;
+        default:
+          break;
+      }
+    }
+
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
       if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
-        switch (exprNode.operator.type) {
-          case STAR_STAR:
-          case STAR_STAR_EQUAL:
-            maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
-            break;
-          case QUESTION_QUESTION:
-            maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
-            break;
-          case OR_EQUAL:
-          case AND_EQUAL:
-          case QUESTION_QUESTION_EQUAL:
-            maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
-            maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
-            break;
-          default:
-            break;
-        }
+        markBinaryExpressionFeatures(exprNode);
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
@@ -1690,23 +1695,7 @@ class IRFactory {
       Node current = null;
       Node previous = null;
       while (exprTree != null) {
-        switch (exprTree.operator.type) {
-          case STAR_STAR:
-          case STAR_STAR_EQUAL:
-            maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
-            break;
-          case QUESTION_QUESTION:
-            maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
-            break;
-          case OR_EQUAL:
-          case AND_EQUAL:
-          case QUESTION_QUESTION_EQUAL:
-            maybeWarnForFeature(exprTree, Feature.LOGICAL_ASSIGNMENT);
-            maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
-            break;
-          default:
-            break;
-        }
+        markBinaryExpressionFeatures(exprTree);
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
         // deep and because we have already checked that there isn't any JSDoc we can traverse
