@@ -70,6 +70,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
+import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -485,6 +486,10 @@ public final class DefaultPassConfig extends PassConfig {
     assertValidOrderForChecks(checks);
 
     checks.add(createEmptyPass(PassNames.BEFORE_SERIALIZATION));
+
+    if (options.getTypedAstOutputFile() != null) {
+      checks.add(serializeTypedAst);
+    }
 
     return checks;
   }
@@ -2733,6 +2738,16 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new ConvertTypesToColors(compiler, SerializationOptions.SKIP_DEBUG_INFO))
           .setFeatureSetForOptimizations()
+          .build();
+
+  /** Emit a TypedAST into of the current compilation. */
+  private final PassFactory serializeTypedAst =
+      PassFactory.builder()
+          .setName("serializeTypedAst")
+          .setInternalFactory(
+              (compiler) ->
+                  SerializeTypedAstPass.createFromPath(compiler, options.getTypedAstOutputFile()))
+          .setFeatureSetForChecks()
           .build();
 
   /** Optimizations that output ES2015 features. */

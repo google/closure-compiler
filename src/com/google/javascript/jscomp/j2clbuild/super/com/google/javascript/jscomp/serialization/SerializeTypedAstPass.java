@@ -28,6 +28,10 @@ public final class SerializeTypedAstPass implements CompilerPass {
     throw new RuntimeException("Serialization not yet supported in JS version of compiler");
   }
 
+  public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
+    throw new RuntimeException("Serialization not yet supported in JS version of compiler");
+  }
+
   @Override
   public void process(Node externs, Node root) {}
 }
