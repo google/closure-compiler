@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
                 new PeepholeMinimizeConditions(true /* late */),
                 new PeepholeFoldConstants(true, false /* useTypes */))
             .process(externs, js);
-        new Denormalize(compiler).process(externs, js);
+        new Denormalize(compiler, FeatureSet.BARE_MINIMUM).process(externs, js);
       }
     };
   }

@@ -2455,7 +2455,8 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory denormalize =
       PassFactory.builder()
           .setName("denormalize")
-          .setInternalFactory(Denormalize::new)
+          .setInternalFactory(
+              (compiler) -> new Denormalize(compiler, options.getOutputFeatureSet()))
           .setFeatureSetForOptimizations()
           .build();
 

@@ -1891,56 +1891,6 @@ public final class NodeUtil {
     throw new IllegalArgumentException("Not an assignment op:" + n);
   }
 
-  static Token getAssignOpFromOp(Node n) {
-    switch (n.getToken()) {
-      case BITOR:
-        return Token.ASSIGN_BITOR;
-      case BITXOR:
-        return Token.ASSIGN_BITXOR;
-      case BITAND:
-        return Token.ASSIGN_BITAND;
-      case LSH:
-        return Token.ASSIGN_LSH;
-      case RSH:
-        return Token.ASSIGN_RSH;
-      case URSH:
-        return Token.ASSIGN_URSH;
-      case ADD:
-        return Token.ASSIGN_ADD;
-      case SUB:
-        return Token.ASSIGN_SUB;
-      case MUL:
-        return Token.ASSIGN_MUL;
-      case EXPONENT:
-        return Token.ASSIGN_EXPONENT;
-      case DIV:
-        return Token.ASSIGN_DIV;
-      case MOD:
-        return Token.ASSIGN_MOD;
-      default:
-        throw new IllegalStateException("Unexpected operator: " + n);
-    }
-  }
-
-  static boolean hasCorrespondingAssignmentOp(Node n) {
-    switch (n.getToken()) {
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case LSH:
-      case RSH:
-      case URSH:
-      case ADD:
-      case SUB:
-      case MUL:
-      case DIV:
-      case MOD:
-        return true;
-      default:
-        return false;
-    }
-  }
-
   /** Gets the closest ancestor to the given node of the provided type. */
   public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(n, n1 -> n1.getToken() == type);
