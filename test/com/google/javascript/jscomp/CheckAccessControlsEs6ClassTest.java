@@ -2927,6 +2927,22 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstantProperty1aLogicalAssignment() {
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  constructor() {",
+                "    /** @const */",
+                "    this.bar = null;",
+                "",
+                "    this.bar ??= 4;",
+                "  }",
+                "}")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE));
+  }
+
+  @Test
   public void testConstantPropertyReassigned_crossModuleWithCollidingNames() {
     disableRewriteClosureCode();
     testNoWarning(
@@ -2965,6 +2981,20 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "    this.BAR = 3;",
                 "",
                 "    this.BAR += 4;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testConstantProperty_conventionNotEnforced1LogicalAssignment() {
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  constructor() {",
+                "    this.BAR = null;",
+                "",
+                "    this.BAR ??= 4;",
                 "  }",
                 "}")));
   }
