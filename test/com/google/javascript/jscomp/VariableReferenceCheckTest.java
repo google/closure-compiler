@@ -261,6 +261,13 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCorrectEarlyReferenceLogicalAssignment() {
+    assertNoWarning("function f() { a ||= {}; } let a;");
+    assertNoWarning("function f() { a &&= {}; } let a;");
+    assertNoWarning("function f() { a ??= {}; } let a;");
+  }
+
+  @Test
   public void testCorrectEarlyReference_withES6Modules() {
     assertNoWarning("export function f() { a = 2; } var a = 2;");
   }
@@ -684,6 +691,13 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testReassignedConst() {
     assertReassign("const a = 0; a = 1;");
     assertReassign("const a = 0; a++;");
+  }
+
+  @Test
+  public void testLogicalReassignedConst() {
+    assertReassign("const a = 0; a ||= 1;");
+    assertReassign("const a = 1; a &&= 1;");
+    assertReassign("const a = null; a ??= 1;");
   }
 
   @Test
