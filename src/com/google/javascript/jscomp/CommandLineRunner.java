@@ -576,6 +576,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean debug = false;
 
     @Option(
+        name = "--typed_ast_output_file__INTENRNAL_USE_ONLY",
+        usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
+        hidden = true)
+    private String typedAstOutputFile = null;
+
+    @Option(
         name = "--generate_exports",
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for those marked with @export")
@@ -1845,6 +1851,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       level.setWrappedOutputOptimizations(options);
     }
 
+    if (flags.typedAstOutputFile != null) {
+      options.setTypedAstOutputFile(Paths.get(flags.typedAstOutputFile));
+    }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
 
