@@ -2347,7 +2347,7 @@ public abstract class CompilerTestCase {
       return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
     }
 
-    protected Diagnostic withMessage(final String expected) {
+    public Diagnostic withMessage(final String expected) {
       checkState(messagePredicate == null);
       return new Diagnostic(
           level, diagnostic, NamedPredicate.of(expected::equals, "\"" + expected + "\""));

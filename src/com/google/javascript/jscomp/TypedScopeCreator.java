@@ -805,7 +805,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       switch (moduleType) {
         case LEGACY_GOOG_MODULE:
         case GOOG_MODULE:
-          declareExportsInModuleScope(this.getModule());
+          declareExportsInGoogModuleScope(this.getModule(), moduleBody);
           markGoogModuleExportsAsConst(moduleBody);
           break;
         case ES6_MODULE:
@@ -832,11 +832,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * the scope as if it were a declaration: `const exports = ...`. This method only handles cases
      * where we want to treat exports as implicitly declared.
      */
-    private void declareExportsInModuleScope(Module googModule) {
-      if (googModule.namespace().containsKey(Export.NAMESPACE)) {
-        // The goog.module explicitly assigns `exports`. Defer declaration until reaching that
-        // assignment.
-        return;
+    private void declareExportsInGoogModuleScope(Module googModule, Node moduleBody) {
+      for (Node statement = moduleBody.getFirstChild();
+          statement != null;
+          statement = statement.getNext()) {
+        if (!NodeUtil.isExprAssign(statement)) {
+          continue;
+        }
+        Node lhs = statement.getFirstFirstChild();
+        if (lhs.matchesName("exports")) {
+          return; // found a direct assignment `exports = [...]`
+        }
       }
       Node root = googModule.metadata().rootNode();
       // Synthesize an object literal namespace 'exports'
