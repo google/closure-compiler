@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -546,9 +545,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     LinkedHashMap<SourceFile, JsAst> typedAstFilesystem = new LinkedHashMap<>();
     ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
 
-    ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers = new ArrayList<>();
-    filePoolBuilder.put(SYNTHETIC_EXTERNS_FILE.getName(), SYNTHETIC_EXTERNS_FILE);
-
     for (TypedAst typedAstProto : typedAstProtos) {
       ArrayList<SourceFile> fileShard = new ArrayList<>();
       for (SourceFileProto p : typedAstProto.getSourceFilePool().getSourceFileList()) {
@@ -567,31 +563,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       for (AstNode scriptProto :
           Iterables.concat(typedAstProto.getExternFileList(), typedAstProto.getCodeFileList())) {
         SourceFile file = fileShard.get(scriptProto.getSourceFile() - 1);
-        ScriptNodeDeserializer deserializer =
-            new ScriptNodeDeserializer(
-                scriptProto, stringShard, colorShard, ImmutableList.copyOf(fileShard));
-
-        if (identical(SYNTHETIC_EXTERNS_FILE, file)) {
-          syntheticExternsDeserializers.add(deserializer);
-        } else {
-          typedAstFilesystem.computeIfAbsent(
-              file, (f) -> new JsAst(file, deserializer::deserializeNew));
-        }
+        typedAstFilesystem.computeIfAbsent(
+            file,
+            (f) -> {
+              ScriptNodeDeserializer deserializer =
+                  new ScriptNodeDeserializer(
+                      scriptProto, stringShard, colorShard, ImmutableList.copyOf(fileShard));
+              return new JsAst(file, deserializer::deserializeNew);
+            });
       }
     }
-
-    typedAstFilesystem.put(
-        SYNTHETIC_EXTERNS_FILE,
-        new JsAst(
-            SYNTHETIC_EXTERNS_FILE,
-            () -> {
-              Node script = IR.script();
-              script.setStaticSourceFile(SYNTHETIC_EXTERNS_FILE);
-              for (ScriptNodeDeserializer d : syntheticExternsDeserializers) {
-                script.addChildrenToBack(d.deserializeNew().removeChildren());
-              }
-              return script;
-            }));
 
     this.externProperties = externProperties.build();
     this.setColorRegistry(colorPoolBuilder.build().getRegistry());
@@ -750,10 +731,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     jsRoot = IR.root();
     externsRoot = IR.root();
     externAndJsRoot = IR.root(externsRoot, jsRoot);
-
-    if (this.typedAstFilesystem != null) {
-      this.getSynthesizedExternsInput(); // Force lazy creation.
-    }
   }
 
   /** Compiles a single source file and a single externs file. */
@@ -2558,8 +2535,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private final Map<Class<?>, IndexProvider<?>> indexProvidersByType = new LinkedHashMap<>();
 
   private static final InputId SYNTHETIC_EXTERNS_INPUT_ID = new InputId(" [synthetic:externs] ");
-  private static final SourceFile SYNTHETIC_EXTERNS_FILE =
-      SourceFile.fromCode(SYNTHETIC_EXTERNS_INPUT_ID.getIdName(), "");
   private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
 
   @Override
@@ -3223,21 +3198,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   CompilerInput getSynthesizedExternsInput() {
     CompilerInput input = this.inputsById.get(SYNTHETIC_EXTERNS_INPUT_ID);
-    if (input != null) {
-      return input;
+    if (input == null) {
+      JsAst ast = new JsAst(SourceFile.fromCode(SYNTHETIC_EXTERNS_INPUT_ID.getIdName(), ""));
+      input = new CompilerInput(ast, true);
+      Node root = checkNotNull(ast.getAstRoot(this));
+      putCompilerInput(SYNTHETIC_EXTERNS_INPUT_ID, input);
+      externsRoot.addChildToFront(root);
+      externs.add(0, input);
+      scriptNodeByFilename.put(input.getSourceFile().getName(), root);
     }
-
-    JsAst ast =
-        (this.typedAstFilesystem == null)
-            ? new JsAst(SYNTHETIC_EXTERNS_FILE)
-            : this.typedAstFilesystem.get(SYNTHETIC_EXTERNS_FILE);
-    input = new CompilerInput(ast, true);
-    Node root = checkNotNull(ast.getAstRoot(this));
-    putCompilerInput(SYNTHETIC_EXTERNS_INPUT_ID, input);
-    externsRoot.addChildToFront(root);
-    externs.add(0, input);
-    scriptNodeByFilename.put(input.getSourceFile().getName(), root);
-
     return input;
   }
 
