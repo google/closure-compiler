@@ -1153,6 +1153,11 @@ public class Node {
         sb.append(x);
         sb.append(']');
       }
+      if (this.originalName != null) {
+        sb.append(" [original_name: ");
+        sb.append(this.originalName);
+        sb.append(']');
+      }
     }
 
     if (printType && jstypeOrColor != null) {
