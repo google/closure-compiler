@@ -353,12 +353,7 @@ class ScopedAliases implements CompilerPass {
       if (replacement.hasChildren()) {
         replacement.getFirstChild().makeNonIndexableRecursive();
       }
-      if (aliasReference.isStringKey()) {
-        checkState(!aliasReference.hasChildren());
-        aliasReference.addChildToFront(replacement);
-      } else {
-        aliasReference.replaceWith(replacement);
-      }
+      aliasReference.replaceWith(replacement);
       compiler.reportChangeToEnclosingScope(replacement);
     }
   }
