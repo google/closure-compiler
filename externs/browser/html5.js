@@ -903,6 +903,12 @@ function CanvasRenderingContext2D() {}
 CanvasRenderingContext2D.prototype.canvas;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter
+ */
+CanvasRenderingContext2D.prototype.filter;
+
+/**
  * @constructor
  * @extends {BaseRenderingContext2D}
  * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
