@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -390,46 +392,102 @@ public final class SymbolTable {
     }
   }
 
+  /**
+   * Methods returns debug representation of the SymbolTable. It starts with the global scope and
+   * all its symbols recursively going to children scopes and printing their symbols.
+   */
   @SuppressWarnings("unused")
-  public String toDebugString() {
+  public String toDebugStringTree() {
+    // We are recursively going through scopes from global to nested and need to build parent =>
+    // children map as it doesn't exist at the moment.
+    ImmutableListMultimap.Builder<SymbolScope, SymbolScope> childrenScopesBuilder =
+        ImmutableListMultimap.builder();
+    for (SymbolScope scope : getAllScopes()) {
+      if (scope.getParentScope() != null) {
+        childrenScopesBuilder.put(scope.getParentScope(), scope);
+      }
+    }
+    ImmutableListMultimap<SymbolScope, SymbolScope> childrenScopes = childrenScopesBuilder.build();
     StringBuilder builder = new StringBuilder();
+    // Go through all scopes that don't have parent. It's likely only Global scope.
+    for (SymbolScope scope : getAllScopes()) {
+      if (scope.getParentScope() == null) {
+        toDebugStringTree(builder, "", scope, childrenScopes);
+      }
+    }
+
+    // All objects/classes have property scopes. They usually don't have parents. These scopes
+    // confusingly are not included in "getAllScopes()" pass above.
+    HashSet<SymbolScope> visitedPropertyScopes = new HashSet<>();
     for (Symbol symbol : getAllSymbols()) {
-      toDebugString(builder, symbol);
+      if (symbol.propertyScope == null || visitedPropertyScopes.contains(symbol.propertyScope)) {
+        continue;
+      }
+      visitedPropertyScopes.add(symbol.getPropertyScope());
+      toDebugStringTree(builder, "", symbol.propertyScope, childrenScopes);
     }
     return builder.toString();
   }
 
-  private void toDebugString(StringBuilder builder, Symbol symbol) {
-    SymbolScope scope = symbol.scope;
-    if (scope.isGlobalScope()) {
-      builder.append(SimpleFormat.format("'%s' : in global scope:\n", symbol.getName()));
-    } else if (scope.getRootNode() != null) {
-      builder.append(
-          SimpleFormat.format(
-              "'%s' : in scope %s:%d\n",
-              symbol.getName(),
-              scope.getRootNode().getSourceFileName(),
-              scope.getRootNode().getLineno()));
-    } else if (scope.getSymbolForScope() != null) {
-      builder.append(
-          SimpleFormat.format(
-              "'%s' : in scope %s\n", symbol.getName(), scope.getSymbolForScope().getName()));
-    } else {
-      builder.append(SimpleFormat.format("'%s' : in unknown scope\n", symbol.getName()));
+  private void toDebugStringTree(
+      StringBuilder builder,
+      String prefix,
+      SymbolScope scope,
+      ImmutableListMultimap<SymbolScope, SymbolScope> childrenScopes) {
+    builder.append(prefix).append(scope);
+    String childrenPrefix = prefix + "    ";
+    boolean printedSomething = false;
+    if (!scope.ownSymbols.isEmpty()) {
+      printedSomething = true;
+      builder.append('\n').append(prefix).append("  Symbols:\n");
+      for (Symbol symbol : scope.ownSymbols.values()) {
+        toDebugString(builder, childrenPrefix, symbol, /* printScope= */ false);
+      }
     }
+    if (childrenScopes.containsKey(scope)) {
+      printedSomething = true;
+      builder.append('\n').append(prefix).append("  Scopes:\n");
+      for (SymbolScope childScope : childrenScopes.get(scope)) {
+        toDebugStringTree(builder, childrenPrefix, childScope, childrenScopes);
+      }
+    }
+    if (!printedSomething) {
+      builder.append('\n');
+    }
+    builder.append('\n');
+  }
+
+  @SuppressWarnings("unused")
+  public String toDebugString() {
+    StringBuilder builder = new StringBuilder();
+    for (Symbol symbol : getAllSymbols()) {
+      toDebugString(builder, "", symbol, /* printScope= */ true);
+    }
+    return builder.toString();
+  }
+
+  private void toDebugString(
+      StringBuilder builder, String prefix, Symbol symbol, boolean printScope) {
+    builder.append(prefix).append("'").append(symbol.getName()).append("'");
+    if (printScope) {
+      builder.append(" in ").append(symbol.scope);
+    }
+    builder.append('\n');
 
     int refCount = 0;
     for (Reference ref : getReferences(symbol)) {
       Node node = ref.getNode();
-      builder.append(
-          SimpleFormat.format(
-              "  Ref %d: %s line: %d col: %d len: %d %s\n",
-              refCount,
-              node.getSourceFileName(),
-              node.getLineno(),
-              node.getCharno(),
-              node.getLength(),
-              node.isIndexable() ? "" : "non indexable"));
+      builder
+          .append(prefix)
+          .append(
+              SimpleFormat.format(
+                  "  Ref %d: %s line: %d col: %d len: %d %s\n",
+                  refCount,
+                  node.getSourceFileName(),
+                  node.getLineno(),
+                  node.getCharno(),
+                  node.getLength(),
+                  node.isIndexable() ? "" : "non indexable"));
       refCount++;
     }
   }
@@ -1572,6 +1630,10 @@ public final class SymbolTable {
       return getParentScope() == null && getRootNode() != null;
     }
 
+    public boolean isModuleScope() {
+      return getRootNode() != null && getRootNode().isModuleBody();
+    }
+
     /**
      * Returns whether this is a doc scope. A doc scope is a table for symbols that are documented
      * solely within a JSDoc comment.
@@ -1603,8 +1665,18 @@ public final class SymbolTable {
     @Override
     public String toString() {
       Node n = getRootNode();
-      if (n != null) {
-        return "Scope@" + n.getSourceFileName() + ":" + n.getLineno();
+      if (isGlobalScope()) {
+        return "GlobalScope";
+      } else if (n != null) {
+        String type = "Scope";
+        if (isModuleScope()) {
+          type = "ModuleScope";
+        } else if (isBlockScope()) {
+          type = "BlockScope";
+        } else if (isLexicalScope()) {
+          type = "LexicalScope";
+        }
+        return type + "@" + n.getSourceFileName() + ":" + n.getLineno();
       } else {
         return "PropertyScope@" + getSymbolForScope();
       }
