@@ -1010,7 +1010,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidSuppress() {
+  public void testMisplacedSuppress() {
     testSame("/** @suppress {missingRequire} */ var x = new y.Z();");
     testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
     testSame("/** @suppress {missingRequire} */ var f = function() { var x = new y.Z(); }");
@@ -1088,6 +1088,40 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/** @suppress {visibility} */ a.x_ += 0;");
     testSame("/** @suppress {visibility} */ a.x_ *= 0;");
     testSame("/** @suppress {visibility} */ a.x_ /= 0;");
+  }
+
+  @Test
+  public void testClassFieldSuppressed() {
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  x = 2;",
+            "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  static x = 2",
+            "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['x'] = 2",
+            "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  static ['x'] = 2",
+            "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @type {string}  */",
+            "   x = 2",
+            "}"));
   }
 
   @Test
@@ -1175,5 +1209,30 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Test
   public void testLocaleFileNotOnScriptIsNotAllowed() {
     testWarning("/** @fileoverview */ /** @localeFile */ var x;", MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testConstructorFieldError_withTypeAnnotation() {
+    testSame("class C { /** @constructor */ x = function() {}; }");
+  }
+
+  @Test
+  public void testPublicClassField_allowsTypeAnnotation() {
+    testSame("class C { /** @type {number} */ x = 2; }");
+  }
+
+  @Test
+  public void testPublicClassComputedField_allowsTypeAnnotation() {
+    testSame("class C { /** @type {number} */ [x] = 2; }");
+  }
+
+  @Test
+  public void testPublicClassField_typeDefError() {
+    testWarning("class C { /** @typedef {number} */ x = 2;}", MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testPublicClassComputedField_typeDefError() {
+    testWarning("class C { /** @typedef {number} */ [x] = 2;}", MISPLACED_ANNOTATION);
   }
 }

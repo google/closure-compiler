@@ -179,6 +179,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         // Suppressions are always valid here.
         return;
 
@@ -485,6 +487,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       case STRING_KEY:
       case COMPUTED_PROP:
       case EXPORT:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         return true;
       case GETELEM:
       case GETPROP:
@@ -594,6 +598,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
+        case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
           valid = true;
           break;
         // Declarations are valid iff they only contain simple names
