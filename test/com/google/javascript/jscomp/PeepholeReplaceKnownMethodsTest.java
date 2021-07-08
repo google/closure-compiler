@@ -208,8 +208,18 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldStringReplace() {
-    // TODO(johnlenz): support folding this case
-    foldSame("x = 'acaca'.replace('c','x')");
+    fold("'c'.replace('c','x')", "'x'");
+    fold("'ac'.replace('c','x')", "'ax'");
+    fold("'ca'.replace('c','x')", "'xa'");
+    fold("'ac'.replace('c','xxx')", "'axxx'");
+    fold("'ca'.replace('c','xxx')", "'xxxa'");
+
+    // only one instance replaced
+    fold("'acaca'.replace('c','x')", "'axaca'");
+    fold("'ab'.replace('','x')", "'xab'");
+
+    foldSame("'acaca'.replace(/c/,'x')"); // this will affect the global RegExp props
+    foldSame("'acaca'.replace(/c/g,'x')"); // this will affect the global RegExp props
 
     // not a literal
     foldSame("x.replace('x','c')");
@@ -218,7 +228,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("'PreXyzPost'.replace('Xyz', '$&')"); // would fold to 'PreXyzPost'
     foldSame("'PreXyzPost'.replace('Xyz', '$`')"); // would fold to 'PrePrePost'
     foldSame("'PreXyzPost'.replace('Xyz', '$\\'')"); // would fold to  'PrePostPost'
-    foldSame("'PreXyzPostXyz'.replace('Xyz', '$\\'')"); // would fold to 'PrePostXyzPost'
+    foldSame("'PreXyzPostXyz'.replace('Xyz', '$\\'')"); // would fold to 'PrePostXyzPostXyz'
     foldSame("'123'.replace('2', '$`')"); // would fold to '113'
   }
 
@@ -227,8 +237,12 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'abcde'.replaceAll('bcd','c')", "x = 'ace'");
     fold("x = 'abcde'.replaceAll('c','xxx')", "x = 'abxxxde'");
     fold("x = 'abcde'.replaceAll('xxx','c')", "x = 'abcde'");
+    fold("'ab'.replaceAll('','x')", "'xaxbx'");
 
     fold("x = 'c_c_c'.replaceAll('c','x')", "x = 'x_x_x'");
+
+    foldSame("x = 'acaca'.replaceAll(/c/,'x')"); // this should throw
+    foldSame("x = 'acaca'.replaceAll(/c/g,'x')"); // this will affect the global RegExp props
 
     // not a literal
     foldSame("x.replaceAll('x','c')");

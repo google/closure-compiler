@@ -275,6 +275,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               return tryFoldStringCharAt(subtree, stringNode, firstArg);
             case "charCodeAt":
               return tryFoldStringCharCodeAt(subtree, stringNode, firstArg);
+            case "replace":
+              return tryFoldStringReplace(subtree, stringNode, firstArg);
             case "replaceAll":
               return tryFoldStringReplaceAll(subtree, stringNode, firstArg);
             default: // fall out
@@ -861,7 +863,51 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     return resultNode;
   }
 
-  /** Try to fold .charAt() calls on strings */
+  /** Try to fold .replace() calls on strings */
+  private Node tryFoldStringReplace(Node n, Node stringNode, Node arg1) {
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isStringLit());
+
+    Node arg2 = arg1.getNext();
+    if (arg2 == null || arg2.getNext() != null) {
+      // too few or too many parameters
+      return n;
+    }
+
+    if (!arg1.isStringLit() || !arg2.isStringLit()) {
+      // only string literals are supported for folding.
+      return n;
+    }
+
+    String lookForPattern = arg1.getString();
+    String replacementPattern = arg2.getString();
+    if (replacementPattern.contains("$")) {
+      // 'special' replacements aren't supported yet.
+      return n;
+    }
+
+    String original = stringNode.getString();
+
+    int index = original.indexOf(lookForPattern);
+    if (index == -1) {
+      return n;
+    }
+
+    // Java "replace" acts like JavaScript's "replaceAll" here we only want to replace the first
+    // instance of the string
+    String newString =
+        original.substring(0, index)
+            + replacementPattern
+            + original.substring(index + lookForPattern.length());
+
+    Node resultNode = IR.string(newString).srcref(stringNode);
+    Node parent = n.getParent();
+    n.replaceWith(resultNode);
+    reportChangeToEnclosingScope(parent);
+    return resultNode;
+  }
+
+  /** Try to fold .replaceAll() calls on strings */
   private Node tryFoldStringReplaceAll(Node n, Node stringNode, Node arg1) {
     checkArgument(n.isCall());
     checkArgument(stringNode.isStringLit());
@@ -885,7 +931,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     // Java "replace" acts like JavaScript's "replaceAll" and replaces all occurrences.
     String original = stringNode.getString();
-    String newString = original.replace(arg1.getString(), arg2.getString());
+    String newString = original.replace(arg1.getString(), replacementPattern);
 
     Node resultNode = IR.string(newString).srcref(stringNode);
     Node parent = n.getParent();
