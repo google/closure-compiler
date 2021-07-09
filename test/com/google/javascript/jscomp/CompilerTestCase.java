@@ -1317,7 +1317,7 @@ public abstract class CompilerTestCase {
     test(srcs(js), expected(expected));
   }
 
-  private static List<SourceFile> createSources(String name, String... sources) {
+  protected static List<SourceFile> createSources(String name, String... sources) {
     if (sources == null) {
       return null;
     }
