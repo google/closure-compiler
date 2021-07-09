@@ -505,10 +505,10 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     compiler.beforePass(this.getName());
     getProcessor(compiler).process(externs, root);
 
-    Node syntheticExternsAtEnd = externs.getLastChild();
-    assertThat(syntheticExternsAtEnd).isNotNull();
-    assertThat(syntheticExternsAtEnd.isScript()).isTrue();
-    Node injectedAlias = syntheticExternsAtEnd.getFirstChild();
+    Node syntheticExterns = externs.getFirstChild();
+    assertThat(syntheticExterns).isNotNull();
+    assertThat(syntheticExterns.isScript()).isTrue();
+    Node injectedAlias = syntheticExterns.getFirstChild();
     assertThat(injectedAlias).isNotNull();
     assertThat(injectedAlias.isFunction()).isTrue();
     assertThat(injectedAlias.getFirstChild().isName()).isTrue();

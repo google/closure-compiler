@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.DYNAMIC_IMPORT_CALLBACK_FN;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.ModuleRenaming.GlobalizedModuleName;
@@ -37,6 +38,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
+import java.util.Iterator;
 import javax.annotation.Nullable;
 
 /**
@@ -401,7 +403,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
           registry.createTemplatizedType(promiseType.toObjectType(), ImmutableList.of(unknownType));
       JSType stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
 
-      Node externsRoot = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+      Node externsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
       // "import" is not a valid JS name and will not parse. However we can manually create it
       // and inject it into the externs.
       if (alias.equals("import") || NodeUtil.isValidSimpleName(alias)) {
@@ -429,12 +431,15 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
         externsRoot.addChildToBack(aliasRootNode);
 
         // Define the rest of the parts of the name
-        String[] aliasNameParts = alias.split("\\.");
-        for (int i = 1; i < aliasNameParts.length; i++) {
-          aliasRootName = aliasRootName + "." + aliasNameParts[i];
+        Iterator<String> aliasNameParts = Splitter.on(".").split(alias).iterator();
+        if (aliasNameParts.hasNext()) {
+          aliasRootName = aliasNameParts.next();
+        }
+        while (aliasNameParts.hasNext()) {
+          aliasRootName = aliasRootName + "." + aliasNameParts.next();
           Node qName = astFactory.createQName(t.getScope(), aliasRootName);
           Node assignedValue;
-          if (i == aliasNameParts.length - 1) {
+          if (!aliasNameParts.hasNext()) {
             assignedValue =
                 astFactory.createFunction(
                     "",
