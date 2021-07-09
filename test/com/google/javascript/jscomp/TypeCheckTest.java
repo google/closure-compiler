@@ -23051,6 +23051,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("class B { x; }");
     testTypes("class C { x }");
     testTypes("class D { /** @type {string|undefined} */ x;}");
+    testTypes("class E { /** @type {string} @suppress {checkTypes} */ x = 2; }");
   }
 
   @Test
@@ -23059,6 +23060,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("class B { static x; }");
     testTypes("class C { static x }");
     testTypes("class D { static /** @type {string|undefined} */ x;}");
+    testTypes("class E { /** @type {string} @suppress {checkTypes} */ static x = 2; }");
   }
 
   @Test
@@ -23211,10 +23213,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("/** @dict */ class C { [x]=2; }");
     testTypes("/** @dict */ class C { 'x' = 2; }");
     testTypes("/** @dict */ class C { 1 = 2; }");
-
-    testTypes("/** @unrestricted */ class C { [x]=2; }");
+    testTypes(
+        lines(
+            "/** @param {number} x */ function takesNum(x) {}",
+            "/** @dict */",
+            "class C {",
+            "  /** @type {string} @suppress {checkTypes} */",
+            "  [takesNum('string')] = 2;",
+            "}"));
+    testTypes("/** @unrestricted */ class C { [x] = 2; }");
     testTypes("/** @unrestricted */ class C { 'x' = 2; }");
     testTypes("/** @unrestricted */ class C { 1 = 2; }");
+    testTypes(
+        lines("/** @unrestricted */", "class C {", "  /** @type {string} */", "  [x] = 2;", "}"));
   }
 
   @Test
@@ -23222,10 +23233,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("/** @dict */ class C { static [x]=2; }");
     testTypes("/** @dict */ class C { static 'x' = 2; }");
     testTypes("/** @dict */ class C { static 1 = 2; }");
+    testTypes(
+        lines("/** @dict */", "class C {", "  /** @type {string}*/", "  static [x] = 2;", "}"));
 
     testTypes("/** @unrestricted */ class C { static [x]=2; }");
     testTypes("/** @unrestricted */ class C { static 'x' = 2; }");
     testTypes("/** @unrestricted */ class C { static 1 = 2; }");
+    testTypes(
+        lines(
+            "/** @unrestricted */",
+            "class C {",
+            "  /** @type {string} */",
+            "  static [x] = 2;",
+            "}"));
   }
 
   @Test
