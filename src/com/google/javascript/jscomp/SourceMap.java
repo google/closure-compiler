@@ -158,20 +158,10 @@ public final class SourceMap {
       Node node,
       FilePosition outputStartPosition,
       FilePosition outputEndPosition) {
-    Node parent = node.getParent();
-    StaticSourceFile sourceFile = node.getStaticSourceFile();
-
-    // TODO(b/179517798): Delete this impossible case.
-    if (node.isStringLit()
-        && parent != null
-        && NodeUtil.isNormalOrOptChainGetProp(parent)
-        && node.isSecondChildOf(parent)) {
-      return; // Don't map STRINGs if they are GETPROP STRINGs
-    }
-
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient
     // information for a mapping to be useful.
+    StaticSourceFile sourceFile = node.getStaticSourceFile();
     if (sourceFile == null || node.getLineno() < 0) {
       return;
     }
