@@ -180,7 +180,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
      * code. The earlier duplicates are the ones that should be removed.
      */
     for (Node key = n.getLastChild(); key != null; key = key.getPrevious()) {
-      if (key.isEmpty() || key.isComputedProp() || key.isSpread()) {
+      if (key.isEmpty() || key.isComputedProp() || key.isSpread() || key.isComputedFieldDef()) {
         continue;
       }
 

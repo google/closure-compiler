@@ -25,8 +25,8 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -43,34 +43,82 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setChecksOnly(true);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     return options;
   }
 
   @Test
-  @Ignore("TODO(b/189993301): re-enable this test in next CL. right now it gives error.")
   public void publicClassFields_supportedInChecksOnlyMode() {
     CompilerOptions options = createCompilerOptions();
-    options.setChecksOnly(true);
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    testNoWarnings(
+        options,
+        lines(
+            "class MyClass {", //
+            "  /** @type {number} */",
+            "  x = 2;",
+            "  y;",
+            "}",
+            "console.log(new MyClass().x);"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInChecksOnlyMode2() {
+    CompilerOptions options = createCompilerOptions();
+
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    testNoWarnings(
+        options,
+        lines(
+            "class MyClass {", //
+            "  x = '';",
+            "  y;",
+            "}",
+            "console.log(new MyClass().x);"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInChecksOnlyMode3() {
+    CompilerOptions options = createCompilerOptions();
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "class MyClass {", //
+              "  /** @type {string} */",
+              "  x = 2;",
+              "}")
+        },
+        /* compiled= */ null,
+        new DiagnosticGroup[] {DiagnosticGroups.CHECK_TYPES});
+  }
+
+  @Test
+  public void publicClassFields_cannotBeOutputYet() {
+    CompilerOptions options = createCompilerOptions();
+    options.setChecksOnly(false);
 
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     test(
         options,
-        lines(
-            "class MyClass {", //
-            "  /** @type {string} */",
-            "  x = '';",
-            "  y;",
-            "}",
-            "console.log(new MyClass().x);"),
-        // TODO(b/189993301): the compiler should allow this @type annotation
-        DiagnosticGroups.MISPLACED_TYPE_ANNOTATION);
+        new String[] {
+          lines(
+              "class MyClass {", //
+              "  /** @type {string} */",
+              "  x = '';",
+              "  y;",
+              "}",
+              "console.log(new MyClass().x);")
+        },
+        /* compiled= */ null,
+        new DiagnosticGroup[] {DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS});
   }
 
   @Test
-  @Ignore("TODO(b/189993301): re-enable this test in next CL. right now it gives error.")
   public void computedPublicClassFields_supportedInChecksOnlyMode() {
     CompilerOptions options = createCompilerOptions();
-    options.setChecksOnly(true);
 
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     testNoWarnings(
@@ -80,33 +128,71 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "class MyClass {",
             "  [3 + 4] = 5;",
             "  [6];",
+            "  'x' = 2;",
             "}",
             "console.log(new MyClass()[6]);"));
   }
 
   @Test
-  @Ignore("TODO(b/189993301): re-enable this test in next CL. right now it gives error.")
-  public void publicClassFields_cannotBeOutputYet() {
+  public void computedPublicClassFields_supportedInChecksOnlyMode2() {
     CompilerOptions options = createCompilerOptions();
 
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    testNoWarnings(
+        options,
+        lines(
+            "/** @dict */", //
+            "class MyClass {",
+            "  ['x'] = 5;",
+            "}",
+            "console.log(new MyClass()['x']);"));
+  }
+
+  // deprecated warnings aren't given on computed fields:
+  // users should be careful about tags on computed fields
+  @Test
+  public void computedPublicClassFields_supportedInChecksOnlyMode3() {
+    CompilerOptions options = createCompilerOptions();
+
+    testNoWarnings(
+        options,
+        lines(
+            "/** @unrestricted */", //
+            "class MyClass {",
+            "  /** @deprecated */",
+            "  ['x'] = 5;",
+            "  baz() { return this['x']; }",
+            "}"));
+  }
+
+  @Test
+  public void computedPublicClassFields_supportedInChecksOnlyMode4() {
+    CompilerOptions options = createCompilerOptions();
+    // test will give JSC_ILLEGAL_PROPERTY_ACCESS error because @dict or @restricted is missing
     test(
         options,
         new String[] {
-          lines(
-              "/** @unrestricted */", //
-              "class MyClass {",
-              "  /** @type {string} */",
-              "  x = '';",
-              "  y;",
-              "}",
-              "console.log(new MyClass().x);")
+          lines("class MyClass {", "  [3 + 4] = 5;", "}"),
         },
         /* compiled= */ null,
-        new DiagnosticGroup[] {
-          // TODO(b/189993301): the compiler should allow this @type annotation
-          DiagnosticGroups.MISPLACED_TYPE_ANNOTATION,
-          DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS
-        });
+        new DiagnosticGroup[] {DiagnosticGroups.CHECK_TYPES});
+  }
+
+  @Test
+  public void publicMixedClassFields_supportedInChecksOnlyMode() {
+    CompilerOptions options = createCompilerOptions();
+
+    testNoWarnings(
+        options,
+        lines(
+            "/** @unrestricted */",
+            "class MyClass {", //
+            "  a = 2;",
+            "  ['b'] = 'hi';",
+            "  'c' = 5;",
+            "  2 = 4;",
+            "  d;",
+            "  ['e'];",
+            "}"));
   }
 }
