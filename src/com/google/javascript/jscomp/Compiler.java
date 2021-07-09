@@ -250,6 +250,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public PerformanceTracker tracker;
 
+  /** Runtime-library files deserailized from a TypedAST JAR resource; indexed by filename */
+  private ImmutableMap<String, JsAst> runtimeLibraryTypedAsts;
+
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
@@ -546,6 +549,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     LinkedHashMap<SourceFile, JsAst> typedAstFilesystem = new LinkedHashMap<>();
     ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
 
+    this.initRuntimeLibraryTypedAsts(colorPoolBuilder);
+
     ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers = new ArrayList<>();
     filePoolBuilder.put(SYNTHETIC_EXTERNS_FILE.getName(), SYNTHETIC_EXTERNS_FILE);
 
@@ -598,6 +603,43 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.typedAstFilesystem = ImmutableMap.copyOf(typedAstFilesystem);
 
     return ImmutableMap.copyOf(filePoolBuilder);
+  }
+
+  @Override
+  @GwtIncompatible
+  public void initRuntimeLibraryTypedAsts(ColorPool.Builder colorPoolBuilder) {
+    checkState(this.runtimeLibraryTypedAsts == null);
+
+    String path =
+        String.join(
+            "",
+            "/runtime_libs.typedast");
+    TypedAst typedAstProto =
+        Iterables.getOnlyElement(
+            this.deserializeTypedAsts(Compiler.class.getResourceAsStream(path)));
+
+    ImmutableList<SourceFile> fileShard =
+        typedAstProto.getSourceFilePool().getSourceFileList().stream()
+            .map(SourceFile::fromProto)
+            .collect(toImmutableList());
+    StringPool stringShard = StringPool.fromProto(typedAstProto.getStringPool());
+    ColorPool.ShardView colorShard =
+        colorPoolBuilder.addShard(typedAstProto.getTypePool(), stringShard);
+
+    LinkedHashMap<String, JsAst> runtimeLibraryTypedAsts = new LinkedHashMap<>();
+    for (LazyAst lazyAst : typedAstProto.getCodeAstList()) {
+      SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
+      runtimeLibraryTypedAsts.computeIfAbsent(
+          file.getName(),
+          (f) -> {
+            ScriptNodeDeserializer deserializer =
+                new ScriptNodeDeserializer(
+                    lazyAst, stringShard, colorShard, ImmutableList.copyOf(fileShard));
+            return new JsAst(file, deserializer::deserializeNew);
+          });
+    }
+
+    this.runtimeLibraryTypedAsts = ImmutableMap.copyOf(runtimeLibraryTypedAsts);
   }
 
   /** Initializes the instance state needed for a compile job. */
@@ -1562,6 +1604,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void setColorRegistry(ColorRegistry colorRegistry) {
+    checkState(this.runtimeLibraryTypedAsts != null);
     this.colorRegistry = colorRegistry;
   }
 
@@ -3372,13 +3415,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return lastInjectedLibrary;
     }
 
-    checkState(!hasTypeCheckingRun(), "runtime library injected after type checking");
     checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
 
     // Load/parse the code.
-    String originalCode =
-        ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
-    Node ast = this.parseSyntheticCode(resourceName, originalCode);
+    final Node ast;
+    if (this.hasOptimizationColors()) {
+      String path =
+          String.join(
+              "",
+              "src/com/google/javascript/jscomp/js/",
+              resourceName,
+              ".js");
+      JsAst jsast = this.runtimeLibraryTypedAsts.get(path);
+      ast = jsast.getAstRoot(this);
+    } else {
+      checkState(!this.hasTypeCheckingRun(), "runtime library injected after type checking");
+      String originalCode =
+          ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
+      ast = this.parseSyntheticCode(resourceName, originalCode);
+    }
 
     // Look for string literals of the form 'require foo bar' or 'declare baz''.
     // As we process each one, remove it from its parent.
@@ -3582,7 +3637,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               try {
                 TypedAst typedAst =
                     Iterables.getOnlyElement(this.deserializeTypedAsts(inputStream));
-                return TypedAstDeserializer.deserialize(typedAst);
+                return TypedAstDeserializer.deserialize(this, typedAst);
               } finally {
                 stopTracer(tracer, "deserializeTypedAst");
               }

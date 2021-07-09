@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.serialization.ColorPool;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
@@ -275,6 +276,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Returns whether a file name was created by {@link createFillFileName}. */
   public static boolean isFillFileName(String fileName) {
     return fileName.endsWith(FILL_FILE_SUFFIX);
+  }
+
+  /**
+   * Deserialize runtime libraries from a TypedAST packaged as a JAR resource and reconcile their
+   * Colors with the current inputs.
+   *
+   * <p>This method must be called anywhere that Colors are reconciled for application to the AST.
+   * Otherwise Color information won't be consistent. `colorPoolBuilder` must be the same builder as
+   * used for the other inputs, and the caller retains ownership.
+   */
+  public void initRuntimeLibraryTypedAsts(ColorPool.Builder colorPoolBuilder) {
+    throw new UnsupportedOperationException(
+        "Implementation in Compiler.java is not J2CL compatible.");
   }
 
   /**

@@ -65,9 +65,10 @@ public final class ConvertTypesToColors implements CompilerPass {
     private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
 
     RemoveTypesAndApplyColors(
-        ColorPool colorPool, IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
+        ColorPool.ShardView colorPoolShard,
+        IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
       super();
-      this.colorPoolShard = colorPool.getOnlyShard();
+      this.colorPoolShard = colorPoolShard;
       this.typePointersByJstype = typePointersByJstype;
     }
 
@@ -118,11 +119,16 @@ public final class ConvertTypesToColors implements CompilerPass {
     TypePool typePool = serializeJstypes.getTypePool();
     StringPool stringPool = stringPoolBuilder.build();
 
-    ColorPool colorPool = ColorPool.fromOnlyShard(typePool, stringPool);
-    NodeTraversal.traverse(
-        compiler,
-        externsAndJsRoot,
-        new RemoveTypesAndApplyColors(colorPool, serializeJstypes.getTypePointersByJstype()));
+    ColorPool.Builder colorPoolBuilder = ColorPool.builder();
+    this.compiler.initRuntimeLibraryTypedAsts(colorPoolBuilder);
+
+    RemoveTypesAndApplyColors callback =
+        new RemoveTypesAndApplyColors(
+            colorPoolBuilder.addShard(typePool, stringPool),
+            serializeJstypes.getTypePointersByJstype());
+
+    ColorPool colorPool = colorPoolBuilder.build();
+    NodeTraversal.traverse(compiler, externsAndJsRoot, callback);
 
     compiler.clearJSTypeRegistry();
     compiler.setColorRegistry(colorPool.getRegistry());

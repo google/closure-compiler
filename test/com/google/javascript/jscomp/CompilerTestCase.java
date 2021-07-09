@@ -1539,7 +1539,9 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        if (!librariesToInject.isEmpty() && i == 0) {
+        final boolean injectLibrariesFromTypedAsts =
+            multistageCompilation || replaceTypesWithColors;
+        if (!librariesToInject.isEmpty() && i == 0 && !injectLibrariesFromTypedAsts) {
           recentChange.reset();
           for (String resourceName : librariesToInject) {
             compiler.ensureLibraryInjected(resourceName, true);
@@ -1572,24 +1574,28 @@ public abstract class CompilerTestCase {
           new GatherExternProperties(compiler).process(externsRoot, mainRoot);
         }
 
-        // Only run multistage compilation once, if asked.
-        boolean runMultistageCompilation = multistageCompilation && i == 0;
+        if (i == 0) {
+          if (multistageCompilation) {
+            if (inputs != null) {
+              compiler =
+                  CompilerTestCaseUtils.multistageSerializeAndDeserialize(
+                      this, compiler, inputs, recentChange);
+              root = compiler.getRoot();
+              externsRoot = compiler.getExternsRoot();
+              mainRoot = compiler.getJsRoot();
+              lastCompiler = compiler;
+            }
+          } else if (replaceTypesWithColors) {
+            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+                .process(externsRoot, mainRoot);
+          }
 
-        // Multistage compilation already converts types to colors so don't run the pass twice.
-        if ((replaceTypesWithColors && i == 0) && !multistageCompilation) {
-          new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
-              .process(externsRoot, mainRoot);
-        }
-
-        if (runMultistageCompilation) {
-          if (inputs != null) {
-            compiler =
-                CompilerTestCaseUtils.multistageSerializeAndDeserialize(
-                    this, compiler, inputs, recentChange);
-            root = compiler.getRoot();
-            externsRoot = compiler.getExternsRoot();
-            mainRoot = compiler.getJsRoot();
-            lastCompiler = compiler;
+          if (!librariesToInject.isEmpty() && injectLibrariesFromTypedAsts) {
+            recentChange.reset();
+            for (String resourceName : librariesToInject) {
+              compiler.ensureLibraryInjected(resourceName, true);
+            }
+            hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
         }
 
