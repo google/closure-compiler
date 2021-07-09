@@ -37,6 +37,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static java.util.stream.Collectors.joining;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -102,11 +103,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   public static final DiagnosticType INEXISTENT_PROPERTY =
       DiagnosticType.warning("JSC_INEXISTENT_PROPERTY", "Property {0} never defined on {1}");
 
+  @VisibleForTesting
+  static final String POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION =
+      "\n\n"
+          + "This property is accessed on a \"loose\" type, but is not defined anywhere in the"
+          + " program, so it must not exist."
+      ;
+
   // disabled by default. This one only makes sense if you're using
   // well-typed externs.
   static final DiagnosticType POSSIBLE_INEXISTENT_PROPERTY =
       DiagnosticType.disabled(
-          "JSC_POSSIBLE_INEXISTENT_PROPERTY", "Property {0} never defined on {1}");
+          "JSC_POSSIBLE_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}"
+              + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION.replace("'", "''"));
 
   static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
       DiagnosticType.warning(
@@ -662,13 +672,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitYield(t, n);
         break;
 
-      case SUPER:
-      case NEW_TARGET:
-      case IMPORT_META:
-      case AWAIT:
-        ensureTyped(n);
-        break;
-
       case DEC:
       case INC:
         left = n.getFirstChild();
@@ -827,6 +830,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case ASSIGN:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
         visitAssign(t, n);
         typeable = false;
         break;
@@ -902,6 +908,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case STRING_KEY:
       case MEMBER_FUNCTION_DEF:
       case COMPUTED_PROP:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
       case LABEL:
       case LABEL_NAME:
       case SWITCH:
@@ -1003,26 +1011,27 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
         // These nodes are typed during the type inference.
+      case SUPER:
+      case NEW_TARGET:
+      case IMPORT_META:
+      case AWAIT:
       case AND:
       case HOOK:
-      case OBJECTLIT:
       case OR:
       case COALESCE:
-        if (n.getJSType() != null) { // If we didn't run type inference.
-          ensureTyped(n);
+        ensureTyped(n);
+        break;
+
+      case OBJECTLIT:
+        // If this is an enum, then give that type to the objectlit as well.
+        if (parent.getJSType() instanceof EnumType) {
+          ensureTyped(n, parent.getJSType());
         } else {
-          // If this is an enum, then give that type to the objectlit as well.
-          if (n.isObjectLit() && (parent.getJSType() instanceof EnumType)) {
-            ensureTyped(n, parent.getJSType());
-          } else {
-            ensureTyped(n);
-          }
+          ensureTyped(n);
         }
-        if (n.isObjectLit()) {
-          JSType typ = getJSType(n);
-          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            visitObjectOrClassLiteralKey(key, n, typ);
-          }
+        JSType typ = getJSType(n);
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          visitObjectOrClassLiteralKey(key, n, typ);
         }
         break;
 
@@ -1494,7 +1503,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * definition <code>key() { ... }</code> If the <code>lvalue</code> is a prototype modification,
    * we change the schema of the object type it is referring to.
    *
-   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, or COMPUTED_PROPERTY node
+   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, COMPUTED_PROPERTY,
+   *     MEMBER_FIELD_DEF, or COMPUTED_FIELD_DEF node
    * @param owner the parent node, either OBJECTLIT or CLASS_MEMBERS
    * @param ownerType the instance type of the enclosing object/class
    */
@@ -1507,7 +1517,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Validate computed properties similarly to how we validate GETELEMs.
-    if (key.isComputedProp()) {
+    if (key.isComputedProp() || key.isComputedFieldDef()) {
       validator.expectIndexMatch(key, ownerType, getJSType(key.getFirstChild()));
       return;
     }
@@ -1541,6 +1551,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // For getter and setter property definitions the
     // r-value type != the property type.
     Node rvalue = key.getFirstChild();
+    if (rvalue == null) {
+      ensureTyped(key);
+      return;
+    }
     JSType rightType = getObjectLitKeyTypeFromValueType(key, getJSType(rvalue));
     if (rightType == null) {
       rightType = getNativeType(UNKNOWN_TYPE);
@@ -1548,7 +1562,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     // Validate value is assignable to the key type.
     JSType keyType = getJSType(key);
-
+    String propertyName = NodeUtil.getObjectOrClassLitKeyName(key);
     JSType allowedValueType = keyType;
     if (allowedValueType.isEnumElementType()) {
       allowedValueType = allowedValueType.toMaybeEnumElementType().getPrimitiveType();
@@ -1556,37 +1570,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     boolean valid =
         validator.expectCanAssignToPropertyOf(
-            key, rightType, allowedValueType, owner, NodeUtil.getObjectLitKeyName(key));
+            key, rightType, allowedValueType, owner, propertyName);
     if (valid) {
       ensureTyped(key, rightType);
     } else {
       ensureTyped(key);
     }
 
-    // Validate that the key type is assignable to the object property type.
-    // This is necessary as the owner may have been cast to a non-literal
-    // object type.
-    // TODO(johnlenz): consider introducing a CAST node to the AST (or
-    // perhaps a parentheses node).
-
-    JSType objlitType = getJSType(owner);
-    ObjectType type = ObjectType.cast(objlitType.restrictByNotNullOrUndefined());
-    if (type != null) {
-      String property = NodeUtil.getObjectLitKeyName(key);
-      if (owner.isClass()) {
-        checkPropertyInheritanceOnClassMember(key, property, type.toMaybeFunctionType());
-      } else {
-        checkPropertyInheritanceOnPrototypeLitKey(key, property, type);
-      }
-      // TODO(lharker): add a unit test for the following if case or remove it.
-      // Removing the check doesn't break any unit tests, but it does have coverage in
-      // our coverage report.
-      if (type.hasProperty(property)
-          && !type.isPropertyTypeInferred(property)
-          && !propertyIsImplicitCast(type, property)) {
-        validator.expectCanAssignToPropertyOf(
-            key, keyType, type.getPropertyType(property), owner, property);
-      }
+    // Validate inheritance for classes and object literals used as prototypes
+    if (owner.isClass()) {
+      FunctionType classConstructorType = owner.getJSType().assertFunctionType();
+      checkPropertyInheritanceOnClassMember(key, propertyName, classConstructorType);
+    } else if (ownerType.toMaybeObjectType() != null) {
+      checkPropertyInheritanceOnPrototypeLitKey(key, propertyName, ownerType.toMaybeObjectType());
     }
   }
 

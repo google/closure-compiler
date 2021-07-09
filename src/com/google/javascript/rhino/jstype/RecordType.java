@@ -46,17 +46,15 @@ import java.util.Map;
 /**
  * A record (structural) type.
  *
- * Subtyping: The subtyping of a record type is defined via structural
- * comparison of a record type's properties. For example, a record
- * type of the form { a : TYPE_1 } is a supertype of a record type
- * of the form { b : TYPE_2, a : TYPE_1 } because B can be assigned to
- * A and matches all constraints. Similarly, a defined type can be assigned
- * to a record type so long as that defined type matches all property
- * constraints of the record type. A record type of the form { a : A, b : B }
- * can be assigned to a record of type { a : A }.
+ * <p>Subtyping: The subtyping of a record type is defined via structural comparison of a record
+ * type's properties. For example, a record type of the form { a : TYPE_1 } is a supertype of a
+ * record type of the form { b : TYPE_2, a : TYPE_1 } because B can be assigned to A and matches all
+ * constraints. Similarly, a defined type can be assigned to a record type so long as that defined
+ * type matches all property constraints of the record type. A record type of the form { a : A, b :
+ * B } can be assigned to a record of type { a : A }.
  *
  */
-public class RecordType extends PrototypeObjectType {
+public final class RecordType extends PrototypeObjectType {
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.RECORD;
 
   private final boolean declared;

@@ -1153,6 +1153,11 @@ public class Node {
         sb.append(x);
         sb.append(']');
       }
+      if (this.originalName != null) {
+        sb.append(" [original_name: ");
+        sb.append(this.originalName);
+        sb.append(']');
+      }
     }
 
     if (printType && jstypeOrColor != null) {
@@ -2691,6 +2696,10 @@ public class Node {
     return this.token == Token.AND;
   }
 
+  public final boolean isAssignAnd() {
+    return this.token == Token.ASSIGN_AND;
+  }
+
   public final boolean isArrayLit() {
     return this.token == Token.ARRAYLIT;
   }
@@ -2947,6 +2956,14 @@ public class Node {
     return this.token == Token.MEMBER_VARIABLE_DEF;
   }
 
+  public final boolean isMemberFieldDef() {
+    return this.token == Token.MEMBER_FIELD_DEF;
+  }
+
+  public final boolean isComputedFieldDef() {
+    return this.token == Token.COMPUTED_FIELD_DEF;
+  }
+
   public final boolean isModuleBody() {
     return this.token == Token.MODULE_BODY;
   }
@@ -2979,6 +2996,10 @@ public class Node {
     return this.token == Token.COALESCE;
   }
 
+  public final boolean isAssignNullishCoalesce() {
+    return this.token == Token.ASSIGN_COALESCE;
+  }
+
   public final boolean isNumber() {
     return this.token == Token.NUMBER;
   }
@@ -3005,6 +3026,10 @@ public class Node {
 
   public final boolean isOr() {
     return this.token == Token.OR;
+  }
+
+  public final boolean isAssignOr() {
+    return this.token == Token.ASSIGN_OR;
   }
 
   public final boolean isParamList() {

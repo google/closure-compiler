@@ -43,10 +43,8 @@ import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
-/**
- * The {@code Unknown} type.
- */
-public class UnknownType extends ObjectType {
+/** The {@code Unknown} type. */
+public final class UnknownType extends ObjectType {
   // See the explanation of checked unknown types in JSTypeNative.
   private final boolean isChecked;
 

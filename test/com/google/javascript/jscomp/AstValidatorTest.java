@@ -114,8 +114,8 @@ public final class AstValidatorTest extends CompilerTestCase {
     Node members = new Node(Token.CLASS_MEMBERS);
     c.addChildToBack(members);
     expectValid(c, Check.STATEMENT);
-    Node method1 = new Node(
-        Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
+    Node method1 =
+        new Node(Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
     members.addChildToBack(method1);
     expectInvalid(c, Check.STATEMENT);
 
@@ -127,6 +127,91 @@ public final class AstValidatorTest extends CompilerTestCase {
     members.addChildToBack(method2);
 
     expectInvalid(c, Check.STATEMENT);
+  }
+
+  @Test
+  public void testClassField() {
+    valid("class C {x}");
+    valid("class C {x = 2}");
+    valid("class C {x = 2;}");
+    valid("class C {x; y;}");
+    valid(
+        lines(
+            "class C {", //
+            "  x",
+            "  y",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassFieldStatic() {
+    valid("class C {static x}");
+    valid("class C {static x = 2}");
+    valid("class C {static x = 2;}");
+    valid("class C {static x; static y;}");
+    valid(
+        lines(
+            "class C {", //
+            "  static x",
+            "  static y",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassComputedField() {
+    valid("/** @dict */ class C { [x]; }");
+    valid("/** @dict */ class C { ['x']=2; }");
+    valid("/** @dict */ class C { 'x'=2; }");
+    valid("/** @dict */ class C { 1=2; }");
+    valid(
+        lines(
+            "/** @unrestricted */", //
+            "class C {",
+            "  [x]=2",
+            "  static y = 4",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassComputedFieldStatic() {
+    valid("/** @dict */ class C { static [x]; }");
+    valid("/** @dict */ class C { static ['x']=2; }");
+    valid("/** @dict */ class C { static 'x'=2; }");
+    valid("/** @dict */ class C { static 1=2; }");
+    valid(
+        lines(
+            "/** @unrestricted */", //
+            "class C {",
+            "  static [x]=2",
+            "  static y = 4",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testFeatureValidation_classField() {
+    testFeatureValidation(
+        lines(
+            "class C {", //
+            "  x=2;",
+            "}",
+            ""),
+        Feature.PUBLIC_CLASS_FIELDS);
+  }
+
+  @Test
+  public void testFeatureValidation_classComputedField() {
+    testFeatureValidation(
+        lines(
+            "/** @dict */", //
+            "class C {", //
+            "  [x]=2;",
+            "}",
+            ""),
+        Feature.PUBLIC_CLASS_FIELDS);
   }
 
   @Test
@@ -366,7 +451,6 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Since we're building the AST by hand, there won't be any types on it.
     enableTypeInfoValidation = false;
 
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     Node n = new Node(Token.IMPORT_META);
     expectValid(n, Check.EXPRESSION);
   }
@@ -378,11 +462,8 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     JSDocInfo.Builder jsdoc = JSDocInfo.builder();
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
-    Node n = IR.exprResult(
-        new Node(
-            Token.ASSIGN,
-            IR.cast(IR.name("x"), jsdoc.build()),
-            IR.number(0)));
+    Node n =
+        IR.exprResult(new Node(Token.ASSIGN, IR.cast(IR.name("x"), jsdoc.build()), IR.number(0)));
     expectValid(n, Check.STATEMENT);
   }
 
@@ -698,13 +779,14 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
-    Node n = IR.assign(
-        new Node(Token.OBJECT_PATTERN, new Node(Token.ARRAY_PATTERN)), IR.objectlit());
+    Node n =
+        IR.assign(new Node(Token.OBJECT_PATTERN, new Node(Token.ARRAY_PATTERN)), IR.objectlit());
     expectInvalid(n, Check.EXPRESSION);
 
-    n = IR.assign(
-        new Node(Token.ARRAY_PATTERN, IR.computedProp(IR.string("x"), IR.number(1))),
-        IR.objectlit());
+    n =
+        IR.assign(
+            new Node(Token.ARRAY_PATTERN, IR.computedProp(IR.string("x"), IR.number(1))),
+            IR.objectlit());
     expectInvalid(n, Check.EXPRESSION);
 
     Node stringkey = IR.stringKey("x");
@@ -1188,16 +1270,22 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_nullishCoalesceOp() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
-
     testFeatureValidation("x ?? y", Feature.NULL_COALESCE_OP);
     testFeatureValidation("x ?? y ?? z", Feature.NULL_COALESCE_OP);
   }
 
   @Test
-  public void testFeatureValidation_optChain() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+  public void testFeatureValidation_logicalAssignmentOp() {
+    // TODO (user): re-enable TypeInfoValidation and TypeCheck
+    enableTypeInfoValidation = false;
+    disableTypeCheck();
+    testFeatureValidation("x ||= y", Feature.LOGICAL_ASSIGNMENT);
+    testFeatureValidation("x &&= y", Feature.LOGICAL_ASSIGNMENT);
+    testFeatureValidation("x ??= y", Feature.LOGICAL_ASSIGNMENT);
+  }
 
+  @Test
+  public void testFeatureValidation_optChain() {
     testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);
     testFeatureValidation("x?.()", Feature.OPTIONAL_CHAINING);
     testFeatureValidation("x?.[1]", Feature.OPTIONAL_CHAINING);
@@ -1346,8 +1434,8 @@ public final class AstValidatorTest extends CompilerTestCase {
   /**
    * Tests that AstValidator checks for the given feature in the AST
    *
-   * <p>This will raise an error if a) the AST parsed from {@code code} lacks {@code feature}, or
-   * b) AstValidator does not validate {@code feature}'s presence in the AST.
+   * <p>This will raise an error if a) the AST parsed from {@code code} lacks {@code feature}, or b)
+   * AstValidator does not validate {@code feature}'s presence in the AST.
    */
   private void testFeatureValidation(String code, Feature feature) {
     valid(code);

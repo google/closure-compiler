@@ -114,6 +114,9 @@ public abstract class CompilerTestCase {
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode;
 
+  /** Whether to rewrite Closure code before the test is run. */
+  private boolean rewriteClosureProvides;
+
   /**
    * If true, run type checking together with the pass being tested. A separate flag controls
    * whether type checking runs before or after the pass.
@@ -822,6 +825,7 @@ public abstract class CompilerTestCase {
   protected final void enableTypeCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeCheckEnabled = true;
+    enableCreateModuleMap();
   }
 
   /**
@@ -863,7 +867,7 @@ public abstract class CompilerTestCase {
   protected final void enableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
-    // passes in stage 2 never have acesses to a script's feature set.
+    // passes in stage 2 never have accesses to a script's feature set.
     scriptFeatureValidationEnabled = false;
   }
 
@@ -908,6 +912,13 @@ public abstract class CompilerTestCase {
   protected final void disableRewriteClosureCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = false;
+  }
+
+  /** Rewrite goog.provides */
+  protected final void enableRewriteClosureProvides() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.rewriteClosureProvides = true;
+    enableCreateModuleMap();
   }
 
   /**
@@ -1512,8 +1523,6 @@ public abstract class CompilerTestCase {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
-          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
-              .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1530,7 +1539,9 @@ public abstract class CompilerTestCase {
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
-        if (!librariesToInject.isEmpty() && i == 0) {
+        final boolean injectLibrariesFromTypedAsts =
+            multistageCompilation || replaceTypesWithColors;
+        if (!librariesToInject.isEmpty() && i == 0 && !injectLibrariesFromTypedAsts) {
           recentChange.reset();
           for (String resourceName : librariesToInject) {
             compiler.ensureLibraryInjected(resourceName, true);
@@ -1547,6 +1558,14 @@ public abstract class CompilerTestCase {
           check.processForTesting(externsRoot, mainRoot);
         }
 
+        // Only rewrite provides once, if asked.
+        if (rewriteClosureProvides && i == 0) {
+          recentChange.reset();
+          new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
+              .process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
         if (inferConsts && i == 0) {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
@@ -1555,24 +1574,28 @@ public abstract class CompilerTestCase {
           new GatherExternProperties(compiler).process(externsRoot, mainRoot);
         }
 
-        // Only run multistage compilation once, if asked.
-        boolean runMultistageCompilation = multistageCompilation && i == 0;
+        if (i == 0) {
+          if (multistageCompilation) {
+            if (inputs != null) {
+              compiler =
+                  CompilerTestCaseUtils.multistageSerializeAndDeserialize(
+                      this, compiler, inputs, recentChange);
+              root = compiler.getRoot();
+              externsRoot = compiler.getExternsRoot();
+              mainRoot = compiler.getJsRoot();
+              lastCompiler = compiler;
+            }
+          } else if (replaceTypesWithColors) {
+            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+                .process(externsRoot, mainRoot);
+          }
 
-        // Multistage compilation already converts types to colors so don't run the pass twice.
-        if ((replaceTypesWithColors && i == 0) && !multistageCompilation) {
-          new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
-              .process(externsRoot, mainRoot);
-        }
-
-        if (runMultistageCompilation) {
-          if (inputs != null) {
-            compiler =
-                CompilerTestCaseUtils.multistageSerializeAndDeserialize(
-                    this, compiler, inputs, recentChange);
-            root = compiler.getRoot();
-            externsRoot = compiler.getExternsRoot();
-            mainRoot = compiler.getJsRoot();
-            lastCompiler = compiler;
+          if (!librariesToInject.isEmpty() && injectLibrariesFromTypedAsts) {
+            recentChange.reset();
+            for (String resourceName : librariesToInject) {
+              compiler.ensureLibraryInjected(resourceName, true);
+            }
+            hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
         }
 
@@ -1718,13 +1741,10 @@ public abstract class CompilerTestCase {
 
       if (expected != null) {
         if (!compareSyntheticCode) {
-          // remove code in files starting with [synthetic:
           Node scriptRoot = mainRoot.getFirstChild();
-          Node child = scriptRoot.getFirstChild();
-          while (child != null) {
+          for (Node child = scriptRoot.getFirstChild(); child != null; ) {
             Node nextChild = child.getNext();
-            String sourceFile = child.getSourceFileName();
-            if (sourceFile != null && sourceFile.startsWith(Compiler.SYNTHETIC_CODE_PREFIX)) {
+            if (NodeUtil.isInSyntheticScript(child)) {
               child.detach();
             }
             child = nextChild;
@@ -1900,8 +1920,6 @@ public abstract class CompilerTestCase {
       new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
           .process(externsRoot, mainRoot);
       new ProcessClosurePrimitives(compiler).process(externsRoot, mainRoot);
-      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
-          .process(externsRoot, mainRoot);
     }
 
     if (rewriteClosureCode) {
@@ -1913,6 +1931,11 @@ public abstract class CompilerTestCase {
     if (transpileEnabled && !compiler.hasErrors()) {
       transpileToEs5(compiler, externsRoot, mainRoot);
     }
+
+    if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
+      new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
+          .process(externsRoot, mainRoot);
+    }
     return mainRoot;
   }
 
@@ -1921,16 +1944,25 @@ public abstract class CompilerTestCase {
   }
 
   protected void testExternChanges(String extern, String input, String expectedExtern) {
+    testExternChanges(extern, input, expected(expectedExtern), (DiagnosticType[]) null);
+  }
+
+  protected void testExternChanges(String extern, String input, Expected expectedExtern) {
     testExternChanges(extern, input, expectedExtern, (DiagnosticType[]) null);
   }
 
   protected void testExternChanges(
       String input, String expectedExtern, DiagnosticType... warnings) {
-    testExternChanges("", input, expectedExtern, warnings);
+    testExternChanges("", input, expected(expectedExtern), warnings);
   }
 
   protected void testExternChanges(
       String extern, String input, String expectedExtern, DiagnosticType... warnings) {
+    testExternChanges(extern, input, expected(expectedExtern), warnings);
+  }
+
+  protected void testExternChanges(
+      String extern, String input, Expected expectedExtern, DiagnosticType... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
@@ -1951,6 +1983,11 @@ public abstract class CompilerTestCase {
 
   private void testExternChangesInternal(
       Compiler compiler, String expectedExtern, DiagnosticType... warnings) {
+    testExternChangesInternal(compiler, expected(expectedExtern), warnings);
+  }
+
+  private void testExternChangesInternal(
+      Compiler compiler, Expected expectedExterns, DiagnosticType... warnings) {
     compiler.parseInputs();
 
     if (createModuleMap) {
@@ -1967,7 +2004,7 @@ public abstract class CompilerTestCase {
 
     Node externs = externsAndJs.getFirstChild();
 
-    Node expected = compiler.parseTestCode(expectedExtern);
+    Node expectedRoot = parseExpectedJs(expectedExterns);
     assertThat(compiler.getErrors()).isEmpty();
 
     // Call "beforePass" as some passes ask for the index of the current pass being run and expect
@@ -1989,20 +2026,15 @@ public abstract class CompilerTestCase {
       // Expected output parsed without implied block.
       checkState(externs.isRoot());
       checkState(compareJsDoc);
-      checkState(
-          externs.hasOneChild(), "Compare as tree only works when output has a single script.");
-      externs = externs.getFirstChild();
 
-      Node expectedRoot = parseExpectedJs(expectedExtern);
       expectedRoot.detach();
-      expectedRoot = expectedRoot.getFirstChild();
 
       assertNode(externs)
           .usingSerializer(createPrettyPrinter(compiler))
           .isEqualIncludingJsDocTo(expectedRoot);
     } else {
       String externsCode = compiler.toSource(externs);
-      String expectedCode = compiler.toSource(expected);
+      String expectedCode = compiler.toSource(expectedRoot);
       assertThat(externsCode).isEqualTo(expectedCode);
     }
 
@@ -2321,7 +2353,7 @@ public abstract class CompilerTestCase {
       return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
     }
 
-    protected Diagnostic withMessage(final String expected) {
+    public Diagnostic withMessage(final String expected) {
       checkState(messagePredicate == null);
       return new Diagnostic(
           level, diagnostic, NamedPredicate.of(expected::equals, "\"" + expected + "\""));

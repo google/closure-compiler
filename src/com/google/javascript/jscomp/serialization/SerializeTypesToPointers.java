@@ -30,7 +30,7 @@ import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -69,7 +69,7 @@ final class SerializeTypesToPointers {
 
   void gatherTypesOnAst(Node root) {
     checkState(this.typePool == null, "Cannot call process() twice");
-    NodeTraversal.traverse(this.compiler, root, new Callback());
+    NodeTraversal.traverse(this.compiler, root, new TypeSearchCallback());
 
     // these types are only used when debug logging is enabled, but we always serialize them as not
     // to have a different TypePool with and without debug logging.
@@ -83,13 +83,17 @@ final class SerializeTypesToPointers {
     logSerializationDebugInfo(this.jstypeReconserializer, this.typePool);
   }
 
-  private class Callback extends AbstractPostOrderCallback {
+  private final class TypeSearchCallback implements NodeTraversal.Callback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isScript() || !NodeUtil.isFromTypeSummary(n);
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       JSType type = n.getJSType();
-      if (type != null && !typePointersByJstype.containsKey(type)) {
-        typePointersByJstype.put(type, jstypeReconserializer.serializeType(type));
+      if (type != null) {
+        typePointersByJstype.computeIfAbsent(type, jstypeReconserializer::serializeType);
       }
     }
   }

@@ -655,7 +655,7 @@ public class CompilerOptions implements Serializable {
   // --------------------------------
 
   /** Replace UI strings with chrome.i18n.getMessage calls. Used by Chrome extensions/apps. */
-  boolean replaceMessagesWithChromeI18n;
+  private boolean replaceMessagesWithChromeI18n;
 
   String tcProjectId;
 
@@ -671,6 +671,26 @@ public class CompilerOptions implements Serializable {
 
     this.replaceMessagesWithChromeI18n = replaceMessagesWithChromeI18n;
     this.tcProjectId = tcProjectId;
+  }
+
+  /**
+   * Should we run the pass that does replacement of the chrome-specific `chrome.i18n.getMessage()`
+   * translatable message definitions?
+   *
+   * <p>This form of l10n is incompatible with our standard `goog.getMsg()` messages.
+   */
+  public boolean shouldRunReplaceMessagesForChrome() {
+    if (replaceMessagesWithChromeI18n) {
+      checkState(
+          messageBundle == null || messageBundle instanceof EmptyMessageBundle,
+          "When replacing messages with chrome.i18n.getMessage, a message bundle should not be"
+              + " specified.");
+      checkState(
+          !doLateLocalization, "Late localization is not supported for chrome.i18n.getMessage");
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /** Inserts run-time type assertions for debugging. */
@@ -833,6 +853,12 @@ public class CompilerOptions implements Serializable {
   boolean preventLibraryInjection = false;
 
   boolean assumeForwardDeclaredForMissingTypes = false;
+
+  /**
+   * A Set of goog.requires to be removed. If null, ALL of the unused goog.requires will be counted
+   * as a candidate to be removed.
+   */
+  @Nullable ImmutableSet<String> unusedImportsToRemove;
 
   /**
    * If {@code true}, considers all missing types to be forward declared (useful for partial
@@ -1165,7 +1191,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Experimental option to disable all Closure and ES module rewriting
+   * Experimental option to disable all Closure and ES module and goog.provide rewriting
    *
    * <p>Use at your own risk - disabling module rewriting is not fully tested yet.
    */
@@ -1175,6 +1201,22 @@ public class CompilerOptions implements Serializable {
 
   boolean shouldRewriteModulesAfterTypechecking() {
     return this.enableModuleRewriting && !this.rewriteModulesBeforeTypechecking;
+  }
+
+  boolean shouldRewriteModules() {
+    return this.enableModuleRewriting;
+  }
+
+  private boolean rewriteProvidesInChecksOnly;
+
+  public void setBadRewriteProvidesInChecksOnlyThatWeWantToGetRidOf(boolean b) {
+    this.rewriteProvidesInChecksOnly = b;
+  }
+
+  boolean shouldRewriteProvidesInChecksOnly() {
+    // Disabling module rewriting automatically disables provide rewriting, as provide rewriting
+    // must happen after module rewriting.
+    return this.rewriteProvidesInChecksOnly && this.shouldRewriteModules();
   }
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
@@ -1248,6 +1290,7 @@ public class CompilerOptions implements Serializable {
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
     rewriteModulesBeforeTypechecking = false;
+    rewriteProvidesInChecksOnly = false;
     enableModuleRewriting = true;
 
     // Checks
@@ -2228,8 +2271,13 @@ public class CompilerOptions implements Serializable {
     this.doLateLocalization = doLateLocalization;
   }
 
-  public boolean shouldDoLateLocalization() {
-    return this.doLateLocalization;
+  public boolean doLateLocalization() {
+    return doLateLocalization;
+  }
+
+  /** Should we run any form of the `ReplaceMessages` pass? */
+  public boolean shouldRunReplaceMessagesPass() {
+    return !shouldRunReplaceMessagesForChrome() && messageBundle != null;
   }
 
   public void setMarkAsCompiled(boolean markAsCompiled) {
@@ -2538,6 +2586,15 @@ public class CompilerOptions implements Serializable {
     this.preventLibraryInjection = preventLibraryInjection;
   }
 
+  public void setUnusedImportsToRemove(@Nullable ImmutableSet<String> unusedImportsToRemove) {
+    this.unusedImportsToRemove = unusedImportsToRemove;
+  }
+
+  @Nullable
+  public ImmutableSet<String> getUnusedImportsToRemove() {
+    return this.unusedImportsToRemove;
+  }
+
   public void setInstrumentForCoverageOption(InstrumentOption instrumentForCoverageOption) {
     this.instrumentForCoverageOption = checkNotNull(instrumentForCoverageOption);
   }
@@ -2840,6 +2897,7 @@ public class CompilerOptions implements Serializable {
         .add("tweakProcessing", getTweakProcessing())
         .add("emitUseStrict", emitUseStrict)
         .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
+        .add("unusedImportsToRemove", unusedImportsToRemove)
         .add("variableRenaming", variableRenaming)
         .add("warningsGuard", getWarningsGuard())
         .add("wrapGoogModulesForWhitespaceOnly", wrapGoogModulesForWhitespaceOnly)

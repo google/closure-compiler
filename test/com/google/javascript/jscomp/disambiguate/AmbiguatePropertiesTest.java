@@ -947,10 +947,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testPredeclaredType() {
     this.enableClosurePass();
+    this.enableRewriteClosureProvides();
 
     String js =
         lines(
-            new TestExternsBuilder().addClosureExterns().build(),
             "goog.forwardDeclare('goog.Foo');",
             "/** @constructor */ ",
             "function A() {",
@@ -960,14 +960,16 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "function f(x) { x.y = 4; }");
     String result =
         lines(
-            new TestExternsBuilder().addClosureExterns().build(),
             "/** @constructor */ ",
             "function A() {",
             "  this.a = 3;",
             "}",
             "/** @param {goog.Foo} x */",
             "function f(x) { x.y = 4; }");
-    test(js, result);
+    test(
+        externs(EXTERNS + new TestExternsBuilder().addClosureExterns().build()),
+        srcs(js),
+        expected(result));
   }
 
   @Test

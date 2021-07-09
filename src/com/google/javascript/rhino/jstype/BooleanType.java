@@ -45,7 +45,7 @@ import com.google.javascript.jscomp.base.Tri;
  * Boolean type.
  *
  */
-public class BooleanType extends ValueType {
+public final class BooleanType extends ValueType {
   BooleanType(JSTypeRegistry registry) {
     super(registry);
   }

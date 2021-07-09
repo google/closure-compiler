@@ -68,9 +68,11 @@ public final class SymbolTableTest {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setChecksOnly(true);
     options.setPreserveDetailedSourceInfo(true);
+    options.setPreserveClosurePrimitives(true);
     options.setContinueAfterErrors(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+    options.setBadRewriteProvidesInChecksOnlyThatWeWantToGetRidOf(true);
   }
 
   /**
@@ -389,15 +391,46 @@ public final class SymbolTableTest {
     assertThat(table.getReferences(googRequire)).hasSize(2);
   }
 
-  @Test
-  public void testGoogRequireReferences2() {
-    options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
+  private void exerciseGoogRequireReferenceCorrectly(String inputProvidingNamespace) {
     SymbolTable table =
-        createSymbolTable(
-            lines("foo.bar = function(){};  // definition", "goog.require('foo.bar')"));
-    Symbol fooBar = getGlobalVar(table, "foo.bar");
-    assertThat(fooBar).isNotNull();
-    assertThat(table.getReferences(fooBar)).hasSize(2);
+        createSymbolTableFromManySources(
+            inputProvidingNamespace,
+            lines(
+                "goog.provide('module.two');",
+                "goog.require('module.one');",
+                "goog.requireType('module.one');",
+                "goog.forwardDeclare('module.one');"),
+            lines(
+                "goog.module('module.three');",
+                "const one = goog.require('module.one');",
+                "const oneType = goog.requireType('module.one');",
+                "const oneForward = goog.forwardDeclare('module.one');"),
+            lines(
+                "goog.module('module.four');",
+                "goog.module.declareLegacyNamespace();",
+                "const one = goog.require('module.one');",
+                "const oneType = goog.requireType('module.one');",
+                "const oneForward = goog.forwardDeclare('module.one');"));
+    Symbol namespace = getGlobalVar(table, "ns$module.one");
+    assertThat(namespace).isNotNull();
+    // 1 ref from declaration and then 2 refs in each of 3 files.
+    assertThat(table.getReferences(namespace)).hasSize(10);
+  }
+
+  @Test
+  public void testGoogProvideReferenced() {
+    exerciseGoogRequireReferenceCorrectly("goog.provide('module.one');");
+  }
+
+  @Test
+  public void testGoogModuleReferenced() {
+    exerciseGoogRequireReferenceCorrectly("goog.module('module.one');");
+  }
+
+  @Test
+  public void testGoogLegacyModuleReferenced() {
+    exerciseGoogRequireReferenceCorrectly(
+        lines("goog.module('module.one');", "goog.module.declareLegacyNamespace();"));
   }
 
   @Test
@@ -1403,7 +1436,7 @@ public final class SymbolTableTest {
   public void testTypedefInNodeJsModule() {
     options.setProcessCommonJSModules(true);
     SymbolTable table =
-        createSymbolTableFromTwoSources(
+        createSymbolTableFromManySources(
             lines("/** @typedef {number} */", "exports.MyTypedef;"),
             lines(
                 "const file1 = require('./file1.js');",
@@ -1475,6 +1508,25 @@ public final class SymbolTableTest {
     assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
   }
 
+  @Test
+  public void testMethodUsageWithBadRewriteDisable() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "goog.module('some.module');",
+                "class Apple {eat(){}}",
+                "const /** !Apple */ apple = new Apple();",
+                "apple.eat();"),
+            "");
+    for (Symbol symbol : getVars(table)) {
+      if (symbol.getName().equals("eat")) {
+        // TODO(b/1914393990): there should be 2 references to 'eat()', on line 2 and line 4.
+        assertThat(table.getReferences(symbol)).hasSize(1);
+      }
+    }
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertThat(ordering.compare(first, first)).isEqualTo(0);
     assertThat(ordering.compare(second, second)).isEqualTo(0);
@@ -1530,14 +1582,15 @@ public final class SymbolTableTest {
     return assertSymbolTableValid(compiler.buildKnownSymbolTable());
   }
 
-  private SymbolTable createSymbolTableFromTwoSources(String input1, String input2) {
-    List<SourceFile> inputs =
-        ImmutableList.of(
-            SourceFile.fromCode("file1.js", input1), SourceFile.fromCode("file2.js", input2));
+  private SymbolTable createSymbolTableFromManySources(String... inputs) {
+    ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
+    for (int i = 0; i < inputs.length; i++) {
+      sources.add(SourceFile.fromCode("file" + (i + 1) + ".js", inputs[i]));
+    }
     List<SourceFile> externs = ImmutableList.of();
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
-    compiler.compile(externs, inputs, options);
+    compiler.compile(externs, sources.build(), options);
     return assertSymbolTableValid(compiler.buildKnownSymbolTable());
   }
 

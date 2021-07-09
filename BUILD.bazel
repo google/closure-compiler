@@ -15,6 +15,7 @@
 load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
 load("//:bazel/oss_java_library.bzl", "oss_java_library")
 load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
+load("//:bazel/typedast.bzl", "typedast")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
@@ -35,18 +36,18 @@ sonatype_artifact_bundle(
     name = "compiler_shaded_bundle",
     artifact_id = "closure-compiler",
     jar = ":compiler_shaded.jar",
-    javadoc = ":compiler_lib.javadoc",
+    javadoc = ":compiler_lib_no_runtime_libs.javadoc",
     pom = "maven/closure-compiler.pom.xml",
-    sources = ":compiler_lib.sources",
+    sources = ":compiler_lib_no_runtime_libs.sources",
 )
 
 sonatype_artifact_bundle(
     name = "compiler_unshaded_bundle",
     artifact_id = "closure-compiler-unshaded",
     jar = ":compiler_unshaded_deploy.jar",
-    javadoc = ":compiler_lib.javadoc",
+    javadoc = ":compiler_lib_no_runtime_libs.javadoc",
     pom = "maven/closure-compiler-unshaded.pom.xml",
-    sources = ":compiler_lib.sources",
+    sources = ":compiler_lib_no_runtime_libs.sources",
 )
 
 sonatype_artifact_bundle(
@@ -97,15 +98,47 @@ java_library(
     resources = [":externs_zip"],
 )
 
-oss_java_library(
+java_library(
     name = "compiler_lib",
+    resources = [
+        "src/com/google/javascript/jscomp/js/polyfills.txt",
+        "src/com/google/javascript/jscomp/js/runtime_type_check.js",
+        ":runtime_lib_typedast_srcs",
+        ":runtime_libs_typedast",
+    ],
+    exports = [":compiler_lib_no_runtime_libs"],
+)
+
+typedast(
+    name = "runtime_libs_typedast",
+    srcs = [":runtime_lib_typedast_srcs"],
+    compiler = ":compiler_unshaded_no_runtime_libs",
+)
+
+filegroup(
+    name = "runtime_lib_typedast_srcs",
+    srcs = glob(
+        ["src/com/google/javascript/jscomp/js/**/*.js"],
+        exclude = [
+            "src/com/google/javascript/jscomp/js/runtime_type_check.js",  # TODO(b/192503189) Add this when we can fix the compile errors.
+            "src/com/google/javascript/jscomp/js/build_polyfill_table.js",
+        ],
+    ),
+)
+
+java_binary(
+    name = "compiler_unshaded_no_runtime_libs",
+    main_class = "com.google.javascript.jscomp.CommandLineRunner",
+    runtime_deps = [":compiler_lib_no_runtime_libs"],
+)
+
+oss_java_library(
+    name = "compiler_lib_no_runtime_libs",
     java_attrs = dict(
         resources = [
             ":externs_zip",
         ] + glob([
             "src/**/*.properties",
-            "src/com/google/javascript/jscomp/js/**/*.js",
-            "src/com/google/javascript/jscomp/js/**/*.txt",
         ]),
     ),
     javadoc_attrs = dict(

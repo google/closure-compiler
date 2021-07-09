@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.min;
 
@@ -50,6 +51,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertySetterTree;
@@ -64,6 +66,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FieldDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForAwaitOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
@@ -139,48 +142,42 @@ import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-/**
- * IRFactory transforms the external AST to the internal AST.
- */
+/** IRFactory transforms the external AST to the internal AST. */
 class IRFactory {
 
   static final String GETTER_ERROR_MESSAGE =
-      "getters are not supported in older versions of JavaScript. " +
-      "If you are targeting newer versions of JavaScript, " +
-      "set the appropriate language_in option.";
+      "getters are not supported in older versions of JavaScript. "
+          + "If you are targeting newer versions of JavaScript, "
+          + "set the appropriate language_in option.";
 
   static final String SETTER_ERROR_MESSAGE =
-      "setters are not supported in older versions of JavaScript. " +
-      "If you are targeting newer versions of JavaScript, " +
-      "set the appropriate language_in option.";
+      "setters are not supported in older versions of JavaScript. "
+          + "If you are targeting newer versions of JavaScript, "
+          + "set the appropriate language_in option.";
 
   static final String INVALID_ES3_PROP_NAME =
-      "Keywords and reserved words are not allowed as unquoted property " +
-      "names in older versions of JavaScript. " +
-      "If you are targeting newer versions of JavaScript, " +
-      "set the appropriate language_in option.";
+      "Keywords and reserved words are not allowed as unquoted property "
+          + "names in older versions of JavaScript. "
+          + "If you are targeting newer versions of JavaScript, "
+          + "set the appropriate language_in option.";
 
   static final String INVALID_ES5_STRICT_OCTAL =
       "Octal integer literals are not supported in strict mode.";
 
-  static final String INVALID_OCTAL_DIGIT =
-      "Invalid octal digit in octal literal.";
+  static final String INVALID_OCTAL_DIGIT = "Invalid octal digit in octal literal.";
 
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not recommended. See"
-      + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
+          + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
 
   static final String OCTAL_STRING_LITERAL_WARNING =
       "Octal literals in strings are not supported in this language mode.";
 
-  static final String DUPLICATE_PARAMETER =
-      "Duplicate parameter name \"%s\"";
+  static final String DUPLICATE_PARAMETER = "Duplicate parameter name \"%s\"";
 
-  static final String DUPLICATE_LABEL =
-      "Duplicate label \"%s\"";
+  static final String DUPLICATE_LABEL = "Duplicate label \"%s\"";
 
-  static final String UNLABELED_BREAK =
-      "unlabelled break must be inside loop or switch";
+  static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
 
   static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
 
@@ -205,21 +202,30 @@ class IRFactory {
   private static final ImmutableSet<String> ES5_STRICT_RESERVED_KEYWORDS =
       ImmutableSet.of(
           // From Section 7.6.1.2
-          "class", "const", "enum", "export", "extends", "import", "super",
-          "implements", "interface", "let", "package", "private", "protected",
-          "public", "static", "yield");
+          "class",
+          "const",
+          "enum",
+          "export",
+          "extends",
+          "import",
+          "super",
+          "implements",
+          "interface",
+          "let",
+          "package",
+          "private",
+          "protected",
+          "public",
+          "static",
+          "yield");
 
-  /**
-   * If non-null, use this set of keywords instead of TokenStream.isKeyword().
-   */
-  @Nullable
-  private final Set<String> reservedKeywords;
+  /** If non-null, use this set of keywords instead of TokenStream.isKeyword(). */
+  @Nullable private final Set<String> reservedKeywords;
+
   private final Set<Comment> parsedComments = new HashSet<>();
 
-  // @license text gets appended onto the fileLevelJsDocBuilder as found,
-  // and stored in JSDocInfo for placeholder node.
-  final JSDocInfo.Builder fileLevelJsDocBuilder;
-  JSDocInfo fileOverviewInfo = null;
+  private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
+  private JSDocInfo firstFileoverview = null;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
@@ -233,22 +239,18 @@ class IRFactory {
   private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private Node resultNode;
 
-  private IRFactory(String sourceString,
-                    StaticSourceFile sourceFile,
-                    Config config,
-                    ErrorReporter errorReporter,
-                    ImmutableList<Comment> comments) {
+  private IRFactory(
+      String sourceString,
+      StaticSourceFile sourceFile,
+      Config config,
+      ErrorReporter errorReporter,
+      ImmutableList<Comment> comments) {
     this.sourceString = sourceString;
     this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
     this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
-
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
-    if (config.jsDocParsingMode().shouldParseDescriptions()) {
-      this.fileLevelJsDocBuilder.parseDocumentation();
-    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -310,13 +312,14 @@ class IRFactory {
     return templateNode;
   }
 
-  public static IRFactory transformTree(ProgramTree tree,
-                                        StaticSourceFile sourceFile,
-                                        String sourceString,
-                                        Config config,
-                                        ErrorReporter errorReporter) {
-    IRFactory irFactory = new IRFactory(sourceString, sourceFile,
-        config, errorReporter, tree.sourceComments);
+  public static IRFactory transformTree(
+      ProgramTree tree,
+      StaticSourceFile sourceFile,
+      String sourceString,
+      Config config,
+      ErrorReporter errorReporter) {
+    IRFactory irFactory =
+        new IRFactory(sourceString, sourceFile, config, errorReporter, tree.sourceComments);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -387,8 +390,7 @@ class IRFactory {
           return;
         }
       }
-      errorReporter.error(UNEXPECTED_RETURN,
-          sourceName, n.getLineno(), n.getCharno());
+      errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
     }
   }
 
@@ -415,7 +417,8 @@ class IRFactory {
             errorReporter.error(
                 SimpleFormat.format(UNDEFINED_LABEL, labelName.getString()),
                 sourceName,
-                n.getLineno(), n.getCharno());
+                n.getLineno(),
+                n.getCharno());
             break;
           }
           parent = parent.getParent();
@@ -424,9 +427,7 @@ class IRFactory {
           if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
             // report invalid continue target
             errorReporter.error(
-                UNEXPECTED_LABELLED_CONTINUE,
-                sourceName,
-                n.getLineno(), n.getCharno());
+                UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
           }
         }
       } else {
@@ -435,10 +436,7 @@ class IRFactory {
           while (!isContinueTarget(parent)) {
             if (parent.isFunction() || parent.isScript()) {
               // report invalid continue
-              errorReporter.error(
-                  UNEXPECTED_CONTINUE,
-                  sourceName,
-                  n.getLineno(), n.getCharno());
+              errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
               break;
             }
             parent = parent.getParent();
@@ -448,10 +446,7 @@ class IRFactory {
           while (!isBreakTarget(parent)) {
             if (parent.isFunction() || parent.isScript()) {
               // report invalid break
-              errorReporter.error(
-                  UNLABELED_BREAK,
-                  sourceName,
-                  n.getLineno(), n.getCharno());
+              errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
               break;
             }
             parent = parent.getParent();
@@ -490,7 +485,6 @@ class IRFactory {
     }
   }
 
-
   private static boolean labelsMatch(Node label, Node labelName) {
     return label.getFirstChild().getString().equals(labelName.getString());
   }
@@ -499,12 +493,14 @@ class IRFactory {
     if (n.isLabel()) {
       Node labelName = n.getFirstChild();
       for (Node parent = n.getParent();
-           parent != null && !parent.isFunction(); parent = parent.getParent()) {
+          parent != null && !parent.isFunction();
+          parent = parent.getParent()) {
         if (parent.isLabel() && labelsMatch(parent, labelName)) {
           errorReporter.error(
               SimpleFormat.format(DUPLICATE_LABEL, labelName.getString()),
               sourceName,
-              n.getLineno(), n.getCharno());
+              n.getLineno(),
+              n.getCharno());
           break;
         }
       }
@@ -538,24 +534,14 @@ class IRFactory {
   }
 
   private void setFileOverviewJsDoc(Node irNode) {
-    // Only after we've seen all @fileoverview entries, attach the
-    // last one to the root node, and copy the found license strings
-    // to that node.
-    JSDocInfo rootNodeJsDoc = fileLevelJsDocBuilder.build();
-    if (rootNodeJsDoc != null) {
-      irNode.setJSDocInfo(rootNodeJsDoc);
+    JSDocInfo.Builder fileoverview =
+        (this.firstFileoverview == null) ? JSDocInfo.builder() : this.firstFileoverview.toBuilder();
+
+    if (!this.licenseBuilder.isEmpty()) {
+      fileoverview.recordLicense(String.join("", this.licenseBuilder));
     }
 
-    if (fileOverviewInfo != null) {
-      JSDocInfo jsdoc = irNode.getJSDocInfo();
-      if (jsdoc != null && jsdoc.getLicense() != null) {
-        JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(fileOverviewInfo);
-        builder.recordLicense(jsdoc.getLicense());
-        fileOverviewInfo = builder.build();
-      }
-
-      irNode.setJSDocInfo(fileOverviewInfo);
-    }
+    irNode.setJSDocInfo(fileoverview.build(false));
   }
 
   Node transformBlock(ParseTree node) {
@@ -571,19 +557,29 @@ class IRFactory {
     return newBlock;
   }
 
-  /**
-   * @return true if the jsDocParser represents a fileoverview.
-   */
-  private boolean handlePossibleFileOverviewJsDoc(
-      JsDocInfoParser jsDocParser) {
-    if (jsDocParser.getFileOverviewJSDocInfo() != fileOverviewInfo) {
-      fileOverviewInfo = jsDocParser.getFileOverviewJSDocInfo();
-      if (fileOverviewInfo.isExterns()) {
-        this.currentFileIsExterns = true;
-      }
-      return true;
+  /** @return true if the jsDocParser represents a fileoverview. */
+  private boolean handlePossibleFileOverviewJsDoc(JsDocInfoParser jsDocParser) {
+    if (jsDocParser.getLicenseText() != null) {
+      this.licenseBuilder.add(jsDocParser.getLicenseText());
     }
-    return false;
+
+    JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
+    if (identical(newFileoverview, this.firstFileoverview)) {
+      return false;
+    }
+
+    if (this.firstFileoverview == null) {
+      this.firstFileoverview = newFileoverview;
+      this.currentFileIsExterns = newFileoverview.isExterns();
+    } else {
+      if (!newFileoverview.getSuppressions().isEmpty()) {
+        JSDocInfo.Builder mergeSuppressions = this.firstFileoverview.toBuilder();
+        mergeSuppressions.recordSuppressions(newFileoverview.getSuppressions());
+        this.firstFileoverview = mergeSuppressions.build();
+      }
+    }
+
+    return true;
   }
 
   private void handlePossibleFileOverviewJsDoc(Comment comment) {
@@ -803,7 +799,7 @@ class IRFactory {
     return location.column;
   }
 
-  String languageFeatureWarningMessage(Feature feature) {
+  static String languageFeatureWarningMessage(Feature feature) {
     LanguageMode forFeature = LanguageMode.minimumRequiredFor(feature);
 
     if (forFeature == LanguageMode.UNSUPPORTED) {
@@ -820,9 +816,7 @@ class IRFactory {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          languageFeatureWarningMessage(feature),
-          sourceName,
-          lineno(node), charno(node));
+          languageFeatureWarningMessage(feature), sourceName, lineno(node), charno(node));
     }
   }
 
@@ -831,9 +825,7 @@ class IRFactory {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          languageFeatureWarningMessage(feature),
-          sourceName,
-          lineno(token), charno(token));
+          languageFeatureWarningMessage(feature), sourceName, lineno(token), charno(token));
     }
   }
 
@@ -841,9 +833,7 @@ class IRFactory {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          languageFeatureWarningMessage(feature),
-          sourceName,
-          node.getLineno(), node.getCharno());
+          languageFeatureWarningMessage(feature), sourceName, node.getLineno(), node.getCharno());
     }
   }
 
@@ -858,13 +848,11 @@ class IRFactory {
     }
   }
 
-  void setSourceInfo(
-      Node irNode, com.google.javascript.jscomp.parsing.parser.Token token) {
+  void setSourceInfo(Node irNode, com.google.javascript.jscomp.parsing.parser.Token token) {
     setSourceInfo(irNode, token.location.start, token.location.end);
   }
 
-  void setSourceInfo(
-      Node node, SourcePosition start, SourcePosition end) {
+  void setSourceInfo(Node node, SourcePosition start, SourcePosition end) {
     if (node.getLineno() == -1) {
       // If we didn't already set the line, then set it now. This avoids
       // cases like ParenthesizedExpression where we just return a previous
@@ -877,12 +865,12 @@ class IRFactory {
   /**
    * Creates a JsDocInfoParser and parses the JsDoc string.
    *
-   * Used both for handling individual JSDoc comments and for handling
-   * file-level JSDoc comments (@fileoverview and @license).
+   * <p>Used both for handling individual JSDoc comments and for handling file-level JSDoc comments
+   * (@fileoverview and @license).
    *
    * @param node The JsDoc Comment node to parse.
-   * @return A JsDocInfoParser. Will contain either fileoverview JsDoc, or
-   *     normal JsDoc, or no JsDoc (if the method parses to the wrong level).
+   * @return A JsDocInfoParser. Will contain either fileoverview JsDoc, or normal JsDoc, or no JsDoc
+   *     (if the method parses to the wrong level).
    */
   private JsDocInfoParser createJsDocInfoParser(Comment node) {
     String comment = node.value;
@@ -893,17 +881,15 @@ class IRFactory {
     // The JsDocInfoParser expects the comment without the initial '/**'.
     int numOpeningChars = 3;
     JsDocInfoParser jsdocParser =
-      new JsDocInfoParser(
-          new JsDocTokenStream(comment.substring(numOpeningChars),
-                               lineno,
-                               charno + numOpeningChars),
-          comment,
-          position,
-          templateNode,
-          config,
-          errorReporter);
-    jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
-    jsdocParser.setFileOverviewJSDocInfo(fileOverviewInfo);
+        new JsDocInfoParser(
+            new JsDocTokenStream(
+                comment.substring(numOpeningChars), lineno, charno + numOpeningChars),
+            comment,
+            position,
+            templateNode,
+            config,
+            errorReporter);
+    jsdocParser.setFileOverviewJSDocInfo(this.firstFileoverview);
     if (node.type == Comment.Type.IMPORTANT && node.value.length() > 0) {
       jsdocParser.parseImportantComment();
     } else {
@@ -913,9 +899,7 @@ class IRFactory {
     return jsdocParser;
   }
 
-  /**
-   * Parses inline type info.
-   */
+  /** Parses inline type info. */
   private JSDocInfo parseInlineTypeDoc(Comment node) {
     String comment = node.value;
     int lineno = lineno(node.location.start);
@@ -924,21 +908,19 @@ class IRFactory {
     // The JsDocInfoParser expects the comment without the initial '/**'.
     int numOpeningChars = 3;
     JsDocInfoParser parser =
-      new JsDocInfoParser(
-          new JsDocTokenStream(comment.substring(numOpeningChars),
-              lineno,
-              charno + numOpeningChars),
-          comment,
-          node.location.start.offset,
-          templateNode,
-          config,
-          errorReporter);
+        new JsDocInfoParser(
+            new JsDocTokenStream(
+                comment.substring(numOpeningChars), lineno, charno + numOpeningChars),
+            comment,
+            node.location.start.offset,
+            templateNode,
+            config,
+            errorReporter);
     return parser.parseInlineTypeDoc();
   }
 
   // Set the length on the node if we're in IDE mode.
-  void setLength(
-      Node node, SourcePosition start, SourcePosition end) {
+  void setLength(Node node, SourcePosition start, SourcePosition end) {
     node.setLength(end.offset - start.offset);
   }
 
@@ -1254,7 +1236,7 @@ class IRFactory {
     }
 
     Node transformLabelName(IdentifierToken token) {
-      Node label =  newStringNode(Token.LABEL_NAME, token.value);
+      Node label = newStringNode(Token.LABEL_NAME, token.value);
       setSourceInfo(label, token);
       return label;
     }
@@ -1277,17 +1259,12 @@ class IRFactory {
     }
 
     Node processDoLoop(DoWhileStatementTree loopNode) {
-      return newNode(
-          Token.DO,
-          transformBlock(loopNode.body),
-          transform(loopNode.condition));
+      return newNode(Token.DO, transformBlock(loopNode.body), transform(loopNode.condition));
     }
 
     Node processElementGet(MemberLookupExpressionTree getNode) {
       return newNode(
-          Token.GETELEM,
-          transform(getNode.operand),
-          transform(getNode.memberExpression));
+          Token.GETELEM, transform(getNode.operand), transform(getNode.memberExpression));
     }
 
     Node processOptChainElementGet(OptionalMemberLookupExpressionTree getNode) {
@@ -1301,9 +1278,7 @@ class IRFactory {
       return getElem;
     }
 
-    /**
-     * @param exprNode unused
-     */
+    /** @param exprNode unused */
     Node processEmptyStatement(EmptyStatementTree exprNode) {
       return newNode(Token.EMPTY);
     }
@@ -1325,10 +1300,7 @@ class IRFactory {
       maybeWarnForFeature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
       return newNode(
-          Token.FOR_OF,
-          initializer,
-          transform(loopNode.collection),
-          transformBlock(loopNode.body));
+          Token.FOR_OF, initializer, transform(loopNode.collection), transformBlock(loopNode.body));
     }
 
     Node processForAwaitOf(ForAwaitOfStatementTree loopNode) {
@@ -1342,11 +1314,12 @@ class IRFactory {
     }
 
     Node processForLoop(ForStatementTree loopNode) {
-      Node node = newNode(
-          Token.FOR,
-          transformOrEmpty(loopNode.initializer, loopNode),
-          transformOrEmpty(loopNode.condition, loopNode),
-          transformOrEmpty(loopNode.increment, loopNode));
+      Node node =
+          newNode(
+              Token.FOR,
+              transformOrEmpty(loopNode.initializer, loopNode),
+              transformOrEmpty(loopNode.condition, loopNode),
+              transformOrEmpty(loopNode.increment, loopNode));
       node.addChildToBack(transformBlock(loopNode.body));
       return node;
     }
@@ -1370,8 +1343,7 @@ class IRFactory {
     }
 
     Node processFunctionCall(CallExpressionTree callNode) {
-      Node node = newNode(Token.CALL,
-                           transform(callNode.operand));
+      Node node = newNode(Token.CALL, transform(callNode.operand));
       node.setTrailingComma(callNode.arguments.hasTrailingComma);
       ArgumentListTree argumentsTree = callNode.arguments;
       // For each arg, represents a location (end SourcePosition) such that all
@@ -1503,9 +1475,7 @@ class IRFactory {
       } else {
         if (isDeclaration || isMember) {
           errorReporter.error(
-            "unnamed function statement",
-            sourceName,
-            lineno(functionTree), charno(functionTree));
+              "unnamed function statement", sourceName, lineno(functionTree), charno(functionTree));
 
           // Return the bare minimum to put the AST in a valid state.
           newName = createMissingNameNode();
@@ -1556,6 +1526,38 @@ class IRFactory {
       }
 
       return result;
+    }
+
+    // class fields: general case
+    Node processField(FieldDeclarationTree tree) {
+      maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
+
+      Node node = newStringNode(Token.MEMBER_FIELD_DEF, tree.name.value);
+      if (tree.initializer != null) {
+        Node initializer = transform(tree.initializer);
+        node.addChildToBack(initializer);
+        setLength(node, tree.location.start, tree.location.end);
+      }
+
+      node.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
+
+      return node;
+    }
+
+    // class fields: computed property fields
+    Node processComputedPropertyField(ComputedPropertyFieldTree tree) {
+      maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
+
+      Node key = transform(tree.property);
+
+      Node node =
+          (tree.initializer != null)
+              ? newNode(Token.COMPUTED_FIELD_DEF, key, transform(tree.initializer))
+              : newNode(Token.COMPUTED_FIELD_DEF, key);
+
+      node.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
+
+      return node;
     }
 
     Node processFormalParameterList(FormalParameterListTree tree) {
@@ -1652,14 +1654,30 @@ class IRFactory {
       return node;
     }
 
+    private void markBinaryExpressionFeatures(BinaryOperatorTree exprNode) {
+      switch (exprNode.operator.type) {
+        case STAR_STAR:
+        case STAR_STAR_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+          break;
+        case QUESTION_QUESTION:
+          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+          break;
+        case QUESTION_QUESTION_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
+          // fall through
+        case OR_EQUAL:
+        case AND_EQUAL:
+          maybeWarnForFeature(exprNode, Feature.LOGICAL_ASSIGNMENT);
+          break;
+        default:
+          break;
+      }
+    }
+
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
       if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
-        if (exprNode.operator.type == TokenType.STAR_STAR
-            || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
-          maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
-        } else if (exprNode.operator.type == TokenType.QUESTION_QUESTION) {
-          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
-        }
+        markBinaryExpressionFeatures(exprNode);
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
@@ -1677,20 +1695,13 @@ class IRFactory {
       Node current = null;
       Node previous = null;
       while (exprTree != null) {
-        if (exprTree.operator.type == TokenType.STAR_STAR
-            || exprTree.operator.type == TokenType.STAR_STAR_EQUAL) {
-          maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
-        }
-        if (exprTree.operator.type == TokenType.QUESTION_QUESTION) {
-          maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
-        }
+        markBinaryExpressionFeatures(exprTree);
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
         // deep and because we have already checked that there isn't any JSDoc we can traverse
         // out of order.
-        current = newNode(
-            transformBinaryTokenType(exprTree.operator.type),
-            transform(exprTree.right));
+        current =
+            newNode(transformBinaryTokenType(exprTree.operator.type), transform(exprTree.right));
         // We have inlined "transform" here. Normally, we would need to handle the JSDoc here but we
         // know there is no JSDoc to attach, which simplifies things.
         setSourceInfo(current, exprTree);
@@ -1719,16 +1730,12 @@ class IRFactory {
       return root;
     }
 
-    /**
-     * @param node unused.
-     */
+    /** @param node unused. */
     Node processDebuggerStatement(DebuggerStatementTree node) {
       return newNode(Token.DEBUGGER);
     }
 
-    /**
-     * @param node unused.
-     */
+    /** @param node unused. */
     Node processThisExpression(ThisExpressionTree node) {
       return newNode(Token.THIS);
     }
@@ -1746,9 +1753,7 @@ class IRFactory {
             charno(labelTree));
         return statement; // drop the LABEL node so that the resulting AST is valid
       }
-      return newNode(Token.LABEL,
-          transformLabelName(labelTree.name),
-          statement);
+      return newNode(Token.LABEL, transformLabelName(labelTree.name), statement);
     }
 
     Node processName(IdentifierExpressionTree nameNode) {
@@ -1862,9 +1867,7 @@ class IRFactory {
     }
 
     Node processNewExpression(NewExpressionTree exprNode) {
-      Node node = newNode(
-          Token.NEW,
-          transform(exprNode.operand));
+      Node node = newNode(Token.NEW, transform(exprNode.operand));
       node.setTrailingComma(exprNode.hasTrailingComma);
       if (exprNode.arguments != null) {
         for (ParseTree arg : exprNode.arguments.arguments) {
@@ -1899,7 +1902,8 @@ class IRFactory {
           errorReporter.error(
               "Default value cannot appear at top level of an object literal.",
               sourceName,
-              lineno(el), 0);
+              lineno(el),
+              0);
           continue;
         } else if (el.type == ParseTreeType.GET_ACCESSOR && maybeReportGetter(el)) {
           continue;
@@ -1935,8 +1939,7 @@ class IRFactory {
     Node processComputedPropertyMethod(ComputedPropertyMethodTree tree) {
       maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
-      Node n = newNode(Token.COMPUTED_PROP,
-          transform(tree.property), transform(tree.method));
+      Node n = newNode(Token.COMPUTED_PROP, transform(tree.property), transform(tree.method));
       n.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
       if (tree.method.asFunctionDeclaration().isStatic) {
         n.setStaticMember(true);
@@ -2100,9 +2103,12 @@ class IRFactory {
     private void validateRegExpFlags(LiteralExpressionTree tree, String flags) {
       for (char flag : Lists.charactersOf(flags)) {
         switch (flag) {
-          case 'g': case 'i': case 'm':
+          case 'g':
+          case 'i':
+          case 'm':
             break;
-          case 'u': case 'y':
+          case 'u':
+          case 'y':
             Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
             maybeWarnForFeature(tree, feature);
             break;
@@ -2111,9 +2117,7 @@ class IRFactory {
             break;
           default:
             errorReporter.error(
-                "Invalid RegExp flag '" + flag + "'",
-                sourceName,
-                lineno(tree), charno(tree));
+                "Invalid RegExp flag '" + flag + "'", sourceName, lineno(tree), charno(tree));
         }
       }
     }
@@ -2158,9 +2162,10 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.TEMPLATE_LITERALS);
       Node templateLitNode = newNode(Token.TEMPLATELIT);
       setSourceInfo(templateLitNode, tree);
-      Node node = tree.operand == null
-          ? templateLitNode
-          : newNode(Token.TAGGED_TEMPLATELIT, transform(tree.operand), templateLitNode);
+      Node node =
+          tree.operand == null
+              ? templateLitNode
+              : newNode(Token.TAGGED_TEMPLATELIT, transform(tree.operand), templateLitNode);
       for (ParseTree child : tree.elements) {
         templateLitNode.addChildToBack(transform(child));
       }
@@ -2205,8 +2210,7 @@ class IRFactory {
     }
 
     Node processSwitchStatement(SwitchStatementTree statementNode) {
-      Node node = newNode(Token.SWITCH,
-          transform(statementNode.expression));
+      Node node = newNode(Token.SWITCH, transform(statementNode.expression));
       for (ParseTree child : statementNode.caseClauses) {
         node.addChildToBack(transform(child));
       }
@@ -2214,13 +2218,11 @@ class IRFactory {
     }
 
     Node processThrowStatement(ThrowStatementTree statementNode) {
-      return newNode(Token.THROW,
-          transform(statementNode.value));
+      return newNode(Token.THROW, transform(statementNode.value));
     }
 
     Node processTryStatement(TryStatementTree statementNode) {
-      Node node = newNode(Token.TRY,
-          transformBlock(statementNode.body));
+      Node node = newNode(Token.TRY, transformBlock(statementNode.body));
       Node block = newNode(Token.BLOCK);
       boolean lineSet = false;
 
@@ -2255,9 +2257,8 @@ class IRFactory {
         maybeWarnForFeature(clauseNode, Feature.OPTIONAL_CATCH_BINDING);
       }
 
-      return newNode(Token.CATCH,
-          transform(clauseNode.exception),
-          transformBlock(clauseNode.catchBody));
+      return newNode(
+          Token.CATCH, transform(clauseNode.exception), transformBlock(clauseNode.catchBody));
     }
 
     Node processFinally(FinallyTree finallyNode) {
@@ -2305,9 +2306,9 @@ class IRFactory {
       Node assignTarget = operand.isCast() ? operand.getFirstChild() : operand;
       if (!assignTarget.isValidAssignmentTarget()) {
         errorReporter.error(
-            SimpleFormat.format("Invalid %s %s operand.",
-                (postfix ? "postfix" : "prefix"),
-                (type == Token.INC ? "increment" : "decrement")),
+            SimpleFormat.format(
+                "Invalid %s %s operand.",
+                (postfix ? "postfix" : "prefix"), (type == Token.INC ? "increment" : "decrement")),
             sourceName,
             operand.getLineno(),
             operand.getCharno());
@@ -2359,22 +2360,14 @@ class IRFactory {
     }
 
     Node processWhileLoop(WhileStatementTree stmt) {
-      return newNode(
-          Token.WHILE,
-          transform(stmt.condition),
-          transformBlock(stmt.body));
+      return newNode(Token.WHILE, transform(stmt.condition), transformBlock(stmt.body));
     }
 
     Node processWithStatement(WithStatementTree stmt) {
-      return newNode(
-          Token.WITH,
-          transform(stmt.expression),
-          transformBlock(stmt.body));
+      return newNode(Token.WITH, transform(stmt.expression), transformBlock(stmt.body));
     }
 
-    /**
-     * @param tree unused
-     */
+    /** @param tree unused */
     Node processMissingExpression(MissingPrimaryExpressionTree tree) {
       // This will already have been reported as an error by the parser.
       // Try to create something valid that ide mode might be able to
@@ -2391,8 +2384,7 @@ class IRFactory {
     }
 
     Node processIllegalToken(ParseTree node) {
-      errorReporter.error(
-          "Unsupported syntax: " + node.type, sourceName, lineno(node), 0);
+      errorReporter.error("Unsupported syntax: " + node.type, sourceName, lineno(node), 0);
       return newNode(Token.EMPTY);
     }
 
@@ -2400,10 +2392,7 @@ class IRFactory {
     boolean maybeReportGetter(ParseTree node) {
       features = features.with(Feature.GETTER);
       if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
-        errorReporter.error(
-            GETTER_ERROR_MESSAGE,
-            sourceName,
-            lineno(node), 0);
+        errorReporter.error(GETTER_ERROR_MESSAGE, sourceName, lineno(node), 0);
         return true;
       }
       return false;
@@ -2413,30 +2402,22 @@ class IRFactory {
     boolean maybeReportSetter(ParseTree node) {
       features = features.with(Feature.SETTER);
       if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
-        errorReporter.error(
-            SETTER_ERROR_MESSAGE,
-            sourceName,
-            lineno(node), 0);
+        errorReporter.error(SETTER_ERROR_MESSAGE, sourceName, lineno(node), 0);
         return true;
       }
       return false;
     }
 
     Node processBooleanLiteral(LiteralExpressionTree literal) {
-      return newNode(transformBooleanTokenType(
-          literal.literalToken.type));
+      return newNode(transformBooleanTokenType(literal.literalToken.type));
     }
 
-    /**
-     * @param literal unused
-     */
+    /** @param literal unused */
     Node processNullLiteral(LiteralExpressionTree literal) {
       return newNode(Token.NULL);
     }
 
-    /**
-     * @param literal unused
-     */
+    /** @param literal unused */
     Node processNull(NullTree literal) {
       // NOTE: This is not a NULL literal but a placeholder node such as in
       // an array with "holes".
@@ -2696,8 +2677,7 @@ class IRFactory {
       return good;
     }
 
-    private Node transformList(
-        Token type, ImmutableList<ParseTree> list) {
+    private Node transformList(Token type, ImmutableList<ParseTree> list) {
       Node n = newNode(type);
       for (ParseTree tree : list) {
         n.addChildToBack(transform(tree));
@@ -2705,8 +2685,7 @@ class IRFactory {
       return n;
     }
 
-    private Node transformListOrEmpty(
-        Token type, ImmutableList<ParseTree> list) {
+    private Node transformListOrEmpty(Token type, ImmutableList<ParseTree> list) {
       if (list == null || list.isEmpty()) {
         return newNode(Token.EMPTY);
       } else {
@@ -2716,9 +2695,7 @@ class IRFactory {
 
     Node unsupportedLanguageFeature(ParseTree node, String feature) {
       errorReporter.error(
-          "unsupported language feature: " + feature,
-          sourceName,
-          lineno(node), charno(node));
+          "unsupported language feature: " + feature, sourceName, lineno(node), charno(node));
       return createMissingExpressionNode();
     }
 
@@ -2738,9 +2715,11 @@ class IRFactory {
         case REGULAR_EXPRESSION:
           return processRegExpLiteral(expr);
         default:
-          throw new IllegalStateException("Unexpected literal type: "
-              + expr.literalToken.getClass() + " type: "
-              + expr.literalToken.type);
+          throw new IllegalStateException(
+              "Unexpected literal type: "
+                  + expr.literalToken.getClass()
+                  + " type: "
+                  + expr.literalToken.type);
       }
     }
 
@@ -2917,10 +2896,16 @@ class IRFactory {
         case OBJECT_SPREAD:
           return processObjectSpread(node.asObjectSpread());
 
-        // TODO(johnlenz): handle these or remove parser support
+          // TODO(johnlenz): handle these or remove parser support
         case ARGUMENT_LIST:
         default:
           break;
+
+          // ES2022
+        case FIELD_DECLARATION:
+          return processField(node.asFieldDeclaration());
+        case COMPUTED_PROPERTY_FIELD:
+          return processComputedPropertyField(node.asComputedPropertyField());
       }
       return processIllegalToken(node);
     }
@@ -2982,7 +2967,7 @@ class IRFactory {
       cur++; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
-        // Characters for which the backslash is semantically important.
+          // Characters for which the backslash is semantically important.
         case '^':
         case '$':
         case '\\':
@@ -3017,8 +3002,16 @@ class IRFactory {
         case 'w':
         case 'W':
         case 'x':
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
           result.append('\\');
           // fallthrough
         default:
@@ -3105,9 +3098,11 @@ class IRFactory {
               // No warning: "\0" followed by a character which is not an octal digit
               // is allowed in strict mode.
             } else {
-              errorReporter.warning(OCTAL_STRING_LITERAL_WARNING,
+              errorReporter.warning(
+                  OCTAL_STRING_LITERAL_WARNING,
                   sourceName,
-                  lineno(token.location.start), charno(token.location.start));
+                  lineno(token.location.start),
+                  charno(token.location.start));
             }
           }
 
@@ -3116,9 +3111,8 @@ class IRFactory {
 
           break;
         case 'x':
-          result.append((char) (
-              hexdigit(value.charAt(cur + 1)) * 0x10
-              + hexdigit(value.charAt(cur + 2))));
+          result.append(
+              (char) (hexdigit(value.charAt(cur + 1)) * 0x10 + hexdigit(value.charAt(cur + 2))));
           cur += 2;
           break;
         case 'u':
@@ -3199,36 +3193,45 @@ class IRFactory {
         case 'E':
           return Double.parseDouble(value);
         case 'b':
-        case 'B': {
-          maybeWarnForFeature(token, Feature.BINARY_LITERALS);
-          double v = 0;
-          int c = 1;
-          while (++c < length) {
-            v = (v * 2) + binarydigit(value.charAt(c));
+        case 'B':
+          {
+            maybeWarnForFeature(token, Feature.BINARY_LITERALS);
+            double v = 0;
+            int c = 1;
+            while (++c < length) {
+              v = (v * 2) + binarydigit(value.charAt(c));
+            }
+            return v;
           }
-          return v;
-        }
         case 'o':
-        case 'O': {
-          maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
-          double v = 0;
-          int c = 1;
-          while (++c < length) {
-            v = (v * 8) + octaldigit(value.charAt(c));
+        case 'O':
+          {
+            maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
+            double v = 0;
+            int c = 1;
+            while (++c < length) {
+              v = (v * 8) + octaldigit(value.charAt(c));
+            }
+            return v;
           }
-          return v;
-        }
         case 'x':
-        case 'X': {
-          double v = 0;
-          int c = 1;
-          while (++c < length) {
-            v = (v * 0x10) + hexdigit(value.charAt(c));
+        case 'X':
+          {
+            double v = 0;
+            int c = 1;
+            while (++c < length) {
+              v = (v * 0x10) + hexdigit(value.charAt(c));
+            }
+            return v;
           }
-          return v;
-        }
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
           double v = 0;
           int c = 0;
           while (++c < length) {
@@ -3236,22 +3239,29 @@ class IRFactory {
             if (isOctalDigit(digit)) {
               v = (v * 8) + octaldigit(digit);
             } else {
-              errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
-                  lineno(location.start), charno(location.start));
+              errorReporter.error(
+                  INVALID_OCTAL_DIGIT, sourceName, lineno(location.start), charno(location.start));
               return 0;
             }
           }
           if (inStrictContext()) {
-            errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
-                lineno(location.start), charno(location.start));
+            errorReporter.error(
+                INVALID_ES5_STRICT_OCTAL,
+                sourceName,
+                lineno(location.start),
+                charno(location.start));
           } else {
-            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-                lineno(location.start), charno(location.start));
+            errorReporter.warning(
+                INVALID_ES5_STRICT_OCTAL,
+                sourceName,
+                lineno(location.start),
+                charno(location.start));
           }
           return v;
-        case '8': case '9':
-          errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
-                    lineno(location.start), charno(location.start));
+        case '8':
+        case '9':
+          errorReporter.error(
+              INVALID_OCTAL_DIGIT, sourceName, lineno(location.start), charno(location.start));
           return 0;
         default:
           throw new IllegalStateException(
@@ -3329,23 +3339,46 @@ class IRFactory {
 
   private static int hexdigit(char c) {
     switch (c) {
-      case '0': return 0;
-      case '1': return 1;
-      case '2': return 2;
-      case '3': return 3;
-      case '4': return 4;
-      case '5': return 5;
-      case '6': return 6;
-      case '7': return 7;
-      case '8': return 8;
-      case '9': return 9;
-      case 'a': case 'A': return 10;
-      case 'b': case 'B': return 11;
-      case 'c': case 'C': return 12;
-      case 'd': case 'D': return 13;
-      case 'e': case 'E': return 14;
-      case 'f': case 'F': return 15;
-      default: throw new IllegalStateException("unexpected: " + c);
+      case '0':
+        return 0;
+      case '1':
+        return 1;
+      case '2':
+        return 2;
+      case '3':
+        return 3;
+      case '4':
+        return 4;
+      case '5':
+        return 5;
+      case '6':
+        return 6;
+      case '7':
+        return 7;
+      case '8':
+        return 8;
+      case '9':
+        return 9;
+      case 'a':
+      case 'A':
+        return 10;
+      case 'b':
+      case 'B':
+        return 11;
+      case 'c':
+      case 'C':
+        return 12;
+      case 'd':
+      case 'D':
+        return 13;
+      case 'e':
+      case 'E':
+        return 14;
+      case 'f':
+      case 'F':
+        return 15;
+      default:
+        throw new IllegalStateException("unexpected: " + c);
     }
   }
 
@@ -3480,6 +3513,13 @@ class IRFactory {
         return Token.AND;
       case QUESTION_QUESTION:
         return Token.COALESCE;
+
+      case OR_EQUAL:
+        return Token.ASSIGN_OR;
+      case AND_EQUAL:
+        return Token.ASSIGN_AND;
+      case QUESTION_QUESTION_EQUAL:
+        return Token.ASSIGN_COALESCE;
 
       default:
         throw new IllegalStateException(String.valueOf(token));

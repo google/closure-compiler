@@ -22,9 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Compilation results
- */
+/** Compilation results */
 public class Result {
   public final boolean success;
   public final ImmutableList<JSError> errors;
@@ -55,7 +53,7 @@ public class Result {
       String idGeneratorMap,
       Set<SourceFile> transpiledFiles) {
     this.success = errors.isEmpty();
-    this.errors  = errors;
+    this.errors = errors;
     this.warnings = warnings;
     this.variableMap = variableMap;
     this.propertyMap = propertyMap;
@@ -95,12 +93,14 @@ public class Result {
   }
 
   /**
-   * Returns an almost empty result that is used for multistage compilation.
+   * Returns an almost empty result that is more appropriate for a partial compilation.
    *
-   * <p>For multistage compilations, Result for stage1 only cares about errors and warnings. It is
-   * unnecessary to write all of other results in the disk.
+   * <p>For a partial compilation we only care about errors and warnings. It is unnecessary to
+   * examine all of the other results.
+   *
+   * @param result the full `Result` object provided by the compiler
    */
-  public static Result createResultForStage1(Result result) {
+  public static Result pruneResultForPartialCompilation(Result result) {
     VariableMap emptyVariableMap = new VariableMap(ImmutableMap.of());
     return new Result(
         /* errors= */ result.errors,

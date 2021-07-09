@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -87,7 +88,7 @@ abstract class CompilerTypeTestCase {
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(getCodingConvention());
-
+    options.setLanguage(LanguageMode.UNSUPPORTED);
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(

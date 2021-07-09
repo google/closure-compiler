@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,13 +39,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public NormalizeTest() {
     super(EXTERNS);
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
   }
 
   @Override
@@ -69,7 +61,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testNullishCoalesce() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     test("var a = x ?? y, b = foo()", "var a = x ?? y; var b = foo()");
     test(
         lines(
@@ -305,6 +296,18 @@ public final class NormalizeTest extends CompilerTestCase {
     test("x %= 1;", "x = x % 1;");
 
     test("/** @suppress {const} */ x += 1;", "/** @suppress {const} */ x = x + 1;");
+  }
+
+  @Test
+  public void testAssignShorthandDontNormalizeWhenLHSNotName() {
+    testSame("obj.x += 1;");
+  }
+
+  @Test
+  public void testLogicalAssignShorthand() {
+    test("x ||= 1;", "x || (x = 1);");
+    test("x &&= 1;", "x && (x = 1);");
+    test("x ??= 1;", "x ?? (x = 1);");
   }
 
   @Test
@@ -765,7 +768,7 @@ public final class NormalizeTest extends CompilerTestCase {
     options.setEmitUseStrict(false);
     compiler.init(new ArrayList<SourceFile>(), new ArrayList<SourceFile>(), options);
     String code = "function f(x) {} function g(x) {}";
-    Node ast = compiler.parseSyntheticCode(code);
+    Node ast = compiler.parseSyntheticCode("testNormalizeSyntheticCode", code);
     Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
     assertThat(compiler.toSource(ast))
         .isEqualTo("function f(x$jscomp$prefix_0){}function g(x$jscomp$prefix_1){}");

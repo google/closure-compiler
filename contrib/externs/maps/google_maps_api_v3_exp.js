@@ -1942,7 +1942,7 @@ google.maps.DirectionsService = function() {};
  * @param {!google.maps.DirectionsRequest} request
  * @param {(function(?google.maps.DirectionsResult,
  *     !google.maps.DirectionsStatus): void)=} callback
- * @return {?Promise<!google.maps.DirectionsResult>}
+ * @return {!Promise<!google.maps.DirectionsResult>}
  */
 google.maps.DirectionsService.prototype.route = function(request, callback) {};
 
@@ -2300,7 +2300,7 @@ google.maps.DistanceMatrixService = function() {};
  * @param {!google.maps.DistanceMatrixRequest} request
  * @param {(function(?google.maps.DistanceMatrixResponse,
  *     !google.maps.DistanceMatrixStatus): void)=} callback
- * @return {?Promise<!google.maps.DistanceMatrixResponse>}
+ * @return {!Promise<!google.maps.DistanceMatrixResponse>}
  */
 google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(
     request, callback) {};
@@ -2432,7 +2432,7 @@ google.maps.ElevationService = function() {};
  * @param {!google.maps.PathElevationRequest} request
  * @param {(function(?Array<!google.maps.ElevationResult>,
  *     !google.maps.ElevationStatus): void)=} callback
- * @return {?Promise<!google.maps.PathElevationResponse>}
+ * @return {!Promise<!google.maps.PathElevationResponse>}
  */
 google.maps.ElevationService.prototype.getElevationAlongPath = function(
     request, callback) {};
@@ -2442,7 +2442,7 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(
  * @param {!google.maps.LocationElevationRequest} request
  * @param {(function(?Array<!google.maps.ElevationResult>,
  *     !google.maps.ElevationStatus): void)=} callback
- * @return {?Promise<!google.maps.LocationElevationResponse>}
+ * @return {!Promise<!google.maps.LocationElevationResponse>}
  */
 google.maps.ElevationService.prototype.getElevationForLocations = function(
     request, callback) {};
@@ -2513,8 +2513,8 @@ google.maps.Geocoder = function() {};
  * Geocode a request.
  * @param {!google.maps.GeocoderRequest} request
  * @param {?(function(?Array<!google.maps.GeocoderResult>,
- *     !google.maps.GeocoderStatus): void)} callback
- * @return {?Promise<!google.maps.GeocoderResponse>}
+ *     !google.maps.GeocoderStatus): void)=} callback
+ * @return {!Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
 
@@ -3147,7 +3147,7 @@ google.maps.ImageMapTypeOptions.prototype.tileSize;
 
 /**
  * An overlay that looks like a bubble and is often connected to a marker.
- * @param {google.maps.InfoWindowOptions=} opts
+ * @param {?google.maps.InfoWindowOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -3160,17 +3160,19 @@ google.maps.InfoWindow = function(opts) {};
 google.maps.InfoWindow.prototype.close = function() {};
 
 /**
- * @return {string|Node}
+ * @return {string|?Node|undefined} The content of this InfoWindow. The same
+ *     string or Node that was previously set as the content.
  */
 google.maps.InfoWindow.prototype.getContent = function() {};
 
 /**
- * @return {google.maps.LatLng}
+ * @return {?google.maps.LatLng|undefined} The LatLng position of this
+ *     InfoWindow.
  */
 google.maps.InfoWindow.prototype.getPosition = function() {};
 
 /**
- * @return {number}
+ * @return {number} The zIndex of this InfoWindow.
  */
 google.maps.InfoWindow.prototype.getZIndex = function() {};
 
@@ -3182,34 +3184,46 @@ google.maps.InfoWindow.prototype.getZIndex = function() {};
  * <code>anchorPoint</code> property for calculating the
  * <code>pixelOffset</code> (see InfoWindowOptions). The
  * <code>anchorPoint</code> is the offset from the anchor&#39;s position to the
- * tip of the InfoWindow.
- * @param {(?google.maps.Map|?google.maps.StreetViewPanorama|?google.maps.InfoWindowOpenOptions)=}
- *     options
- * @param {?google.maps.MVCObject=} anchor
+ * tip of the InfoWindow. It is recommended to use the {@link
+ * google.maps.InfoWindowOpenOptions} interface as the single argument for this
+ * method. To prevent changing browser focus on open, set {@link
+ * google.maps.InfoWindowOpenOptions.shouldFocus} to <code>false</code>.
+ * @param {(?google.maps.InfoWindowOpenOptions|?google.maps.Map|?google.maps.StreetViewPanorama)=}
+ *     options Either an InfoWindowOpenOptions object (recommended) or the
+ *     map|panorama on which to render this InfoWindow.
+ * @param {?google.maps.MVCObject=} anchor The anchor to which this InfoWindow
+ *     will be positioned. If the anchor is non-null, the InfoWindow will be
+ *     positioned at the top-center of the anchor. The InfoWindow will be
+ *     rendered on the same map or panorama as the anchor <strong>(when
+ *     available)</strong>.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.open = function(options, anchor) {};
 
 /**
- * @param {string|Node} content
+ * @param {(string|?Node)=} content The content to be displayed by this
+ *     InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setContent = function(content) {};
 
 /**
- * @param {google.maps.InfoWindowOptions} options
+ * @param {?google.maps.InfoWindowOptions=} options
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} position
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} position The
+ *     LatLng position at which to display this InfoWindow.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setPosition = function(position) {};
 
 /**
- * @param {number} zIndex
+ * @param {number} zIndex The z-index for this InfoWindow. An InfoWindow with a
+ *     greater z-index will be displayed in front of all other InfoWindows with
+ *     a lower z-index.
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setZIndex = function(zIndex) {};
@@ -3221,17 +3235,27 @@ google.maps.InfoWindow.prototype.setZIndex = function(zIndex) {};
 google.maps.InfoWindowOpenOptions = function() {};
 
 /**
- * If anchor is non-null, position this InfoWindow at the top-center of the
- * anchor, instead of at the given latlng. The InfoWindow will be rendered on
- * the same Map or StreetView as the anchor.
+ * The anchor to which this InfoWindow will be positioned. If the anchor is
+ * non-null, the InfoWindow will be positioned at the top-center of the anchor.
+ * The InfoWindow will be rendered on the same map or panorama as the anchor
+ * <strong>(when available)</strong>.
  * @type {?google.maps.MVCObject|undefined}
  */
 google.maps.InfoWindowOpenOptions.prototype.anchor;
 
 /**
+ * The map or panorama on which to render this InfoWindow.
+ * @type {?google.maps.Map|?google.maps.StreetViewPanorama|undefined}
+ */
+google.maps.InfoWindowOpenOptions.prototype.map;
+
+/**
  * Whether or not focus should be moved inside the InfoWindow when it is opened.
- * When unset or set to <code>null</code> or <code>undefined</code>, a heuristic
- * will be used to decide whether focus should be moved or not.
+ * When this property is unset or when it is set to <code>null</code> or
+ * <code>undefined</code>, a heuristic is used to decide whether or not focus
+ * should be moved. It is recommended to explicitly set this property to fit
+ * your needs as the heuristic is subject to change and may not work well for
+ * all use cases.
  * @type {?boolean|undefined}
  */
 google.maps.InfoWindowOpenOptions.prototype.shouldFocus;
@@ -4556,7 +4580,7 @@ google.maps.MapOptions.prototype.keyboardShortcuts;
  * The unique identifier that represents a single instance of a Google Map. You
  * can create Map IDs and update a style associated with a Map ID at any time in
  * the Google Cloud Console <a
- * href="https://console.cloud.google.com/google/maps-apis/client-maps">Maps
+ * href="https://console.cloud.google.com/google/maps-apis/studio/maps">Maps
  * Management page</a> without changing embedded JSON styling in your
  * application code.
  * @type {?string|undefined}
@@ -5386,9 +5410,10 @@ google.maps.MarkerOptions.prototype.opacity;
 google.maps.MarkerOptions.prototype.optimized;
 
 /**
- * Marker position. The position is required to display the marker and can be
- * provided with {@link google.maps.Marker.setPosition} if not provided at
- * marker construction.
+ * Sets the marker position. A marker may be constructed but not displayed until
+ * its position is provided - for example, by a user&#39;s actions or choices. A
+ * marker position can be provided with {@link google.maps.Marker.setPosition}
+ * if not provided at marker construction.
  * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|undefined}
  */
 google.maps.MarkerOptions.prototype.position;
@@ -5493,7 +5518,7 @@ google.maps.MaxZoomService = function() {};
  * <code>MaxZoomResult</code>.
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
  * @param {(function(!google.maps.MaxZoomResult): void)=} callback
- * @return {?Promise<!google.maps.MaxZoomResult>}
+ * @return {!Promise<!google.maps.MaxZoomResult>}
  */
 google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(
     latlng, callback) {};
@@ -7123,7 +7148,7 @@ google.maps.StreetViewService = function() {};
  *     request
  * @param {(function(?google.maps.StreetViewPanoramaData,
  *     !google.maps.StreetViewStatus): void)=} callback
- * @return {?Promise<!google.maps.StreetViewResponse>}
+ * @return {!Promise<!google.maps.StreetViewResponse>}
  */
 google.maps.StreetViewService.prototype.getPanorama = function(
     request, callback) {};
@@ -8105,8 +8130,8 @@ google.maps.WebglOverlayView.prototype.getMap = function() {};
 
 /**
  * Implement this method to fetch or create intermediate data structures before
- * the overlay is drawn; use for structures that don’t require immediate access
- * to the WebGL rendering context.
+ * the overlay is drawn that don’t require immediate access to the WebGL
+ * rendering context.
  * @return {undefined}
  */
 google.maps.WebglOverlayView.prototype.onAdd = function() {};
@@ -9013,8 +9038,9 @@ google.maps.places = {};
  * attaches to an input element of type <code>text</code>, and listens for text
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
- * @param {!HTMLInputElement} inputField
- * @param {?google.maps.places.AutocompleteOptions=} opts
+ * @param {!HTMLInputElement} inputField The <code>&lt;input&gt;</code> text
+ *     field to which the <code>Autocomplete</code> should be attached.
+ * @param {?google.maps.places.AutocompleteOptions=} opts Options.
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -9022,7 +9048,7 @@ google.maps.places.Autocomplete = function(inputField, opts) {};
 
 /**
  * Returns the bounds to which predictions are biased.
- * @return {!google.maps.LatLngBounds|undefined}
+ * @return {!google.maps.LatLngBounds|undefined} The biasing bounds.
  */
 google.maps.places.Autocomplete.prototype.getBounds = function() {};
 
@@ -9038,7 +9064,7 @@ google.maps.places.Autocomplete.prototype.getFields = function() {};
  * Returns the details of the Place selected by user if the details were
  * successfully retrieved. Otherwise returns a stub Place object, with the
  * <code>name</code> property set to the current value of the input field.
- * @return {!google.maps.places.PlaceResult}
+ * @return {!google.maps.places.PlaceResult} The Place selected by the user.
  */
 google.maps.places.Autocomplete.prototype.getPlace = function() {};
 
@@ -9046,7 +9072,7 @@ google.maps.places.Autocomplete.prototype.getPlace = function() {};
  * Sets the preferred area within which to return Place results. Results are
  * biased towards, but not restricted to, this area.
  * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
- *     bounds
+ *     bounds The biasing bounds.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
@@ -9055,7 +9081,8 @@ google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
  * Sets the component restrictions. Component restrictions are used to restrict
  * predictions to only those within the parent component. For example, the
  * country.
- * @param {?google.maps.places.ComponentRestrictions} restrictions
+ * @param {?google.maps.places.ComponentRestrictions} restrictions The
+ *     restrictions to use.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(
@@ -9082,7 +9109,7 @@ google.maps.places.Autocomplete.prototype.setOptions = function(options) {};
  * href="https://developers.google.com/maps/documentation/places/web-service/supported_types#table3">
  * developer&#39;s guide</a>. If no type is specified, all types will be
  * returned. The <code>setTypes</code> method accepts a single element array.
- * @param {?Array<string>} types
+ * @param {?Array<string>} types The types of predictions to be included.
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setTypes = function(types) {};
@@ -9238,10 +9265,13 @@ google.maps.places.AutocompleteService = function() {};
 /**
  * Retrieves place autocomplete predictions based on the supplied autocomplete
  * request.
- * @param {!google.maps.places.AutocompletionRequest} request
+ * @param {!google.maps.places.AutocompletionRequest} request The autocompletion
+ *     request.
  * @param {(function(?Array<!google.maps.places.AutocompletePrediction>,
- *     !google.maps.places.PlacesServiceStatus): void)=} callback
- * @return {?Promise<!google.maps.places.AutocompleteResponse>}
+ *     !google.maps.places.PlacesServiceStatus): void)=} callback A callback
+ *     accepting an array of AutocompletePrediction objects and a
+ *     PlacesServiceStatus value as argument.
+ * @return {!Promise<!google.maps.places.AutocompleteResponse>}
  */
 google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
     request, callback) {};
@@ -9249,9 +9279,12 @@ google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
 /**
  * Retrieves query autocomplete predictions based on the supplied query
  * autocomplete request.
- * @param {!google.maps.places.QueryAutocompletionRequest} request
+ * @param {!google.maps.places.QueryAutocompletionRequest} request The query
+ *     autocompletion request.
  * @param {function(?Array<!google.maps.places.QueryAutocompletePrediction>,
- *     !google.maps.places.PlacesServiceStatus): void} callback
+ *     !google.maps.places.PlacesServiceStatus): void} callback A callback
+ *     accepting an array of QueryAutocompletePrediction objects and a
+ *     PlacesServiceStatus value as argument.
  * @return {undefined}
  */
 google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
@@ -9480,6 +9513,7 @@ google.maps.places.PhotoOptions.prototype.maxWidth;
 /**
  * Defines information about an aspect of the place that users have reviewed.
  * @record
+ * @deprecated This interface is no longer used.
  */
 google.maps.places.PlaceAspectRating = function() {};
 
@@ -9956,6 +9990,7 @@ google.maps.places.PlaceReview = function() {};
 /**
  * The aspects rated by the review. The ratings on a scale of 0 to 3.
  * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
+ * @deprecated This field is no longer available.
  */
 google.maps.places.PlaceReview.prototype.aspects;
 
@@ -9987,6 +10022,12 @@ google.maps.places.PlaceReview.prototype.language;
  * @type {string}
  */
 google.maps.places.PlaceReview.prototype.profile_photo_url;
+
+/**
+ * The rating of this review, a number between 1.0 and 5.0 (inclusive).
+ * @type {number|undefined}
+ */
+google.maps.places.PlaceReview.prototype.rating;
 
 /**
  * A string of formatted recent time, expressing the review time relative to the

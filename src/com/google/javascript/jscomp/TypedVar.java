@@ -71,7 +71,7 @@ public class TypedVar extends AbstractVar<TypedScope, TypedVar>
 
   TypedVar(boolean inferred, String name, Node nameNode, JSType type,
       TypedScope scope, int index, CompilerInput input) {
-    super(name, nameNode, scope, index, input);
+    super(name, nameNode, scope, index, input, /* implicitGoogNamespaceDefinition= */ null);
     if (nameNode != null) {
       checkArgument(
           NAME_NODE_TYPES.contains(nameNode.getToken()),

@@ -410,39 +410,41 @@ class VariableReferenceCheck implements CompilerPass {
    */
   private boolean checkEarlyReference(Var v, Reference reference, Node referenceNode) {
     // Don't check the order of references in externs files.
-    if (!referenceNode.isFromExterns()) {
-      // Special case to deal with var goog = goog || {}. Note that
-      // let x = x || {} is illegal, just like var y = x || {}; let x = y;
-      if (v.isVar()) {
-        Node curr = reference.getParent();
-        while (curr.isOr() && curr.getParent().getFirstChild() == curr) {
-          curr = curr.getParent();
-        }
-        if (curr.isName() && curr.getString().equals(v.getName())) {
-          return false;
-        }
+    if (referenceNode.isFromExterns() || v.isImplicitGoogNamespace()) {
+      return false;
+    }
+    // Special case to deal with var goog = goog || {}. Note that
+    // let x = x || {} is illegal, just like var y = x || {}; let x = y;
+    if (v.isVar()) {
+      Node curr = reference.getParent();
+      while (curr.isOr() && curr.getParent().getFirstChild() == curr) {
+        curr = curr.getParent();
       }
-
-      // Only generate warnings for early references in the same function scope/global scope in
-      // order to deal with possible forward declarations and recursion
-      // e.g. don't warn on:
-      //   function f() { return x; } f(); let x = 5;
-      // We don't track where `f` is called, just where it's defined, and don't want to warn for
-      //     function f() { return x; } let x = 5; f();
-      // TODO(moz): See if we can remove the bypass for "goog"
-      if (reference.getScope().hasSameContainerScope(v.getScope()) && !v.getName().equals("goog")) {
-        compiler.report(
-            JSError.make(
-                reference.getNode(),
-                v.isGoogModuleExports()
-                    ? EARLY_EXPORTS_REFERENCE
-                    : (v.isLet() || v.isConst() || v.isClass() || v.isParam())
-                        ? EARLY_REFERENCE_ERROR
-                        : EARLY_REFERENCE,
-                v.getName()));
-        return true;
+      if (curr.isName() && curr.getString().equals(v.getName())) {
+        return false;
       }
     }
+
+    // Only generate warnings for early references in the same function scope/global scope in
+    // order to deal with possible forward declarations and recursion
+    // e.g. don't warn on:
+    //   function f() { return x; } f(); let x = 5;
+    // We don't track where `f` is called, just where it's defined, and don't want to warn for
+    //     function f() { return x; } let x = 5; f();
+    // TODO(moz): See if we can remove the bypass for "goog"
+    if (reference.getScope().hasSameContainerScope(v.getScope()) && !v.getName().equals("goog")) {
+      compiler.report(
+          JSError.make(
+              reference.getNode(),
+              v.isGoogModuleExports()
+                  ? EARLY_EXPORTS_REFERENCE
+                  : (v.isLet() || v.isConst() || v.isClass() || v.isParam())
+                      ? EARLY_REFERENCE_ERROR
+                      : EARLY_REFERENCE,
+              v.getName()));
+      return true;
+    }
+
     return false;
   }
 

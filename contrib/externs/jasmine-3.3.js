@@ -82,7 +82,13 @@ jasmine.Clock.prototype.tick = function(ms) {};
 jasmine.Clock.prototype.mockDate = function(date) {};
 
 
-/** @constructor */
+/**
+ * @constructor
+ * @template T, U
+ * (Template args here are unused, but added to align with
+ * google3/third_party/javascript/typings/jasmine 's definition of
+ * AsyncMatchers.)
+ */
 jasmine.AsyncMatchers = function() {};
 
 

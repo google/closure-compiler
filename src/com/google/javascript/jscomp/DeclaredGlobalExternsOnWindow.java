@@ -113,15 +113,9 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    if (parent != null
-        && !NodeUtil.isControlStructure(parent)
-        && !NodeUtil.isStatementBlock(parent)) {
-      return false;
-    }
-    if (n.isScript() && NodeUtil.isFromTypeSummary(n)) {
-      return false;
-    }
-    return true;
+    return parent == null
+        || NodeUtil.isControlStructure(parent)
+        || NodeUtil.isStatementBlock(parent);
   }
 
   @Override

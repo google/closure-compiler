@@ -625,6 +625,36 @@ public final class CheckMissingOverrideTypesTest {
     }
 
     @Test
+    public void testInterfaceTypeParam_acrossModuleImportChain() {
+      test(
+          srcs(
+              lines("goog.module('a');", "/** @interface */ let intf;", "exports.intf = intf;"),
+              lines(
+                  "goog.module('b');",
+                  "const {intf} = goog.require('a');",
+                  "class Foo {",
+                  "  /** @param {!intf} arg */",
+                  "  method(arg) {}",
+                  "}",
+                  "exports.Foo = Foo;"),
+              lines(
+                  "goog.module('c');",
+                  "const {Foo} = goog.require('b')",
+                  "class Bar extends Foo {",
+                  "  /** @override */",
+                  "  method(arg) {",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(
+                  lines(
+                      "/**",
+                      " * @param {!a.intf} arg", // reports fully qualified type `a.intf`
+                      " * @override",
+                      " */")));
+    }
+
+    @Test
     public void testEnumTypeParam_acrossModuleImportChain() {
       test(
           srcs(

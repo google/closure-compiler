@@ -7,12 +7,12 @@ option java_multiple_files = true;
 
 message OptimizationJsdoc {
   repeated JsdocTag kind = 1;
-  string license_text = 2;
+  int32 license_text_pointer = 2;
 
   // Tags used by i18n messages.
-  string description = 3;
-  string meaning = 4;
-  string alternate_message_id = 5;
+  int32 description_pointer = 3;
+  int32 meaning_pointer = 4;
+  int32 alternate_message_id_pointer = 5;
 }
 
 enum JsdocTag {
@@ -59,4 +59,13 @@ enum JsdocTag {
 
   // Used by GlobalNamespace, CollapseProperties, and AggressiveInlineAliases
   JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE = 25;
+
+  // Used by unit tests
+  JSDOC_FILEOVERVIEW = 26;
+
+  // Used by localization logic
+  JSDOC_LOCALE_FILE = 27;
+  JSDOC_LOCALE_OBJECT = 28;
+  JSDOC_LOCALE_SELECT = 29;
+  JSDOC_LOCALE_VALUE = 30;
 }

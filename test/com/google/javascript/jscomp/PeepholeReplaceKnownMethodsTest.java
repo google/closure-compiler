@@ -37,10 +37,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     super(
         MINIMAL_EXTERNS
             + lines(
-                // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in
-                // NTI,
+                // NOTE: these are defined as variadic to avoid wrong-argument-count warnings,
                 // which enables testing that the pass does not touch calls with wrong argument
                 // count.
+                "/** @type {function(this: string, ...*): string} */ String.prototype.replaceAll;",
+                "/** @type {function(this: string, ...*): string} */ String.prototype.replace;",
                 "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
                 "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
                 "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
@@ -203,6 +204,55 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     // Template strings
     foldSame("x = `abcdef`.substr(0,2)");
     foldSame("x = `abc ${xyz} def`.substr(0,2)");
+  }
+
+  @Test
+  public void testFoldStringReplace() {
+    fold("'c'.replace('c','x')", "'x'");
+    fold("'ac'.replace('c','x')", "'ax'");
+    fold("'ca'.replace('c','x')", "'xa'");
+    fold("'ac'.replace('c','xxx')", "'axxx'");
+    fold("'ca'.replace('c','xxx')", "'xxxa'");
+
+    // only one instance replaced
+    fold("'acaca'.replace('c','x')", "'axaca'");
+    fold("'ab'.replace('','x')", "'xab'");
+
+    foldSame("'acaca'.replace(/c/,'x')"); // this will affect the global RegExp props
+    foldSame("'acaca'.replace(/c/g,'x')"); // this will affect the global RegExp props
+
+    // not a literal
+    foldSame("x.replace('x','c')");
+
+    foldSame("'Xyz'.replace('Xyz', '$$')"); // would fold to '$'
+    foldSame("'PreXyzPost'.replace('Xyz', '$&')"); // would fold to 'PreXyzPost'
+    foldSame("'PreXyzPost'.replace('Xyz', '$`')"); // would fold to 'PrePrePost'
+    foldSame("'PreXyzPost'.replace('Xyz', '$\\'')"); // would fold to  'PrePostPost'
+    foldSame("'PreXyzPostXyz'.replace('Xyz', '$\\'')"); // would fold to 'PrePostXyzPostXyz'
+    foldSame("'123'.replace('2', '$`')"); // would fold to '113'
+  }
+
+  @Test
+  public void testFoldStringReplaceAll() {
+    fold("x = 'abcde'.replaceAll('bcd','c')", "x = 'ace'");
+    fold("x = 'abcde'.replaceAll('c','xxx')", "x = 'abxxxde'");
+    fold("x = 'abcde'.replaceAll('xxx','c')", "x = 'abcde'");
+    fold("'ab'.replaceAll('','x')", "'xaxbx'");
+
+    fold("x = 'c_c_c'.replaceAll('c','x')", "x = 'x_x_x'");
+
+    foldSame("x = 'acaca'.replaceAll(/c/,'x')"); // this should throw
+    foldSame("x = 'acaca'.replaceAll(/c/g,'x')"); // this will affect the global RegExp props
+
+    // not a literal
+    foldSame("x.replaceAll('x','c')");
+
+    foldSame("'Xyz'.replaceAll('Xyz', '$$')"); // would fold to '$'
+    foldSame("'PreXyzPost'.replaceAll('Xyz', '$&')"); // would fold to 'PreXyzPost'
+    foldSame("'PreXyzPost'.replaceAll('Xyz', '$`')"); // would fold to 'PrePrePost'
+    foldSame("'PreXyzPost'.replaceAll('Xyz', '$\\'')"); // would fold to  'PrePostPost'
+    foldSame("'PreXyzPostXyz'.replaceAll('Xyz', '$\\'')"); // would fold to 'PrePostXyzPost'
+    foldSame("'123'.replaceAll('2', '$`')"); // would fold to '113'
   }
 
   @Test

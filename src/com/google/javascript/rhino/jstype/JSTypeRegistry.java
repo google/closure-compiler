@@ -90,7 +90,7 @@ import javax.annotation.Nullable;
  * <p>This class is not thread-safe.
  *
  */
-public class JSTypeRegistry {
+public final class JSTypeRegistry {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   /**

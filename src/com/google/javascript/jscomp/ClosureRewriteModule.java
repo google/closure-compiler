@@ -1071,10 +1071,6 @@ final class ClosureRewriteModule implements CompilerPass {
       compiler.reportChangeToEnclosingScope(call);
       NodeUtil.getEnclosingStatement(call).detach();
     }
-    Node callee = call.getFirstChild();
-    Node arg = callee.getNext();
-    maybeAddToSymbolTable(callee);
-    maybeAddToSymbolTable(createNamespaceNode(arg));
   }
 
   private static void updateGoogDeclareLegacyNamespace(Node call) {
@@ -1172,15 +1168,6 @@ final class ClosureRewriteModule implements CompilerPass {
         call.detach();
         statementNode.replaceWith(IR.exprResult(call));
         compiler.reportChangeToEnclosingScope(call);
-      }
-      if (targetIsNonLegacyGoogModule && !preserveSugar) {
-        // Add goog.require() and namespace name to preprocessor table because they're removed
-        // by current pass. If target is not a module then goog.require() is retained for
-        // ProcessClosurePrimitives pass and symbols will be added there instead.
-        Node callee = call.getFirstChild();
-        Node arg = callee.getNext();
-        maybeAddToSymbolTable(callee);
-        maybeAddToSymbolTable(createNamespaceNode(arg));
       }
     }
   }
@@ -1863,15 +1850,6 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   /**
-   * Add the given qualified name node to the symbol table.
-   */
-  private void maybeAddToSymbolTable(Node n) {
-    if (preprocessorSymbolTable != null) {
-      preprocessorSymbolTable.addReference(n);
-    }
-  }
-
-  /**
    * Add alias nodes to the symbol table as they going to be removed by rewriter. Example aliases:
    *
    * const Foo = goog.require('my.project.Foo');
@@ -1890,14 +1868,6 @@ final class ClosureRewriteModule implements CompilerPass {
       String name = "alias_" + module + "_" + nodeName;
       preprocessorSymbolTable.addReference(n, name);
     }
-  }
-
-  /**
-   * @param n String node containing goog.module namespace.
-   * @return A NAMESPACE node with the same name and source info as provided node.
-   */
-  private static Node createNamespaceNode(Node n) {
-    return Node.newString(n.getString()).srcref(n);
   }
 
   /**

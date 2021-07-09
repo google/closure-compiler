@@ -44,8 +44,7 @@ package com.google.javascript.rhino;
 /**
  * This class implements the JavaScript scanner.
  *
- * It is based on the C source files jsscan.c and jsscan.h
- * in the jsref package.
+ * <p>It is based on the C source files jsscan.c and jsscan.h in the jsref package.
  *
  */
 public enum Token {
@@ -119,9 +118,9 @@ public enum Token {
   ASSIGN_MOD, // %=
   ASSIGN_EXPONENT, // **=
 
-  ASSIGN_OR, //logical or assignment (||=)
-  ASSIGN_AND, //logical and assignment (&&=)
-  ASSIGN_COALESCE, //logical nullish coalesce assignment (??=)
+  ASSIGN_OR, // logical or assignment (||=)
+  ASSIGN_AND, // logical and assignment (&&=)
+  ASSIGN_COALESCE, // logical nullish coalesce assignment (??=)
 
   HOOK, // conditional (?:)
   OR, // logical or (||)
@@ -172,6 +171,8 @@ public enum Token {
   CLASS, // classes
   CLASS_MEMBERS, // class member container
   MEMBER_FUNCTION_DEF,
+  MEMBER_FIELD_DEF, // class field general case
+  COMPUTED_FIELD_DEF, // class field computed property case
   SUPER,
 
   LET, // block scoped vars
@@ -297,6 +298,8 @@ public enum Token {
       case TRY:
       case VAR:
       case YIELD:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         return -1;
       case EMPTY:
       case FALSE:

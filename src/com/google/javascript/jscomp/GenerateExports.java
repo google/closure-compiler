@@ -179,7 +179,7 @@ public class GenerateExports implements CompilerPass {
   }
 
   private void declareSyntheticExternsVar(String name, Node srcref) {
-    CompilerInput syntheticInput = compiler.getSynthesizedExternsInputAtEnd();
+    CompilerInput syntheticInput = compiler.getSynthesizedExternsInput();
     Node syntheticVarRoot = syntheticInput.getAstRoot(compiler);
 
     Node varDeclaration = IR.var(IR.name(name)).srcrefTree(srcref);

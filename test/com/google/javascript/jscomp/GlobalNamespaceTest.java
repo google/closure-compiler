@@ -526,8 +526,7 @@ public final class GlobalNamespaceTest {
             .getLastChild() // EXPR_RESULT `y.hasOwnProperty('bar');`
             .getFirstFirstChild(); // `y.hasOwnProperty`
     Node yNode = yDotHasOwnProperty.getFirstChild(); // `y`
-    checkState(
-        yDotHasOwnProperty.getQualifiedName().equals("y.hasOwnProperty"), yDotHasOwnProperty);
+    assertNode(yDotHasOwnProperty).matchesQualifiedName("y.hasOwnProperty");
     Node xNode = IR.name("x");
     yNode.replaceWith(xNode);
 

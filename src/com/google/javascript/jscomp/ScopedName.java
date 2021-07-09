@@ -63,9 +63,8 @@ abstract class ScopedName {
     }
   }
 
-  // Non-final for jsdev tests
   @Override
-  public boolean equals(Object other) {
+  public final boolean equals(Object other) {
     if (!(other instanceof ScopedName)) {
       return false;
     }
@@ -73,9 +72,8 @@ abstract class ScopedName {
         && getScopeRoot().equals(((ScopedName) other).getScopeRoot());
   }
 
-  // Non-final for jsdev tests
   @Override
-  public int hashCode() {
+  public final int hashCode() {
     return Objects.hash(getName(), getScopeRoot());
   }
 }

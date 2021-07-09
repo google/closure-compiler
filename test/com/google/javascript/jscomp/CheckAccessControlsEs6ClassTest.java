@@ -237,6 +237,34 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testWarningOnClassField_deprecated() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @deprecated There is a madness to this method */",
+                "  bar = 2;",
+                "  baz() { return this.bar; }",
+                "}")),
+        deprecatedProp(
+            "Property bar of type Foo has been deprecated: There is a madness to this method"));
+  }
+
+  @Test
+  public void testNoWarningOnClassField_deprecated() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /**",
+                "   * @type {?}",
+                "   * @deprecated Use something else.",
+                "   */",
+                "  x = 2;",
+                "}")));
+  }
+
+  @Test
   public void testNoWarningInDeprecatedClass() {
     test(
         srcs(
@@ -871,6 +899,50 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class Foo { }"),
             lines("Foo")),
         error(BAD_PRIVATE_GLOBAL_ACCESS));
+  }
+
+  @Test
+  public void testNoPrivateAccessForFields() {
+    // Overriding a private property with a non-private property
+    // in a different file causes problems.
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  bar",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  bar",
+                "}")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoPrivateAccessForFields2() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  bar",
+                "}"),
+            lines("new Foo().bar")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoPrivateAccessForFields3() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  bar = 2",
+                "}"),
+            lines("new Foo().bar = 4")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1567,6 +1639,89 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "",
                 "/** @protected */",
                 "Bar.prototype.x;")));
+  }
+
+  @Test
+  public void testNoProtectedAccessForFields1() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar",
+                "}"),
+            "(new Foo).bar;"),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoProtectedAccessForFields2() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar",
+                "}"),
+            lines(
+                "class OtherFoo {", //
+                "  constructor() {",
+                "    (new Foo).bar;",
+                "  }",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoProtectedAccessForFields3() {
+    test(
+        srcs(
+            lines(
+                "class Foo {}",
+                "",
+                "class SubFoo extends Foo {",
+                "  /** @protected */",
+                "  bar",
+                "}"),
+            lines(
+                "class SubberFoo extends Foo {",
+                "  constructor() {",
+                "    (new SubFoo).bar;",
+                "  }",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoProtectedAccessForFields4() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  constructor() {",
+                "    (new SubFoo).bar;",
+                "  }",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  /** @protected */",
+                "  bar",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testNoProtectedAccessForFields5() {
+    test(
+        srcs(
+            lines("goog.Foo = class {", "  /** @protected */", "  bar", "}"),
+            lines(
+                "goog.NotASubFoo = class {",
+                "  constructor() {",
+                "    (new goog.Foo).bar;",
+                "  }",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
   @Test
@@ -2772,6 +2927,22 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstantProperty1aLogicalAssignment() {
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  constructor() {",
+                "    /** @const */",
+                "    this.bar = null;",
+                "",
+                "    this.bar ??= 4;",
+                "  }",
+                "}")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE));
+  }
+
+  @Test
   public void testConstantPropertyReassigned_crossModuleWithCollidingNames() {
     disableRewriteClosureCode();
     testNoWarning(
@@ -2810,6 +2981,20 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "    this.BAR = 3;",
                 "",
                 "    this.BAR += 4;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testConstantProperty_conventionNotEnforced1LogicalAssignment() {
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  constructor() {",
+                "    this.BAR = null;",
+                "",
+                "    this.BAR ??= 4;",
                 "  }",
                 "}")));
   }
@@ -3135,6 +3320,21 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class Bar {}",
                 "",
                 "Bar.CONST = 100;")));
+  }
+
+  @Test
+  public void testConstantProperty17() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "/** @const */",
+                "  x = 2;",
+                "}",
+                "",
+                "/** @const */",
+                "new Foo().x = 2;")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE));
   }
 
   @Test

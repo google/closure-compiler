@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.Requirement.WhitelistEntry;
@@ -83,7 +82,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     enableClosurePass();
     enableClosurePassForExpected();
     enableRewriteClosureCode();
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5_STRICT);
     configuration = DEFAULT_CONFORMANCE;
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
@@ -643,6 +641,29 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedName_googProvided() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'foo.bar'\n"
+            + "  error_message: 'foo.bar is not allowed'\n"
+            + "  allowlist: 'SRC1'\n"
+            + "}";
+
+    testWarning(
+        srcs(
+            SourceFile.fromCode("SRC1", "goog.provide('foo.bar');"),
+            SourceFile.fromCode("SRC2", "alert(foo.bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testWarning(
+        srcs(
+            SourceFile.fromCode("SRC1", "goog.provide('foo.bar'); foo.bar = {};"),
+            SourceFile.fromCode("SRC2", "alert(foo.bar);")),
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testInferredConstCheck() {
     configuration =
         lines(
@@ -831,7 +852,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning("anything;");
   }
-
 
   @Test
   public void testReportLooseTypeViolations() {
@@ -2118,6 +2138,35 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "    /** @type {?} */",
             "    this.prop;",
             "  }",
+            "  method() {",
+            "    alert(this.prop);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_implicitUnknownOnClassField_warn() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+    // TODO(b/192088118): need to fix so test gives warning for implicit field reference
+    testNoWarning(
+        lines(
+            "class F {", //
+            "  prop;",
+            "  method() {",
+            "    alert(this.prop);",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testBanUnknownDirectThisPropsReferences_explicitUnknownOnClassField_ok() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testNoWarning(
+        lines(
+            "class F {", //
+            "  /** @type {?} */",
+            "  prop = 2;",
             "  method() {",
             "    alert(this.prop);",
             "  }",

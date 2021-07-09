@@ -25,6 +25,9 @@ import static com.google.javascript.rhino.Token.ARRAYLIT;
 import static com.google.javascript.rhino.Token.ARRAY_PATTERN;
 import static com.google.javascript.rhino.Token.ASSIGN;
 import static com.google.javascript.rhino.Token.ASSIGN_ADD;
+import static com.google.javascript.rhino.Token.ASSIGN_AND;
+import static com.google.javascript.rhino.Token.ASSIGN_COALESCE;
+import static com.google.javascript.rhino.Token.ASSIGN_OR;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.BIGINT;
 import static com.google.javascript.rhino.Token.BITOR;
@@ -32,6 +35,7 @@ import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.COALESCE;
 import static com.google.javascript.rhino.Token.COMMA;
+import static com.google.javascript.rhino.Token.COMPUTED_FIELD_DEF;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
 import static com.google.javascript.rhino.Token.DEFAULT_VALUE;
@@ -50,6 +54,7 @@ import static com.google.javascript.rhino.Token.IF;
 import static com.google.javascript.rhino.Token.INC;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
+import static com.google.javascript.rhino.Token.MEMBER_FIELD_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
@@ -76,7 +81,6 @@ import static com.google.javascript.rhino.Token.YIELD;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
-import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
@@ -155,6 +159,8 @@ public final class AstAnalyzerTest {
       options.setStrictModeInput(false);
       options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
 
+      options.setLanguageIn(CompilerOptions.LanguageMode.UNSUPPORTED);
+
       compiler = new Compiler();
       compiler.initOptions(options);
 
@@ -163,7 +169,6 @@ public final class AstAnalyzerTest {
               ImmutableMap.of(
                   "getter", PropertyAccessKind.GETTER_ONLY, //
                   "setter", PropertyAccessKind.SETTER_ONLY)));
-      compiler.setColorRegistry(ColorRegistry.builder().setDefaultNativeColorsForTesting().build());
     }
 
     private Node parseInternal(String js) {
@@ -241,6 +246,9 @@ public final class AstAnalyzerTest {
           kase().js("a[0][i=4]").token(GETELEM).expect(true),
           kase().js("a?.[0][i=4]").token(OPTCHAIN_GETELEM).expect(true),
           kase().js("a += 3").token(ASSIGN_ADD).expect(true),
+          kase().js("a ||= b").token(ASSIGN_OR).expect(true),
+          kase().js("a &&= b").token(ASSIGN_AND).expect(true),
+          kase().js("a ??= b").token(ASSIGN_COALESCE).expect(true),
           kase().js("a, b, z += 4").token(COMMA).expect(true),
           kase().js("a ? c : d++").token(HOOK).expect(true),
           kase().js("a ?? b++").token(COALESCE).expect(true),
@@ -572,6 +580,26 @@ public final class AstAnalyzerTest {
           // MEMBER_FUNCTION_DEF
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("({ a(x) {} })"),
           kase().expect(false).token(MEMBER_FUNCTION_DEF).js("class C { a(x) {} }"),
+
+          // MEMBER_FIELD_DEF
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x=2; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { x \n y }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x=2; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x; }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x }"),
+          kase().expect(true).token(MEMBER_FIELD_DEF).js("class C { static x \n static y }"),
+
+          // COMPUTED_FIELD_DEF
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { [x]; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { ['x']=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 'x'=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { 1=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static [x]; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static ['x']=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static 'x'=2; }"),
+          kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static 1=2; }"),
 
           // SUPER calls
           kase().expect(false).token(SUPER).js("super()"),

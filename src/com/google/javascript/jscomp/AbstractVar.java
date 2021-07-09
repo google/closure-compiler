@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
@@ -38,8 +39,11 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   private final String name;
 
-  /** Var node */
   private final Node nameNode;
+
+  // null if not an implicit goog namespace; otherwise starts out as an ArrayList then is frozen
+  // into an ImmutableList.
+  private SourceKind implicitGoogNamespaceStrength;
 
   /** Input source */
   private final CompilerInput input;
@@ -66,18 +70,24 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       @Nullable Node nameNode,
       @Nullable S scope,
       int index,
-      @Nullable CompilerInput input) {
+      @Nullable CompilerInput input,
+      @Nullable Node implicitGoogNamespaceDefinition) {
     checkArgument(index >= -1, index);
     this.name = checkNotNull(name);
-    this.nameNode = nameNode;
+    if (implicitGoogNamespaceDefinition != null) {
+      this.nameNode = null;
+      this.implicitGoogNamespaceStrength = strengthOf(implicitGoogNamespaceDefinition);
+    } else {
+      this.nameNode = nameNode;
+      this.implicitGoogNamespaceStrength = null;
+    }
     this.scope = scope;
     this.index = index;
     this.input = input;
   }
 
-  // Non-final for jsdev tests
   @Override
-  public String getName() {
+  public final String getName() {
     return name;
   }
 
@@ -97,7 +107,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   @Override
   public final StaticSourceFile getSourceFile() {
-    return (nameNode != null ? nameNode : scope.getRootNode()).getStaticSourceFile();
+    return (this.getNode() != null ? this.getNode() : scope.getRootNode()).getStaticSourceFile();
   }
 
   @Override
@@ -107,11 +117,11 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   @Override
   public final V getDeclaration() {
-    return nameNode == null ? null : thisVar();
+    return this.getNode() == null ? null : thisVar();
   }
 
   public final Node getParentNode() {
-    return nameNode == null ? null : nameNode.getParent();
+    return this.getNode() == null ? null : this.getNode().getParent();
   }
 
   /**
@@ -123,6 +133,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return parent != null && NodeUtil.isFunctionExpression(parent);
   }
 
+  @Override
   public final S getScope() {
     return scope;
   }
@@ -135,8 +146,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return index;
   }
 
-  // Non-final for jsdev tests
-  public boolean isGlobal() {
+  public final boolean isGlobal() {
     return scope.isGlobal();
   }
 
@@ -150,13 +160,14 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   /** Returns {@code true} if the variable is declared or inferred to be a constant. */
   public final boolean isDeclaredOrInferredConst() {
-    if (nameNode == null) {
+    Node declarationNode = this.getNode();
+    if (declarationNode == null) {
       return false;
     }
 
-    return nameNode.isDeclaredConstantVar()
-        || nameNode.isInferredConstantVar()
-        || nameNode.getBooleanProp(Node.IS_CONSTANT_NAME);
+    return declarationNode.isDeclaredConstantVar()
+        || declarationNode.isInferredConstantVar()
+        || declarationNode.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 
   /**
@@ -169,18 +180,16 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   }
 
   public final Node getInitialValue() {
-    return NodeUtil.getRValueOfLValue(nameNode);
+    return NodeUtil.getRValueOfLValue(this.getNode());
   }
 
-  // Non-final for jsdev tests
-  public Node getNameNode() {
-    return nameNode;
+  public final Node getNameNode() {
+    return this.getNode();
   }
 
-  // Non-final for jsdev tests
   @Override
-  public JSDocInfo getJSDocInfo() {
-    return nameNode == null ? null : NodeUtil.getBestJSDocInfo(nameNode);
+  public final JSDocInfo getJSDocInfo() {
+    return this.getNode() == null ? null : NodeUtil.getBestJSDocInfo(this.getNode());
   }
 
   final boolean isVar() {
@@ -208,7 +217,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   }
 
   public final boolean isDefaultParam() {
-    Node parent = nameNode.getParent();
+    Node parent = this.getNode().getParent();
     return parent.getParent().isParamList() && parent.isDefaultValue()
         && parent.getFirstChild() == nameNode;
   }
@@ -230,6 +239,9 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   }
 
   private boolean isImplicit() {
+    if (isImplicitGoogNamespace()) {
+      return true;
+    }
     AbstractScope.ImplicitVar var = AbstractScope.ImplicitVar.of(name);
     return var != null && var.isMadeByScope(scope);
   }
@@ -245,8 +257,10 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       Token.PARAM_LIST);
 
   final Token declarationType() {
-    for (Node current = nameNode; current != null;
-         current = current.getParent()) {
+    if (isImplicitGoogNamespace()) {
+      return null;
+    }
+    for (Node current = this.getNode(); current != null; current = current.getParent()) {
       if (DECLARATION_TYPES.contains(current.getToken())) {
         return current.getToken();
       }
@@ -263,5 +277,49 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   @SuppressWarnings("unchecked")
   private V thisVar() {
     return (V) this;
+  }
+
+  /**
+   * Whether this name comes from a goog.provide or legacy goog.module and does not have a normal
+   * syntactical definition
+   */
+  final boolean isImplicitGoogNamespace() {
+    return this.implicitGoogNamespaceStrength != null;
+  }
+
+  /**
+   * Indicates this namespace was provided at the given node
+   *
+   * @param definition the STRINGLIT in a goog.provide or goog.module call
+   */
+  final void addImplicitGoogNamespaceDefinition(Node definition) {
+    checkState(this.isImplicitGoogNamespace(), this);
+    this.implicitGoogNamespaceStrength =
+        strongerOf(this.implicitGoogNamespaceStrength, strengthOf(definition));
+  }
+
+  /** Returns the strongest kind of all definitions of this namespace */
+  final SourceKind getImplicitGoogNamespaceStrength() {
+    checkState(this.isImplicitGoogNamespace(), this);
+    return this.implicitGoogNamespaceStrength;
+  }
+
+  private static final SourceKind strengthOf(Node n) {
+    StaticSourceFile source = n.getStaticSourceFile();
+    if (source == null) {
+      return SourceKind.EXTERN;
+    }
+
+    return source.getKind();
+  }
+
+  private static SourceKind strongerOf(SourceKind left, SourceKind right) {
+    if (left.equals(SourceKind.STRONG) || right.equals(SourceKind.STRONG)) {
+      return SourceKind.STRONG;
+    } else if (left.equals(SourceKind.EXTERN) || right.equals(SourceKind.EXTERN)) {
+      // Externs are stronger because they aren't deleted.
+      return SourceKind.EXTERN;
+    }
+    return SourceKind.WEAK;
   }
 }

@@ -149,8 +149,8 @@ public final class NodeSubject extends Subject {
       // are different.
       facts.addAll(
           new TextDiffFactsBuilder("AST diff")
-              .expectedText(expected.toStringTree())
-              .actualText(actual.toStringTree())
+              .expectedText(mismatch.expected.toStringTree())
+              .actualText(mismatch.actual.toStringTree())
               .build());
     } else {
       facts.addAll(
@@ -246,6 +246,11 @@ public final class NodeSubject extends Subject {
 
   public NodeSubject isArrowFunction() {
     check("isArrowFunction()").that(actual.isArrowFunction()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isStatic() {
+    check("isStatic()").that(actual.isStaticMember()).isTrue();
     return this;
   }
 

@@ -471,7 +471,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   private DeserializedAst testAndReturnResult(Externs externs, Sources code, Expected expected) {
     TypedAst ast = compile(externs, code);
     Node expectedRoot = this.parseExpectedJs(expected);
-    DeserializedAst result = TypedAstDeserializer.deserialize(ast);
+    DeserializedAst result = TypedAstDeserializer.deserialize(this.getLastCompiler(), ast);
     Node newRoot = result.getRoot().getLastChild();
     assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
     new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true)

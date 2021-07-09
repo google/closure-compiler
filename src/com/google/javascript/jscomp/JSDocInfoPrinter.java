@@ -62,7 +62,8 @@ public final class JSDocInfoPrinter {
 
     if (info.isExterns()) {
       parts.add("@externs");
-    } else if (info.isTypeSummary()) {
+    }
+    if (info.isTypeSummary()) {
       parts.add("@typeSummary");
     }
 

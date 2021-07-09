@@ -346,6 +346,7 @@ $jscomp.polyfill('Promise',
    *     `unhandledjrection` event handlers call `preventDefault()`.
    *     True otherwise.
    * @private
+   * @suppress {missingProperties}
    */
   PolyfillPromise.prototype.notifyUnhandledRejection_ = function() {
     if (this.isRejectionHandled_) {

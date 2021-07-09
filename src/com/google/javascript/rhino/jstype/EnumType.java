@@ -51,10 +51,11 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * An enum type representing a branded collection of elements. Each element
- * is referenced by its name, and has an {@link EnumElementType} type.
+ * An enum type representing a branded collection of elements. Each element is referenced by its
+ * name, and has an {@link EnumElementType} type.
+ *
  */
-public class EnumType extends PrototypeObjectType implements JSType.WithSourceRef {
+public final class EnumType extends PrototypeObjectType implements JSType.WithSourceRef {
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM;
 
   // the type of the individual elements

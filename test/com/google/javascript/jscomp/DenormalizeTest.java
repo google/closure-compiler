@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +27,12 @@ import org.junit.runners.JUnit4;
 /** @author johnlenz@google.com (John Lenz) */
 @RunWith(JUnit4.class)
 public final class DenormalizeTest extends CompilerTestCase {
+
+  private FeatureSet outputFeatureSet = FeatureSet.ES_UNSUPPORTED;
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new NormalizeAndDenormalizePass(compiler);
+    return new NormalizeAndDenormalizePass(compiler, outputFeatureSet);
   }
 
   @Override
@@ -271,6 +275,43 @@ public final class DenormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAssignShorthandDontDenormalizeWhenLHSNotName() {
+    testSame("obj.x = obj.x + 1;");
+  }
+
+  @Test
+  public void testLogicalAssignShorthand() {
+    disableScriptFeatureValidation();
+    test("x || (x = 1);", "x ||= 1;");
+    test("x && (x = 1);", "x &&= 1;");
+    test("x ?? (x = 1);", "x ??= 1;");
+  }
+
+  @Test
+  public void testLogicalAssignShorthandDontDenormalizeWhenLHSNotName() {
+    testSame("obj.x || (obj.x = 1);");
+  }
+
+  @Test
+  public void testLogicalAssignShorthandRHSAssignmentOp() {
+    // This test was intended to show that the following should not fold into `a ||= 1`
+    // Both Normalize and Denormalize report to the compiler they have modified this code
+    // (Normalize produces `a || (a = a + 1);` and Denormalize reverts it to `a || (a += 1);`).
+    // The unit test wants to warn on unnecessary change reporting,
+    // so validating AST change marking has been disabled.
+    disableValidateAstChangeMarking();
+    testSame("a || (a += 1);");
+  }
+
+  @Test
+  public void testLogicalAssignShorthandBrowser2020() {
+    this.outputFeatureSet = FeatureSet.BROWSER_2020;
+    testSame("x || (x = 1);");
+    testSame("x && (x = 1);");
+    testSame("x ?? (x = 1);");
+  }
+
+  @Test
   public void testNoCrashOnEs6Features() {
     test(
         lines(
@@ -350,9 +391,9 @@ public final class DenormalizeTest extends CompilerTestCase {
     NormalizeStatements normalizePass;
     AbstractCompiler compiler;
 
-    public NormalizeAndDenormalizePass(AbstractCompiler compiler) {
+    public NormalizeAndDenormalizePass(AbstractCompiler compiler, FeatureSet outputFeatureSet) {
       this.compiler = compiler;
-      denormalizePass = new Denormalize(compiler);
+      denormalizePass = new Denormalize(compiler, outputFeatureSet);
       normalizePass = new NormalizeStatements(compiler, false);
     }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -131,16 +132,17 @@ public final class JsDocInfoParser {
   private static final Set<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
-  private JSDocInfo.Builder fileLevelJsDocBuilder;
+  @Nullable private String licenseText;
 
-  /**
-   * Sets the JsDocBuilder for the file-level (root) node of this parse. The parser uses the builder
-   * to append any preserve annotations it encounters in JsDoc comments.
-   *
-   * @param fileLevelJsDocBuilder
-   */
-  void setFileLevelJsDocBuilder(JSDocInfo.Builder fileLevelJsDocBuilder) {
-    this.fileLevelJsDocBuilder = fileLevelJsDocBuilder;
+  private void setLicenseTextMonotonic(String x) {
+    checkNotNull(x);
+    checkState(this.licenseText == null);
+    this.licenseText = x;
+  }
+
+  @Nullable
+  String getLicenseText() {
+    return this.licenseText;
   }
 
   /**
@@ -303,9 +305,8 @@ public final class JsDocInfoParser {
     // so we need to add one here so they will be identical
     String license = " " + info.string;
 
-    if (fileLevelJsDocBuilder != null) {
-      fileLevelJsDocBuilder.addLicense(license);
-    } else if (jsdocBuilder.shouldParseDocumentation()) {
+    this.setLicenseTextMonotonic(license);
+    if (jsdocBuilder.shouldParseDocumentation()) {
       jsdocBuilder.recordBlockDescription(license);
     } else {
       jsdocBuilder.recordBlockDescription("");
@@ -528,9 +529,7 @@ public final class JsDocInfoParser {
           String preserve = preserveInfo.string;
 
           if (preserve.length() > 0) {
-            if (fileLevelJsDocBuilder != null) {
-              fileLevelJsDocBuilder.addLicense(preserve);
-            }
+            this.setLicenseTextMonotonic(preserve);
           }
 
           token = preserveInfo.token;
@@ -692,6 +691,30 @@ public final class JsDocInfoParser {
         case NO_INLINE:
           if (!jsdocBuilder.recordNoInline()) {
             addParserWarning("msg.jsdoc.noinline");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_FILE:
+          if (!jsdocBuilder.recordLocaleFile()) {
+            addParserWarning("msg.jsdoc.localefile");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_OBJECT:
+          if (!jsdocBuilder.recordLocaleObject()) {
+            addParserWarning("msg.jsdoc.localeobject");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_SELECT:
+          if (!jsdocBuilder.recordLocaleSelect()) {
+            addParserWarning("msg.jsdoc.localeselect");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case LOCALE_VALUE:
+          if (!jsdocBuilder.recordLocaleValue()) {
+            addParserWarning("msg.jsdoc.localevalue");
           }
           return eatUntilEOLIfNotAnnotation();
 

@@ -3229,6 +3229,93 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @type {string} */",
+            "  a = 'hi';",
+            "  /** @type {symbol|undefined} */",
+            "  b;",
+            "  c = 0;",
+            "  d;",
+            "  /** @type {string|null} */",
+            "  e = null;",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    ObjectType fooInstance = fooCtor.getInstanceType();
+
+    assertType(fooInstance).hasDeclaredProperty("a");
+    assertType(fooInstance.getPropertyType("a")).isString();
+
+    assertType(fooInstance).hasDeclaredProperty("b");
+    assertType(fooInstance.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
+
+    assertType(fooInstance).hasDeclaredProperty("c");
+    assertType(fooInstance.getPropertyType("c")).isUnknown();
+
+    assertType(fooInstance).hasDeclaredProperty("d");
+    assertType(fooInstance.getPropertyType("d")).isUnknown();
+
+    assertType(fooInstance).hasDeclaredProperty("e");
+    assertType(fooInstance.getPropertyType("e")).toStringIsEqualTo("(null|string)");
+  }
+
+  @Test
+  public void testClassDeclarationWithStaticField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @type {string} */",
+            "  static a = 'hi';",
+            "  /** @type {symbol|undefined} */",
+            "  static b;",
+            "  static c = 0;",
+            "  static d;",
+            "  /** @type {string|null} */",
+            "  static e = null;",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+
+    assertType(fooCtor).hasDeclaredProperty("a");
+    assertType(fooCtor.getPropertyType("a")).isString();
+
+    assertType(fooCtor).hasDeclaredProperty("b");
+    assertType(fooCtor.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
+
+    assertType(fooCtor).hasDeclaredProperty("c");
+    assertType(fooCtor.getPropertyType("c")).isUnknown();
+
+    assertType(fooCtor).hasDeclaredProperty("d");
+    assertType(fooCtor.getPropertyType("d")).isUnknown();
+
+    assertType(fooCtor).hasDeclaredProperty("e");
+    assertType(fooCtor.getPropertyType("e")).toStringIsEqualTo("(null|string)");
+  }
+
+  @Test
+  public void testClassDeclarationWithDeprecatedField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @deprecated There is a madness to this method */",
+            "  a = 'hi';",
+            "}"));
+  }
+
+  @Test
+  public void testClassDeclarationWithDeprecatedComputedField() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @deprecated There is a madness to this method */",
+            "  ['a'] = 'hi';",
+            "}"));
+  }
+
+  @Test
   public void testClassExpressionAssignment() {
     testSame("var Foo = class Bar {}");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));

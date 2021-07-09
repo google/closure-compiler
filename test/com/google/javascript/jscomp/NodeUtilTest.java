@@ -110,6 +110,8 @@ public final class NodeUtilTest {
       options.setStrictModeInput(false);
       options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
 
+      options.setLanguageIn(CompilerOptions.LanguageMode.UNSUPPORTED);
+
       compiler = new Compiler();
       compiler.initOptions(options);
       Node n = compiler.parseTestCode(js);
@@ -322,6 +324,20 @@ public final class NodeUtilTest {
             {"false||false", Tri.FALSE},
             {"true&&true", Tri.TRUE},
             {"true&&false", Tri.FALSE},
+
+            // Logical assignments
+            {"a||(a=true)", Tri.TRUE},
+            {"a||(a=false)", Tri.UNKNOWN},
+            {"a||=true", Tri.TRUE},
+            {"a||=false", Tri.UNKNOWN},
+            {"a&&(a=true)", Tri.UNKNOWN},
+            {"a&&(a=false)", Tri.FALSE},
+            {"a&&=true", Tri.UNKNOWN},
+            {"a&&=false", Tri.FALSE},
+            {"a??(a=true)", Tri.UNKNOWN},
+            {"a??=true", Tri.UNKNOWN},
+            {"a??(a=false)", Tri.UNKNOWN},
+            {"a??=false", Tri.UNKNOWN},
 
             // Assignment ops other than ASSIGN are unknown.
             {"a *= 2", Tri.UNKNOWN},
@@ -2630,6 +2646,21 @@ public final class NodeUtilTest {
       assertIsConstantDeclaration(false, getNameNodeFrom("var FOO = 1;", "FOO"));
 
       assertIsConstantDeclaration(true, constructInferredConstantDeclaration());
+
+      assertIsConstantDeclaration(
+          false, parse("class C {x = 2;}").getFirstChild().getLastChild().getFirstChild());
+      assertIsConstantDeclaration(
+          true,
+          parse("class C {/** @const */ x = 2;}").getFirstChild().getLastChild().getFirstChild());
+
+      assertIsConstantDeclaration(
+          false, parse("class C { [x] = 2;}").getFirstChild().getLastChild().getFirstChild());
+      assertIsConstantDeclaration(
+          true,
+          parse("class C { /** @const */ [x] = 2;}")
+              .getFirstChild()
+              .getLastChild()
+              .getFirstChild());
     }
 
     @Test

@@ -74,12 +74,11 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
- * A central reporter for all type violations: places where the programmer
- * has annotated a variable (or property) with one type, but has assigned
- * another type to it.
+ * A central reporter for all type violations: places where the programmer has annotated a variable
+ * (or property) with one type, but has assigned another type to it.
  *
- * Also doubles as a central repository for all type violations, so that
- * type-based optimizations (like AmbiguateProperties) can be fault-tolerant.
+ * <p>Also doubles as a central repository for all type violations, so that type-based optimizations
+ * (like AmbiguateProperties) can be fault-tolerant.
  */
 class TypeValidator implements Serializable {
   private final transient AbstractCompiler compiler;
@@ -96,23 +95,15 @@ class TypeValidator implements Serializable {
   private final TypeMismatch.Accumulator mismatches = new TypeMismatch.Accumulator();
 
   // User warnings
-  private static final String FOUND_REQUIRED =
-      "{0}\n"
-          + "found   : {1}\n"
-          + "required: {2}";
+  private static final String FOUND_REQUIRED = "{0}\n" + "found   : {1}\n" + "required: {2}";
 
   private static final String FOUND_REQUIRED_MISSING =
-      "{0}\n"
-      + "found   : {1}\n"
-      + "required: {2}\n"
-      + "missing : [{3}]\n"
-      + "mismatch: [{4}]";
+      "{0}\n" + "found   : {1}\n" + "required: {2}\n" + "missing : [{3}]\n" + "mismatch: [{4}]";
 
   static final DiagnosticType INVALID_CAST =
-      DiagnosticType.warning("JSC_INVALID_CAST",
-          "invalid cast - must be a subtype or supertype\n"
-              + "from: {0}\n"
-              + "to  : {1}");
+      DiagnosticType.warning(
+          "JSC_INVALID_CAST",
+          "invalid cast - must be a subtype or supertype\n" + "from: {0}\n" + "to  : {1}");
 
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
@@ -126,16 +117,15 @@ class TypeValidator implements Serializable {
       DiagnosticType.disabled("JSC_INVALID_OPERAND_TYPE", "{0}");
 
   static final DiagnosticType MISSING_EXTENDS_TAG_WARNING =
-      DiagnosticType.warning(
-          "JSC_MISSING_EXTENDS_TAG",
-          "Missing @extends tag on type {0}");
+      DiagnosticType.warning("JSC_MISSING_EXTENDS_TAG", "Missing @extends tag on type {0}");
 
   static final DiagnosticType DUP_VAR_DECLARATION =
-      DiagnosticType.warning("JSC_DUP_VAR_DECLARATION",
-          "variable {0} redefined, original definition at {1}:{2}");
+      DiagnosticType.warning(
+          "JSC_DUP_VAR_DECLARATION", "variable {0} redefined, original definition at {1}:{2}");
 
   static final DiagnosticType DUP_VAR_DECLARATION_TYPE_MISMATCH =
-      DiagnosticType.warning("JSC_DUP_VAR_DECLARATION_TYPE_MISMATCH",
+      DiagnosticType.warning(
+          "JSC_DUP_VAR_DECLARATION_TYPE_MISMATCH",
           "variable {0} redefined with type {1}, original definition at {2}:{3} with type {4}");
 
   static final DiagnosticType INTERFACE_METHOD_NOT_IMPLEMENTED =
@@ -170,8 +160,7 @@ class TypeValidator implements Serializable {
       DiagnosticType.warning("JSC_UNKNOWN_TYPEOF_VALUE", "unknown type: {0}");
 
   static final DiagnosticType ILLEGAL_PROPERTY_ACCESS =
-      DiagnosticType.warning("JSC_ILLEGAL_PROPERTY_ACCESS",
-                             "Cannot do {0} access on a {1}");
+      DiagnosticType.warning("JSC_ILLEGAL_PROPERTY_ACCESS", "Cannot do {0} access on a {1}");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
@@ -218,13 +207,12 @@ class TypeValidator implements Serializable {
   /**
    * Gets a list of type violations.
    *
-   * For each violation, one element is the expected type and the other is
-   * the type that is actually found. Order is not significant.
+   * <p>For each violation, one element is the expected type and the other is the type that is
+   * actually found. Order is not significant.
    *
-   * NOTE(dimvar): Even though TypeMismatch is a pair, the passes that call this
-   * method never use it as a pair; they just add both its elements to a set
-   * of invalidating types. Consider just maintaining a set of types here
-   * instead of a set of type pairs.
+   * <p>NOTE(dimvar): Even though TypeMismatch is a pair, the passes that call this method never use
+   * it as a pair; they just add both its elements to a set of invalidating types. Consider just
+   * maintaining a set of types here instead of a set of type pairs.
    */
   Iterable<TypeMismatch> getMismatches() {
     return this.mismatches.getMismatches();
@@ -380,9 +368,7 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /**
-   * Expect the type to be a number or a subtype.
-   */
+  /** Expect the type to be a number or a subtype. */
   void expectNumberStrict(Node n, JSType type, String msg) {
     if (!type.isSubtypeOf(getNativeType(NUMBER_TYPE))) {
       registerMismatchAndReport(
@@ -490,7 +476,8 @@ class TypeValidator implements Serializable {
    */
   boolean expectNotNullOrUndefined(
       NodeTraversal t, Node n, JSType type, String msg, JSType expectedType) {
-    if (!type.isNoType() && !type.isUnknownType()
+    if (!type.isNoType()
+        && !type.isUnknownType()
         && type.isSubtypeOf(nullOrUndefined)
         && !containsForwardDeclaredUnresolvedName(type)) {
 
@@ -543,7 +530,8 @@ class TypeValidator implements Serializable {
    * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
    */
   void expectIndexMatch(Node n, JSType objType, JSType indexType) {
-    checkState(n.isGetElem() || n.isOptChainGetElem() || n.isComputedProp(), n);
+    checkState(
+        n.isGetElem() || n.isOptChainGetElem() || n.isComputedProp() || n.isComputedFieldDef(), n);
     Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
     if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them
@@ -591,13 +579,15 @@ class TypeValidator implements Serializable {
    */
   boolean expectCanAssignToPropertyOf(
       Node n, JSType rightType, JSType leftType, Node owner, String propName) {
+    Supplier<String> typeNameSupplier;
+    if (n.isMemberFieldDef()) {
+      FunctionType classType = n.getGrandparent().getJSType().assertFunctionType();
+      typeNameSupplier = () -> classType.getInstanceType().toString();
+    } else {
+      typeNameSupplier = () -> typeRegistry.getReadableTypeName(owner);
+    }
     return expectCanAssignToPropertyOf(
-        n,
-        rightType,
-        leftType,
-        getJSType(owner),
-        () -> typeRegistry.getReadableTypeName(owner),
-        propName);
+        n, rightType, leftType, getJSType(owner), typeNameSupplier, propName);
   }
 
   /**
@@ -646,12 +636,10 @@ class TypeValidator implements Serializable {
       // annotations.
       if (ownerType.isFunctionPrototypeType()) {
         FunctionType ownerFn = ownerType.toObjectType().getOwnerFunction();
-        if (ownerFn.isInterface()
-            && rightType.isFunctionType() && leftType.isFunctionType()) {
+        if (ownerFn.isInterface() && rightType.isFunctionType() && leftType.isFunctionType()) {
           return true;
         }
       }
-
       mismatch(
           n,
           "assignment to property " + propName + " of " + typeNameSupplier.get(),
@@ -727,11 +715,9 @@ class TypeValidator implements Serializable {
   void expectSuperType(Node n, ObjectType superObject, ObjectType subObject) {
     FunctionType subCtor = subObject.getConstructor();
     ObjectType implicitProto = subObject.getImplicitPrototype();
-    ObjectType declaredSuper =
-        implicitProto == null ? null : implicitProto.getImplicitPrototype();
+    ObjectType declaredSuper = implicitProto == null ? null : implicitProto.getImplicitPrototype();
     if (declaredSuper != null && declaredSuper.isTemplatizedType()) {
-      declaredSuper =
-          declaredSuper.toMaybeTemplatizedType().getReferencedType();
+      declaredSuper = declaredSuper.toMaybeTemplatizedType().getReferencedType();
     }
     if (declaredSuper != null
         && !(superObject instanceof UnknownType)
@@ -753,9 +739,9 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect that an ES6 class's extends clause is actually a supertype of the given class.
-   * Compares the registered supertype, which is taken from the JSDoc if present, otherwise
-   * from the AST, with the type in the extends node of the AST.
+   * Expect that an ES6 class's extends clause is actually a supertype of the given class. Compares
+   * the registered supertype, which is taken from the JSDoc if present, otherwise from the AST,
+   * with the type in the extends node of the AST.
    *
    * @param n The node where warnings should point to.
    * @param subCtor The sub constructor type.
@@ -843,14 +829,19 @@ class TypeValidator implements Serializable {
    * @param parent The parent of {@code n}.
    * @param var The variable that we're checking.
    * @param variableName The name of the variable.
-   * @param newType The type being applied to the variable. Mostly just here
-   *     for the benefit of the warning.
-   * @return The variable we end up with. Most of the time, this will just
-   *     be {@code var}, but in some rare cases we will need to declare
-   *     a new var with new source info.
+   * @param newType The type being applied to the variable. Mostly just here for the benefit of the
+   *     warning.
+   * @return The variable we end up with. Most of the time, this will just be {@code var}, but in
+   *     some rare cases we will need to declare a new var with new source info.
    */
-  TypedVar expectUndeclaredVariable(String sourceName, CompilerInput input,
-      Node n, Node parent, TypedVar var, String variableName, JSType newType) {
+  TypedVar expectUndeclaredVariable(
+      String sourceName,
+      CompilerInput input,
+      Node n,
+      Node parent,
+      TypedVar var,
+      String variableName,
+      JSType newType) {
     TypedVar newVar = var;
     JSType varType = var.getType();
 
@@ -1099,9 +1090,7 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /**
-   * Used both for TYPE_MISMATCH_WARNING and INVALID_OPERAND_TYPE.
-   */
+  /** Used both for TYPE_MISMATCH_WARNING and INVALID_OPERAND_TYPE. */
   private void registerMismatchAndReport(
       Node n,
       DiagnosticType diagnostic,
@@ -1142,7 +1131,7 @@ class TypeValidator implements Serializable {
     if (mismatch != null && !mismatch.isEmpty()) {
       mismatchStr = Joiner.on(",").join(mismatch);
     }
-     if (missingStr.length() > 0 || mismatchStr.length() > 0) {
+    if (missingStr.length() > 0 || mismatchStr.length() > 0) {
       return Platform.formatMessage(
           FOUND_REQUIRED_MISSING, description, foundStr, requiredStr, missingStr, mismatchStr);
     } else {
@@ -1150,10 +1139,7 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /**
-   * This method gets the JSType from the Node argument and verifies that it is
-   * present.
-   */
+  /** This method gets the JSType from the Node argument and verifies that it is present. */
   private JSType getJSType(Node n) {
     return checkNotNull(n.getJSType(), "%s has no JSType attached", n);
   }

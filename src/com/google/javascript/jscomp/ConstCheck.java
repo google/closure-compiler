@@ -17,12 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
@@ -47,32 +43,15 @@ class ConstCheck extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
   private final Set<Var> initializedConstants;
-  private final ModuleMetadataMap moduleMetadataMap;
-  private Set<String> providedNames;
 
   /** Creates an instance. */
-  public ConstCheck(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
-    checkNotNull(moduleMetadataMap);
+  public ConstCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.initializedConstants = new HashSet<>();
-    this.moduleMetadataMap = moduleMetadataMap;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    ImmutableSet.Builder<String> providedNames = ImmutableSet.builder();
-    for (ModuleMetadata metadata : this.moduleMetadataMap.getAllModuleMetadata()) {
-      if (!(metadata.isGoogProvide() || metadata.isLegacyGoogModule())) {
-        continue;
-      }
-      for (String namespace : metadata.googNamespaces()) {
-        int dot = namespace.indexOf('.');
-        String rootName = dot != -1 ? namespace.substring(0, dot) : namespace;
-        providedNames.add(rootName);
-      }
-    }
-    this.providedNames = providedNames.build();
-
     NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
@@ -148,13 +127,7 @@ class ConstCheck extends AbstractPostOrderCallback
    * declared.
    */
   private boolean isConstant(Var var, Node nameNode) {
-    if (var == null) {
-      checkState(
-          this.providedNames.contains(nameNode.getString()),
-          "Found unexpected undeclared name %s",
-          nameNode);
-      return false;
-    }
+    checkNotNull(var, "Found unexpected undeclared name %s", nameNode);
     return var.isConst() || var.isDeclaredOrInferredConst();
   }
 

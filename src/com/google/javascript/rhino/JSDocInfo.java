@@ -73,7 +73,6 @@ import javax.annotation.Nullable;
  *
  * <p>Constructing {@link JSDocInfo} objects is simplified by {@link JSDocInfo.Builder} which
  * provides early incompatibility detection.
- *
  */
 public class JSDocInfo implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -336,7 +335,11 @@ public class JSDocInfo implements Serializable {
     CUSTOM_ELEMENT,
     MIXIN_CLASS,
     MIXIN_FUNCTION,
-    ;
+
+    LOCALE_FILE,
+    LOCALE_SELECT,
+    LOCALE_OBJECT,
+    LOCALE_VALUE;
 
     final String name;
     final long mask;
@@ -843,6 +846,26 @@ public class JSDocInfo implements Serializable {
     return checkBit(Bit.PURE_OR_BREAK_MY_CODE);
   }
 
+  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
+  public boolean isLocaleFile() {
+    return checkBit(Bit.LOCALE_FILE);
+  }
+
+  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
+  public boolean isLocaleSelect() {
+    return checkBit(Bit.LOCALE_SELECT);
+  }
+
+  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
+  public boolean isLocaleObject() {
+    return checkBit(Bit.LOCALE_OBJECT);
+  }
+
+  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
+  public boolean isLocaleValue() {
+    return checkBit(Bit.LOCALE_VALUE);
+  }
+
   /**
    * Returns whether there is a declaration present on this {@link JSDocInfo}.
    *
@@ -1179,7 +1202,7 @@ public class JSDocInfo implements Serializable {
 
   @Override
   public String toString() {
-    return "JSDocInfo";
+    return toStringVerbose();
   }
 
   @VisibleForTesting
@@ -1187,6 +1210,13 @@ public class JSDocInfo implements Serializable {
     MoreObjects.ToStringHelper helper =
         MoreObjects.toStringHelper(this)
             .add("bitset", (propertyBits == 0) ? null : Long.toHexString(propertyBits));
+
+    for (Bit b : Bit.values()) {
+      if (checkBit(b)) {
+        helper.add("bit:" + b.name, true);
+      }
+    }
+
     long bits = propertyKeysBitset;
     int index = 0;
     while (bits > 0) {
@@ -1194,6 +1224,7 @@ public class JSDocInfo implements Serializable {
       bits &= ~(1L << low);
       helper = helper.add(Property.values[low].name, propertyValues.get(index++));
     }
+
     return helper.omitNullValues().toString();
   }
 
@@ -2189,6 +2220,50 @@ public class JSDocInfo implements Serializable {
     }
 
     /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
+     * set to {@code true}.
+     *
+     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+     *     recorded
+     */
+    public boolean recordLocaleFile() {
+      return populateBit(Bit.LOCALE_FILE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
+     * set to {@code true}.
+     *
+     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+     *     recorded
+     */
+    public boolean recordLocaleObject() {
+      return populateBit(Bit.LOCALE_OBJECT, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
+     * set to {@code true}.
+     *
+     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+     *     recorded
+     */
+    public boolean recordLocaleValue() {
+      return populateBit(Bit.LOCALE_VALUE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
+     * set to {@code true}.
+     *
+     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+     *     recorded
+     */
+    public boolean recordLocaleSelect() {
+      return populateBit(Bit.LOCALE_SELECT, true);
+    }
+
+    /**
      * Whether the {@link JSDocInfo} being built will have its {@link JSDocInfo#isConstructor()}
      * flag set to {@code true}.
      */
@@ -2327,7 +2402,7 @@ public class JSDocInfo implements Serializable {
      * flag set to {@code true}.
      */
     public boolean recordExterns() {
-      return !checkBit(Bit.TYPE_SUMMARY) && populateBit(Bit.EXTERNS, true);
+      return populateBit(Bit.EXTERNS, true);
     }
 
     /**
@@ -2335,7 +2410,8 @@ public class JSDocInfo implements Serializable {
      * JSDocInfo#isTypeSummary()} flag set to {@code true}.
      */
     public boolean recordTypeSummary() {
-      return !checkBit(Bit.EXTERNS) && populateBit(Bit.TYPE_SUMMARY, true);
+      populateBit(Bit.EXTERNS, true); // Type summaries are a subset of externs.
+      return populateBit(Bit.TYPE_SUMMARY, true);
     }
 
     /**

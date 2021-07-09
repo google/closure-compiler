@@ -67,6 +67,9 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     test(
         "({first, [foo()]: baz(), ...spread});",
         "Object.assign({}, {first, [foo()]: baz()}, spread)");
+    test(
+        "({type : 'object', ...spread && spread});",
+        "Object.assign({}, {type:'object'}, spread && spread);");
   }
 
   @Test

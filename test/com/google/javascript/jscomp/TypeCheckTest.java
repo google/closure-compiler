@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
+import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
@@ -623,6 +624,94 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBooleanReduction1NullishCoalesce() {
     testTypes("/**@type {string} */var x; x = null ?? \"a\";");
+  }
+
+  @Test
+  public void testLogicalAssignment() {
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a||=b;");
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a&&=b;");
+    testTypes("/**@type {?} */var a; /** @type {?} */ var b; a??=b;");
+  }
+
+  @Test
+  public void testAssignOrToNonNumeric() {
+    // The precision of this test can be improved.
+    // Boolean type is treated as {true, false}.
+    testTypes(
+        lines(
+            "/** @param {boolean} x */", //
+            " function assignOr(x) {",
+            "   x ||= 'a';",
+            " };"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: boolean"));
+  }
+
+
+  @Test
+  public void testAssignOrMayOrMayNotAssign() {
+    testTypes(
+        lines(
+            "/** @param {string} x */", //
+            " function assignOr(x) {",
+            "   x ||= 5;",
+            " };"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testAssignAndCheckRHSValid() {
+    testTypes(
+        lines(
+            "/** @type {string|undefined} */", //
+            "var a; a &&= 0;"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: (string|undefined)"));
+  }
+
+  @Test
+  public void testAssignAndRHSNotExecuted() {
+    testTypes(
+        lines(
+            "let /** null */", //
+            "n = null;",
+            "n &&= 'str';"),
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: null"));
+  }
+
+  @Test
+  public void testAssignCoalesceNoAssign() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {string} x */",
+            " function assignCoalesce(x) {",
+            "   x ??= 5;",
+            " };"),
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testAssignCoalesceCheckRHSValid() {
+    testTypes(
+        "/** @type {string|undefined} */ var a; a ??= 0;",
+        lines(
+            "assignment", //
+            "found   : number",
+            "required: (string|undefined)"));
   }
 
   @Test
@@ -1734,7 +1823,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "  return null; ",
             "}"),
-        "Property toString never defined on *"); // ?
+        "Property toString never defined on *" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION); // ?
   }
 
   @Test
@@ -10443,7 +10532,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "Type.prototype.doIt = function(obj) {",
             "  this.prop = obj.unknownProp;",
             "};"),
-        "Property unknownProp never defined on obj");
+        "Property unknownProp never defined on obj" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -11717,7 +11806,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
               "inconsistent return type", // preserve new line
               "found   : *",
               "required: number"),
-          "Property foo never defined on *"
+          "Property foo never defined on *" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION
         });
   }
 
@@ -15302,7 +15391,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + " * @return {MyType}\n"
             + " */\n"
             + "function f(ctor) { return (new ctor()).impossibleProp; }",
-        "Property impossibleProp never defined on ?");
+        "Property impossibleProp never defined on ?" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15585,7 +15674,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty7() {
     testTypes(
         "/** @param {Object} obj */" + "function foo(obj) { return obj.impossible; }",
-        "Property impossible never defined on Object");
+        "Property impossible never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15638,7 +15727,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" + "function f(x) { x.foo(); if (x.foo) {} }",
-        "Property foo never defined on Object");
+        "Property foo never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15662,7 +15751,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         "/** @param {Object} x */"
             + "function f(x) { if (x.bar) { if (x.foo) {} } else { x.foo(); } }",
-        "Property foo never defined on Object");
+        "Property foo never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15670,7 +15759,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" + "function f(x) { if (x.foo) { } else { x.foo(); } }",
-        "Property foo never defined on Object");
+        "Property foo never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15689,7 +15778,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testMissingProperty23() {
-    testTypes("function f(x) { x.impossible(); }", "Property impossible never defined on x");
+    testTypes(
+        "function f(x) { x.impossible(); }",
+        "Property impossible never defined on x" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -15739,7 +15830,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty28b() {
     testTypes(
         "function f(obj) {" + "  /** @type {*} */ obj.foo;" + "  return obj.foox;" + "}",
-        "Property foox never defined on obj");
+        "Property foox never defined on obj" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -16052,7 +16143,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {", //
             "  x.y.z;", //
             "}"),
-        "Property y never defined on Object");
+        "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   // since optional chaining is a property test (tests for the existence of x.y), no warnings
@@ -16079,7 +16170,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {", //
             "  x.y[z];", //
             "}"),
-        "Property y never defined on Object");
+        "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   // since optional chaining is a property test (tests for the existence of x.y), no warnings
@@ -16106,7 +16197,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {", //
             "  x.y();", //
             "}"),
-        "Property y never defined on Object");
+        "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   // prop.access?.() is property test and should allow loose property access
@@ -16121,7 +16212,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return false;", //
             "}",
             "f?.(x.y)"),
-        "Property y never defined on x");
+        "Property y never defined on x" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   // prop.access?.[x] is property test and should allow loose property access
@@ -16135,7 +16226,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {", //
             "  x?.[y.z];", //
             "}"),
-        "Property z never defined on y");
+        "Property z never defined on y" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test
@@ -18889,7 +18980,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         "var string = goog.require('goog.string');\n" + "var /** string */ s = 123;",
         new String[] {
-          "Property require never defined on goog",
+          "Property require never defined on goog" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION,
           "initializing variable\n" + "found   : number\n" + "required: string"
         });
   }
@@ -22955,6 +23046,233 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassField() {
+    testTypes("class A { x=2; }");
+    testTypes("class B { x; }");
+    testTypes("class C { x }");
+    testTypes("class D { /** @type {string|undefined} */ x;}");
+    testTypes("class E { /** @type {string} @suppress {checkTypes} */ x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldStatic() {
+    testTypes("class A { static x=2; }");
+    testTypes("class B { static x; }");
+    testTypes("class C { static x }");
+    testTypes("class D { static /** @type {string|undefined} */ x;}");
+    testTypes("class E { /** @type {string} @suppress {checkTypes} */ static x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldDictError() {
+    testTypes("/** @dict */ class C { x=2; }", "Illegal key, the class is a dict");
+  }
+
+  @Test
+  public void testClassFieldStaticDictError() {
+    testTypes("/** @dict */ class C { static x=2; }", "Illegal key, the class is a dict");
+  }
+
+  @Test
+  public void testClassFieldUnrestricted() {
+    testTypes("/** @unrestricted */ class C { x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldStaticUnrestricted() {
+    testTypes("/** @unrestricted */ class C { static x = 2; }");
+  }
+
+  @Test
+  public void testClassFieldTypeError1() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassFieldStaticTypeError1() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  static x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassFieldTypeError2() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  /** @type {string} */",
+            "  x = '';",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.x = 1;",
+            "  }",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassFieldTypeError3() {
+    testTypes(
+        lines(
+            "const obj = {};", //
+            "obj.C = class {",
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of obj.C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassFieldStaticTypeError3() {
+    testTypes(
+        lines(
+            "const obj = {};", //
+            "obj.C = class {",
+            "  /** @type {string} */ ",
+            "  static x = 2;",
+            "}"),
+        lines(
+            "assignment to property x of obj.C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassDuplicateFieldError() {
+    testTypes(
+        "class C { /** @type {string} */ dog = ''; /** @type {number} */ dog = 0; }",
+        "Class field dog is duplicated");
+  }
+
+  @Test
+  public void testClassDuplicateStaticFieldError() {
+    testTypes(
+        "class C { static /** @type {string} */ dog = ''; static /** @type {number} */ dog = 0; }",
+        "Class field dog is duplicated");
+  }
+
+  @Test
+  public void testClassDuplicateOneStaticFieldNoError() {
+    testTypes("class C {dog = 2; static dog = 'hi';}");
+  }
+
+  @Test
+  public void testClassInitializerTypeInitializer() {
+    testTypes(
+        lines(
+            "/** @param {number|undefined} y */ ", //
+            "function f(y) {",
+            "class C { /** @type {string} */ x = y ?? 0; }",
+            "}"),
+        lines(
+            "assignment to property x of C", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassInitializerTypeInference() {
+    testTypes(
+        lines(
+            "/**", //
+            " * @param {string} s",
+            " * @return {string}",
+            " */",
+            "const stringIdentity = (s) => s;",
+            "class C { x = stringIdentity(0); }"),
+        lines(
+            "actual parameter 1 of stringIdentity does not match formal parameter", //
+            "found   : number",
+            "required: string"));
+  }
+
+  @Test
+  public void testClassComputedField() {
+    testTypes("/** @dict */ class C { [x]=2; }");
+    testTypes("/** @dict */ class C { 'x' = 2; }");
+    testTypes("/** @dict */ class C { 1 = 2; }");
+    testTypes(
+        lines(
+            "/** @param {number} x */ function takesNum(x) {}",
+            "/** @dict */",
+            "class C {",
+            "  /** @type {string} @suppress {checkTypes} */",
+            "  [takesNum('string')] = 2;",
+            "}"));
+    testTypes("/** @unrestricted */ class C { [x] = 2; }");
+    testTypes("/** @unrestricted */ class C { 'x' = 2; }");
+    testTypes("/** @unrestricted */ class C { 1 = 2; }");
+    testTypes(
+        lines("/** @unrestricted */", "class C {", "  /** @type {string} */", "  [x] = 2;", "}"));
+  }
+
+  @Test
+  public void testClassComputedFieldStatic() {
+    testTypes("/** @dict */ class C { static [x]=2; }");
+    testTypes("/** @dict */ class C { static 'x' = 2; }");
+    testTypes("/** @dict */ class C { static 1 = 2; }");
+    testTypes(
+        lines("/** @dict */", "class C {", "  /** @type {string}*/", "  static [x] = 2;", "}"));
+
+    testTypes("/** @unrestricted */ class C { static [x]=2; }");
+    testTypes("/** @unrestricted */ class C { static 'x' = 2; }");
+    testTypes("/** @unrestricted */ class C { static 1 = 2; }");
+    testTypes(
+        lines(
+            "/** @unrestricted */",
+            "class C {",
+            "  /** @type {string} */",
+            "  static [x] = 2;",
+            "}"));
+  }
+
+  @Test
+  public void testClassComputedFieldNoInitializer() {
+    testTypes("/** @dict */ class C { [x]; }");
+    testTypes("/** @dict */ class C { 'x' }");
+    testTypes("/** @dict */ class C { 1 }");
+  }
+
+  @Test
+  public void testClassComputedFieldNoInitializerStatic() {
+    testTypes("/** @dict */ class C { static [x]; }");
+    testTypes("/** @dict */ class C { static 'x' }");
+    testTypes("/** @dict */ class C { static 1 }");
+  }
+
+  @Test
+  public void testClassComputedFieldError() {
+    testTypes("class C { [x] = 2; }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
+  public void testClassComputedFieldErrorStatic() {
+    testTypes("class C { static [x] = 2; }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
   public void testBigIntLiteralProperty() {
     testTypesWithExterns(new TestExternsBuilder().addBigInt().build(), "(1n).toString()");
   }
@@ -24230,7 +24548,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "};",
             "var a = new x.y.A();"),
         new String[] {
-          "Property y never defined on x", "Property A never defined on x.y",
+          "Property y never defined on x",
+          "Property A never defined on x.y" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION,
         });
   }
 

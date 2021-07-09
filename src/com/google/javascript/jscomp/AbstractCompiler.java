@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.serialization.ColorPool;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
@@ -82,6 +83,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // CompilerPass's constructor.
 
   /** Looks up an input (possibly an externs input) by input id. May return null. */
+  @Override
   public abstract CompilerInput getInput(InputId inputId);
 
   /** Looks up a source file by name. May return null. */
@@ -153,6 +155,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /** Whether the AST has been annotated with optimization colors. */
   public abstract boolean hasOptimizationColors();
+
+  /**
+   * Returns `true` when type checking has run, but the type registry has been cleared.
+   *
+   * <p>See also `clearJSTypeRegistry()`.
+   */
+  public abstract boolean isTypeRegistryCleared();
 
   /** Gets a central registry of type information from the compiled JS. */
   public abstract JSTypeRegistry getTypeRegistry();
@@ -229,11 +238,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void setExternExports(String externExports);
 
-  /** Parses code for injecting. */
-  public abstract Node parseSyntheticCode(String code);
-
   /** Parses code for injecting, and associate it with a given source file. */
-  abstract Node parseSyntheticCode(String filename, String code);
+  public abstract Node parseSyntheticCode(String filename, String code);
 
   /** Parses code for testing. */
   @VisibleForTesting
@@ -270,6 +276,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Returns whether a file name was created by {@link createFillFileName}. */
   public static boolean isFillFileName(String fileName) {
     return fileName.endsWith(FILL_FILE_SUFFIX);
+  }
+
+  /**
+   * Deserialize runtime libraries from a TypedAST packaged as a JAR resource and reconcile their
+   * Colors with the current inputs.
+   *
+   * <p>This method must be called anywhere that Colors are reconciled for application to the AST.
+   * Otherwise Color information won't be consistent. `colorPoolBuilder` must be the same builder as
+   * used for the other inputs, and the caller retains ownership.
+   */
+  public void initRuntimeLibraryTypedAsts(ColorPool.Builder colorPoolBuilder) {
+    throw new UnsupportedOperationException(
+        "Implementation in Compiler.java is not J2CL compatible.");
   }
 
   /**
@@ -466,12 +485,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    *     beginning of the externs AST
    */
   abstract CompilerInput getSynthesizedExternsInput();
-
-  /**
-   * @return a CompilerInput that can be modified to add additional extern definitions to the end of
-   *     the externs AST
-   */
-  abstract CompilerInput getSynthesizedExternsInputAtEnd();
 
   /**
    * @return a number in [0,1] range indicating an approximate progress of the last compile. Note
@@ -688,4 +701,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * rewriting has not occurred.
    */
   abstract void mergeSyntheticCodeInput();
+
+  /** A trivial interface to make the LocaleData opaque */
+  interface LocaleData {}
+
+  /**
+   * Storage for i18n data extracted from the compilation set, to use for localization of the
+   * compilation late in the compilation process.
+   */
+  abstract void setLocaleSubstitutionData(LocaleData localeDataValueMap);
+
+  /**
+   * Retrieve extracted i18n data extracted, to use for localization of the compilation late in the
+   * compilation process.
+   */
+  abstract LocaleData getLocaleSubstitutionData();
 }

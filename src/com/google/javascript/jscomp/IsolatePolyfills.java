@@ -311,7 +311,7 @@ class IsolatePolyfills implements CompilerPass {
    * actually rename $jscomp$lookupPolyfilledValue.
    */
   private void cleanUpJscompLookupPolyfilledValue() {
-    Node syntheticExternsRoot = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+    Node syntheticExternsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     Scope syntheticExternsScope =
         new SyntacticScopeCreator(compiler).createScope(syntheticExternsRoot, /* parent= */ null);
     Var externVar =

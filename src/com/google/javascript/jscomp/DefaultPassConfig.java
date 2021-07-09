@@ -25,12 +25,14 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+import com.google.javascript.jscomp.LocaleDataPasses.ExtractAndProtect;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
@@ -68,6 +70,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
+import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -193,7 +196,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.closurePass) {
       checks.add(closureRewriteModule);
     }
-    // TODO(b/141389184): include processClosureProvidesAndRequires here
   }
 
   @Override
@@ -310,9 +312,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
-      if (options.shouldRewriteModulesBeforeTypechecking()) {
-        checks.add(closureProvidesRequires);
-      }
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
@@ -377,9 +376,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldRewriteModulesAfterTypechecking()) {
       addModuleRewritingPasses(checks, options);
-      if (options.closurePass) {
-        checks.add(closureProvidesRequires);
-      }
     }
 
     // Dynamic import rewriting must always occur after type checking
@@ -481,10 +477,19 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(gatherExternProperties);
     }
 
+    if (options.closurePass
+        && (!options.checksOnly || options.shouldRewriteProvidesInChecksOnly())) {
+      checks.add(closureProvidesRequires);
+    }
+
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
     checks.add(createEmptyPass(PassNames.BEFORE_SERIALIZATION));
+
+    if (options.getTypedAstOutputFile() != null) {
+      checks.add(serializeTypedAst);
+    }
 
     return checks;
   }
@@ -499,26 +504,25 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(typesToColors);
 
-    boolean mustRunReplaceProtectedMessagesPass = false;
-    if (options.replaceMessagesWithChromeI18n) {
-      checkState(
-          !options.shouldDoLateLocalization(),
-          "late localization is not available for chrome i18n");
+    if (options.shouldRunReplaceMessagesForChrome()) {
       passes.add(replaceMessagesForChrome);
-    } else if (options.messageBundle != null) {
-      if (options.shouldDoLateLocalization()) {
+    } else if (options.shouldRunReplaceMessagesPass()) {
+      if (options.doLateLocalization()) {
         // With late localization we protect the messages from mangling by optimizations now,
         // then actually replace them after optimizations.
         // The purpose of doing this is to separate localization from optimization so we can
         // optimize just once for all locales.
         passes.add(getProtectMessagesPass());
-        mustRunReplaceProtectedMessagesPass = true;
       } else {
         // TODO(bradfordcsmith): At the moment we expect the optimized output may be slightly
         // smaller if you replace messages before optimizing, but if we can change that, it would
         // be good to drop this early replacement entirely.
         passes.add(getFullReplaceMessagesPass());
       }
+    }
+
+    if (options.doLateLocalization()) {
+      passes.add(protectLocaleData);
     }
 
     // Defines in code always need to be processed.
@@ -832,18 +836,25 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(optimizeToEs6);
     }
 
-    if (mustRunReplaceProtectedMessagesPass) {
-      // TODO(b/188585306): Move this into a third stage of compilation that can be run
-      // independently on the results of optimizations.
-      passes.add(getReplaceProtectedMessagesPass());
-    }
-
     // must run after ast validity check as modules may not be allowed in the output feature set
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);
+    return passes;
+  }
+
+  @Override
+  protected List<PassFactory> getFinalizations() {
+    List<PassFactory> passes = new ArrayList<>();
+
+    if (options.doLateLocalization()) {
+      if (options.shouldRunReplaceMessagesPass()) {
+        passes.add(getReplaceProtectedMessagesPass());
+      }
+      passes.add(substituteLocaleData);
+    }
     return passes;
   }
 
@@ -1131,7 +1142,8 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
-          .setInternalFactory(CheckExtraRequires::new)
+          .setInternalFactory(
+              (compiler) -> new CheckExtraRequires(compiler, options.getUnusedImportsToRemove()))
           .build();
 
   private final PassFactory checkMissingRequires =
@@ -1249,14 +1261,11 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("closureProvidesRequires")
           .setInternalFactory(
-              (compiler) -> {
-                preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                return new ProcessClosureProvidesAndRequires(
-                    compiler,
-                    preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    options.brokenClosureRequiresLevel,
-                    options.shouldPreservesGoogProvidesAndRequires());
-              })
+              (compiler) ->
+                  new ProcessClosureProvidesAndRequires(
+                      compiler,
+                      options.brokenClosureRequiresLevel,
+                      options.shouldPreservesGoogProvidesAndRequires()))
           .setFeatureSetForChecks()
           .build();
 
@@ -1922,8 +1931,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkConsts =
       PassFactory.builder()
           .setName("checkConsts")
-          .setInternalFactory(
-              (compiler) -> new ConstCheck(compiler, compiler.getModuleMetadataMap()))
+          .setInternalFactory(ConstCheck::new)
           .setFeatureSetForChecks()
           .build();
 
@@ -2447,7 +2455,8 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory denormalize =
       PassFactory.builder()
           .setName("denormalize")
-          .setInternalFactory(Denormalize::new)
+          .setInternalFactory(
+              (compiler) -> new Denormalize(compiler, options.getOutputFeatureSet()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2615,7 +2624,7 @@ public final class DefaultPassConfig extends PassConfig {
       additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());
     }
 
-    if (options.closurePass && options.locale != null) {
+    if (options.closurePass && options.locale != null && !options.doLateLocalization()) {
       additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME, IR.string(options.locale));
     }
 
@@ -2732,6 +2741,16 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
+  /** Emit a TypedAST into of the current compilation. */
+  private final PassFactory serializeTypedAst =
+      PassFactory.builder()
+          .setName("serializeTypedAst")
+          .setInternalFactory(
+              (compiler) ->
+                  SerializeTypedAstPass.createFromPath(compiler, options.getTypedAstOutputFile()))
+          .setFeatureSetForChecks()
+          .build();
+
   /** Optimizations that output ES2015 features. */
   private final PassFactory optimizeToEs6 =
       PassFactory.builder()
@@ -2833,5 +2852,47 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getOptions().getDynamicImportAlias(),
                       compiler.getOptions().getChunkOutputType()))
+          .build();
+
+  /** Replace locale values with stubs that can survive optimizations and be replaced afterwards. */
+  private final PassFactory protectLocaleData =
+      PassFactory.builder()
+          .setName("protectLocaleData")
+          .setInternalFactory(
+              (compiler) ->
+                  new CompilerPass() {
+                    @Override
+                    public void process(Node externs, Node root) {
+                      compiler.setLocaleSubstitutionData(
+                          runLocaleDataProtect(compiler, externs, root));
+                    }
+                  })
+          .setFeatureSetForOptimizations()
+          .build();
+
+  LocaleData runLocaleDataProtect(AbstractCompiler compiler, Node externs, Node root) {
+    LocaleDataPasses.ExtractAndProtect pass = new ExtractAndProtect(compiler);
+
+    pass.process(externs, root);
+    return pass.getLocaleValuesDataMaps();
+  }
+
+  /** Replace locale data stubs with the values for a locale. */
+  private final PassFactory substituteLocaleData =
+      PassFactory.builder()
+          .setName("SubstituteLocaleData")
+          .setInternalFactory(
+              (compiler) ->
+                  new CompilerPass() {
+                    @Override
+                    public void process(Node externs, Node root) {
+                      new LocaleDataPasses.LocaleSubstitutions(
+                              compiler,
+                              compiler.getOptions().locale,
+                              compiler.getLocaleSubstitutionData())
+                          .process(externs, root);
+                    }
+                  })
+          .setFeatureSetForOptimizations()
           .build();
 }

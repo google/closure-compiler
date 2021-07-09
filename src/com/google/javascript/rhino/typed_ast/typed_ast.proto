@@ -16,11 +16,24 @@ message TypedAst {
   // required
   StringPoolProto string_pool = 2;
 
-  repeated AstNode extern_file = 3;
-  repeated AstNode code_file = 4;
+  repeated LazyAst extern_ast = 3;
+  repeated LazyAst code_ast = 4;
 
   SourceFilePool source_file_pool = 5;
   ExternsSummary externs_summary = 6;
+
+  message List {
+    repeated TypedAst typed_asts = 1;
+  }
+}
+
+message LazyAst {
+  // Binary representation of an AstNode. They are encoded as 'bytes' to
+  // decrease memory usage during serialization and deserialization and allow
+  // lazy parsing of each AstNode.
+  bytes script = 1;
+  // 1-based index into TypedAst::source_file_pool
+  uint32 source_file = 2;
 }
 
 message StringPoolProto {
@@ -234,7 +247,10 @@ enum NodeKind {
   QUOTED_SETTER_DEF = 631;
 
   MODULE_BODY = 632;
-  // Next other: 633
+  FIELD_DECLARATION = 633;
+  COMPUTED_PROP_FIELD = 634;
+
+  // Next other: 635
 
   CAST = 800;
 }

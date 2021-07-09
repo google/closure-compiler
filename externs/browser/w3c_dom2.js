@@ -39,8 +39,8 @@ Document.prototype.getElementById = function(s) {};
  * @return {!Element}
  * @see https://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/core.html#ID-DocCrElNS
  */
-Document.prototype.createElementNS =
-    function(namespaceURI, qualifiedName, opt_typeExtension) {};
+Document.prototype.createElementNS = function(
+    namespaceURI, qualifiedName, opt_typeExtension) {};
 
 /**
  * @param {?string} namespaceURI
@@ -48,8 +48,7 @@ Document.prototype.createElementNS =
  * @return {!Attr}
  * @see https://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/core.html#ID-DocCrElNS
  */
-Document.prototype.createAttributeNS =
-    function(namespaceURI, qualifiedName) {};
+Document.prototype.createAttributeNS = function(namespaceURI, qualifiedName) {};
 
 /**
  * @param {Node} root
@@ -245,7 +244,8 @@ HTMLDocument.prototype.cookie;
  * @return {undefined}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-72161170
  * Even though official spec says "no parameters" some old browsers might take
- * optional parameters: https://msdn.microsoft.com/en-us/library/ms536652(v=vs.85).aspx
+ * optional parameters:
+ * https://msdn.microsoft.com/en-us/library/ms536652(v=vs.85).aspx
  * @override
  */
 HTMLDocument.prototype.open = function(opt_mimeType, opt_replace) {};
@@ -259,16 +259,19 @@ HTMLDocument.prototype.open = function(opt_mimeType, opt_replace) {};
 HTMLDocument.prototype.getElementsByName = function(elementName) {};
 
 
-/** @typedef {{
-  createNodeIterator: function(Node, number=, NodeFilter=, boolean=) : NodeIterator,
-  createTreeWalker: function(Node, number=, NodeFilter=, boolean=) : TreeWalker
-}} */
+/**
+@typedef {{
+  createNodeIterator: function(Node, number=, NodeFilter=, boolean=) :
+NodeIterator, createTreeWalker: function(Node, number=, NodeFilter=, boolean=) :
+TreeWalker
+}}
+*/
 var TraversalDocument;
 
 /**
  * @record
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter
-*/
+ */
 function NodeFilter() {}
 
 /* Constants for whatToShow */
@@ -295,13 +298,13 @@ function NodeFilter() {}
  * @param {Node} n
  * @return {number} Any of NodeFilter.FILTER_* constants.
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter-acceptNode
-*/
+ */
 NodeFilter.prototype.acceptNode = function(n) {};
 
 /**
  * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeIterator
-*/
+ */
 function NodeIterator() {}
 
 /**
@@ -326,7 +329,7 @@ NodeIterator.prototype.previousNode = function() {};
 /**
  * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-TreeWalker
-*/
+ */
 function TreeWalker() {}
 
 /**
@@ -2994,39 +2997,41 @@ Element.prototype.outerHTML;
  * modification to the `Window.prototype.open` method to allow it to accept one
  * of these objects.
  * @record
- * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
+ * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
 function AttributionSourceParams() {}
 
 /**
- * The event-level data associated with this source. This will be limited to 64
- * bits of information but the value can vary for browsers that want a higher
- * level of privacy.
+ * A DOMString encoding a 64-bit unsigned integer which represents the
+ * event-level data associated with this source. This will be limited to 64 bits
+ * of information but the value can vary for browsers that want a higher level
+ * of privacy.
  * @type {string}
- * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
+ * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.impressionData;
+AttributionSourceParams.prototype.attributionSourceEventId;
 
 /**
- * The eTLD+1 where attribution will be triggered for this source.
+ * An origin whose eTLD+1 is where attribution will be triggered for this
+ * source.
  * @type {string}
- * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
+ * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.conversionDestination;
+AttributionSourceParams.prototype.attributionDestination;
 
 /**
  * The desired endpoint that the attribution report for this source should go
  * to. Default is the top level origin of the page.
  * @type {string|undefined}
- * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
+ * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.reportingOrigin;
+AttributionSourceParams.prototype.attributionReportTo;
 
 /**
  * Expiry in milliseconds for when the source should be deleted. Default is 30
  * days, with a maximum value of 30 days. The maximum expiry can also vary
  * between browsers.
  * @type {number|undefined}
- * @see https://github.com/WICG/conversion-measurement-api/tree/6aa65ec3830fea018d9ff41c031010b0ece60aad#registering-impressions-for-windowopen-navigations
+ * @see https://github.com/WICG/conversion-measurement-api/tree/main#registering-attribution-sources-for-windowopen-navigations
  */
-AttributionSourceParams.prototype.impressionExpiry;
+AttributionSourceParams.prototype.attributionExpiry;

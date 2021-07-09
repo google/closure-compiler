@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -258,19 +259,43 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "modules.")
     private List<String> chunk = new ArrayList<>();
 
+    // TODO(bradfordcsmith): deprecate and remove this in favor of --restore_stage1_from_file
     @Option(
         name = "--continue-saved-compilation",
-        usage = "Filename where the intermediate compilation state was previously saved.",
+        usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
     private String continueSavedCompilationFile = null;
 
     @Option(
+        name = "--restore_stage1_from_file",
+        usage = "Filename where a stage 1 compilation state was previously saved.",
+        hidden = true)
+    private String restoreStage1FromFile = null;
+
+    @Option(
+        name = "--restore_stage2_from_file",
+        usage = "Filename where a stage 2 compilation state was previously saved.",
+        hidden = true)
+    private String restoreStage2FromFile = null;
+
+    // TODO(bradfordcsmith): deprecate and remove this in favor of --save_stage1_to_file
+    @Option(
         name = "--save-after-checks",
-        usage =
-            "Filename to save phase 1 intermediate state so that the compilation can be"
-                + " resumed later.",
+        usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
         hidden = true)
     private String saveAfterChecksFile = null;
+
+    @Option(
+        name = "--save_stage1_to_file",
+        usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
+        hidden = true)
+    private String saveStage1ToFile = null;
+
+    @Option(
+        name = "--save_stage2_to_file",
+        usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
+        hidden = true)
+    private String saveStage2ToFile = null;
 
     @Option(
         name = "--variable_renaming_report",
@@ -549,6 +574,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             "Enable debugging options. Property renaming uses long mangled names which can be "
                 + "mapped back to the original name.")
     private boolean debug = false;
+
+    @Option(
+        name = "--typed_ast_output_file__INTENRNAL_USE_ONLY",
+        usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
+        hidden = true)
+    private String typedAstOutputFile = null;
 
     @Option(
         name = "--generate_exports",
@@ -1657,7 +1688,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     } else {
       runCompiler = true;
 
-      getCommandLineConfig()
+      final CommandLineConfig config = getCommandLineConfig();
+      config
           .setPrintVersion(flags.version)
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
@@ -1668,8 +1700,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setMixedJsSources(mixedSources)
           .setDefaultToStdin()
           .setJsOutputFile(flags.jsOutputFile)
-          .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
-          .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
           .setModule(flags.chunk)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
@@ -1702,6 +1732,38 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setAngularPass(flags.angularPass)
           .setJsonStreamMode(flags.jsonStreamMode)
           .setErrorFormat(flags.errorFormat);
+
+      String stage1RestoreFile = flags.restoreStage1FromFile;
+      if (stage1RestoreFile == null) {
+        // TODO(bradfordcsmith): deprecate and remove this flag
+        stage1RestoreFile = flags.continueSavedCompilationFile;
+      }
+      if (stage1RestoreFile != null) {
+        config.setContinueSavedCompilationFileName(stage1RestoreFile, /* stage= */ 1);
+      }
+      String stage2RestoreFile = flags.restoreStage2FromFile;
+      if (stage1RestoreFile != null) {
+        checkState(stage2RestoreFile == null, "cannot restore both from stage 1 and from stage 2");
+        config.setContinueSavedCompilationFileName(stage1RestoreFile, 1);
+      } else if (stage2RestoreFile != null) {
+        config.setContinueSavedCompilationFileName(stage2RestoreFile, 2);
+      }
+
+      String stage1SaveFile = flags.saveStage1ToFile;
+      if (stage1SaveFile == null) {
+        // TODO(bradfordcsmith): deprecate and remove this flag
+        stage1SaveFile = flags.saveAfterChecksFile;
+      }
+      String stage2SaveFile = flags.saveStage2ToFile;
+      if (stage1SaveFile != null) {
+        checkState(stage2SaveFile == null, "cannot save both stage 1 and stage 2");
+        checkState(stage1RestoreFile == null, "cannot perform stage 1 on a restored stage 1");
+        config.setSaveCompilationStateToFilename(stage1SaveFile, 1);
+      } else if (stage2SaveFile != null) {
+        checkState(stage2RestoreFile == null, "Cannot perform stage 2 on a restored stage 2");
+        checkState(stage1RestoreFile != null, "Saving stage 2 requires restoring from stage 1");
+        config.setSaveCompilationStateToFilename(stage2SaveFile, 2);
+      }
     }
 
     errorStream = null;
@@ -1790,6 +1852,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       level.setWrappedOutputOptimizations(options);
     }
 
+    if (flags.typedAstOutputFile != null) {
+      options.setTypedAstOutputFile(Paths.get(flags.typedAstOutputFile));
+    }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
 

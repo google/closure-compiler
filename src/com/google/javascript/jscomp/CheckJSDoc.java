@@ -152,6 +152,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateImplicitCast(n, info);
     validateClosurePrimitive(n, info);
     validateReturnJsDoc(n, info);
+    validateLocaleFile(n, info);
+  }
+
+  private void validateLocaleFile(Node n, JSDocInfo info) {
+    if (info == null || !info.isLocaleFile()) {
+      return;
+    }
+
+    if (!n.isScript()) {
+      reportMisplaced(n, "localeFile", "localeFile must be in the fileoverview");
+    }
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -168,6 +179,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         // Suppressions are always valid here.
         return;
 
@@ -474,6 +487,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       case STRING_KEY:
       case COMPUTED_PROP:
       case EXPORT:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         return true;
       case GETELEM:
       case GETPROP:
@@ -583,6 +598,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
+        case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
           valid = true;
           break;
         // Declarations are valid iff they only contain simple names

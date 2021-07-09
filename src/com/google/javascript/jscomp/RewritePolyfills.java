@@ -87,7 +87,7 @@ public class RewritePolyfills implements CompilerPass {
       // method prevents it from being dead-code-elimiated before polyfill isolation runs.
       Node jscompLookupMethodDecl = IR.var(IR.name("$jscomp$lookupPolyfilledValue"));
       compiler
-          .getSynthesizedExternsInputAtEnd()
+          .getSynthesizedExternsInput()
           .getAstRoot(compiler)
           .addChildToBack(jscompLookupMethodDecl);
       compiler.reportChangeToEnclosingScope(jscompLookupMethodDecl);

@@ -1,3 +1,4 @@
+AggregateError es_next es3 es6/promise/aggregateerror
 Array.from es6 es3 es6/array/from
 Array.of es6 es3 es6/array/of
 Array.prototype.copyWithin es6 es3 es6/array/copywithin
@@ -57,6 +58,7 @@ Object.setPrototypeOf es6 es5 es6/object/setprototypeof
 Object.values es8 es3 es6/object/values
 Promise es6 es3 es6/promise/promise
 Promise.allSettled es_2020 es3 es6/promise/allSettled
+Promise.any es_next es3 es6/promise/any
 Promise.prototype.finally es9 es3 es6/promise/finally
 Proxy es6 es6
 Reflect es6 es3 es6/reflect/reflect
@@ -83,6 +85,7 @@ String.prototype.normalize es6 es6
 String.prototype.padEnd es8 es3 es6/string/padend
 String.prototype.padStart es8 es3 es6/string/padstart
 String.prototype.repeat es6 es3 es6/string/repeat
+String.prototype.replaceAll es_next es3 es6/string/replaceall
 String.prototype.startsWith es6 es3 es6/string/startswith
 String.prototype.trimEnd es_2019 es3 es6/string/trimend
 String.prototype.trimLeft es_2019 es3 es6/string/trimstart

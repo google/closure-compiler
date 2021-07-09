@@ -553,6 +553,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
   private boolean isNativeErrorClass(NodeTraversal t, String superClassName) {
     switch (superClassName) {
         // All Error classes listed in the ECMAScript spec as of 2016
+      case "AggregateError":
       case "Error":
       case "EvalError":
       case "RangeError":

@@ -86,6 +86,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
 
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
@@ -176,12 +178,14 @@ public final class NodeUtil {
         return getBooleanValue(n.getLastChild());
 
       case AND:
+      case ASSIGN_AND:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
           return lhs.and(rhs);
         }
       case OR:
+      case ASSIGN_OR:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
@@ -198,6 +202,7 @@ public final class NodeUtil {
           }
         }
       case COALESCE:
+      case ASSIGN_COALESCE:
         {
           Tri lhs = getBooleanValue(n.getFirstChild());
           Tri rhs = getBooleanValue(n.getLastChild());
@@ -1313,6 +1318,9 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case ASSIGN:
         return 1;
       case YIELD:
@@ -1486,6 +1494,9 @@ public final class NodeUtil {
       case AND:
       case OR:
       case COALESCE:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
         return and(getKnownValueType(n.getFirstChild()), getKnownValueType(n.getLastChild()));
       case HOOK:
         return and(getKnownValueType(n.getSecondChild()), getKnownValueType(n.getLastChild()));
@@ -1795,6 +1806,11 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * Returns true if the operator is an assignment type operator. Note: The logical assignments
+   * (i.e. ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE) follow short-circuiting behavior, and the RHS may
+   * not always be evaluated. They are still considered AssignmentOps (may be optimized).
+   */
   public static boolean isAssignmentOp(Node n) {
     switch (n.getToken()) {
       case ASSIGN:
@@ -1810,6 +1826,22 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
+        return true;
+      default:
+        break;
+    }
+    return false;
+  }
+
+  /** Returns true if the operator is a logical assignment type operator. */
+  public static boolean isLogicalAssignmentOp(Node n) {
+    switch (n.getToken()) {
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
         return true;
       default:
         break;
@@ -1847,60 +1879,16 @@ public final class NodeUtil {
         return Token.DIV;
       case ASSIGN_MOD:
         return Token.MOD;
+      case ASSIGN_OR:
+        return Token.OR;
+      case ASSIGN_AND:
+        return Token.AND;
+      case ASSIGN_COALESCE:
+        return Token.COALESCE;
       default:
         break;
     }
     throw new IllegalArgumentException("Not an assignment op:" + n);
-  }
-
-  static Token getAssignOpFromOp(Node n) {
-    switch (n.getToken()) {
-      case BITOR:
-        return Token.ASSIGN_BITOR;
-      case BITXOR:
-        return Token.ASSIGN_BITXOR;
-      case BITAND:
-        return Token.ASSIGN_BITAND;
-      case LSH:
-        return Token.ASSIGN_LSH;
-      case RSH:
-        return Token.ASSIGN_RSH;
-      case URSH:
-        return Token.ASSIGN_URSH;
-      case ADD:
-        return Token.ASSIGN_ADD;
-      case SUB:
-        return Token.ASSIGN_SUB;
-      case MUL:
-        return Token.ASSIGN_MUL;
-      case EXPONENT:
-        return Token.ASSIGN_EXPONENT;
-      case DIV:
-        return Token.ASSIGN_DIV;
-      case MOD:
-        return Token.ASSIGN_MOD;
-      default:
-        throw new IllegalStateException("Unexpected operator: " + n);
-    }
-  }
-
-  static boolean hasCorrespondingAssignmentOp(Node n) {
-    switch (n.getToken()) {
-      case BITOR:
-      case BITXOR:
-      case BITAND:
-      case LSH:
-      case RSH:
-      case URSH:
-      case ADD:
-      case SUB:
-      case MUL:
-      case DIV:
-      case MOD:
-        return true;
-      default:
-        return false;
-    }
   }
 
   /** Gets the closest ancestor to the given node of the provided type. */
@@ -3491,6 +3479,7 @@ public final class NodeUtil {
    *
    * @param node A node
    */
+  // TODO(b/189993301): should fields be added to this method?
   static boolean mayBeObjectLitKey(Node node) {
     switch (node.getToken()) {
       case STRING_KEY:
@@ -3518,8 +3507,8 @@ public final class NodeUtil {
    *
    * @param key A node
    */
-  static String getObjectLitKeyName(Node key) {
-    Node keyNode = getObjectLitKeyNode(key);
+  static String getObjectOrClassLitKeyName(Node key) {
+    Node keyNode = getObjectOrClassLitKeyNode(key);
     if (keyNode != null) {
       return keyNode.getString();
     }
@@ -3531,15 +3520,20 @@ public final class NodeUtil {
    *
    * @param key A node
    */
-  static Node getObjectLitKeyNode(Node key) {
+  static Node getObjectOrClassLitKeyNode(Node key) {
     switch (key.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
         return key;
       case COMPUTED_PROP:
-        return key.getFirstChild().isStringLit() ? key.getFirstChild() : null;
+      case COMPUTED_FIELD_DEF:
+        return key.getFirstChild()
+                .isStringLit() // TODO(b/189993301): may be an issue with non string lits
+            ? key.getFirstChild()
+            : null;
       default:
         break;
     }
@@ -3654,6 +3648,12 @@ public final class NodeUtil {
         return "/=";
       case ASSIGN_MOD:
         return "%=";
+      case ASSIGN_OR:
+        return "||=";
+      case ASSIGN_AND:
+        return "&&=";
+      case ASSIGN_COALESCE:
+        return "??=";
       case VOID:
         return "void";
       case TYPEOF:
@@ -4690,7 +4690,9 @@ public final class NodeUtil {
   static boolean isConstantDeclaration(JSDocInfo info, Node node) {
     if (isObjectLitKey(node)
         || (node.getParent().isAssign() && node.isFirstChildOf(node.getParent()))
-        || (node.getParent().isExprResult() && isNormalGet(node))) {
+        || (node.getParent().isExprResult() && isNormalGet(node))
+        || node.isMemberFieldDef()
+        || node.isComputedFieldDef()) {
       return info != null && info.isConstant();
     }
     checkArgument(node.isName(), node);
@@ -5109,6 +5111,9 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case DESTRUCTURING_LHS:
         return n.getNext();
       case VAR:
@@ -5127,6 +5132,7 @@ public final class NodeUtil {
     return null;
   }
 
+  // TODO(b/189993301): do I have to add logic for class fields in these LValue functions?
   /** Get the owner of the given l-value node. */
   static Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
@@ -5162,7 +5168,7 @@ public final class NodeUtil {
       if (owner != null) {
         String ownerName = getBestLValueName(owner);
         if (ownerName != null) {
-          String key = getObjectLitKeyName(lValue);
+          String key = getObjectOrClassLitKeyName(lValue);
           return TokenStream.isJSIdentifier(key) ? ownerName + "." + key : null;
         }
       }
@@ -5376,7 +5382,7 @@ public final class NodeUtil {
   public static boolean isGoogModuleCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
-      return (target.matchesQualifiedName("goog.module"));
+      return GOOG_MODULE.matches(target);
     }
     return false;
   }
@@ -5402,6 +5408,8 @@ public final class NodeUtil {
   }
 
   static boolean isBundledGoogModuleCall(Node n) {
+    // TODO(lharker): take an EXPR_RESULT to align with NodeUtil.isGoogModuleCall and
+    // NodeUtil.isGoogProvideCall.
     if (!(n.isCall()
         && n.hasTwoChildren()
         && n.getFirstChild().matchesQualifiedName("goog.loadModule"))) {

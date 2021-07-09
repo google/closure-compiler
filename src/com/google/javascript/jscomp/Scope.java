@@ -77,18 +77,51 @@ public final class Scope extends AbstractScope<Scope, Var> {
    * @param nameNode the NAME node declaring the variable
    * @param input the input in which this variable is defined.
    */
-  // Non-final for PersisteneScope.
   Var declare(String name, Node nameNode, CompilerInput input) {
     checkArgument(!name.isEmpty());
     // Make sure that it's declared only once
     checkState(getOwnSlot(name) == null);
-    Var var = new Var(name, nameNode, this, getVarCount(), input);
+    Var var =
+        new Var(
+            name,
+            nameNode,
+            this,
+            getVarCount(),
+            input,
+            /* implicitGoogNamespaceDefinition= */ null);
     declareInternal(name, var);
+    return var;
+  }
+
+  /**
+   * Declares an implicit goog.provide or goog.module namespace in this scope
+   *
+   * @param name name of the variable
+   * @param definition the STRINGLIT node holding the full namespace
+   */
+  Var declareImplicitGoogNamespaceIfAbsent(String name, Node definition) {
+    checkArgument(!name.isEmpty());
+    checkState(this.isGlobal(), "Cannot declare implicit goog namespace in local scope %s", this);
+    // Allow redeclarations of provides, since they are implicit and don't have a single
+    // declaration site.
+    Var var = getOwnSlot(name);
+    if (var == null) {
+      var = Var.createImplicitGoogNamespace(name, this, definition);
+      declareInternal(name, var);
+    } else if (var.isImplicitGoogNamespace()) {
+      var.addImplicitGoogNamespaceDefinition(definition);
+    }
     return var;
   }
 
   @Override
   Var makeImplicitVar(ImplicitVar var) {
-    return new Var(var.name, null /* nameNode */, this, -1 /* index */, null /* input */);
+    return new Var(
+        var.name,
+        /* nameNode= */ null,
+        this,
+        /* index= */ -1,
+        /* input= */ null,
+        /* implicitGoogNamespaceDefinition= */ null);
   }
 }

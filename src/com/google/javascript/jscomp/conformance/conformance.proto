@@ -33,10 +33,12 @@ message Requirement {
 
   // Optional: A list of source path prefixes that are exempt from the
   // requirement.
-  repeated string whitelist = 2;
+  // DEPRECATED: Use allowlist instead.
+  repeated string whitelist = 2 [deprecated = true];
 
   // Optional: A list of source paths regexs that are exempt from the
   // requirement.
+  // DEPRECATED: Use allowlist_regexp instead.
   repeated string whitelist_regexp = 3;
 
   // Optional: A list of source path prefixes that are exempt from the
@@ -73,7 +75,8 @@ message Requirement {
     optional bool automatically_prune = 6;
   }
 
-  repeated WhitelistEntry whitelist_entry = 14;
+  // DEPRECATED: Use allowlist_entry instead.
+  repeated WhitelistEntry whitelist_entry = 14 [deprecated = true];
 
   repeated WhitelistEntry allowlist_entry = 19;
 
@@ -192,12 +195,12 @@ message Requirement {
 
   // The value banned, optional for "custom" requirements.  Some custom
   // requirements repurpose this for different purposes, such as for allowlists
-  // (aka. whitelists) of types.
+  // of types.
   repeated string value = 7;
 
   // Whether to allow subconfigs to extend the "value" field.  This does not
-  // make sense for banning values, but when the value is used as an allowlist
-  // (aka whitelist), it becomes important.
+  // make sense for banning values, but when the value is used as an allowlist,
+  // it becomes important.
   optional bool allow_extending_value = 15;
 
   // Strategy to use for matching types in the value parameter (e.g. for

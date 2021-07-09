@@ -105,12 +105,11 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   }
 
   /**
-   * Gets the container node of the scope. This is typically the FUNCTION
-   * node or the global BLOCK/SCRIPT node.
+   * Gets the container node of the scope. This is typically the FUNCTION node or the global
+   * BLOCK/SCRIPT node.
    */
-  // Non-final for jsdev tests
   @Override
-  public Node getRootNode() {
+  public final Node getRootNode() {
     return rootNode;
   }
 
@@ -269,11 +268,10 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   }
 
   /**
-   * Return an iterable over all of the variables declared in this scope
-   * (except the special 'arguments' variable).
+   * Return an iterable over all of the variables declared in this scope (except the special
+   * 'arguments' variable).
    */
-  // Non-final for jsdev tests
-  public Iterable<V> getVarIterable() {
+  public final Iterable<V> getVarIterable() {
     return vars.values();
   }
 
@@ -302,32 +300,22 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     return accessibleVars.values();
   }
 
-  // Non-final for jsdev tests
-  public Iterable<V> getAllSymbols() {
+  public final Iterable<V> getAllSymbols() {
     return Collections.unmodifiableCollection(vars.values());
   }
 
-  /**
-   * Returns number of variables in this scope (excluding the special 'arguments' variable)
-   */
-  // Non-final for jsdev tests
-  public int getVarCount() {
+  /** Returns number of variables in this scope (excluding the special 'arguments' variable) */
+  public final int getVarCount() {
     return vars.size();
   }
 
-  /**
-   * Returns whether this is the global scope.
-   */
-  // Non-final for jsdev tests
-  public boolean isGlobal() {
+  /** Returns whether this is the global scope. */
+  public final boolean isGlobal() {
     return getParent() == null;
   }
 
-  /**
-   * Returns whether this is a local scope (i.e. not the global scope).
-   */
-  // Non-final for jsdev tests
-  public boolean isLocal() {
+  /** Returns whether this is a local scope (i.e. not the global scope). */
+  public final boolean isLocal() {
     return getParent() != null;
   }
 

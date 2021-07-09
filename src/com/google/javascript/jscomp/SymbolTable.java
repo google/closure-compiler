@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -54,6 +55,8 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -334,7 +337,7 @@ public final class SymbolTable {
 
     UnionType unionType = type.toMaybeUnionType();
     if (unionType != null) {
-      List<Symbol> result = new ArrayList<>(2);
+      ImmutableList.Builder<Symbol> result = ImmutableList.builder();
       for (JSType alt : unionType.getAlternates()) {
         // Our type system never has nested unions.
         Symbol altSym = getSymbolForTypeHelper(alt, true);
@@ -342,7 +345,7 @@ public final class SymbolTable {
           result.add(altSym);
         }
       }
-      return result;
+      return result.build();
     }
     Symbol result = getSymbolForTypeHelper(type, true);
     return result == null ? ImmutableList.of() : ImmutableList.of(result);
@@ -389,46 +392,102 @@ public final class SymbolTable {
     }
   }
 
+  /**
+   * Methods returns debug representation of the SymbolTable. It starts with the global scope and
+   * all its symbols recursively going to children scopes and printing their symbols.
+   */
   @SuppressWarnings("unused")
-  public String toDebugString() {
+  public String toDebugStringTree() {
+    // We are recursively going through scopes from global to nested and need to build parent =>
+    // children map as it doesn't exist at the moment.
+    ImmutableListMultimap.Builder<SymbolScope, SymbolScope> childrenScopesBuilder =
+        ImmutableListMultimap.builder();
+    for (SymbolScope scope : getAllScopes()) {
+      if (scope.getParentScope() != null) {
+        childrenScopesBuilder.put(scope.getParentScope(), scope);
+      }
+    }
+    ImmutableListMultimap<SymbolScope, SymbolScope> childrenScopes = childrenScopesBuilder.build();
     StringBuilder builder = new StringBuilder();
+    // Go through all scopes that don't have parent. It's likely only Global scope.
+    for (SymbolScope scope : getAllScopes()) {
+      if (scope.getParentScope() == null) {
+        toDebugStringTree(builder, "", scope, childrenScopes);
+      }
+    }
+
+    // All objects/classes have property scopes. They usually don't have parents. These scopes
+    // confusingly are not included in "getAllScopes()" pass above.
+    HashSet<SymbolScope> visitedPropertyScopes = new HashSet<>();
     for (Symbol symbol : getAllSymbols()) {
-      toDebugString(builder, symbol);
+      if (symbol.propertyScope == null || visitedPropertyScopes.contains(symbol.propertyScope)) {
+        continue;
+      }
+      visitedPropertyScopes.add(symbol.getPropertyScope());
+      toDebugStringTree(builder, "", symbol.propertyScope, childrenScopes);
     }
     return builder.toString();
   }
 
-  private void toDebugString(StringBuilder builder, Symbol symbol) {
-    SymbolScope scope = symbol.scope;
-    if (scope.isGlobalScope()) {
-      builder.append(SimpleFormat.format("'%s' : in global scope:\n", symbol.getName()));
-    } else if (scope.getRootNode() != null) {
-      builder.append(
-          SimpleFormat.format(
-              "'%s' : in scope %s:%d\n",
-              symbol.getName(),
-              scope.getRootNode().getSourceFileName(),
-              scope.getRootNode().getLineno()));
-    } else if (scope.getSymbolForScope() != null) {
-      builder.append(
-          SimpleFormat.format(
-              "'%s' : in scope %s\n", symbol.getName(), scope.getSymbolForScope().getName()));
-    } else {
-      builder.append(SimpleFormat.format("'%s' : in unknown scope\n", symbol.getName()));
+  private void toDebugStringTree(
+      StringBuilder builder,
+      String prefix,
+      SymbolScope scope,
+      ImmutableListMultimap<SymbolScope, SymbolScope> childrenScopes) {
+    builder.append(prefix).append(scope);
+    String childrenPrefix = prefix + "    ";
+    boolean printedSomething = false;
+    if (!scope.ownSymbols.isEmpty()) {
+      printedSomething = true;
+      builder.append('\n').append(prefix).append("  Symbols:\n");
+      for (Symbol symbol : scope.ownSymbols.values()) {
+        toDebugString(builder, childrenPrefix, symbol, /* printScope= */ false);
+      }
     }
+    if (childrenScopes.containsKey(scope)) {
+      printedSomething = true;
+      builder.append('\n').append(prefix).append("  Scopes:\n");
+      for (SymbolScope childScope : childrenScopes.get(scope)) {
+        toDebugStringTree(builder, childrenPrefix, childScope, childrenScopes);
+      }
+    }
+    if (!printedSomething) {
+      builder.append('\n');
+    }
+    builder.append('\n');
+  }
+
+  @SuppressWarnings("unused")
+  public String toDebugString() {
+    StringBuilder builder = new StringBuilder();
+    for (Symbol symbol : getAllSymbols()) {
+      toDebugString(builder, "", symbol, /* printScope= */ true);
+    }
+    return builder.toString();
+  }
+
+  private void toDebugString(
+      StringBuilder builder, String prefix, Symbol symbol, boolean printScope) {
+    builder.append(prefix).append("'").append(symbol.getName()).append("'");
+    if (printScope) {
+      builder.append(" in ").append(symbol.scope);
+    }
+    builder.append('\n');
 
     int refCount = 0;
     for (Reference ref : getReferences(symbol)) {
       Node node = ref.getNode();
-      builder.append(
-          SimpleFormat.format(
-              "  Ref %d: %s line: %d col: %d len: %d %s\n",
-              refCount,
-              node.getSourceFileName(),
-              node.getLineno(),
-              node.getCharno(),
-              node.getLength(),
-              node.isIndexable() ? "" : "non indexable"));
+      builder
+          .append(prefix)
+          .append(
+              SimpleFormat.format(
+                  "  Ref %d: %s line: %d col: %d len: %d %s\n",
+                  refCount,
+                  node.getSourceFileName(),
+                  node.getLineno(),
+                  node.getCharno(),
+                  node.getLength(),
+                  node.isIndexable() ? "" : "non indexable"));
       refCount++;
     }
   }
@@ -595,7 +654,7 @@ public final class SymbolTable {
     return ref != null
         && ref.getNode() != null
         && ref.getNode().getStaticSourceFile() != null
-        && !Compiler.SYNTHETIC_EXTERNS.equals(ref.getNode().getStaticSourceFile().getName())
+        && !NodeUtil.isInSyntheticScript(ref.getNode())
         // Typechecking assigns implicitly goog.provided names a declaration node of the expr:
         // For example, 'some' and 'some.name' in 'goog.provide('some.name.child');' have their
         // declaration node set to the entire call node. Use the actual declaration instead.
@@ -839,7 +898,7 @@ public final class SymbolTable {
     //
     // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
     // that point to the exact same type instance.
-    Map<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
+    IdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
     for (Symbol s : allTypes) {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
@@ -1001,11 +1060,7 @@ public final class SymbolTable {
     ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
         collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseRoots(
-        compiler,
-        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
-        externs,
-        root);
+    NodeTraversal.traverseRoots(compiler, new VisibilityCollector(visibilityMap), externs, root);
   }
 
   /**
@@ -1155,6 +1210,64 @@ public final class SymbolTable {
           }
         };
     NodeTraversal.traverseRoots(compiler, collectSuper, externs, root);
+  }
+
+  /**
+   * Connects goog.module/goog.provide calls with goog.require/goog.requireType. For each
+   * goog.module/goog.provide call creates a symbol and all goog.require/goog.requireType added as
+   * references.
+   */
+  void fillGoogProvideModuleRequires(Node externs, Node root) {
+    // small optimization to keep symbols created within this function for fast access instead of
+    // going through SymbolTable.getSymbolForName() every time.
+    Map<String, Symbol> declaredNamespaces = new HashMap<>();
+    NodeTraversal.Callback traverse =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (!n.isCall()) {
+              return;
+            }
+            Node left = n.getFirstChild();
+            Node arg = n.getSecondChild();
+            // We want only nodes of type `goog.xyz('somestring')`.
+            if (!(left.isGetProp()
+                    && left.getFirstChild().isName()
+                    && left.getFirstChild().getString().equals("goog"))
+                || arg == null
+                || !arg.isStringLit()) {
+              return;
+            }
+            String namespaceName = "ns$" + arg.getString();
+            switch (left.getString()) {
+              case "module":
+              case "provide":
+                Symbol ns =
+                    declareSymbol(
+                        namespaceName,
+                        /* type= */ null,
+                        /* inferred= */ false,
+                        getGlobalScope(),
+                        arg,
+                        /* info= */ null);
+                declaredNamespaces.put(namespaceName, ns);
+                break;
+              case "require":
+              case "requireType":
+              case "forwardDeclare":
+                Symbol symbol = declaredNamespaces.get(namespaceName);
+                // We expect that namespace was already processed by that point, but in some broken
+                // code it might be missing. In which case just skip it.
+                if (symbol != null) {
+                  symbol.defineReferenceAt(arg);
+                }
+                break;
+              default:
+                // do nothing. Some other goog.xyz call.
+            }
+          }
+        };
+    NodeTraversal.traverseRoots(compiler, traverse, externs, root);
   }
 
   /*
@@ -1517,6 +1630,10 @@ public final class SymbolTable {
       return getParentScope() == null && getRootNode() != null;
     }
 
+    public boolean isModuleScope() {
+      return getRootNode() != null && getRootNode().isModuleBody();
+    }
+
     /**
      * Returns whether this is a doc scope. A doc scope is a table for symbols that are documented
      * solely within a JSDoc comment.
@@ -1548,8 +1665,18 @@ public final class SymbolTable {
     @Override
     public String toString() {
       Node n = getRootNode();
-      if (n != null) {
-        return "Scope@" + n.getSourceFileName() + ":" + n.getLineno();
+      if (isGlobalScope()) {
+        return "GlobalScope";
+      } else if (n != null) {
+        String type = "Scope";
+        if (isModuleScope()) {
+          type = "ModuleScope";
+        } else if (isBlockScope()) {
+          type = "BlockScope";
+        } else if (isLexicalScope()) {
+          type = "LexicalScope";
+        }
+        return type + "@" + n.getSourceFileName() + ":" + n.getLineno();
       } else {
         return "PropertyScope@" + getSymbolForScope();
       }
@@ -1863,13 +1990,9 @@ public final class SymbolTable {
   /** Collects the visibility information for each name/property. */
   private class VisibilityCollector extends NodeTraversal.AbstractPostOrderCallback {
     private final ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap;
-    private final CodingConvention codingConvention;
 
-    private VisibilityCollector(
-        ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
-        CodingConvention codingConvention) {
+    private VisibilityCollector(ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
       this.fileVisibilityMap = fileVisibilityMap;
-      this.codingConvention = codingConvention;
     }
 
     @Override

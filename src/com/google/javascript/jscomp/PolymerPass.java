@@ -52,7 +52,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
   private final boolean propertyRenamingEnabled;
 
   private Node polymerElementExterns;
-  private Node externsInsertionRef = null;
   private final Set<String> nativeExternsAdded;
   private ImmutableList<Node> polymerElementProps;
   private GlobalNamespace globalNames;
@@ -165,7 +164,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       PolymerClassRewriter rewriter =
           new PolymerClassRewriter(
               compiler,
-              getExtensInsertionRef(),
               polymerVersion,
               polymerExportPolicy,
               this.propertyRenamingEnabled);
@@ -181,7 +179,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
       PolymerClassRewriter rewriter =
           new PolymerClassRewriter(
               compiler,
-              getExtensInsertionRef(),
               polymerVersion,
               polymerExportPolicy,
               this.propertyRenamingEnabled);
@@ -200,18 +197,6 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     exportSpec.addChildToFront(name.cloneNode());
     exportSpec.addChildToFront(name.cloneNode());
     export.addChildToFront(new Node(Token.EXPORT_SPECS, exportSpec).srcrefTree(export));
-  }
-
-  private Node getExtensInsertionRef() {
-    if (this.polymerElementExterns != null) {
-      return this.polymerElementExterns;
-    }
-
-    if (this.externsInsertionRef == null) {
-      this.externsInsertionRef = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
-    }
-
-    return this.externsInsertionRef;
   }
 
   /**

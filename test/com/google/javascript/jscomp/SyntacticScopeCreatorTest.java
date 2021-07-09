@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
 import org.junit.Test;
@@ -1279,5 +1280,68 @@ public final class SyntacticScopeCreatorTest {
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
     assertScope(moduleScope).declares("exports").directly();
+  }
+
+  @Test
+  public void testGoogProvideOfNameInScope() {
+    Node root = getRoot("goog.provide('foo');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertScope(globalScope).declares("foo").directly();
+    assertThat(globalScope.getVar("foo").isImplicitGoogNamespace()).isTrue();
+  }
+
+  @Test
+  public void testGoogProvideOfNamespaceInScope() {
+    Node root = getRoot("goog.provide('foo.bar');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+  }
+
+  @Test
+  public void testLegacyGoogModuleNamespaceInScope() {
+    Node root = getRoot("goog.module('foo.bar'); goog.module.declareLegacyNamespace();");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertScope(moduleScope).declares("foo").on(globalScope);
+  }
+
+  @Test
+  public void testBundledLegacyGoogModuleNamespaceInScope() {
+    Node root =
+        getRoot(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('foo.bar');",
+                "  goog.module.declareLegacyNamespace();",
+                "  return exports;",
+                "});"));
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).declares("foo").directly();
+    assertScope(globalScope).doesNotDeclare("foo.bar");
+  }
+
+  @Test
+  public void testNonLegacyGoogModuleNamespace_notInScope() {
+    Node root = getRoot("goog.module('foo.bar');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    assertScope(globalScope).doesNotDeclare("foo");
+  }
+
+  @Test
+  public void testGoogProvideDeclaresStrength() {
+    Node root = getRoot("goog.provide('foo');");
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertThat(globalScope.getVar("foo").getImplicitGoogNamespaceStrength())
+        .isEqualTo(SourceKind.STRONG);
   }
 }

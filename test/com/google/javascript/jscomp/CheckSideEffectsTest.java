@@ -64,6 +64,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("var a, b; a = 5, b = 6");
     test("var a, b; a = 5, b == 6", "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", warning(e));
     test("var a, b; a = (5, 6)", "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", warning(e));
+    test("var a, b; a ||= (5, 6)", "var a, b; a ||= (JSCOMPILER_PRESERVE(5), 6)", warning(e));
     test(
         "var a, b; a = (bar(), 6, 7)",
         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)",
@@ -72,7 +73,12 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         "var a, b; a = (bar(), bar(), 7, 8)",
         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)",
         warning(e));
+    test(
+        "var a, b; a ||= (bar(), bar(), 7, 8)",
+        "var a, b; a ||= (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)",
+        warning(e));
     testSame("var a, b; a = (b = 7, 6)");
+    testSame("var a, b; a ||= (b ||= 7, 6)");
     testSame(
         lines(
             "function x(){}",
@@ -141,6 +147,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("var f = s => {key:s}", e);
     testWarning("var f = s => {key:s + 1}", e);
     testWarning("var f = s => {s}", e);
+    testSame("var f = s => {s ||= 1}");
   }
 
   // just here to make sure import.meta doesn't break anything

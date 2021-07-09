@@ -88,7 +88,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckDuplicateCase(compiler),
                           new CheckEmptyStatements(compiler),
                           new CheckEnums(compiler),
-                          new CheckExtraRequires(compiler),
+                          new CheckExtraRequires(compiler, options.getUnusedImportsToRemove()),
                           new CheckGoogModuleTypeScriptName(compiler),
                           new CheckJSDocStyle(compiler),
                           new CheckJSDoc(compiler),

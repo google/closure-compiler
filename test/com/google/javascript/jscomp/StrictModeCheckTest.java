@@ -395,6 +395,20 @@ public final class StrictModeCheckTest extends CompilerTestCase {
     testWarning("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_MEMBER);
   }
 
+  @Test
+  public void testClassField() {
+    disableTypeCheck();
+
+    testSame(
+        lines(
+            "class Example {",
+            "  a = 2;",
+            "  static b;",
+            "  ['a'] = 'hi';",
+            "  static ['b'];",
+            "}"));
+  }
+
   private static String inFn(String body) {
     return "function func() {" + body + "}";
   }

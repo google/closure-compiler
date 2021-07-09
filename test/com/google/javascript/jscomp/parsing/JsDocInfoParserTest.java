@@ -66,14 +66,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
-  private JSDocInfo.Builder fileLevelJsDocBuilder = null;
+  private String prevLicense;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT = "Missing type declaration.";
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   @Before
   public void setUp() throws Exception {
-    fileLevelJsDocBuilder = null;
     extraAnnotations =
         new HashSet<>(
             ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
@@ -1993,38 +1992,37 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParsePreserve() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
-    assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
+    assertThat(this.prevLicense).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   @Test
   public void testParseLicense() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
-    assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
+    assertThat(this.prevLicense).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   @Test
   public void testParseLicenseAscii() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo\n *   Bar\n\n  Baz*/";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
-    assertThat(info.getLicense()).isEqualTo(" Foo\n   Bar\n\n  Baz");
+    assertThat(this.prevLicense).isEqualTo(" Foo\n   Bar\n\n  Baz");
   }
 
   @Test
   public void testParseLicenseWithAnnotation() {
-    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo \n * @author Charlie Brown */";
     parse(comment);
-    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
-    assertThat(info.getLicense()).isEqualTo(" Foo \n @author Charlie Brown ");
+    assertThat(this.prevLicense).isEqualTo(" Foo \n @author Charlie Brown ");
+  }
+
+  @Test
+  public void testParseLicenseMultiple() {
+    String comment = "@license Foo @license Bar */";
+    parse(comment);
+    assertThat(this.prevLicense).isEqualTo(" Foo @license Bar ");
   }
 
   @Test
@@ -2840,9 +2838,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(authors).isNotNull();
     assertThat(authors).hasSize(3);
 
-    assertContains(authors, "a@google.com (A Person)");
-    assertContains(authors, "b@google.com (B Person)");
-    assertContains(authors, "c@google.com (C Person)");
+    assertThat(authors).contains("a@google.com (A Person)");
+    assertThat(authors).contains("b@google.com (B Person)");
+    assertThat(authors).contains("c@google.com (C Person)");
   }
 
   @Test
@@ -3058,10 +3056,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(references).isNotNull();
     assertThat(references).hasSize(4);
 
-    assertContains(references, "A cool place!");
-    assertContains(references, "The world.");
-    assertContains(references, "SomeClass#SomeMember");
-    assertContains(references, "A boring test case");
+    assertThat(references).contains("A cool place!");
+    assertThat(references).contains("The world.");
+    assertThat(references).contains("SomeClass#SomeMember");
+    assertThat(references).contains("A boring test case");
   }
 
   @Test
@@ -5208,6 +5206,30 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseLocaleFile() {
+    JSDocInfo jsDocInfo = parse("@localeFile */");
+    assertThat(jsDocInfo.isLocaleFile()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleObject() {
+    JSDocInfo jsDocInfo = parse("@localeObject */");
+    assertThat(jsDocInfo.isLocaleObject()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleSelect() {
+    JSDocInfo jsDocInfo = parse("@localeSelect */");
+    assertThat(jsDocInfo.isLocaleSelect()).isTrue();
+  }
+
+  @Test
+  public void testParseLocaleValue() {
+    JSDocInfo jsDocInfo = parse("@localeValue */");
+    assertThat(jsDocInfo.isLocaleValue()).isTrue();
+  }
+
+  @Test
   public void testParseCollapsibleOrBreakMyCode() {
     JSDocInfo jsDocInfo = parse("@collapsibleOrBreakMyCode */");
     assertThat(jsDocInfo.isCollapsibleOrBreakMyCode()).isTrue();
@@ -5701,10 +5723,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     return null;
   }
 
-  private static <T> void assertContains(Collection<T> collection, T item) {
-    assertThat(collection).contains(item);
-  }
-
   private Node parseFull(String code, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     Config config =
@@ -5781,11 +5799,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JsDocInfoParser jsdocParser =
         new JsDocInfoParser(stream(comment), comment, 0, templateNode, config, errorReporter);
 
-    if (fileLevelJsDocBuilder != null) {
-      jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
-    }
-
     jsdocParser.parse();
+    this.prevLicense = jsdocParser.getLicenseText();
 
     errorReporter.verifyHasEncounteredAllWarningsAndErrors();
 

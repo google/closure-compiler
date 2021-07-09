@@ -134,7 +134,7 @@ public enum CompilationParam {
 
     @Override
     public String getJavaInfo() {
-      return diagGroupWarningInfo("options.setShouldUnsafelyPreserveTypesForDebugging(true);");
+      return "options.setShouldUnsafelyPreserveTypesForDebugging(true);";
     }
   },
 
@@ -143,6 +143,27 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(value);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return "options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf";
+    }
+  },
+
+  /**
+   * Disable the goog.module, ES module, and goog.provide passes. You'll get undefined behavior
+   * unless using with CHECKS_ONLY
+   */
+  DISABLE_MODULE_REWRITING(false, ParamGroup.ERROR_CHECKING) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setEnableModuleRewriting(!value);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return "options.setEnableModuleRewriting(!value); only supported with CHECKS_ONLY";
     }
   },
 

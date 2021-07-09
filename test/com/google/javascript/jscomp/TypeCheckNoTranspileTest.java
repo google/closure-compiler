@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -5522,7 +5523,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "async function f(/** !Iterable<Promise<{a: number}>> */ o) {",
             "  for await (const {a, b} of o) {}",
             "}"),
-        "Property b never defined on ?");
+        "Property b never defined on ?" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
   }
 
   @Test

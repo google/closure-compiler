@@ -72,6 +72,11 @@ public class ParseTree {
   public ComprehensionTree asComprehension() { return (ComprehensionTree) this; }
   public ComputedPropertyDefinitionTree asComputedPropertyDefinition() {
     return (ComputedPropertyDefinitionTree) this; }
+
+  public ComputedPropertyFieldTree asComputedPropertyField() {
+    return (ComputedPropertyFieldTree) this;
+  }
+
   public ComputedPropertyGetterTree asComputedPropertyGetter() {
     return (ComputedPropertyGetterTree) this; }
   public ComputedPropertyMethodTree asComputedPropertyMethod() {
@@ -190,6 +195,10 @@ public class ParseTree {
 
   public ForAwaitOfStatementTree asForAwaitOfStatement() {
     return (ForAwaitOfStatementTree) this;
+  }
+
+  public FieldDeclarationTree asFieldDeclaration() {
+    return (FieldDeclarationTree) this;
   }
 
   public boolean isPattern() {

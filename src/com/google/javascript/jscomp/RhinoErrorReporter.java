@@ -164,8 +164,7 @@ class RhinoErrorReporter {
           .put(Pattern.compile("^This language feature is only supported for .*"), LANGUAGE_FEATURE)
           .put(
               Pattern.compile(
-                  "^This language feature is not currently supported by the internalReporter:"
-                      + " .*"),
+                  "^This language feature is not currently supported by the compiler:" + " .*"),
               UNSUPPORTED_LANGUAGE_FEATURE)
           .put(
               Pattern.compile("Bounded generic semantics are currently still in development"),

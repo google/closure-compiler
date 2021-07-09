@@ -26,6 +26,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.SourceFile;
@@ -55,25 +56,32 @@ public final class TypedAstDeserializer {
   private TypedAstDeserializer(
       TypedAst typedAst,
       StringPool stringPool,
-      ColorPool colorPool,
+      ColorPool.ShardView colorPoolShard,
       ImmutableList<SourceFile> sourceFiles) {
     this.typedAst = typedAst;
-    this.colorPoolShard = colorPool.getOnlyShard();
+    this.colorPoolShard = colorPoolShard;
     this.stringPool = stringPool;
     this.sourceFiles = sourceFiles;
   }
 
   /** Transforms a given TypedAst object into a compiler AST (represented as a IR.root node) */
-  public static DeserializedAst deserialize(TypedAst typedAst) {
+  public static DeserializedAst deserialize(AbstractCompiler compiler, TypedAst typedAst) {
     StringPool stringPool = StringPool.fromProto(typedAst.getStringPool());
-    ColorPool colorPool = ColorPool.fromOnlyShard(typedAst.getTypePool(), stringPool);
+
+    ColorPool.Builder colorPoolBuilder = ColorPool.builder();
+    compiler.initRuntimeLibraryTypedAsts(colorPoolBuilder);
 
     ImmutableList<SourceFile> sourceFiles =
         typedAst.getSourceFilePool().getSourceFileList().stream()
             .map(SourceFile::fromProto)
             .collect(toImmutableList());
     TypedAstDeserializer deserializer =
-        new TypedAstDeserializer(typedAst, stringPool, colorPool, sourceFiles);
+        new TypedAstDeserializer(
+            typedAst,
+            stringPool,
+            colorPoolBuilder.addShard(typedAst.getTypePool(), stringPool),
+            sourceFiles);
+    ColorPool colorPool = colorPoolBuilder.build();
     Node root = deserializer.deserializeToRoot();
 
     ImmutableSet<String> externProperties =
@@ -113,21 +121,23 @@ public final class TypedAstDeserializer {
   }
 
   private Node deserializeToRoot() {
+
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
-    for (AstNode script : typedAst.getExternFileList()) {
-      externRoot.addChildToBack(deserializeScriptNode(script));
+    for (LazyAst ast : typedAst.getExternAstList()) {
+      externRoot.addChildToBack(deserializeScriptNode(ast, ast.getSourceFile()));
     }
-    for (AstNode script : typedAst.getCodeFileList()) {
-      codeRoot.addChildToBack(deserializeScriptNode(script));
+    for (LazyAst ast : typedAst.getCodeAstList()) {
+      codeRoot.addChildToBack(deserializeScriptNode(ast, ast.getSourceFile()));
     }
     return IR.root(externRoot, codeRoot);
   }
 
-  private Node deserializeScriptNode(AstNode proto) {
-    SourceFile file = this.sourceFiles.get(proto.getSourceFile() - 1);
+  private Node deserializeScriptNode(LazyAst fileProto, int sourceFilePointer) {
+    SourceFile file = this.sourceFiles.get(sourceFilePointer - 1);
     ScriptNodeDeserializer deserializer =
-        new ScriptNodeDeserializer(proto, this.stringPool, this.colorPoolShard, this.sourceFiles);
+        new ScriptNodeDeserializer(
+            fileProto, this.stringPool, this.colorPoolShard, this.sourceFiles);
     JsAst ast = new JsAst(file, deserializer::deserializeNew);
     Node node = ast.getAstRoot(null); // TODO(b/186431141) Don't allow passing null here.
     checkState(identical(node.getStaticSourceFile(), file));

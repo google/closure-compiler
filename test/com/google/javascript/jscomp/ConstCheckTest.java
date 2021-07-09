@@ -40,7 +40,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
       new InferConsts(compiler).process(externs, root);
-      new ConstCheck(compiler, compiler.getModuleMetadataMap()).process(externs, root);
+      new ConstCheck(compiler).process(externs, root);
     };
   }
 

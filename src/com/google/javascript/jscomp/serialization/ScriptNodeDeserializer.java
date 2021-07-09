@@ -24,6 +24,9 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.math.BigInteger;
 import javax.annotation.Nullable;
 
@@ -36,17 +39,19 @@ import javax.annotation.Nullable;
 @GwtIncompatible("protobuf.lite")
 public final class ScriptNodeDeserializer {
 
-  private final AstNode scriptProto;
+  private final SourceFile sourceFile;
+  private final ByteString scriptBytes;
   private final ColorPool.ShardView colorPoolShard;
   private final StringPool stringPool;
   private final ImmutableList<SourceFile> filePool;
 
   public ScriptNodeDeserializer(
-      AstNode scriptProto,
+      LazyAst ast,
       StringPool stringPool,
       ColorPool.ShardView colorPoolShard,
       ImmutableList<SourceFile> filePool) {
-    this.scriptProto = scriptProto;
+    this.scriptBytes = ast.getScript();
+    this.sourceFile = filePool.get(ast.getSourceFile() - 1);
     this.colorPoolShard = colorPoolShard;
     this.stringPool = stringPool;
     this.filePool = filePool;
@@ -62,9 +67,17 @@ public final class ScriptNodeDeserializer {
     private int previousColumn = 0;
 
     Node run() {
-      Node scriptNode = this.visit(this.owner().scriptProto, null, null);
-      scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
-      return scriptNode;
+      try {
+        Node scriptNode =
+            this.visit(
+                AstNode.parseFrom(this.owner().scriptBytes, ExtensionRegistry.getEmptyRegistry()),
+                null,
+                this.owner().createSourceInfoTemplate(this.owner().sourceFile));
+        scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
+        return scriptNode;
+      } catch (InvalidProtocolBufferException ex) {
+        throw new MalformedTypedAstException(ex);
+      }
     }
 
     private ScriptNodeDeserializer owner() {
@@ -74,7 +87,9 @@ public final class ScriptNodeDeserializer {
     private Node visit(AstNode astNode, Node parent, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
-        sourceFileTemplate = this.owner().createSourceInfoTemplate(astNode);
+        sourceFileTemplate =
+            this.owner()
+                .createSourceInfoTemplate(this.owner().filePool.get(astNode.getSourceFile() - 1));
       }
 
       int currentLine = this.previousLine + astNode.getRelativeLine();
@@ -86,7 +101,7 @@ public final class ScriptNodeDeserializer {
         n.setColor(this.owner().colorPoolShard.getColor(astNode.getType()));
       }
       this.owner().deserializeProperties(n, astNode);
-      n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc()));
+      n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
@@ -202,17 +217,11 @@ public final class ScriptNodeDeserializer {
         case DYNAMIC_IMPORT:
           this.addScriptFeature(Feature.DYNAMIC_IMPORT);
           return;
-
         case ASSIGN_OR:
-          // TODO (user): add script feature for assign_or
-          break;
         case ASSIGN_AND:
-          // TODO (user): add script feature for assign_and
-          break;
         case ASSIGN_COALESCE:
-          // TODO (user): add script feature for assign_coalesce
-          break;
-
+          this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
+          return;
         case FOR:
           if (node.isForOf()) {
             this.addScriptFeature(Feature.FOR_OF);
@@ -237,6 +246,10 @@ public final class ScriptNodeDeserializer {
         case CLASS_MEMBERS:
         case MEMBER_FUNCTION_DEF:
           this.addScriptFeature(Feature.MEMBER_DECLARATIONS);
+          return;
+        case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
+          this.addScriptFeature(Feature.PUBLIC_CLASS_FIELDS);
           return;
         case SUPER:
           this.addScriptFeature(Feature.SUPER);
@@ -264,10 +277,9 @@ public final class ScriptNodeDeserializer {
    * <p>This allows the prop structure to be shared among all the node from this source file. This
    * reduces the cost of these properties to O(nodes) to O(files).
    */
-  private Node createSourceInfoTemplate(AstNode astNode) {
+  private Node createSourceInfoTemplate(SourceFile file) {
     // The Node type choice is arbitrary.
     Node sourceInfoTemplate = new Node(Token.SCRIPT);
-    SourceFile file = this.filePool.get(astNode.getSourceFile() - 1);
     sourceInfoTemplate.setStaticSourceFile(file);
     return sourceInfoTemplate;
   }
@@ -528,6 +540,10 @@ public final class ScriptNodeDeserializer {
         return new Node(Token.CLASS_MEMBERS);
       case METHOD_DECLARATION:
         return Node.newString(Token.MEMBER_FUNCTION_DEF, getString(n));
+      case FIELD_DECLARATION:
+        return Node.newString(Token.MEMBER_FIELD_DEF, getString(n));
+      case COMPUTED_PROP_FIELD:
+        return new Node(Token.COMPUTED_FIELD_DEF);
       case PARAMETER_LIST:
         return new Node(Token.PARAM_LIST);
       case RENAMABLE_STRING_KEY:
