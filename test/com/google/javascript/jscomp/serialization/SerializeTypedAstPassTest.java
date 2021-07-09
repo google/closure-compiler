@@ -33,6 +33,8 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,17 +88,15 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAst_constNumber() {
+  public void testAst_constNumber() throws InvalidProtocolBufferException {
     TypePointer numberType = pointerForType(PrimitiveType.NUMBER_TYPE);
-    TypedAst ast = compile("const x = 5;");
-    StringPoolProto stringPool = ast.getStringPool();
+    SerializationResult result = compile("const x = 5;");
 
-    assertThat(ast.getCodeFileList().get(0))
+    assertThat(result.sourceNodes.get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
                 .setRelativeLine(1)
                 .addChild(
                     AstNode.newBuilder()
@@ -104,8 +104,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(findInStringPool(stringPool, "x"))
-                                .setOriginalNamePointer(findInStringPool(stringPool, "x"))
+                                .setStringValuePointer(result.findInStringPool("x"))
+                                .setOriginalNamePointer(result.findInStringPool("x"))
                                 .setRelativeColumn(6)
                                 .setType(numberType)
                                 .addChild(
@@ -123,7 +123,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testAst_externs() {
     // 2 externs files, the default (empty) externs file + the source file marked with @externs
-    assertThat(compile("/** @externs */ function foo() {}").getExternFileList()).hasSize(2);
+    assertThat(compile("/** @externs */ function foo() {}").externNodes).hasSize(2);
   }
 
   @Test
@@ -133,7 +133,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     Externs closureExterns = externs(new TestExternsBuilder().addClosureExterns().build());
     SourceFile mandatorySource = SourceFile.fromCode("mandatory.js", "/* mandatory source */");
 
-    TypedAst typeSummaryAst =
+    SerializationResult typeSummaryResult =
         compile(
             closureExterns,
             srcs(
@@ -148,21 +148,20 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         "  class Foo { }",
                         "  exports = Foo;",
                         "});"))));
-    TypedAst emptySummary =
+    SerializationResult emptyResult =
         compile(
             closureExterns, //
             srcs(mandatorySource));
 
-    assertThat(typeSummaryAst).isEqualTo(emptySummary);
+    assertThat(typeSummaryResult.ast).isEqualTo(emptyResult.ast);
   }
 
   @Test
-  public void testAst_letString() {
+  public void testAst_letString() throws InvalidProtocolBufferException {
     TypePointer stringType = pointerForType(PrimitiveType.STRING_TYPE);
-    TypedAst ast = compile("let s = 'hello';");
-    StringPoolProto stringPool = ast.getStringPool();
+    SerializationResult result = compile("let s = 'hello';");
 
-    assertThat(ast.getCodeFileList().get(0))
+    assertThat(result.sourceNodes.get(0))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
@@ -170,21 +169,19 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.LET_DECLARATION)
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
-                                .setStringValuePointer(findInStringPool(stringPool, "s"))
-                                .setOriginalNamePointer(findInStringPool(stringPool, "s"))
+                                .setStringValuePointer(result.findInStringPool("s"))
+                                .setOriginalNamePointer(result.findInStringPool("s"))
                                 .setType(stringType)
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(
-                                            findInStringPool(stringPool, "hello"))
+                                        .setStringValuePointer(result.findInStringPool("hello"))
                                         .setType(stringType)
                                         .build())
                                 .build())
@@ -195,7 +192,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testAst_numberInCast() {
     TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
-    assertThat(compileToAst("/** @type {?} */ (1);"))
+    assertThat(compileToAstNode("/** @type {?} */ (1);"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
@@ -203,7 +200,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.EXPRESSION_STATEMENT)
@@ -224,10 +220,10 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAst_arrowFunction() {
-    TypedAst ast = compile("() => 'hello';");
+  public void testAst_arrowFunction() throws InvalidProtocolBufferException {
+    SerializationResult result = compile("() => 'hello';");
 
-    assertThat(ast.getCodeFileList().get(0))
+    assertThat(result.sourceNodes.get(0))
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("type"),
@@ -235,7 +231,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.EXPRESSION_STATEMENT)
@@ -253,8 +248,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.STRING_LITERAL)
-                                        .setStringValuePointer(
-                                            findInStringPool(ast.getStringPool(), "hello"))
+                                        .setStringValuePointer(result.findInStringPool("hello"))
                                         .build())
                                 .build())
                         .build())
@@ -262,11 +256,13 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewrittenGoogModule_containsOriginalNames() {
+  public void testRewrittenGoogModule_containsOriginalNames()
+      throws InvalidProtocolBufferException {
     enableRewriteClosureCode();
 
-    TypedAst ast = compile("goog.module('a.b.c'); function f(x) {}");
-    assertThat(ast.getCodeFileList().get(0))
+    SerializationResult result = compile("goog.module('a.b.c'); function f(x) {}");
+
+    assertThat(result.sourceNodes.get(0))
         .ignoringFieldDescriptors(
             AstNode.getDescriptor().findFieldByName("relative_line"),
             AstNode.getDescriptor().findFieldByName("relative_column"),
@@ -274,7 +270,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .setSourceFile(2)
                 .addBooleanProperty(NodeProperty.GOOG_MODULE)
                 // `/** @const */ var module$exports$a$b$c = {};`
                 .addChild(
@@ -286,30 +281,27 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
                                 .setStringValuePointer(
-                                    findInStringPool(ast.getStringPool(), "module$exports$a$b$c"))
+                                    result.findInStringPool("module$exports$a$b$c"))
                                 .addChild(AstNode.newBuilder().setKind(NodeKind.OBJECT_LITERAL))))
                 // `function module$contents$a$b$c_f(x) {}`
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.FUNCTION_LITERAL)
-                        .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f"))
+                        .setOriginalNamePointer(result.findInStringPool("f"))
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.IDENTIFIER)
                                 .setStringValuePointer(
-                                    findInStringPool(
-                                        ast.getStringPool(), "module$contents$a$b$c_f"))
-                                .setOriginalNamePointer(findInStringPool(ast.getStringPool(), "f")))
+                                    result.findInStringPool("module$contents$a$b$c_f"))
+                                .setOriginalNamePointer(result.findInStringPool("f")))
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.PARAMETER_LIST)
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.IDENTIFIER)
-                                        .setStringValuePointer(
-                                            findInStringPool(ast.getStringPool(), "x"))
-                                        .setOriginalNamePointer(
-                                            findInStringPool(ast.getStringPool(), "x"))
+                                        .setStringValuePointer(result.findInStringPool("x"))
+                                        .setOriginalNamePointer(result.findInStringPool("x"))
                                         .build()))
                         .addChild(AstNode.newBuilder().setKind(NodeKind.BLOCK)))
                 .build());
@@ -319,15 +311,17 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void serializesExternsFile() throws IOException {
     ensureLibraryInjected("base");
 
-    TypedAst ast =
+    SerializationResult result =
         compileWithExterns(
             new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
 
-    AstNode externs = ast.getExternFileList().get(0);
+    LazyAst externAst = result.ast.getExternAstList().get(0);
     assertThat(
-            ast.getSourceFilePool()
+            result
+                .ast
+                .getSourceFilePool()
                 .getSourceFileList()
-                .get(externs.getSourceFile() - 1)
+                .get(externAst.getSourceFile() - 1)
                 .getFilename())
         .isEqualTo("externs");
   }
@@ -336,22 +330,27 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void serializesSourceOfSyntheticCode() throws IOException {
     ensureLibraryInjected("base");
 
-    TypedAst ast =
+    SerializationResult result =
         compileWithExterns(
             new TestExternsBuilder().addMath().addObject().build(), "let s = 'hello';");
 
-    AstNode script = ast.getCodeFileList().get(0);
+    LazyAst lazyAst = result.ast.getCodeAstList().get(0);
     assertThat(
-            ast.getSourceFilePool()
+            result
+                .ast
+                .getSourceFilePool()
                 .getSourceFileList()
-                .get(script.getSourceFile() - 1)
+                .get(lazyAst.getSourceFile() - 1)
                 .getFilename())
         .isEqualTo("testcode");
 
     // 'base' is loaded at the beginning of the first script
+    AstNode script = result.sourceNodes.get(0);
     AstNode baseLibraryStart = script.getChild(0);
     assertThat(
-            ast.getSourceFilePool()
+            result
+                .ast
+                .getSourceFilePool()
                 .getSourceFileList()
                 .get(baseLibraryStart.getSourceFile() - 1)
                 .getFilename())
@@ -366,7 +365,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void serializesExternProperties() throws IOException {
     enableGatherExternProperties();
 
-    TypedAst ast =
+    SerializationResult result =
         compileWithExterns(
             lines(
                 "class Foo {", //
@@ -375,47 +374,81 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 "  method(x) { }",
                 "}"),
             "");
-    StringPoolProto stringPool = ast.getStringPool();
 
-    assertThat(ast.getExternsSummary().getPropNamePtrList())
-        .containsAtLeast(
-            findInStringPool(stringPool, "method"), findInStringPool(stringPool, "arg"));
+    assertThat(result.ast.getExternsSummary().getPropNamePtrList())
+        .containsAtLeast(result.findInStringPool("method"), result.findInStringPool("arg"));
   }
 
-  private AstNode compileToAst(String source) {
-    return compile(source).getCodeFileList().get(0);
+  private AstNode compileToAstNode(String source) {
+    return compile(source).sourceNodes.get(0);
   }
 
-  private TypedAst compile(String source) {
+  private SerializationResult compile(String source) {
     return compileWithExterns(DEFAULT_EXTERNS, source);
   }
 
-  private TypedAst compile(TestPart... parts) {
+  private SerializationResult compile(TestPart... parts) {
     TypedAst[] resultAst = new TypedAst[1];
     astConsumer = (ast) -> resultAst[0] = ast;
     test(parts);
-    return resultAst[0];
+    try {
+      return new SerializationResult(resultAst[0]);
+    } catch (InvalidProtocolBufferException ex) {
+      throw new AssertionError(ex);
+    }
   }
 
-  private TypedAst compileWithExterns(String externs, String source) {
+  private static class SerializationResult {
+    private final ImmutableList<AstNode> externNodes;
+    private final ImmutableList<AstNode> sourceNodes;
+    private final TypedAst ast;
+
+    SerializationResult(TypedAst ast) throws InvalidProtocolBufferException {
+      this.externNodes =
+          ast.getExternAstList().stream()
+              .map(lazyAst -> parseAstNode(lazyAst.getScript()))
+              .collect(toImmutableList());
+      this.sourceNodes =
+          ast.getCodeAstList().stream()
+              .map(lazyAst -> parseAstNode(lazyAst.getScript()))
+              .collect(toImmutableList());
+      this.ast = ast;
+    }
+
+    /**
+     * Returns the offset of the given string in this ast's string pool, throwing an exception if
+     * not present
+     */
+    int findInStringPool(String str) {
+      if (str.isEmpty()) {
+        return 0;
+      }
+
+      int offset =
+          this.ast.getStringPool().getStringsList().indexOf(ByteString.copyFromUtf8(str)) + 1;
+      checkState(
+          offset != -1,
+          "Could not find string '%s' in string pool %s",
+          str,
+          this.ast.getStringPool());
+      return offset;
+    }
+  }
+
+  private static AstNode parseAstNode(ByteString byteString) {
+    try {
+      return AstNode.parseFrom(byteString, ExtensionRegistry.getEmptyRegistry());
+    } catch (InvalidProtocolBufferException ex) {
+      throw new AssertionError(ex);
+    }
+  }
+
+  private SerializationResult compileWithExterns(String externs, String source) {
     return compile(externs(externs), srcs(source));
   }
 
   private static TypePointer pointerForType(PrimitiveType primitive) {
     return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
-  }
-
-  /**
-   * Returns the offset of the given string in the given pool, throwing an exception if not present
-   */
-  private static int findInStringPool(StringPoolProto stringPool, String str) {
-    if (str.isEmpty()) {
-      return 0;
-    }
-
-    int offset = stringPool.getStringsList().indexOf(ByteString.copyFromUtf8(str)) + 1;
-    checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
-    return offset;
   }
 
   private void generateDiagnosticFiles() {

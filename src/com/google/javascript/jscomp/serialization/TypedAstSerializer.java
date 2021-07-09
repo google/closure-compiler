@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
@@ -31,6 +32,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
+@GwtIncompatible("protobuf.lite")
 final class TypedAstSerializer {
 
   private final AbstractCompiler compiler;
@@ -80,13 +82,13 @@ final class TypedAstSerializer {
       if (NodeUtil.isFromTypeSummary(script)) {
         continue;
       }
-      builder.addExternFile(serializeScriptNode(script));
+      builder.addExternAst(serializeScriptNode(script));
     }
     for (Node script = jsRoot.getFirstChild(); script != null; script = script.getNext()) {
       if (NodeUtil.isFromTypeSummary(script)) {
         continue;
       }
-      builder.addCodeFile(serializeScriptNode(script));
+      builder.addCodeAst(serializeScriptNode(script));
     }
 
     SourceFilePool sourceFiles =
@@ -112,11 +114,18 @@ final class TypedAstSerializer {
         .build();
   }
 
-  private AstNode serializeScriptNode(Node script) {
+  private LazyAst serializeScriptNode(Node script) {
     checkState(script.isScript());
     previousLine = previousColumn = 0;
 
-    return visit(script);
+    int sourceFile = getSourceFilePointer(script);
+    AstNode scriptProto = visit(script);
+    this.subtreeSourceFiles.clear();
+
+    return LazyAst.newBuilder()
+        .setScript(scriptProto.toByteString())
+        .setSourceFile(sourceFile)
+        .build();
   }
 
   private AstNode.Builder createWithPositionInfo(Node n) {

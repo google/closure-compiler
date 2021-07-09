@@ -113,21 +113,23 @@ public final class TypedAstDeserializer {
   }
 
   private Node deserializeToRoot() {
+
     Node externRoot = IR.root();
     Node codeRoot = IR.root();
-    for (AstNode script : typedAst.getExternFileList()) {
-      externRoot.addChildToBack(deserializeScriptNode(script));
+    for (LazyAst ast : typedAst.getExternAstList()) {
+      externRoot.addChildToBack(deserializeScriptNode(ast, ast.getSourceFile()));
     }
-    for (AstNode script : typedAst.getCodeFileList()) {
-      codeRoot.addChildToBack(deserializeScriptNode(script));
+    for (LazyAst ast : typedAst.getCodeAstList()) {
+      codeRoot.addChildToBack(deserializeScriptNode(ast, ast.getSourceFile()));
     }
     return IR.root(externRoot, codeRoot);
   }
 
-  private Node deserializeScriptNode(AstNode proto) {
-    SourceFile file = this.sourceFiles.get(proto.getSourceFile() - 1);
+  private Node deserializeScriptNode(LazyAst fileProto, int sourceFilePointer) {
+    SourceFile file = this.sourceFiles.get(sourceFilePointer - 1);
     ScriptNodeDeserializer deserializer =
-        new ScriptNodeDeserializer(proto, this.stringPool, this.colorPoolShard, this.sourceFiles);
+        new ScriptNodeDeserializer(
+            fileProto, this.stringPool, this.colorPoolShard, this.sourceFiles);
     JsAst ast = new JsAst(file, deserializer::deserializeNew);
     Node node = ast.getAstRoot(null); // TODO(b/186431141) Don't allow passing null here.
     checkState(identical(node.getStaticSourceFile(), file));

@@ -72,8 +72,8 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
-import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.ColorPool;
+import com.google.javascript.jscomp.serialization.LazyAst;
 import com.google.javascript.jscomp.serialization.ScriptNodeDeserializer;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.jscomp.serialization.SourceFileProto;
@@ -564,12 +564,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         externProperties.add(stringShard.get(x));
       }
 
-      for (AstNode scriptProto :
-          Iterables.concat(typedAstProto.getExternFileList(), typedAstProto.getCodeFileList())) {
-        SourceFile file = fileShard.get(scriptProto.getSourceFile() - 1);
+      for (LazyAst lazyAst :
+          Iterables.concat(typedAstProto.getExternAstList(), typedAstProto.getCodeAstList())) {
+        SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
         ScriptNodeDeserializer deserializer =
             new ScriptNodeDeserializer(
-                scriptProto, stringShard, colorShard, ImmutableList.copyOf(fileShard));
+                lazyAst, stringShard, colorShard, ImmutableList.copyOf(fileShard));
 
         if (identical(SYNTHETIC_EXTERNS_FILE, file)) {
           syntheticExternsDeserializers.add(deserializer);
@@ -3575,11 +3575,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               }
             });
 
-    Tracer tracer = newTracer("deserializeTypedAst");
-    TypedAst typedAst = Iterables.getOnlyElement(this.deserializeTypedAsts(inputStream));
     TypedAstDeserializer.DeserializedAst deserializedAst =
-        TypedAstDeserializer.deserialize(typedAst);
-    stopTracer(tracer, "deserializeTypedAst");
+        runInCompilerThread(
+            () -> {
+              Tracer tracer = newTracer("deserializeTypedAst");
+              try {
+                TypedAst typedAst =
+                    Iterables.getOnlyElement(this.deserializeTypedAsts(inputStream));
+                return TypedAstDeserializer.deserialize(typedAst);
+              } finally {
+                stopTracer(tracer, "deserializeTypedAst");
+              }
+            });
 
     featureSet = compilerState.featureSet;
     scriptNodeByFilename.clear();
@@ -3636,15 +3643,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @GwtIncompatible("ObjectInputStream")
   private List<TypedAst> deserializeTypedAsts(InputStream typedAstsStream) {
-    return runInCompilerThread(
-        () -> {
-          // Restore TypedAST and related fields
-          CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
-          // Set the recursion limit higher as some projects have deeply nested ASTs
-          codedInput.setRecursionLimit(3000);
-          return TypedAst.List.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry())
-              .getTypedAstsList();
-        });
+    try {
+      CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
+      return TypedAst.List.parseFrom(codedInput, ExtensionRegistry.getEmptyRegistry())
+          .getTypedAstsList();
+    } catch (IOException ex) {
+      throw new IllegalArgumentException("Cannot read from TypedAST input stream", ex);
+    }
   }
 
   /** Returns the module type for the provided namespace. */

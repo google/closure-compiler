@@ -39,6 +39,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.serialization.AstNode;
+import com.google.javascript.jscomp.serialization.LazyAst;
 import com.google.javascript.jscomp.serialization.NodeKind;
 import com.google.javascript.jscomp.serialization.SourceFilePool;
 import com.google.javascript.jscomp.serialization.StringPool;
@@ -2760,10 +2761,22 @@ public final class CompilerTest {
                         SourceFilePool.newBuilder()
                             .addSourceFile(file1.getProto())
                             .addSourceFile(file2.getProto()))
-                    .addCodeFile(
-                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
-                    .addCodeFile(
-                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(2)))
+                    .addCodeAst(
+                        LazyAst.newBuilder()
+                            .setSourceFile(1)
+                            .setScript(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.SOURCE_FILE)
+                                    .build()
+                                    .toByteString()))
+                    .addCodeAst(
+                        LazyAst.newBuilder()
+                            .setSourceFile(2)
+                            .setScript(
+                                AstNode.newBuilder()
+                                    .setKind(NodeKind.SOURCE_FILE)
+                                    .build()
+                                    .toByteString())))
             .build();
     InputStream typedAstListStream = new ByteArrayInputStream(typedAstList.toByteArray());
 
@@ -2808,17 +2821,25 @@ public final class CompilerTest {
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
             .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(file.getProto()))
-            .addCodeFile(AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).setSourceFile(1))
+            .addCodeAst(
+                LazyAst.newBuilder()
+                    .setSourceFile(1)
+                    .setScript(
+                        AstNode.newBuilder().setKind(NodeKind.SOURCE_FILE).build().toByteString()))
             .build();
     TypedAst typedAst1 =
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
             .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(file.getProto()))
-            .addCodeFile(
-                AstNode.newBuilder()
-                    .setKind(NodeKind.SOURCE_FILE)
+            .addCodeAst(
+                LazyAst.newBuilder()
                     .setSourceFile(1)
-                    .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION)))
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION))
+                            .build()
+                            .toByteString()))
             .build();
     InputStream typedAstListStream =
         new ByteArrayInputStream(
@@ -2852,21 +2873,29 @@ public final class CompilerTest {
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
             .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(syntheticFile.getProto()))
-            .addCodeFile(
-                AstNode.newBuilder()
-                    .setKind(NodeKind.SOURCE_FILE)
+            .addCodeAst(
+                LazyAst.newBuilder()
                     .setSourceFile(1)
-                    .addChild(AstNode.newBuilder().setKind(NodeKind.CONST_DECLARATION)))
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(AstNode.newBuilder().setKind(NodeKind.CONST_DECLARATION))
+                            .build()
+                            .toByteString()))
             .build();
     TypedAst typedAst1 =
         TypedAst.newBuilder()
             .setStringPool(StringPool.empty().toProto())
             .setSourceFilePool(SourceFilePool.newBuilder().addSourceFile(syntheticFile.getProto()))
-            .addCodeFile(
-                AstNode.newBuilder()
-                    .setKind(NodeKind.SOURCE_FILE)
+            .addCodeAst(
+                LazyAst.newBuilder()
                     .setSourceFile(1)
-                    .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION)))
+                    .setScript(
+                        AstNode.newBuilder()
+                            .setKind(NodeKind.SOURCE_FILE)
+                            .addChild(AstNode.newBuilder().setKind(NodeKind.VAR_DECLARATION))
+                            .build()
+                            .toByteString()))
             .build();
     InputStream typedAstListStream =
         new ByteArrayInputStream(

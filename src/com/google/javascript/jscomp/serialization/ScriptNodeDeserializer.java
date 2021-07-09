@@ -24,6 +24,9 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.math.BigInteger;
 import javax.annotation.Nullable;
 
@@ -36,17 +39,19 @@ import javax.annotation.Nullable;
 @GwtIncompatible("protobuf.lite")
 public final class ScriptNodeDeserializer {
 
-  private final AstNode scriptProto;
+  private final SourceFile sourceFile;
+  private final ByteString scriptBytes;
   private final ColorPool.ShardView colorPoolShard;
   private final StringPool stringPool;
   private final ImmutableList<SourceFile> filePool;
 
   public ScriptNodeDeserializer(
-      AstNode scriptProto,
+      LazyAst ast,
       StringPool stringPool,
       ColorPool.ShardView colorPoolShard,
       ImmutableList<SourceFile> filePool) {
-    this.scriptProto = scriptProto;
+    this.scriptBytes = ast.getScript();
+    this.sourceFile = filePool.get(ast.getSourceFile() - 1);
     this.colorPoolShard = colorPoolShard;
     this.stringPool = stringPool;
     this.filePool = filePool;
@@ -62,9 +67,17 @@ public final class ScriptNodeDeserializer {
     private int previousColumn = 0;
 
     Node run() {
-      Node scriptNode = this.visit(this.owner().scriptProto, null, null);
-      scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
-      return scriptNode;
+      try {
+        Node scriptNode =
+            this.visit(
+                AstNode.parseFrom(this.owner().scriptBytes, ExtensionRegistry.getEmptyRegistry()),
+                null,
+                this.owner().createSourceInfoTemplate(this.owner().sourceFile));
+        scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
+        return scriptNode;
+      } catch (InvalidProtocolBufferException ex) {
+        throw new MalformedTypedAstException(ex);
+      }
     }
 
     private ScriptNodeDeserializer owner() {
@@ -74,7 +87,9 @@ public final class ScriptNodeDeserializer {
     private Node visit(AstNode astNode, Node parent, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
-        sourceFileTemplate = this.owner().createSourceInfoTemplate(astNode);
+        sourceFileTemplate =
+            this.owner()
+                .createSourceInfoTemplate(this.owner().filePool.get(astNode.getSourceFile() - 1));
       }
 
       int currentLine = this.previousLine + astNode.getRelativeLine();
@@ -262,10 +277,9 @@ public final class ScriptNodeDeserializer {
    * <p>This allows the prop structure to be shared among all the node from this source file. This
    * reduces the cost of these properties to O(nodes) to O(files).
    */
-  private Node createSourceInfoTemplate(AstNode astNode) {
+  private Node createSourceInfoTemplate(SourceFile file) {
     // The Node type choice is arbitrary.
     Node sourceInfoTemplate = new Node(Token.SCRIPT);
-    SourceFile file = this.filePool.get(astNode.getSourceFile() - 1);
     sourceInfoTemplate.setStaticSourceFile(file);
     return sourceInfoTemplate;
   }
