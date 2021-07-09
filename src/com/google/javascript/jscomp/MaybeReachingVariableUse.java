@@ -253,8 +253,11 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
         computeMayUse(rhs, cfgNode, output, conditional);
         return;
 
+      case ASSIGN_AND:
       case AND:
+      case ASSIGN_OR:
       case OR:
+      case ASSIGN_COALESCE:
       case COALESCE:
       case OPTCHAIN_GETPROP:
       case OPTCHAIN_GETELEM:
@@ -314,6 +317,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
 
       default:
         if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
+          checkState(!NodeUtil.isLogicalAssignmentOp(n));
           Node name = n.getFirstChild();
           if (!conditional) {
             removeFromUseIfLocal(name.getString(), output);

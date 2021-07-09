@@ -163,6 +163,12 @@ public final class MaybeReachingVariableUseTest {
   }
 
   @Test
+  public void testLogicalAssignmentInExpressions() {
+    assertMatch("var x=0; D:foo(bar(x||=1)); U:x");
+    assertMatch("var x=0; D:foo(bar + (x ||= 1)); U:x");
+  }
+
+  @Test
   public void testHook() {
     assertMatch("var x=0; D:foo() ? x=1 : bar(); U:x");
     assertMatch("var x=0; D:foo() ? x=1 : x=2; U:x");
@@ -176,6 +182,20 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("D: var x = 0; U: x += 100");
     assertMatch("D: var x = 0; U: x -= 100");
     assertNotMatch("D: var x = 0; x+=10; U:x");
+  }
+
+  @Test
+  public void testLogicalAssignmentOps() {
+    assertMatch("D: var x = 0; U: x ||= 100");
+
+    assertMatch("D: var x = 0; x||=10; U:x");
+    assertMatch("D: var x = 0; x&&=10; U:x");
+    assertMatch("D: var x = 0; x??=10; U:x");
+
+    assertMatch("D: var x=0; var y; y??=((y=2)||(x=1)); U:x");
+
+    assertMatch("var x=0; var y; D:y??=(x=1); U:x");
+    assertMatch("D: var x=0; var y; y??=(x=1); U:x");
   }
 
   @Test
