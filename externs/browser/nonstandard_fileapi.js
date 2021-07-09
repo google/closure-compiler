@@ -624,6 +624,27 @@ Window.prototype.resolveLocalFileSystemURI =
     function(uri, successCallback, errorCallback) {}
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/LocalFileSystem
+ * @see https://cordova.apache.org/docs/en/10.x/reference/cordova-plugin-file/
+ * @param {string} url
+ * @param {function(!Entry)} successCallback
+ * @param {function(!FileError)=} errorCallback
+ * @return {undefined}
+ */
+function resolveLocalFileSystemURL(url, successCallback, errorCallback) {}
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/LocalFileSystem
+ * @see https://cordova.apache.org/docs/en/10.x/reference/cordova-plugin-file/
+ * @param {string} url
+ * @param {function(!Entry)} successCallback
+ * @param {function(!FileError)=} errorCallback
+ * @return {undefined}
+ */
+Window.prototype.resolveLocalFileSystemURL =
+    function(url, successCallback, errorCallback) {}
+
+/**
  * This has replaced requestFileSystem in Chrome since WebKit revision 84224.
  * @see http://www.w3.org/TR/file-system-api/#widl-LocalFileSystem-requestFileSystem
  * @param {number} type
