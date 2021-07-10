@@ -145,7 +145,7 @@ final class TypedAstSerializer {
     AstNode.Builder builder = createWithPositionInfo(n);
     addType(n, builder);
     OptimizationJsdoc serializedJsdoc =
-        JsdocSerializer.serializeJsdoc(n.getJSDocInfo(), stringPool);
+        JSDocSerializer.serializeJsdoc(n.getJSDocInfo(), stringPool);
     if (serializedJsdoc != null) {
       builder.setJsdoc(serializedJsdoc);
     }

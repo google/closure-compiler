@@ -1024,7 +1024,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "/** @constructor */ var namespace = function() {};",
             "goog.inherits(namespace,Object);",
             "namespace.includeExtraParam = true;",
-            "/** @enum {JsdocSerializer_placeholder_type} */",
+            "/** @enum {JSDocSerializer_placeholder_type} */",
             "namespace.Param = { param1: 1,param2: 2 };",
             "if(namespace.includeExtraParam) namespace.Param.optParam = 3;",
             "/** @constructor */",
@@ -1098,7 +1098,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "var Bar = null;",
-            "/** @const @enum {JsdocSerializer_placeholder_type} */",
+            "/** @const @enum {JSDocSerializer_placeholder_type} */",
             "ns.Foo.prop = { A: 1 }"));
   }
 
@@ -1287,7 +1287,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
             "var x = function() { use(ns.Foo.EventType.A) };",
             "use(x);"));
@@ -1307,7 +1307,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
             "/** @const */ ns.Foo.EventType = ns.Foo.EventType;",
             "var x = function() { use(ns.Foo.EventType.A) };",
@@ -1328,7 +1328,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
             "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Foo.Other.X) };",
@@ -1349,7 +1349,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "var ns = {}", //
             "ns.Foo = function() {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.EventType = { A: 1, B: 2 };",
             "ns.Bar = null;",
             "/** @const */ ns.Foo.Other = { X: 1, Y: 2 };",
             "var x = function() { use(ns.Foo?.Other.X) };",
@@ -1372,7 +1372,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
                 "var ns = {}", //
                 "ns.Foo = function() {};",
                 "ns.Bar = null;",
-                "/** @enum {JsdocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};",
+                "/** @enum {JSDocSerializer_placeholder_type} */ ns.Foo.Other = { X: {Y: 1}};",
                 "var x = function() { use(ns.Foo.Other.X.Y) };",
                 "use(x)")));
   }
@@ -1564,7 +1564,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "if (f == Fruit.BANANA) alert('banana'); }"),
         lines(
             "/** @constructor */ var Enums = function() {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */",
+            "/** @enum {JSDocSerializer_placeholder_type} */",
             "Enums.Fruit = { APPLE: 1,BANANA: 2 };",
             "/** @constructor */ function foo(f) {",
             "if (f instanceof Enums) { alert('what?'); return; }",
@@ -2649,7 +2649,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
                 "function Foo() {}",
                 "/** @constructor */",
                 "Foo.Bar = function() {};",
-                "/** @enum {JsdocSerializer_placeholder_type} */",
+                "/** @enum {JSDocSerializer_placeholder_type} */",
                 "Foo.Bar.baz = {A: 1, B: 2};",
                 "",
                 "var $jscomp$destructuring$var1 = null;",
@@ -2713,7 +2713,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "use(exports.B);"),
         lines(
             "/** @const */ var exports = {};",
-            "/** @const @enum {JsdocSerializer_placeholder_type} */ var Letters = {",
+            "/** @const @enum {JSDocSerializer_placeholder_type} */ var Letters = {",
             "  A: 'a', ",
             "  B: 'b'};",
             // this used to become
@@ -2837,7 +2837,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         lines(
             "const a = {}; ",
             "/** @const */ a.b = {};",
-            "/** @enum {JsdocSerializer_placeholder_type} */ a.b.Enum = {c: 'c'};",
+            "/** @enum {JSDocSerializer_placeholder_type} */ a.b.Enum = {c: 'c'};",
             "",
             "const alias = null;",
             "function f() { const c = null; use(a.b.Enum.c); }"));

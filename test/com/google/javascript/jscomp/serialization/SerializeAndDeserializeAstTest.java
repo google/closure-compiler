@@ -173,7 +173,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     testSame("const ns = {}; /** @nocollapse */ ns.f = (x) => x;");
     test(
         "/** @enum {string} */ const Enum = { A: 'string' };",
-        "/** @enum {!JsdocSerializer_placeholder_type} */ const Enum = { A: 'string' };");
+        "/** @enum {!JSDocSerializer_placeholder_type} */ const Enum = { A: 'string' };");
   }
 
   @Test

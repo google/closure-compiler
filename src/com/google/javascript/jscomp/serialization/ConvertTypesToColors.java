@@ -55,7 +55,7 @@ public final class ConvertTypesToColors implements CompilerPass {
 
       JSDocInfo jsdoc = n.getJSDocInfo();
       if (jsdoc != null) {
-        n.setJSDocInfo(JsdocSerializer.convertJSDocInfoForOptimizations(jsdoc));
+        n.setJSDocInfo(JSDocSerializer.convertJSDocInfoForOptimizations(jsdoc));
       }
     }
   }

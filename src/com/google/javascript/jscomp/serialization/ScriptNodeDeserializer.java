@@ -101,7 +101,7 @@ public final class ScriptNodeDeserializer {
         n.setColor(this.owner().colorPoolShard.getColor(astNode.getType()));
       }
       this.owner().deserializeProperties(n, astNode);
-      n.setJSDocInfo(JsdocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
+      n.setJSDocInfo(JSDocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;

@@ -27,9 +27,9 @@ import com.google.javascript.rhino.Token;
 import java.util.TreeSet;
 
 /** Utilities for serializing and deserializing JSDoc necessary for optimzations. */
-public final class JsdocSerializer {
+public final class JSDocSerializer {
 
-  private JsdocSerializer() {}
+  private JSDocSerializer() {}
 
   /**
    * Returns a variant of input JSDocInfo where fields not needed for optimizations are removed
@@ -181,12 +181,12 @@ public final class JsdocSerializer {
   // Optimizations shouldn't care about the contents of JSTypeExpressions but some JSDoc APIs
   // expect their presence, so create a placeholder type.
   private static final SourceFile SYNTHETIC_SOURCE =
-      SourceFile.fromCode("JsdocSerializer_placeholder_source", "");
+      SourceFile.fromCode("JSDocSerializer_placeholder_source", "");
 
   private static JSTypeExpression createPlaceholderType() {
     // the BANG (!) token makes unit testing easier, as the JSDoc parser implicitly adds "!"
     // to some JSTypeExpressions
-    Node name = IR.string("JsdocSerializer_placeholder_type");
+    Node name = IR.string("JSDocSerializer_placeholder_type");
     Node bang = new Node(Token.BANG, name);
     name.setStaticSourceFile(SYNTHETIC_SOURCE);
     bang.setStaticSourceFile(SYNTHETIC_SOURCE);
