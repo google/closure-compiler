@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -431,6 +432,58 @@ public final class SymbolTableTest {
   public void testGoogLegacyModuleReferenced() {
     exerciseGoogRequireReferenceCorrectly(
         lines("goog.module('module.one');", "goog.module.declareLegacyNamespace();"));
+  }
+
+  private void verifySymbolreferencedInSecondFileAsImport(
+      String firstFile, String secondFile, String symbolName) {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
+    SymbolTable table = createSymbolTableFromManySources(firstFile, secondFile);
+    Symbol symbol =
+        table.getAllSymbols().stream()
+            .filter(
+                (s) -> s.getSourceFileName().equals("file1.js") && s.getName().equals(symbolName))
+            .findFirst()
+            .get();
+    for (SymbolTable.Reference ref : table.getReferences(symbol)) {
+      if (ref.getNode().getSourceFileName().equals("file2.js")) {
+        assertThat(ref.getIsImport()).isTrue();
+        return;
+      }
+    }
+    Assert.fail("Did not find references in file2.js of symbol " + symbol);
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleDefaultExport() {
+    verifySymbolreferencedInSecondFileAsImport(
+        lines("goog.module('some.Foo');", "class Foo {}", "exports = Foo;"),
+        lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
+        "Foo");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleIndividualExports() {
+    verifySymbolreferencedInSecondFileAsImport(
+        lines("goog.module('some.foo');", "exports.one = 1;"),
+        lines("goog.module('some.bar');", "const {one} = goog.require('some.foo');"),
+        "one");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExport() {
+    verifySymbolreferencedInSecondFileAsImport(
+        lines("goog.provide('some.Foo');", "some.Foo = class {}"),
+        lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
+        "some.Foo");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_provideIndividualExports() {
+    verifySymbolreferencedInSecondFileAsImport(
+        lines("goog.provide('some.foo');", "some.foo.one = 1;"),
+        lines("goog.module('some.bar');", "const {one} = goog.require('some.foo');"),
+        "some.foo.one");
   }
 
   @Test
@@ -1430,22 +1483,6 @@ public final class SymbolTableTest {
     assertThat(barStaticMethodRefs.get(0)).isEqualTo(barStaticMethod.getDeclaration());
     // We recognize that the call to Foo.staticMethod() is actually a call to Bar.staticMethod().
     assertNode(barStaticMethodRefs.get(1).getNode()).matchesQualifiedName("Foo.staticMethod");
-  }
-
-  @Test
-  public void testTypedefInNodeJsModule() {
-    options.setProcessCommonJSModules(true);
-    SymbolTable table =
-        createSymbolTableFromManySources(
-            lines("/** @typedef {number} */", "exports.MyTypedef;"),
-            lines(
-                "const file1 = require('./file1.js');",
-                "/** @const {!file1.MyTypedef} */",
-                "const one = 1;"));
-
-    Symbol typedefSymbol = getGlobalVar(table, "module$file1.default.MyTypedef");
-    assertThat(typedefSymbol).isNotNull();
-    assertThat(table.getReferenceList(typedefSymbol)).hasSize(2);
   }
 
   @Test

@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -1213,6 +1214,72 @@ public final class SymbolTable {
   }
 
   /**
+   * This function connects imported symbol back to its declaration. For example?
+   *
+   * <pre>
+   * goog.module('some.Foo');
+   * class Foo {}
+   * exports = Foo;
+   *
+   * goog.module('some.bar');
+   * const Foo = goog.require('some.Foo');
+   * </pre>
+   *
+   * This method will add a reference from the `Foo` symbol in `some.Bar` module pointing to the
+   * `class Foo` in `some.Foo` module.
+   */
+  private void addRefsInGoogRequireStatement(Node n, Map<String, SymbolScope> googModuleScopes) {
+    if (compiler.getOptions().shouldRewriteModules()) {
+      // When modules are rewritten - there is no need to connect imported names back to definitions
+      // as that was done with the help of Preprocessor tables in ClosureRewriteModule pass.
+      return;
+    }
+    if (n.isName()) {
+      // This is `const Foo = goog.require('some.Foo');` case.
+      // The type of Foo is either a class/interface in which case we can find its symbol that
+      // declared class/interface. Alternatively it's a namespace and there is no declaration. Just
+      // skip it.
+      Symbol declaration = getSymbolForTypeHelper(n.getJSType(), false);
+      if (declaration != null) {
+        declaration.defineReferenceAt(n, /* isImport= */ true);
+      }
+    } else if (n.isDestructuringLhs()) {
+      // This is `const {one} = goog.require('some.foo')` case.
+      // For each imported symbol in destructuring we need to find corresponding declaration symbol
+      // in `some.foo` namespace and connect them.
+      Node require = n.getLastChild();
+      String moduleName = require.getSecondChild().getString();
+      ModuleType type =
+          compiler.getModuleMap().getClosureModule(moduleName).metadata().moduleType();
+      SymbolScope moduleScope = googModuleScopes.get(moduleName);
+      checkState(n.getFirstChild().isObjectPattern());
+      // Iterate through all symbols in destructuring.
+      for (Node stringKey : n.getFirstChild().children()) {
+        checkState(stringKey.isStringKey());
+        String varName = stringKey.getString();
+        Symbol varDeclaration = null;
+        // AST of goog.module and goog.provide differs significantly so we need to lookup variables
+        // differently.
+        switch (type) {
+          case GOOG_MODULE:
+          case LEGACY_GOOG_MODULE:
+            Symbol exports = moduleScope.getOwnSlot("exports");
+            varDeclaration = exports.getPropertyScope().getOwnSlot(varName);
+            break;
+          case GOOG_PROVIDE:
+            varDeclaration = getSymbolForName(null, moduleName + "." + varName);
+            break;
+          default:
+            // skip
+        }
+        if (varDeclaration != null) {
+          varDeclaration.defineReferenceAt(stringKey, /* isImport= */ true);
+        }
+      }
+    }
+  }
+
+  /**
    * Connects goog.module/goog.provide calls with goog.require/goog.requireType. For each
    * goog.module/goog.provide call creates a symbol and all goog.require/goog.requireType added as
    * references.
@@ -1221,6 +1288,9 @@ public final class SymbolTable {
     // small optimization to keep symbols created within this function for fast access instead of
     // going through SymbolTable.getSymbolForName() every time.
     Map<String, Symbol> declaredNamespaces = new HashMap<>();
+    // Map containind goog.module names to Scope object representing them. For goog.provide
+    // namespaces there is no scope as elements of goog.provide are global.
+    Map<String, SymbolScope> moduleScopes = new HashMap<>();
     NodeTraversal.Callback traverse =
         new AbstractPostOrderCallback() {
           @Override
@@ -1251,10 +1321,14 @@ public final class SymbolTable {
                         arg,
                         /* info= */ null);
                 declaredNamespaces.put(namespaceName, ns);
+                if (n.getGrandparent().isModuleBody()) {
+                  moduleScopes.put(arg.getString(), scopes.get(n.getGrandparent()));
+                }
                 break;
               case "require":
               case "requireType":
               case "forwardDeclare":
+                addRefsInGoogRequireStatement(n.getParent(), moduleScopes);
                 Symbol symbol = declaredNamespaces.get(namespaceName);
                 // We expect that namespace was already processed by that point, but in some broken
                 // code it might be missing. In which case just skip it.
@@ -1454,8 +1528,12 @@ public final class SymbolTable {
       return JSType.toMaybeFunctionType(getType());
     }
 
+    public Reference defineReferenceAt(Node n, boolean isImport) {
+      return references.computeIfAbsent(n, (Node k) -> new Reference(this, k, isImport));
+    }
+
     public Reference defineReferenceAt(Node n) {
-      return references.computeIfAbsent(n, (Node k) -> new Reference(this, k));
+      return defineReferenceAt(n, /* isImport= */ false);
     }
 
     /** Sets the declaration node. May only be called once. */
@@ -1527,8 +1605,20 @@ public final class SymbolTable {
 
   /** Reference */
   public static final class Reference extends SimpleReference<Symbol> {
-    Reference(Symbol symbol, Node node) {
+    /**
+     * Indicates whether reference is in a `goog.require` import. For example: `const Foo =
+     * goog.require('some.Foo');` `Foo` above will be import reference of the Foo class declared in
+     * some.Foo module.
+     */
+    private final boolean isImport;
+
+    Reference(Symbol symbol, Node node, boolean isImport) {
       super(symbol, node);
+      this.isImport = isImport;
+    }
+
+    public boolean getIsImport() {
+      return this.isImport;
     }
   }
 
@@ -1824,7 +1914,7 @@ public final class SymbolTable {
                   false /* declared */,
                   globalScope,
                   firstInputRoot);
-          symbol.setDeclaration(new Reference(symbol, firstInputRoot));
+          symbol.setDeclaration(new Reference(symbol, firstInputRoot, /* isImport= */ false));
         }
         thisStack.add(symbol);
       } else if (t.getScopeRoot().isFunction()) {
