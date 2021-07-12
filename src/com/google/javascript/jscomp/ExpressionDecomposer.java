@@ -142,9 +142,6 @@ class ExpressionDecomposer {
 
   /**
    * Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}.
-   *
-   * <p>This method should not be called from outside of this class. Instead call {@link
-   * #maybeExposeExpression(Node)}.
    */
   private void exposeExpression(Node expression) {
     // First rewrite all optional chains containing the expression.
