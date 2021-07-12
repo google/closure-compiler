@@ -4213,6 +4213,9 @@ HTMLSelectElement.prototype.autofocus;
  */
 HTMLSelectElement.prototype.labels;
 
+/** @type {boolean} */
+HTMLSelectElement.prototype.required;
+
 /** @type {HTMLCollection<!HTMLOptionElement>} */
 HTMLSelectElement.prototype.selectedOptions;
 
