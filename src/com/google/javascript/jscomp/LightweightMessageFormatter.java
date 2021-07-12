@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * produces is very compact and to the point.
  */
 public final class LightweightMessageFormatter extends AbstractMessageFormatter {
-  private final SourceExcerpt excerpt;
+  private final SourceExcerpt defaultFormat;
   private static final ExcerptFormatter excerptFormatter =
       new LineNumberingFormatter();
   private boolean includeLocation = true;
@@ -48,18 +48,17 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
    */
   private LightweightMessageFormatter() {
     super(null);
-    this.excerpt = LINE;
+    this.defaultFormat = LINE;
   }
 
   public LightweightMessageFormatter(SourceExcerptProvider source) {
     this(source, LINE);
   }
 
-  public LightweightMessageFormatter(SourceExcerptProvider source,
-      SourceExcerpt excerpt) {
+  public LightweightMessageFormatter(SourceExcerptProvider source, SourceExcerpt defaultFormat) {
     super(source);
     checkNotNull(source);
-    this.excerpt = excerpt;
+    this.defaultFormat = defaultFormat;
   }
 
   public static LightweightMessageFormatter withoutSource() {
@@ -96,14 +95,14 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     StringBuilder b = new StringBuilder();
     StringBuilder boldLine = new StringBuilder();
 
+    OriginalMapping mapping =
+        source == null
+            ? null
+            : source.getSourceMapping(
+                error.getSourceName(), error.getLineNumber(), error.getCharno());
+
     // Check if we can reverse-map the source.
     if (includeLocation) {
-      OriginalMapping mapping =
-          source == null
-              ? null
-              : source.getSourceMapping(
-                  error.getSourceName(), error.getLineNumber(), error.getCharno());
-
       if (mapping != null) {
         appendPosition(b, sourceName, lineNumber, charno);
 
@@ -129,21 +128,26 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     b.append(maybeEmbolden(boldLine.toString()));
     b.append('\n');
 
-    String sourceExcerptWithPositionIndicator =
-        getExcerptWithPosition(error, sourceName, lineNumber, charno);
-    if (sourceExcerptWithPositionIndicator != null) {
-      b.append(sourceExcerptWithPositionIndicator);
+    // For reverse-mapped sources, fall back to a single line excerpt because the excerpt length
+    // cannot be reliably mapped.
+    String sourceExcerptWithPosition =
+        getExcerptWithPosition(
+            error, sourceName, lineNumber, charno, mapping != null ? LINE : defaultFormat);
+
+    if (sourceExcerptWithPosition != null) {
+      b.append(sourceExcerptWithPosition);
     }
+
     return b.toString();
   }
 
   String getExcerptWithPosition(JSError error) {
     return getExcerptWithPosition(
-        error, error.getSourceName(), error.getLineNumber(), error.getCharno());
+        error, error.getSourceName(), error.getLineNumber(), error.getCharno(), defaultFormat);
   }
 
   private String getExcerptWithPosition(
-      JSError error, String sourceName, int lineNumber, int charno) {
+      JSError error, String sourceName, int lineNumber, int charno, SourceExcerpt format) {
     StringBuilder b = new StringBuilder();
 
     SourceExcerptProvider source = getSource();
@@ -153,10 +157,10 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     String sourceExcerpt =
         source == null
             ? null
-            : excerpt.get(source, sourceName, lineNumber, length, excerptFormatter);
+            : format.get(source, sourceName, lineNumber, length, excerptFormatter);
 
     if (sourceExcerpt != null) {
-      if (excerpt.equals(FULL)) {
+      if (format.equals(FULL)) {
         if (0 <= charno) {
           padMultipleLines(charno, sourceExcerpt, b, error.getNode());
         } else {
@@ -169,7 +173,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
         // charno == sourceExcerpt.length() means something is missing
         // at the end of the line
-        if (excerpt.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
+        if (format.equals(LINE) && 0 <= charno && charno <= sourceExcerpt.length()) {
           padLine(charno, sourceExcerpt, b, error.getNodeLength(), error.getNode());
         }
       }
