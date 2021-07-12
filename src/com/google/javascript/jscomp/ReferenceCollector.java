@@ -311,6 +311,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
         case OPTCHAIN_GETPROP:
         case OPTCHAIN_GETELEM:
         case OPTCHAIN_CALL:
+        case DEFAULT_VALUE:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();

@@ -1723,6 +1723,11 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void dontInlineConditionalDefaultValueAssignment() {
+    testSame("let x; const {y = (x = 0)} = obj(); use(x);");
+  }
+
+  @Test
   public void testFunctionInlinedAcrossScript() {
     String[] srcs = {
       "function f() {}",

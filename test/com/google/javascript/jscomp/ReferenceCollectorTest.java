@@ -405,6 +405,27 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBasicBlocksInConditionals() {
+    testBehavior(
+        lines("var x = 0;", "x || 3;", "3 || x;", "const [y = (x = 1)] = [];"),
+        new Behavior() {
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+            if (t.getScope().isGlobal()) {
+              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+              assertThat(x.references).hasSize(4);
+              // first child of || is not a boundary, but the second child is.
+              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.NAME);
+              // second child of `y = (x = 1)` is a boundary
+              assertNode(x.references.get(3).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
+            }
+          }
+        });
+  }
+
+  @Test
   public void nullishCoalesce() {
     testBehavior(
         "var x = 0; var y = x ?? (x = 1)",
