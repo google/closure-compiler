@@ -309,6 +309,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return !rvalue.isFromExterns();
 
       case ASSIGN:
+      case ASSIGN_OR:
+      case ASSIGN_AND:
+      case ASSIGN_COALESCE:
       case CLASS: // `extends` clause.
         return rvalue.isSecondChildOf(parent);
 
