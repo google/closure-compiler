@@ -495,22 +495,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return builder().withPath(fileName).withContent(code).build();
   }
 
-  /**
-   * @deprecated Use {@link #fromInputStream(String, InputStream, Charset)}
-   */
-  @Deprecated
-  @GwtIncompatible("java.io.InputStream")
-  public static SourceFile fromInputStream(String fileName, InputStream s)
-      throws IOException {
-    return builder().withPath(fileName).withContent(s).build();
-  }
-
-  @GwtIncompatible("java.io.InputStream")
-  public static SourceFile fromInputStream(String fileName, InputStream s, Charset charset)
-      throws IOException {
-    return builder().withPath(fileName).withCharset(charset).withContent(s).build();
-  }
-
   @GwtIncompatible("java.io.Reader")
   public static SourceFile fromProto(SourceFileProto protoSourceFile) {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);

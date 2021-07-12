@@ -496,10 +496,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             new BufferedInputStream(ByteStreams.limit(zip, entry.getSize()));
         mapFromExternsZip.put(
             filename,
-            SourceFile.fromInputStream(
-                // Give the files an odd prefix, so that they do not conflict
-                // with the user's files.
-                "externs.zip//" + filename, entryStream, UTF_8));
+            // Give the files an odd prefix, so that they do not conflict
+            // with the user's files.
+            SourceFile.builder()
+                .withPath("externs.zip//" + filename)
+                .withContent(entryStream)
+                .build());
       }
       return DefaultExterns.prepareExterns(env, mapFromExternsZip);
     }
@@ -677,7 +679,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         }
 
         this.err.println(WAITING_FOR_INPUT_WARNING);
-        inputs.add(SourceFile.fromInputStream("stdin", this.in, inputCharset));
+        inputs.add(
+            SourceFile.builder()
+                .withPath("stdin")
+                .withContent(this.in)
+                .withCharset(inputCharset)
+                .build());
         usingStdin = true;
       }
       if (i >= cumulatedInputFilesExpected - 1) {
