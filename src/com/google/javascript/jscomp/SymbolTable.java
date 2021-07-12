@@ -876,27 +876,6 @@ public final class SymbolTable {
     // In this case the map will be {one: 1} => OBJ. Using this map will skip 'alias' when creating
     // property scopes.
     //
-    // Another similar case is NodeJs modules. Consider following setup:
-    //
-    // foo.js:
-    // exports.one = 1;
-    //
-    // bar.js:
-    // const foo = require('./foo.js');
-    // foo.one;
-    //
-    // In this setup foo.js transpiled to:
-    // module$foo.default = {};
-    // module$foo.default.one = 1;
-    //
-    // and bar.js transpiled to:
-    // const foo = module$foo.default;
-    // foo.one;
-    //
-    // So here 'foo' becomes alias of 'module$foo.default' and we get the same issue of having 2
-    // symbols with the same type and we need to make sure that 'module$foo.default' becomes the
-    // root symbol. That's why all module symbols (moduleTypes list) processed last.
-    //
     // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
     // that point to the exact same type instance.
     IdentityHashMap<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
@@ -904,19 +883,36 @@ public final class SymbolTable {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
       // happens few lines above.
+      Symbol symbolForType = getSymbolForTypeHelper(s.getType(), /* linkToCtor= */ false);
+      if (s.getType().isNominalConstructorOrInterface() && !s.equals(symbolForType)) {
+        // Some cases can't be handled by sorting. For example
+        //
+        // goog.module('some.Foo');
+        // class Foo {}
+        // exports = Foo;
+        //
+        // goog.module('some.bar');
+        // const Foo = goog.require('some.Foo');
+        //
+        // Both Foo symbols (declaration and alias) have the same type and equal candidates to
+        // become "symbol that declares Foo type". But in reality we should use the Foo in some.Foo
+        // module. So if symbolForType exists and not equal to current symbol - it means it's an
+        // alias.
+        continue;
+      }
       symbolThatDeclaresType.put(s.getType(), s);
     }
 
     for (Symbol s : allTypes) {
       // Create property scopes only based on "root" symbols for each type to handle aliases.
-      if (s.getType() == null || symbolThatDeclaresType.get(s.getType()).equals(s)) {
+      if (s.getType() == null || s.equals(symbolThatDeclaresType.get(s.getType()))) {
         createPropertyScopeFor(s);
       }
     }
 
     // Now we need to set the new property scope symbol to all aliases.
     for (Symbol s : allTypes) {
-      if (s.getType() != null) {
+      if (s.getType() != null && symbolThatDeclaresType.get(s.getType()) != null) {
         s.propertyScope = symbolThatDeclaresType.get(s.getType()).getPropertyScope();
       }
     }
