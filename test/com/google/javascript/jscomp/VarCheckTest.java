@@ -159,6 +159,18 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLogicalAssignment() {
+    testSame("let x; x ||= 2");
+    testError("let x; x ||= a", VarCheck.UNDEFINED_VAR_ERROR);
+    // References let, not defined
+    testError("{ let x = 1; } var y; y ||= x;", VarCheck.UNDEFINED_VAR_ERROR);
+    // Multiple declared vars
+    testSame("try { var x = 1; x ||= 2; } catch (x) {}");
+    // In externs
+    test(externs("x ||= new Klass();"), srcs("class Klass{}"), error(VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
   public void testReferencedLetDefined1_withES6Modules() {
     testSame("export let x; x = 1;");
   }
