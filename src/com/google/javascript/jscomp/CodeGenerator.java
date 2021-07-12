@@ -953,38 +953,12 @@ public class CodeGenerator {
         }
 
       case CALL:
-        // We have two special cases here:
-        // 1) If the left hand side of the call is a direct reference to eval,
-        // then it must have a DIRECT_EVAL annotation. If it does not, then
-        // that means it was originally an indirect call to eval, and that
-        // indirectness must be preserved.
-        // 2) If the left hand side of the call is a property reference,
-        // then the call must not a FREE_CALL annotation. If it does, then
-        // that means it was originally an call without an explicit this and
-        // that must be preserved.
-        {
-          boolean needsParens = NodeUtil.isOptChainNode(first);
-          if (isIndirectEval(first)
-              || (node.getBooleanProp(Node.FREE_CALL) && NodeUtil.isNormalOrOptChainGet(first))) {
-            add("(0,");
-            addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
-            add(")");
-          } else {
-            if (needsParens) {
-              add("(");
-            }
-            addExpr(first, NodeUtil.precedence(type), context);
-            if (needsParens) {
-              add(")");
-            }
-          }
+        this.addInvocationTarget(node, context);
 
-          Node args = first.getNext();
-          add("(");
-          addList(args);
-          add(")");
-          break;
-        }
+        add("(");
+        addList(first.getNext());
+        add(")");
+        break;
 
       case IF:
         Preconditions.checkState(childCount == 2 || childCount == 3, node);
@@ -1276,7 +1250,7 @@ public class CodeGenerator {
         break;
 
       case TAGGED_TEMPLATELIT:
-        add(first, Context.START_OF_EXPR);
+        this.addInvocationTarget(node, context);
         add(first.getNext());
         break;
 
@@ -1459,6 +1433,37 @@ public class CodeGenerator {
       return precedence(n.getFirstChild());
     }
     return NodeUtil.precedence(n.getToken());
+  }
+
+  /**
+   * We have two special cases here:
+   *
+   * <ul>
+   *   <li>If the left hand side of the call is a direct reference to eval, then it must have a
+   *       DIRECT_EVAL annotation. If it does not, then that means it was originally an indirect
+   *       call to eval, and that indirectness must be preserved.
+   *   <li>If the left hand side of the call is a property reference, then the call must not a
+   *       FREE_CALL annotation. If it does, then that means it was originally an call without an
+   *       explicit this and that must be preserved.
+   */
+  private void addInvocationTarget(Node node, Context context) {
+    Node first = node.getFirstChild();
+
+    boolean needsParens = NodeUtil.isOptChainNode(first);
+    if (isIndirectEval(first)
+        || (node.getBooleanProp(Node.FREE_CALL) && NodeUtil.isNormalOrOptChainGet(first))) {
+      add("(0,");
+      addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
+      add(")");
+    } else {
+      if (needsParens) {
+        add("(");
+      }
+      addExpr(first, NodeUtil.precedence(node.getToken()), context);
+      if (needsParens) {
+        add(")");
+      }
+    }
   }
 
   private static boolean arrowFunctionNeedsParens(Node n) {
@@ -1810,11 +1815,12 @@ public class CodeGenerator {
     }
     for (Node n = firstInList; n != null; n = n.getNext()) {
       boolean isFirst = n == firstInList;
+      int minPrecedence = isArrayOrFunctionArgument ? 1 : 0;
       if (isFirst) {
-        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
+        addExpr(n, minPrecedence, lhsContext);
       } else {
         cc.addOp(separator, true);
-        addExpr(n, isArrayOrFunctionArgument ? 1 : 0, getContextForNoInOperator(lhsContext));
+        addExpr(n, minPrecedence, getContextForNoInOperator(lhsContext));
       }
     }
     if (prettyPrint

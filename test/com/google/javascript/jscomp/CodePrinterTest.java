@@ -490,6 +490,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("var x=a,b,c", "var x=a,b,c");
     assertPrint("var x=(a,b),c", "var x=(a,b),c");
     assertPrint("var x=a,b=(c,d)", "var x=a,b=(c,d)");
+    assertPrint("var x=(a,b)(c);", "var x=(a,b)(c)");
+    assertPrint("var x=(a,b)`c`;", "var x=(a,b)`c`");
     assertPrint("foo(a,b,c,d)", "foo(a,b,c,d)");
     assertPrint("foo((a,b,c),d)", "foo((a,b,c),d)");
     assertPrint("foo((a,(b,c)),d)", "foo((a,b,c),d)");
