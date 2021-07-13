@@ -2737,7 +2737,11 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("typesToColors")
           .setInternalFactory(
               (compiler) ->
-                  new ConvertTypesToColors(compiler, SerializationOptions.SKIP_DEBUG_INFO))
+                  new ConvertTypesToColors(
+                      compiler,
+                      compiler.isDebugLoggingEnabled()
+                          ? SerializationOptions.INCLUDE_DEBUG_INFO
+                          : SerializationOptions.SKIP_DEBUG_INFO))
           .setFeatureSetForOptimizations()
           .build();
 

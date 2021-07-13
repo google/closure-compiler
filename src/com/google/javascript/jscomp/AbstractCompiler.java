@@ -644,15 +644,19 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   public abstract void setModuleMap(ModuleMap moduleMap);
 
+  public final boolean isDebugLoggingEnabled() {
+    return this.getOptions().getDebugLogDirectory() != null;
+  }
+
   /** Provides logging access to a file with the specified name. */
   @MustBeClosed
   public final LogFile createOrReopenLog(
       Class<?> owner, String firstNamePart, String... restNameParts) {
-    @Nullable Path dir = getOptions().getDebugLogDirectory();
-    if (dir == null) {
+    if (!this.isDebugLoggingEnabled()) {
       return LogFile.createNoOp();
     }
 
+    Path dir = getOptions().getDebugLogDirectory();
     Path relativeParts = Paths.get(firstNamePart, restNameParts);
     Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
     return LogFile.createOrReopen(file);

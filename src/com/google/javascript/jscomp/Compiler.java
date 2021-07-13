@@ -411,7 +411,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     initWarningsGuard(options.getWarningsGuard());
-    if (options.getDebugLogDirectory() != null) {
+    if (this.isDebugLoggingEnabled()) {
       // If debug logs are requested, then we'll always log the configuration for convenience.
       options.setPrintConfig(true);
     }
@@ -424,7 +424,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void printConfig() {
-    if (this.getOptions().getDebugLogDirectory() == null) {
+    if (this.isDebugLoggingEnabled()) {
+      // Log to separate files for convenience.
+      logToFile("externs.log", externs::toString);
+      // To get a pretty-printed JSON module graph, change the string generation expression to
+      //
+      // new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson())
+      //
+      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
+      // compiled with J2CL, so we can permanently improve this.
+      logToFile("inputs.json", () -> Iterables.toString(moduleGraph.getAllInputs()));
+      logToFile("options.log", () -> options.toString());
+      logToFile("warningsGuard.log", () -> warningsGuard.toString());
+    } else {
       // Debug logging is not enabled, so use stderr
       final PrintStream err = System.err;
       err.println("==== Externs ====");
@@ -442,18 +454,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       err.println(options);
       err.println("==== WarningsGuard ====");
       err.println(warningsGuard);
-    } else {
-      // Log to separate files for convenience.
-      logToFile("externs.log", externs::toString);
-      // To get a pretty-printed JSON module graph, change the string generation expression to
-      //
-      // new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson())
-      //
-      // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
-      // compiled with J2CL, so we can permanently improve this.
-      logToFile("inputs.json", () -> Iterables.toString(moduleGraph.getAllInputs()));
-      logToFile("options.log", () -> options.toString());
-      logToFile("warningsGuard.log", () -> warningsGuard.toString());
     }
   }
 
@@ -1279,17 +1279,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-    if (this.getOptions().getDebugLogDirectory() == null) {
+    if (this.isDebugLoggingEnabled()) {
+      try (LogFile log =
+          this.createOrReopenIndexedLog(this.getClass(), "src_after_pass", passName)) {
+        log.log(currentJsSource);
+      }
+    } else {
       System.err.println();
       System.err.println("// " + passName + " yields:");
       System.err.println("// ************************************");
       System.err.println(currentJsSource);
       System.err.println("// ************************************");
-    } else {
-      try (LogFile log =
-          this.createOrReopenIndexedLog(this.getClass(), "src_after_pass", passName)) {
-        log.log(currentJsSource);
-      }
     }
 
     this.lastJsSource = currentJsSource;
