@@ -162,7 +162,7 @@ public abstract class CompilerTestCase {
   private boolean checkAstChangeMarking;
 
   /** Whether we expect parse warnings in the current test. */
-  private boolean expectParseWarningsThisTest;
+  private boolean expectParseWarningsInThisTest;
 
   /** An expected symbol table error. Only useful for testing the symbol table error-handling. */
   private DiagnosticType expectedSymbolTableError;
@@ -632,7 +632,7 @@ public abstract class CompilerTestCase {
     this.compareSyntheticCode = true;
     this.computeSideEffects = false;
     this.annotateSourceInfo = false;
-    this.expectParseWarningsThisTest = false;
+    this.expectParseWarningsInThisTest = false;
     this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
     this.inferConsts = false;
@@ -1056,9 +1056,9 @@ public abstract class CompilerTestCase {
   }
 
   /** Whether we should ignore parse warnings for the current test method. */
-  protected final void setExpectParseWarningsThisTest() {
+  protected final void setExpectParseWarningsInThisTest() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    expectParseWarningsThisTest = true;
+    expectParseWarningsInThisTest = true;
   }
 
   protected final void setWebpackModulesById(Map<String, String> webpackModulesById) {
@@ -1461,7 +1461,7 @@ public abstract class CompilerTestCase {
       }
       return;
     }
-    if (!expectParseWarningsThisTest) {
+    if (!expectParseWarningsInThisTest) {
       assertWithMessage("Unexpected parser warning(s)").that(compiler.getWarnings()).isEmpty();
     } else {
       assertThat(compiler.getWarningCount()).isGreaterThan(0);

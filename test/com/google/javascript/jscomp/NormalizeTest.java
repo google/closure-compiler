@@ -371,7 +371,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testForIn2() {
-    setExpectParseWarningsThisTest();
+    setExpectParseWarningsInThisTest();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     // Verify vars are extracted from the FOR-IN node.
     test("for(var a = foo() in b) foo()", "var a = foo(); for(a in b) foo()");

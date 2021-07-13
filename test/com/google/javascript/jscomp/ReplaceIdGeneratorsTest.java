@@ -605,7 +605,7 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testConflictingIdGenerator() {
-    setExpectParseWarningsThisTest();
+    setExpectParseWarningsInThisTest();
     testSame("/** @idGenerator \n @idGenerator {consistent} \n*/ var id = function() {}; ");
 
     testSame("/** @idGenerator {stable} \n @idGenerator \n*/ var id = function() {}; ");

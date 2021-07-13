@@ -172,7 +172,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   // https://github.com/google/closure-compiler/issues/2189
   @Test
   public void testGithubIssue2189() {
-    setExpectParseWarningsThisTest();
+    setExpectParseWarningsInThisTest();
     test(
         lines(
             "/**",
@@ -281,7 +281,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testObjectDestructuringFunctionBadJsdoc() {
     // see https://github.com/google/closure-compiler/issues/3175
-    setExpectParseWarningsThisTest(); // intentionally pass bad JSDoc
+    setExpectParseWarningsInThisTest(); // intentionally pass bad JSDoc
     ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
     test(
         lines(

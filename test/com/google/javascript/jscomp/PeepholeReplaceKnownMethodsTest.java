@@ -674,7 +674,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldParseOctalNumbers() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    setExpectParseWarningsThisTest();
+    setExpectParseWarningsInThisTest();
 
     fold("x = parseInt(021, 8)", "x = 15");
   }

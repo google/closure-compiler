@@ -90,7 +90,7 @@ public final class StatementFusionTest extends CompilerTestCase {
   public void testFuseIntoForIn2() {
     // This test case causes a parse warning in ES5 strict out, but is a parse error in ES6+ out.
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT);
-    setExpectParseWarningsThisTest();
+    setExpectParseWarningsInThisTest();
     fuseSame("a();for(var x = b() in y){}");
   }
 
