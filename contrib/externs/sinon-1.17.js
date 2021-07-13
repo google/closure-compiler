@@ -779,6 +779,13 @@ SinonSandbox.prototype.stub = function(obj, method, func) {};
  */
 SinonSandbox.prototype.useFakeTimers = function(params) {};
 
+/**
+ * https://sinonjs.org/releases/v1.17.6/sandbox/
+ *
+ * @type {!SinonClock|undefined}
+ */
+SinonSandbox.prototype.clock;
+
 sinon.fakeServer = {};
 
 /**
