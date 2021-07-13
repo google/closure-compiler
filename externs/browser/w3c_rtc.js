@@ -1039,7 +1039,6 @@ var ConstrainLong;
 /**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-mediatrackconstraintset
  * @record
- * @private
  */
 function MediaTrackConstraintSet() {}
 
