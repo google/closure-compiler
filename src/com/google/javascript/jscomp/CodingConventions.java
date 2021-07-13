@@ -130,11 +130,6 @@ public final class CodingConventions {
       return nextConvention.getPackageName(source);
     }
 
-     @Override
-    public boolean blockRenamingForProperty(String name) {
-      return  nextConvention.blockRenamingForProperty(name);
-    }
-
     @Override
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
       return nextConvention.getClassesDefinedByCall(callNode);
@@ -353,11 +348,6 @@ public final class CodingConventions {
     @Override
     public final boolean isExported(String name) {
       return CodingConvention.super.isExported(name);
-    }
-
-    @Override
-    public boolean blockRenamingForProperty(String name) {
-      return false;
     }
 
     @Override

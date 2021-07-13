@@ -124,16 +124,15 @@ public interface CodingConvention extends Serializable {
   }
 
   /**
-   * Check whether the property name is eligible for renaming.
+   * No-op convention that is never used.
    *
-   * This method will not block removal or collapsing
-   * of the property; it will just block renaming if the
-   * property is not optimized away.
-   *
-   * @param name A property name.
-   * @return {@code true} if the name can not be renamed.
+   * @deprecated since this has a default value and is never checked, you can safely remove any
+   *     overrides of this method from your coding conventions.
    */
-  public boolean blockRenamingForProperty(String name);
+  @Deprecated
+  public default boolean blockRenamingForProperty(String name) {
+    return false;
+  }
 
   /**
    * @return the package name for the given source file, or null if

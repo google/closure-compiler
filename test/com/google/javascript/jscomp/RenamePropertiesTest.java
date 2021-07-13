@@ -60,14 +60,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     return 1;
   }
 
-  @Override protected CodingConvention getCodingConvention() {
-    return new CodingConventions.Proxy(super.getCodingConvention()) {
-      @Override public boolean blockRenamingForProperty(String name) {
-        return name.endsWith("Exported");
-      }
-    };
-  }
-
   @Test
   public void testPrototypeProperties() {
     test("Bar.prototype.getA = function(){}; bar.getA();" +
@@ -89,14 +81,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             "Bar.prototype.a = function(){}; bar?.a();",
             "Bar.prototype.b = function(){};",
             "Bar.prototype.c = function(){}"));
-  }
-
-  @Test
-  public void testExportedByConventionPrototypeProperties() {
-    test("Bar.prototype.getA = function(){}; bar.getA();" +
-         "Bar.prototype.getBExported = function(){}; bar.getBExported()",
-         "Bar.prototype.a = function(){}; bar.a();" +
-         "Bar.prototype.getBExported = function(){}; bar.getBExported()");
   }
 
   @Test
@@ -190,11 +174,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExportedSetPropertyOfThis() {
-    testSame("this.propExported = 'bar'");
-  }
-
-  @Test
   public void testReadPropertyOfThis() {
     test("f(this.prop);",
          "f(this.a);");
@@ -206,18 +185,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testObjectLiteralInLocalScope() {
     test("function x() { var foo = {prop1: 'bar', prop2: 'baz'}; }",
          "function x() { var foo = {a: 'bar', b: 'baz'}; }");
-  }
-
-  @Test
-  public void testExportedObjectLiteralInLocalScope() {
-    test("function x() { var foo = {prop1: 'bar', prop2Exported: 'baz'};" +
-         " foo.prop2Exported; }",
-         "function x() { var foo = {a: 'bar', prop2Exported: 'baz'};" +
-         " foo.prop2Exported; }");
-
-    test(
-        "function x() { var foo = {prop1: 'bar', prop2Exported: 'baz'};foo?.prop2Exported; }",
-        "function x() { var foo = {a: 'bar', prop2Exported: 'baz'}; foo?.prop2Exported; }");
   }
 
   @Test

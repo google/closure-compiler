@@ -328,10 +328,6 @@ class RenameProperties implements CompilerPass {
           break;
         case GETPROP:
         case OPTCHAIN_GETPROP:
-          if (compiler.getCodingConvention().blockRenamingForProperty(n.getString())) {
-            externedNames.add(n.getString());
-            break;
-            }
           maybeMarkCandidate(n);
           break;
         case OBJECTLIT:
@@ -353,8 +349,6 @@ class RenameProperties implements CompilerPass {
                   // Ensure that we never rename some other property in a way
                   // that could conflict with this quoted key.
                   quotedNames.add(propName);
-                } else if (compiler.getCodingConvention().blockRenamingForProperty(propName)) {
-                  externedNames.add(propName);
                 } else {
                   maybeMarkCandidate(key);
                 }
@@ -401,9 +395,7 @@ class RenameProperties implements CompilerPass {
                 String memberDefName = key.getString();
                 if (member.isFunction()) {
                   Node fnName = member.getFirstChild();
-                  if (compiler.getCodingConvention().blockRenamingForProperty(memberDefName)) {
-                    externedNames.add(fnName.getString());
-                  } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(key)
+                  if (NodeUtil.isEs6ConstructorMemberFunctionDef(key)
                       || memberDefName.equals("superClass_")) {
                     // TODO (simarora) is there a better way to identify these externs?
                     externedNames.add(fnName.getString());
