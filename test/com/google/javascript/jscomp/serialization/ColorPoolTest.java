@@ -71,7 +71,7 @@ public class ColorPoolTest {
                         ObjectTypeProto.newBuilder()
                             .setUuid(StandardColors.NUMBER_OBJECT_ID.asByteString())
                             .setDebugInfo(
-                                ObjectTypeProto.DebugInfo.newBuilder().setClassName("Number"))
+                                ObjectTypeProto.DebugInfo.newBuilder().addTypename("Number"))
                             .setIsInvalidating(true))
                     .build())
             .addType(
@@ -787,6 +787,35 @@ public class ColorPoolTest {
 
     // Then
     assertThat(colorPool.getColor(TEST_ID)).propertiesKeepOriginalName();
+  }
+
+  @Test
+  public void reconcile_debugNames() {
+    // Given
+    TypePool typePool0 =
+        singleObjectPool(
+            ObjectTypeProto.newBuilder()
+                .setUuid(TEST_ID.asByteString())
+                .setDebugInfo(
+                    ObjectTypeProto.DebugInfo.newBuilder().addTypename("A").addTypename("C")));
+
+    TypePool typePool1 =
+        singleObjectPool(
+            ObjectTypeProto.newBuilder()
+                .setUuid(TEST_ID.asByteString())
+                .setDebugInfo(
+                    ObjectTypeProto.DebugInfo.newBuilder().addTypename("B").addTypename("A")));
+
+    // When
+    ColorPool colorPool =
+        ColorPool.builder()
+            .addShardAnd(typePool0, StringPool.empty())
+            .addShardAnd(typePool1, StringPool.empty())
+            .build();
+
+    // Then
+    assertThat(colorPool.getColor(TEST_ID).getDebugInfo().getCompositeTypename())
+        .isEqualTo("A/B/C");
   }
 
   @Test

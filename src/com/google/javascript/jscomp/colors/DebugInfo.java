@@ -32,22 +32,18 @@ public abstract class DebugInfo {
    */
   public static final DebugInfo EMPTY = builder().build();
 
-  public abstract String getClassName();
-
-  public abstract String getFilename();
+  public abstract String getCompositeTypename();
 
   /** Builder for {@link DebugInfo} */
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Builder setClassName(String value);
-
-    public abstract Builder setFilename(String value);
+    public abstract Builder setCompositeTypename(String value);
 
     public abstract DebugInfo build();
   }
 
   public static Builder builder() {
-    return new AutoValue_DebugInfo.Builder().setClassName("").setFilename("");
+    return new AutoValue_DebugInfo.Builder().setCompositeTypename("");
   }
 
   /** All DebugInfo objects are equal */

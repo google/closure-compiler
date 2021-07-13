@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Optional;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 final class JSTypeReconserializer {
@@ -271,6 +271,7 @@ final class JSTypeReconserializer {
   }
 
   private TypeProto reconcileObjectTypes(SeenTypeRecord seen) {
+    TreeSet<String> debugTypenames = new TreeSet<>();
     LinkedHashSet<TypePointer> instancePointers = new LinkedHashSet<>();
     LinkedHashSet<TypePointer> prototypePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> ownProperties = new LinkedHashSet<>();
@@ -278,26 +279,12 @@ final class JSTypeReconserializer {
     boolean isConstructor = false;
     boolean isInvalidating = false;
     boolean propertiesKeepOriginalName = false;
-    ObjectTypeProto.DebugInfo.Builder sampleDebugInfo = null;
 
     for (JSType type : seen.jstypes) {
       ObjectType objType = checkNotNull(type.toMaybeObjectType(), type);
 
       if (this.serializationMode.includeDebugInfo()) {
-        // TODO(nickreid): Actually reconcile these
-        String classname = debugNameOf(objType);
-        if (classname != null) {
-          if (sampleDebugInfo == null) {
-            sampleDebugInfo = ObjectTypeProto.DebugInfo.newBuilder();
-          }
-          sampleDebugInfo
-              .setClassName(classname)
-              .setFilename(
-                  Optional.ofNullable(sourceRefFor(objType))
-                      .map(JSType.WithSourceRef::getSource)
-                      .map(Node::getSourceFileName)
-                      .orElse(""));
-        }
+        debugTypenames.add(debugNameOf(type));
       }
 
       if (objType.isFunctionType()) {
@@ -340,8 +327,8 @@ final class JSTypeReconserializer {
             .setMarkedConstructor(isConstructor)
             .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
             .setUuid(seen.colorId.asByteString());
-    if (sampleDebugInfo != null) {
-      objectProto.setDebugInfo(sampleDebugInfo);
+    if (!debugTypenames.isEmpty()) {
+      objectProto.getDebugInfoBuilder().addAllTypename(debugTypenames);
     }
     return TypeProto.newBuilder().setObject(objectProto).build();
   }
@@ -502,27 +489,6 @@ final class JSTypeReconserializer {
     throw new AssertionError();
   }
 
-  @Nullable
-  private static JSType.WithSourceRef sourceRefFor(ObjectType type) {
-    if (type.isEnumType()) {
-      return type.toMaybeEnumType();
-    } else if (type.isEnumElementType()) {
-      // EnumElementTypes are proxied to their underlying type when transformed to colors.
-      throw new AssertionError(type);
-    }
-
-    if (type.isFunctionType()) {
-      return type.toMaybeFunctionType();
-    } else if (type.isFunctionPrototypeType()) {
-      return type.getOwnerFunction();
-    } else if (type.getConstructor() != null) {
-      return type.getConstructor();
-    }
-
-    return null;
-  }
-
-  @Nullable
   private static String debugNameOf(JSType type) {
     ObjectType oType = type.toMaybeObjectType();
     if (oType == null) {
@@ -541,6 +507,6 @@ final class JSTypeReconserializer {
         className = "(typeof " + className + ")";
       }
     }
-    return className;
+    return (className == null) ? type.toString() : className;
   }
 }

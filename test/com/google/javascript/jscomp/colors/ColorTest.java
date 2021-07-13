@@ -152,6 +152,36 @@ public class ColorTest {
   }
 
   @Test
+  public void union_debugInfoTypenameFormat() {
+    // Given
+    Color a =
+        Color.singleBuilder()
+            .setId(fromAscii("A"))
+            .setDebugInfo(DebugInfo.builder().setCompositeTypename("A").build())
+            .build();
+    Color b =
+        Color.singleBuilder()
+            .setId(fromAscii("B"))
+            .setDebugInfo(DebugInfo.builder().setCompositeTypename("B").build())
+            .build();
+    Color c =
+        Color.singleBuilder()
+            .setId(fromAscii("C"))
+            .setDebugInfo(DebugInfo.builder().setCompositeTypename("C").build())
+            .build();
+
+    // When
+    Color ab = Color.createUnion(ImmutableSet.of(a, b));
+    Color ba = Color.createUnion(ImmutableSet.of(b, a));
+    Color abc = Color.createUnion(ImmutableSet.of(ab, c));
+
+    // Then
+    assertThat(ab.getDebugInfo().getCompositeTypename()).isEqualTo("(A|B)");
+    assertThat(ba.getDebugInfo().getCompositeTypename()).isEqualTo("(A|B)");
+    assertThat(abc.getDebugInfo().getCompositeTypename()).isEqualTo("(A|B|C)");
+  }
+
+  @Test
   public void primitivesAreInvalidatingBasedOnConstantData() {
     assertThat(StandardColors.UNKNOWN).isInvalidating();
     assertThat(StandardColors.TOP_OBJECT).isInvalidating();

@@ -42,6 +42,7 @@ import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.TreeSet;
 
 /**
  * A set of {@link Color}s reconstructed from possibly many {@link TypePool} protos.
@@ -236,7 +237,7 @@ public final class ColorPool {
     }
 
     private Color reconcileObjectProtos(ColorId id, Map<ShardView, TypeProto> viewToProto) {
-      DebugInfo sampleDebugInfo = DebugInfo.EMPTY;
+      TreeSet<String> debugTypenames = new TreeSet<>();
       ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
       ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
       ImmutableSet.Builder<String> ownProperties = ImmutableSet.builder();
@@ -252,13 +253,8 @@ public final class ColorPool {
         checkState(proto.hasObject());
         ObjectTypeProto objProto = proto.getObject();
 
-        if (identical(sampleDebugInfo, DebugInfo.EMPTY) && objProto.hasDebugInfo()) {
-          ObjectTypeProto.DebugInfo info = objProto.getDebugInfo();
-          sampleDebugInfo =
-              DebugInfo.builder()
-                  .setFilename(info.getFilename())
-                  .setClassName(info.getClassName())
-                  .build();
+        if (objProto.hasDebugInfo()) {
+          debugTypenames.addAll(objProto.getDebugInfo().getTypenameList());
         }
         for (TypePointer p : objProto.getInstanceTypeList()) {
           instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
@@ -282,9 +278,15 @@ public final class ColorPool {
         }
       }
 
+      DebugInfo debugInfo = DebugInfo.EMPTY;
+      if (!debugTypenames.isEmpty()) {
+        debugInfo =
+            DebugInfo.builder().setCompositeTypename(String.join("/", debugTypenames)).build();
+      }
+
       return Color.singleBuilder()
           .setId(id)
-          .setDebugInfo(sampleDebugInfo)
+          .setDebugInfo(debugInfo)
           .setInstanceColors(instanceColors.build())
           .setPrototypes(prototypes.build())
           .setOwnProperties(ownProperties.build())

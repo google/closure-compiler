@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.ALGEBRAIC;
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.CAN_HOLD;
-import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableSet;
@@ -536,22 +535,13 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   }
 
   private static String nameOf(Color color) {
-    if (color.isUnion()) {
-      return "("
-          + color.getUnionElements().stream()
-              .map(ColorGraphBuilderTest::nameOf)
-              .sorted()
-              .collect(joining("|"))
-          + ")";
-    } else {
-      return color.getDebugInfo().getClassName();
-    }
+    return color.getDebugInfo().getCompositeTypename();
   }
 
   private static Color.Builder colorWithName(String name) {
     return Color.singleBuilder()
         .setId(ColorId.fromAscii(name))
-        .setDebugInfo(DebugInfo.builder().setClassName(name).build());
+        .setDebugInfo(DebugInfo.builder().setCompositeTypename(name).build());
   }
 
   private static final Correspondence<DiGraphNode<ColorGraphNode, Object>, String>

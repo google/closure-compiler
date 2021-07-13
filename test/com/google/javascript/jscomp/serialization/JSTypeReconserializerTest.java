@@ -333,7 +333,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .contains(
             TypeProto.newBuilder()
                 .setObject(
-                    ObjectTypeProto.newBuilder()
+                    namedObjectBuilder("{x: string}")
                         .setIsInvalidating(true)
                         .addOwnProperty(findInStringPool("x")))
                 .build());
@@ -366,7 +366,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   }
 
   @Test
-  public void reconciles_differentFunctionsWithSameJspath() {
+  public void reconcile_differentFunctionsWithSameJspath() {
     assertThat(
             compileToTypes(
                 lines(
@@ -427,7 +427,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .contains(
             TypeProto.newBuilder()
                 .setObject(
-                    ObjectTypeProto.newBuilder()
+                    namedObjectBuilder("function(new:*): ?")
                         .setIsInvalidating(true)
                         .addPrototype(pointerForType(PrimitiveType.UNKNOWN_TYPE))
                         .addInstanceType(pointerForType(PrimitiveType.UNKNOWN_TYPE))
@@ -459,7 +459,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactly(
             TypeProto.newBuilder()
-                .setObject(ObjectTypeProto.newBuilder().setIsInvalidating(true))
+                .setObject(namedObjectBuilder("{x: string}").setIsInvalidating(true))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Bar")).build(),
@@ -514,7 +514,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         .contains(
             TypeProto.newBuilder()
                 .setObject(
-                    ObjectTypeProto.newBuilder()
+                    namedObjectBuilder("function(new:Bar): ?", "function(new:Foo): ?")
                         .setMarkedConstructor(true)
                         .addInstanceType(pointerForType("Foo"))
                         .addInstanceType(pointerForType("Bar"))
@@ -607,12 +607,11 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     // Enum types have a unique reference names format which is part of the ColorId
   }
 
-  private ObjectTypeProto.Builder namedObjectBuilder(String className) {
+  private ObjectTypeProto.Builder namedObjectBuilder(String... className) {
     return ObjectTypeProto.newBuilder()
         .setDebugInfo(
             ObjectTypeProto.DebugInfo.newBuilder()
-                .setClassName(className)
-                .setFilename("testcode")
+                .addAllTypename(ImmutableList.copyOf(className))
                 .build());
   }
 
@@ -644,7 +643,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   private TypePointer pointerForType(String className) {
     List<TypeProto> types = this.typePool.getTypeList();
     for (int i = 0; i < types.size(); i++) {
-      if (types.get(i).getObject().getDebugInfo().getClassName().equals(className)) {
+      if (types.get(i).getObject().getDebugInfo().getTypenameList().contains(className)) {
         return TypePointer.newBuilder().setPoolOffset(untrimOffset(i)).build();
       }
     }
@@ -664,7 +663,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
         continue;
       }
       ObjectTypeProto objectSubtype = subtype.getObject();
-      if (!objectSubtype.getDebugInfo().getClassName().equals(className)) {
+      if (!objectSubtype.getDebugInfo().getTypename(0).equals(className)) {
         continue;
       }
       if (isAxiomatic(edge.getSupertype())) {

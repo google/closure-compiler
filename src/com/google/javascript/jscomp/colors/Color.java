@@ -17,15 +17,14 @@
 package com.google.javascript.jscomp.colors;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
@@ -87,6 +86,7 @@ public abstract class Color {
         break;
     }
 
+    TreeSet<String> debugTypenames = new TreeSet<>();
     ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
     ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
     ImmutableSet.Builder<Color> newElements = ImmutableSet.builder();
@@ -102,10 +102,12 @@ public abstract class Color {
         for (Color nestedElement : element.getUnionElements()) {
           newElements.add(nestedElement);
           ids.add(nestedElement.getId());
+          debugTypenames.add(nestedElement.getDebugInfo().getCompositeTypename());
         }
       } else {
         newElements.add(element);
         ids.add(element.getId());
+        debugTypenames.add(element.getDebugInfo().getCompositeTypename());
       }
 
       instanceColors.addAll(element.getInstanceColors());
@@ -117,10 +119,18 @@ public abstract class Color {
       prototypes.addAll(element.getPrototypes());
     }
 
+    debugTypenames.remove("");
+    DebugInfo debugInfo =
+        debugTypenames.isEmpty()
+            ? DebugInfo.EMPTY
+            : DebugInfo.builder()
+                .setCompositeTypename("(" + String.join("|", debugTypenames) + ")")
+                .build();
+
     return new AutoValue_Color.Builder()
         .setClosureAssert(isClosureAssert)
         .setConstructor(isConstructor)
-        .setDebugInfo(DebugInfo.EMPTY)
+        .setDebugInfo(debugInfo)
         .setId(ColorId.union(ids.build()))
         .setInstanceColors(instanceColors.build())
         .setInvalidating(isInvalidating)
@@ -198,11 +208,6 @@ public abstract class Color {
 
     abstract Builder setBoxId(@Nullable ColorId x);
 
-    @VisibleForTesting
-    public Builder setDebugName(String x) {
-      return this.setDebugInfo(DebugInfo.builder().setClassName(x).build());
-    }
-
     public Builder setPrototype(Color x) {
       return this.setPrototypes((x == null) ? ImmutableSet.of() : ImmutableSet.of(x));
     }
@@ -224,7 +229,6 @@ public abstract class Color {
     private final Color buildUnion() {
       Color result = this.buildInternal();
       checkState(result.getUnionElements().size() > 1, result);
-      checkState(identical(result.getDebugInfo(), DebugInfo.EMPTY), result);
       checkState(result.getBoxId() == null, result);
       return result;
     }
@@ -234,7 +238,7 @@ public abstract class Color {
 
       Color result = this.buildInternal();
       checkState(result.getUnionElements().isEmpty(), result);
-      checkState(!result.getDebugInfo().getClassName().isEmpty(), result);
+      checkState(!result.getDebugInfo().getCompositeTypename().isEmpty(), result);
       return result;
     }
   }
