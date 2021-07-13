@@ -324,8 +324,6 @@ class RenameProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case COMPUTED_PROP:
-          break;
         case GETPROP:
         case OPTCHAIN_GETPROP:
           maybeMarkCandidate(n);
@@ -386,9 +384,11 @@ class RenameProperties implements CompilerPass {
           {
             // Replace function names defined in a class scope
             for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-              if (key.isComputedProp()) {
-                // We don't want to rename computed properties.
+              if (key.isComputedProp() || key.isComputedFieldDef()) {
+                // We don't want to rename computed properties or member fields.
                 continue;
+              } else if (key.isMemberFieldDef()) {
+                maybeMarkCandidate(key);
               } else {
                 Node member = key.getFirstChild();
 

@@ -325,6 +325,7 @@ final class TypedAstSerializer {
       case GETPROP:
       case OPTCHAIN_GETPROP:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
       case NAME:
       case STRINGLIT:
       case STRING_KEY:

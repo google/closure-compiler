@@ -685,6 +685,96 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassFields() {
+    test(
+        lines(
+            "class Bar {", //
+            "  field = 7;",
+            "}",
+            "var bar = new Bar();",
+            "bar.field;"),
+        lines(
+            "class Bar {", //
+            "  a = 7;",
+            "}",
+            "var bar = new Bar();",
+            "bar.a;"));
+  }
+
+  @Test
+  public void testClassFieldWithFunctionRHS() {
+    test(
+        lines(
+            "class Bar {", //
+            "  superClass_ = function f(){};",
+            "}",
+            "var bar = new Bar();",
+            "bar.superClass_;"),
+        lines(
+            "class Bar {", //
+            "  a = function f(){};",
+            "}",
+            "var bar = new Bar();",
+            "bar.a;"));
+  }
+
+  @Test
+  public void testStaticClassFields() {
+    test(
+        lines("class Bar {", "  static field = 1;", "}", "Bar.field;"),
+        lines("class Bar {", "  static a = 1;", "}", "Bar.a;"));
+  }
+
+  @Test
+  public void testClassComputedFields() {
+    test(
+        lines(
+            "class Bar {", //
+            "  ['field'] = 1;",
+            "}",
+            "var bar = new Bar()",
+            "bar.field;"),
+        lines(
+            "class Bar {", //
+            "  ['field'] = 1;",
+            "}",
+            "var bar = new Bar()",
+            "bar.a;"));
+  }
+
+  @Test
+  public void testStaticClassComputedFields() {
+    test(
+        lines(
+            "class Bar {", //
+            "  static ['field'] = 1;",
+            "}",
+            "Bar.field;"),
+        lines("class Bar {", "  static ['field'] = 1;", "}", "Bar.a;"));
+  }
+
+  @Test
+  public void testClassMixedFields() {
+    test(
+        lines(
+            "class Bar {", //
+            "  field = 1;",
+            "  ['field'] = 2;",
+            "  static 1 = 5;",
+            "}",
+            "var bar = new Bar()",
+            "bar.field;"),
+        lines(
+            "class Bar {",
+            "  a = 1;",
+            "  ['field'] = 2;",
+            "  static 1 = 5;",
+            "}",
+            "var bar = new Bar()",
+            "bar.a;"));
+  }
+
+  @Test
   public void testObjectMethodProperty() {
     // ES5 version
     test(

@@ -200,6 +200,20 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithFields() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  a = 1;",
+            "  'b' = 4;",
+            "  static ['c'] = 'hi';",
+            "  d;",
+            "  ['e'];",
+            "  1 = 2;",
+            "}"));
+  }
+
+  @Test
   public void testVanillaFunctionDeclaration() {
     testSame("function f(x, y) { return x ** y; }");
   }
