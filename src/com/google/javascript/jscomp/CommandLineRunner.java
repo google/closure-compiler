@@ -925,7 +925,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Instructs the compiler to replace dynamic imports expressions with a function call "
                 + "using the specified name. Allows dynamic import expressions to be externally "
-                + "polyfilled when the output language level does not natively support them.")
+                + "polyfilled when the output language level does not natively support them. "
+                + "An alias of 'import' is allowed.")
     private String dynamicImportAlias = null;
 
     @Argument private List<String> arguments = new ArrayList<>();
