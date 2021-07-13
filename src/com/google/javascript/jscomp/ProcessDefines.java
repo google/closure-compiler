@@ -570,6 +570,7 @@ class ProcessDefines implements CompilerPass {
         // Binary operators are only valid if both children are valid.
       case AND:
       case OR:
+      case COALESCE:
       case ADD:
       case BITAND:
       case BITNOT:

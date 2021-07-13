@@ -95,6 +95,12 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefineBadType_nullishCoalesce() {
+    test(srcs("/** @define {string} */ var DEF = 'a' ?? 'b'"));
+    testError("/** @define {string} */ var DEF = 'a' ?? null", ProcessDefines.INVALID_DEFINE_VALUE);
+  }
+
+  @Test
   public void testChecksOnlyProducesErrors() {
     mode = ProcessDefines.Mode.CHECK;
     test(
