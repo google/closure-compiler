@@ -3232,7 +3232,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testClassDeclarationWithField() {
     testSame(
         lines(
-            "class Foo {",
+            "class Foo {", //
             "  /** @type {string} */",
             "  a = 'hi';",
             "  /** @type {symbol|undefined} */",
@@ -3246,19 +3246,19 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
     ObjectType fooInstance = fooCtor.getInstanceType();
 
-    assertType(fooInstance).hasDeclaredProperty("a");
+    assertThat(fooInstance.hasOwnDeclaredProperty("a")).isTrue();
     assertType(fooInstance.getPropertyType("a")).isString();
 
-    assertType(fooInstance).hasDeclaredProperty("b");
+    assertThat(fooInstance.hasOwnDeclaredProperty("b")).isTrue();
     assertType(fooInstance.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
 
-    assertType(fooInstance).hasDeclaredProperty("c");
+    assertThat(fooInstance.hasOwnDeclaredProperty("c")).isTrue();
     assertType(fooInstance.getPropertyType("c")).isUnknown();
 
-    assertType(fooInstance).hasDeclaredProperty("d");
+    assertThat(fooInstance.hasOwnDeclaredProperty("d")).isTrue();
     assertType(fooInstance.getPropertyType("d")).isUnknown();
 
-    assertType(fooInstance).hasDeclaredProperty("e");
+    assertThat(fooInstance.hasOwnDeclaredProperty("e")).isTrue();
     assertType(fooInstance.getPropertyType("e")).toStringIsEqualTo("(null|string)");
   }
 
@@ -3266,7 +3266,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testClassDeclarationWithStaticField() {
     testSame(
         lines(
-            "class Foo {",
+            "class Foo {", //
             "  /** @type {string} */",
             "  static a = 'hi';",
             "  /** @type {symbol|undefined} */",
@@ -3279,19 +3279,19 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
 
-    assertType(fooCtor).hasDeclaredProperty("a");
+    assertThat(fooCtor.hasOwnDeclaredProperty("a")).isTrue();
     assertType(fooCtor.getPropertyType("a")).isString();
 
-    assertType(fooCtor).hasDeclaredProperty("b");
+    assertThat(fooCtor.hasOwnDeclaredProperty("b")).isTrue();
     assertType(fooCtor.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
 
-    assertType(fooCtor).hasDeclaredProperty("c");
+    assertThat(fooCtor.hasOwnDeclaredProperty("c")).isTrue();
     assertType(fooCtor.getPropertyType("c")).isUnknown();
 
-    assertType(fooCtor).hasDeclaredProperty("d");
+    assertThat(fooCtor.hasOwnDeclaredProperty("d")).isTrue();
     assertType(fooCtor.getPropertyType("d")).isUnknown();
 
-    assertType(fooCtor).hasDeclaredProperty("e");
+    assertThat(fooCtor.hasOwnDeclaredProperty("e")).isTrue();
     assertType(fooCtor.getPropertyType("e")).toStringIsEqualTo("(null|string)");
   }
 

@@ -175,7 +175,13 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
               return;
             }
 
-            owningType = n.isStaticMember() ? ctorType : ctorType.getPrototype();
+            if (n.isStaticMember()) {
+              owningType = ctorType;
+            } else if (n.isMemberFieldDef()) {
+              owningType = ctorType.getInstanceType();
+            } else {
+              owningType = ctorType.getPrototype();
+            }
           } else {
             owningType = dereferenced(parent.getJSType());
           }

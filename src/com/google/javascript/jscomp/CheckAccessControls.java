@@ -1336,10 +1336,15 @@ class CheckAccessControls implements Callback, CompilerPass {
               JSType ctorType = parent.getParent().getJSType();
               if (ctorType != null && ctorType.isFunctionType()) {
                 FunctionType ctorFunctionType = ctorType.toMaybeFunctionType();
-                builder.setReceiverType(
-                    sourceNode.isStaticMember()
-                        ? ctorFunctionType
-                        : ctorFunctionType.getPrototype());
+                ObjectType owningType;
+                if (sourceNode.isStaticMember()) {
+                  owningType = ctorFunctionType;
+                } else if (sourceNode.isMemberFieldDef()) {
+                  owningType = ctorFunctionType.getInstanceType();
+                } else {
+                  owningType = ctorFunctionType.getPrototype();
+                }
+                builder.setReceiverType(owningType);
               }
               break;
 

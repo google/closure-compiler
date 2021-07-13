@@ -3534,11 +3534,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // GETTER_DEF -> CLASS_MEMBERS -> CLASS
       Node ownerNode = member.getGrandparent();
       checkState(ownerNode.isClass());
-      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
-      if (!member.isStaticMember()) {
-        ownerType = ((FunctionType) ownerType).getPrototype();
+      FunctionType ownerType = ownerNode.getJSType().toMaybeFunctionType();
+      if (member.isStaticMember()) {
+        return ownerType;
+      } else if (member.isMemberFieldDef()) {
+        return ownerType.getInstanceType();
+      } else {
+        checkState(
+            member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef(), member);
+        return ownerType.getPrototype();
       }
-      return ownerType;
+
     }
   } // end ClassScopeBuilder
 

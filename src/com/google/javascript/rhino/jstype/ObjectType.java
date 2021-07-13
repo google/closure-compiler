@@ -572,7 +572,7 @@ public abstract class ObjectType extends JSType {
   /**
    * Whether the given property is declared on this object.
    */
-  final boolean hasOwnDeclaredProperty(String name) {
+  public final boolean hasOwnDeclaredProperty(String name) {
     return hasOwnProperty(name) && isPropertyTypeDeclared(name);
   }
 
