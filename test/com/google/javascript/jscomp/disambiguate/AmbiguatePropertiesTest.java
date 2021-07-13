@@ -1488,6 +1488,109 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSingleClass_withSingleMemberField_ambiguated() {
+    test("class Foo { field = 2; } ", "class Foo { a = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleQuotedMemberField_notAmbiguated() {
+    testSame("/** @dict */ class Foo { 'field' = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleStaticMemberField_ambiguated() {
+    test("class Foo { static field = 2; }", "class Foo { static a = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleComputedMemberField_notAmbiguated() {
+    testSame("/** @dict */ class Foo { ['field'] = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleStaticComputedMemberField_notAmbiguated() {
+    testSame("/** @dict */ class Foo { static ['field'] = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleNumberMemberField_notAmbiguated() {
+    testSame("/** @dict */ class Foo { 1 = 2; }");
+  }
+
+  @Test
+  public void testSingleClass_withSingleStaticNumberMemberField_notAmbiguated() {
+    testSame("/** @dict */ class Foo { static 1 = 2; }");
+  }
+
+  @Test
+  public void testQuotedMemberFieldInClass_notAmbiguated() {
+    testSame("/** @dict */ class Foo { 'fieldFoo' }");
+  }
+
+  @Test
+  public void testQuotedMemberFieldInClassReservesPropertyName() {
+    test(
+        "/** @unrestricted */ class Foo { 'a'; foo; }",
+        "/** @unrestricted */ class Foo { 'a'; b; }");
+  }
+
+  @Test
+  public void testSingleClass_withTwoMemberFields_notAmbiguated() {
+    test("class Foo { field1; field2 = 2;}", "class Foo { a; b = 2;}");
+  }
+
+  @Test
+  public void testSingleClass_withStaticAndPrototypeMemberFields_ambiguated() {
+    test("class Foo { static staticField; memberField; }", "class Foo { static a; a; }");
+  }
+
+  @Test
+  public void testTwoUnrelatedClasses_withMemberFields_ambiguated() {
+    test("class Foo { fieldFoo; } class Bar { fieldBar; }", "class Foo { a; } class Bar { a; }");
+  }
+
+  @Test
+  public void testTwoUnrelatedClasses_withStaticMemberFields_ambiguated() {
+    test(
+        lines(
+            "class Foo { static fieldFoo = 2; }", //
+            "class Bar { static fieldBar = 2; }"),
+        lines(
+            "class Foo { static a = 2; }", //
+            "class Bar { static a = 2; }"));
+  }
+
+  @Test
+  public void testEs6SuperclassStaticField_notAmbiguated() {
+    test(
+        lines("class Foo { static fieldFoo; }", "class Bar extends Foo { static fieldBar; }"),
+        // Since someone could access Foo.methodFoo() through Bar, make sure the fields get
+        // distinct names.
+        lines("class Foo { static b; }", "class Bar extends Foo { static a; }"));
+  }
+
+  @Test
+  public void testSingleClass_withMultipleMemberFields_notAmbiguated() {
+    test(
+        lines(
+            "/** @unrestricted */",
+            "class Foo {",
+            "  field = 1;",
+            "  ['hi'] = 4;",
+            "  static 1 = 2;",
+            "  hello = 5;",
+            "}"),
+        lines(
+            "/** @unrestricted */",
+            "class Foo {",
+            "  a = 1;",
+            "  ['hi'] = 4;",
+            "  static 1 = 2;",
+            "  b = 5;",
+            "}"));
+  }
+
+  @Test
   public void testQuotedMemberFnInClass_notAmbiguated() {
     testSame("/** @dict */ class Foo { 'methodFoo'() {} }");
   }
@@ -1539,6 +1642,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "class Foo { static b() {} }", //
             "class Bar extends Foo { static a() {} }"));
   }
+
 
   @Test
   public void testEs6SubclassChain_withStaticMethods_notAmbiguated() {

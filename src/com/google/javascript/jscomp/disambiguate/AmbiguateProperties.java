@@ -447,7 +447,6 @@ public class AmbiguateProperties implements CompilerPass {
             quotedNames.add(key.getFirstChild().getString());
           }
           break;
-
         case MEMBER_FUNCTION_DEF:
         case GETTER_DEF:
         case SETTER_DEF:
@@ -517,7 +516,7 @@ public class AmbiguateProperties implements CompilerPass {
           // see https://github.com/google/closure-compiler/issues/3071
           quotedNames.add(member.getString());
           continue;
-        } else if (member.isComputedProp()) {
+        } else if (member.isComputedProp() || member.isComputedFieldDef()) {
           // ignore ['foo']() {}
           // for simple cases, we also prevent renaming collisions
           if (member.getFirstChild().isStringLit()) {
@@ -531,9 +530,20 @@ public class AmbiguateProperties implements CompilerPass {
           continue;
         }
 
-        Color memberOwnerColor = member.isStaticMember() ? classConstructorType : classPrototype;
-
-        // member could be a MEMBER_FUNCTION_DEF, GETTER_DEF, or SETTER_DEF
+        Color memberOwnerColor;
+        if (member.isStaticMember()) {
+          memberOwnerColor = classConstructorType;
+        } else if (member.isMemberFieldDef()) {
+          ImmutableSet<Color> possibleInstances = classConstructorType.getInstanceColors();
+          memberOwnerColor =
+              possibleInstances.isEmpty()
+                  ? StandardColors.UNKNOWN
+                  : Color.createUnion(possibleInstances);
+        } else {
+          checkState(member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef());
+          memberOwnerColor = classPrototype;
+        }
+        // member could be a MEMBER_FUNCTION_DEF, MEMBER_FIELD_DEF, GETTER_DEF, or SETTER_DEF
         maybeMarkCandidate(member, memberOwnerColor);
       }
     }
