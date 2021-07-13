@@ -302,11 +302,14 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
+        case ASSIGN_AND:
         case AND:
         case HOOK:
         case IF:
+        case ASSIGN_OR:
         case OR:
         case SWITCH:
+        case ASSIGN_COALESCE:
         case COALESCE:
         case OPTCHAIN_GETPROP:
         case OPTCHAIN_GETELEM:
