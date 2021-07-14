@@ -2453,13 +2453,46 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantPropertyInExterns() {
-    String externs =
-        DEFAULT_EXTERNS
-        + "/** @constructor */ function Foo() {};\n"
-        + "/** @const */ Foo.prototype.PROP;";
-    String js = "var f = new Foo(); f.PROP = 1; f.PROP = 2;";
-    testError(externs(externs), srcs(js), error(CONST_PROPERTY_REASSIGNED_VALUE));
+  public void testConstantProperty_recordType() {
+    test(
+        srcs(
+            lines(
+                "/** @record */",
+                "function Foo() { }",
+                "/** @const {number} */",
+                "Foo.prototype.bar;",
+                "",
+                "const /** !Foo */ x = {",
+                "  bar: 9,",
+                "};",
+                "x.bar = 0;")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE)
+            .withMessageContaining("unknown location due to structural typing"));
+  }
+
+  @Test
+  public void testConstantProperty_fromExternsOrIjs_duplicateExternOk() {
+    testSame(
+        externs(
+            lines(
+                "/** @constructor */ function Foo() {}", //
+                "/** @const */ Foo.prototype.PROP;",
+                "/** @const */ Foo.prototype.PROP;")),
+        srcs(""));
+  }
+
+  @Test
+  public void testConstantProperty_fromExternsOrIjs() {
+    test(
+        externs(
+            lines(
+                "/** @constructor */ function Foo() {}", //
+                "/** @const */ Foo.prototype.PROP;")),
+        srcs(
+            lines(
+                "var f = new Foo();", //
+                "f.PROP = 1;")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE).withMessageContaining("at externs:2:"));
   }
 
   @Test

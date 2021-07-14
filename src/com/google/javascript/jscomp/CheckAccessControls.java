@@ -17,12 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -45,7 +44,7 @@ import javax.annotation.Nullable;
  * <p>Because access control restrictions are attached to type information, this pass must run after
  * TypeInference, and InferJSDocInfo.
  */
-class CheckAccessControls implements Callback, CompilerPass {
+class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType DEPRECATED_NAME = DiagnosticType.disabled(
       "JSC_DEPRECATED_VAR",
@@ -115,8 +114,10 @@ class CheckAccessControls implements Callback, CompilerPass {
 
   static final DiagnosticType CONST_PROPERTY_REASSIGNED_VALUE =
       DiagnosticType.warning(
-        "JSC_CONSTANT_PROPERTY_REASSIGNED_VALUE",
-        "constant property {0} assigned a value more than once");
+          "JSC_CONSTANT_PROPERTY_REASSIGNED_VALUE",
+          lines(
+              "constant property {0} assigned a value more than once", //
+              "Initialized at {1}"));
 
   static final DiagnosticType CONST_PROPERTY_DELETED =
       DiagnosticType.warning(
@@ -132,14 +133,13 @@ class CheckAccessControls implements Callback, CompilerPass {
   // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
   // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
   private final Deque<ObjectType> currentClassStack = new LinkedList<>();
+  private final HashBasedTable<JSType, String, Node> constPropertyInits = HashBasedTable.create();
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
-  private final Multimap<JSType, String> initializedConstantProperties;
 
   CheckAccessControls(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
-    this.initializedConstantProperties = HashMultimap.create();
   }
 
   @Override
@@ -593,63 +593,86 @@ class CheckAccessControls implements Callback, CompilerPass {
       return;
     }
 
+    ObjectType objectType = dereference(propRef.getReceiverType());
+    String propertyName = propRef.getName();
+    Node sourceNode = propRef.getSourceNode();
+
+    if (!isPropertyDeclaredConstant(objectType, propertyName)) {
+      return;
+    }
+
+    if (sourceNode.isFromExterns() && propRef.isDeclaration()) {
+      // Treat stub declarations in externs as inits, but never warn on them.
+      this.recordConstPropertyInit(propRef, objectType);
+      return;
+    }
+
     if (!propRef.isMutation()) {
       return;
     }
 
-    ObjectType objectType = castToObject(dereference(propRef.getReceiverType()));
-
-    String propertyName = propRef.getName();
-
-    boolean isConstant = isPropertyDeclaredConstant(objectType, propertyName);
-
-    // Check whether constant properties are reassigned
-    if (isConstant) {
-      if (propRef.isDeletion()) {
-        compiler.report(
-            JSError.make(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
-        return;
-      }
-
-      // Can't check for constant properties on generic function types.
-      // TODO(johnlenz): I'm not 100% certain this is necessary, or if
-      // the type is being inspected incorrectly.
-      if (objectType == null
-          || (objectType.isFunctionType()
-              && !objectType.toMaybeFunctionType().isConstructor())) {
-        return;
-      }
-
-      if (isIllegalMutationOfConstantProperty(propRef, objectType)) {
-        compiler.report(
-            JSError.make(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
-      }
-
-      initializedConstantProperties.put(objectType, propertyName);
-
-      // Add the prototype when we're looking at an instance object
-      if (objectType.isInstanceType()) {
-        ObjectType prototype = objectType.getImplicitPrototype();
-        if (prototype != null && prototype.hasProperty(propertyName)) {
-          initializedConstantProperties.put(prototype, propertyName);
-        }
-      }
+    if (propRef.isDeletion()) {
+      compiler.report(JSError.make(sourceNode, CONST_PROPERTY_DELETED, propertyName));
+      return;
     }
+
+    // Can't check for constant properties on generic function types.
+    // TODO(johnlenz): I'm not 100% certain this is necessary, or if
+    // the type is being inspected incorrectly.
+    if (objectType.isFunctionType() && !objectType.toMaybeFunctionType().isConstructor()) {
+      return;
+    }
+
+    if (objectType.isStructuralType() && !propRef.isDeclaration()) {
+      // We don't know the claess this structural type matches, so assume all assignments are bad.
+      compiler.report(
+          JSError.make(
+              sourceNode,
+              CONST_PROPERTY_REASSIGNED_VALUE,
+              propertyName,
+              "unknown location due to structural typing"));
+      return;
+    }
+
+    Node init = this.getConstPropertyInit(propRef, objectType);
+    if (init != null) {
+      compiler.report(
+          JSError.make(
+              sourceNode, CONST_PROPERTY_REASSIGNED_VALUE, propertyName, init.getLocation()));
+    }
+
+    this.recordConstPropertyInit(propRef, objectType);
   }
 
-  private boolean isIllegalMutationOfConstantProperty(PropertyReference ref, ObjectType type) {
-    if (type.isStructuralType() && !ref.isDeclaration()) {
-      return true;
-    }
+  @Nullable
+  private Node getConstPropertyInit(PropertyReference ref, ObjectType type) {
     String name = ref.getName();
     while (type != null) {
-      if (initializedConstantProperties.containsEntry(type, name)
-          || initializedConstantProperties.containsEntry(getCanonicalInstance(type), name)) {
-        return true;
+      Node init = this.constPropertyInits.get(type, name);
+      if (init != null) {
+        return init;
       }
+      Node canonicalInit = this.constPropertyInits.get(getCanonicalInstance(type), name);
+      if (canonicalInit != null) {
+        return canonicalInit;
+      }
+
       type = type.getImplicitPrototype();
     }
-    return false;
+
+    return null;
+  }
+
+  private void recordConstPropertyInit(PropertyReference ref, ObjectType type) {
+    this.constPropertyInits.row(type).putIfAbsent(ref.getName(), ref.getSourceNode());
+
+    // Add the prototype when we're looking at an instance object
+    if (type.isInstanceType()) {
+      ObjectType prototype = type.getImplicitPrototype();
+      if (prototype != null && prototype.hasProperty(ref.getName())) {
+        this.constPropertyInits.row(prototype).putIfAbsent(ref.getName(), ref.getSourceNode());
+      }
+    }
   }
 
   /**
@@ -1046,11 +1069,8 @@ class CheckAccessControls implements Callback, CompilerPass {
     return null;
   }
 
-  /**
-   * Returns if a property is declared constant.
-   */
-  private boolean isPropertyDeclaredConstant(
-      ObjectType objectType, String prop) {
+  /** Returns if a property is declared constant. */
+  private boolean isPropertyDeclaredConstant(ObjectType objectType, String prop) {
     for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isConstant()) {
@@ -1227,6 +1247,7 @@ class CheckAccessControls implements Callback, CompilerPass {
       Builder setOverride(boolean isOverride);
 
       Builder setReadableTypeName(Supplier<String> typeName);
+
       PropertyReference build();
     }
 
