@@ -2331,7 +2331,17 @@ public final class CompilerTest {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       compiler.saveState(byteArrayOutputStream);
       byteArrayOutputStream.close();
+
+      // NOTE: The AST is not expected to be used after serialization to the save file
+      // and it has been modified to transport the locale data to the next stage via
+      // `__JSC_LOCALE_DATA__`
+      assertThat(compiler.toSource(m1)).isEqualTo("var __JSC_LOCALE_DATA__=[];var a={};a.b={};");
+
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
+
+      // restoring state creates new JSModule objects. the old ones are stale.
+      m1 = compiler.getModuleGraph().getModuleByName("m1");
+      m2 = compiler.getModuleGraph().getModuleByName("m2");
     }
 
     compiler.performOptimizations();
@@ -2341,14 +2351,8 @@ public final class CompilerTest {
     JSChunk weakModule = compiler.getModuleGraph().getModuleByName("$weak$");
     assertThat(weakModule).isNotNull();
 
-    if (saveAndRestore) {
-      // NOTE: The AST is not expected to be used after serialization to the save file
-      // and it has been modified to transport the locale data to the next stage via
-      // `__JSC_LOCALE_DATA__`
-      assertThat(compiler.toSource(m1)).isEqualTo("var __JSC_LOCALE_DATA__=[];var a={};a.b={};");
-    } else {
-      assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
-    }
+    assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
+
     assertThat(compiler.toSource(m2)).isEqualTo("var d={};");
     assertThat(compiler.toSource(weakModule)).isEmpty();
   }
