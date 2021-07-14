@@ -284,6 +284,13 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLogicalAssignment() {
+    testSame("let x = 0; x ||= 1");
+    testSame("function f(x, y) { return x &&= y; }");
+    testSame("let y = null; if (y ??= 2) { function f() {} }");
+  }
+
+  @Test
   public void testEsModule() {
     testSame(
         new String[] {
