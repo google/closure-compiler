@@ -36,7 +36,7 @@ import com.google.javascript.jscomp.LocaleDataPasses.ExtractAndProtect;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
-import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
@@ -610,7 +610,7 @@ public final class DefaultPassConfig extends PassConfig {
     // information and so that other passes can take advantage of the renamed
     // properties.
     if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
-      passes.add(disambiguateProperties2);
+      passes.add(disambiguateProperties);
     }
 
     if (options.computeFunctionSideEffects) {
@@ -2080,13 +2080,12 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Disambiguate property names based on type information. */
-  private final PassFactory disambiguateProperties2 =
+  private final PassFactory disambiguateProperties =
       PassFactory.builder()
           .setName(PassNames.DISAMBIGUATE_PROPERTIES)
           .setInternalFactory(
               (compiler) ->
-                  new DisambiguateProperties2(
-                      compiler, options.getPropertiesThatMustDisambiguate()))
+                  new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
           .setFeatureSetForOptimizations()
           .build();
 

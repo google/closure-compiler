@@ -111,6 +111,6 @@ final class UseSiteRenamer {
   }
 
   private static JSError createInvalidationError(String name) {
-    return JSError.make(null, -1, -1, DisambiguateProperties2.PROPERTY_INVALIDATION, name);
+    return JSError.make(null, -1, -1, DisambiguateProperties.PROPERTY_INVALIDATION, name);
   }
 }

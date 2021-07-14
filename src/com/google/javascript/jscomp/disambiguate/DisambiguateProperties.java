@@ -52,7 +52,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 /** Assembles the various parts of the diambiguator to execute them as a compiler pass. */
-public final class DisambiguateProperties2 implements CompilerPass {
+public final class DisambiguateProperties implements CompilerPass {
 
   public static final DiagnosticType PROPERTY_INVALIDATION =
       DiagnosticType.error(
@@ -66,7 +66,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private final ImmutableSet<String> propertiesThatMustDisambiguate;
   private final ColorRegistry registry;
 
-  public DisambiguateProperties2(
+  public DisambiguateProperties(
       AbstractCompiler compiler, ImmutableSet<String> propertiesThatMustDisambiguate) {
     this.compiler = compiler;
     this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;

@@ -44,13 +44,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Unit test for the {@link DisambiguateProperties2} pass.
+ * Unit test for the {@link DisambiguateProperties} pass.
  *
- * <p>This also runs the typechecking passes, because DisambiguateProperties2 depends on the
+ * <p>This also runs the typechecking passes, because DisambiguateProperties depends on the
  * typecheck passes behavior, and it's complicated to manually mimic the results of typechecking.
  */
 @RunWith(JUnit4.class)
-public final class DisambiguateProperties2Test extends CompilerTestCase {
+public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   private static final String PROP_DEFINER_DEFINITION =
       lines(
@@ -62,7 +62,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   private ImmutableSet<String> propertiesThatMustDisambiguate = ImmutableSet.of();
 
-  public DisambiguateProperties2Test() {
+  public DisambiguatePropertiesTest() {
     super("");
   }
 
@@ -77,7 +77,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new DisambiguateProperties2(compiler, propertiesThatMustDisambiguate);
+    return new DisambiguateProperties(compiler, propertiesThatMustDisambiguate);
   }
 
   @Override
@@ -922,8 +922,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "  x.mustDisambiguate0",
                 "  x.mustDisambiguate1",
                 "}")),
-        error(DisambiguateProperties2.PROPERTY_INVALIDATION),
-        error(DisambiguateProperties2.PROPERTY_INVALIDATION));
+        error(DisambiguateProperties.PROPERTY_INVALIDATION),
+        error(DisambiguateProperties.PROPERTY_INVALIDATION));
   }
 
   @Test
@@ -980,7 +980,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
-        ImmutableSet.of(DisambiguateProperties2.PROPERTY_INVALIDATION);
+        ImmutableSet.of(DisambiguateProperties.PROPERTY_INVALIDATION);
 
     @Override
     protected int getPriority() {
@@ -1037,7 +1037,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
       Path dir =
           Paths.get(
               this.getLastCompiler().getOptions().getDebugLogDirectory().toString(),
-              DisambiguateProperties2.class.getSimpleName());
+              DisambiguateProperties.class.getSimpleName());
 
       try (Stream<Path> files = Files.list(dir)) {
         return files.collect(toImmutableList());

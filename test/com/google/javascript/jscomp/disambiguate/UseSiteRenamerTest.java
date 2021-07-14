@@ -233,7 +233,7 @@ public final class UseSiteRenamerTest {
 
     // Then
     assertError(this.reportedErrors.remove(0))
-        .hasType(DisambiguateProperties2.PROPERTY_INVALIDATION);
+        .hasType(DisambiguateProperties.PROPERTY_INVALIDATION);
   }
 
   private void runRename(@Nullable ImmutableSet<String> propertiesThatMustDisambiguate) {
