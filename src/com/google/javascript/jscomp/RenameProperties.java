@@ -326,37 +326,8 @@ class RenameProperties implements CompilerPass {
       switch (n.getToken()) {
         case GETPROP:
         case OPTCHAIN_GETPROP:
+        case MEMBER_FIELD_DEF:
           maybeMarkCandidate(n);
-          break;
-        case OBJECTLIT:
-        case OBJECT_PATTERN:
-          // Iterate through all the properties.
-          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            switch (key.getToken()) {
-              case COMPUTED_PROP: // We don't want to rename computed properties
-              case OBJECT_REST:
-              case OBJECT_SPREAD:
-                break;
-
-              case GETTER_DEF:
-              case MEMBER_FUNCTION_DEF:
-              case SETTER_DEF:
-              case STRING_KEY:
-                String propName = key.getString();
-                if (key.isQuotedString()) {
-                  // Ensure that we never rename some other property in a way
-                  // that could conflict with this quoted key.
-                  quotedNames.add(propName);
-                } else {
-                  maybeMarkCandidate(key);
-                }
-                break;
-
-              default:
-                throw new IllegalStateException(
-                    "Unexpected child of " + n.getToken() + ": " + key.toStringTree());
-            }
-          }
           break;
         case GETELEM:
         case OPTCHAIN_GETELEM:
@@ -380,33 +351,25 @@ class RenameProperties implements CompilerPass {
           }
           break;
         }
-        case CLASS_MEMBERS:
-          {
-            // Replace function names defined in a class scope
-            for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-              if (key.isComputedProp() || key.isComputedFieldDef()) {
-                // We don't want to rename computed properties or member fields.
-                continue;
-              } else if (key.isMemberFieldDef()) {
-                maybeMarkCandidate(key);
-              } else {
-                Node member = key.getFirstChild();
-
-                String memberDefName = key.getString();
-                if (member.isFunction()) {
-                  Node fnName = member.getFirstChild();
-                  if (NodeUtil.isEs6ConstructorMemberFunctionDef(key)
-                      || memberDefName.equals("superClass_")) {
-                    // TODO (simarora) is there a better way to identify these externs?
-                    externedNames.add(fnName.getString());
-                  } else {
-                    maybeMarkCandidate(key);
-                  }
-                }
-              }
-            }
-            break;
+        case MEMBER_FUNCTION_DEF:
+          checkState(!n.isQuotedString());
+          if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
+            externedNames.add(n.getString());
+          } else {
+            maybeMarkCandidate(n);
           }
+          break;
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case STRING_KEY:
+          if (n.isQuotedString()) {
+            // Ensure that we never rename some other property in a way
+            // that could conflict with this quoted key.
+            quotedNames.add(n.getString());
+          } else {
+            maybeMarkCandidate(n);
+          }
+          break;
         case FUNCTION:
           {
             // We eliminate any stub implementations of JSCompiler_renameProperty
