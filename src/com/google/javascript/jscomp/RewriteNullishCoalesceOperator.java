@@ -24,8 +24,6 @@ import com.google.javascript.rhino.Node;
 public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callback, CompilerPass {
 
   private static final String TEMP_VAR_NAME_PREFIX = "$jscomp$nullish$tmp";
-  private static final FeatureSet TRANSPILED_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(Feature.NULL_COALESCE_OP);
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -39,12 +37,16 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
+    NodeTraversal.traverse(compiler, root, this);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.NULL_COALESCE_OP);
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      return scriptFeatures == null || scriptFeatures.contains(Feature.NULL_COALESCE_OP);
+    }
     return true;
   }
 

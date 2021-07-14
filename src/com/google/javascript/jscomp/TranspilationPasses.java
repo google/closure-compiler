@@ -422,7 +422,10 @@ public class TranspilationPasses {
    * @param combinedRoot The combined root for all JS files.
    * @param featureSet Ignored
    * @param callbacks The callbacks that should be invoked if a file has ES2015 features.
+   * @deprecated Please use a regular NodeTraversal object directly, using `shouldTraverse` to skip
+   *     SCRIPT node if desired.
    */
+  @Deprecated
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
     FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
