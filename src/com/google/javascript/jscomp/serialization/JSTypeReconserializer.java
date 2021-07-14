@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
-import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
 
 import com.google.common.collect.ImmutableList;
@@ -264,7 +263,7 @@ final class JSTypeReconserializer {
                 .addAllUnionMember(
                     seen.unionMembers.stream()
                         .map((r) -> r.pointer)
-                        .sorted(comparingInt(TypePointer::getPoolOffset))
+                        .sorted(TypePointers.OFFSET_ASCENDING)
                         .collect(toImmutableList()))
                 .build())
         .build();
@@ -408,9 +407,31 @@ final class JSTypeReconserializer {
   TypePool generateTypePool() {
     checkState(this.state == State.COLLECTING_TYPES);
     checkValid();
-    this.state = State.GENERATING_POOL;
 
     TypePool.Builder builder = TypePool.newBuilder();
+
+    if (this.serializationMode.includeDebugInfo()) {
+      TypePool.DebugInfo.Builder debugInfo = builder.getDebugInfoBuilder();
+      this.invalidatingTypes
+          .getMismatchLocations()
+          .inverse() // Key by source ref to deduplicate the strings, which are pretty long.
+          .asMap()
+          .forEach(
+              (location, types) ->
+                  debugInfo
+                      .addMismatchBuilder()
+                      .setSourceRef(location.getLocation())
+                      .addAllInvolvedColor(
+                          types.stream()
+                              .peek((t) -> checkState(!t.isUnionType(), t))
+                              // Ensure all types are recorded before reconciliation.
+                              .map(this::serializeType)
+                              .distinct()
+                              .sorted(TypePointers.OFFSET_ASCENDING)
+                              .collect(toImmutableList())));
+    }
+
+    this.state = State.GENERATING_POOL;
 
     for (SeenTypeRecord seen : this.seenTypeRecords.values()) {
       if (StandardColors.AXIOMATIC_COLORS.containsKey(seen.colorId)) {

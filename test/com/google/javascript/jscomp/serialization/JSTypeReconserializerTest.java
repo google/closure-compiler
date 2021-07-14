@@ -150,7 +150,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     List<TypeProto> typePool = compileToTypes("class Foo { m() {} } new Foo().m();");
 
     assertThat(typePool)
-        .ignoringFieldDescriptors(ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
+        .ignoringFieldDescriptors(OBJECT_UUID)
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
@@ -605,6 +605,37 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void reconcile_setPropertiesKeepOriginalName_noActualTestcase() {
     // TODO(b/185519307): Come up with a situation where this can happen.
     // Enum types have a unique reference names format which is part of the ColorId
+  }
+
+  @Test
+  public void debugInfo_mismatchLocations() {
+    TypePool typePool =
+        compileToTypePool(
+            lines(
+                "class A { }",
+                "class B { }",
+                "class C { }",
+                "",
+                "/**",
+                " * @suppress {checkTypes}",
+                " * @type {(!A|!B)}",
+                " */",
+                "const x = new C();"));
+
+    assertThat(typePool.getDebugInfo().getMismatchList())
+        .contains(
+            TypePool.DebugInfo.Mismatch.newBuilder()
+                .setSourceRef("testcode:9:10")
+                .addInvolvedColor(pointerForType("(typeof A)"))
+                .addInvolvedColor(pointerForType("A"))
+                .addInvolvedColor(pointerForType("A.prototype"))
+                .addInvolvedColor(pointerForType("(typeof B)"))
+                .addInvolvedColor(pointerForType("B"))
+                .addInvolvedColor(pointerForType("B.prototype"))
+                .addInvolvedColor(pointerForType("(typeof C)"))
+                .addInvolvedColor(pointerForType("C"))
+                .addInvolvedColor(pointerForType("C.prototype"))
+                .build());
   }
 
   private ObjectTypeProto.Builder namedObjectBuilder(String... className) {

@@ -17,10 +17,12 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Comparator.comparingInt;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
+import java.util.Comparator;
 
 /** TypePointer utilities. */
 final class TypePointers {
@@ -42,6 +44,8 @@ final class TypePointers {
           StandardColors.TOP_OBJECT);
 
   static final int AXIOMATIC_COLOR_COUNT = OFFSET_TO_AXIOMATIC_COLOR.size();
+
+  static final Comparator<TypePointer> OFFSET_ASCENDING = comparingInt(TypePointer::getPoolOffset);
 
   static int trimOffset(TypePointer x) {
     return trimOffset(x.getPoolOffset());

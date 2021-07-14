@@ -11,8 +11,21 @@ message TypePool {
   repeated TypeProto type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
-  // Human-readable representation of where this TypePool comes from.
-  string source_name = 3;
+
+  DebugInfo debug_info = 3;
+  message DebugInfo {
+    /**
+     * Details of type mismatches, which may not be errors.
+     *
+     * Mismatches make the directly involved colors, and some related colors,
+     * invalidating; therefore many colors may be present. Unions are unpacked.
+     */
+    repeated Mismatch mismatch = 1;
+    message Mismatch {
+      string source_ref = 1;
+      repeated TypePointer involved_color = 2;
+    }
+  }
 }
 
 // References a serialized type. Typically, any reference to a type that needs
