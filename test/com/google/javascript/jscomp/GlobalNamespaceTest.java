@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -108,6 +109,96 @@ public final class GlobalNamespaceTest {
     assertThat(a.getRefs()).hasSize(2);
     assertThat(a.getLocalSets()).isEqualTo(0);
     assertThat(a.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void logicalAssignment1() {
+    GlobalNamespace namespace = parse("var a = a ||= {};");
+    Name a = namespace.getSlot("a");
+
+    assertThat(a).isNotNull();
+    assertThat(a.getRefs()).hasSize(2);
+    assertThat(a.getLocalSets()).isEqualTo(0);
+    assertThat(a.getGlobalSets()).isEqualTo(2);
+  }
+
+  @Test
+  public void logicalAssignment2() {
+    GlobalNamespace namespace = parse("var a = a || (a = {});");
+    Name a = namespace.getSlot("a");
+
+    assertThat(a).isNotNull();
+    assertThat(a.getRefs()).hasSize(4);
+    assertThat(a.getLocalSets()).isEqualTo(0);
+    assertThat(a.getGlobalSets()).isEqualTo(2);
+  }
+
+  @Test
+  public void testlogicalAssignmentGets1() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const ns = {};", //
+                "ns.n1 = 1;",
+                "ns.n2 = 2;",
+                "ns.n1 ??= ns.n2;",
+                "ns.n1 &&= ns.n2;"));
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getTotalGets()).isEqualTo(0);
+
+    Name n1 = namespace.getSlot("ns.n1");
+    assertThat(n1.getGlobalSets()).isEqualTo(3);
+    assertThat(n1.getAliasingGets()).isEqualTo(0);
+    assertThat(n1.getTotalGets()).isEqualTo(0);
+
+    Name n2 = namespace.getSlot("ns.n2");
+    assertThat(n2.getGlobalSets()).isEqualTo(1);
+    assertThat(n2.getAliasingGets()).isEqualTo(2);
+    assertThat(n2.getTotalGets()).isEqualTo(2);
+  }
+
+  @Test
+  public void testlogicalAssignmentGets2() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const ns = {};", //
+                "ns.n1 = 1;",
+                "ns.n2 = 2;",
+                "ns.n1 ?? (ns.n1 = ns.n2);",
+                "ns.n1 && (ns.n1 = ns.n2);"));
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getTotalGets()).isEqualTo(0);
+
+    Name n1 = namespace.getSlot("ns.n1");
+    assertThat(n1.getGlobalSets()).isEqualTo(3);
+    assertThat(n1.getAliasingGets()).isEqualTo(2);
+    assertThat(n1.getTotalGets()).isEqualTo(4);
+
+    Name n2 = namespace.getSlot("ns.n2");
+    assertThat(n2.getGlobalSets()).isEqualTo(1);
+    assertThat(n2.getAliasingGets()).isEqualTo(2);
+    assertThat(n2.getTotalGets()).isEqualTo(2);
+  }
+
+  @Test
+  public void detectsPropertySetsInLogicalAssignmentOperators1() {
+    GlobalNamespace namespace = parse("const a = {b: 0}; a.b ||= 1; a.b = 2;");
+
+    assertThat(namespace.getSlot("a.b").getGlobalSets()).isEqualTo(3);
+  }
+
+  @Test
+  public void detectsPropertySetsInLogicalAssignmentOperators2() {
+    GlobalNamespace namespace = parse("const a = {b: 0}; a.b || (a.b = 1); a.b = 2;");
+
+    assertThat(namespace.getSlot("a.b").getGlobalSets()).isEqualTo(3);
   }
 
   @Test
@@ -1386,6 +1477,7 @@ public final class GlobalNamespaceTest {
   private GlobalNamespace parse(String js) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setLanguage(LanguageMode.UNSUPPORTED);
     // Don't optimize, because we want to know how GlobalNamespace responds to the original code
     // in `js`.
     options.setSkipNonTranspilationPasses(true);
