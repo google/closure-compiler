@@ -457,6 +457,7 @@ class OptimizeCalls implements CompilerPass {
         case GETTER_DEF:
         case SETTER_DEF:
         case MEMBER_FUNCTION_DEF:
+        case MEMBER_FIELD_DEF:
           // ignore quoted keys.
           if (!n.isQuotedString()) {
             maybeAddPropReference(n.getString(), n);
@@ -468,6 +469,7 @@ class OptimizeCalls implements CompilerPass {
           break;
 
         case COMPUTED_PROP:
+        case COMPUTED_FIELD_DEF:
         case OPTCHAIN_GETELEM:
         case GETELEM:
           // Ignore quoted keys.

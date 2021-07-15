@@ -243,6 +243,46 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         .inOrder();
   }
 
+  @Test
+  public void testReferenceCollection_findsClassFields() {
+    considerExterns = true;
+
+    test(
+        srcs(
+            lines(
+                "class C {",
+                "  a = 2;",
+                "  b;",
+                "  ['c'] = 'hi';",
+                "  'd' = 5;",
+                "  1 = 2;",
+                "}",
+                "new C();",
+                "")));
+
+    assertThat(references.getNameReferences())
+        .comparingElementsUsing(KEY_EQUALITY)
+        .containsExactly("C");
+
+    assertThat(references.getPropReferences())
+        .comparingElementsUsing(KEY_EQUALITY)
+        .containsExactly("a", "b");
+
+    final ImmutableMap<String, ArrayList<Node>> nameToRefs =
+        ImmutableMap.copyOf(references.getPropReferences());
+    assertThat(nameToRefs.keySet()).containsExactly("a", "b");
+
+    assertThat(nameToRefs.get("a"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.MEMBER_FIELD_DEF)
+        .inOrder();
+
+    assertThat(nameToRefs.get("b"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.MEMBER_FIELD_DEF)
+        .inOrder();
+  }
+
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
       Correspondence.transforming(Map.Entry::getKey, "has key");
 
