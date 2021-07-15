@@ -519,6 +519,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testTypedefBeforeOwner1() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
+
     test(
         options,
         lines(
@@ -528,25 +529,26 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "foo.Bar = function() {};"),
         lines(
             "var foo = {};", //
+            "foo.Bar.Type = {};",
             "foo.Bar.Type;",
             "foo.Bar = function() {};"));
   }
 
   @Test
-  public void testTypedefBeforeOwner2() {
+  public void testTypedefChildProvide() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(
+    compile(
         options,
         lines(
-            "goog.provide('foo.Bar.Type');",
             "goog.provide('foo.Bar');",
-            "/** @typedef {number} */ foo.Bar.Type;",
-            "foo.Bar = function() {};"),
-        lines(
-            "var foo$Bar$Type;", //
-            "var foo$Bar = function() {};"));
+            "goog.provide('foo.Bar.Type');",
+            "",
+            "foo.Bar = function() {};",
+            "/** @typedef {number} */ foo.Bar.Type;"));
+
+    assertThat(lastCompiler.getErrors()).hasSize(1);
+    assertThat(lastCompiler.getErrors().get(0).getDescription()).contains("provide foo.Bar.Type");
   }
 
   @Test
