@@ -978,6 +978,92 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "const fooChild = '';")));
   }
 
+  @Test
+  public void classField() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  a;",
+                "  static a = 2;",
+                "}",
+                "",
+                "class Bar {",
+                "  a; ",
+                "  static a = 3;",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$1_a;",
+                "  static JSC$2_a = 2;",
+                "}",
+                "",
+                "class Bar {",
+                "  JSC$3_a;",
+                "  static JSC$4_a = 3;",
+                "}")));
+  }
+
+  @Test
+  public void classComputedField() {
+    testSame(
+        srcs(
+            lines(
+                "class Foo {",
+                "  ['a'];",
+                "  'b' = 2;",
+                "  1 = 'hello';",
+                "  static ['a'] = 2;",
+                "  static 'b' = 2;",
+                "  static 1 = 'hello';",
+                "}",
+                "",
+                "class Bar {",
+                "  ['a'];",
+                "  'b' = 2;",
+                "  1 = 'hello';",
+                "  static ['a'] = 2;",
+                "  static 'b' = 2;",
+                "  static 1 = 'hello';",
+                "}")));
+  }
+
+  @Test
+  public void classMixedFields() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  a;",
+                "  static a = 2;",
+                "  ['a'];",
+                "  static ['a'] = 2;",
+                "}",
+                "",
+                "class Bar {",
+                "  a;",
+                "  static a = 2;",
+                "  ['a'];",
+                "  static ['a'] = 2;",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$1_a;",
+                "  static JSC$2_a = 2;",
+                "  ['a'];",
+                "  static ['a'] = 2;",
+                "}",
+                "",
+                "class Bar {",
+                "  JSC$3_a;",
+                "  static JSC$4_a = 2;",
+                "  ['a'];",
+                "  static ['a'] = 2;",
+                "}")));
+  }
+
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(DisambiguateProperties.PROPERTY_INVALIDATION);

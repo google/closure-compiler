@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
+import static com.google.javascript.rhino.Token.MEMBER_FIELD_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
@@ -269,6 +270,52 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     assertThat(this.propIndex.keySet()).containsExactly("a", "constructor");
 
     this.assertThatUsesOf("a").containsExactly("FOO", GETPROP);
+  }
+
+  @Test
+  public void classMemberField_onInstance_isFound() {
+    // When
+    this.propIndex =
+        this.collectProperties(
+            "",
+            lines(
+                "class Foo {", //
+                "  a = 0;",
+                "  b;",
+                "  ['c'] = 1;",
+                "  'd' = 2;",
+                "  3 = 'hi'",
+                "}",
+                "",
+                "FOO: new Foo();"));
+
+    assertThat(this.propIndex.keySet()).containsExactly("a", "b");
+
+    this.assertThatUsesOf("a").containsExactly("FOO", MEMBER_FIELD_DEF);
+    this.assertThatUsesOf("b").containsExactly("FOO", MEMBER_FIELD_DEF);
+  }
+
+  @Test
+  public void classMemberField_onCtor_isFound() {
+    // When
+    this.propIndex =
+        this.collectProperties(
+            "",
+            lines(
+                "class Foo {", //
+                "  static a = 0;",
+                "  static b;",
+                "  static ['c'] = 1;",
+                "  static 'd' = 2;",
+                "  static 3 = 'hi'",
+                "}",
+                "",
+                "TYPEOF_FOO: Foo;"));
+
+    assertThat(this.propIndex.keySet()).containsExactly("a", "b");
+
+    this.assertThatUsesOf("a").containsExactly("TYPEOF_FOO", MEMBER_FIELD_DEF);
+    this.assertThatUsesOf("b").containsExactly("TYPEOF_FOO", MEMBER_FIELD_DEF);
   }
 
   @Test

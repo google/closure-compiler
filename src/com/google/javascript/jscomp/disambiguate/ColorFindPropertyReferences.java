@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashMap;
@@ -126,13 +127,24 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
 
   private void handleClass(Node classNode) {
     Color classType = classNode.getColor();
-    ImmutableSet<Color> classPrototypeType =
-        // the class type may not be a function type if it was in a cast, so treat it as unknown
-        classType.getPrototypes();
-
     this.traverseObjectlitLike(
         NodeUtil.getClassMembers(classNode),
-        (m) -> m.isStaticMember() ? classType : Color.createUnion(classPrototypeType));
+        (m) -> {
+          if (m.isStaticMember()) {
+            return classType;
+          } else if (m.isMemberFieldDef()) {
+            ImmutableSet<Color> classInstanceType = classType.getInstanceColors();
+            return classInstanceType.isEmpty()
+                ? StandardColors.UNKNOWN
+                : Color.createUnion(classInstanceType);
+          } else {
+            checkState(m.isMemberFunctionDef() || m.isGetterDef() || m.isSetterDef(), m);
+            ImmutableSet<Color> classPrototypeType = classType.getPrototypes();
+            return classPrototypeType.isEmpty()
+                ? StandardColors.UNKNOWN
+                : Color.createUnion(classPrototypeType);
+          }
+        });
     colorGraphNodeFactory.createNode(classType);
   }
 
@@ -181,12 +193,14 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       switch (child.getToken()) {
         case COMPUTED_PROP:
+        case COMPUTED_FIELD_DEF:
         case OBJECT_REST:
         case OBJECT_SPREAD:
           continue;
 
         case STRING_KEY:
         case MEMBER_FUNCTION_DEF:
+        case MEMBER_FIELD_DEF:
         case GETTER_DEF:
         case SETTER_DEF:
           if (child.isQuotedString()) {
