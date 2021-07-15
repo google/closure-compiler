@@ -4157,10 +4157,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     ignoreWarnings(LOAD_WARNING);
     test(
-        new String[] {"import * as a from './a.js'; let b = a.b;", "var a = {}; a.b = 5;"},
-        new String[] {
-          "import * as a$jscomp$1 from './a.js'; let b = a$jscomp$1.b;", "var a$b = 5;"
-        });
+        srcs("import * as a from './a.js'; let b = a.b;", "var a = {}; a.b = 5;"),
+        expected("import * as a$jscomp$1 from './a.js'; let b = a$jscomp$1.b;", "var a$b = 5;"));
   }
 
   @Test

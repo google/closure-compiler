@@ -1910,7 +1910,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testEmptyFile() {
-    test(new String[] {"const x = 42;", ""}, new String[] {"/** @const {number} */ var x;", ""});
+    test(srcs("const x = 42;", ""), expected("/** @const {number} */ var x;", ""));
   }
 
   @Test
