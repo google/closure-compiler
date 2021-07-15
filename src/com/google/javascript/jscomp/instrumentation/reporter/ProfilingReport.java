@@ -115,7 +115,7 @@ final class ProfilingReport {
               String.valueOf(entry.getValue().numberOfReports)));
     }
 
-    return output.stream().map((row) -> row.stream().collect(joining("\t"))).collect(joining("\n"));
+    return output.stream().map((row) -> String.join("\t", row)).collect(joining("\n"));
   }
 
   /** Metrics collected for particular InstrumentationPoint across all reports. */
