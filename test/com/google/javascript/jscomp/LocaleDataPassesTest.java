@@ -181,7 +181,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             "/** @localeObject */",
             "i18n.Obj_af = {",
             "  val1: /** @localeValue */ 'af val1',",
-            "  val2: /** @localeValue */ 'af val2',",
+            "  val2: /** @localeValue */ undefined,",
             "};",
             "/** @localeSelect */",
             "switch (goog.LOCALE) {",
@@ -208,7 +208,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             "/** @localeObject */",
             "i18n.Obj_af = {",
             "  val1: /** @localeValue */ 'af val1',",
-            "  val2: /** @localeValue */ 'af val2',",
+            "  val2: /** @localeValue */ undefined,",
             "};",
             "",
             "i18n.Obj = {",
@@ -233,7 +233,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
                 "/** @localeObject */",
                 "i18n.Obj_af = {",
                 "  val1: /** @localeValue */ 'af val1',",
-                "  val2: /** @localeValue */ 'af val2',",
+                "  val2: /** @localeValue */ undefined,",
                 "};",
                 "",
                 "i18n.Obj = {",
@@ -258,12 +258,12 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
                 "/** @localeObject */",
                 "i18n.Obj_af = {",
                 "  val1: /** @localeValue */ 'af val1',",
-                "  val2: /** @localeValue */ 'af val2',",
+                "  val2: /** @localeValue */ undefined,",
                 "};",
                 "",
                 "i18n.Obj = {",
                 "  val1: /** @localeValue */ 'af val1',",
-                "  val2: /** @localeValue */ 'af val2',",
+                "  val2: /** @localeValue */ undefined,",
                 "};",
                 "")));
   }
@@ -655,6 +655,99 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMinimalSuccessWithAlias() {
+    multiTest(
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @localeFile",
+            " */",
+            "goog.provide('i18n.Obj');",
+            "",
+            "/** @localeObject */",
+            "i18n.Obj_en = {",
+            "  val1: /** @localeValue */ 'en val1',",
+            "  val2: /** @localeValue */ 'en val2',",
+            "};",
+            "/** @localeObject */",
+            "i18n.Obj_af = i18n.Obj_en;",
+            "/** @localeSelect */",
+            "switch (goog.LOCALE) {",
+            "  case 'af':",
+            "    i18n.Obj = i18n.Obj_af;",
+            "    break;",
+            "  case 'en':",
+            "    i18n.Obj = i18n.Obj_en",
+            "    break;",
+            "}",
+            ""),
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @localeFile",
+            " */",
+            "goog.provide('i18n.Obj');",
+            "",
+            "/** @localeObject */",
+            "i18n.Obj_en = {",
+            "  val1: /** @localeValue */ 'en val1',",
+            "  val2: /** @localeValue */ 'en val2',",
+            "};",
+            "/** @localeObject */",
+            "i18n.Obj_af = i18n.Obj_en",
+            "",
+            "i18n.Obj = {",
+            "  val1: __JSC_LOCALE_VALUE__(0),",
+            "  val2: __JSC_LOCALE_VALUE__(1),",
+            "};",
+            ""),
+        new LocaleResult(
+            "en",
+            lines(
+                "/**",
+                " * @fileoverview",
+                " * @localeFile",
+                " */",
+                "goog.provide('i18n.Obj');",
+                "",
+                "/** @localeObject */",
+                "i18n.Obj_en = {",
+                "  val1: /** @localeValue */ 'en val1',",
+                "  val2: /** @localeValue */ 'en val2',",
+                "};",
+                "/** @localeObject */",
+                "i18n.Obj_af = i18n.Obj_en;",
+                "",
+                "i18n.Obj = {",
+                "  val1: /** @localeValue */ 'en val1',",
+                "  val2: /** @localeValue */ 'en val2',",
+                "};",
+                "")),
+        new LocaleResult(
+            "af",
+            lines(
+                "/**",
+                " * @fileoverview",
+                " * @localeFile",
+                " */",
+                "goog.provide('i18n.Obj');",
+                "",
+                "/** @localeObject */",
+                "i18n.Obj_en = {",
+                "  val1: /** @localeValue */ 'en val1',",
+                "  val2: /** @localeValue */ 'en val2',",
+                "};",
+                "/** @localeObject */",
+                "i18n.Obj_af = i18n.Obj_en;",
+                "",
+                "i18n.Obj = {",
+                "  val1: /** @localeValue */ 'en val1',",
+                "  val2: /** @localeValue */ 'en val2',",
+                "};",
+                "")));
+  }
+
+  @Test
   public void testMinimalErrorMissingDefaultLocale() {
     multiTestProtectionError(
         lines(
@@ -1035,6 +1128,6 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             "}",
             ""),
         LocaleDataPasses.LOCALE_FILE_MALFORMED,
-        "Malformed locale data file. Object literal expected");
+        "Malformed locale data file. Object literal or alias expected");
   }
 }

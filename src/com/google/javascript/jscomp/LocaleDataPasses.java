@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -96,7 +95,7 @@ final class LocaleDataPasses {
 
     @Override
     public void process(Node externs, Node root) {
-      // Create the extern symbol
+      // Create the extern symbols
       NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
       NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
 
@@ -124,7 +123,7 @@ final class LocaleDataPasses {
    * <p>3. locale objects and extracts the tagged locale specific values so that they can be use in
    * the later phase to replace the template values
    */
-  private static class ExtractAndProtectLocaleData implements Callback {
+  private static class ExtractAndProtectLocaleData implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
     // There is a single sequence that spans all files.
     private final SequentialIntProvider intProvider = new SequentialIntProvider();
@@ -182,6 +181,8 @@ final class LocaleDataPasses {
               Node target = n;
               Node value = n.getFirstChild();
               handleLocaleObjectAssignment(target, value);
+              // Nothing else to do here as the values can not contain other distinct values.
+              return false;
             }
           }
           break;
@@ -197,11 +198,14 @@ final class LocaleDataPasses {
               Node value = assign.getLastChild();
               Node target = assign.getFirstChild();
               handleLocaleObjectAssignment(target, value);
+              // Nothing else to do here as the values can not contain other distinct values.
+              return false;
             }
           }
           break;
 
-        default: // fall out
+        default:
+          // fall out
       }
 
       return true;
@@ -211,35 +215,44 @@ final class LocaleDataPasses {
       checkNotNull(datagroup);
 
       if (!value.isObjectLit()) {
-        compiler.report(JSError.make(value, LOCALE_FILE_MALFORMED, "Object literal expected"));
-        return;
-      }
-
-      // Use the first "localeObject" as a template to use.
-      if (this.datagroup.templatedStructure == null) {
-        checkState(value.isObjectLit());
-        storeTemplatedClone(value);
-      }
-      checkNotNull(datagroup.templatedStructure);
-
-      // The specific locale for which to record values for
-      String localeId = determineLocaleIdFromAssignmentTarget(target);
-      if (localeId.equals("en")) {
-        if (datagroup.seenDefaultLocale) {
+        String valueName = value.getQualifiedName();
+        // If the assignment is a qualified name the "_" is used to seperate the locale idendifier
+        // from the rest of the identifier.
+        if (valueName != null && valueName.contains("_")) {
+          String targetLocaleId = determineLocaleIdFromQName(target);
+          String valueLocaleId = determineLocaleIdFromQName(value);
+          aliasDataGroupValues(targetLocaleId, valueLocaleId, target);
+        } else {
           compiler.report(
-              JSError.make(
-                  target, LOCALE_FILE_MALFORMED, "Duplicate locale definition " + localeId));
+              JSError.make(value, LOCALE_FILE_MALFORMED, "Object literal or alias expected"));
         }
-        datagroup.seenDefaultLocale = true;
+      } else {
+        // Use the first "localeObject" as a template to use.
+        if (datagroup.templatedStructure == null) {
+          checkState(value.isObjectLit());
+          storeTemplatedClone(value);
+        }
+        checkNotNull(datagroup.templatedStructure);
+
+        // The specific locale for which to record values for
+        String localeId = determineLocaleIdFromQName(target);
+        if (localeId.equals("en")) {
+          if (datagroup.seenDefaultLocale) {
+            compiler.report(
+                JSError.make(
+                    target, LOCALE_FILE_MALFORMED, "Duplicate locale definition " + localeId));
+          }
+          datagroup.seenDefaultLocale = true;
+        }
+        extractAndValidate(localeId, datagroup.templatedStructure, value);
       }
-      extractAndValidate(localeId, this.datagroup.templatedStructure, value);
     }
 
     /**
      * Extract the locale id from the assignment target. The locale id is assumed to be everything
      * after the first "_" is the name.
      */
-    private String determineLocaleIdFromAssignmentTarget(Node target) {
+    private String determineLocaleIdFromQName(Node target) {
       String rawName = target.getQualifiedName();
       // The locale name is everything after the first "_";
       String locale = rawName.substring(rawName.indexOf('_') + 1);
@@ -247,7 +260,7 @@ final class LocaleDataPasses {
 
       // Make some attempt to validate the locale name. This isn't every effective though and
       // the real validation is done elsewhere by ensuring that "en" (the default locale) is found.
-      if (!locale.matches("[a-z]+(_[a-zA-Z]+(_[a-zA-Z0-9]+)?)?")) {
+      if (!locale.matches("[a-z]{2,3}(_[a-zA-Z0-9]{2,4}(_[a-zA-Z0-9]+)?)?(_u_nu_latn)?")) {
         compiler.report(
             JSError.make(target, LOCALE_FILE_MALFORMED, "Unexpected locale id: " + locale));
       }
@@ -329,6 +342,21 @@ final class LocaleDataPasses {
       }
     }
 
+    /** Copy all the value associated with this datagroup from one locale to another. */
+    private void aliasDataGroupValues(String targetLocaleId, String sourceLocaleId, Node ref) {
+
+      for (int i = datagroup.firstValueId; i <= datagroup.lastValueId; i++) {
+        LinkedHashMap<String, Node> map = checkNotNull(valueMaps.get(i));
+
+        Node valueNode = map.get(sourceLocaleId);
+
+        // It is necessary to clone the nodes as we leave the existing values in place for
+        // the applications that directly reference the per-locale values.
+        Node previousValue = map.put(targetLocaleId, valueNode);
+        checkState(previousValue == null); // validate not replacing a value
+      }
+    }
+
     /**
      * Validate that the locale specific values are primitives or an array of primitives. NOTE: This
      * may be too restrictive and should be expanded as necessary but care should be taken not to
@@ -336,7 +364,16 @@ final class LocaleDataPasses {
      * references, functions, etc).
      */
     private void validateLocaleValue(Node valueNode) {
+      validateLocaleValue(valueNode, false);
+    }
+
+    private void validateLocaleValue(Node valueNode, boolean keyAllowed) {
       switch (valueNode.getToken()) {
+        case NAME:
+          if (!NodeUtil.isUndefined(valueNode)) {
+            validateLocaleValueFailure(valueNode);
+          }
+          break;
         case TRUE:
         case FALSE:
         case NUMBER:
@@ -347,16 +384,32 @@ final class LocaleDataPasses {
             validateLocaleValue(c);
           }
           break;
+        case OBJECTLIT:
+          for (Node c = valueNode.getFirstChild(); c != null; c = c.getNext()) {
+            validateLocaleValue(c, true);
+          }
+          break;
+        case STRING_KEY:
+          if (keyAllowed && valueNode.isQuotedString()) {
+            validateLocaleValue(valueNode.getOnlyChild());
+          } else {
+            validateLocaleValueFailure(valueNode);
+          }
+          break;
         default:
-          compiler.report(
-              JSError.make(
-                  valueNode,
-                  LOCALE_FILE_MALFORMED,
-                  "Unexpected expression. "
-                      + "Only boolean, number, or string values or array literals"
-                      + " of the same are allowed"));
+          validateLocaleValueFailure(valueNode);
           break;
       }
+    }
+
+    private void validateLocaleValueFailure(Node valueNode) {
+      compiler.report(
+          JSError.make(
+              valueNode,
+              LOCALE_FILE_MALFORMED,
+              "Unexpected expression. "
+                  + "Only boolean, number, string literals or array or object literals"
+                  + " of the same are allowed"));
     }
 
     private boolean isLocaleFileNode(Node n) {
@@ -388,8 +441,9 @@ final class LocaleDataPasses {
     // Represents state for a given file.  Each file represents a single
     // data structure with a range of values.
     private static class LocalizedDataGroup {
-      public boolean seenSelect = false;
-      public boolean seenDefaultLocale = false;
+      boolean seenSelect = false;
+      boolean seenDefaultLocale = false;
+      boolean inExtFile = false;
       int firstValueId = -1;
       int lastValueId = -1; // inclusive for validation
       Node templatedStructure;
@@ -412,16 +466,17 @@ final class LocaleDataPasses {
         String basefilepath = filepath.replace("ext.js", ".js");
 
         LocalizedDataGroup datagroup = fileToDataGroup.get(basefilepath);
+        if (datagroup != null) {
+          // Allow a secondary switch to exist in the "ext.js" file.
+          // TODO(user): Try to remove this.
+          datagroup.seenSelect = false;
+          datagroup.inExtFile = true;
 
-        if (datagroup == null) {
+          return datagroup;
+        } else {
           compiler.report(JSError.make(script, LOCALE_MISSING_BASE_FILE, basefilepath));
+          return null;
         }
-
-        // Allow a secondary switch to exist in the "ext.js" file.
-        // TODO(user): Try to remove this.
-        datagroup.seenSelect = false;
-
-        return datagroup;
       }
 
       LocalizedDataGroup dataGroup = new LocalizedDataGroup();
@@ -606,7 +661,7 @@ final class LocaleDataPasses {
    * To avoid the optimizations from optimizing known constants, make then non-const by replacing
    * them with a call to an extern value.
    */
-  private static class ProtectCurrentLocale implements Callback {
+  private static class ProtectCurrentLocale implements NodeTraversal.Callback {
     private final Node qnameForGoogLocale = IR.getprop(IR.name("goog"), "LOCALE");
 
     private final AbstractCompiler compiler;
@@ -669,6 +724,7 @@ final class LocaleDataPasses {
       return locale.replace('-', '_');
     }
 
+    @Override
     public void process(Node externs, Node root) {
       // Create the extern symbol
       NodeTraversal.traverse(compiler, root, this);
