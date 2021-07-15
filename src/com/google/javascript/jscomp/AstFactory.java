@@ -60,11 +60,13 @@ final class AstFactory {
   // We might not need Arguments type, but if we do, we should avoid redundant lookups
   private final Supplier<JSType> argumentsTypeSupplier;
 
-  private AstFactory() {
-    this.registry = null;
-    unknownType = null;
-    argumentsTypeSupplier = () -> null;
+  enum TypeMode {
+    JSTYPE,
+    COLOR,
+    NONE
   }
+
+  private final TypeMode typeMode;
 
   private AstFactory(JSTypeRegistry registry) {
     this.registry = registry;
@@ -79,20 +81,48 @@ final class AstFactory {
                 return unknownType;
               }
             });
-    ;
+    this.typeMode = TypeMode.JSTYPE;
+  }
+
+  private AstFactory(TypeMode typeMode) {
+    checkArgument(
+        !TypeMode.JSTYPE.equals(typeMode), "Must pass JSTypeRegistry for mode %s", typeMode);
+    this.registry = null;
+    this.unknownType = null;
+    this.argumentsTypeSupplier =
+        () -> {
+          throw new AssertionError();
+        };
+    this.typeMode = typeMode;
   }
 
   static AstFactory createFactoryWithoutTypes() {
-    return new AstFactory();
+    return new AstFactory(TypeMode.NONE);
   }
 
   static AstFactory createFactoryWithTypes(JSTypeRegistry registry) {
     return new AstFactory(registry);
   }
 
+  static AstFactory createFactoryWithColors() {
+    return new AstFactory(TypeMode.COLOR);
+  }
+
   /** Does this class instance add types to the nodes it creates? */
   boolean isAddingTypes() {
-    return registry != null;
+    return TypeMode.JSTYPE.equals(this.typeMode);
+  }
+
+  /** Does this class instance add optimization colors to the nodes it creates? */
+  boolean isAddingColors() {
+    return TypeMode.COLOR.equals(this.typeMode);
+  }
+
+  // TODO(b/193800507): delete all calls to this method
+  // The possible exception is in methods with a JSType parameter: unclear whether those will need
+  // to remain long-term or can be deleted.
+  private void assertNotAddingColors() {
+    checkState(!this.isAddingColors(), "method not supported for colors");
   }
 
   /**
@@ -190,6 +220,7 @@ final class AstFactory {
    * @param value value to yield
    */
   Node createYield(JSType jsType, Node value) {
+    assertNotAddingColors();
     Node result = IR.yield(value);
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(jsType));
@@ -204,6 +235,7 @@ final class AstFactory {
    * @param value value to await
    */
   Node createAwait(JSType jsType, Node value) {
+    assertNotAddingColors();
     Node result = IR.await(value);
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(jsType));
@@ -212,6 +244,7 @@ final class AstFactory {
   }
 
   Node createString(String value) {
+    assertNotAddingColors();
     Node result = IR.string(value);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.STRING_TYPE));
@@ -220,6 +253,7 @@ final class AstFactory {
   }
 
   Node createNumber(double value) {
+    assertNotAddingColors();
     Node result = IR.number(value);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.NUMBER_TYPE));
@@ -228,6 +262,7 @@ final class AstFactory {
   }
 
   Node createBoolean(boolean value) {
+    assertNotAddingColors();
     Node result = value ? IR.trueNode() : IR.falseNode();
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -236,6 +271,7 @@ final class AstFactory {
   }
 
   Node createNull() {
+    assertNotAddingColors();
     Node result = IR.nullNode();
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.NULL_TYPE));
@@ -244,6 +280,7 @@ final class AstFactory {
   }
 
   Node createVoid(Node child) {
+    assertNotAddingColors();
     Node result = IR.voidNode(child);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.VOID_TYPE));
@@ -259,6 +296,7 @@ final class AstFactory {
   }
 
   Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
+    assertNotAddingColors();
     Node result = IR.cast(child, jsdoc);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.UNKNOWN_TYPE));
@@ -267,6 +305,7 @@ final class AstFactory {
   }
 
   Node createNot(Node child) {
+    assertNotAddingColors();
     Node result = IR.not(child);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -275,6 +314,7 @@ final class AstFactory {
   }
 
   Node createThis(JSType thisType) {
+    assertNotAddingColors();
     Node result = IR.thisNode();
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(thisType));
@@ -283,6 +323,7 @@ final class AstFactory {
   }
 
   Node createSuper(JSType superType) {
+    assertNotAddingColors();
     Node result = IR.superNode();
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(superType));
@@ -292,6 +333,7 @@ final class AstFactory {
 
   /** Creates a THIS node with the correct type for the given function node. */
   Node createThisForFunction(Node functionNode) {
+    assertNotAddingColors();
     final Node result = IR.thisNode();
     if (isAddingTypes()) {
       result.setJSType(getTypeOfThisForFunctionNode(functionNode));
@@ -301,6 +343,7 @@ final class AstFactory {
 
   /** Creates a SUPER node with the correct type for the given function node. */
   Node createSuperForFunction(Node functionNode) {
+    assertNotAddingColors();
     final Node result = IR.superNode();
     if (isAddingTypes()) {
       result.setJSType(getTypeOfSuperForFunctionNode(functionNode));
@@ -310,6 +353,7 @@ final class AstFactory {
 
   @Nullable
   private JSType getTypeOfThisForFunctionNode(Node functionNode) {
+    assertNotAddingColors();
     if (isAddingTypes()) {
       FunctionType functionType = getFunctionType(functionNode);
       return checkNotNull(functionType.getTypeOfThis(), functionType);
@@ -320,6 +364,7 @@ final class AstFactory {
 
   @Nullable
   private JSType getTypeOfSuperForFunctionNode(Node functionNode) {
+    assertNotAddingColors();
     if (isAddingTypes()) {
       ObjectType thisType = getTypeOfThisForFunctionNode(functionNode).assertObjectType();
       return checkNotNull(thisType.getSuperClassConstructor().getInstanceType(), thisType);
@@ -330,6 +375,7 @@ final class AstFactory {
 
   private FunctionType getFunctionType(Node functionNode) {
     checkState(functionNode.isFunction(), "not a function: %s", functionNode);
+    assertNotAddingColors();
     // If the function declaration was cast to a different type, we want the original type
     // from before the cast.
     final JSType typeBeforeCast = functionNode.getJSTypeBeforeCast();
@@ -344,6 +390,7 @@ final class AstFactory {
 
   /** Creates a NAME node having the type of "this" appropriate for the given function node. */
   Node createThisAliasReferenceForFunction(String aliasName, Node functionNode) {
+    assertNotAddingColors();
     final Node result = IR.name(aliasName);
     if (isAddingTypes()) {
       result.setJSType(getTypeOfThisForFunctionNode(functionNode));
@@ -357,6 +404,7 @@ final class AstFactory {
    * <p>e.g. `const aliasName = this;`
    */
   Node createThisAliasDeclarationForFunction(String aliasName, Node functionNode) {
+    assertNotAddingColors();
     return createSingleConstNameDeclaration(
         aliasName, createThis(getTypeOfThisForFunctionNode(functionNode)));
   }
@@ -367,6 +415,7 @@ final class AstFactory {
    * <p>e.g. `let variableName`
    */
   Node createSingleLetNameDeclaration(String variableName) {
+    assertNotAddingColors();
     return IR.let(createName(variableName, JSTypeNative.VOID_TYPE));
   }
 
@@ -377,6 +426,7 @@ final class AstFactory {
    * <p>e.g. `var variableName`
    */
   Node createSingleVarNameDeclaration(String variableName) {
+    assertNotAddingColors();
     return IR.var(createName(variableName, JSTypeNative.VOID_TYPE));
   }
 
@@ -388,6 +438,7 @@ final class AstFactory {
    * <p>e.g. `var variableName = value;`
    */
   Node createSingleVarNameDeclaration(String variableName, Node value) {
+    assertNotAddingColors();
     return IR.var(createName(variableName, value.getJSType()), value);
   }
 
@@ -399,6 +450,7 @@ final class AstFactory {
    * <p>e.g. `const variableName = value;`
    */
   Node createSingleConstNameDeclaration(String variableName, Node value) {
+    assertNotAddingColors();
     return IR.constNode(createName(variableName, value.getJSType()), value);
   }
 
@@ -407,6 +459,7 @@ final class AstFactory {
    * externs for it weren't included.
    */
   Node createArgumentsReference() {
+    assertNotAddingColors();
     Node result = IR.name("arguments");
     if (isAddingTypes()) {
       result.setJSType(argumentsTypeSupplier.get());
@@ -420,10 +473,12 @@ final class AstFactory {
    * <p>e.g. `const argsAlias = arguments;`
    */
   Node createArgumentsAliasDeclaration(String aliasName) {
+    assertNotAddingColors();
     return createSingleConstNameDeclaration(aliasName, createArgumentsReference());
   }
 
   Node createName(String name, JSType type) {
+    assertNotAddingColors();
     Node result = IR.name(name);
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(type));
@@ -432,6 +487,7 @@ final class AstFactory {
   }
 
   Node createName(String name, JSTypeNative nativeType) {
+    assertNotAddingColors();
     Node result = IR.name(name);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(nativeType));
@@ -440,10 +496,12 @@ final class AstFactory {
   }
 
   Node createNameWithUnknownType(String name) {
+    assertNotAddingColors();
     return createName(name, unknownType);
   }
 
   Node createName(Scope scope, String name) {
+    assertNotAddingColors();
     Node result = IR.name(name);
     if (isAddingTypes()) {
       result.setJSType(getVarNameType(scope, name));
@@ -452,10 +510,12 @@ final class AstFactory {
   }
 
   Node createQName(Scope scope, String qname) {
+    assertNotAddingColors();
     return createQName(scope, DOT_SPLITTER.split(qname));
   }
 
   Node createQNameWithUnknownType(String qname) {
+    assertNotAddingColors();
     return createQNameWithUnknownType(DOT_SPLITTER.split(qname));
   }
 
@@ -466,6 +526,7 @@ final class AstFactory {
    */
   Node createQName(TypedScope globalTypedScope, String qname) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
+    assertNotAddingColors();
     List<String> nameParts = DOT_SPLITTER.splitToList(qname);
     checkState(!nameParts.isEmpty());
 
@@ -481,33 +542,39 @@ final class AstFactory {
   }
 
   Node createQName(Scope scope, Iterable<String> names) {
+    assertNotAddingColors();
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
     return createQName(scope, baseName, propertyNames);
   }
 
   private Node createQNameWithUnknownType(Iterable<String> names) {
+    assertNotAddingColors();
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
     return createQNameWithUnknownType(baseName, propertyNames);
   }
 
   Node createQName(Scope scope, String baseName, String... propertyNames) {
+    assertNotAddingColors();
     checkNotNull(baseName);
     return createQName(scope, baseName, Arrays.asList(propertyNames));
   }
 
   Node createQName(Scope scope, String baseName, Iterable<String> propertyNames) {
+    assertNotAddingColors();
     Node baseNameNode = createName(scope, baseName);
     return createGetProps(baseNameNode, propertyNames);
   }
 
   Node createQNameWithUnknownType(String baseName, Iterable<String> propertyNames) {
+    assertNotAddingColors();
     Node baseNameNode = createNameWithUnknownType(baseName);
     return createGetProps(baseNameNode, propertyNames);
   }
 
   Node createGetProp(Node receiver, String propertyName) {
+    assertNotAddingColors();
     Node result = IR.getprop(receiver, propertyName);
     if (isAddingTypes()) {
       result.setJSType(getJsTypeForProperty(receiver, propertyName));
@@ -517,6 +584,7 @@ final class AstFactory {
 
   /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
   Node createGetProps(Node receiver, Iterable<String> propertyNames) {
+    assertNotAddingColors();
     Node result = receiver;
     for (String propertyName : propertyNames) {
       result = createGetProp(result, propertyName);
@@ -526,6 +594,7 @@ final class AstFactory {
 
   /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
   Node createGetProps(Node receiver, String firstPropName, String... otherPropNames) {
+    assertNotAddingColors();
     Node result = createGetProp(receiver, firstPropName);
     for (String propertyName : otherPropNames) {
       result = createGetProp(result, propertyName);
@@ -534,6 +603,7 @@ final class AstFactory {
   }
 
   Node createGetElem(Node receiver, Node key) {
+    assertNotAddingColors();
     Node result = IR.getelem(receiver, key);
     if (isAddingTypes()) {
       // In general we cannot assume we know the type we get from a GETELEM.
@@ -545,6 +615,7 @@ final class AstFactory {
   }
 
   Node createDelProp(Node target) {
+    assertNotAddingColors();
     Node result = IR.delprop(target);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -553,6 +624,7 @@ final class AstFactory {
   }
 
   Node createStringKey(String key, Node value) {
+    assertNotAddingColors();
     Node result = IR.stringKey(key, value);
     if (isAddingTypes()) {
       result.setJSType(value.getJSType());
@@ -561,6 +633,7 @@ final class AstFactory {
   }
 
   Node createComputedProperty(Node key, Node value) {
+    assertNotAddingColors();
     Node result = IR.computedProp(key, value);
     if (isAddingTypes()) {
       result.setJSType(value.getJSType());
@@ -574,6 +647,7 @@ final class AstFactory {
    * <p>{@code get name() { return value; }}
    */
   Node createGetterDef(String name, Node value) {
+    assertNotAddingColors();
     JSType returnType = value.getJSType();
     // Name is stored on the GETTER_DEF node. The function has no name.
     Node functionNode =
@@ -584,6 +658,7 @@ final class AstFactory {
   }
 
   Node createIn(Node left, Node right) {
+    assertNotAddingColors();
     Node result = IR.in(left, right);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -592,6 +667,7 @@ final class AstFactory {
   }
 
   Node createComma(Node left, Node right) {
+    assertNotAddingColors();
     Node result = IR.comma(left, right);
     if (isAddingTypes()) {
       result.setJSType(right.getJSType());
@@ -600,6 +676,7 @@ final class AstFactory {
   }
 
   Node createCommas(Node first, Node second, Node... rest) {
+    assertNotAddingColors();
     Node result = createComma(first, second);
     for (Node next : rest) {
       result = createComma(result, next);
@@ -608,6 +685,7 @@ final class AstFactory {
   }
 
   Node createAnd(Node left, Node right) {
+    assertNotAddingColors();
     Node result = IR.and(left, right);
     if (isAddingTypes()) {
       JSType leftType = checkNotNull(left.getJSType(), left);
@@ -643,6 +721,7 @@ final class AstFactory {
   }
 
   Node createOr(Node left, Node right) {
+    assertNotAddingColors();
     Node result = IR.or(left, right);
     if (isAddingTypes()) {
       JSType leftType = checkNotNull(left.getJSType(), left);
@@ -678,6 +757,7 @@ final class AstFactory {
   }
 
   Node createCall(Node callee, Node... args) {
+    assertNotAddingColors();
     Node result = NodeUtil.newCallNode(callee, args);
     if (isAddingTypes()) {
       FunctionType calleeType = JSType.toMaybeFunctionType(callee.getJSType());
@@ -697,6 +777,7 @@ final class AstFactory {
    * type is known.
    */
   Node createObjectDotAssignCall(Scope scope, JSType returnType, Node... args) {
+    assertNotAddingColors();
     Node objAssign = createQName(scope, "Object", "assign");
     Node result = createCall(objAssign, args);
 
@@ -716,6 +797,7 @@ final class AstFactory {
   }
 
   Node createNewNode(Node target, Node... args) {
+    assertNotAddingColors();
     Node result = IR.newNode(target, args);
     if (isAddingTypes()) {
       JSType instanceType = target.getJSType();
@@ -730,6 +812,7 @@ final class AstFactory {
   }
 
   Node createObjectGetPrototypeOfCall(Node argObjectNode) {
+    assertNotAddingColors();
     Node objectName = createName("Object", JSTypeNative.OBJECT_FUNCTION_TYPE);
     Node objectGetPrototypeOf = createGetProp(objectName, "getPrototypeOf");
     Node result = createCall(objectGetPrototypeOf, argObjectNode);
@@ -747,6 +830,7 @@ final class AstFactory {
   }
 
   ObjectType getPrototypeObjectType(ObjectType objectType) {
+    assertNotAddingColors();
     checkNotNull(objectType);
     if (objectType.isUnknownType()) {
       // Calling getImplicitPrototype() on the unknown type returns `null`, but we want
@@ -765,6 +849,7 @@ final class AstFactory {
    * constructor.
    */
   Node createConstructorCall(@Nullable JSType classType, Node callee, Node... args) {
+    assertNotAddingColors();
     Node result = NodeUtil.newCallNode(callee, args);
     if (isAddingTypes()) {
       checkNotNull(classType);
@@ -782,6 +867,7 @@ final class AstFactory {
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(Node lhs, Node rhs) {
+    assertNotAddingColors();
     Node result = IR.assign(lhs, rhs);
     if (isAddingTypes()) {
       result.setJSType(rhs.getJSType());
@@ -791,6 +877,7 @@ final class AstFactory {
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(String lhsName, Node rhs) {
+    assertNotAddingColors();
     return createAssign(createName(lhsName, rhs.getJSType()), rhs);
   }
 
@@ -800,6 +887,7 @@ final class AstFactory {
    * <p>The type of the literal, if assigned, may be a supertype of the known properties.
    */
   Node createObjectLit(Node... elements) {
+    assertNotAddingColors();
     Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
       result.setJSType(registry.createAnonymousObjectType(null));
@@ -808,6 +896,7 @@ final class AstFactory {
   }
 
   public Node createQuotedStringKey(String key, Node value) {
+    assertNotAddingColors();
     Node result = IR.stringKey(key, value);
     result.setQuotedString();
     return result;
@@ -815,6 +904,7 @@ final class AstFactory {
 
   /** Creates an object-literal with zero or more elements and a specific type. */
   Node createObjectLit(@Nullable JSType jsType, Node... elements) {
+    assertNotAddingColors();
     Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(jsType));
@@ -824,6 +914,7 @@ final class AstFactory {
 
   /** Creates an empty function `function() {}` */
   Node createEmptyFunction(JSType type) {
+    assertNotAddingColors();
     Node result = NodeUtil.emptyFunction();
     if (isAddingTypes()) {
       checkNotNull(type);
@@ -835,6 +926,7 @@ final class AstFactory {
 
   /** Creates an empty function `function*() {}` */
   Node createEmptyGeneratorFunction(JSType type) {
+    assertNotAddingColors();
     Node result = NodeUtil.emptyFunction();
     result.setIsGeneratorFunction(true);
     if (isAddingTypes()) {
@@ -854,6 +946,7 @@ final class AstFactory {
    * @param type type to apply to the function itself
    */
   Node createFunction(String name, Node paramList, Node body, JSType type) {
+    assertNotAddingColors();
     Node nameNode = createName(name, type);
     Node result = IR.function(nameNode, paramList, body);
     if (isAddingTypes()) {
@@ -864,6 +957,7 @@ final class AstFactory {
   }
 
   Node createParamList(String... parameterNames) {
+    assertNotAddingColors();
     final Node paramList = IR.paramList();
     for (String parameterName : parameterNames) {
       paramList.addChildToBack(createNameWithUnknownType(parameterName));
@@ -872,18 +966,21 @@ final class AstFactory {
   }
 
   Node createZeroArgFunction(String name, Node body, @Nullable JSType returnType) {
+    assertNotAddingColors();
     FunctionType functionType =
         isAddingTypes() ? registry.createFunctionType(returnType).toMaybeFunctionType() : null;
     return createFunction(name, IR.paramList(), body, functionType);
   }
 
   Node createZeroArgGeneratorFunction(String name, Node body, @Nullable JSType returnType) {
+    assertNotAddingColors();
     Node result = createZeroArgFunction(name, body, returnType);
     result.setIsGeneratorFunction(true);
     return result;
   }
 
   Node createZeroArgArrowFunctionForExpression(Node expression) {
+    assertNotAddingColors();
     Node result = IR.arrowFunction(IR.name(""), IR.paramList(), expression);
     if (isAddingTypes()) {
       // It feels like we should be adding type-of-this here, but it should remain unknown,
@@ -901,6 +998,7 @@ final class AstFactory {
   }
 
   Node createMemberFunctionDef(String name, Node function) {
+    assertNotAddingColors();
     // A function used for a member function definition must have an empty name,
     // because the name string goes on the MEMBER_FUNCTION_DEF node.
     checkArgument(function.getFirstChild().getString().isEmpty(), function);
@@ -913,6 +1011,7 @@ final class AstFactory {
   }
 
   Node createSheq(Node expr1, Node expr2) {
+    assertNotAddingColors();
     Node result = IR.sheq(expr1, expr2);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -921,6 +1020,7 @@ final class AstFactory {
   }
 
   Node createEq(Node expr1, Node expr2) {
+    assertNotAddingColors();
     Node result = IR.eq(expr1, expr2);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -929,6 +1029,7 @@ final class AstFactory {
   }
 
   Node createNe(Node expr1, Node expr2) {
+    assertNotAddingColors();
     Node result = IR.ne(expr1, expr2);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
@@ -937,6 +1038,7 @@ final class AstFactory {
   }
 
   Node createHook(Node condition, Node expr1, Node expr2) {
+    assertNotAddingColors();
     Node result = IR.hook(condition, expr1, expr2);
     if (isAddingTypes()) {
       result.setJSType(registry.createUnionType(expr1.getJSType(), expr2.getJSType()));
@@ -945,10 +1047,12 @@ final class AstFactory {
   }
 
   Node createArraylit(Node... elements) {
+    assertNotAddingColors();
     return createArraylit(Arrays.asList(elements));
   }
 
   Node createArraylit(Iterable<Node> elements) {
+    assertNotAddingColors();
     Node result = IR.arraylit(elements);
     if (isAddingTypes()) {
       result.setJSType(
@@ -961,6 +1065,7 @@ final class AstFactory {
   }
 
   Node createJSCompMakeIteratorCall(Node iterable, Scope scope) {
+    assertNotAddingColors();
     String function = "makeIterator";
     Node makeIteratorName = createQName(scope, "$jscomp", function);
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
@@ -986,6 +1091,7 @@ final class AstFactory {
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, Scope scope) {
+    assertNotAddingColors();
     Node makeIteratorName = createQName(scope, "$jscomp", "arrayFromIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
     // of makeIteratorName manually.
@@ -1022,6 +1128,7 @@ final class AstFactory {
    * }</pre>
    */
   Node createJSCompMakeAsyncIteratorCall(Node iterable, Scope scope) {
+    assertNotAddingColors();
     Node makeIteratorAsyncName = createQName(scope, "$jscomp", "makeAsyncIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
     // of makeIteratorName manually.
@@ -1060,6 +1167,7 @@ final class AstFactory {
    * @param originalFunctionType the type of the async generator function that needs transpilation
    */
   Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, Scope scope) {
+    assertNotAddingColors();
     Node ctor = createQName(scope, "$jscomp", "AsyncGeneratorWrapper");
 
     if (isAddingTypes() && !ctor.getJSType().isUnknownType()) {
@@ -1093,6 +1201,7 @@ final class AstFactory {
    *     createAsyncGeneratorWrapperReference.
    */
   Node createEmptyAsyncGeneratorWrapperArgument(JSType asyncGeneratorWrapperType) {
+    assertNotAddingColors();
     JSType generatorType = null;
 
     if (isAddingTypes()) {
@@ -1116,6 +1225,7 @@ final class AstFactory {
   }
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(Scope scope, Node generatorFunction) {
+    assertNotAddingColors();
     Node jscompDotAsyncExecutePromiseGeneratorFunction =
         createQName(scope, "$jscomp", "asyncExecutePromiseGeneratorFunction");
     // TODO(bradfordcsmith): Maybe update the type to be more specific
