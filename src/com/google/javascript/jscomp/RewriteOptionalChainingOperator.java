@@ -25,10 +25,8 @@ import java.util.function.Function;
 /** Replaces the ES2020 `?.` operator with conditional (? :). */
 final class RewriteOptionalChainingOperator implements CompilerPass {
 
-  private static final FeatureSet TRANSPILED_FEATURES =
-      FeatureSet.BARE_MINIMUM.with(Feature.OPTIONAL_CHAINING);
-
   private final AbstractCompiler compiler;
+
   /**
    * Produces the object responsible for creating temporary variable names for a given
    * CompilerInput.
@@ -54,11 +52,8 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(
-        compiler, externs, TRANSPILED_FEATURES, new TranspilationCallback());
-    TranspilationPasses.processTranspile(
-        compiler, root, TRANSPILED_FEATURES, new TranspilationCallback());
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
+    NodeTraversal.traverseRoots(compiler, new TranspilationCallback(), externs, root);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.OPTIONAL_CHAINING);
   }
 
   /** Locates and transpiles all optional chains. */
@@ -72,6 +67,8 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
       if (n.isScript()) {
         // Set the TmpVarNameCreator to be used when rewriting optional chains in this script.
         rewriterBuilder.setTmpVarNameCreator(getTmpVarNameCreatorForInput.apply(t.getInput()));
+        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+        return scriptFeatures == null || scriptFeatures.contains(Feature.OPTIONAL_CHAINING);
       }
       return true;
     }

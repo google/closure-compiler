@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.OptionalChainRewriter.TmpVarNameCreator;
 import org.junit.Before;
 import org.junit.Test;
@@ -295,9 +294,6 @@ public final class RewriteOptionalChainingOperatorTest {
     @Before
     public void setUp() throws Exception {
       super.setUp();
-
-      setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.ECMASCRIPT_2019);
-
       enableTypeCheck();
       enableTypeInfoValidation();
     }
@@ -329,7 +325,6 @@ public final class RewriteOptionalChainingOperatorTest {
     @Before
     public void setUp() throws Exception {
       super.setUp();
-      setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN, LanguageMode.ECMASCRIPT_2019);
       enableTypeCheck();
       enableTypeInfoValidation();
     }
