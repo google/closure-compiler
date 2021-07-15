@@ -359,6 +359,7 @@ public class AmbiguateProperties implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case GETPROP:
+        case OPTCHAIN_GETPROP:
           processGetProp(n);
           return;
 

@@ -1777,6 +1777,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOptchainGet_ambiguated() {
+    test("class Foo { foo() { this?.foo(); } };", "class Foo { a() { this?.a(); } };");
+  }
+
+  @Test
   public void testAmbiguateEs6ClassMethodsDoesntCrashOnClassInACast() {
     // the cast causes the actual CLASS node to have the unknown type, so verify that the pass
     // can handle it not being a function type.
