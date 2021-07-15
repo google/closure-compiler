@@ -136,13 +136,19 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSimpleTemplateLiteral() {
+  public void testTemplateLiteral_simple() {
     testSame("let obj = `foobar`;");
   }
 
   @Test
-  public void testTemplateLiteralWithSubstitution() {
+  public void testTemplateLiteral_withSubstitution() {
     testSame("let obj = `Hello ${2+3}`;");
+  }
+
+  @Test
+  public void testTemplateLiteral_withIllegalEscape() {
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#es2018_revision_of_illegal_escape_sequences
+    testSame("latex`\\unicode`;");
   }
 
   @Test

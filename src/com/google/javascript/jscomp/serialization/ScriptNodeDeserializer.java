@@ -449,10 +449,13 @@ public final class ScriptNodeDeserializer {
       case TEMPLATELIT_SUB:
         return new Node(Token.TEMPLATELIT_SUB);
       case TEMPLATELIT_STRING:
-        TemplateStringValue templateStringValue = n.getTemplateStringValue();
-        String rawString = this.stringPool.get(templateStringValue.getRawStringPointer());
-        String cookedString = this.stringPool.get(templateStringValue.getCookedStringPointer());
-        return Node.newTemplateLitString(cookedString, rawString);
+        {
+          TemplateStringValue templateStringValue = n.getTemplateStringValue();
+          int cookedPointer = templateStringValue.getCookedStringPointer();
+          String cookedString = cookedPointer == -1 ? null : this.stringPool.get(cookedPointer);
+          String rawString = this.stringPool.get(templateStringValue.getRawStringPointer());
+          return Node.newTemplateLitString(cookedString, rawString);
+        }
       case NEW_TARGET:
         return new Node(Token.NEW_TARGET);
       case COMPUTED_PROP:

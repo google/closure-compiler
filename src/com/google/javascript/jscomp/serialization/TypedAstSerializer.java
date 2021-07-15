@@ -339,7 +339,8 @@ final class TypedAstSerializer {
         builder.setTemplateStringValue(
             TemplateStringValue.newBuilder()
                 .setRawStringPointer(this.stringPool.put(n.getRawString()))
-                .setCookedStringPointer(this.stringPool.put(n.getCookedString()))
+                .setCookedStringPointer(
+                    n.getCookedString() == null ? -1 : this.stringPool.put(n.getCookedString()))
                 .build());
         return;
       case NUMBER:

@@ -190,6 +190,50 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAst_templateLit_illegalEscape() throws InvalidProtocolBufferException {
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#es2018_revision_of_illegal_escape_sequences
+    SerializationResult result = compile("latex`\\unicode`;");
+
+    assertThat(result.sourceNodes.get(0))
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .ignoringFieldDescriptors(
+            AstNode.getDescriptor().findFieldByName("relative_line"),
+            AstNode.getDescriptor().findFieldByName("relative_column"),
+            AstNode.getDescriptor().findFieldByName("type"))
+        .isEqualTo(
+            AstNode.newBuilder()
+                .setKind(NodeKind.SOURCE_FILE)
+                .addChild(
+                    AstNode.newBuilder()
+                        .setKind(NodeKind.EXPRESSION_STATEMENT)
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.TAGGED_TEMPLATELIT)
+                                .addChild(
+                                    AstNode.newBuilder()
+                                        .setKind(NodeKind.IDENTIFIER)
+                                        .setStringValuePointer(result.findInStringPool("latex"))
+                                        .setOriginalNamePointer(result.findInStringPool("latex"))
+                                        .build())
+                                .addChild(
+                                    AstNode.newBuilder()
+                                        .setKind(NodeKind.TEMPLATELIT)
+                                        .addChild(
+                                            AstNode.newBuilder()
+                                                .setKind(NodeKind.TEMPLATELIT_STRING)
+                                                .setTemplateStringValue(
+                                                    TemplateStringValue.newBuilder()
+                                                        .setCookedStringPointer(-1)
+                                                        .setRawStringPointer(
+                                                            result.findInStringPool("\\unicode"))
+                                                        .build()))
+                                        .build())
+                                .build())
+                        .build())
+                .build());
+  }
+
+  @Test
   public void testAst_numberInCast() {
     TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
     assertThat(compileToAstNode("/** @type {?} */ (1);"))

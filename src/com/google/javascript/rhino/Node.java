@@ -353,34 +353,22 @@ public class Node {
 
   private static final class TemplateLiteralSubstringNode extends Node {
 
-    private static final long serialVersionUID = 1L;
-    // The "cooked" version of the template literal substring. May be null.
-    @Nullable private String cooked;
-    // The raw version of the template literal substring, is not null
-    private String raw;
+    /**
+     * The cooked version of the template literal substring.
+     *
+     * <p>Null iff the raw string contains an uncookable escape sequence.
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#es2018_revision_of_illegal_escape_sequences
+     */
+    @Nullable private final String cooked;
 
-    // Only for cloneNode
-    private TemplateLiteralSubstringNode() {
-      super(Token.TEMPLATELIT_STRING);
-    }
+    /** The raw version of the template literal substring, is not null */
+    private final String raw;
 
     TemplateLiteralSubstringNode(@Nullable String cooked, String raw) {
       super(Token.TEMPLATELIT_STRING);
-      setCooked(cooked);
-      setRaw(raw);
-    }
-
-    /**
-     * sets the raw string content.
-     *
-     * @param str the new value. Non null.
-     */
-    private void setRaw(String str) {
-      this.raw = RhinoStringPool.addOrGet(str); // RhinoStringPool is null-hostile.
-    }
-
-    private void setCooked(String s) {
-      this.cooked = (s == null) ? null : RhinoStringPool.addOrGet(s);
+      // RhinoStringPool is null-hostile.
+      this.cooked = (cooked == null) ? null : RhinoStringPool.addOrGet(cooked);
+      this.raw = RhinoStringPool.addOrGet(raw);
     }
 
     @Override
@@ -397,10 +385,8 @@ public class Node {
 
     @Override
     TemplateLiteralSubstringNode cloneNode(boolean cloneTypeExprs) {
-      TemplateLiteralSubstringNode clone = new TemplateLiteralSubstringNode();
+      TemplateLiteralSubstringNode clone = new TemplateLiteralSubstringNode(this.cooked, this.raw);
       copyBaseNodeFields(this, clone, cloneTypeExprs);
-      clone.raw = raw;
-      clone.cooked = cooked;
       return clone;
     }
   }

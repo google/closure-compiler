@@ -83,7 +83,11 @@ message AstNode {
 
 message TemplateStringValue {
   uint32 raw_string_pointer = 1;
-  uint32 cooked_string_pointer = 2;
+  /**
+   * -1 if the raw string contains an uncookable escape sequence.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#es2018_revision_of_illegal_escape_sequences
+   */
+  int32 cooked_string_pointer = 2;
 }
 
 enum NodeKind {
