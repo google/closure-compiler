@@ -61,7 +61,7 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
   private void visitNullishCoalesce(NodeTraversal t, Node n) {
     // a() ?? b()
     // let temp;
-    // (temp = a) != null) : temp ? b()
+    // ((temp = a()) != null) ? temp : b()
     String tempVarName = TEMP_VAR_NAME_PREFIX + uniqueNameIdSuppier.get();
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
 
