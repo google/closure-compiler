@@ -535,9 +535,33 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testTypedefChildProvide() {
+  public void testTypedefChildProvide_noTypechecking_brokenCode() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
+    test(
+        options,
+        lines(
+            "goog.provide('foo.Bar');",
+            "goog.provide('foo.Bar.Type');",
+            "",
+            "foo.Bar = function() {};",
+            "/** @typedef {number} */ foo.Bar.Type;"),
+        lines(
+            "/** @const */ var foo = {};",
+            // This output will cause a NPE at runtime. This test is meant to demonstrate that
+            // edge case. Note that when typechecking is enabled, the compiler will emit an error
+            // rather than produce broken output, which should cover most use cases.
+            "foo.Bar.Type = {};",
+            "foo.Bar = function() {};",
+            "foo.Bar.Type;"));
+  }
+
+  @Test
+  public void testTypedefChildProvide_withTypechecking() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
     compile(
         options,
         lines(

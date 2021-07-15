@@ -477,8 +477,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(gatherExternProperties);
     }
 
-    if (options.closurePass
-        && (!options.checksOnly || options.shouldRewriteProvidesInChecksOnly())) {
+    if (options.checksOnly && options.closurePass && options.shouldRewriteProvidesInChecksOnly()) {
       checks.add(closureProvidesRequires);
     }
 
@@ -503,6 +502,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(typesToColors);
+
+    if (options.closurePass) {
+      passes.add(closureProvidesRequires);
+    }
 
     if (options.shouldRunReplaceMessagesForChrome()) {
       passes.add(replaceMessagesForChrome);
