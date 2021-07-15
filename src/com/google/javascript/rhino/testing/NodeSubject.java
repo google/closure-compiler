@@ -41,12 +41,15 @@ package com.google.javascript.rhino.testing;
 
 import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
+import static com.google.javascript.jscomp.testing.ColorSubject.colors;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
 import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.javascript.jscomp.testing.ColorSubject;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -184,7 +187,11 @@ public final class NodeSubject extends Subject {
   }
 
   public TypeSubject hasJSTypeThat() {
-    return TypeSubject.assertType(actual.getJSTypeRequired());
+    return check("getJSType()").about(types()).that(actual.getJSTypeRequired());
+  }
+
+  public ColorSubject hasColorThat() {
+    return check("getColor()").about(colors()).that(actual.getColor());
   }
 
   public void hasType(Token type) {
