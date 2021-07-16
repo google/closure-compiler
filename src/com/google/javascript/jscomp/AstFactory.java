@@ -24,6 +24,8 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -123,6 +125,10 @@ final class AstFactory {
   // to remain long-term or can be deleted.
   private void assertNotAddingColors() {
     checkState(!this.isAddingColors(), "method not supported for colors");
+  }
+
+  private void assertNotAddingJSTypes() {
+    checkState(!this.isAddingTypes(), "method not supported for JSTypes");
   }
 
   /**
@@ -244,47 +250,32 @@ final class AstFactory {
   }
 
   Node createString(String value) {
-    assertNotAddingColors();
     Node result = IR.string(value);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.STRING_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.STRING_TYPE, StandardColors.STRING, result);
     return result;
   }
 
   Node createNumber(double value) {
-    assertNotAddingColors();
     Node result = IR.number(value);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.NUMBER_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER, result);
     return result;
   }
 
   Node createBoolean(boolean value) {
-    assertNotAddingColors();
     Node result = value ? IR.trueNode() : IR.falseNode();
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
   Node createNull() {
-    assertNotAddingColors();
     Node result = IR.nullNode();
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.NULL_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.NULL_TYPE, StandardColors.NULL_OR_VOID, result);
     return result;
   }
 
   Node createVoid(Node child) {
-    assertNotAddingColors();
     Node result = IR.voidNode(child);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.VOID_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID, result);
     return result;
   }
 
@@ -296,20 +287,14 @@ final class AstFactory {
   }
 
   Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
-    assertNotAddingColors();
     Node result = IR.cast(child, jsdoc);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.UNKNOWN_TYPE));
-    }
+    setTypeOrColor(unknownType, StandardColors.UNKNOWN, result);
     return result;
   }
 
   Node createNot(Node child) {
-    assertNotAddingColors();
     Node result = IR.not(child);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
@@ -426,8 +411,7 @@ final class AstFactory {
    * <p>e.g. `var variableName`
    */
   Node createSingleVarNameDeclaration(String variableName) {
-    assertNotAddingColors();
-    return IR.var(createName(variableName, JSTypeNative.VOID_TYPE));
+    return IR.var(createName(variableName, JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID));
   }
 
   /**
@@ -438,8 +422,7 @@ final class AstFactory {
    * <p>e.g. `var variableName = value;`
    */
   Node createSingleVarNameDeclaration(String variableName, Node value) {
-    assertNotAddingColors();
-    return IR.var(createName(variableName, value.getJSType()), value);
+    return IR.var(createName(variableName, value.getJSType(), value.getColor()), value);
   }
 
   /**
@@ -450,8 +433,7 @@ final class AstFactory {
    * <p>e.g. `const variableName = value;`
    */
   Node createSingleConstNameDeclaration(String variableName, Node value) {
-    assertNotAddingColors();
-    return IR.constNode(createName(variableName, value.getJSType()), value);
+    return IR.constNode(createName(variableName, value.getJSType(), value.getColor()), value);
   }
 
   /**
@@ -478,35 +460,49 @@ final class AstFactory {
   }
 
   Node createName(String name, JSType type) {
-    assertNotAddingColors();
-    Node result = IR.name(name);
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(type));
-    }
-    return result;
+    return createName(name, type, StandardColors.UNKNOWN);
   }
 
   Node createName(String name, JSTypeNative nativeType) {
-    assertNotAddingColors();
     Node result = IR.name(name);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(nativeType));
+    setTypeOrColor(nativeType, StandardColors.UNKNOWN, result);
+    return result;
+  }
+
+  Node createName(String name, Color color) {
+    assertNotAddingJSTypes();
+    return createName(name, unknownType, color);
+  }
+
+  private Node createName(String name, JSTypeNative jsTypeNative, Color color) {
+    Node result = IR.name(name);
+    setTypeOrColor(jsTypeNative, color, result);
+    return result;
+  }
+
+  private Node createName(String name, JSType jsType, Color color) {
+    Node result = IR.name(name);
+    setTypeOrColor(jsType, color, result);
+    return result;
+  }
+
+  Node createName(Scope scope, String name) {
+    Node result = IR.name(name);
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(getVarNameType(scope, name));
+        break;
+      case COLOR:
+        result.setColor(getVarNameColor(scope, name));
+        break;
+      case NONE:
+        break;
     }
     return result;
   }
 
   Node createNameWithUnknownType(String name) {
-    assertNotAddingColors();
-    return createName(name, unknownType);
-  }
-
-  Node createName(Scope scope, String name) {
-    assertNotAddingColors();
-    Node result = IR.name(name);
-    if (isAddingTypes()) {
-      result.setJSType(getVarNameType(scope, name));
-    }
-    return result;
+    return createName(name, unknownType, StandardColors.UNKNOWN);
   }
 
   Node createQName(Scope scope, String qname) {
@@ -603,41 +599,28 @@ final class AstFactory {
   }
 
   Node createGetElem(Node receiver, Node key) {
-    assertNotAddingColors();
     Node result = IR.getelem(receiver, key);
-    if (isAddingTypes()) {
-      // In general we cannot assume we know the type we get from a GETELEM.
-      // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template
-      // type here.
-      result.setJSType(unknownType);
-    }
+    // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template
+    // type here.
+    setTypeOrColor(unknownType, StandardColors.UNKNOWN, result);
     return result;
   }
 
   Node createDelProp(Node target) {
-    assertNotAddingColors();
     Node result = IR.delprop(target);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
   Node createStringKey(String key, Node value) {
-    assertNotAddingColors();
     Node result = IR.stringKey(key, value);
-    if (isAddingTypes()) {
-      result.setJSType(value.getJSType());
-    }
+    setTypeOrColor(value.getJSType(), value.getColor(), result);
     return result;
   }
 
   Node createComputedProperty(Node key, Node value) {
-    assertNotAddingColors();
     Node result = IR.computedProp(key, value);
-    if (isAddingTypes()) {
-      result.setJSType(value.getJSType());
-    }
+    setTypeOrColor(value.getJSType(), value.getColor(), result);
     return result;
   }
 
@@ -658,25 +641,18 @@ final class AstFactory {
   }
 
   Node createIn(Node left, Node right) {
-    assertNotAddingColors();
     Node result = IR.in(left, right);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
   Node createComma(Node left, Node right) {
-    assertNotAddingColors();
     Node result = IR.comma(left, right);
-    if (isAddingTypes()) {
-      result.setJSType(right.getJSType());
-    }
+    setTypeOrColor(right.getJSType(), right.getColor(), result);
     return result;
   }
 
   Node createCommas(Node first, Node second, Node... rest) {
-    assertNotAddingColors();
     Node result = createComma(first, second);
     for (Node next : rest) {
       result = createComma(result, next);
@@ -867,18 +843,15 @@ final class AstFactory {
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(Node lhs, Node rhs) {
-    assertNotAddingColors();
     Node result = IR.assign(lhs, rhs);
-    if (isAddingTypes()) {
-      result.setJSType(rhs.getJSType());
-    }
+    setTypeOrColor(rhs.getJSType(), rhs.getColor(), result);
     return result;
   }
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(String lhsName, Node rhs) {
-    assertNotAddingColors();
-    return createAssign(createName(lhsName, rhs.getJSType()), rhs);
+    Node name = createName(lhsName, rhs.getJSType(), rhs.getColor());
+    return createAssign(name, rhs);
   }
 
   /**
@@ -887,16 +860,21 @@ final class AstFactory {
    * <p>The type of the literal, if assigned, may be a supertype of the known properties.
    */
   Node createObjectLit(Node... elements) {
-    assertNotAddingColors();
     Node result = IR.objectlit(elements);
-    if (isAddingTypes()) {
-      result.setJSType(registry.createAnonymousObjectType(null));
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(registry.createAnonymousObjectType(null));
+        break;
+      case COLOR:
+        result.setColor(StandardColors.TOP_OBJECT);
+        break;
+      case NONE:
+        break;
     }
     return result;
   }
 
   public Node createQuotedStringKey(String key, Node value) {
-    assertNotAddingColors();
     Node result = IR.stringKey(key, value);
     result.setQuotedString();
     return result;
@@ -957,7 +935,6 @@ final class AstFactory {
   }
 
   Node createParamList(String... parameterNames) {
-    assertNotAddingColors();
     final Node paramList = IR.paramList();
     for (String parameterName : parameterNames) {
       paramList.addChildToBack(createNameWithUnknownType(parameterName));
@@ -1011,29 +988,20 @@ final class AstFactory {
   }
 
   Node createSheq(Node expr1, Node expr2) {
-    assertNotAddingColors();
     Node result = IR.sheq(expr1, expr2);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
   Node createEq(Node expr1, Node expr2) {
-    assertNotAddingColors();
     Node result = IR.eq(expr1, expr2);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
   Node createNe(Node expr1, Node expr2) {
-    assertNotAddingColors();
     Node result = IR.ne(expr1, expr2);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
+    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
     return result;
   }
 
@@ -1263,6 +1231,27 @@ final class AstFactory {
     return type;
   }
 
+  /**
+   * Look up the correct type for the given name in the given scope.
+   *
+   * <p>Returns the unknown type if no type can be found
+   */
+  private Color getVarNameColor(Scope scope, String name) {
+    Var var = scope.getVar(name);
+    Color color = null;
+    if (var != null) {
+      Node nameDefinitionNode = var.getNode();
+      if (nameDefinitionNode != null) {
+        color = nameDefinitionNode.getColor();
+      }
+    }
+    if (color == null) {
+      // TODO(bradfordcsmith): Consider throwing an error if the type cannot be found.
+      color = StandardColors.UNKNOWN;
+    }
+    return color;
+  }
+
   private JSType getJsTypeForProperty(Node receiver, String propertyName) {
     // NOTE: we use both findPropertyType and getPropertyType because they are subtly
     // different: findPropertyType works on JSType, autoboxing scalars and joining unions,
@@ -1292,5 +1281,31 @@ final class AstFactory {
       getpropType = getNativeType(JSTypeNative.GLOBAL_THIS);
     }
     return getpropType;
+  }
+
+  private void setTypeOrColor(JSTypeNative nativeType, Color color, Node result) {
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(getNativeType(nativeType));
+        break;
+      case COLOR:
+        result.setColor(checkNotNull(color));
+        break;
+      case NONE:
+        break;
+    }
+  }
+
+  private void setTypeOrColor(JSType jsType, Color color, Node result) {
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(checkNotNull(jsType));
+        break;
+      case COLOR:
+        result.setColor(checkNotNull(color));
+        break;
+      case NONE:
+        break;
+    }
   }
 }
