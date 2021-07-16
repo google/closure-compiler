@@ -318,7 +318,13 @@ final class LocaleDataPasses {
 
         if (templateNode.getChildCount() != localeNode.getChildCount()) {
           compiler.report(
-              JSError.make(localeNode, LOCALE_FILE_MALFORMED, "Missing or unexpected expressions"));
+              JSError.make(
+                  localeNode,
+                  LOCALE_FILE_MALFORMED,
+                  "Missing or unexpected expressions. Expected "
+                      + templateNode.getChildCount()
+                      + " but found "
+                      + localeNode.getChildCount()));
           return;
         }
 
@@ -521,11 +527,16 @@ final class LocaleDataPasses {
         return;
       }
 
-      Node replacement =
-          IR.exprResult(IR.assign(target, this.datagroup.templatedStructure))
-              .srcrefTreeIfMissing(n);
-      n.replaceWith(replacement);
-      compiler.reportChangeToEnclosingScope(replacement);
+      if (datagroup.inExtFile) {
+        compiler.reportChangeToEnclosingScope(n);
+        n.detach();
+      } else {
+        Node replacement =
+            IR.exprResult(IR.assign(target, datagroup.templatedStructure.cloneTree()))
+                .srcrefTreeIfMissing(n);
+        n.replaceWith(replacement);
+        compiler.reportChangeToEnclosingScope(replacement);
+      }
     }
 
     /**
@@ -601,7 +612,6 @@ final class LocaleDataPasses {
 
       // If this there is a localeSelect, and the template structure isn't provided, another error
       // will have been reported.
-      checkNotNull(datagroup.templatedStructure);
       datagroup = null;
     }
 
@@ -620,7 +630,12 @@ final class LocaleDataPasses {
       datagroup.lastValueId = intProvider.currentValue();
 
       // At least one value is expected, otherwise the input source is malformed
-      checkState(datagroup.firstValueId <= intProvider.currentValue());
+      checkState(
+          datagroup.firstValueId <= intProvider.currentValue(),
+          "%s : %s for node %s",
+          datagroup.firstValueId,
+          intProvider.currentValue(),
+          n);
     }
 
     private Node replaceValueNodesInClone(Node n) {
