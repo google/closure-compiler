@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -59,8 +58,6 @@ public final class DisambiguateProperties implements CompilerPass {
           "JSC_DISAMBIGUATE2_PROPERTY_INVALIDATION",
           "Property ''{0}'' was required to be disambiguated but was invalidated."
           );
-
-  private static final Gson GSON = new Gson();
 
   private final AbstractCompiler compiler;
   private final ImmutableSet<String> propertiesThatMustDisambiguate;
@@ -136,6 +133,7 @@ public final class DisambiguateProperties implements CompilerPass {
     propIndex.values().forEach(renamer::renameUses);
 
     this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
+    this.logForDiagnostics("mismatches", this.registry::getMismatchLocationsForDebugging);
 
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
@@ -264,7 +262,7 @@ public final class DisambiguateProperties implements CompilerPass {
 
   private void logForDiagnostics(String name, Supplier<Object> data) {
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), name + ".log")) {
-      log.log(() -> GSON.toJson(data.get()));
+      log.logJson(data);
     }
   }
 

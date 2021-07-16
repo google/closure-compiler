@@ -35,11 +35,13 @@ import java.util.LinkedHashMap;
 public final class ColorRegistry {
   private final ImmutableMap<ColorId, Color> nativeColors;
   private final ImmutableSetMultimap<Color, Color> colorToDisambiguationSupertypeGraph;
+  private final ImmutableSetMultimap<String, ColorId> mismatchLocations;
 
   private ColorRegistry(Builder builder) {
     this.nativeColors = ImmutableMap.copyOf(builder.nativeColors);
     this.colorToDisambiguationSupertypeGraph =
         ImmutableSetMultimap.copyOf(builder.colorToDisambiguationSupertypeGraph);
+    this.mismatchLocations = ImmutableSetMultimap.copyOf(builder.mismatchLocations);
 
     checkState(this.nativeColors.keySet().equals(REQUIRED_IDS));
   }
@@ -57,6 +59,16 @@ public final class ColorRegistry {
     return this.colorToDisambiguationSupertypeGraph.get(x);
   }
 
+  /**
+   * An index (mismatch sourceref string) => (involved color ids).
+   *
+   * <p>This index is only intended for debugging. It may be empty or incomplete during production
+   * compilations.
+   */
+  public final ImmutableSetMultimap<String, ColorId> getMismatchLocationsForDebugging() {
+    return this.mismatchLocations;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -66,6 +78,8 @@ public final class ColorRegistry {
 
     private final LinkedHashMap<ColorId, Color> nativeColors = new LinkedHashMap<>();
     private final SetMultimap<Color, Color> colorToDisambiguationSupertypeGraph =
+        MultimapBuilder.linkedHashKeys().linkedHashSetValues().build();
+    private final SetMultimap<String, ColorId> mismatchLocations =
         MultimapBuilder.linkedHashKeys().linkedHashSetValues().build();
 
     private Builder() {}
@@ -78,6 +92,11 @@ public final class ColorRegistry {
 
     public Builder addDisambiguationEdge(Color subtype, Color supertype) {
       this.colorToDisambiguationSupertypeGraph.put(subtype, supertype);
+      return this;
+    }
+
+    public Builder addMismatchLocations(String location, Iterable<ColorId> ids) {
+      this.mismatchLocations.putAll(location, ids);
       return this;
     }
 

@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.DebugInfo;
@@ -816,6 +817,62 @@ public class ColorPoolTest {
     // Then
     assertThat(colorPool.getColor(TEST_ID).getDebugInfo().getCompositeTypename())
         .isEqualTo("A/B/C");
+  }
+
+  @Test
+  public void reconcile_debugInfo_mismatches() {
+    // Given
+    TypePool typePool0 =
+        TypePool.newBuilder()
+            .setDebugInfo(
+                TypePool.DebugInfo.newBuilder()
+                    .addMismatch(
+                        TypePool.DebugInfo.Mismatch.newBuilder()
+                            .setSourceRef("location_0")
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.SYMBOL_TYPE))
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.STRING_TYPE))
+                            .build())
+                    .addMismatch(
+                        TypePool.DebugInfo.Mismatch.newBuilder()
+                            .setSourceRef("location_1")
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
+                            .build()))
+            .build();
+
+    TypePool typePool1 =
+        TypePool.newBuilder()
+            .setDebugInfo(
+                TypePool.DebugInfo.newBuilder()
+                    .addMismatch(
+                        TypePool.DebugInfo.Mismatch.newBuilder()
+                            .setSourceRef("location_0")
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.SYMBOL_TYPE))
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.BOOLEAN_TYPE))
+                            .build())
+                    .addMismatch(
+                        TypePool.DebugInfo.Mismatch.newBuilder()
+                            .setSourceRef("location_2")
+                            .addInvolvedColor(primitiveTypePointer(PrimitiveType.BIGINT_TYPE))
+                            .build()))
+            .build();
+
+    // When
+    ColorPool colorPool =
+        ColorPool.builder()
+            .addShardAnd(typePool0, StringPool.empty())
+            .addShardAnd(typePool1, StringPool.empty())
+            .build();
+
+    // Then
+    assertThat(colorPool.getRegistry().getMismatchLocationsForDebugging())
+        .isEqualTo(
+            ImmutableSetMultimap.builder()
+                .put("location_0", StandardColors.BOOLEAN.getId())
+                .put("location_0", StandardColors.STRING.getId())
+                .put("location_0", StandardColors.SYMBOL.getId())
+                .put("location_1", StandardColors.NUMBER.getId())
+                .put("location_2", StandardColors.BIGINT.getId())
+                .build());
   }
 
   @Test

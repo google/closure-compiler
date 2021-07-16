@@ -97,10 +97,14 @@ public final class ColorPool {
     }
 
     private ColorId getId(TypePointer pointer) {
-      if (isAxiomatic(pointer)) {
-        return OFFSET_TO_AXIOMATIC_COLOR.get(pointer.getPoolOffset()).getId();
+      return this.getId(pointer.getPoolOffset());
+    }
+
+    private ColorId getId(int untrimmedOffset) {
+      if (isAxiomatic(untrimmedOffset)) {
+        return OFFSET_TO_AXIOMATIC_COLOR.get(untrimmedOffset).getId();
       } else {
-        return this.trimmedOffsetToId.get(trimOffset(pointer));
+        return this.trimmedOffsetToId.get(trimOffset(untrimmedOffset));
       }
     }
   }
@@ -122,11 +126,9 @@ public final class ColorPool {
         new LinkedHashMap<>();
     private final LinkedHashMap<ColorId, Color> idToColor = new LinkedHashMap<>();
     private final ColorRegistry.Builder registry = ColorRegistry.builder();
-
-    // Like a 3D table, (ColorId, ShardView, index) => TypeProto
     private final HashBasedTable<ColorId, ShardView, TypeProto> idToProto = HashBasedTable.create();
 
-    private final ArrayDeque<ColorId> reconcliationDebugStack = new ArrayDeque<>();
+    private final ArrayDeque<ColorId> reconcilationDebugStack = new ArrayDeque<>();
 
     private Builder() {
       this.idToColor.putAll(StandardColors.AXIOMATIC_COLORS);
@@ -149,8 +151,16 @@ public final class ColorPool {
 
       ImmutableList<ColorId> trimmedOffsetToId = createTrimmedOffsetToId(typePool);
       ShardView shard = new ShardView(typePool, stringPool, trimmedOffsetToId);
-
       this.protoToShard.put(typePoolRef, shard);
+
+      if (typePool.hasDebugInfo()) {
+        for (TypePool.DebugInfo.Mismatch m : typePool.getDebugInfo().getMismatchList()) {
+          this.registry.addMismatchLocations(
+              m.getSourceRef(),
+              m.getInvolvedColorList().stream().map(shard::getId).collect(toImmutableList()));
+        }
+      }
+
       return shard;
     }
 
@@ -195,14 +205,14 @@ public final class ColorPool {
     }
 
     private Color lookupOrReconcileColor(ColorId id) {
-      this.reconcliationDebugStack.addLast(id);
+      this.reconcilationDebugStack.addLast(id);
       try {
         Color existing = this.idToColor.putIfAbsent(id, PENDING_COLOR);
         if (existing != null) {
           if (identical(existing, PENDING_COLOR)) {
             throw new MalformedTypedAstException(
                 "Cyclic Color structure detected: "
-                    + this.reconcliationDebugStack.stream()
+                    + this.reconcilationDebugStack.stream()
                         .map(this.idToProto::row)
                         .map(ImmutableMap::copyOf)
                         .collect(toImmutableList()));
@@ -232,7 +242,7 @@ public final class ColorPool {
         this.idToColor.put(id, result);
         return result;
       } finally {
-        this.reconcliationDebugStack.removeLast();
+        this.reconcilationDebugStack.removeLast();
       }
     }
 

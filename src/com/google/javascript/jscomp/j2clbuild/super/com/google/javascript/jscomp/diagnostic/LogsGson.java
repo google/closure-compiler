@@ -17,12 +17,13 @@
 package com.google.javascript.jscomp.diagnostic;
 
 /** Fail-fast J2CL stub. */
-final class LogsGson {
+public final class LogsGson {
 
   static String toJson(Object o) {
     throw new UnsupportedOperationException("Not available in J2CL");
   }
 
+  /** Fail-fast J2CL stub. */
   public interface Able {
     Object toLogsGson();
   }
