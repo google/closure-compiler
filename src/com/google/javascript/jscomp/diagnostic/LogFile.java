@@ -52,6 +52,10 @@ public abstract class LogFile implements AutoCloseable {
   @FormatMethod
   public abstract LogFile log(@FormatString String template, Object... values);
 
+  public abstract LogFile logJson(Object value);
+
+  public abstract LogFile logJson(Supplier<Object> value);
+
   @Override
   public abstract void close();
 }

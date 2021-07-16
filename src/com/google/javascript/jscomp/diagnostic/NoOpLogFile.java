@@ -42,5 +42,15 @@ final class NoOpLogFile extends LogFile {
   }
 
   @Override
+  public LogFile logJson(Object value) {
+    return this;
+  }
+
+  @Override
+  public LogFile logJson(Supplier<Object> value) {
+    return this;
+  }
+
+  @Override
   public void close() {}
 }

@@ -77,6 +77,16 @@ final class WritingLogFile extends LogFile {
     return logInternal(String.format(template, values));
   }
 
+  @Override
+  public LogFile logJson(Object value) {
+    return logInternal(LogsGson.toJson(value));
+  }
+
+  @Override
+  public LogFile logJson(Supplier<Object> value) {
+    return logInternal(LogsGson.toJson(value.get()));
+  }
+
   private LogFile logInternal(String value) {
     try {
       // It's fine to pass a fully rendered string because we know we're going to use it by the
