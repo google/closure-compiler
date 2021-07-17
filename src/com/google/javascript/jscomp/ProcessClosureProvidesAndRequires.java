@@ -24,7 +24,9 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -46,12 +48,6 @@ import java.util.Set;
  * in the list of {@link ProvidedName}s.
  */
 class ProcessClosureProvidesAndRequires implements CompilerPass {
-
-  static final DiagnosticType TYPEDEF_CHILD_OF_PROVIDE =
-      DiagnosticType.error(
-          "JSC_TYPEDEF_CHILD_OF_PROVIDE",
-          "invalid @typedef goog.provide {0}\n"
-              + "Parent namespace {1} is goog.provided and initialized in the same file");
 
   // The root Closure namespace
   private static final String GOOG = "goog";
@@ -268,74 +264,23 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
    * Handles a stub definition for a goog.provided name (e.g. a @typedef or a definition from
    * externs)
    *
-   * @param exprResult EXPR_RESULT node.
+   * @param n EXPR_RESULT node.
    */
-  private void handleStubDefinition(NodeTraversal t, Node exprResult) {
+  private void handleStubDefinition(NodeTraversal t, Node n) {
     if (!t.inGlobalHoistScope()) {
       return;
     }
-    boolean isExternStub = exprResult.isFromExterns();
-    boolean isTypedefStub = isTypedefStubDeclaration(exprResult);
-    // recognize @typedefs only if using this pass for typechecking via
-    // collectProvidedNames. We don't want rewriting to depend on @typedef annotations.
-    boolean isValidTypedefStubDefinition = isTypedefStub && !this.hasRewritingOccurred;
-
-    if (isValidTypedefStubDefinition || isExternStub) {
-      if (exprResult.getFirstChild().isQualifiedName()) {
-        String name = exprResult.getFirstChild().getQualifiedName();
+    JSDocInfo info = n.getFirstChild().getJSDocInfo();
+    boolean hasStubDefinition = info != null && (n.isFromExterns() || info.hasTypedefType());
+    if (hasStubDefinition) {
+      if (n.getFirstChild().isQualifiedName()) {
+        String name = n.getFirstChild().getQualifiedName();
         ProvidedName pn = providedNames.get(name);
         if (pn != null) {
-          pn.addDefinition(exprResult, t.getChunk());
+          pn.addDefinition(n, t.getChunk());
         }
       }
     }
-    if (isTypedefStub) {
-      checkNestedTypedefProvide(exprResult);
-    }
-  }
-
-  /**
-   * Checks that code doesn't use goog.provides in a way that will cause broken output code.
-   *
-   * @param exprResult an EXPR_RESULT node with an @typedef type
-   */
-  private void checkNestedTypedefProvide(Node exprResult) {
-    // forbid this pattern:
-    //   goog.provide('my.parent');
-    //   goog.provide('my.parent.ChildTypedef');
-    //   my.parent = [...]; // some initialization, doesn't matter what
-    //   /** @typedef {...} */
-    //   my.parent.ChildType;
-    // at one point, this pattern was supported. now it would produce code that crashes at
-    // runtime because the compiler would initializer `my.parent.ChildType = {}` before
-    // `my.parent = [...]`, so report an error.
-
-    String name = exprResult.getFirstChild().getQualifiedName();
-    if (name == null || !name.contains(".")) {
-      // @typedefs on simple names are okay.
-      return;
-    }
-    if (!providedNames.containsKey(name)) {
-      // non-provided names don't matter.
-      return;
-    }
-    String parentName = name.substring(0, name.lastIndexOf("."));
-    ProvidedName parent = providedNames.get(parentName);
-    Node parentDefinition = parent.getCandidateDefinition();
-    if (parentDefinition == null
-        || !parentDefinition.getStaticSourceFile().equals(exprResult.getStaticSourceFile())
-        || isTypedefStubDeclaration(parentDefinition)) {
-      return;
-    }
-    compiler.report(JSError.make(exprResult, TYPEDEF_CHILD_OF_PROVIDE, name, parentName));
-  }
-
-  private boolean isTypedefStubDeclaration(Node statement) {
-    if (!statement.isExprResult()) {
-      return false;
-    }
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(statement);
-    return info != null && info.hasTypedefType();
   }
 
   /** Handles a candidate definition for a goog.provided name. */
@@ -502,6 +447,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     // If this is previously provided, this will instead be the expression or declaration marked
     // as IS_NAMESPACE.
     private Node explicitNode = null;
+    // Whether there are child namespaces of this one.
+    private boolean hasAChildNamespace = false;
 
     // The candidate definition for this namespace. For example, given
     //      goog.provide('a.b');
@@ -554,6 +501,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
         checkState(explicitNode == null);
         checkArgument(node.isExprResult(), node);
         explicitNode = node;
+      } else {
+        // goog.provide('name.space.some.child');
+        hasAChildNamespace = true;
       }
       updateMinimumChunk(chunk);
     }
@@ -674,6 +624,19 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               // We don't need to change the definition, but mark it as 'IS_NAMESPACE' so that
               // future passes know this was originally provided.
               candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
+            }
+          } else {
+            // /** @typedef {something} */ name.space.Type;
+            checkState(exprNode.isQualifiedName(), exprNode);
+            // If this namespace has child namespaces, we still need to add an object to hang them
+            // on to avoid creating broken code.
+            // We must cast the type of the literal to unknown, because the type checker doesn't
+            // expect the namespace to have a value.
+            if (hasAChildNamespace) {
+              createNamespaceInitialization(
+                  createDeclarationNode(
+                      astFactory.createCastToUnknown(
+                          astFactory.createObjectLit(), createUnknownTypeJsDocInfo(exprNode))));
             }
           }
         }
@@ -818,6 +781,14 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       String explicitOrImplicit = isExplicitlyProvided() ? "explicit" : "implicit";
       return String.format("ProvidedName: %s, %s", namespace, explicitOrImplicit);
     }
+  }
+
+  private JSDocInfo createUnknownTypeJsDocInfo(Node sourceNode) {
+    JSDocInfo.Builder castToUnknownBuilder = JSDocInfo.builder().parseDocumentation();
+    castToUnknownBuilder.recordType(
+        new JSTypeExpression(
+            new Node(Token.QMARK).srcref(sourceNode), "<ProcessClosurePrimitives.java>"));
+    return castToUnknownBuilder.build();
   }
 
   /**

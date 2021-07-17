@@ -68,7 +68,15 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypedefProvides_withProvidedParent() {
+  public void testTypedefProvides() {
+    // subnamespace assignment happens before parent.
+    // parent namespace isn't ever actually assigned.
+    // we're relying on goog.provide to provide it.
+    // Created from goog.provide
+    // Created from goog.provide.
+    // Cast to unknown is necessary, because the type checker does not expect a symbol
+    // used as a typedef to have a value.
+    // created from goog.provide
     test(
         srcs(
             lines(
@@ -76,7 +84,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "goog.provide('ns.SomeType');",
                 "goog.provide('ns.SomeType.EnumValue');",
                 "goog.provide('ns.SomeType.defaultName');",
-                "goog.provide('ns.SomeType.NestedType');",
                 // subnamespace assignment happens before parent.
                 "/** @enum {number} */",
                 "ns.SomeType.EnumValue = { A: 1, B: 2 };",
@@ -85,39 +92,21 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
                 "ns.SomeType;",
                 "/** @const {string} */",
-                "ns.SomeType.defaultName = 'foobarbaz';",
-                "/** @typedef {number} */",
-                "ns.SomeType.NestedType;")),
+                "ns.SomeType.defaultName = 'foobarbaz';")),
         expected(
             lines(
                 // Created from goog.provide
                 "/** @const */ var ns = {};",
                 // Created from goog.provide.
-                "/** @const */",
-                "ns.SomeType = {};", // created from goog.provide
-                "/** @const */",
-                "ns.SomeType.NestedType = {};", // created from goog.provide
+                // Cast to unknown is necessary, because the type checker does not expect a symbol
+                // used as a typedef to have a value.
+                "ns.SomeType = /** @type {?} */ ({});", // created from goog.provide
                 "/** @enum {number} */",
                 "ns.SomeType.EnumValue = {A:1, B:2};",
                 "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
                 "ns.SomeType;",
                 "/** @const {string} */",
-                "ns.SomeType.defaultName = 'foobarbaz';",
-                "/** @typedef {number} */",
-                "ns.SomeType.NestedType;")));
-  }
-
-  @Test
-  public void testTypedefProvidesWithExplicitParentNamespace_errorInCollectProvidesMode() {
-    testError(
-        srcs(
-            lines(
-                "goog.provide('foo.bar');",
-                "goog.provide('foo.bar.Type');",
-                "",
-                "foo.bar = function() {};",
-                "/** @typedef {string} */ foo.bar.Type;")),
-        error(ProcessClosureProvidesAndRequires.TYPEDEF_CHILD_OF_PROVIDE));
+                "ns.SomeType.defaultName = 'foobarbaz';")));
   }
 
   @Test
@@ -655,7 +644,9 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypedefProvide_withChild() {
+  public void testTypedefProvide() {
+    // Cast to unknown to support also having @typedef. We want the type system to treat
+    // this as a typedef, but need an actual namespace to hang foo.Bar.Baz on.
     test(
         srcs(
             lines(
@@ -666,9 +657,10 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "foo.Bar.Baz = {};")),
         expected(
             lines(
-                "/** @const */ var foo = {};",
-                "/** @const */",
-                "foo.Bar = {};",
+                "/** @const */ var foo = {};", //
+                // Cast to unknown to support also having @typedef. We want the type system to treat
+                // this as a typedef, but need an actual namespace to hang foo.Bar.Baz on.
+                "foo.Bar = /** @type {?} */ ({});",
                 "/** @typedef {!Array<string>} */ foo.Bar;",
                 "foo.Bar.Baz = {}")));
   }
@@ -921,7 +913,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvidedTypedef_noParentProvide() {
+  public void testNoStubForProvidedTypedef() {
     test(
         srcs(
             "goog.provide('x'); /** @typedef {number} */ var x;"),
@@ -930,20 +922,21 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvidedTypedef_noParentProvide_doublyNestedNamespace() {
+  public void testNoStubForProvidedTypedef2() {
     test(
-        srcs("goog.provide('x.y'); /** @typedef {number} */ x.y;"),
+        srcs(
+            "goog.provide('x.y'); /** @typedef {number} */ x.y;"),
         expected(
-            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @typedef {number} */ x.y;"));
+            "/** @const */ var x = {}; /** @typedef {number} */ x.y;"));
   }
 
   @Test
-  public void testProvidedTypedef_noParentProvide_triplyNestedNamespace() {
+  public void testNoStubForProvidedTypedef4() {
     test(
-        srcs("goog.provide('x.y.z'); /** @typedef {number} */ x.y.z;"),
+        srcs(
+            "goog.provide('x.y.z'); /** @typedef {number} */ x.y.z;"),
         expected(
-            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @const */  x.y.z = {}; /**"
-                + " @typedef {number} */ x.y.z;"));
+            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @typedef {number} */ x.y.z;"));
   }
 
   @Test
