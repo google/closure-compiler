@@ -2040,6 +2040,19 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         "function foo() {return `${false}`}");
   }
 
+  @Test
+  public void testClassField() {
+    test(
+        lines(
+            "class Foo {", //
+            "  x = null <= null;",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  x = true;",
+            "}"));
+  }
+
   private static final ImmutableList<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",

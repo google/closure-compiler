@@ -201,6 +201,25 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassField() {
+    test(
+        lines(
+            "class Foo {", //
+            "  f1;",
+            "  ['f2'] = 1;",
+            "  static f3;",
+            "  static 'f4' = 'hi';",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  f1",
+            "  ['f2'] = 1",
+            "  static f3",
+            "  static 'f4' = 'hi'",
+            "}"));
+  }
+
+  @Test
   public void testClassInForLoop() {
     testSame("for (class a {};;) { break; }");
   }
