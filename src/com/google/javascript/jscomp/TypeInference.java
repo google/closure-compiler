@@ -477,59 +477,8 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
       switch (branch) {
         case ON_TRUE:
-          if (source.isForIn() || source.isForOf()) {
-            Node item = source.getFirstChild();
-            Node obj = item.getNext();
-
-            FlowScope informed = traverse(obj, output);
-
-            final AssignmentType assignmentType;
-            if (NodeUtil.isNameDeclaration(item)) {
-              item = item.getFirstChild();
-              assignmentType = AssignmentType.DECLARATION;
-            } else {
-              assignmentType = AssignmentType.ASSIGN;
-            }
-            if (item.isDestructuringLhs()) {
-              item = item.getFirstChild();
-            }
-            if (source.isForIn()) {
-              // item is assigned a property name, so its type should be string
-              JSType iterKeyType = getNativeType(STRING_TYPE);
-              JSType objType = getJSType(obj).autobox();
-              JSType objIndexType =
-                  objType
-                      .getTemplateTypeMap()
-                      .getResolvedTemplateType(registry.getObjectIndexKey());
-              if (objIndexType != null && !objIndexType.isUnknownType()) {
-                JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
-                if (!narrowedKeyType.isEmptyType()) {
-                  iterKeyType = narrowedKeyType;
-                }
-              }
-              if (item.isName()) {
-                informed = redeclareSimpleVar(informed, item, iterKeyType);
-              } else if (item.isDestructuringPattern()) {
-                informed =
-                    traverseDestructuringPattern(item, informed, iterKeyType, assignmentType);
-              }
-            } else {
-              // for/of. The type of `item` is the type parameter of the Iterable type.
-              JSType objType = getJSType(obj).autobox();
-              // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
-              TemplateType templateType = registry.getIterableTemplate();
-              JSType newType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
-
-              // Note that `item` can be an arbitrary LHS expression we need to check.
-              if (item.isDestructuringPattern()) {
-                // for (const {x, y} of data) {
-                informed = traverseDestructuringPattern(item, informed, newType, assignmentType);
-              } else {
-                informed = traverse(item, informed);
-                informed = updateScopeForAssignment(informed, item, newType, assignmentType);
-              }
-            }
-            newScope = informed;
+          if (NodeUtil.isEnhancedFor(source)) {
+            newScope = initializeEnhancedForScope(source, output);
             break;
           }
 
@@ -918,6 +867,75 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   // types when the invocation target is such a name.
   private static final ImmutableSet<Token> TOKENS_ALLOWING_NULL_TYPES =
       ImmutableSet.of(Token.NAME, Token.CALL, Token.NEW);
+
+  private FlowScope initializeEnhancedForScope(Node source, FlowScope output) {
+    Node item = source.getFirstChild();
+    Node obj = item.getNext();
+
+    FlowScope informed = traverse(obj, output);
+
+    final AssignmentType assignmentType;
+    if (NodeUtil.isNameDeclaration(item)) {
+      item = item.getFirstChild();
+      assignmentType = AssignmentType.DECLARATION;
+    } else {
+      assignmentType = AssignmentType.ASSIGN;
+    }
+    if (item.isDestructuringLhs()) {
+      item = item.getFirstChild();
+    }
+
+    final JSType newType;
+    switch (source.getToken()) {
+      case FOR_IN:
+        {
+          // item is assigned a property name, so its type should be string
+          JSType iterKeyType = getNativeType(STRING_TYPE);
+          JSType objType = getJSType(obj).autobox();
+          JSType objIndexType =
+              objType.getTemplateTypeMap().getResolvedTemplateType(registry.getObjectIndexKey());
+          if (objIndexType != null && !objIndexType.isUnknownType()) {
+            JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
+            if (!narrowedKeyType.isEmptyType()) {
+              iterKeyType = narrowedKeyType;
+            }
+          }
+
+          newType = iterKeyType;
+          break;
+        }
+      case FOR_OF:
+      case FOR_AWAIT_OF:
+        {
+          // for/of. The type of `item` is the type parameter of the Iterable type.
+          // for/await/of. go one layer deeper: the type paramter of the Iterable type should be
+          // IThenable, and `item` is the type parameter of the IThenable type
+          JSType objType = getJSType(obj).autobox();
+
+          // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
+          TemplateType templateType = registry.getIterableTemplate();
+          JSType iterableType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
+          if (source.isForAwaitOf()) {
+            newType = Promises.getResolvedType(registry, iterableType);
+          } else {
+            newType = iterableType;
+          }
+          break;
+        }
+      default:
+        throw new IllegalArgumentException("Unexpected source node " + source);
+    }
+
+    // Note that `item` can be an arbitrary LHS expression we need to check.
+    if (item.isDestructuringPattern()) {
+      // for (const {x, y} of data) {
+      informed = traverseDestructuringPattern(item, informed, newType, assignmentType);
+    } else {
+      informed = traverse(item, informed);
+      informed = updateScopeForAssignment(informed, item, newType, assignmentType);
+    }
+    return informed;
+  }
 
   private FlowScope traverseUnsignedRightShift(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
