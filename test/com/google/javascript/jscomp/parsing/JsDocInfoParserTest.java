@@ -5079,7 +5079,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @static \n"
             + "* @supported\n"
             + "* @wizaction \n"
-            + "* @wizmodule \n"
             + "*/");
   }
 
