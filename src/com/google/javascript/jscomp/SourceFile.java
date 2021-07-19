@@ -39,7 +39,6 @@ import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
@@ -428,43 +427,15 @@ public final class SourceFile implements StaticSourceFile, Serializable {
         if (!entryName.endsWith(".js")) { // Only accept js files
           continue;
         }
-        sourceFiles.add(fromZipEntry(zipName, absoluteZipPath, entryName, inputCharset));
+        sourceFiles.add(
+            builder()
+                .withCharset(inputCharset)
+                .withOriginalPath(zipName + BANG_SLASH + entryName)
+                .withZipEntryPath(absoluteZipPath, entryName)
+                .build());
       }
     }
     return sourceFiles;
-  }
-
-  @GwtIncompatible("java.io.File")
-  public static SourceFile fromZipEntry(
-      String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
-      throws MalformedURLException {
-    return builder()
-        .withCharset(inputCharset)
-        .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .withZipEntryPath(absoluteZipPath, entryPath)
-        .build();
-  }
-
-  @GwtIncompatible("java.io.File")
-  public static SourceFile fromZipEntry(
-      String originalZipPath,
-      String absoluteZipPath,
-      String entryPath,
-      Charset inputCharset,
-      SourceKind kind)
-      throws MalformedURLException {
-    // No longer throws MalformedURLException but we are keeping it for backward compatibility.
-    return builder()
-        .withKind(kind)
-        .withCharset(inputCharset)
-        .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
-        .withZipEntryPath(absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/"))
-        .build();
-  }
-
-  @GwtIncompatible("java.io.File")
-  public static SourceFile fromFile(String fileName, Charset charset, SourceKind kind) {
-    return builder().withPath(fileName).withCharset(charset).withKind(kind).build();
   }
 
   @GwtIncompatible("java.io.File")
@@ -475,11 +446,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName) {
     return builder().withPath(fileName).build();
-  }
-
-  @GwtIncompatible("java.io.File")
-  public static SourceFile fromPath(Path path, Charset charset, SourceKind kind) {
-    return builder().withPath(path).withCharset(charset).withKind(kind).build();
   }
 
   @GwtIncompatible("java.io.File")

@@ -98,9 +98,10 @@ public class SourceMapResolver {
    */
   @Nullable
   static SourceFile getRelativePath(String baseFilePath, String relativePath) {
-    return SourceFile.fromPath(
-        FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize(),
-        UTF_8,
-        SourceKind.NON_CODE);
+    return SourceFile.builder()
+        .withPath(
+            FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize())
+        .withKind(SourceKind.NON_CODE)
+        .build();
   }
 }

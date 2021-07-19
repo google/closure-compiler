@@ -92,7 +92,10 @@ public final class SourceFileTest {
           SourceFile inMemory = SourceFile.fromCode("test.js", code, SourceKind.NON_CODE);
           assertThat(inMemory.getLineOfOffset(0)).isEqualTo(1); // Trigger line offset generation
           SourceFile fakeOnDisk =
-              SourceFile.fromFile("fake_on_disk.js", UTF_8, SourceKind.NON_CODE);
+              SourceFile.builder()
+                  .withPath("fake_on_disk.js")
+                  .withKind(SourceKind.NON_CODE)
+                  .build();
 
           fakeOnDisk.restoreFrom(inMemory);
           assertThat(fakeOnDisk.getLineOfOffset(0)).isEqualTo(1);
@@ -166,8 +169,9 @@ public final class SourceFileTest {
     Path jsZipFile = folder.newFile("test.js.zip").toPath();
     createZipWithContent(jsZipFile, expectedContent);
     SourceFile zipSourceFile =
-        SourceFile.fromZipEntry(
-            jsZipFile.toString(), jsZipFile.toAbsolutePath().toString(), "foo.js", UTF_8);
+        SourceFile.builder()
+            .withZipEntryPath(jsZipFile.toAbsolutePath().toString(), "foo.js")
+            .build();
 
     // Verify initial state.
     assertThat(zipSourceFile.getCode()).isEqualTo(expectedContent);
@@ -191,19 +195,19 @@ public final class SourceFileTest {
 
     // Test SourceFile#fromZipEntry(String, String, String, Charset, SourceKind)
     SourceFile sourceFileFromZipEntry =
-        SourceFile.fromZipEntry(
-            jsZipPath.toString(),
-            jsZipPath.toAbsolutePath().toString(),
-            "foo.js",
-            UTF_8,
-            SourceKind.WEAK);
+        SourceFile.builder()
+            .withKind(SourceKind.WEAK)
+            .withZipEntryPath(jsZipPath.toAbsolutePath().toString(), "foo.js")
+            .build();
     assertThat(sourceFileFromZipEntry.getCode()).isEqualTo(expectedContent);
     assertThat(sourceFileFromZipEntry.getKind()).isEqualTo(SourceKind.WEAK);
 
     // Test SourceFile#fromZipEntry(String, String, String, Charset)
     SourceFile sourceFileFromZipEntryDefaultKind =
-        SourceFile.fromZipEntry(
-            jsZipPath.toString(), jsZipPath.toAbsolutePath().toString(), "foo.js", UTF_8);
+        SourceFile.builder()
+            .withZipEntryPath(jsZipPath.toAbsolutePath().toString(), "foo.js")
+            .build();
+
     assertThat(sourceFileFromZipEntryDefaultKind.getCode()).isEqualTo(expectedContent);
     assertThat(sourceFileFromZipEntryDefaultKind.getKind()).isEqualTo(SourceKind.STRONG);
 

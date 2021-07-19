@@ -655,7 +655,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           }
         } else {
           SourceKind kind = file.flag == JsSourceType.WEAKDEP ? SourceKind.WEAK : SourceKind.STRONG;
-          newFile = SourceFile.fromFile(filename, inputCharset, kind);
+          newFile =
+              SourceFile.builder()
+                  .withPath(filename)
+                  .withCharset(inputCharset)
+                  .withKind(kind)
+                  .build();
         }
         inputs.add(newFile);
       } else {
