@@ -20,6 +20,24 @@ const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
 
 const assertFails = testing.assertFails;
+
+/**
+ * We have defined a separate function for making a new RegExp object to prevent
+ * the compiler from inlining it. In some browsers directly declaring the regexp
+ * with the slash (/) notations causes older browsers to fail when parsing the
+ * code, so it never actually runs. We need a runtime exception from creating
+ * the RegExp instead.
+ *
+ * @param {string} string
+ * @param {string} flags
+ * @return {!RegExp}
+ * @noinline
+ */
+function newRegExp(string, flags) {
+  return new RegExp(string, flags);
+}
+
+
 /**
  * Tests replaceAll by replacing all instances of 'Xyz' or /Xyz/g with '+'.
  */
@@ -137,7 +155,7 @@ testSuite({
     let es2018Regex = 'X(?<Name>yz)';
     let regExp;
     try {
-      regExp = new RegExp(es2018Regex, 'g');
+      regExp = newRegExp(es2018Regex, 'g');
     } catch (e) {
       // browser lacks support for `?<Name>` named group; do nothing.
       return;
