@@ -506,6 +506,30 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
   }
 
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedNonstaticClassFieldIsMovable() {
+    testSame(
+        lines(
+            "class SomeClass {", //
+            "  a;",
+            "  static b = 2;",
+            "  ['c'] = 3;",
+            "  static 'd' = 'hi';",
+            "  1 = 2;",
+            "}"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+  }
+
+  @Test
+  public void testPureOrBreakMyCodeAnnotatedStaticClassFieldIsMovable() {
+    testSame(
+        lines(
+            "class SomeClass {", //
+            "  static staticProp = /** @pureOrBreakMyCode */ someFn();",
+            "}"));
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
+  }
+
   //  try to find cases to copy from CrossChunkCodeMotion
   private ReferenceCollection getReferencesForName(
       String name, CrossChunkReferenceCollector collector) {

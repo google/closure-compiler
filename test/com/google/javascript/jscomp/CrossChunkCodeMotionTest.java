@@ -718,6 +718,39 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassMovement_classFields() {
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("class Foo { a; static b = 2; ['c'] = 3; static 'd' = 'hi'; 1 = 2;}")
+            .addChunk("new Foo();")
+            .build(),
+        new String[] {
+          "", "class Foo { a; static b = 2; ['c'] = 3; static 'd' = 'hi'; 1 = 2; } new Foo();"
+        });
+  }
+
+  @Test
+  public void testPureOrBreakMyCodedStaticClassFieldIsMovable() {
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "function wrapIt(val) { return [val]; }", //
+                    "class ImmovableClass { static x = wrapIt(123); }",
+                    "class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }"))
+            .addChunk("new ImmovableClass(); new MovableClass();")
+            .build(),
+        new String[] {
+          lines(
+              "function wrapIt(val) { return [val] }", //
+              "class ImmovableClass { static x = wrapIt(123);}"),
+          lines(
+              "class MovableClass { static y = /** @pureOrBreakMyCode */ wrapIt(123); }", //
+              "new ImmovableClass(); new MovableClass();")
+        });
+  }
+
+  @Test
   public void testStubMethodMovement() {
     // The method stub can move, but the unstub definition cannot, because
     // CrossChunkCodeMotion doesn't know where individual methods are used.
@@ -1837,6 +1870,17 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             .build(),
         new String[] {"", "let a = 1; let b = { [a + 1]: 2 };", "a;"});
  }
+
+  @Test
+  public void testClassComputedFieldUnmovable() {
+    testSame(
+        JSChunkGraphBuilder.forChain().addChunk("class C { ['x'] = 1; }").addChunk("a;").build());
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("class C { static ['x'] = 1; }")
+            .addChunk("a;")
+            .build());
+  }
 
   @Test
   public void testPureOrBreakMyCode() {

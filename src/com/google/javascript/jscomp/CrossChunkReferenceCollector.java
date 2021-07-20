@@ -360,6 +360,17 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
             if (!canMoveValue(scope, keyExpr)) {
               return false;
             }
+          } else if (member.isComputedFieldDef()) {
+            Node keyExpr = member.getFirstChild();
+            if (!canMoveValue(scope, keyExpr)) {
+              return false;
+            }
+          } else if (member.isMemberFieldDef()) {
+            if (member.isStaticMember() && !canMoveValue(scope, member.getFirstChild())) {
+              // Unlike non-static fields,the RHS of a static field is executed at
+              // class definition time. So, we must check canMoveValue for static fields.
+              return false;
+            }
           } else {
             checkState(member.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(member), member);
           }
