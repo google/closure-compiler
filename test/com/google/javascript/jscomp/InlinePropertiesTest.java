@@ -735,4 +735,73 @@ public final class InlinePropertiesTest extends CompilerTestCase {
             "C.foo = 1;",
             "var z = C.foo;"));
   }
+
+  @Test
+  public void testClassField() {
+    test(
+        lines(
+            "class C {", //
+            "  a = 1;",
+            "}",
+            "(new C()).a"),
+        lines(
+            "class C {", //
+            "  a = 1;",
+            "}",
+            "new C(), 1;"));
+  }
+
+  @Test
+  public void testClassFieldWithInheritance() {
+    test(
+        lines(
+            "class C {", //
+            "  a = 1;",
+            "}",
+            "class D extends C {};",
+            "(new D()).a"),
+        lines(
+            "class C {", //
+            "  a = 1;",
+            "}",
+            "class D extends C {};",
+            "new D(), 1;"));
+  }
+
+  @Test
+  public void testClassField_static() {
+    test(
+        lines(
+            "class C {", //
+            "  static a = 1;",
+            "}",
+            "C.a"),
+        lines(
+            "class C {", //
+            "  static a = 1;",
+            "}",
+            "1"));
+  }
+
+  @Test
+  public void testClassComputedField() {
+    testSame(
+        lines(
+            "/** @dict */", //
+            "class C {",
+            "  ['a'] = 1;",
+            "}",
+            "(new C())['a']"));
+  }
+
+  @Test
+  public void testClassComputedField_static() {
+    testSame(
+        lines(
+            "/** @dict */", //
+            "class C {",
+            "  static ['a'] = 1;",
+            "}",
+            "C['a']"));
+  }
 }

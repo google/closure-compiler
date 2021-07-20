@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -96,11 +97,10 @@ final class InlineProperties implements CompilerPass {
       // These are assigned at most once in the branches below
       final boolean invalidatingPropRef;
       final String propName;
-
       if (n.isGetProp()) {
         propName = n.getString();
         if (parent.isAssign()) {
-          invalidatingPropRef = !maybeRecordCandidateDefinition(t, n, parent);
+          invalidatingPropRef = !maybeRecordCandidateGetpropDefinition(t, n, parent);
         } else if (NodeUtil.isLValue(n)) {
           // Other LValue references invalidate
           // e.g. in an enhanced for loop or a destructuring statement
@@ -125,6 +125,9 @@ final class InlineProperties implements CompilerPass {
         // since we do not inline functions in this pass
         // Note that string keys in destructuring patterns are fine, since they just access the prop
         invalidatingPropRef = true;
+      } else if (n.isMemberFieldDef()) {
+        propName = n.getString();
+        invalidatingPropRef = !maybeRecordCandidateClassFieldDefinition(n);
       } else {
         return;
       }
@@ -135,13 +138,34 @@ final class InlineProperties implements CompilerPass {
       }
     }
 
+    /** @return Whether this is a valid definition for a candidate class field. */
+    private boolean maybeRecordCandidateClassFieldDefinition(Node n) {
+      checkState(n.isMemberFieldDef(), n);
+      Node src = n.getFirstChild();
+      String propName = n.getString();
+      Node classNode = n.getGrandparent();
+      final Color c;
+
+      if (n.isStaticMember()) {
+        c = getColor(classNode);
+      } else {
+        ImmutableSet<Color> possibleInstances = getColor(classNode).getInstanceColors();
+        c =
+            possibleInstances.isEmpty()
+                ? StandardColors.UNKNOWN
+                : Color.createUnion(possibleInstances);
+      }
+
+      return maybeStoreCandidateValue(c, propName, src);
+    }
+
     /** @return Whether this is a valid definition for a candidate property. */
-    private boolean maybeRecordCandidateDefinition(NodeTraversal t, Node n, Node parent) {
+    private boolean maybeRecordCandidateGetpropDefinition(NodeTraversal t, Node n, Node parent) {
       checkState(n.isGetProp() && parent.isAssign(), n);
       Node src = n.getFirstChild();
       String propName = n.getString();
-
       Node value = parent.getLastChild();
+
       if (src.isThis()) {
         // This is a simple assignment like:
         //    this.foo = 1;
@@ -241,7 +265,6 @@ final class InlineProperties implements CompilerPass {
         if (!this.hasInSupertypesListSeenSet.add(subCtor)) {
           return false;
         }
-
         if (subCtor == null || superCtor == null) {
           return false;
         }
