@@ -2410,7 +2410,6 @@ public class JSDocInfo implements Serializable {
      * JSDocInfo#isTypeSummary()} flag set to {@code true}.
      */
     public boolean recordTypeSummary() {
-      populateBit(Bit.EXTERNS, true); // Type summaries are a subset of externs.
       return populateBit(Bit.TYPE_SUMMARY, true);
     }
 

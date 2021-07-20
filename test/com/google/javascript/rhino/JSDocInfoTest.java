@@ -320,13 +320,12 @@ public class JSDocInfoTest {
   }
 
   @Test
-  public void testSetTypeSummary_impliesExterns() {
+  public void testSetTypeSummary() {
     JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordTypeSummary();
     JSDocInfo info = builder.build();
 
     assertThat(info.isTypeSummary()).isTrue();
-    assertThat(info.isExterns()).isTrue();
   }
 
   @Test

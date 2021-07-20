@@ -563,7 +563,7 @@ public final class JSDocInfoPrinterTest {
 
   @Test
   public void testTypeSummary() {
-    testFileoverview("/** @typeSummary */ ", "/** @externs @typeSummary */ ");
+    testSameFileoverview("/** @typeSummary */ ");
   }
 
   @Test
@@ -602,10 +602,6 @@ public final class JSDocInfoPrinterTest {
 
   private void testSameFileoverview(String jsdoc) {
     test(jsdoc, jsdoc, JsDocInfoParser::parseFileOverviewJsdoc);
-  }
-
-  private void testFileoverview(String input, String output) {
-    test(input, output, JsDocInfoParser::parseFileOverviewJsdoc);
   }
 
   private void test(String input, String output) {
