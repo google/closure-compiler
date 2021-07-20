@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
@@ -24,6 +23,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016_MODU
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,40 +101,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     disableTypeCheck();
   }
 
-  protected final PassFactory makePassFactory(
-      String name, final CompilerPass pass) {
-    return PassFactory.builder()
-        .setName(name)
-        .setInternalFactory((compiler) -> pass)
-        .setFeatureSet(ES2016_MODULES)
-        .build();
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    // TODO(lharker): we should just use TranspilationPasses.addPreTypecheck/PostCheckPasses
-    // instead of re-enumerating all these passes.
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+
     optimizer.addOneTimePass(
-        makePassFactory(
-            "es6InjectRuntimeLibraries", new InjectTranspilationRuntimeLibraries(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6RenameVariablesInParamLists", new Es6RenameVariablesInParamLists(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory("rewriteNewDotTarget", new RewriteNewDotTarget(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6ForOf", new Es6ForOfConverter(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6RewriteBlockScopedDeclaration", new Es6RewriteBlockScopedDeclaration(compiler)));
+        PassFactory.builder()
+            .setName("es6InjectRuntimeLibraries")
+            .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
+            .setFeatureSet(ES2016_MODULES)
+            .build());
+
+    ArrayList<PassFactory> passes = new ArrayList<>();
+    TranspilationPasses.addPostCheckTranspilationPasses(passes, compiler.getOptions());
+    optimizer.consume(passes);
+
     return optimizer;
   }
 
@@ -571,10 +552,26 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidExtends() {
-    testError("class C extends foo() {}", DYNAMIC_EXTENDS_TYPE);
-    testError("class C extends function(){} {}", DYNAMIC_EXTENDS_TYPE);
-    testError("class A {}; class B {}; class C extends (foo ? A : B) {}", DYNAMIC_EXTENDS_TYPE);
+  public void testDynamicExtends() {
+    test(
+        "class C extends foo() {}",
+        lines(
+            "/** @const */ var testcode$classextends$var0 = foo();",
+            "/** @constructor @extends {testcode$classextends$var0} */",
+            "var C = function() {",
+            "  return testcode$classextends$var0.apply(this, arguments) || this;",
+            "};",
+            "$jscomp.inherits(C, testcode$classextends$var0);"));
+
+    test(
+        "class C extends function(){} {}",
+        lines(
+            "/** @const */ var testcode$classextends$var0 = function(){};",
+            "/** @constructor @extends {testcode$classextends$var0} */",
+            "var C = function() {",
+            "  testcode$classextends$var0.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(C, testcode$classextends$var0);"));
   }
 
   @Test
@@ -2161,7 +2158,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"),
         lines(
             "function f(a) {",
-            "  var {x: x} = a;",
+            "  var $jscomp$destructuring$var0 = a;",
+            "  var x = $jscomp$destructuring$var0.x;",
             "  if (a) {",
             "    var x$0 = 2;",
             "    return x$0;",
