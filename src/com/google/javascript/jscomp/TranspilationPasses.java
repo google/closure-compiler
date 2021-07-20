@@ -81,6 +81,10 @@ public class TranspilationPasses {
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
     }
 
+    if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
+      passes.add(rewriteLogicalAssignmentOperators);
+    }
+
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
     }
@@ -379,6 +383,13 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName("rewriteGenerators")
           .setInternalFactory(Es6RewriteGenerators::new)
+          .setFeatureSetForChecks()
+          .build();
+
+  static final PassFactory rewriteLogicalAssignmentOperators =
+      PassFactory.builder()
+          .setName("rewriteLogicalAssignmentOperators")
+          .setInternalFactory(RewriteLogicalAssignmentOperators::new)
           .setFeatureSetForChecks()
           .build();
 
