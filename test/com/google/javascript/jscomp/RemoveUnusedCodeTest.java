@@ -33,6 +33,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/**
+ * Test removal of unused global and local variables.
+ *
+ * <p>These test cases for `RemoveUnusedCode` focus on removal of variables and do not enable the
+ * options for removing individual properties, fields, or methods. See the other
+ * `RemoveUnusedCode*Test` classes for that kind of code removal.
+ */
 @RunWith(JUnit4.class)
 public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
@@ -1583,6 +1590,57 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "  }",
             "}",
             "new C"));
+  }
+
+  @Test
+  public void testClassFields() {
+    // Removal of individual fields is not enabled in this test class.
+    // These tests confirm that the existence of fields does not prevent removal of a class that
+    // is never instantiated.
+    testSame(
+        lines(
+            "class C {", //
+            "  x;",
+            "  y = 2;",
+            "  z = 'hi';",
+            "  static x;",
+            "  static y = 2;",
+            "  static z = 'hi';",
+            "}",
+            "new C"));
+    test(
+        lines(
+            "class C {", //
+            "  x;",
+            "  y = 2;",
+            "  z = 'hi';",
+            "  static x;",
+            "  static y = 2;",
+            "  static z = 'hi';",
+            "}"),
+        "");
+    testSame(
+        lines(
+            "class C {", //
+            "  ['x'];",
+            "  1 = 2",
+            "  'a' = 'foo';",
+            "  static ['x'];",
+            "  static 1 = 2",
+            "  static 'a' = 'foo';",
+            "}",
+            "new C"));
+    test(
+        lines(
+            "class C {", //
+            "  ['x'];",
+            "  1 = 2",
+            "  'a' = 'foo';",
+            "  static ['x'];",
+            "  static 1 = 2",
+            "  static 'a' = 'foo';",
+            "}"),
+        "");
   }
 
   @Test

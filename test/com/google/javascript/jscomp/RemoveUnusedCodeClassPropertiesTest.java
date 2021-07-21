@@ -24,6 +24,9 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link RemoveUnusedCode} that cover removal of instance properties and properties
  * defined directly on constructors.
+ *
+ * <p>Note that removal of variables is actually disabled for these test cases to make it easier to
+ * construct cases where only parts of a class will be removed.
  */
 @RunWith(JUnit4.class)
 public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase {
@@ -793,5 +796,85 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     testSame(lines("async function foo() {", "   this.x = 1;", "   return await this.x;", "}"));
 
     testSame(lines("this.x = 1;", "async function foo() {", "   return await this.x;", "}"));
+  }
+
+  @Test
+  public void testField() {
+    test(
+        lines(
+            "class C {", //
+            "  x = 1;",
+            "  y;",
+            "  z = 'hi';",
+            "  static x = 1;",
+            "  static y;",
+            "  static z = 'hi';",
+            "}"),
+        lines(
+            "class C {", //
+            "         ",
+            "}"));
+  }
+
+  @Test
+  public void testComputedField() {
+    testSame(
+        lines(
+            "class C {", //
+            "  ['x'] = 1;",
+            "  'y';",
+            "  1 = 'hi';",
+            "  static ['x'] = 1;",
+            "  static 'y';",
+            "  static 1 = 'hi';",
+            "}"));
+  }
+
+  @Test
+  public void testMixedField() {
+    // Computed properties cannot be removed, so only non-computed properties are removed
+    test(
+        lines(
+            "class C {", //
+            "  x = 1;",
+            "  y;",
+            "  z = 'hi';",
+            "  static x = 1;",
+            "  static y;",
+            "  static z = 'hi';",
+            "  ['x'] = 1;",
+            "  'y';",
+            "  1 = 'hi';",
+            "  static ['x'] = 1;",
+            "  static 'y';",
+            "  static 1 = 'hi';",
+            "}"),
+        lines(
+            "class C {", //
+            "  ['x'] = 1;",
+            "  'y';",
+            "  1 = 'hi';",
+            "  static ['x'] = 1;",
+            "  static 'y';",
+            "  static 1 = 'hi';",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  [alert()] = 5;",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  static x = alert();",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  x = alert();",
+            "}"));
   }
 }

@@ -1392,7 +1392,22 @@ class RemoveUnusedCode implements CompilerPass {
                   .buildClassOrPrototypeNamedProperty(member));
           break;
 
+        case MEMBER_FIELD_DEF:
+          // TODO(bradfordcsmith): currently if the RHS of a field has side effects, we do not
+          // remove any part of the field. The proper behavior of class C { x = alert(); }
+          // would be to remove x, leaving class C { constructor() { alert(); } }
+          // but currently we aren't removing anything.
+          if (member.getFirstChild() == null
+              || !astAnalyzer.mayHaveSideEffects(member.getFirstChild())) {
+            considerForIndependentRemoval(
+                new RemovableBuilder()
+                    .addContinuation(new Continuation(member, scope))
+                    .buildClassOrPrototypeNamedProperty(member));
+          }
+          break;
+
         case COMPUTED_PROP:
+        case COMPUTED_FIELD_DEF:
           traverseChildren(member, scope);
           break;
 
@@ -1991,6 +2006,7 @@ class RemoveUnusedCode implements CompilerPass {
     ClassOrPrototypeNamedProperty buildClassOrPrototypeNamedProperty(Node propertyNode) {
       checkArgument(
           propertyNode.isMemberFunctionDef()
+              || propertyNode.isMemberFieldDef()
               || NodeUtil.isGetOrSetKey(propertyNode)
               || (propertyNode.isStringKey() && !propertyNode.isQuotedString()),
           propertyNode);
