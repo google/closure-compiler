@@ -572,11 +572,15 @@ class IRFactory {
       this.firstFileoverview = newFileoverview;
       this.currentFileIsExterns = newFileoverview.isExterns();
     } else {
+      JSDocInfo.Builder merged = this.firstFileoverview.toBuilder();
       if (!newFileoverview.getSuppressions().isEmpty()) {
-        JSDocInfo.Builder mergeSuppressions = this.firstFileoverview.toBuilder();
-        mergeSuppressions.recordSuppressions(newFileoverview.getSuppressions());
-        this.firstFileoverview = mergeSuppressions.build();
+        merged.recordSuppressions(newFileoverview.getSuppressions());
       }
+      if (newFileoverview.isExterns()) {
+        this.currentFileIsExterns = true;
+        merged.recordExterns();
+      }
+      this.firstFileoverview = merged.build();
     }
 
     return true;

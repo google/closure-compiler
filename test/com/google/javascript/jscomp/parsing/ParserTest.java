@@ -3379,11 +3379,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node n =
         parse(
             lines(
-                "/** @externs */", //
+                "/** @typeSummary */", //
                 "/** @fileoverview Second */"));
 
     assertThat(n.getJSDocInfo()).isNotNull();
-    assertThat(n.getJSDocInfo().isExterns()).isTrue();
+    assertThat(n.getJSDocInfo().isTypeSummary()).isTrue();
     assertThat(n.getJSDocInfo().getFileOverview()).isNull();
   }
 
@@ -3399,6 +3399,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getSuppressions()).containsExactly("const", "checkTypes");
+  }
+
+  @Test
+  public void testFileoverview_firstOneWins_externsAccumulate() {
+    isIdeMode = true;
+
+    Node n =
+        parse(
+            lines(
+                "/** @fileoverview First */", //
+                "/** @externs */"));
+
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("First");
+    assertThat(n.getJSDocInfo().isExterns()).isTrue();
   }
 
   @Test
