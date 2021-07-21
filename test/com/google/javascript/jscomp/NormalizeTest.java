@@ -330,6 +330,22 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLogicalAssignPropertyReferenceShorthand() {
+    // When the LHS is getprop, normalization does not occur
+    test("x.a ||= 1;", "x.a ||= 1;");
+    test("x.a &&= 1;", "x.a &&= 1;");
+    test("x.a ??= 1;", "x.a ??= 1;");
+  }
+
+  @Test
+  public void testLogicalAssignPropertyReferenceElementShorthand() {
+    // When the LHS is getelem, normalization does not occur
+    test("x[a] ||= 1;", "x[a] ||= 1;");
+    test("x[a] &&= 1;", "x[a] &&= 1;");
+    test("x[a] ??= 1;", "x[a] ??= 1;");
+  }
+
+  @Test
   public void testDuplicateVarInExterns() {
     test(
         externs("var extern;"),
