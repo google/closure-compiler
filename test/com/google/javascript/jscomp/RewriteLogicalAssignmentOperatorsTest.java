@@ -48,8 +48,100 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
   }
 
   @Test
+  public void testPropertyReference() {
+    test(
+        srcs("a.x ||= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "($jscomp$logical$assign$tmpm1146332801$0 = a).x ",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0.x = b);")));
+    test(
+        srcs("a.foo &&= null"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "($jscomp$logical$assign$tmpm1146332801$0 = a).foo ",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$0.foo = null);")));
+    test(
+        srcs(
+            lines(
+                "foo().x = null;", //
+                "foo().x ??= y")),
+        expected(
+            lines(
+                "foo().x = null;", //
+                "let $jscomp$logical$assign$tmpm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = foo()).x ",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$0.x = y);")));
+  }
+
+  @Test
+  public void testPropertyReferenceElement() {
+    test(
+        srcs("a[x] ||= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = a)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = x]",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = b);")));
+    test(
+        srcs("a[x + 5 + 's'] &&= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = a)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = (x + 5 + 's')] ",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = b);")));
+    test(
+        srcs("foo[x] ??= bar[y]"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = foo)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = x]",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = bar[y]);")));
+  }
+
+  @Test
   public void testInExpressions() {
     test(srcs("a ?? (b ??= 1) ?? (c ??= 2)"), expected("a ?? (b ?? (b = 1)) ?? (c ?? (c = 2));"));
+    test(
+        srcs("for (let x = foo(); !x.b; x.b ||= {}) {}"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "for (let x = foo(); !x.b;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = x).b",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0.b = {})",
+                ") {}")));
+    test(
+        srcs(lines("for (let x = foo; !x[b]; x[b] &&= {}) {}")),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "for (let x = foo; !x[b];",
+                "($jscomp$logical$assign$tmpm1146332801$0 = x)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = b]",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = {})",
+                ") {}")));
     test(
         srcs(
             lines(
@@ -63,5 +155,79 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
                 "do {",
                 "  a = a - 1;",
                 "} while (a || (a = null));")));
+    test(
+        srcs(
+            lines(
+                "foo().x = 4;", //
+                "do {",
+                "  foo().x = foo().x - 1;",
+                "} while (foo().x ||= null);")),
+        expected(
+            lines(
+                "foo().x = 4;", //
+                "let $jscomp$logical$assign$tmpm1146332801$0;",
+                "do {",
+                "  foo().x = foo().x - 1;",
+                "} while (($jscomp$logical$assign$tmpm1146332801$0 = foo()).x ",
+                "          ||",
+                "         ($jscomp$logical$assign$tmpm1146332801$0.x = null));")));
+    test(
+        srcs(
+            lines(
+                "foo[x] = 4;", //
+                "do {",
+                "  foo[x] = foo[x] - 1;",
+                "} while (foo[x] &&= null);")),
+        expected(
+            lines(
+                "foo[x] = 4;", //
+                "let $jscomp$logical$assign$tmpm1146332801$0;",
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "do {",
+                "  foo[x] = foo[x] - 1;",
+                "} while (($jscomp$logical$assign$tmpm1146332801$0 = foo)",
+                "         [$jscomp$logical$assign$tmpindexm1146332801$0 = x] ",
+                "          &&",
+                "         ($jscomp$logical$assign$tmpm1146332801$0",
+                "         [$jscomp$logical$assign$tmpindexm1146332801$0] = null));")));
+  }
+
+  @Test
+  public void testNestedPropertyReference() {
+    test(
+        srcs("a ||= (b &&= (c ??= d));"), //
+        expected("a || (a = (b && (b = (c ?? (c = d)))));"));
+
+    test(
+        srcs("a.x ??= (b.x ||= {});"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpm1146332801$1;",
+                "(($jscomp$logical$assign$tmpm1146332801$1 = a).x",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$1.x = ",
+                "($jscomp$logical$assign$tmpm1146332801$0 = b).x",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0.x = {})));")));
+
+    test(
+        srcs("a[x] &&= (b[x] ??= a[x]);"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "let $jscomp$logical$assign$tmpm1146332801$1;",
+                "let $jscomp$logical$assign$tmpindexm1146332801$1;",
+                "($jscomp$logical$assign$tmpm1146332801$1 = a)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$1 = x]",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$1",
+                "[$jscomp$logical$assign$tmpindexm1146332801$1] =",
+                "($jscomp$logical$assign$tmpm1146332801$0 = b)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = x]",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = a[x]));")));
   }
 }
