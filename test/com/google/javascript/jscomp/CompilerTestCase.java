@@ -1558,14 +1558,6 @@ public abstract class CompilerTestCase {
           check.processForTesting(externsRoot, mainRoot);
         }
 
-        // Only rewrite provides once, if asked.
-        if (rewriteClosureProvides && i == 0) {
-          recentChange.reset();
-          new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
-              .process(externsRoot, mainRoot);
-          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        }
-
         if (inferConsts && i == 0) {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
@@ -1597,6 +1589,14 @@ public abstract class CompilerTestCase {
             }
             hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
+        }
+
+        // Only rewrite provides once, if asked.
+        if (rewriteClosureProvides && i == 0) {
+          recentChange.reset();
+          new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
+              .process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
         // Only run the normalize pass once, if asked.
@@ -1910,11 +1910,6 @@ public abstract class CompilerTestCase {
         .isNotNull();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
-    // Only run the normalize pass, if asked.
-    if (normalizeEnabled && !compiler.hasErrors()) {
-      Normalize normalize = new Normalize(compiler, false);
-      normalize.process(externsRoot, mainRoot);
-    }
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER)
@@ -1935,6 +1930,12 @@ public abstract class CompilerTestCase {
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);
+    }
+
+    // Only run the normalize pass, if asked.
+    if (normalizeEnabled && !compiler.hasErrors()) {
+      Normalize normalize = new Normalize(compiler, false);
+      normalize.process(externsRoot, mainRoot);
     }
     return mainRoot;
   }

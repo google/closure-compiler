@@ -54,7 +54,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     preserveGoogProvidesAndRequires = false;
     enableTypeCheck();
     enableCreateModuleMap(); // necessary for the typechecker
-    enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -97,13 +97,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "ns.SomeType = {};", // created from goog.provide
                 "/** @const */",
                 "ns.SomeType.NestedType = {};", // created from goog.provide
-                "/** @enum {number} */",
+                "/** @enum {!JSDocSerializer_placeholder_type} */",
                 "ns.SomeType.EnumValue = {A:1, B:2};",
-                "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
                 "ns.SomeType;",
-                "/** @const {string} */",
+                "/** @const */",
                 "ns.SomeType.defaultName = 'foobarbaz';",
-                "/** @typedef {number} */",
                 "ns.SomeType.NestedType;")));
   }
 
@@ -303,7 +301,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
             lines(
                 "/** @const */ var foo = {};",
                 "function f(){",
-                "/** @suppress {checkTypes} */",
                 "  foo = 0;",
                 "}")));
   }
@@ -669,7 +666,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
                 "/** @const */ var foo = {};",
                 "/** @const */",
                 "foo.Bar = {};",
-                "/** @typedef {!Array<string>} */ foo.Bar;",
+                "foo.Bar;",
                 "foo.Bar.Baz = {}")));
   }
 
@@ -922,19 +919,14 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
   @Test
   public void testProvidedTypedef_noParentProvide() {
-    test(
-        srcs(
-            "goog.provide('x'); /** @typedef {number} */ var x;"),
-        expected(
-            "/** @typedef {number} */ var x;"));
+    test(srcs("goog.provide('x'); /** @typedef {number} */ var x;"), expected("var x;"));
   }
 
   @Test
   public void testProvidedTypedef_noParentProvide_doublyNestedNamespace() {
     test(
         srcs("goog.provide('x.y'); /** @typedef {number} */ x.y;"),
-        expected(
-            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @typedef {number} */ x.y;"));
+        expected("/** @const */ var x = {}; /** @const */ x.y = {}; x.y;"));
   }
 
   @Test
@@ -942,8 +934,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     test(
         srcs("goog.provide('x.y.z'); /** @typedef {number} */ x.y.z;"),
         expected(
-            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @const */  x.y.z = {}; /**"
-                + " @typedef {number} */ x.y.z;"));
+            "/** @const */ var x = {}; /** @const */ x.y = {}; /** @const */  x.y.z = {}; x.y.z;"));
   }
 
   @Test
@@ -1035,6 +1026,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   private void testModule(String[] moduleInputs, String[] expected) {
-    test(JSChunkGraphBuilder.forStar().addChunks(moduleInputs).build(), expected);
+    test(srcs(JSChunkGraphBuilder.forStar().addChunks(moduleInputs).build()), expected(expected));
   }
 }
