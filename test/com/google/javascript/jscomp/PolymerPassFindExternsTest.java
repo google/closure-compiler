@@ -98,27 +98,35 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFindsPolymerElementRoot_skipsTypeSummaryAtFront() {
-    testSame(externs(lines("/** @typeSummary */ let PolymerElement;"), EXTERNS), srcs(""));
+  public void testFindsPolymerElementRoot_inTypeSummary() {
+    testSame(
+        externs(
+            lines(
+                "/** @typeSummary */", //
+                EXTERNS)),
+        srcs(""));
     Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
 
     assertThat(polymerElementNode).isNotNull();
     assertThat(polymerElementNode.isVar()).isTrue();
     assertThat(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement")).isTrue();
     assertThat(polymerElementNode.getParent().isScript()).isTrue();
-    assertThat(NodeUtil.isFromTypeSummary(polymerElementNode.getParent())).isFalse();
+    assertThat(NodeUtil.isFromTypeSummary(polymerElementNode.getParent())).isTrue();
   }
 
   @Test
-  public void testFindsPolymerElementRoot_skipsTypeSummaryAtBack() {
-    testSame(externs(EXTERNS, lines("/** @typeSummary */ let PolymerElement;")), srcs(""));
+  public void testFindsPolymerElementRoot_inTypeSummary_ignoresModule() {
+    testSame(
+        externs(
+            lines("goog.module = function(id) { };"),
+            lines(
+                "/** @typeSummary */", //
+                "goog.module('some.module');",
+                EXTERNS)),
+        srcs(""));
     Node polymerElementNode = findExternsCallback.getPolymerElementExterns();
 
-    assertThat(polymerElementNode).isNotNull();
-    assertThat(polymerElementNode.isVar()).isTrue();
-    assertThat(polymerElementNode.getFirstChild().matchesQualifiedName("PolymerElement")).isTrue();
-    assertThat(polymerElementNode.getParent().isScript()).isTrue();
-    assertThat(NodeUtil.isFromTypeSummary(polymerElementNode.getParent())).isFalse();
+    assertThat(polymerElementNode).isNull();
   }
 
   @Test

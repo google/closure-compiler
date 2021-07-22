@@ -2416,7 +2416,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsTypeSummary(!n.isFromExterns() && options.shouldGenerateTypedExterns());
+    builder.setTagAsTypeSummary(options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
   }

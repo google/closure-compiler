@@ -32,9 +32,13 @@ final class PolymerPassFindExterns implements NodeTraversal.Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    // @typeSummary files are included in the externs AST but are not really externs; in particular
-    // they may be modules, while externs are always in the global scope.
-    return !(n.isScript() && NodeUtil.isFromTypeSummary(n));
+    /**
+     * The externs subtree also includes @typeSummary files, which are slightly different from
+     * normal externs. The Polymer externs may exist in either file type. However,
+     * some @typeSummaries are goog.modules, which definitely don't contain Polymer externs, and
+     * which we don't want to search.
+     */
+    return !n.isModuleBody();
   }
 
   @Override
