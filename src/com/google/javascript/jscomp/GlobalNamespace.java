@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -127,6 +128,9 @@ class GlobalNamespace
   /** Maps names (e.g. "a.b.c") and MODULE_BODY nodes to Names in that module */
   private final Table<ModuleMetadata, String, Name> nameMapByModule = HashBasedTable.create();
 
+  /** Limits traversal to scripts matching the given predicate. */
+  private Predicate<Node> shouldTraverseScript = (n) -> true;
+
   /**
    * Creates an instance that may emit warnings when building the namespace.
    *
@@ -178,6 +182,10 @@ class GlobalNamespace
     this.externsRoot = externsRoot;
     this.root = root;
     this.enableImplicityAliasedValues = compiler.getOptions().getAssumeStaticInheritanceRequired();
+  }
+
+  void setShouldTraverseScriptPredicate(Predicate<Node> shouldTraverseScript) {
+    this.shouldTraverseScript = shouldTraverseScript;
   }
 
   boolean hasExternsRoot() {
@@ -415,6 +423,9 @@ class GlobalNamespace
     /** Collect the references in pre-order. */
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (n.isScript() && !shouldTraverseScript.test(n)) {
+        return false;
+      }
       if (hasExternsRoot()) {
         if (n == externsRoot) {
           // If we are traversing the externs, then we save a pointer to the scope

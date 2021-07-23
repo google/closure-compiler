@@ -88,6 +88,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
@@ -199,6 +200,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ImmutableMap<String, String> inputPathByWebpackId;
 
   private LocaleData localeDataValueMap;
+
+  private StaticScope transpilationNamespace;
 
   /**
    * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
@@ -1740,6 +1743,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return getTypeValidator().getMismatches();
     }
     throw new RuntimeException("Can't ask for type mismatches before type checking.");
+  }
+
+  @Override
+  StaticScope getTranspilationNamespace() {
+    if (this.transpilationNamespace == null) {
+      // Note: this also needs to happen /after/ the runtime libraries are injected, or we will not
+      // be able to find the runtime library code.
+      checkState(
+          !getLifeCycleStage().isNormalized(),
+          "cannot init transpilation namespace after optimizations phase, or information may be"
+              + " lost");
+
+      GlobalNamespace gn = new GlobalNamespace(this, this.getExternsRoot(), this.getJsRoot());
+      // Exclude user-defined code names, to save memory and help prevent misuse.
+      gn.setShouldTraverseScriptPredicate(
+          (Node script) -> script.isFromExterns() || script.isFirstChildOf(this.getJsRoot()));
+      gn.getNameForest(); // ensure namespace is generated
+      // wrap GlobalNamespace to prevent looking up extra information in GlobalNamespace
+      this.transpilationNamespace = gn;
+    }
+
+    return this.transpilationNamespace;
   }
 
   public void maybeSetTracker() {

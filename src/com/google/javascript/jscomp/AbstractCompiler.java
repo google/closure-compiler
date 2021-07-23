@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
@@ -186,6 +187,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /** Sets the top scope. */
   abstract void setTopScope(TypedScope x);
+
+  /**
+   * Returns a scope containing only externs and synthetic code or other code in the first script.
+   *
+   * <p>Intended for transpilation passes to look up types when synthesizing new code.
+   */
+  abstract StaticScope getTranspilationNamespace();
 
   /** Report an error or warning. */
   public abstract void report(JSError error);
