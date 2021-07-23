@@ -20,6 +20,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,8 +29,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
+  private static final String EXTERNS_BASE = new TestExternsBuilder().addJSCompLibraries().build();
+
   public Es6RewriteRestAndSpreadTest() {
-    super(MINIMAL_EXTERNS);
+    super(EXTERNS_BASE);
   }
 
   @Override
@@ -187,6 +190,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         externs(
             lines(
+                EXTERNS_BASE,
                 "/**",
                 " * @constructor",
                 // Skipping @struct here to allow for string access.
@@ -216,6 +220,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         externs(
             lines(
+                EXTERNS_BASE,
                 "/**",
                 " * @constructor",
                 // Skipping @struct here to allow for string access.
@@ -246,7 +251,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoDeepMethodParameterList() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/** @param {...number} args */ function numberVarargFn(args) { }",
                     "",
@@ -264,6 +269,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         externs(
             lines(
+                EXTERNS_BASE,
                 "/**",
                 " * @constructor",
                 // Skipping @struct here to allow for string access.
@@ -303,7 +309,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadMultipleVariablesIntoParameterList() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/** @param {...number} args */ function numberVarargFn(args) { }",
                     "/** @type {!Iterable<number>} */ var numberIterable;")),
@@ -323,7 +329,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterListOnAnonymousRecieverWithSideEffects() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/**",
                     " * @constructor",
@@ -351,7 +357,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         externs(
             lines(
-                MINIMAL_EXTERNS,
+                EXTERNS_BASE,
                 "/**",
                 " * @constructor",
                 // Skip @struct to allow for bracket access
@@ -384,7 +390,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   public void testSpreadVariableIntoMethodParameterListOnConditionalRecieverWithSideEffects() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/**",
                     " * @constructor",
@@ -413,7 +419,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
       testSpreadVariableIntoMethodParameterListOnConditionalRecieverWithSideEffectsInCast() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/**",
                     " * @constructor",
@@ -446,7 +452,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
       testSpreadVariableIntoMethodParameterListOnRecieversWithSideEffectsMultipleTimesInOneScope() {
     test(
         externs(
-            MINIMAL_EXTERNS
+            EXTERNS_BASE
                 + lines(
                     "/**",
                     " * @constructor",
@@ -510,14 +516,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
-        externs(
-            lines(
-                "/**",
-                " * @param {?Object|undefined} selfObj",
-                " * @param {...*} var_args",
-                " * @return {!Function}",
-                " */",
-                "Function.prototype.bind = function(selfObj, var_args) {};")),
         srcs("new F(...args);"),
         expected(
             "new (Function.prototype.bind.apply(F,"

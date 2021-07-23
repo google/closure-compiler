@@ -39,6 +39,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   boolean rewriteSuperPropertyReferencesWithoutSuper;
 
+  private static final String EXTERNS_BASE =
+      new TestExternsBuilder().addArguments().addJSCompLibraries().build();
+
+  public RewriteAsyncFunctionsTest() {
+    super(EXTERNS_BASE);
+  }
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -256,7 +263,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testInnerSuperCall() {
     test(
-        externs(new TestExternsBuilder().addPromise().build()),
+        externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
         srcs(
             lines(
                 "class A {",
@@ -349,7 +356,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testInnerSuperReference() {
     test(
-        externs(new TestExternsBuilder().addFunction().build()),
+        externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             lines(
                 "class A {",
@@ -648,7 +655,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testInnerArrowFunctionUsingArguments() {
     test(
-        externs(new TestExternsBuilder().addArguments().build()),
+        externs(new TestExternsBuilder().addArguments().addJSCompLibraries().build()),
         srcs(
             lines(
                 "class X {",
@@ -771,7 +778,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testArgumentsReplacement_normalClosureInAsync() {
     test(
-        externs(new TestExternsBuilder().addFunction().build()),
+        externs(new TestExternsBuilder().addFunction().addJSCompLibraries().build()),
         srcs(
             lines(
                 "async function a() {",
@@ -830,7 +837,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testAsyncClassMethodWithAsyncArrow() {
     test(
-        externs(new TestExternsBuilder().addConsole().build()),
+        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             lines(
                 "class A {",
@@ -862,7 +869,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Test
   public void testNonAsyncClassMethodWithAsyncArrow() {
     test(
-        externs(new TestExternsBuilder().addConsole().build()),
+        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(
             lines(
                 "class A {",

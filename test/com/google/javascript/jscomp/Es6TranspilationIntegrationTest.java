@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016_MODU
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,55 +39,12 @@ import org.junit.runners.JUnit4;
 public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
-      lines(
-          MINIMAL_EXTERNS,
-          "/** @constructor @template T */",
-          "function Arguments() {}",
-          "",
-          "Array.prototype.concat = function(var_args) {};",
-          "",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {*}",
-          " */",
-          "Function.prototype.apply = function(var_args) {};",
-          "",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {*}",
-          " */",
-          "Function.prototype.call = function(var_args) {};",
-          "",
-          // Stub out just enough of ES6 runtime libraries to satisfy the typechecker.
-          // In a real compilation, the needed parts of the library are loaded automatically.
-          "/**",
-          " * @param {function(new: ?)} subclass",
-          " * @param {function(new: ?)} superclass",
-          " */",
-          "$jscomp.inherits = function(subclass, superclass) {};",
-          "",
-          "/**",
-          " * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
-          " * @return {!Iterator<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.makeIterator = function(iterable) {};",
-          "",
-          "/**",
-          " * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
-          " * @return {!Array<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.arrayFromIterable = function(iterable) {};",
-          "",
-          "$jscomp.global.Object = function() {};",
-          "",
-          "/**",
-          "* @param {!Object} obj",
-          "* @param {!Object} props",
-          "* @return {!Object}",
-          "*/",
-          "$jscomp.global.Object.defineProperties = function(obj, props) {};");
+      new TestExternsBuilder()
+          .addArguments()
+          .addFunction()
+          .addJSCompLibraries()
+          .addObject()
+          .build();
 
   public Es6TranspilationIntegrationTest() {
     super(EXTERNS_BASE);

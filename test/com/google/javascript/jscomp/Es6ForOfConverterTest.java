@@ -15,10 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,18 +32,7 @@ import org.junit.runners.JUnit4;
 public final class Es6ForOfConverterTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
-      lines(
-          MINIMAL_EXTERNS,
-          "/** @constructor @template T */",
-          "function Arguments() {}",
-          "/**",
-          " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
-          " * @return {!Iterator<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.makeIterator = function(iterable) {};",
-          "var console;",
-          "console.log = function(s) {}");
+      new TestExternsBuilder().addArguments().addConsole().addJSCompLibraries().build();
 
   public Es6ForOfConverterTest() {
     super(EXTERNS_BASE);
@@ -78,7 +67,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "    console.log(i);",
             "  }",
             "}"));
-    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/makeiterator");
 
     // With simple assign instead of var declaration in bound variable.
     test(
@@ -231,7 +219,16 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   @Test
   public void testForLetOfWithoutExterns() {
     test(
-        externs(""),
+        // add only minimal runtime library stubs to prevent AstFactory crash
+        externs(
+            lines(
+                "var $jscomp = {};",
+                "/**",
+                " * @param {?} iterable",
+                " * @return {!Iterator<T>}",
+                " * @template T",
+                " */",
+                "$jscomp.makeIterator = function(iterable) {};")),
         srcs("for (let x of [1, 2, 3]) {}"),
         expected(
             lines(

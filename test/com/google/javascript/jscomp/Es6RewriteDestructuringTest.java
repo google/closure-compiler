@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -40,6 +41,13 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   private ObjectDestructuringRewriteMode destructuringRewriteMode =
       ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
   private boolean useNoninjectingCompiler = true;
+
+  private static final String EXTERNS_BASE =
+      new TestExternsBuilder().addObject().addArguments().addString().addJSCompLibraries().build();
+
+  public Es6RewriteDestructuringTest() {
+    super(EXTERNS_BASE);
+  }
 
   @Override
   @Before
@@ -387,7 +395,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var c=$jscomp$destructuring$var0.next().value"));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("var a; [[a] = ['b']] = [];"),
         expected(
             lines(
@@ -464,7 +471,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testArrayDestructuringMixedRest() {
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("let [first, ...[re, st, ...{length: num_left}]] = f();"),
         expected(
             lines(
@@ -528,7 +534,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringForOfWithShadowing() {
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("for (const [value] of []) { const value = 0; }"),
         expected(
             lines(
@@ -545,7 +550,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringForInWithShadowing() {
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("for (const [value] in {}) { const value = 0; }"),
         expected(
             lines(
@@ -717,7 +721,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     testSame(
         externs(
             lines(
-                MINIMAL_EXTERNS,
+                EXTERNS_BASE,
                 "/** @constructor */",
                 "function Foo() {}",
                 "",
@@ -746,7 +750,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testDestructuringArrayNotInExprResult() {
     test(
-        externs(MINIMAL_EXTERNS),
         srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
         expected(
             lines(
@@ -761,7 +764,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "})();")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs(
             lines(
                 "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
@@ -781,7 +783,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "foo();")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs(
             lines(
                 "var prefix;",
@@ -802,7 +803,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "}")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs(
             lines(
                 "var prefix;",
@@ -825,7 +825,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "}")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
         expected(
             lines(
@@ -893,7 +892,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   @Test
   public void testNestedDestructuring() {
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("var [[x]] = [[1]];"),
         expected(
             lines(
@@ -903,7 +901,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "var x = $jscomp$destructuring$var1.next().value;")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("var [[x,y],[z]] = [[1,2],[3]];"),
         expected(
             lines(
@@ -917,7 +914,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                 "var z = $jscomp$destructuring$var2.next().value;")));
 
     test(
-        externs(MINIMAL_EXTERNS),
         srcs("var [[x,y],z] = [[1,2],3];"),
         expected(
             lines(

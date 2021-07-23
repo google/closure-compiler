@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -168,7 +169,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS),
+        externs(new TestExternsBuilder().addJSCompLibraries().build()),
         srcs(lines("var x, a, b;", "x = ([a,b] = [1,2])")),
         expected(
             lines(
@@ -188,7 +189,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS + "var console = {log(s) {}};"),
+        externs(new TestExternsBuilder().addJSCompLibraries().addConsole().build()),
         srcs(lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()")),
         expected(
             lines(
@@ -211,7 +212,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS),
+        externs(new TestExternsBuilder().addJSCompLibraries().build()),
         srcs(
             lines(
                 "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();")),
@@ -236,7 +237,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS),
+        externs(new TestExternsBuilder().addJSCompLibraries().build()),
         srcs(
             lines(
                 "var prefix;",
@@ -262,7 +263,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS + " const console = {log(s) {}}"),
+        externs(new TestExternsBuilder().addJSCompLibraries().addConsole().build()),
         srcs(
             lines(
                 "var prefix;",
@@ -290,7 +291,7 @@ public final class MultiPassTest extends CompilerTestCase {
     setDestructuringArrowFunctionOptions();
 
     test(
-        externs(MINIMAL_EXTERNS + " const console = {log(s) {}}"),
+        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
         srcs(lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}")),
         expected(
             lines(

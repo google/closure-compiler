@@ -45,6 +45,10 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   private LanguageMode languageIn = null;
   private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
+  public RewriteDynamicImportsTest() {
+    super(new TestExternsBuilder().addPromise().build());
+  }
+
   @Override
   @Before
   public void setUp() throws Exception {
