@@ -553,7 +553,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   private void visitScript(NodeTraversal t, Node script) {
     final Node moduleBody = script.getFirstChild();
     // TypedScopeCreator sets the module object type on the MODULE_BODY during type checking.
-    final JSType moduleObjectType = moduleBody.getJSType();
+    final AstFactory.Type moduleObjectType = AstFactory.type(moduleBody);
     inlineModuleToGlobalScope(moduleBody);
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
@@ -587,7 +587,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   }
 
   private Node createExportsObject(
-      String moduleName, NodeTraversal t, Node script, JSType moduleObjectType) {
+      String moduleName, NodeTraversal t, Node script, AstFactory.Type moduleObjectType) {
     Node moduleObject = astFactory.createObjectLit(moduleObjectType);
     // Going to get renamed by RenameGlobalVars, so the name we choose here doesn't matter as long
     // as it doesn't collide with an existing variable. (We can't use `moduleName` since then

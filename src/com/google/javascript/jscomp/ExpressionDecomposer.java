@@ -19,6 +19,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -756,7 +757,7 @@ class ExpressionDecomposer {
       // Original callee was like `super.prop(args)`.
       // The correct way to call the value `super.prop` from a temporary variable is
       // `tmpVar.call(this, args)`, so just create a `this` here.
-      receiverNode = astFactory.createThis(origThisValue.getJSType()).srcref(origThisValue);
+      receiverNode = astFactory.createThis(type(origThisValue)).srcref(origThisValue);
     } else {
       final Node thisVarNode = extractExpression(origThisValue, state.extractBeforeStatement);
       state.extractBeforeStatement = thisVarNode;

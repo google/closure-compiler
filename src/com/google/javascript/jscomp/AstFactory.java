@@ -222,60 +222,54 @@ final class AstFactory {
   /**
    * Returns a new {@code yield} expression.
    *
-   * @param jsType Type we expect to get back after the yield
+   * @param type Type we expect to get back after the yield
    * @param value value to yield
    */
-  Node createYield(JSType jsType, Node value) {
-    assertNotAddingColors();
+  Node createYield(Type type, Node value) {
     Node result = IR.yield(value);
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(jsType));
-    }
+    this.setJSTypeOrColor(type, result);
     return result;
   }
 
   /**
    * Returns a new {@code await} expression.
    *
-   * @param jsType Type we expect to get back after the await
+   * @param type Type we expect to get back after the await
    * @param value value to await
    */
-  Node createAwait(JSType jsType, Node value) {
-    assertNotAddingColors();
+  Node createAwait(Type type, Node value) {
     Node result = IR.await(value);
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(jsType));
-    }
+    setJSTypeOrColor(type, result);
     return result;
   }
 
   Node createString(String value) {
     Node result = IR.string(value);
-    setTypeOrColor(JSTypeNative.STRING_TYPE, StandardColors.STRING, result);
+    setJSTypeOrColor(type(JSTypeNative.STRING_TYPE, StandardColors.STRING), result);
     return result;
   }
 
   Node createNumber(double value) {
     Node result = IR.number(value);
-    setTypeOrColor(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER, result);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
     return result;
   }
 
   Node createBoolean(boolean value) {
     Node result = value ? IR.trueNode() : IR.falseNode();
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
   Node createNull() {
     Node result = IR.nullNode();
-    setTypeOrColor(JSTypeNative.NULL_TYPE, StandardColors.NULL_OR_VOID, result);
+    setJSTypeOrColor(type(JSTypeNative.NULL_TYPE, StandardColors.NULL_OR_VOID), result);
     return result;
   }
 
   Node createVoid(Node child) {
     Node result = IR.voidNode(child);
-    setTypeOrColor(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID, result);
+    setJSTypeOrColor(type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID), result);
     return result;
   }
 
@@ -288,31 +282,25 @@ final class AstFactory {
 
   Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
     Node result = IR.cast(child, jsdoc);
-    setTypeOrColor(unknownType, StandardColors.UNKNOWN, result);
+    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), result);
     return result;
   }
 
   Node createNot(Node child) {
     Node result = IR.not(child);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
-  Node createThis(JSType thisType) {
-    assertNotAddingColors();
+  Node createThis(Type thisType) {
     Node result = IR.thisNode();
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(thisType));
-    }
+    setJSTypeOrColor(thisType, result);
     return result;
   }
 
-  Node createSuper(JSType superType) {
-    assertNotAddingColors();
+  Node createSuper(Type superType) {
     Node result = IR.superNode();
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(superType));
-    }
+    setJSTypeOrColor(superType, result);
     return result;
   }
 
@@ -391,7 +379,7 @@ final class AstFactory {
   Node createThisAliasDeclarationForFunction(String aliasName, Node functionNode) {
     assertNotAddingColors();
     return createSingleConstNameDeclaration(
-        aliasName, createThis(getTypeOfThisForFunctionNode(functionNode)));
+        aliasName, createThis(type(getTypeOfThisForFunctionNode(functionNode))));
   }
 
   /**
@@ -400,8 +388,8 @@ final class AstFactory {
    * <p>e.g. `let variableName`
    */
   Node createSingleLetNameDeclaration(String variableName) {
-    assertNotAddingColors();
-    return IR.let(createName(variableName, JSTypeNative.VOID_TYPE));
+    return IR.let(
+        createName(variableName, type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID)));
   }
 
   /**
@@ -411,7 +399,8 @@ final class AstFactory {
    * <p>e.g. `var variableName`
    */
   Node createSingleVarNameDeclaration(String variableName) {
-    return IR.var(createName(variableName, JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID));
+    return IR.var(
+        createName(variableName, type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID)));
   }
 
   /**
@@ -422,7 +411,7 @@ final class AstFactory {
    * <p>e.g. `var variableName = value;`
    */
   Node createSingleVarNameDeclaration(String variableName, Node value) {
-    return IR.var(createName(variableName, value.getJSType(), value.getColor()), value);
+    return IR.var(createName(variableName, type(value)), value);
   }
 
   /**
@@ -433,7 +422,7 @@ final class AstFactory {
    * <p>e.g. `const variableName = value;`
    */
   Node createSingleConstNameDeclaration(String variableName, Node value) {
-    return IR.constNode(createName(variableName, value.getJSType(), value.getColor()), value);
+    return IR.constNode(createName(variableName, type(value.getJSType(), value.getColor())), value);
   }
 
   /**
@@ -460,29 +449,23 @@ final class AstFactory {
   }
 
   Node createName(String name, JSType type) {
-    return createName(name, type, StandardColors.UNKNOWN);
+    return createName(name, type(type));
   }
 
   Node createName(String name, JSTypeNative nativeType) {
     Node result = IR.name(name);
-    setTypeOrColor(nativeType, StandardColors.UNKNOWN, result);
+    setJSTypeOrColor(type(nativeType, StandardColors.UNKNOWN), result);
     return result;
   }
 
   Node createName(String name, Color color) {
     assertNotAddingJSTypes();
-    return createName(name, unknownType, color);
+    return createName(name, type(unknownType, color));
   }
 
-  private Node createName(String name, JSTypeNative jsTypeNative, Color color) {
+  Node createName(String name, Type type) {
     Node result = IR.name(name);
-    setTypeOrColor(jsTypeNative, color, result);
-    return result;
-  }
-
-  private Node createName(String name, JSType jsType, Color color) {
-    Node result = IR.name(name);
-    setTypeOrColor(jsType, color, result);
+    setJSTypeOrColor(type, result);
     return result;
   }
 
@@ -502,7 +485,7 @@ final class AstFactory {
   }
 
   Node createNameWithUnknownType(String name) {
-    return createName(name, unknownType, StandardColors.UNKNOWN);
+    return createName(name, type(unknownType, StandardColors.UNKNOWN));
   }
 
   Node createQName(Scope scope, String qname) {
@@ -578,6 +561,12 @@ final class AstFactory {
     return result;
   }
 
+  Node createGetProp(Node receiver, String propertyName, Type type) {
+    Node result = IR.getprop(receiver, propertyName);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
   /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
   Node createGetProps(Node receiver, Iterable<String> propertyNames) {
     assertNotAddingColors();
@@ -602,25 +591,25 @@ final class AstFactory {
     Node result = IR.getelem(receiver, key);
     // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template
     // type here.
-    setTypeOrColor(unknownType, StandardColors.UNKNOWN, result);
+    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), result);
     return result;
   }
 
   Node createDelProp(Node target) {
     Node result = IR.delprop(target);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
   Node createStringKey(String key, Node value) {
     Node result = IR.stringKey(key, value);
-    setTypeOrColor(value.getJSType(), value.getColor(), result);
+    setJSTypeOrColor(type(value.getJSType(), value.getColor()), result);
     return result;
   }
 
   Node createComputedProperty(Node key, Node value) {
     Node result = IR.computedProp(key, value);
-    setTypeOrColor(value.getJSType(), value.getColor(), result);
+    setJSTypeOrColor(type(value.getJSType(), value.getColor()), result);
     return result;
   }
 
@@ -642,13 +631,13 @@ final class AstFactory {
 
   Node createIn(Node left, Node right) {
     Node result = IR.in(left, right);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
   Node createComma(Node left, Node right) {
     Node result = IR.comma(left, right);
-    setTypeOrColor(right.getJSType(), right.getColor(), result);
+    setJSTypeOrColor(type(right.getJSType(), right.getColor()), result);
     return result;
   }
 
@@ -743,6 +732,12 @@ final class AstFactory {
       JSType returnType = calleeType != null ? calleeType.getReturnType() : unknownType;
       result.setJSType(returnType);
     }
+    return result;
+  }
+
+  Node createCall(Node callee, Type resultType, Node... args) {
+    Node result = NodeUtil.newCallNode(callee, args);
+    setJSTypeOrColor(resultType, result);
     return result;
   }
 
@@ -844,13 +839,13 @@ final class AstFactory {
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(Node lhs, Node rhs) {
     Node result = IR.assign(lhs, rhs);
-    setTypeOrColor(rhs.getJSType(), rhs.getColor(), result);
+    setJSTypeOrColor(type(rhs.getJSType(), rhs.getColor()), result);
     return result;
   }
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(String lhsName, Node rhs) {
-    Node name = createName(lhsName, rhs.getJSType(), rhs.getColor());
+    Node name = createName(lhsName, type(rhs.getJSType(), rhs.getColor()));
     return createAssign(name, rhs);
   }
 
@@ -874,44 +869,33 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates an object-literal with zero or more elements and a specific type. */
+  Node createObjectLit(Type type, Node... elements) {
+    Node result = IR.objectlit(elements);
+    setJSTypeOrColor(type, result);
+    return result;
+  }
+
   public Node createQuotedStringKey(String key, Node value) {
     Node result = IR.stringKey(key, value);
     result.setQuotedString();
     return result;
   }
 
-  /** Creates an object-literal with zero or more elements and a specific type. */
-  Node createObjectLit(@Nullable JSType jsType, Node... elements) {
-    assertNotAddingColors();
-    Node result = IR.objectlit(elements);
-    if (isAddingTypes()) {
-      result.setJSType(checkNotNull(jsType));
-    }
-    return result;
-  }
-
   /** Creates an empty function `function() {}` */
-  Node createEmptyFunction(JSType type) {
-    assertNotAddingColors();
+  Node createEmptyFunction(Type type) {
     Node result = NodeUtil.emptyFunction();
     if (isAddingTypes()) {
-      checkNotNull(type);
-      checkArgument(type.isFunctionType(), type);
-      result.setJSType(checkNotNull(type));
+      checkArgument(type.getJSType(registry).isFunctionType(), type);
     }
+    setJSTypeOrColor(type, result);
     return result;
   }
 
   /** Creates an empty function `function*() {}` */
-  Node createEmptyGeneratorFunction(JSType type) {
-    assertNotAddingColors();
-    Node result = NodeUtil.emptyFunction();
+  Node createEmptyGeneratorFunction(Type type) {
+    Node result = createEmptyFunction(type);
     result.setIsGeneratorFunction(true);
-    if (isAddingTypes()) {
-      checkNotNull(type);
-      checkArgument(type.isFunctionType(), type);
-      result.setJSType(checkNotNull(type));
-    }
     return result;
   }
 
@@ -925,12 +909,24 @@ final class AstFactory {
    */
   Node createFunction(String name, Node paramList, Node body, JSType type) {
     assertNotAddingColors();
+    return createFunction(name, paramList, body, type(type));
+  }
+
+  /**
+   * Creates a function `function name(paramList) { body }`
+   *
+   * @param name STRING node - empty string if no name
+   * @param paramList PARAM_LIST node
+   * @param body BLOCK node
+   * @param type type to apply to the function itself
+   */
+  Node createFunction(String name, Node paramList, Node body, Type type) {
     Node nameNode = createName(name, type);
     Node result = IR.function(nameNode, paramList, body);
     if (isAddingTypes()) {
-      checkArgument(type.isFunctionType(), type);
-      result.setJSType(type);
+      checkArgument(type.getJSType(registry).isFunctionType(), type);
     }
+    setJSTypeOrColor(type, result);
     return result;
   }
 
@@ -946,7 +942,7 @@ final class AstFactory {
     assertNotAddingColors();
     FunctionType functionType =
         isAddingTypes() ? registry.createFunctionType(returnType).toMaybeFunctionType() : null;
-    return createFunction(name, IR.paramList(), body, functionType);
+    return createFunction(name, IR.paramList(), body, type(functionType));
   }
 
   Node createZeroArgGeneratorFunction(String name, Node body, @Nullable JSType returnType) {
@@ -989,19 +985,19 @@ final class AstFactory {
 
   Node createSheq(Node expr1, Node expr2) {
     Node result = IR.sheq(expr1, expr2);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
   Node createEq(Node expr1, Node expr2) {
     Node result = IR.eq(expr1, expr2);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
   Node createNe(Node expr1, Node expr2) {
     Node result = IR.ne(expr1, expr2);
-    setTypeOrColor(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN, result);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
@@ -1189,7 +1185,7 @@ final class AstFactory {
       }
     }
 
-    return createEmptyGeneratorFunction(generatorType);
+    return createEmptyGeneratorFunction(type(generatorType));
   }
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(Scope scope, Node generatorFunction) {
@@ -1283,29 +1279,89 @@ final class AstFactory {
     return getpropType;
   }
 
-  private void setTypeOrColor(JSTypeNative nativeType, Color color, Node result) {
+  private void setJSTypeOrColor(Type type, Node result) {
     switch (this.typeMode) {
       case JSTYPE:
-        result.setJSType(getNativeType(nativeType));
+        result.setJSType(type.getJSType(registry));
         break;
       case COLOR:
-        result.setColor(checkNotNull(color));
+        result.setColor(type.getColor());
         break;
       case NONE:
         break;
     }
   }
 
-  private void setTypeOrColor(JSType jsType, Color color, Node result) {
-    switch (this.typeMode) {
-      case JSTYPE:
-        result.setJSType(checkNotNull(jsType));
-        break;
-      case COLOR:
-        result.setColor(checkNotNull(color));
-        break;
-      case NONE:
-        break;
+  interface Type {
+    JSType getJSType(JSTypeRegistry registry);
+
+    Color getColor();
+  }
+
+  private static final class TypeOnNode implements Type {
+    private final Node n;
+
+    TypeOnNode(Node n) {
+      this.n = n;
     }
+
+    @Override
+    public JSType getJSType(JSTypeRegistry registry) {
+      return checkNotNull(this.n.getJSType(), n);
+    }
+
+    @Override
+    public Color getColor() {
+      return checkNotNull(this.n.getColor(), n);
+    }
+  }
+
+  private static final class JSTypeOrColor implements Type {
+    private final JSType jstype;
+    private final JSTypeNative jstypeNative;
+    private final Color color;
+
+    JSTypeOrColor(JSTypeNative jstypeNative, Color color) {
+      this.jstypeNative = jstypeNative;
+      this.jstype = null;
+      this.color = color;
+    }
+
+    JSTypeOrColor(JSType jstype, Color color) {
+      this.jstype = jstype;
+      this.jstypeNative = null;
+      this.color = color;
+    }
+
+    @Override
+    public JSType getJSType(JSTypeRegistry registry) {
+      return this.jstype != null ? checkNotNull(this.jstype) : registry.getNativeType(jstypeNative);
+    }
+
+    @Override
+    public Color getColor() {
+      return checkNotNull(this.color);
+    }
+  }
+
+  /** Uses the JSType or Color of the given node as a template for adding type information */
+  static Type type(Node node) {
+    return new TypeOnNode(node);
+  }
+
+  static Type type(JSType type) {
+    return new JSTypeOrColor(type, null);
+  }
+
+  static Type type(Color type) {
+    return new JSTypeOrColor((JSType) null, type);
+  }
+
+  static Type type(JSType type, Color color) {
+    return new JSTypeOrColor(type, color);
+  }
+
+  static Type type(JSTypeNative type, Color color) {
+    return new JSTypeOrColor(type, color);
   }
 }

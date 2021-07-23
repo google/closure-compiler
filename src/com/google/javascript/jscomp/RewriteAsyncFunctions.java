@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -432,7 +433,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
 
           case AWAIT:
             // Awaits become yields in the converted async function's inner generator function.
-            n.replaceWith(astFactory.createYield(n.getJSType(), n.removeFirstChild()));
+            n.replaceWith(astFactory.createYield(type(n), n.removeFirstChild()));
             break;
 
           default:

@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
@@ -61,7 +62,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node memberDef;
     if (superClass.isEmpty()) {
       // use the pre-cast type because createEmptyFunction expects a FunctionType
-      Node function = astFactory.createEmptyFunction(getTypeBeforeCast(classNode));
+      Node function = astFactory.createEmptyFunction(type(getTypeBeforeCast(classNode)));
       compiler.reportChangeToChangeScope(function);
       memberDef = astFactory.createMemberFunctionDef("constructor", function);
     } else {
@@ -89,7 +90,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SUPER, compiler);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS, compiler);
       }
-      Node constructor = astFactory.createFunction("", IR.paramList(), body, classNode.getJSType());
+      Node constructor = astFactory.createFunction("", IR.paramList(), body, type(classNode));
       memberDef = astFactory.createMemberFunctionDef("constructor", constructor);
     }
     memberDef.srcrefTreeIfMissing(classNode);
@@ -223,7 +224,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       node.replaceWith(expandedSuper);
       callTarget = astFactory.createGetProp(callTarget.detach(), "call");
       grandparent.addChildToFront(callTarget);
-      Node thisNode = astFactory.createThis(clazz.getJSType());
+      Node thisNode = astFactory.createThis(type(clazz));
       thisNode.makeNonIndexable(); // no direct correlation with original source
       thisNode.insertAfter(callTarget);
       grandparent.srcrefTreeIfMissing(parent);
@@ -239,7 +240,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       callTarget = astFactory.createGetProp(callTarget.detach(), "call");
       grandparent.addChildToFront(callTarget);
       JSType thisType = getInstanceTypeForClassNode(clazz);
-      Node thisNode = astFactory.createThis(thisType);
+      Node thisNode = astFactory.createThis(type(thisType));
       thisNode.makeNonIndexable(); // no direct correlation with original source
       thisNode.insertAfter(callTarget);
       grandparent.putBooleanProp(Node.FREE_CALL, false);

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -573,7 +574,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
       // We are in an AsyncGenerator and must instead yield an "await" ActionRecord
       result =
           astFactory.createYield(
-              iterableResultType,
+              type(iterableResultType),
               astFactory.createNewNode(
                   astFactory.createQName(t.getScope(), ACTION_RECORD_NAME),
                   astFactory.createQName(t.getScope(), ACTION_ENUM_AWAIT),
@@ -581,7 +582,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     } else {
       result =
           astFactory.createAwait(
-              iterableResultType,
+              type(iterableResultType),
               astFactory.createCall(astFactory.createGetProp(iteratorTemp, "next")));
     }
 
