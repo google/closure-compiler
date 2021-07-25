@@ -117,7 +117,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     maybeCollapseIntoForStatements(n, parent);
-    maybeCollapseLogicalAssignShorthand(n, parent);
+    maybeCollapseLogicalAssignShorthand(t, n, parent);
     maybeCollapseAssignShorthand(n, parent);
   }
 
@@ -203,7 +203,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
     }
   }
 
-  private void maybeCollapseLogicalAssignShorthand(Node n, Node parent) {
+  private void maybeCollapseLogicalAssignShorthand(NodeTraversal t, Node n, Node parent) {
     if (!isCollapsableLogicalAssign(n)) {
       return;
     }
@@ -214,6 +214,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
       Node opDetached = op.detach();
       opDetached.setJSDocInfo(n.getJSDocInfo());
       n.replaceWith(opDetached);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LOGICAL_ASSIGNMENT, compiler);
       compiler.reportChangeToEnclosingScope(parent);
     }
   }
