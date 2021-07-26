@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -88,8 +89,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, Compil
     // Add an empty target object literal so changes made by Object.assign will not affect any other
     // variables.
     Node result =
-        astFactory.createObjectDotAssignCall(
-            namespace, obj.getJSType(), astFactory.createObjectLit());
+        astFactory.createObjectDotAssignCall(namespace, type(obj), astFactory.createObjectLit());
 
     // An indicator whether the current last thing in the param list is an object literal to which
     // properties may be added.  Initialized to null since nothing should be added to the empty

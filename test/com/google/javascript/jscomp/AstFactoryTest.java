@@ -801,7 +801,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateAnd() {
+  public void testCreateAnd_jstypes() {
     AstFactory astFactory = createTestAstFactory();
 
     Node numberLiteral = astFactory.createNumber(2112D);
@@ -811,6 +811,19 @@ public class AstFactoryTest {
     assertNode(andNode).hasType(Token.AND);
     assertThat(childList(andNode)).containsExactly(numberLiteral, stringLiteral).inOrder();
     assertType(andNode.getJSType()).toStringIsEqualTo("(number|string)");
+  }
+
+  @Test
+  public void testCreateAnd_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node numberLiteral = astFactory.createNumber(2112D);
+    Node stringLiteral = astFactory.createString("hello");
+    Node andNode = astFactory.createAnd(numberLiteral, stringLiteral);
+
+    assertNode(andNode).hasType(Token.AND);
+    assertThat(childList(andNode)).containsExactly(numberLiteral, stringLiteral).inOrder();
+    assertNode(andNode).hasColorThat().hasAlternates(StandardColors.STRING, StandardColors.NUMBER);
   }
 
   @Test
@@ -824,7 +837,8 @@ public class AstFactoryTest {
     assertNode(andNode).hasType(Token.AND);
     assertThat(childList(andNode)).containsExactly(nullNode, stringLiteral).inOrder();
     // NULL_TYPE doesn't contain any truthy values, so its type is the only possibility
-    assertType(andNode.getJSType()).toStringIsEqualTo("null");
+    // but AstFactory is simpler than the type inferencer and does not realize this.
+    assertType(andNode.getJSType()).toStringIsEqualTo("(null|string)");
   }
 
   @Test
@@ -838,7 +852,8 @@ public class AstFactoryTest {
     assertNode(andNode).hasType(Token.AND);
     assertThat(childList(andNode)).containsExactly(nonNullObject, stringLiteral).inOrder();
     // OBJECT_TYPE doesn't contain any falsy values, so the RHS type is the only possibility
-    assertType(andNode.getJSType()).toStringIsEqualTo("string");
+    // but AstFactory is simpler than the type inferencer and does not realize this.
+    assertType(andNode.getJSType()).toStringIsEqualTo("(Object|string)");
   }
 
   @Test
@@ -865,7 +880,8 @@ public class AstFactoryTest {
     assertNode(andNode).hasType(Token.OR);
     assertThat(childList(andNode)).containsExactly(nullLiteral, stringLiteral).inOrder();
     // NULL_TYPE doesn't contain any truthy values, so the RHS type is the only possibility
-    assertType(andNode.getJSType()).toStringIsEqualTo("string");
+    // but AstFactory is simpler than the type inferencer and does not realize this.
+    assertType(andNode.getJSType()).toStringIsEqualTo("(null|string)");
   }
 
   @Test
@@ -879,7 +895,8 @@ public class AstFactoryTest {
     assertNode(andNode).hasType(Token.OR);
     assertThat(childList(andNode)).containsExactly(nonNullObject, stringLiteral).inOrder();
     // OBJECT_TYPE doesn't contain any falsy values, so the RHS won't be evaluated
-    assertType(andNode.getJSType()).toStringIsEqualTo("Object");
+    // but AstFactory is simpler than the type inferencer and does not realize this.
+    assertType(andNode.getJSType()).toStringIsEqualTo("(Object|string)");
   }
 
   @Test
@@ -1042,6 +1059,36 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateQNameWithUnknownTypeFromString_jstype() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node objDotInnerDotStr = astFactory.createQNameWithUnknownType("obj.inner.str");
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasJSTypeThat().isUnknown();
+    assertNode(objDotInner).hasJSTypeThat().isUnknown();
+    assertNode(objDotInnerDotStr).hasJSTypeThat().isUnknown();
+  }
+
+  @Test
+  public void testCreateQNameWithUnknownTypeFromString_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node objDotInnerDotStr = astFactory.createQNameWithUnknownType("obj.inner.str");
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
+    assertNode(objDotInner).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
+    assertNode(objDotInnerDotStr).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
+  }
+
+  @Test
   public void testCreateQNameFromString() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -1195,7 +1242,7 @@ public class AstFactoryTest {
     Node callee = IR.superNode().setJSType(classBExtendsNode.getJSType());
     Node arg1 = astFactory.createString("hi");
     Node arg2 = astFactory.createNumber(2112D);
-    Node callNode = astFactory.createConstructorCall(classBType, callee, arg1, arg2);
+    Node callNode = astFactory.createConstructorCall(type(classBNode), callee, arg1, arg2);
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isTrue();
@@ -1346,6 +1393,27 @@ public class AstFactoryTest {
     assertNode(memberFunctionDef).hasToken(Token.MEMBER_FUNCTION_DEF);
     assertThat(memberFunctionDef.getString()).isEqualTo("bar");
     assertType(memberFunctionDef.getJSType()).isEqualTo(functionType);
+  }
+
+  @Test
+  public void testCreateMemberFunctionDef_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    // just a quick way to get a valid function type
+    Node root = parseAndAddColors("function foo() {}");
+    Color functionType =
+        root.getFirstChild() // script
+            .getFirstChild() // function
+            .getColor();
+
+    Node paramList = IR.paramList();
+    Node body = IR.block();
+    Node functionNode = IR.function(IR.name(""), paramList, body).setColor(functionType);
+
+    Node memberFunctionDef = astFactory.createMemberFunctionDef("bar", functionNode);
+    assertNode(memberFunctionDef).hasToken(Token.MEMBER_FUNCTION_DEF);
+    assertThat(memberFunctionDef.getString()).isEqualTo("bar");
+    assertNode(memberFunctionDef).hasColorThat().isEqualTo(functionType);
   }
 
   @Test
@@ -1640,7 +1708,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateHook() {
+  public void testCreateHook_jstypes() {
     AstFactory astFactory = createTestAstFactory();
     JSType stringType = getNativeType(JSTypeNative.STRING_TYPE);
     JSType numberType = getNativeType(JSTypeNative.NUMBER_TYPE);
@@ -1652,6 +1720,19 @@ public class AstFactoryTest {
     Node hook = astFactory.createHook(condition, left, right);
     assertNode(hook).hasToken(Token.HOOK);
     assertType(hook.getJSType()).isEqualTo(getRegistry().createUnionType(stringType, numberType));
+  }
+
+  @Test
+  public void testCreateHook_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node condition = IR.falseNode();
+    Node left = astFactory.createString("left");
+    Node right = astFactory.createNumber(0);
+
+    Node hook = astFactory.createHook(condition, left, right);
+    assertNode(hook).hasToken(Token.HOOK);
+    assertNode(hook).hasColorThat().hasAlternates(StandardColors.STRING, StandardColors.NUMBER);
   }
 
   @Test
@@ -1679,7 +1760,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateNewNode() {
+  public void testCreateNewNode_jstypes() {
     // Given
     AstFactory astFactory = createTestAstFactory();
     JSType numberType = getNativeType(JSTypeNative.NUMBER_TYPE);
@@ -1708,6 +1789,37 @@ public class AstFactoryTest {
     // Then
     assertNode(newExpr).isEquivalentTo(expected);
     assertType(newExpr.getJSType()).isEqualTo(expected.getJSType());
+  }
+
+  @Test
+  public void testCreateNewNode_colors() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node first = astFactory.createNumber(0);
+    Node second = astFactory.createNumber(1);
+
+    Node classNode =
+        parseAndAddColors(
+                lines(
+                    "class Example { constructor(arg0, arg1) {} }", //
+                    "new Example(0, 1);"))
+            .getFirstChild() // Script
+            .getFirstChild(); // class
+
+    Node expected =
+        classNode
+            .getNext() // ExpressionResult
+            .getFirstChild(); // NewExpression
+
+    // When
+    Node newExpr =
+        astFactory.createNewNode(
+            astFactory.createName("Example", classNode.getColor()), first, second);
+
+    // Then
+    assertNode(newExpr).isEquivalentTo(expected);
+    assertNode(newExpr).hasColorThat().isEqualTo(expected.getColor());
   }
 
   private static ImmutableList<Node> childList(Node parent) {
