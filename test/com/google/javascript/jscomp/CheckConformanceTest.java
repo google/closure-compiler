@@ -2965,7 +2965,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(
         "goog.dom.createDom('iframe', {['not_src']: src});",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
-        "Possible violation: BanCreateDom Message");
+        "Possible violation: BanCreateDom Message\n"
+            + "The type information available for this expression is too loose to ensure"
+            + " conformance.");
 
     testNoWarning("goog.dom.createDom('iframe');");
     testNoWarning("goog.dom.createDom('iframe', {'src': ''});");

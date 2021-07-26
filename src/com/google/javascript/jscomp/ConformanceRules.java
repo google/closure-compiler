@@ -1920,7 +1920,7 @@ public final class ConformanceRules {
           if (attr.isComputedProp()) {
             // We don't know if the computed property matches 'src' or not
             return reportLooseTypeViolations
-                ? ConformanceResult.POSSIBLE_VIOLATION
+                ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
                 : ConformanceResult.CONFORMANCE;
           }
         }
