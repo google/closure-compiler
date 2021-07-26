@@ -209,7 +209,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureGoogScopeAliasesForIjs);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
-      checks.add(whitespaceWrapGoogModules);
+      if (options.wrapGoogModulesForWhitespaceOnly) {
+        checks.add(whitespaceWrapGoogModules);
+      }
       checks.add(removeSyntheticScript);
       return checks;
     }
