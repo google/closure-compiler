@@ -24,6 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -52,6 +53,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS);
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
+  private final StaticScope namespace;
 
   private final JSType arrayType;
   private final JSType boolType;
@@ -62,6 +65,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
   public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
+    this.namespace = compiler.getTranspilationNamespace();
 
     if (compiler.hasTypeCheckingRun()) {
       JSTypeRegistry registry = compiler.getTypeRegistry();
@@ -273,7 +278,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
             currGroup = null;
           }
 
-          groups.add(Es6ToEs3Util.arrayFromIterable(compiler, spreadExpression));
+          Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterable");
+          groups.add(
+              astFactory.createJscompArrayFromIterableCall(spreadExpression, this.namespace));
         }
       } else {
         if (currGroup == null) {
@@ -317,11 +324,10 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       joinedGroups = baseArrayLit;
     } else {
       Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
-      joinedGroups = IR.call(concat, groups.toArray(new Node[0]));
+      joinedGroups = astFactory.createCall(concat, groups.toArray(new Node[0]));
     }
 
     joinedGroups.srcrefTreeIfMissing(spreadParent);
-    joinedGroups.setJSType(arrayType);
 
     spreadParent.replaceWith(joinedGroups);
     compiler.reportChangeToEnclosingScope(joinedGroups);
@@ -379,7 +385,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
         joinedGroups = IR.call(concat, groups.toArray(new Node[0])).setJSType(arrayType);
       }
-      joinedGroups.setJSType(arrayType);
     }
     boolean isFreeCall = spreadParent.getBooleanProp(Node.FREE_CALL);
 

@@ -35,6 +35,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -966,33 +967,25 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateMethodCall() {
+  public void testCreateMethodCall_throws() {
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "class Foo {",
-                "  /**",
-                "   * @param {string} arg1",
-                "   * @param {number} arg2",
-                "   * @return {string}",
-                "   */",
-                "  method(arg1, arg2) { return arg1; }",
-                "}",
-                "const foo = new Foo();"));
-    Scope scope = getScope(root);
+    parseAndAddTypes(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @param {string} arg1",
+            "   * @param {number} arg2",
+            "   * @return {string}",
+            "   */",
+            "  method(arg1, arg2) { return arg1; }",
+            "}",
+            "const foo = new Foo();"));
+    StaticScope scope = compiler.getTranspilationNamespace();
 
+    // createQName only accepts globally qualified qnames. foo.method is a prototype method access.
     // foo.method("hi", 2112)
-    Node callee = astFactory.createQName(scope, "foo.method");
-    Node arg1 = astFactory.createString("hi");
-    Node arg2 = astFactory.createNumber(2112D);
-    Node callNode = astFactory.createCall(callee, arg1, arg2);
-
-    assertNode(callNode).hasType(Token.CALL);
-    assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
-    assertThat(childList(callNode)).containsExactly(callee, arg1, arg2).inOrder();
-    assertType(callNode.getJSType()).isString();
+    assertThrows(Exception.class, () -> astFactory.createQName(scope, "foo.method"));
   }
 
   @Test
@@ -1000,18 +993,17 @@ public class AstFactoryTest {
     // NOTE: This method is testing both createCall() and createQName()
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "class Foo {",
-                "  /**",
-                "   * @param {string} arg1",
-                "   * @param {number} arg2",
-                "   * @return {string}",
-                "   */",
-                "  static method(arg1, arg2) { return arg1; }",
-                "}"));
-    Scope scope = getScope(root);
+    parseAndAddTypes(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @param {string} arg1",
+            "   * @param {number} arg2",
+            "   * @return {string}",
+            "   */",
+            "  static method(arg1, arg2) { return arg1; }",
+            "}"));
+    StaticScope scope = compiler.getTranspilationNamespace();
 
     // Foo.method("hi", 2112)
     Node callee = astFactory.createQName(scope, "Foo.method");
@@ -1026,11 +1018,11 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateStaticMethodCallDotCall() {
+  public void testCreateStaticMethodCallDotCallThrows() {
     // NOTE: This method is testing both createCall() and createQName()
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
+
         parseAndAddTypes(
             lines(
                 "class Foo {",
@@ -1041,65 +1033,30 @@ public class AstFactoryTest {
                 "   */",
                 "  static method(arg1, arg2) { return arg1; }",
                 "}"));
-    Scope scope = getScope(root);
+    StaticScope scope = compiler.getTranspilationNamespace();
 
+    // createQName only accepts globally qualified qnames. While Foo.method is a global qualified
+    // name, its '.call' property is not.
     // Foo.method.call(null, "hi", 2112)
-    Node callee = astFactory.createQName(scope, "Foo.method.call");
-    Node nullNode = astFactory.createNull();
-    Node arg1 = astFactory.createString("hi");
-    Node arg2 = astFactory.createNumber(2112D);
-    Node callNode = astFactory.createCall(callee, nullNode, arg1, arg2);
-
-    assertNode(callNode).hasType(Token.CALL);
-    assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
-    assertThat(childList(callNode)).containsExactly(callee, nullNode, arg1, arg2).inOrder();
-    assertType(callNode.getJSType()).isString();
+    assertThrows(Exception.class, () -> astFactory.createQName(scope, "Foo.method.call"));
   }
 
   @Test
   public void testCreateQNameFromString() {
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "", //
-                "const obj = {",
-                "  inner: {",
-                "    str: 'hi',",
-                "  }",
-                "};",
-                ""));
-    Scope scope = getScope(root);
+    parseAndAddTypes(
+        lines(
+            "", //
+            "const obj = {",
+            "  inner: {",
+            "    str: 'hi',",
+            "  }",
+            "};",
+            ""));
+    StaticScope scope = compiler.getTranspilationNamespace();
 
     Node objDotInnerDotStr = astFactory.createQName(scope, "obj.inner.str");
-
-    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
-    Node objDotInner = objDotInnerDotStr.getFirstChild();
-    Node obj = objDotInner.getFirstChild();
-
-    assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
-    assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
-    assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
-  }
-
-  @Test
-  public void testCreateQNameFromStringIterable() {
-    AstFactory astFactory = createTestAstFactory();
-
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "", //
-                "const obj = {",
-                "  inner: {",
-                "    str: 'hi',",
-                "  }",
-                "};",
-                ""));
-    Scope scope = getScope(root);
-
-    Node objDotInnerDotStr = astFactory.createQName(scope, ImmutableList.of("obj", "inner", "str"));
 
     assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
     Node objDotInner = objDotInnerDotStr.getFirstChild();
@@ -1114,17 +1071,16 @@ public class AstFactoryTest {
   public void testCreateQNameFromBaseNamePlusStringIterable() {
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "", //
-                "const obj = {",
-                "  inner: {",
-                "    str: 'hi',",
-                "  }",
-                "};",
-                ""));
-    Scope scope = getScope(root);
+    parseAndAddTypes(
+        lines(
+            "", //
+            "const obj = {",
+            "  inner: {",
+            "    str: 'hi',",
+            "  }",
+            "};",
+            ""));
+    StaticScope scope = compiler.getTranspilationNamespace();
 
     Node objDotInnerDotStr = astFactory.createQName(scope, "obj", ImmutableList.of("inner", "str"));
 
@@ -1141,19 +1097,18 @@ public class AstFactoryTest {
   public void testCreateQNameFromStringVarArgs() {
     AstFactory astFactory = createTestAstFactory();
 
-    Node root =
-        parseAndAddTypes(
-            lines(
-                "", //
-                "const obj = {",
-                "  inner: {",
-                "    str: 'hi',",
-                "  }",
-                "};",
-                ""));
-    Scope scope = getScope(root);
+    parseAndAddTypes(
+        lines(
+            "", //
+            "const obj = {",
+            "  inner: {",
+            "    str: 'hi',",
+            "  }",
+            "};",
+            ""));
 
-    Node objDotInnerDotStr = astFactory.createQName(scope, "obj", "inner", "str");
+    Node objDotInnerDotStr =
+        astFactory.createQName(compiler.getTranspilationNamespace(), "obj", "inner", "str");
 
     assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
     Node objDotInner = objDotInnerDotStr.getFirstChild();
@@ -1253,7 +1208,8 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactoryWithoutTypes();
 
     Node nameNode = astFactory.createName("name", (JSType) null);
-    Node callObjectDotGetPrototypeOfOnName = astFactory.createObjectGetPrototypeOfCall(nameNode);
+    Node callObjectDotGetPrototypeOfOnName =
+        astFactory.createObjectGetPrototypeOfCall(/* scope= */ null, nameNode);
     // expect
     // `Object.getPrototypeOf(name)`
     assertNode(callObjectDotGetPrototypeOfOnName).hasType(Token.CALL);
@@ -1274,13 +1230,14 @@ public class AstFactoryTest {
     // right types applied to the call
     Node root =
         parseAndAddTypes(
+            new TestExternsBuilder().addObject().build(),
             lines(
                 "class A {}", //
                 "A.prototype;", // convenient way to grab class prototype
                 "const a = new A();",
                 ""));
 
-    Scope scope = getScope(root);
+    StaticScope scope = compiler.getTranspilationNamespace();
 
     // `class A {}`
     Node classANode =
@@ -1294,7 +1251,7 @@ public class AstFactoryTest {
             .getOnlyChild();
 
     Node aNameNode = astFactory.createName(scope, "a");
-    Node callObjectDotGetPrototypeOf = astFactory.createObjectGetPrototypeOfCall(aNameNode);
+    Node callObjectDotGetPrototypeOf = astFactory.createObjectGetPrototypeOfCall(scope, aNameNode);
     assertNode(callObjectDotGetPrototypeOf)
         .hasJSTypeThat()
         .isEqualTo(classADotPrototype.getJSTypeRequired());
@@ -1309,12 +1266,13 @@ public class AstFactoryTest {
     // right types applied to the call
     Node root =
         parseAndAddTypes(
+            new TestExternsBuilder().addObject().build(),
             lines(
                 "class A {}", //
                 "class B extends A {}",
                 ""));
 
-    Scope scope = getScope(root);
+    StaticScope scope = compiler.getTranspilationNamespace();
 
     // `class A {}`
     Node classANode =
@@ -1322,7 +1280,8 @@ public class AstFactoryTest {
             .getFirstChild();
 
     Node classBNameNode = astFactory.createName(scope, "B");
-    Node callObjectDotGetPrototypeOf = astFactory.createObjectGetPrototypeOfCall(classBNameNode);
+    Node callObjectDotGetPrototypeOf =
+        astFactory.createObjectGetPrototypeOfCall(scope, classBNameNode);
     assertNode(callObjectDotGetPrototypeOf)
         .hasJSTypeThat()
         .isEqualTo(classANode.getJSTypeRequired());

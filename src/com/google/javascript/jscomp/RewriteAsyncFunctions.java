@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -63,6 +64,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
   private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments";
   private static final String ASYNC_THIS = "$jscomp$async$this";
   private static final String ASYNC_SUPER_PROP_GETTER_PREFIX = "$jscomp$async$super$get$";
+  private final StaticScope namespace;
 
   /**
    * Information needed to replace a reference to `super.propertyName` with a call to a wrapper
@@ -348,7 +350,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         // same logic for dealing with super references. Consider having them share
         // it from a common place instead of duplicating.
         final Node thisNode = createThisReference();
-        final Node prototypeOfThisNode = astFactory.createObjectGetPrototypeOfCall(thisNode);
+        final Node prototypeOfThisNode =
+            astFactory.createObjectGetPrototypeOfCall(namespace, thisNode);
         final Node originalSuperNode = superDotProperty.getFirstChild();
 
         // NOTE: must look at the enclosing MEMBER_FUNCTION_DEF to see if the method is static
@@ -363,7 +366,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
           // value for `super`.
           // super.propertyName -> Object.getPrototypeOf(Object.getPrototypeOf(this)).propertyName
           originalSuperNode.replaceWith(
-              astFactory.createObjectGetPrototypeOfCall(prototypeOfThisNode));
+              astFactory.createObjectGetPrototypeOfCall(namespace, prototypeOfThisNode));
         }
       }
       // () => super.propertyName
@@ -476,6 +479,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         builder.rewriteSuperPropertyReferencesWithoutSuper;
     this.registry = checkNotNull(builder.registry);
     this.astFactory = checkNotNull(builder.astFactory);
+    this.namespace = checkNotNull(builder.namespace);
   }
 
   static class Builder {
@@ -483,6 +487,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     private boolean rewriteSuperPropertyReferencesWithoutSuper = false;
     private JSTypeRegistry registry;
     private AstFactory astFactory;
+    private StaticScope namespace;
 
     Builder(AbstractCompiler compiler) {
       checkNotNull(compiler);
@@ -497,6 +502,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     RewriteAsyncFunctions build() {
       astFactory = compiler.createAstFactory();
       registry = compiler.getTypeRegistry();
+      namespace = compiler.getTranspilationNamespace();
       return new RewriteAsyncFunctions(this);
     }
   }
@@ -597,7 +603,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     newBody.addChildToBack(
         astFactory.createReturn(
             astFactory.createJscompAsyncExecutePromiseGeneratorFunctionCall(
-                t.getScope(), generatorFunction)));
+                namespace, generatorFunction)));
 
     newBody.srcrefTreeIfMissing(originalBody);
     compiler.reportChangeToEnclosingScope(newBody);

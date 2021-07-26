@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -35,11 +36,13 @@ class Es6TemplateLiterals {
   private final AstFactory astFactory;
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
+  private final StaticScope namespace;
 
   Es6TemplateLiterals(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.registry = compiler.getTypeRegistry();
+    this.namespace = this.compiler.getTranspilationNamespace();
   }
 
   /**
@@ -132,14 +135,14 @@ class Es6TemplateLiterals {
       // cooked array at runtime to make the raw array a copy of the cooked array.
       callTemplateTagArgCreator =
           astFactory.createCall(
-              astFactory.createQName(t.getScope(), "$jscomp.createTemplateTagFirstArg"),
+              astFactory.createQName(namespace, "$jscomp.createTemplateTagFirstArg"),
               siteObject.cloneTree());
     } else {
       // The raw string array is different, so we need to construct it.
       Node raw = createRawStringArray(templateLit, arrayType);
       callTemplateTagArgCreator =
           astFactory.createCall(
-              astFactory.createQName(t.getScope(), "$jscomp.createTemplateTagFirstArgWithRaw"),
+              astFactory.createQName(this.namespace, "$jscomp.createTemplateTagFirstArgWithRaw"),
               siteObject.cloneTree(),
               raw);
     }

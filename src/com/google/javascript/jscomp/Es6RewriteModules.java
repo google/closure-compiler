@@ -924,7 +924,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
           maybeAddAliasToSymbolTable(n, t.getSourceName());
           Binding binding = thisModule.boundNames().get(name);
 
-          Node replacement = replace(t.getScope(), n, binding);
+          Node replacement = replace(n, binding);
 
           // `n.x()` may become `foo()`
           if (replacement.isName()
@@ -973,7 +973,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
      * @param n the node to replace
      * @param binding the binding nameNode is a reference to
      */
-    private Node replace(Scope scope, Node n, Binding binding) {
+    private Node replace(Node n, Binding binding) {
       checkState(n.isName());
 
       while (binding.isModuleNamespace()
@@ -995,7 +995,12 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       QualifiedName globalName = ModuleRenaming.getGlobalName(binding);
       final Node newNode;
       if (!globalName.isSimple()) {
-        newNode = astFactory.createQName(scope, globalName.join());
+        String root = globalName.getRoot();
+        newNode =
+            // we might encounter a name not in the global scope when requiring a missing symbol.
+            globalTypedScope != null && globalTypedScope.hasSlot(root)
+                ? astFactory.createQName(globalTypedScope, globalName.join())
+                : astFactory.createQNameWithUnknownType(globalName.join());
       } else {
         // Because this pass does not update the global scope with injected names, t.getScope()
         // will not contain a declaration for this global name. Fortunately, we already have the

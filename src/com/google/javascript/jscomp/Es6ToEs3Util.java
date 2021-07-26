@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -51,36 +50,8 @@ public final class Es6ToEs3Util {
     compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
   }
 
-  /**
-   * Returns a call to {@code $jscomp.makeIterator} with {@code iterable} as its argument.
-   */
-  static Node makeIterator(AbstractCompiler compiler, Node iterable) {
-    return callEs6RuntimeFunction(compiler, iterable, "makeIterator");
-  }
-
-  /**
-   * Returns a call to $jscomp.arrayFromIterable with {@code iterable} as its argument.
-   */
-  static Node arrayFromIterable(AbstractCompiler compiler, Node iterable) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
-    JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
-
-    Node call =
-        callEs6RuntimeFunction(compiler, iterable, "arrayFromIterable").setJSType(arrayType);
-    call.getFirstChild().setJSType(registry.createFunctionTypeWithVarArgs(arrayType));
-    return call;
-  }
-
   static void preloadEs6RuntimeFunction(AbstractCompiler compiler, String function) {
     compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
-  }
-
-  static Node callEs6RuntimeFunction(
-      AbstractCompiler compiler, Node iterable, String function) {
-    preloadEs6RuntimeFunction(compiler, function);
-    return IR.call(
-        NodeUtil.newQName(compiler, "$jscomp." + function),
-        iterable);
   }
 
   /**

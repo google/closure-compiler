@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -64,6 +65,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   private final AbstractCompiler compiler;
   private final ObjectDestructuringRewriteMode rewriteMode;
   private final AstFactory astFactory;
+  private final StaticScope namespace;
 
   private final FeatureSet featuresToTriggerRunningPass;
   private final FeatureSet featuresToMarkAsRemoved;
@@ -78,6 +80,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     this.compiler = builder.compiler;
     this.rewriteMode = builder.rewriteMode;
     this.astFactory = compiler.createAstFactory();
+    this.namespace = compiler.getTranspilationNamespace();
 
     switch (this.rewriteMode) {
       case REWRITE_ALL_OBJECT_PATTERNS:
@@ -366,7 +369,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
    */
   private void replaceObjectPattern(
       NodeTraversal t, Node objectPattern, Node rhs, Node parent, Node nodeToDetach) {
-    final Scope scope = t.getScope(); // get scope here, AST may be in temporary invalid state later
     String tempVarName = getTempVariableName();
     final JSType tempVarType = objectPattern.getJSType();
 
@@ -477,7 +479,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
           throw new IllegalStateException("object rest may not be followed by any properties");
         }
         // TODO(b/116532470): see if casting this to a more specific type fixes disambiguation
-        Node assignCall = astFactory.createCall(astFactory.createQName(scope, "Object.assign"));
+        Node assignCall =
+            astFactory.createCall(astFactory.createQName(this.namespace, "Object.assign"));
         assignCall.addChildToBack(astFactory.createObjectLit());
         assignCall.addChildToBack(astFactory.createName(tempVarName, tempVarType));
 
@@ -595,7 +598,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     }
 
     String tempVarName = getTempVariableName();
-    Node makeIteratorCall = astFactory.createJSCompMakeIteratorCall(rhs.detach(), t.getScope());
+    Node makeIteratorCall = astFactory.createJSCompMakeIteratorCall(rhs.detach(), this.namespace);
     Node tempVarModel = astFactory.createName(tempVarName, makeIteratorCall.getJSType());
     Node tempDecl = IR.var(tempVarModel.cloneNode(), makeIteratorCall);
     tempDecl.srcrefTreeIfMissing(arrayPattern);
@@ -645,8 +648,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         //   var temp = $jscomp.makeIterator(rhs);
         //   x = $jscomp.arrayFromIterator(temp);
         newLHS = child.removeFirstChild();
-        newRHS =
-            astFactory.createJscompArrayFromIteratorCall(tempVarModel.cloneNode(), t.getScope());
+        newRHS = astFactory.createJscompArrayFromIteratorCall(tempVarModel.cloneNode(), namespace);
       } else {
         // LHS is just a name (or a nested pattern).
         //   var [x] = rhs;

@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -42,6 +43,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   private final JSType makeIteratorTypeArg;
   private final DefaultNameGenerator namer;
   private final AstFactory astFactory;
+  private final StaticScope namespace;
 
   private static final String ITER_BASE = "$jscomp$iter$";
 
@@ -56,6 +58,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     this.makeIteratorTypeArg = createMakeIteratorTypeArg();
     this.namer = new DefaultNameGenerator();
     this.astFactory = compiler.createAstFactory();
+    this.namespace = compiler.getTranspilationNamespace();
   }
 
   @Override
@@ -121,9 +124,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node iterResult = astFactory.createName(iteratorResultName, iIterableResultType);
     iterResult.makeNonIndexable();
 
-    // TODO(lharker): replace this with astFactory.createJscompMakeIteratorCall once b/136592294 is
-    // fixed.
-    Node call = Es6ToEs3Util.makeIterator(compiler, iterable);
+    Node call = astFactory.createJSCompMakeIteratorCall(iterable, namespace);
     if (addTypes) {
       // Put types on the $jscomp.makeIterator getprop
       Node getProp = call.getFirstChild();

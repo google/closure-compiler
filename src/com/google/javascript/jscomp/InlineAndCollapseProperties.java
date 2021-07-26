@@ -2267,7 +2267,7 @@ class InlineAndCollapseProperties implements CompilerPass {
               }
 
               Node newNode =
-                  astFactory.createQName(t.getScope(), resolveAlias(n.getQualifiedName(), n));
+                  astFactory.createQName(namespace, resolveAlias(n.getQualifiedName(), n));
               if (isLeftmostNameLocal(t, newNode)) {
                 // The aliased name is shadowed by a local variable. Don't rewrite.
                 return;

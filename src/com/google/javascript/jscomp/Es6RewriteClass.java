@@ -27,6 +27,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -57,11 +58,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
   private final AstFactory astFactory;
   private final JSType objectPropertyDescriptorType;
   private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
+  private final StaticScope transpilationNamespace;
 
   public Es6RewriteClass(AbstractCompiler compiler) {
     this.compiler = compiler;
     JSTypeRegistry registry = compiler.getTypeRegistry();
     this.astFactory = compiler.createAstFactory();
+    this.transpilationNamespace = compiler.getTranspilationNamespace();
 
     // Finds the type for `ObjectPropertyDescriptor`. Fallback to the unknown type if it's not
     // present, which may happen if typechecking hasn't run or this is a unit test w/o externs.
@@ -150,7 +153,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
-        visitNonMethodMember(member, metadata, t.getScope());
+        visitNonMethodMember(member, metadata);
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
         constructor = member.removeFirstChild().setJSType(classNode.getJSType());
         constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());
@@ -182,7 +185,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       Node definePropsCall =
           IR.exprResult(
               astFactory.createCall(
-                  createObjectDotDefineProperties(t.getScope()),
+                  createObjectDotDefineProperties(),
                   metadata.getClassPrototypeNode().cloneTree(),
                   metadata.getDefinePropertiesObjForPrototype()));
       definePropsCall.srcrefTreeIfMissing(classNode);
@@ -193,7 +196,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       Node definePropsCall =
           IR.exprResult(
               astFactory.createCall(
-                  createObjectDotDefineProperties(t.getScope()),
+                  createObjectDotDefineProperties(),
                   metadata.getFullClassNameNode().cloneTree(),
                   metadata.getDefinePropertiesObjForClass()));
       definePropsCall.srcrefTreeIfMissing(classNode);
@@ -225,7 +228,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         Node inheritsCall =
             IR.exprResult(
                     astFactory.createCall(
-                        astFactory.createQName(t.getScope(), "$jscomp.inherits"),
+                        astFactory.createQName(transpilationNamespace, "$jscomp.inherits"),
                         metadata.getFullClassNameNode().cloneTree(),
                         metadata.getSuperClassNameNode().cloneTree()))
                 .srcrefTreeIfMissing(metadata.getSuperClassNameNode());
@@ -233,7 +236,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       }
     }
 
-    addTypeDeclarations(t.getScope(), metadata, enclosingStatement);
+    addTypeDeclarations(metadata, enclosingStatement);
 
     if (NodeUtil.isStatement(classNode)) {
       constructor.getFirstChild().setString("");
@@ -275,12 +278,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     t.reportCodeChange();
   }
 
-  private Node createObjectDotDefineProperties(Scope scope) {
-    return astFactory.createQName(scope, "$jscomp.global.Object.defineProperties");
+  private Node createObjectDotDefineProperties() {
+    return astFactory.createJSCompDotGlobalAccess(
+        this.transpilationNamespace, "Object.defineProperties");
   }
 
-  private Node createObjectDotDefineProperty(Scope scope) {
-    return astFactory.createQName(scope, "$jscomp.global.Object.defineProperty");
+  private Node createObjectDotDefineProperty() {
+    return astFactory.createJSCompDotGlobalAccess(
+        this.transpilationNamespace, "Object.defineProperty");
   }
 
   /** @param member A getter or setter */
@@ -311,8 +316,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
   }
 
   /** Appends an Object.defineProperty call defining the given computed getter or setter */
-  private void extractComputedProperty(
-      Node computedMember, ClassDeclarationMetadata metadata, Scope scope) {
+  private void extractComputedProperty(Node computedMember, ClassDeclarationMetadata metadata) {
     Node owner =
         computedMember.isStaticMember()
             ? metadata.getFullClassNameNode()
@@ -329,7 +333,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
     Node objectDefinePropertyCall =
         astFactory.createCall(
-            createObjectDotDefineProperty(scope), owner.cloneTree(), property, propertyDescriptor);
+            createObjectDotDefineProperty(), owner.cloneTree(), property, propertyDescriptor);
 
     metadata.insertNodeAndAdvance(
         IR.exprResult(objectDefinePropertyCall).srcrefTreeIfMissing(computedMember));
@@ -345,9 +349,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
    *
    * <p>Computed getters and setters are defined in individual Object.defineProperty calls
    */
-  private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata, Scope scope) {
+  private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata) {
     if (member.isComputedProp()) {
-      extractComputedProperty(member.detach(), metadata, scope);
+      extractComputedProperty(member.detach(), metadata);
       return;
     }
 
@@ -411,11 +415,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
    * Adds declarations for static properties defined with a getter or setter, so that optimizations
    * like property collapsing recognize the properties' existence.
    */
-  private void addTypeDeclarations(
-      Scope scope, ClassDeclarationMetadata metadata, Node insertionPoint) {
+  private void addTypeDeclarations(ClassDeclarationMetadata metadata, Node insertionPoint) {
     for (ClassProperty property : metadata.getClassMembersToDeclare().values()) {
       Node declaration =
-          property.getDeclaration(astFactory, scope, metadata.getFullClassNameNode().cloneTree());
+          property.getDeclaration(astFactory, metadata.getFullClassNameNode().cloneTree());
       declaration.srcrefTreeIfMissing(metadata.getClassNameNode());
       declaration.insertAfter(insertionPoint);
       insertionPoint = declaration;
@@ -523,7 +526,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
      *     the class (if a static property) or a class' prototype (if non-static). This should
      *     always be a new node, as this method will insert it into the returned EXPR_RESULT.
      */
-    final Node getDeclaration(AstFactory astFactory, Scope scope, Node toDeclareOn) {
+    final Node getDeclaration(AstFactory astFactory, Node toDeclareOn) {
       Node decl = null;
 
       switch (kind()) {
@@ -531,14 +534,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           decl = astFactory.createGetElem(toDeclareOn, astFactory.createString(propertyKey()));
           break;
         case COMPUTED_PROPERTY:
-          // Note that at the moment we only allow qualified names as the keys for class computed
-          // properties.
-          // TODO(bradfordcsmith): Clone the original declared member qualified name instead of
-          // creating it from scratch from the string form. That way we would just reuse the type
-          // information, instead of AstFactory having to re-create it.
-          decl =
-              astFactory.createGetElem(toDeclareOn, astFactory.createQName(scope, propertyKey()));
-          break;
+          // No need to declare computed properties as they're unaffected by property collapsing
+          throw new UnsupportedOperationException(this.toString());
         case NORMAL_PROPERTY:
           decl = astFactory.createGetProp(toDeclareOn, propertyKey());
           break;

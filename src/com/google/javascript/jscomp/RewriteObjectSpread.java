@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 
 /**
  * Converts object spread to valid ES2017 code.
@@ -37,10 +38,12 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, Compil
       FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
 
   private final AstFactory astFactory;
+  private final StaticScope namespace;
 
   public RewriteObjectSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.namespace = this.compiler.getTranspilationNamespace();
   }
 
   @Override
@@ -58,17 +61,17 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, Compil
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case OBJECTLIT:
-        visitObject(t, n);
+        visitObject(n);
         break;
       default:
         break;
     }
   }
 
-  private void visitObject(NodeTraversal t, Node obj) {
+  private void visitObject(Node obj) {
     for (Node child = obj.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isSpread()) {
-        visitObjectWithSpread(t, obj);
+        visitObjectWithSpread(obj);
         return;
       }
     }
@@ -79,14 +82,14 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, Compil
    *
    * Object.assign({}, {first:b, c}, spread, {d:e, last});
    */
-  private void visitObjectWithSpread(NodeTraversal t, Node obj) {
+  private void visitObjectWithSpread(Node obj) {
     checkArgument(obj.isObjectLit());
 
     // Add an empty target object literal so changes made by Object.assign will not affect any other
     // variables.
     Node result =
         astFactory.createObjectDotAssignCall(
-            t.getScope(), obj.getJSType(), astFactory.createObjectLit());
+            namespace, obj.getJSType(), astFactory.createObjectLit());
 
     // An indicator whether the current last thing in the param list is an object literal to which
     // properties may be added.  Initialized to null since nothing should be added to the empty

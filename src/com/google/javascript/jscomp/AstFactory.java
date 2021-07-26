@@ -29,6 +29,8 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -51,6 +53,15 @@ import javax.annotation.Nullable;
  * logic for deciding whether type information should be added or not, and only minimal logic for
  * determining which types to add when they are necessary. Most methods in this class are able to
  * determine the correct type information from already existing AST nodes and the current scope.
+ *
+ * <p>AstFactory supports both Closure types (see {@link JSType}) and optimization-only types (see
+ * {@link Color})s. Colors contain less information than JSTypes which puts some restrictions on the
+ * amount of inference this class can do. For example, there's no way to ask "What is the color of
+ * property 'x' on receiver color 'obj'". This is why many methods accept a StaticScope instead of a
+ * Scope: you may pass in a {@link GlobalNamespace} or similar object which contains fully qualified
+ * names, to look up colors for an entire property chain.
+ *
+ * <p>TODO(b/193800507): delete the methods in this class that only work for JSTypes but not colors.
  */
 final class AstFactory {
 
@@ -121,8 +132,6 @@ final class AstFactory {
   }
 
   // TODO(b/193800507): delete all calls to this method
-  // The possible exception is in methods with a JSType parameter: unclear whether those will need
-  // to remain long-term or can be deleted.
   private void assertNotAddingColors() {
     checkState(!this.isAddingColors(), "method not supported for colors");
   }
@@ -469,7 +478,7 @@ final class AstFactory {
     return result;
   }
 
-  Node createName(Scope scope, String name) {
+  Node createName(StaticScope scope, String name) {
     Node result = IR.name(name);
     switch (this.typeMode) {
       case JSTYPE:
@@ -488,14 +497,14 @@ final class AstFactory {
     return createName(name, type(unknownType, StandardColors.UNKNOWN));
   }
 
-  Node createQName(Scope scope, String qname) {
-    assertNotAddingColors();
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this throws an exception for instance methods and properties, for example.
+   */
+  Node createQName(StaticScope scope, String qname) {
     return createQName(scope, DOT_SPLITTER.split(qname));
-  }
-
-  Node createQNameWithUnknownType(String qname) {
-    assertNotAddingColors();
-    return createQNameWithUnknownType(DOT_SPLITTER.split(qname));
   }
 
   /**
@@ -520,36 +529,88 @@ final class AstFactory {
     return this.createGetProps(receiver, otherParts);
   }
 
-  Node createQName(Scope scope, Iterable<String> names) {
-    assertNotAddingColors();
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this does not work for instance methods or properties, for example.
+   */
+  Node createQName(StaticScope scope, Iterable<String> names) {
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
     return createQName(scope, baseName, propertyNames);
   }
 
-  private Node createQNameWithUnknownType(Iterable<String> names) {
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this does not work for instance methods or properties, for example.
+   */
+  Node createQName(StaticScope scope, String baseName, String... propertyNames) {
+    checkNotNull(baseName);
+    return createQName(scope, baseName, Arrays.asList(propertyNames));
+  }
+
+  /**
+   * Creates a qualfied name in the given scope.
+   *
+   * <p>Only works if {@link StaticScope#getSlot(String)} returns a name. In practice, that means
+   * this does not work for instance methods or properties, for example.
+   */
+  Node createQName(StaticScope scope, String baseName, Iterable<String> propertyNames) {
+    Node baseNameNode = createName(scope, baseName);
+    Node qname = baseNameNode;
+    String name = baseName;
+    for (String propertyName : propertyNames) {
+      name += "." + propertyName;
+      Type type = null;
+      if (isAddingTypes()) {
+        Node def =
+            checkNotNull(scope.getSlot(name), "Cannot find name %s in StaticScope.", name)
+                .getDeclaration()
+                .getNode();
+        type = type(def);
+      }
+      qname = createGetProp(qname, propertyName, type);
+    }
+    return qname;
+  }
+
+  Node createQNameWithUnknownType(String qname) {
     assertNotAddingColors();
+    return createQNameWithUnknownType(DOT_SPLITTER.split(qname));
+  }
+
+  private Node createQNameWithUnknownType(Iterable<String> names) {
+
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
     return createQNameWithUnknownType(baseName, propertyNames);
   }
 
-  Node createQName(Scope scope, String baseName, String... propertyNames) {
-    assertNotAddingColors();
-    checkNotNull(baseName);
-    return createQName(scope, baseName, Arrays.asList(propertyNames));
-  }
-
-  Node createQName(Scope scope, String baseName, Iterable<String> propertyNames) {
-    assertNotAddingColors();
-    Node baseNameNode = createName(scope, baseName);
-    return createGetProps(baseNameNode, propertyNames);
-  }
-
   Node createQNameWithUnknownType(String baseName, Iterable<String> propertyNames) {
     assertNotAddingColors();
     Node baseNameNode = createNameWithUnknownType(baseName);
-    return createGetProps(baseNameNode, propertyNames);
+    return createGetPropsWithUnknownType(baseNameNode, propertyNames);
+  }
+
+  /**
+   * Creates an access of the given {@code qname} on {@code $jscomp.global}
+   *
+   * <p>For example, given "Object.defineProperties", returns an AST representation of
+   * "$jscomp.global.Object.defineProperties".
+   *
+   * <p>This may be useful if adding synthetic code to a local scope, which can shadow the global
+   * like Object you're trying to access. The $jscomp global should not be shadowed.
+   */
+  Node createJSCompDotGlobalAccess(StaticScope scope, String qname) {
+    Node jscompDotGlobal = createQName(scope, "$jscomp.global");
+    Node result = createQName(scope, qname);
+    // Move the fully qualified qname onto the $jscomp.global getprop
+    Node qnameRoot = NodeUtil.getRootOfQualifiedName(result);
+    qnameRoot.replaceWith(createGetProp(jscompDotGlobal, qnameRoot.getString(), type(qnameRoot)));
+    return result;
   }
 
   Node createGetProp(Node receiver, String propertyName) {
@@ -584,6 +645,21 @@ final class AstFactory {
     for (String propertyName : otherPropNames) {
       result = createGetProp(result, propertyName);
     }
+    return result;
+  }
+
+  /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
+  Node createGetPropsWithUnknownType(Node receiver, Iterable<String> propertyNames) {
+    Node result = receiver;
+    for (String propertyName : propertyNames) {
+      result = createGetPropWithUnknownType(result, propertyName);
+    }
+    return result;
+  }
+
+  Node createGetPropWithUnknownType(Node receiver, String propertyName) {
+    Node result = IR.getprop(receiver, propertyName);
+    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), result);
     return result;
   }
 
@@ -741,13 +817,17 @@ final class AstFactory {
     return result;
   }
 
+  Node createCallWithUnknownType(Node callee, Node... args) {
+    return createCall(callee, type(unknownType, StandardColors.UNKNOWN), args);
+  }
+
   /**
    * Creates a call to Object.assign that returns the specified type.
    *
    * <p>Object.assign returns !Object in the externs, which can lose type information if the actual
    * type is known.
    */
-  Node createObjectDotAssignCall(Scope scope, JSType returnType, Node... args) {
+  Node createObjectDotAssignCall(StaticScope scope, JSType returnType, Node... args) {
     assertNotAddingColors();
     Node objAssign = createQName(scope, "Object", "assign");
     Node result = createCall(objAssign, args);
@@ -782,10 +862,9 @@ final class AstFactory {
     return result;
   }
 
-  Node createObjectGetPrototypeOfCall(Node argObjectNode) {
+  Node createObjectGetPrototypeOfCall(StaticScope scope, Node argObjectNode) {
     assertNotAddingColors();
-    Node objectName = createName("Object", JSTypeNative.OBJECT_FUNCTION_TYPE);
-    Node objectGetPrototypeOf = createGetProp(objectName, "getPrototypeOf");
+    Node objectGetPrototypeOf = createQName(scope, "Object.getPrototypeOf");
     Node result = createCall(objectGetPrototypeOf, argObjectNode);
     if (isAddingTypes()) {
       ObjectType typeOfArgObject = argObjectNode.getJSTypeRequired().assertObjectType();
@@ -1028,7 +1107,7 @@ final class AstFactory {
     return result;
   }
 
-  Node createJSCompMakeIteratorCall(Node iterable, Scope scope) {
+  Node createJSCompMakeIteratorCall(Node iterable, StaticScope scope) {
     assertNotAddingColors();
     String function = "makeIterator";
     Node makeIteratorName = createQName(scope, "$jscomp", function);
@@ -1054,7 +1133,7 @@ final class AstFactory {
     return createCall(makeIteratorName, iterable);
   }
 
-  Node createJscompArrayFromIteratorCall(Node iterator, Scope scope) {
+  Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
     assertNotAddingColors();
     Node makeIteratorName = createQName(scope, "$jscomp", "arrayFromIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
@@ -1078,6 +1157,32 @@ final class AstFactory {
     return createCall(makeIteratorName, iterator);
   }
 
+  Node createJscompArrayFromIterableCall(Node iterable, StaticScope scope) {
+    // TODO(b/193800507): consider making this verify the arrayFromIterable $jscomp runtime library
+    // is injected.
+    assertNotAddingColors();
+    Node makeIterableName = createQName(scope, "$jscomp", "arrayFromIterable");
+    // Since createCall (currently) doesn't handle templated functions, fill in the template types
+    // of makeIteratorName manually.
+    if (isAddingTypes() && !makeIterableName.getJSType().isUnknownType()) {
+      // if makeIteratorName has the unknown type, we must have not injected the required runtime
+      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+
+      JSType iterableType =
+          iterable
+              .getJSType()
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(registry.getIterableTemplate());
+      JSType makeIterableType = makeIterableName.getJSType();
+      // e.g. replace
+      //   function(Iterable<T>): Array<T>
+      // with
+      //   function(Iterable<number>): Array<number>
+      makeIterableName.setJSType(replaceTemplate(makeIterableType, ImmutableList.of(iterableType)));
+    }
+    return createCall(makeIterableName, iterable);
+  }
+
   /**
    * Given an iterable like {@code rhs} in
    *
@@ -1091,7 +1196,7 @@ final class AstFactory {
    * $jscomp.makeAsyncIterator(rhs)
    * }</pre>
    */
-  Node createJSCompMakeAsyncIteratorCall(Node iterable, Scope scope) {
+  Node createJSCompMakeAsyncIteratorCall(Node iterable, StaticScope scope) {
     assertNotAddingColors();
     Node makeIteratorAsyncName = createQName(scope, "$jscomp", "makeAsyncIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
@@ -1130,7 +1235,7 @@ final class AstFactory {
    *
    * @param originalFunctionType the type of the async generator function that needs transpilation
    */
-  Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, Scope scope) {
+  Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, StaticScope scope) {
     assertNotAddingColors();
     Node ctor = createQName(scope, "$jscomp", "AsyncGeneratorWrapper");
 
@@ -1188,10 +1293,11 @@ final class AstFactory {
     return createEmptyGeneratorFunction(type(generatorType));
   }
 
-  Node createJscompAsyncExecutePromiseGeneratorFunctionCall(Scope scope, Node generatorFunction) {
+  Node createJscompAsyncExecutePromiseGeneratorFunctionCall(
+      StaticScope scope, Node generatorFunction) {
     assertNotAddingColors();
     Node jscompDotAsyncExecutePromiseGeneratorFunction =
-        createQName(scope, "$jscomp", "asyncExecutePromiseGeneratorFunction");
+        createQName(scope, "$jscomp.asyncExecutePromiseGeneratorFunction");
     // TODO(bradfordcsmith): Maybe update the type to be more specific
     // Currently this method expects `function(): !Generator<?>` and returns `Promise<?>`.
     // Since we propagate type information only if type checking has already run,
@@ -1211,11 +1317,14 @@ final class AstFactory {
    *
    * <p>Returns the unknown type if no type can be found
    */
-  private JSType getVarNameType(Scope scope, String name) {
-    Var var = scope.getVar(name);
+  private JSType getVarNameType(StaticScope scope, String name) {
+    StaticSlot var = scope.getSlot(name);
     JSType type = null;
     if (var != null) {
-      Node nameDefinitionNode = var.getNode();
+      Node nameDefinitionNode =
+          checkNotNull(
+                  var.getDeclaration(), "Cannot find type for var with missing declaration %s", var)
+              .getNode();
       if (nameDefinitionNode != null) {
         type = nameDefinitionNode.getJSType();
       }
@@ -1232,11 +1341,11 @@ final class AstFactory {
    *
    * <p>Returns the unknown type if no type can be found
    */
-  private Color getVarNameColor(Scope scope, String name) {
-    Var var = scope.getVar(name);
+  private Color getVarNameColor(StaticScope scope, String name) {
+    StaticSlot var = scope.getSlot(name);
     Color color = null;
     if (var != null) {
-      Node nameDefinitionNode = var.getNode();
+      Node nameDefinitionNode = var.getDeclaration().getNode();
       if (nameDefinitionNode != null) {
         color = nameDefinitionNode.getColor();
       }

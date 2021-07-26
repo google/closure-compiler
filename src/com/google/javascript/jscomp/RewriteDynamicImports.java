@@ -192,10 +192,9 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    */
   private void replaceDynamicImportWithPromise(
       NodeTraversal t, Node dynamicImport, Var targetModuleNS) {
-    final Scope scope = t.getScope();
     final JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node promiseDotResolve =
-        astFactory.createQName(scope.getGlobalScope(), "Promise.resolve");
+        astFactory.createQName(compiler.getTranspilationNamespace(), "Promise.resolve");
     final Node promiseResolveCall = astFactory.createCall(promiseDotResolve);
     final boolean isExpressionUsed = NodeUtil.isExpressionResultUsed(dynamicImport);
     if (isExpressionUsed) {
@@ -432,12 +431,10 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
 
         // Define the rest of the parts of the name
         Iterator<String> aliasNameParts = Splitter.on(".").split(alias).iterator();
-        if (aliasNameParts.hasNext()) {
-          aliasRootName = aliasNameParts.next();
-        }
+        Node qName = aliasRootNode.getFirstChild().cloneNode();
+        aliasNameParts.next(); // skip over root name
         while (aliasNameParts.hasNext()) {
-          aliasRootName = aliasRootName + "." + aliasNameParts.next();
-          Node qName = astFactory.createQName(t.getScope(), aliasRootName);
+          qName = astFactory.createGetProp(qName.cloneTree(), aliasNameParts.next());
           Node assignedValue;
           if (!aliasNameParts.hasNext()) {
             assignedValue =

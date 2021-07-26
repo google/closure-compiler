@@ -1401,8 +1401,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     // include externs definitions for the stuff that would have been injected
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns",
+            new TestExternsBuilder()
+                .addExtra("/** @type {!Global} */ var globalThis;")
+                .addJSCompLibraries()
+                .build()));
     externs = externsList.build();
 
     test(

@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -50,10 +51,12 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
   private final Deque<ConstructorData> constructorDataStack;
   private final AstFactory astFactory;
   private GlobalNamespace globalNamespace;
+  private final StaticScope transpilationNamespace;
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.transpilationNamespace = compiler.getTranspilationNamespace();
     this.constructorDataStack = new ArrayDeque<>();
   }
 
@@ -132,7 +135,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         // To correctly extend them with the ES5 classes we're generating here, we must use
         // `$jscomp.construct`, which is our wrapper around `Reflect.construct`.
         convertSuperCallsToJsCompConstructCalls(
-            t, constructor, superCalls, superClassNameNode, thisType);
+            constructor, superCalls, superClassNameNode, thisType);
       } else if (isNativeErrorClass(t, superClassQName)) {
         // TODO(bradfordcsmith): It might be better to use $jscomp.construct() for these instead
         // of our custom-made, Error-specific workaround.
@@ -238,7 +241,6 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
    * </code></pre>
    */
   private void convertSuperCallsToJsCompConstructCalls(
-      NodeTraversal t,
       Node constructor,
       List<Node> superCalls,
       Node superClassNameNode,
@@ -260,8 +262,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       // `return $jscomp.construct(SuperClassName, [args], this.constructor);`
       firstStatement.replaceWith(
           astFactory.createReturn(
-              createJSCompConstructorCall(
-                  t.getScope(), superClassNameNode, firstSuperCall, thisType)));
+              createJSCompConstructorCall(superClassNameNode, firstSuperCall, thisType)));
     } else {
       final JSType typeOfThis = getTypeOfThisForConstructor(constructor);
       // `this` -> `$jscomp$super$this` throughout the constructor body,
@@ -281,8 +282,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
             astFactory
                 .createAssign(
                     astFactory.createName(SUPER_THIS, typeOfThis).srcref(superCall),
-                    createJSCompConstructorCall(
-                        t.getScope(), superClassNameNode, superCall, thisType))
+                    createJSCompConstructorCall(superClassNameNode, superCall, thisType))
                 .srcref(superCall));
       }
     }
@@ -451,7 +451,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
    * the AST.
    */
   private Node createJSCompConstructorCall(
-      Scope scope, Node superClassQNameNode, Node superCall, JSType thisType) {
+      Node superClassQNameNode, Node superCall, JSType thisType) {
     checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
     checkArgument(superCall.isCall(), superCall);
 
@@ -460,7 +460,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
 
     // `$jscomp.construct`
     final Node jscompDotConstruct =
-        astFactory.createQName(scope, "$jscomp", "construct").srcrefTree(callee);
+        astFactory.createQName(this.transpilationNamespace, "$jscomp.construct").srcrefTree(callee);
 
     final Node superClassQName = superClassQNameNode.cloneTree();
 
