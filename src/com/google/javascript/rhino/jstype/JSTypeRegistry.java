@@ -370,6 +370,7 @@ public final class JSTypeRegistry {
     asyncIteratorValueTemplate = new TemplateType(this, "VALUE");
     TemplateType asyncIteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
     TemplateType asyncIteratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
+    TemplateType asyncIteratorIterableTemplate = new TemplateType(this, "VALUE");
     generatorValueTemplate = new TemplateType(this, "VALUE");
     TemplateType generatorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
     TemplateType generatorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
@@ -566,6 +567,21 @@ public final class JSTypeRegistry {
     registerNativeType(
         JSTypeNative.ASYNC_ITERABLE_TYPE, asyncIterableFunctionType.getInstanceType());
 
+    FunctionType asyncIteratorIterableFunctionType =
+        nativeInterface("AsyncIteratorIterable", asyncIteratorIterableTemplate);
+    asyncIteratorIterableFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(
+                asyncIteratorFunctionType.getInstanceType(), asyncIteratorIterableTemplate),
+            createTemplatizedType(
+                asyncIterableFunctionType.getInstanceType(), asyncIteratorIterableTemplate)));
+
+    registerNativeType(
+        JSTypeNative.ASYNC_ITERATOR_ITERABLE_FUNCTION_TYPE, asyncIteratorIterableFunctionType);
+    registerNativeType(
+        JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE,
+        asyncIteratorIterableFunctionType.getInstanceType());
+
     FunctionType asyncGeneratorFunctionType =
         nativeInterface(
             "AsyncGenerator",
@@ -614,6 +630,16 @@ public final class JSTypeRegistry {
 
     registerNativeType(JSTypeNative.PROMISE_FUNCTION_TYPE, promiseFunctionType);
     registerNativeType(JSTypeNative.PROMISE_TYPE, promiseFunctionType.getInstanceType());
+
+    // Arguments
+    FunctionType argumentsFunctionType =
+        nativeConstructorBuilder("Arguments").withParameters().build();
+    argumentsFunctionType.setImplementedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(iArrayLikeType, unknownType),
+            createTemplatizedType(iterableType, unknownType)));
+    registerNativeType(JSTypeNative.ARGUMENTS_FUNCTION_TYPE, argumentsFunctionType);
+    registerNativeType(JSTypeNative.ARGUMENTS_TYPE, argumentsFunctionType.getInstanceType());
 
     // (bigint,number,string)
     JSType bigintNumberString = createUnionType(bigIntType, numberType, stringType);
@@ -780,9 +806,11 @@ public final class JSTypeRegistry {
   }
 
   private void initializeRegistry() {
+    registerGlobalType(getNativeType(JSTypeNative.ARGUMENTS_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BIGINT_TYPE));

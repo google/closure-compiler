@@ -403,11 +403,11 @@ public final class JSTypeColorIdHasherTest extends CompilerTestCase {
   }
 
   @Test
-  public void returnsNativeId_forBoxTypes() {
+  public void returnsNativeId_forNativeTypes() {
     JSTypeRegistry registry = new JSTypeRegistry(ErrorReporter.ALWAYS_THROWS_INSTANCE);
     this.hasher = new JSTypeColorIdHasher(registry);
 
-    JSTypeColorIdHasher.BOX_TYPE_TO_ID.forEach(
+    JSTypeColorIdHasher.NATIVE_TYPE_TO_ID.forEach(
         (n, i) -> {
           ObjectType t = registry.getNativeObjectType(n);
           assertThat(this.hasher.hashObjectType(t)).isEqualTo(i);

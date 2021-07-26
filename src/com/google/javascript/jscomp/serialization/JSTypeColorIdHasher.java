@@ -36,11 +36,11 @@ import javax.annotation.Nullable;
 
 final class JSTypeColorIdHasher {
 
-  private final ImmutableMap<ObjectType, ColorId> boxTypeToId;
+  private final ImmutableMap<ObjectType, ColorId> standardColorObjectIds;
 
   JSTypeColorIdHasher(JSTypeRegistry registry) {
-    this.boxTypeToId =
-        BOX_TYPE_TO_ID.entrySet().stream()
+    this.standardColorObjectIds =
+        NATIVE_TYPE_TO_ID.entrySet().stream()
             .collect(
                 toImmutableMap(
                     (e) -> registry.getNativeObjectType(e.getKey()), Map.Entry::getValue));
@@ -56,7 +56,7 @@ final class JSTypeColorIdHasher {
             && !type.isTemplateType(),
         type);
 
-    ColorId boxId = this.boxTypeToId.get(type);
+    ColorId boxId = this.standardColorObjectIds.get(type);
     if (boxId != null) {
       return boxId;
     }
@@ -138,8 +138,13 @@ final class JSTypeColorIdHasher {
     static final int UNKNOWN_SOURCEREF = 0x660be782;
   }
 
-  static final ImmutableMap<JSTypeNative, ColorId> BOX_TYPE_TO_ID =
+  static final ImmutableMap<JSTypeNative, ColorId> NATIVE_TYPE_TO_ID =
       ImmutableMap.<JSTypeNative, ColorId>builder()
+          .put(JSTypeNative.ARGUMENTS_TYPE, StandardColors.ARGUMENTS_ID)
+          .put(JSTypeNative.ARRAY_TYPE, StandardColors.ARRAY_ID)
+          .put(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE, StandardColors.ASYNC_ITERATOR_ITERABLE_ID)
+          .put(JSTypeNative.ITERATOR_TYPE, StandardColors.ITERATOR_ID)
+          .put(JSTypeNative.PROMISE_TYPE, StandardColors.PROMISE_ID)
           .put(JSTypeNative.BIGINT_OBJECT_TYPE, StandardColors.BIGINT_OBJECT_ID)
           .put(JSTypeNative.BOOLEAN_OBJECT_TYPE, StandardColors.BOOLEAN_OBJECT_ID)
           .put(JSTypeNative.NUMBER_OBJECT_TYPE, StandardColors.NUMBER_OBJECT_ID)

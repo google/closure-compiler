@@ -120,5 +120,5 @@ public final class ColorRegistry {
     }
   }
 
-  private static final ImmutableSet<ColorId> REQUIRED_IDS = StandardColors.PRIMITIVE_BOX_IDS;
+  public static final ImmutableSet<ColorId> REQUIRED_IDS = StandardColors.STANDARD_OBJECT_IDS;
 }

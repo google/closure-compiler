@@ -47,6 +47,9 @@ package com.google.javascript.rhino.jstype;
 public enum JSTypeNative {
   // Built-in types (please keep alphabetized)
 
+  ARGUMENTS_TYPE,
+  ARGUMENTS_FUNCTION_TYPE,
+
   ARRAY_TYPE,
   ARRAY_FUNCTION_TYPE,
 
@@ -55,6 +58,9 @@ public enum JSTypeNative {
 
   ASYNC_ITERATOR_FUNCTION_TYPE,
   ASYNC_ITERATOR_TYPE,
+
+  ASYNC_ITERATOR_ITERABLE_FUNCTION_TYPE,
+  ASYNC_ITERATOR_ITERABLE_TYPE,
 
   ASYNC_GENERATOR_FUNCTION_TYPE,
   ASYNC_GENERATOR_TYPE,

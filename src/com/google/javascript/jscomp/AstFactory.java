@@ -20,8 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -70,8 +68,6 @@ final class AstFactory {
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
   private final JSType unknownType;
-  // We might not need Arguments type, but if we do, we should avoid redundant lookups
-  private final Supplier<JSType> argumentsTypeSupplier;
 
   enum TypeMode {
     JSTYPE,
@@ -84,16 +80,6 @@ final class AstFactory {
   private AstFactory(JSTypeRegistry registry) {
     this.registry = registry;
     this.unknownType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    this.argumentsTypeSupplier =
-        Suppliers.memoize(
-            () -> {
-              JSType globalType = registry.getGlobalType("Arguments");
-              if (globalType != null) {
-                return globalType;
-              } else {
-                return unknownType;
-              }
-            });
     this.typeMode = TypeMode.JSTYPE;
   }
 
@@ -102,10 +88,6 @@ final class AstFactory {
         !TypeMode.JSTYPE.equals(typeMode), "Must pass JSTypeRegistry for mode %s", typeMode);
     this.registry = null;
     this.unknownType = null;
-    this.argumentsTypeSupplier =
-        () -> {
-          throw new AssertionError();
-        };
     this.typeMode = typeMode;
   }
 
@@ -442,7 +424,7 @@ final class AstFactory {
     assertNotAddingColors();
     Node result = IR.name("arguments");
     if (isAddingTypes()) {
-      result.setJSType(argumentsTypeSupplier.get());
+      result.setJSType(registry.getNativeType(JSTypeNative.ARGUMENTS_TYPE));
     }
     return result;
   }

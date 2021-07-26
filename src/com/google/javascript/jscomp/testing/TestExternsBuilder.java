@@ -545,9 +545,8 @@ public class TestExternsBuilder {
       lines(
           "/**",
           " * @constructor",
-          " * @implements {IArrayLike<T>}",
+          " * @implements {IArrayLike<?>}",
           " * @implements {Iterable<?>}",
-          " * @template T",
           " */",
           "function Arguments() {}",
           "",

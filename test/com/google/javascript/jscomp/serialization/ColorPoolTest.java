@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.protobuf.ByteString;
@@ -97,11 +98,11 @@ public class ColorPoolTest {
   }
 
   @Test
-  public void testSynthesizesMissingBoxColors() {
+  public void testSynthesizesMissingStandardColors() {
     ColorPool colorPool =
         ColorPool.fromOnlyShard(TypePool.getDefaultInstance(), StringPool.empty());
 
-    for (ColorId id : StandardColors.PRIMITIVE_BOX_IDS) {
+    for (ColorId id : ColorRegistry.REQUIRED_IDS) {
       assertThat(colorPool.getColor(id)).hasId(id);
     }
   }

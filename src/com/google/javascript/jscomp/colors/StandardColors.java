@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Colors that are expected to be referenceable as part of any compilation.
+ * Colors that are expected to be referencable as part of any compilation.
  *
  * <p>This set describes any Color that needs to be used a priori by a compiler pass. That includes:
  *
@@ -28,9 +28,17 @@ import com.google.common.collect.ImmutableSet;
  *   <li>"axiomatic" Colors (those with constant definitions, e.g. UNKNOWN)
  *   <li>primitive Colors (e.g. `number`, `null`)
  *   <li>box Colors (e.g. `Number`, `String`)
+ *   <li>Colors used in AstFactory to type synthetic nodes (e.g. `Array`)
  * </ul>
  */
 public final class StandardColors {
+
+  // These IDs are randomly chosen.
+  public static final ColorId ARGUMENTS_ID = ColorId.fromUnsigned(0x1939a66d);
+  public static final ColorId ARRAY_ID = ColorId.fromUnsigned(0x79d4a603);
+  public static final ColorId ITERATOR_ID = ColorId.fromUnsigned(0x417ed2ab);
+  public static final ColorId ASYNC_ITERATOR_ITERABLE_ID = ColorId.fromUnsigned(0xcb382e0a);
+  public static final ColorId PROMISE_ID = ColorId.fromUnsigned(0x39581abf);
 
   public static final ColorId BIGINT_OBJECT_ID = ColorId.fromUnsigned(0xa9d9ad6d);
   public static final ColorId BOOLEAN_OBJECT_ID = ColorId.fromUnsigned(0x9205dc06);
@@ -160,6 +168,21 @@ public final class StandardColors {
           NUMBER_OBJECT_ID,
           STRING_OBJECT_ID,
           SYMBOL_OBJECT_ID);
+
+  /**
+   * The set of ColorIds for object Colors that need to be referenced in optimizations
+   *
+   * <p>The exact definition of each box Color may be altered by JS code.
+   */
+  static final ImmutableSet<ColorId> STANDARD_OBJECT_IDS =
+      ImmutableSet.<ColorId>builder()
+          .addAll(PRIMITIVE_BOX_IDS)
+          .add(ARRAY_ID)
+          .add(ARGUMENTS_ID)
+          .add(ASYNC_ITERATOR_ITERABLE_ID)
+          .add(ITERATOR_ID)
+          .add(PROMISE_ID)
+          .build();
 
   private StandardColors() {
     throw new AssertionError();

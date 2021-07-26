@@ -319,6 +319,20 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConvertsArrayTypeToColor_andStoresInRegistry() {
+    enableTypeCheck();
+
+    TypedAstDeserializer.DeserializedAst result = testAndReturnResult(srcs("[]"), expected("[]"));
+    Node newScript = result.getRoot().getSecondChild().getFirstChild();
+    assertNode(newScript).hasToken(Token.SCRIPT);
+    Node three = newScript.getFirstFirstChild();
+
+    assertNode(three).hasToken(Token.ARRAYLIT);
+    assertThat(three.getColor())
+        .isSameInstanceAs(result.getColorRegistry().get(StandardColors.ARRAY_ID));
+  }
+
+  @Test
   public void testOriginalNamePreserved() {
     Node newRoot =
         testAndReturnResult(srcs("const x = 0;"), expected("const x = 0;"))

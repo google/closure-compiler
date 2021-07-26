@@ -183,10 +183,10 @@ public final class ColorPool {
         this.lookupOrReconcileColor(id);
       }
 
-      for (ColorId boxId : StandardColors.PRIMITIVE_BOX_IDS) {
+      for (ColorId colorId : ColorRegistry.REQUIRED_IDS) {
         this.registry.setNativeColor(
             this.idToColor.computeIfAbsent(
-                boxId, (unused) -> Color.singleBuilder().setId(boxId).build()));
+                colorId, (unused) -> Color.singleBuilder().setId(colorId).build()));
       }
 
       for (ShardView shard : this.protoToShard.values()) {
