@@ -1085,16 +1085,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalizedSideEffects25() {
-    String source =
-        lines(
-            "/** @constructor */", //
-            "function SomeCtor() { this.x ||= 1; }",
-            "new SomeCtor()");
-    assertPureCallsMarked(source, ImmutableList.of("SomeCtor"));
-  }
-
-  @Test
   public void testUnaryOperators1() {
     String source = lines("function f() {var x = 1; x++}", "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1175,18 +1165,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void testDeleteOperator2_optChainGetProp() {
     String source = lines("function f() {var x = {y:2}; delete x?.y}", "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
-  }
-
-  @Test
-  public void testLogicalAssignOperators1() {
-    String source = lines("function f() {var x = 0; x||=2}", "f()");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
-  }
-
-  @Test
-  public void testLogicalAssignOperators2() {
-    String source = lines("var x = 0;", "function f() {x||=2}", "f()");
-    assertNoPureCalls(source);
   }
 
   // Start pure alias
@@ -1838,32 +1816,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "",
             "preceding();"),
         ImmutableList.of());
-  }
-
-  @Test
-  public void
-      testSideEffectsArePropagated_toPrecedingCaller_fromFollowingCallee_logicalAssignment1() {
-    assertPureCallsMarked(
-        lines(
-            "var following = function() { };", // This implementation is pure...
-            "var preceding = function() { following(); };", // so this one should be initially...
-            "following ||= function() { throw 'something'; };", //  but then it becomes impure.
-            "",
-            "preceding();"),
-        ImmutableList.of());
-  }
-
-  @Test
-  public void
-      testSideEffectsArePropagated_toPrecedingCaller_fromFollowingCallee_logicalAssignment2() {
-    assertPureCallsMarked(
-        lines(
-            "var following = function() { };",
-            "var preceding = function() { following(); };",
-            "following ||= function() { };", // replacement function is pure function
-            "",
-            "preceding();"),
-        ImmutableList.of("following", "preceding"));
   }
 
   @Test
