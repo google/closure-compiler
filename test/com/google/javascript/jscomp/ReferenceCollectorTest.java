@@ -238,22 +238,6 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testVarInFunctionNotAssignedOnlyOnceInLifetimeLogicalAssignment() {
-    Behavior behavior =
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isFalse();
-            }
-          }
-        };
-    testBehavior("var x; function f() { x ||= 0; }", behavior);
-    testBehavior("let x; function f() { x ||= 0; }", behavior);
-  }
-
-  @Test
   public void testParameterAssignedOnlyOnceInLifetime() {
     testBehavior(
         "function f(x) { x; }",
@@ -272,21 +256,6 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   public void testModifiedParameterNotAssignedOnlyOnceInLifetime() {
     testBehavior(
         "function f(x) { x = 3; }",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionScope()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isFalse();
-            }
-          }
-        });
-  }
-
-  @Test
-  public void testModifiedParameterNotAssignedOnlyOnceInLifetimeLogicalAssignment() {
-    testBehavior(
-        "function f(x) { x ||= 3; }",
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
@@ -413,56 +382,6 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLetAssignedOnceInLifetimeNotWellDefinedLogicalAssignment() {
-    testBehavior(
-        "let y; let e = 1; y ||= e;",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
-              assertThat(e.isAssignedOnceInLifetime()).isTrue();
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isFalse();
-            }
-          }
-        });
-  }
-
-  @Test
-  public void testLetAssignedOnceInLifetimeNotWellDefinedLogicalAssignment2() {
-    testBehavior(
-        "let y; y || (y = 1);",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isFalse();
-            }
-          }
-        });
-  }
-
-  @Test
-  public void testLetIfBlockAssignedOnceInLifetime() {
-    testBehavior(
-        "let y; if (y) { y = 1; }",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isFalse();
-            }
-          }
-        });
-  }
-
-  @Test
   public void testBasicBlocks() {
     testBehavior(
         lines(
@@ -486,6 +405,27 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBasicBlocksInConditionals() {
+    testBehavior(
+        lines("var x = 0;", "x || 3;", "3 || x;", "const [y = (x = 1)] = [];"),
+        new Behavior() {
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+            if (t.getScope().isGlobal()) {
+              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+              assertThat(x.references).hasSize(4);
+              // first child of || is not a boundary, but the second child is.
+              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.NAME);
+              // second child of `y = (x = 1)` is a boundary
+              assertNode(x.references.get(3).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
+            }
+          }
+        });
+  }
+
+  @Test
   public void nullishCoalesce() {
     testBehavior(
         "var x = 0; var y = x ?? (x = 1)",
@@ -499,42 +439,6 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
               assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
               // first child of ?? is not a boundary, but the second child is.
               assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
-            }
-          }
-        });
-  }
-
-  @Test
-  public void logicalAssignmentBasicBlockBoundary1() {
-    testBehavior(
-        "let x, y; y ||= x",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.references).hasSize(2);
-              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.NAME);
-            }
-          }
-        });
-  }
-
-  @Test
-  public void logicalAssignmentBasicBlockBoundary2() {
-    testBehavior(
-        "var x = 0; var y = x || (x ||= (x = 1))",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.references).hasSize(4);
-              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.ASSIGN_OR);
-              assertNode(x.references.get(3).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
             }
           }
         });
