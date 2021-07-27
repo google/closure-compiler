@@ -70,6 +70,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   private final Deque<GraphColoring<Var, Void>> colorings;
   private final Deque<LiveVariablesAnalysis> liveAnalyses;
   private final boolean usePseudoNames;
+  private final AstFactory astFactory;
   private LiveVariablesAnalysis liveness;
 
   private final Comparator<Var> coloringTieBreaker =
@@ -89,6 +90,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     colorings = new ArrayDeque<>();
     liveAnalyses = new ArrayDeque<>();
     this.usePseudoNames = usePseudoNames;
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -519,8 +521,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // const x = 1; // constant requires an initializer
         // let {x, y} = obj; // destructuring requires an initializer
         // let [x, y] = iterable; // destructuring requires an initializer
-        Node undefinedValue =
-            compiler.createAstFactory().createUndefinedValue().srcrefTree(nameNode);
+        Node undefinedValue = astFactory.createUndefinedValue().srcrefTree(nameNode);
         nameNode.addChildToFront(undefinedValue);
       }
       // find the declaration node in a way that works normal and destructuring declarations.

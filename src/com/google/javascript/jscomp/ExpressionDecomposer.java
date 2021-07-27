@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
@@ -534,7 +535,7 @@ class ExpressionDecomposer {
         trueExpr.addChildToFront(
             astFactory.exprResult(
                 buildResultExpression(
-                    astFactory.createName(tempNameAssign, first.getJSType()).srcref(expr),
+                    astFactory.createName(tempNameAssign, type(first)).srcref(expr),
                     needResult,
                     tempName)));
         falseExpr.addChildToFront(
@@ -728,9 +729,9 @@ class ExpressionDecomposer {
     checkArgument(NodeUtil.isNormalGet(first), first);
 
     // Find the type of (fn expression).call
-    JSType fnType = first.getJSType();
     JSType fnCallType = null;
-    if (fnType != null) {
+    if (astFactory.isAddingTypes()) {
+    JSType fnType = first.getJSType();
       fnCallType =
           fnType.isFunctionType()
               ? fnType.toMaybeFunctionType().getPropertyType("call")
@@ -777,7 +778,9 @@ class ExpressionDecomposer {
     call.removeFirstChild();
     call.addChildToFront(receiverNode);
     call.addChildToFront(
-        IR.getprop(functionNameNode, "call").setJSType(fnCallType).srcrefTreeIfMissing(call));
+        astFactory
+            .createGetProp(functionNameNode, "call", type(fnCallType, StandardColors.TOP_OBJECT))
+            .srcrefTreeIfMissing(call));
     call.putBooleanProp(Node.FREE_CALL, false);
   }
 

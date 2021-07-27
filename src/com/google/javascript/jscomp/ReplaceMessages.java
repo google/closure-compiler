@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -150,7 +151,8 @@ public final class ReplaceMessages {
           createProtectionFunctionCallee(protectionFunctionName).srcref(googGetMsg);
       final Node msgPropertiesNode =
           createMsgPropertiesNode(message, msgOptions).srcrefTree(originalMessageString);
-      Node newCallNode = astFactory.createCall(newCallee, msgPropertiesNode).srcref(callNode);
+      Node newCallNode =
+          astFactory.createCall(newCallee, type(callNode), msgPropertiesNode).srcref(callNode);
       // If the result of this call (the message) is unused, there is no reason for optimizations
       // to preserve it.
       newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
@@ -175,6 +177,7 @@ public final class ReplaceMessages {
           astFactory
               .createCall(
                   createProtectionFunctionCallee(ReplaceMessagesConstants.DEFINE_MSG_CALLEE),
+                  type(valueNode),
                   msgProps)
               .srcrefTreeIfMissing(valueNode);
       newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
@@ -222,7 +225,7 @@ public final class ReplaceMessages {
       final Node placeholderNode = placeholderObjLlitBuilder.build();
       final Node newValueNode =
           astFactory
-              .createCall(newCallee, msgPropertiesNode, placeholderNode)
+              .createCall(newCallee, type(origValueNode), msgPropertiesNode, placeholderNode)
               .srcrefTreeIfMissing(origValueNode);
       origValueNode.replaceWith(newValueNode);
       compiler.reportChangeToChangeScope(functionNode);
@@ -247,6 +250,7 @@ public final class ReplaceMessages {
           astFactory
               .createCall(
                   fallbackCallee,
+                  type(callNode),
                   firstMsgKey,
                   originalFirstArg.detach(),
                   secondMsgKey,

@@ -602,8 +602,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * added if it proves useful.
    */
   public final AstFactory createAstFactory() {
-    return hasTypeCheckingRun() && !hasOptimizationColors()
-        ? AstFactory.createFactoryWithTypes(getTypeRegistry())
+    return hasTypeCheckingRun()
+        ? (hasOptimizationColors()
+            ? AstFactory.createFactoryWithColors(getColorRegistry())
+            : AstFactory.createFactoryWithTypes(getTypeRegistry()))
         : AstFactory.createFactoryWithoutTypes();
   }
 
