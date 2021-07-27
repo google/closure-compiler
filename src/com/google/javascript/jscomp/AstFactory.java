@@ -832,11 +832,9 @@ final class AstFactory {
 
   private Color getInstanceOfColor(Color color) {
     ImmutableSet<Color> possibleInstanceColors = color.getInstanceColors();
-    Color instanceColor =
-        possibleInstanceColors.isEmpty()
-            ? StandardColors.UNKNOWN
-            : Color.createUnion(possibleInstanceColors);
-    return instanceColor;
+    return possibleInstanceColors.isEmpty()
+        ? StandardColors.UNKNOWN
+        : Color.createUnion(possibleInstanceColors);
   }
 
   Node createObjectGetPrototypeOfCall(StaticScope scope, Node argObjectNode) {
