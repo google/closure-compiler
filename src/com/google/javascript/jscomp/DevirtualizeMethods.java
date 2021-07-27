@@ -248,6 +248,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       case GETPROP:
       case MEMBER_FUNCTION_DEF:
       case STRING_KEY:
+      case MEMBER_FIELD_DEF:
         break;
 
       default:

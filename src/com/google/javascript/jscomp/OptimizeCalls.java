@@ -243,8 +243,15 @@ class OptimizeCalls implements CompilerPass {
           break;
 
         case CLASS_MEMBERS:
-          checkArgument(definitionSite.isMemberFunctionDef(), definitionSite);
-          fns.add(definitionSite.getLastChild());
+          if (definitionSite.isMemberFunctionDef()) {
+            fns.add(definitionSite.getLastChild());
+          } else {
+            checkArgument(definitionSite.isMemberFieldDef(), definitionSite);
+            Node value = definitionSite.getFirstChild();
+            if (value != null) {
+              addValueFunctionNodes(fns, value);
+            }
+          }
           break;
 
         case OBJECTLIT:

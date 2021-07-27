@@ -256,6 +256,8 @@ public final class OptimizeCallsTest extends CompilerTestCase {
                 "  ['c'] = 'hi';",
                 "  'd' = 5;",
                 "  1 = 2;",
+                "  e = function() { return 1; };",
+                "  ['f'] = function z() { return 2; };",
                 "}",
                 "new C();",
                 "")));
@@ -266,11 +268,11 @@ public final class OptimizeCallsTest extends CompilerTestCase {
 
     assertThat(references.getPropReferences())
         .comparingElementsUsing(KEY_EQUALITY)
-        .containsExactly("a", "b");
+        .containsExactly("a", "b", "e");
 
     final ImmutableMap<String, ArrayList<Node>> nameToRefs =
         ImmutableMap.copyOf(references.getPropReferences());
-    assertThat(nameToRefs.keySet()).containsExactly("a", "b");
+    assertThat(nameToRefs.keySet()).containsExactly("a", "b", "e");
 
     assertThat(nameToRefs.get("a"))
         .comparingElementsUsing(HAS_TOKEN)
@@ -281,7 +283,13 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         .comparingElementsUsing(HAS_TOKEN)
         .containsExactly(Token.MEMBER_FIELD_DEF)
         .inOrder();
+
+    assertThat(nameToRefs.get("e"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.MEMBER_FIELD_DEF)
+        .inOrder();
   }
+
 
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
       Correspondence.transforming(Map.Entry::getKey, "has key");
