@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
@@ -61,6 +62,7 @@ public class AstFactoryTest {
   private JSTypeRegistry getRegistry() {
     return compiler.getTypeRegistry();
   }
+
 
   private JSType getNativeType(JSTypeNative nativeType) {
     return getRegistry().getNativeType(nativeType);
@@ -116,7 +118,11 @@ public class AstFactoryTest {
   }
 
   private AstFactory createTestAstFactoryWithColors() {
-    return AstFactory.createFactoryWithColors();
+    return AstFactory.createFactoryWithColors(
+        // the built-in color registry is available only if we've run parseAndAddColors()
+        compiler.hasOptimizationColors()
+            ? compiler.getColorRegistry()
+            : ColorRegistry.builder().setDefaultNativeColorsForTesting().build());
   }
 
   private AstFactory createTestAstFactoryWithoutTypes() {
@@ -245,7 +251,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateArgumentsReference() {
+  public void testCreateArgumentsReference_jstypes() {
     // Make sure the compiler's type registry includes the standard externs definition for
     // Arguments.
     parseAndAddTypes(new TestExternsBuilder().addArguments().build(), "");
@@ -255,6 +261,23 @@ public class AstFactoryTest {
     Node argumentsNode = astFactory.createArgumentsReference();
     assertNode(argumentsNode).matchesName("arguments");
     assertType(argumentsNode.getJSType()).isEqualTo(getRegistry().getGlobalType("Arguments"));
+  }
+
+  @Test
+  public void testCreateArgumentsReference_colors() {
+    Node root =
+        parseAndAddColors(
+            new TestExternsBuilder().addArguments().build(), "function f() { arguments; }");
+
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node block = NodeUtil.getFunctionBody(root.getFirstFirstChild());
+    Node argumentsReferenceNode = block.getFirstFirstChild();
+    Color argumentsReferenceColor = argumentsReferenceNode.getColor();
+
+    Node argumentsNode = astFactory.createArgumentsReference();
+    assertNode(argumentsNode).matchesName("arguments");
+    assertNode(argumentsNode).hasColorThat().isEqualTo(argumentsReferenceColor);
   }
 
   @Test
@@ -1736,7 +1759,7 @@ public class AstFactoryTest {
   }
 
   @Test
-  public void testCreateArraylit() {
+  public void testCreateArraylit_jstypes() {
     // Given
     AstFactory astFactory = createTestAstFactory();
     JSType numberType = getNativeType(JSTypeNative.NUMBER_TYPE);
@@ -1757,6 +1780,29 @@ public class AstFactoryTest {
     // Then
     assertNode(array).isEquivalentTo(expected);
     assertType(array.getJSType()).isEqualTo(expected.getJSType());
+  }
+
+  @Test
+  public void testCreateArraylit_colors() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node first = astFactory.createNumber(0);
+    Node second = astFactory.createNumber(1);
+    Node third = astFactory.createNumber(2);
+
+    Node expected =
+        parseAndAddColors("[0, 1, 2]")
+            .getFirstChild() // Script
+            .getFirstChild() // Expression
+            .getFirstChild(); // Array
+
+    // When
+    Node array = astFactory.createArraylit(first, second, third);
+
+    // Then
+    assertNode(array).isEquivalentTo(expected);
+    assertThat(array.getColor()).isEqualTo(expected.getColor());
   }
 
   @Test

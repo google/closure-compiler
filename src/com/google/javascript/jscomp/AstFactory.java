@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -65,6 +66,7 @@ final class AstFactory {
 
   private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
+  @Nullable private final ColorRegistry colorRegistry;
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
   private final JSType unknownType;
@@ -79,28 +81,35 @@ final class AstFactory {
 
   private AstFactory(JSTypeRegistry registry) {
     this.registry = registry;
+    this.colorRegistry = null;
     this.unknownType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     this.typeMode = TypeMode.JSTYPE;
   }
 
-  private AstFactory(TypeMode typeMode) {
-    checkArgument(
-        !TypeMode.JSTYPE.equals(typeMode), "Must pass JSTypeRegistry for mode %s", typeMode);
+  private AstFactory() {
     this.registry = null;
+    this.colorRegistry = null;
     this.unknownType = null;
-    this.typeMode = typeMode;
+    this.typeMode = TypeMode.NONE;
+  }
+
+  private AstFactory(ColorRegistry colorRegistry) {
+    this.registry = null;
+    this.colorRegistry = colorRegistry;
+    this.unknownType = null;
+    this.typeMode = TypeMode.COLOR;
   }
 
   static AstFactory createFactoryWithoutTypes() {
-    return new AstFactory(TypeMode.NONE);
+    return new AstFactory();
   }
 
   static AstFactory createFactoryWithTypes(JSTypeRegistry registry) {
     return new AstFactory(registry);
   }
 
-  static AstFactory createFactoryWithColors() {
-    return new AstFactory(TypeMode.COLOR);
+  static AstFactory createFactoryWithColors(ColorRegistry colorRegistry) {
+    return new AstFactory(colorRegistry);
   }
 
   /** Does this class instance add types to the nodes it creates? */
@@ -421,10 +430,16 @@ final class AstFactory {
    * externs for it weren't included.
    */
   Node createArgumentsReference() {
-    assertNotAddingColors();
     Node result = IR.name("arguments");
-    if (isAddingTypes()) {
-      result.setJSType(registry.getNativeType(JSTypeNative.ARGUMENTS_TYPE));
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(registry.getNativeType(JSTypeNative.ARGUMENTS_TYPE));
+        break;
+      case COLOR:
+        result.setColor(colorRegistry.get(StandardColors.ARGUMENTS_ID));
+        break;
+      case NONE:
+        break;
     }
     return result;
   }
@@ -435,7 +450,6 @@ final class AstFactory {
    * <p>e.g. `const argsAlias = arguments;`
    */
   Node createArgumentsAliasDeclaration(String aliasName) {
-    assertNotAddingColors();
     return createSingleConstNameDeclaration(aliasName, createArgumentsReference());
   }
 
@@ -1067,97 +1081,133 @@ final class AstFactory {
   }
 
   Node createArraylit(Node... elements) {
-    assertNotAddingColors();
     return createArraylit(Arrays.asList(elements));
   }
 
   Node createArraylit(Iterable<Node> elements) {
-    assertNotAddingColors();
     Node result = IR.arraylit(elements);
-    if (isAddingTypes()) {
+    switch (this.typeMode) {
+      case JSTYPE:
       result.setJSType(
           registry.createTemplatizedType(
               registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
               // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
               getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+        break;
+      case COLOR:
+        result.setColor(colorRegistry.get(StandardColors.ARRAY_ID));
+        break;
+      case NONE:
+        break;
     }
     return result;
   }
 
   Node createJSCompMakeIteratorCall(Node iterable, StaticScope scope) {
-    assertNotAddingColors();
-    String function = "makeIterator";
-    Node makeIteratorName = createQName(scope, "$jscomp", function);
-    // Since createCall (currently) doesn't handle templated functions, fill in the template types
-    // of makeIteratorName manually.
-    if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
-      // if makeIteratorName has the unknown type, we must have not injected the required runtime
-      // libraries - hopefully because this is in a test using NonInjectingCompiler.
-
-      // e.g get `number` from `Iterable<number>`
-      JSType iterableType =
-          iterable
-              .getJSType()
-              .getTemplateTypeMap()
-              .getResolvedTemplateType(registry.getIterableTemplate());
-      JSType makeIteratorType = makeIteratorName.getJSType();
-      // e.g. replace
-      //   function(Iterable<T>): Iterator<T>
-      // with
-      //   function(Iterable<number>): Iterator<number>
-      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
+    Node makeIteratorName = createQName(scope, "$jscomp.makeIterator");
+    final Type type;
+    switch (this.typeMode) {
+      case JSTYPE:
+        // Since createCall (currently) doesn't handle templated functions, fill in the template
+        // types
+        // of makeIteratorName manually.
+        // e.g get `number` from `Iterable<number>`
+        JSType iterableType =
+            iterable
+                .getJSType()
+                .getTemplateTypeMap()
+                .getResolvedTemplateType(registry.getIterableTemplate());
+        JSType makeIteratorType = makeIteratorName.getJSType();
+        // e.g. replace
+        //   function(Iterable<T>): Iterator<T>
+        // with
+        //   function(Iterable<number>): Iterator<number>
+        makeIteratorName.setJSType(
+            replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
+        type = type(makeIteratorName.getJSType().assertFunctionType().getReturnType());
+        break;
+      case COLOR:
+        type = type(colorRegistry.get(StandardColors.ITERATOR_ID));
+        break;
+      case NONE:
+        type = noTypeInformation();
+        break;
+      default:
+        throw new AssertionError();
     }
-    return createCall(makeIteratorName, iterable);
+    return createCall(makeIteratorName, type, iterable);
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
-    assertNotAddingColors();
-    Node makeIteratorName = createQName(scope, "$jscomp", "arrayFromIterator");
-    // Since createCall (currently) doesn't handle templated functions, fill in the template types
-    // of makeIteratorName manually.
-    if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
-      // if makeIteratorName has the unknown type, we must have not injected the required runtime
-      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+    Node makeIteratorName = createQName(scope, "$jscomp.arrayFromIterator");
 
-      JSType iterableType =
-          iterator
-              .getJSType()
-              .getTemplateTypeMap()
-              .getResolvedTemplateType(registry.getIteratorValueTemplate());
-      JSType makeIteratorType = makeIteratorName.getJSType();
-      // e.g. replace
-      //   function(Iterator<T>): Array<T>
-      // with
-      //   function(Iterator<number>): Array<number>
-      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
+    final Type resultType;
+    switch (this.typeMode) {
+      case JSTYPE:
+        // Since createCall (currently) doesn't handle templated functions, fill in the template
+        // types of makeIteratorName manually.
+        JSType iterableType =
+            iterator
+                .getJSType()
+                .getTemplateTypeMap()
+                .getResolvedTemplateType(registry.getIteratorValueTemplate());
+        JSType makeIteratorType = makeIteratorName.getJSType();
+        // e.g. replace
+        //   function(Iterator<T>): Array<T>
+        // with
+        //   function(Iterator<number>): Array<number>
+        makeIteratorName.setJSType(
+            replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
+        resultType = type(makeIteratorName.getJSType().assertFunctionType().getReturnType());
+        break;
+      case COLOR:
+        // colors don't include generics, so just set the return type to Array.
+        resultType = type(colorRegistry.get(StandardColors.ARRAY_ID));
+        break;
+      case NONE:
+        resultType = noTypeInformation();
+        break;
+      default:
+        throw new AssertionError();
     }
-    return createCall(makeIteratorName, iterator);
+    return createCall(makeIteratorName, resultType, iterator);
   }
 
   Node createJscompArrayFromIterableCall(Node iterable, StaticScope scope) {
     // TODO(b/193800507): consider making this verify the arrayFromIterable $jscomp runtime library
     // is injected.
-    assertNotAddingColors();
-    Node makeIterableName = createQName(scope, "$jscomp", "arrayFromIterable");
-    // Since createCall (currently) doesn't handle templated functions, fill in the template types
-    // of makeIteratorName manually.
-    if (isAddingTypes() && !makeIterableName.getJSType().isUnknownType()) {
-      // if makeIteratorName has the unknown type, we must have not injected the required runtime
-      // libraries - hopefully because this is in a test using NonInjectingCompiler.
+    Node makeIterableName = createQName(scope, "$jscomp.arrayFromIterable");
 
-      JSType iterableType =
-          iterable
-              .getJSType()
-              .getTemplateTypeMap()
-              .getResolvedTemplateType(registry.getIterableTemplate());
-      JSType makeIterableType = makeIterableName.getJSType();
-      // e.g. replace
-      //   function(Iterable<T>): Array<T>
-      // with
-      //   function(Iterable<number>): Array<number>
-      makeIterableName.setJSType(replaceTemplate(makeIterableType, ImmutableList.of(iterableType)));
+    final Type resultType;
+    switch (this.typeMode) {
+      case JSTYPE:
+        // Since createCall (currently) doesn't handle templated functions, fill in the template
+        // types of makeIteratorName manually.
+        JSType iterableType =
+            iterable
+                .getJSType()
+                .getTemplateTypeMap()
+                .getResolvedTemplateType(registry.getIterableTemplate());
+        JSType makeIterableType = makeIterableName.getJSType();
+        // e.g. replace
+        //   function(Iterable<T>): Array<T>
+        // with
+        //   function(Iterable<number>): Array<number>
+        makeIterableName.setJSType(
+            replaceTemplate(makeIterableType, ImmutableList.of(iterableType)));
+        resultType = type(makeIterableName.getJSType().assertFunctionType().getReturnType());
+        break;
+      case COLOR:
+        // colors don't include generics, so just set the return type to Array.
+        resultType = type(colorRegistry.get(StandardColors.ARRAY_ID));
+        break;
+      case NONE:
+        resultType = noTypeInformation();
+        break;
+      default:
+        throw new AssertionError();
     }
-    return createCall(makeIterableName, iterable);
+    return createCall(makeIterableName, resultType, iterable);
   }
 
   /**
@@ -1174,27 +1224,35 @@ final class AstFactory {
    * }</pre>
    */
   Node createJSCompMakeAsyncIteratorCall(Node iterable, StaticScope scope) {
-    assertNotAddingColors();
-    Node makeIteratorAsyncName = createQName(scope, "$jscomp", "makeAsyncIterator");
-    // Since createCall (currently) doesn't handle templated functions, fill in the template types
-    // of makeIteratorName manually.
-    if (isAddingTypes() && !makeIteratorAsyncName.getJSType().isUnknownType()) {
-      // if makeIteratorName has the unknown type, we must have not injected the required runtime
-      // libraries - hopefully because this is in a test using NonInjectingCompiler.
-
-      // e.g get `number` from `AsyncIterable<number>`
-      JSType asyncIterableType =
-          JsIterables.maybeBoxIterableOrAsyncIterable(iterable.getJSType(), registry)
-              .orElse(unknownType);
-      JSType makeAsyncIteratorType = makeIteratorAsyncName.getJSType();
-      // e.g. replace
-      //   function(AsyncIterable<T>): AsyncIterator<T>
-      // with
-      //   function(AsyncIterable<number>): AsyncIterator<number>
-      makeIteratorAsyncName.setJSType(
-          replaceTemplate(makeAsyncIteratorType, ImmutableList.of(asyncIterableType)));
+    Node makeIteratorAsyncName = createQName(scope, "$jscomp.makeAsyncIterator");
+    final Type resultType;
+    switch (this.typeMode) {
+      case JSTYPE:
+        // Since createCall (currently) doesn't handle templated functions, fill in the template
+        // types of makeIteratorName manually.
+        // e.g get `number` from `AsyncIterable<number>`
+        JSType asyncIterableType =
+            JsIterables.maybeBoxIterableOrAsyncIterable(iterable.getJSType(), registry)
+                .orElse(unknownType);
+        JSType makeAsyncIteratorType = makeIteratorAsyncName.getJSType();
+        // e.g. replace
+        //   function(AsyncIterable<T>): AsyncIterator<T>
+        // with
+        //   function(AsyncIterable<number>): AsyncIterator<number>
+        makeIteratorAsyncName.setJSType(
+            replaceTemplate(makeAsyncIteratorType, ImmutableList.of(asyncIterableType)));
+        resultType = type(makeIteratorAsyncName.getJSType().assertFunctionType().getReturnType());
+        break;
+      case COLOR:
+        resultType = type(colorRegistry.get(StandardColors.ASYNC_ITERATOR_ITERABLE_ID));
+        break;
+      case NONE:
+        resultType = noTypeInformation();
+        break;
+      default:
+        throw new AssertionError();
     }
-    return createCall(makeIteratorAsyncName, iterable);
+    return createCall(makeIteratorAsyncName, resultType, iterable);
   }
 
   private JSType replaceTemplate(JSType templatedType, ImmutableList<JSType> templateTypes) {
@@ -1213,13 +1271,9 @@ final class AstFactory {
    * @param originalFunctionType the type of the async generator function that needs transpilation
    */
   Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, StaticScope scope) {
-    assertNotAddingColors();
-    Node ctor = createQName(scope, "$jscomp", "AsyncGeneratorWrapper");
+    Node ctor = createQName(scope, "$jscomp.AsyncGeneratorWrapper");
 
-    if (isAddingTypes() && !ctor.getJSType().isUnknownType()) {
-      // if ctor has the unknown type, we must have not injected the required runtime
-      // libraries - hopefully because this is in a test using NonInjectingCompiler.
-
+    if (isAddingTypes()) {
       // e.g get `number` from `AsyncIterable<number>`
       JSType yieldedType =
           originalFunctionType
@@ -1234,6 +1288,7 @@ final class AstFactory {
       //  AsyncGeneratorWrapper<number>
       ctor.setJSType(replaceTemplate(ctor.getJSType(), ImmutableList.of(yieldedType)));
     }
+    // no need to have a special case for colors as they don't include generics
 
     return ctor;
   }
@@ -1247,40 +1302,54 @@ final class AstFactory {
    *     createAsyncGeneratorWrapperReference.
    */
   Node createEmptyAsyncGeneratorWrapperArgument(JSType asyncGeneratorWrapperType) {
-    assertNotAddingColors();
-    JSType generatorType = null;
+    Type generatorType = noTypeInformation();
 
     if (isAddingTypes()) {
       if (asyncGeneratorWrapperType.isUnknownType()) {
         // Not injecting libraries?
         generatorType =
-            registry.createFunctionType(
-                replaceTemplate(
-                    getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)));
+            type(
+                registry.createFunctionType(
+                    replaceTemplate(
+                        getNativeType(JSTypeNative.GENERATOR_TYPE),
+                        ImmutableList.of(unknownType))));
       } else {
         // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
         JSType innerFunctionReturnType =
             Iterables.getOnlyElement(
                     asyncGeneratorWrapperType.toMaybeFunctionType().getParameters())
                 .getJSType();
-        generatorType = registry.createFunctionType(innerFunctionReturnType);
+        generatorType = type(registry.createFunctionType(innerFunctionReturnType));
       }
+    } else if (isAddingColors()) {
+      // colors don't model function types, so it's fine to fallback to the top object.
+      generatorType = type(StandardColors.TOP_OBJECT);
     }
 
-    return createEmptyGeneratorFunction(type(generatorType));
+    return createEmptyGeneratorFunction(generatorType);
   }
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(
       StaticScope scope, Node generatorFunction) {
-    assertNotAddingColors();
     Node jscompDotAsyncExecutePromiseGeneratorFunction =
         createQName(scope, "$jscomp.asyncExecutePromiseGeneratorFunction");
-    // TODO(bradfordcsmith): Maybe update the type to be more specific
-    // Currently this method expects `function(): !Generator<?>` and returns `Promise<?>`.
-    // Since we propagate type information only if type checking has already run,
-    // these unknowns probably don't matter, but we should be able to be more specific with the
-    // return type at least.
-    return createCall(jscompDotAsyncExecutePromiseGeneratorFunction, generatorFunction);
+    Type resultType = type(unknownType);
+    if (isAddingTypes()) {
+      // TODO(bradfordcsmith): Maybe update the type to be more specific
+      // Currently this method expects `function(): !Generator<?>` and returns `Promise<?>`.
+      // Since we propagate type information only if type checking has already run,
+      // these unknowns probably don't matter, but we should be able to be more specific with the
+      // return type at least.
+      resultType =
+          type(
+              jscompDotAsyncExecutePromiseGeneratorFunction
+                  .getJSType()
+                  .assertFunctionType()
+                  .getReturnType());
+    } else if (isAddingColors()) {
+      resultType = type(colorRegistry.get(StandardColors.PROMISE_ID));
+    }
+    return createCall(jscompDotAsyncExecutePromiseGeneratorFunction, resultType, generatorFunction);
   }
 
   private JSType getNativeType(JSTypeNative nativeType) {
@@ -1449,5 +1518,9 @@ final class AstFactory {
 
   static Type type(JSTypeNative type, Color color) {
     return new JSTypeOrColor(type, color);
+  }
+
+  private static Type noTypeInformation() {
+    return new JSTypeOrColor((JSType) null, null);
   }
 }
