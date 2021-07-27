@@ -893,6 +893,12 @@ BaseRenderingContext2D.prototype.textBaseline;
 BaseRenderingContext2D.prototype.lineDashOffset;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/direction
+ */
+BaseRenderingContext2D.prototype.direction;
+
+/**
  * @constructor
  * @extends {BaseRenderingContext2D}
  * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
