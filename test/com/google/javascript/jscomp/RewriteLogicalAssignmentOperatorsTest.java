@@ -37,7 +37,7 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteLogicalAssignmentOperators(compiler);
+    return new RewriteLogicalAssignmentOperatorsPass(compiler);
   }
 
   @Test

@@ -247,10 +247,14 @@ class Normalize implements CompilerPass {
   static class NormalizeStatements implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
     private final boolean assertOnChange;
+    private final RewriteLogicalAssignmentOperatorsHelper rewriteLogicalAssignmentOperatorsHelper;
 
     NormalizeStatements(AbstractCompiler compiler, boolean assertOnChange) {
       this.compiler = compiler;
       this.assertOnChange = assertOnChange;
+      this.rewriteLogicalAssignmentOperatorsHelper =
+          new RewriteLogicalAssignmentOperatorsHelper(
+              compiler, compiler.createAstFactory(), compiler.getUniqueIdSupplier());
     }
 
     private void reportCodeChange(String changeDescription, Node n) {
@@ -262,8 +266,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      doStatementNormalizations(n);
-
+      doStatementNormalizations(t, n);
       return true;
     }
 
@@ -399,7 +402,7 @@ class Normalize implements CompilerPass {
     }
 
     /** Do normalizations that introduce new siblings or parents. */
-    private void doStatementNormalizations(Node n) {
+    private void doStatementNormalizations(NodeTraversal t, Node n) {
       if (n.isLabel()) {
         normalizeLabels(n);
       }
@@ -422,7 +425,7 @@ class Normalize implements CompilerPass {
 
       if (NodeUtil.isCompoundAssignmentOp(n)) {
         if (NodeUtil.isLogicalAssignmentOp(n)) {
-          normalizeLogicalAssignShorthand(n);
+          rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(t, n);
         } else {
           normalizeAssignShorthand(n);
         }
@@ -622,25 +625,6 @@ class Normalize implements CompilerPass {
       Node insertPoint = IR.empty();
       shorthand.replaceWith(insertPoint);
       Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
-      assign.setJSDocInfo(shorthand.getJSDocInfo());
-      shorthand.setJSDocInfo(null);
-      insertPoint.replaceWith(assign);
-      compiler.reportChangeToEnclosingScope(assign);
-    }
-
-    private void normalizeLogicalAssignShorthand(Node shorthand) {
-      if (!shorthand.getFirstChild().isName()) {
-        return;
-      }
-      Node name = shorthand.getFirstChild();
-      Node last = shorthand.getLastChild();
-      name.detach();
-      last.detach();
-      Node insertPoint = IR.empty();
-      shorthand.replaceWith(insertPoint);
-      Node logicalOp = IR.assign(name.cloneNode().srcref(name), last).srcref(shorthand);
-      Node assign =
-          new Node(NodeUtil.getOpFromAssignmentOp(shorthand), name, logicalOp).srcref(shorthand);
       assign.setJSDocInfo(shorthand.getJSDocInfo());
       shorthand.setJSDocInfo(null);
       insertPoint.replaceWith(assign);

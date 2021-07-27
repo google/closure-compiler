@@ -82,7 +82,7 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
-      passes.add(rewriteLogicalAssignmentOperators);
+      passes.add(rewriteLogicalAssignmentOperatorsPass);
     }
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
@@ -386,10 +386,10 @@ public class TranspilationPasses {
           .setFeatureSetForChecks()
           .build();
 
-  static final PassFactory rewriteLogicalAssignmentOperators =
+  static final PassFactory rewriteLogicalAssignmentOperatorsPass =
       PassFactory.builder()
-          .setName("rewriteLogicalAssignmentOperators")
-          .setInternalFactory(RewriteLogicalAssignmentOperators::new)
+          .setName("rewriteLogicalAssignmentOperatorsPass")
+          .setInternalFactory(RewriteLogicalAssignmentOperatorsPass::new)
           .setFeatureSetForChecks()
           .build();
 

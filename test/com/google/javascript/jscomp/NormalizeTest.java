@@ -331,18 +331,71 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testLogicalAssignPropertyReferenceShorthand() {
-    // When the LHS is getprop, normalization does not occur
-    test("x.a ||= 1;", "x.a ||= 1;");
-    test("x.a &&= 1;", "x.a &&= 1;");
-    test("x.a ??= 1;", "x.a ??= 1;");
+    test(
+        srcs("a.x ||= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "($jscomp$logical$assign$tmpm1146332801$0 = a).x ",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0.x = b);")));
+    test(
+        srcs("a.foo &&= null"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "($jscomp$logical$assign$tmpm1146332801$0 = a).foo ",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$0.foo = null);")));
+    test(
+        srcs(
+            lines(
+                "foo().x = null;", //
+                "foo().x ??= y")),
+        expected(
+            lines(
+                "foo().x = null;", //
+                "let $jscomp$logical$assign$tmpm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = foo()).x ",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$0.x = y);")));
   }
 
   @Test
   public void testLogicalAssignPropertyReferenceElementShorthand() {
-    // When the LHS is getelem, normalization does not occur
-    test("x[a] ||= 1;", "x[a] ||= 1;");
-    test("x[a] &&= 1;", "x[a] &&= 1;");
-    test("x[a] ??= 1;", "x[a] ??= 1;");
+    test(
+        srcs("a[x] ||= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = a)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = x]",
+                "   ||",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = b);")));
+    test(
+        srcs("a[x + 5 + 's'] &&= b"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = a)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = (x + 5 + 's')] ",
+                "   &&",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = b);")));
+    test(
+        srcs("foo[x] ??= bar[y]"),
+        expected(
+            lines(
+                "let $jscomp$logical$assign$tmpm1146332801$0;", //
+                "let $jscomp$logical$assign$tmpindexm1146332801$0;",
+                "($jscomp$logical$assign$tmpm1146332801$0 = foo)",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0 = x]",
+                "   ??",
+                "($jscomp$logical$assign$tmpm1146332801$0",
+                "[$jscomp$logical$assign$tmpindexm1146332801$0] = bar[y]);")));
   }
 
   @Test
