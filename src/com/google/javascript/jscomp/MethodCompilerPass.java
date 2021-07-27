@@ -93,7 +93,7 @@ abstract class MethodCompilerPass implements CompilerPass {
    * itself or the name of a function).
    */
   private void addPossibleSignature(String name, Node node, NodeTraversal t) {
-    if (node.isFunction()) {
+    if (node != null && node.isFunction()) {
       // The node we're looking at is a function, so we can add it directly
       addSignature(name, node, t.getSourceName());
     } else {
@@ -202,6 +202,7 @@ abstract class MethodCompilerPass implements CompilerPass {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch (key.getToken()) {
               case MEMBER_FUNCTION_DEF:
+              case MEMBER_FIELD_DEF:
               case STRING_KEY:
                 addPossibleSignature(key.getString(), key.getFirstChild(), t);
                 break;
@@ -211,6 +212,7 @@ abstract class MethodCompilerPass implements CompilerPass {
                 break;
               case COMPUTED_PROP: // complicated
               case OBJECT_SPREAD:
+              case COMPUTED_FIELD_DEF:
                 break;
               default:
                 throw new IllegalStateException("Unexpected " + n.getToken() + " key: " + key);

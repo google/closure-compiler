@@ -445,4 +445,44 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
                 "(new Foo).m();",
                 "esc(Foo)")));
   }
+
+  @Test
+  public void testClassFieldDoesntCrash() {
+    testSame("class C { a; };");
+    testSame("class C { a = 2; };");
+    testSame("class C { ['a'] = 2; }");
+    testSame("class C { a = function() { return 4; }; }");
+    testSame("class C { static a; };");
+    testSame("class C { static a = 2; };");
+    testSame("class C { static ['a'] = 2; }");
+    testSame("class C { static a = function() { return 4; }; }");
+  }
+
+  @Test
+  public void testNonStaticClassFieldArrowFunction() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  a = 5;",
+            "  b = () => this.a;",
+            "}",
+            "new Foo().b()"));
+  }
+
+  @Test
+  public void testStaticClassFieldFunctionDoesInline() {
+    test(
+        lines(
+            "class Foo {", //
+            "  static a = 5;",
+            "  static b = function() { return this.a; };",
+            "}",
+            "Foo.b();"),
+        lines(
+            "class Foo {", //
+            "  static a = 5;",
+            "  static b = function() { return this.a; };",
+            "}",
+            "Foo.a;"));
+  }
 }
