@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIP
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -275,7 +276,9 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
 
-    new AstValidator(compiler).setTypeValidationEnabled(true).process(externsNode, jsNode);
+    new AstValidator(compiler)
+        .setTypeValidationMode(TypeInfoValidation.JSTYPE)
+        .process(externsNode, jsNode);
 
     return new TypeCheckResult(jsNode.getFirstChild(), s);
   }

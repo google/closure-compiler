@@ -34,6 +34,7 @@ import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
+import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -1643,8 +1644,14 @@ public abstract class CompilerTestCase {
         // Transpilation passes are allowed to leave the AST in a bad state when there is a halting
         // error.
         if (astValidationEnabled && !compiler.hasHaltingErrors()) {
+          AstValidator.TypeInfoValidation typeValidationMode =
+              typeInfoValidationEnabled
+                  ? compiler.hasOptimizationColors()
+                      ? TypeInfoValidation.COLOR
+                      : TypeInfoValidation.JSTYPE
+                  : TypeInfoValidation.NONE;
           new AstValidator(compiler, scriptFeatureValidationEnabled)
-              .setTypeValidationEnabled(typeInfoValidationEnabled)
+              .setTypeValidationMode(typeValidationMode)
               .validateRoot(root);
         }
         new SourceInfoCheck(compiler).process(externsRoot, mainRoot);

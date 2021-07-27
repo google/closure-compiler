@@ -49,8 +49,14 @@ public final class AstValidator implements CompilerPass {
   private final ViolationHandler violationHandler;
   private Node currentScript;
 
+  enum TypeInfoValidation {
+    JSTYPE,
+    COLOR,
+    NONE
+  }
+
   /** Perform type validation if this is enabled. */
-  private boolean isTypeValidationEnabled = false;
+  private TypeInfoValidation typeValidationMode = TypeInfoValidation.NONE;
 
   /** Validate that a SCRIPT's FeatureSet property includes all features if this is enabled. */
   private final boolean isScriptFeatureValidationEnabled;
@@ -89,8 +95,8 @@ public final class AstValidator implements CompilerPass {
    * <p>TODO(b/74537281): Currently only expressions are checked for type information. Do we need to
    * do more?
    */
-  public AstValidator setTypeValidationEnabled(boolean isEnabled) {
-    isTypeValidationEnabled = isEnabled;
+  public AstValidator setTypeValidationMode(TypeInfoValidation mode) {
+    typeValidationMode = mode;
     return this;
   }
 
@@ -251,7 +257,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   public void validateExpression(Node n) {
-    if (isTypeValidationEnabled) {
+    if (!typeValidationMode.equals(TypeInfoValidation.NONE)) {
       validateExpressionType(n);
     }
     switch (n.getToken()) {
@@ -483,11 +489,14 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateExpressionType(Node n) {
-    JSType type = n.getJSType();
+    if (this.typeValidationMode.equals(TypeInfoValidation.JSTYPE)) {
+      JSType type = n.getJSType();
 
-    if (type != null && !type.isResolved()) { // null types are checked in the switch statement
-      violation("Found unresolved type " + type, n);
+      if (type != null && !type.isResolved()) { // null types are checked in the switch statement
+        violation("Found unresolved type " + type, n);
+      }
     }
+
     switch (n.getToken()) {
       case NAME:
         validateNameType(n);
@@ -521,28 +530,58 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateCallType(Node callNode) {
-    // TODO(b/74537281): Shouldn't CALL nodes always have a type, even if it is unknown?
-    Node callee = callNode.getFirstChild();
-    JSType calleeType =
-        checkNotNull(callee.getJSType(), "Callee of\n\n%s\nhas no type.", callNode.toStringTree());
+    switch (this.typeValidationMode) {
+      case JSTYPE:
+        // TODO(b/74537281): Shouldn't CALL nodes always have a type, even if it is unknown?
+        Node callee = callNode.getFirstChild();
+        JSType calleeType =
+            checkNotNull(
+                callee.getJSType(), "Callee of\n\n%s\nhas no type.", callNode.toStringTree());
 
-    if (calleeType.isFunctionType()) {
-      FunctionType calleeFunctionType = calleeType.toMaybeFunctionType();
-      JSType returnType = calleeFunctionType.getReturnType();
-      // Skip this check if the call node was originally in a cast, because the cast type may be
-      // narrower than the return type. Also skip the check if the function's return type is the
-      // any (formerly unknown) type, since we may have inferred a better type.
-      if (callNode.getJSTypeBeforeCast() == null && !returnType.isUnknownType()) {
-        expectMatchingTypeInformation(callNode, returnType);
-      }
-    } // TODO(b/74537281): What other cases should be covered?
+        if (calleeType.isFunctionType()) {
+          FunctionType calleeFunctionType = calleeType.toMaybeFunctionType();
+          JSType returnType = calleeFunctionType.getReturnType();
+          // Skip this check if the call node was originally in a cast, because the cast type may be
+          // narrower than the return type. Also skip the check if the function's return type is the
+          // any (formerly unknown) type, since we may have inferred a better type.
+          if (callNode.getJSTypeBeforeCast() == null && !returnType.isUnknownType()) {
+            expectMatchingTypeInformation(callNode, returnType);
+          }
+        } // TODO(b/74537281): What other cases should be covered?
+        break;
+      case COLOR:
+        callee = callNode.getFirstChild();
+        checkNotNull(callee.getColor(), "Callee of\n\n%s\nhas no color.", callNode.toStringTree());
+        // skip additional validation of return types, since optimization colors don't include
+        // call signature types
+        break;
+      case NONE:
+        throw new AssertionError();
+    }
   }
 
   private void expectSomeTypeInformation(Node n) {
-    if (n.getJSType() == null) {
-      violation(
-          "Type information missing" + "\n" + compiler.toSource(NodeUtil.getEnclosingStatement(n)),
-          n);
+    switch (this.typeValidationMode) {
+      case JSTYPE:
+        if (n.getJSType() == null) {
+          violation(
+              "Type information missing"
+                  + "\n"
+                  + compiler.toSource(NodeUtil.getEnclosingStatement(n)),
+              n);
+        }
+        break;
+      case COLOR:
+        if (n.getColor() == null) {
+          violation(
+              "Color information missing"
+                  + "\n"
+                  + compiler.toSource(NodeUtil.getEnclosingStatement(n)),
+              n);
+        }
+        break;
+      case NONE:
+        throw new AssertionError();
     }
   }
 
@@ -1103,7 +1142,7 @@ public final class AstValidator implements CompilerPass {
   private void validateSuper(Node superNode) {
     validateFeature(Feature.SUPER, superNode);
     validateChildless(superNode);
-    if (isTypeValidationEnabled) {
+    if (!typeValidationMode.equals(TypeInfoValidation.NONE)) {
       expectSomeTypeInformation(superNode);
     }
     Node superParent = superNode.getParent();
