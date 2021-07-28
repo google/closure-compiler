@@ -1432,6 +1432,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldIdentityDeclaration() {
+    fold ("var x = x;", "var x");
+  }
+
+  @Test
   public void testEmptyArrayPatternInAssignRemoved() {
     fold("({} = {});", "");
     fold("({} = foo());", "foo()");

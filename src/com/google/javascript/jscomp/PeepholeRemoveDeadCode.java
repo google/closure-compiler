@@ -83,6 +83,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case OBJECT_PATTERN:
         return tryOptimizeObjectPattern(subtree);
       case VAR:
+        return tryOptimizeVarNameDeclaration(subtree);
       case CONST:
       case LET:
         return tryOptimizeNameDeclaration(subtree);
@@ -230,6 +231,24 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return right;
     }
     return subtree;
+  }
+
+  /**
+   * Try removing identity assignments and empty destructuring pattern assignments
+   *
+   * @return the replacement node, if changed, or the original if not
+   */
+  private Node tryOptimizeVarNameDeclaration(Node subtree) {
+    checkState(NodeUtil.isNameDeclaration(subtree));
+    Node left = subtree.getFirstChild();
+    if (left.isName()) {
+      Node right = NodeUtil.getAssignedValue(left);
+      if (right != null && right.isName() && left.getString().equals(right.getString())) {
+        right.detach();
+        reportChangeToEnclosingScope(left);
+      }
+    }
+    return tryOptimizeNameDeclaration(subtree);
   }
 
   /**
