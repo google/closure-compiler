@@ -262,6 +262,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testCorrectEarlyReferenceLogicalAssignment() {
+    // These patterns are normalized away
     assertNoWarning("function f() { a ||= {}; } let a;");
     assertNoWarning("function f() { a &&= {}; } let a;");
     assertNoWarning("function f() { a ??= {}; } let a;");
@@ -695,6 +696,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testLogicalReassignedConst() {
+    // These patterns are normalized away
     assertReassign("const a = 0; a ||= 1;");
     assertReassign("const a = 1; a &&= 1;");
     assertReassign("const a = null; a ??= 1;");

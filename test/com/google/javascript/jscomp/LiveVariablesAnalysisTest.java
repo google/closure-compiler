@@ -121,6 +121,7 @@ public final class LiveVariablesAnalysisTest {
 
   @Test
   public void logicalAssignment() {
+    // This pattern is normalized away
     assertLiveBeforeX("var a,b;X:a??=b", "a");
     assertLiveBeforeX("var a,b;X:a??=b", "b");
   }
