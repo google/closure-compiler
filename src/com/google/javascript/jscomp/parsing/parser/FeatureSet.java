@@ -219,13 +219,13 @@ public final class FeatureSet implements Serializable {
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
     NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT), // Part of ES2021
+    LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES_NEXT),
 
     // ES_NEXT_IN: Features fully supported in checks, but not yet fully supported in optimizations
 
     PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_NEXT_IN),
 
     // ES_UNSUPORTED: Features that we can parse, but not yet supported in all checks
-    LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES_UNSUPPORTED),
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
     // to the CodeGenerator that it should handle type syntax.

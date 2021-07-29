@@ -75,20 +75,6 @@ public final class RhinoErrorReporterTest {
   }
 
   @Test
-  public void testUnsupportedLanguageFeatureError() {
-    // note: when we move 'logical assignment' to ES_NEXT_IN, this test is expected to fail. If
-    // there is another ES_UNSUPPORTED feature in FeatureSet.java, rewrite this test to use that
-    // feature; otherwise delete the test.
-
-    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
-
-    assertError(
-        "let x; x ||= 0;",
-        RhinoErrorReporter.UNSUPPORTED_LANGUAGE_FEATURE,
-        "This language feature is not currently supported by the compiler: Logical assignments.");
-  }
-
-  @Test
   public void testLanguageFeatureInHigherLanguageInError() {
     this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT_2015;
     assertError(
