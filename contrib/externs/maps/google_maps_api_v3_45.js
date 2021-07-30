@@ -9869,6 +9869,20 @@ google.maps.places.PlaceResult.prototype.html_attributions;
 google.maps.places.PlaceResult.prototype.icon;
 
 /**
+ * Background color for use with a Place&#39;s icon. See also {@link
+ * google.maps.places.PlaceResult.icon_mask_base_uri}.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceResult.prototype.icon_background_color;
+
+/**
+ * A truncated URL to an icon mask. Access different icon types by appending a
+ * file extension to the end (i.e. <code>.svg</code> or <code>.png</code>).
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceResult.prototype.icon_mask_base_uri;
+
+/**
  * The Place’s phone number in international format. International format
  * includes the country code, and is prefixed with the plus (+) sign. Only
  * available with {@link google.maps.places.PlacesService.getDetails}.
