@@ -608,6 +608,10 @@ class ExpressionDecomposer {
    * @return The extracted statement node.
    */
   private Node extractExpression(Node expr, Node injectionPoint) {
+    // Since all instances of logical assignment ops are normalized into an expression that
+    // separates the logical operation from the assignment, logical assignment ops are
+    // never seen here, and its logical operation part is instead handled by extractConditional().
+    checkState(!NodeUtil.isLogicalAssignmentOp(expr), expr);
     Node parent = expr.getParent();
 
     boolean isLhsOfAssignOp =
@@ -638,8 +642,8 @@ class ExpressionDecomposer {
 
     final Node tempNameValue;
 
-    // If it is ASSIGN_XXX, keep the assignment in place and extract the
-    // original value of the LHS operand.
+    // If it is ASSIGN_XXX and not a logical assignment operator keep the
+    // assignment in place and extract the original value of the LHS operand.
     if (isLhsOfAssignOp) {
       checkState(expr.isName() || NodeUtil.isNormalGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
