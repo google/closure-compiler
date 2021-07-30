@@ -1149,8 +1149,6 @@ public final class JsDocInfoParser {
               case EXPORT:
                 if (!jsdocBuilder.recordExport()) {
                   addParserWarning("msg.jsdoc.export", lineno, charno);
-                } else if (!jsdocBuilder.recordVisibility(Visibility.PUBLIC)) {
-                  addParserWarning("msg.jsdoc.extra.visibility", lineno, charno);
                 }
                 if (!isAnnotationNext) {
                   return recordDescription(token);

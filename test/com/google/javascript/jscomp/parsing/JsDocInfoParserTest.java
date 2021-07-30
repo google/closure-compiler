@@ -3567,9 +3567,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testMixedVisibility() {
     parse("@public @private */", "extra visibility tag");
     parse("@public @protected */", "extra visibility tag");
-    parse("@export @protected */", "extra visibility tag");
-    parse("@export {string}\n * @private */", "extra visibility tag");
-    parse("@export {string}\n * @public */", "extra visibility tag");
+    parse("@export @protected */");
+    parse("@export {string}\n * @private */");
+    parse("@export {string}\n * @public */");
   }
 
   @Test

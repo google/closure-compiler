@@ -781,7 +781,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "});"),
         lines(
             "goog.module('m');", //
-            "/** @public @constructor @struct */",
+            "/** @constructor @struct */",
             "var x = function() {};"));
   }
 
@@ -794,26 +794,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function(){}",
             "});"),
         lines(
-            "/** @export @public @constructor @struct */", //
+            "/** @export @constructor @struct */", //
             "var x = function() {};"));
   }
-
-  // public void testNestedObjectLiteral(){
-  // testRewriteError(
-  //    lines(
-  //        "var FancyClass = goog.defineClass(null, {",
-  //        "  constructor: function() {},",
-  //        "  someNestedObjLit:{}",
-  //        "});"),
-  //    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT_2015);
-  // testRewriteError(
-  //    lines(
-  //        "var FancyClass = goog.defineClass(null, {",
-  //        "  constructor() {},",
-  //        "  statics:{",
-  //        "    someNestedObjLit:{}",
-  //        "  }",
-  //        "});"),
-  //    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT_2015);
-  // }
 }
