@@ -100,7 +100,9 @@ public final class ScriptNodeDeserializer {
       if (astNode.hasType()) {
         n.setColor(this.owner().colorPoolShard.getColor(astNode.getType()));
       }
-      this.owner().deserializeProperties(n, astNode);
+      if (astNode.getBooleanPropertyCount() > 0) {
+        n.deserializeProperties(astNode.getBooleanPropertyList());
+      }
       n.setJSDocInfo(JSDocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
       this.previousLine = currentLine;
@@ -613,129 +615,5 @@ public final class ScriptNodeDeserializer {
         break;
     }
     throw new IllegalStateException("Unexpected serialized kind for AstNode: " + n);
-  }
-
-  private void deserializeProperties(Node n, AstNode serializedNode) {
-    for (NodeProperty prop : serializedNode.getBooleanPropertyList()) {
-      switch (prop) {
-        case ARROW_FN:
-          n.setIsArrowFunction(true);
-          continue;
-        case ASYNC_FN:
-          n.setIsAsyncFunction(true);
-          continue;
-        case GENERATOR_FN:
-          n.setIsGeneratorFunction(true);
-          continue;
-        case IS_PARENTHESIZED:
-          n.setIsParenthesized(true);
-          continue;
-        case SYNTHETIC:
-          n.setIsSyntheticBlock(true);
-          continue;
-        case ADDED_BLOCK:
-          n.setIsAddedBlock(true);
-          continue;
-        case IS_CONSTANT_NAME:
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          continue;
-        case IS_DECLARED_CONSTANT:
-          n.setDeclaredConstantVar(true);
-          continue;
-        case IS_INFERRED_CONSTANT:
-          n.setInferredConstantVar(true);
-          continue;
-        case IS_NAMESPACE:
-          n.putBooleanProp(Node.IS_NAMESPACE, true);
-          continue;
-        case DIRECT_EVAL:
-          n.putBooleanProp(Node.DIRECT_EVAL, true);
-          continue;
-        case FREE_CALL:
-          n.putBooleanProp(Node.FREE_CALL, true);
-          continue;
-        case SLASH_V:
-          n.putBooleanProp(Node.SLASH_V, true);
-          continue;
-        case REFLECTED_OBJECT:
-          n.putBooleanProp(Node.REFLECTED_OBJECT, true);
-          continue;
-        case STATIC_MEMBER:
-          n.setStaticMember(true);
-          continue;
-        case YIELD_ALL:
-          n.setYieldAll(true);
-          continue;
-        case EXPORT_DEFAULT:
-          n.putBooleanProp(Node.EXPORT_DEFAULT, true);
-          continue;
-        case EXPORT_ALL_FROM:
-          n.putBooleanProp(Node.EXPORT_ALL_FROM, true);
-          continue;
-        case IS_GENERATOR_MARKER:
-          n.setGeneratorMarker(true);
-          continue;
-        case IS_GENERATOR_SAFE:
-          n.setGeneratorSafe(true);
-          continue;
-        case COMPUTED_PROP_METHOD:
-          n.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
-          continue;
-        case COMPUTED_PROP_GETTER:
-          n.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
-          continue;
-        case COMPUTED_PROP_SETTER:
-          n.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
-          continue;
-        case COMPUTED_PROP_VARIABLE:
-          n.putBooleanProp(Node.COMPUTED_PROP_VARIABLE, true);
-          continue;
-        case COLOR_FROM_CAST:
-          n.setColorFromTypeCast();
-          continue;
-        case NON_INDEXABLE:
-          n.makeNonIndexable();
-          continue;
-        case GOOG_MODULE:
-          n.putBooleanProp(Node.GOOG_MODULE, true);
-          continue;
-        case TRANSPILED:
-          n.putBooleanProp(Node.TRANSPILED, true);
-          continue;
-        case DELETED:
-          n.setDeleted(true);
-          continue;
-        case MODULE_ALIAS:
-          n.putBooleanProp(Node.MODULE_ALIAS, true);
-          continue;
-        case IS_UNUSED_PARAMETER:
-          n.setUnusedParameter(true);
-          continue;
-        case MODULE_EXPORT:
-          n.putBooleanProp(Node.MODULE_EXPORT, true);
-          continue;
-        case IS_SHORTHAND_PROPERTY:
-          n.setShorthandProperty(true);
-          continue;
-        case ES6_MODULE:
-          n.putBooleanProp(Node.ES6_MODULE, true);
-          continue;
-        case START_OF_OPT_CHAIN:
-          n.setIsOptionalChainStart(true);
-          continue;
-        case TRAILING_COMMA:
-          n.setTrailingComma(true);
-          continue;
-        case FEATURE_SET:
-        case SIDE_EFFECT_FLAGS:
-        case DIRECTIVES:
-        case CONSTANT_VAR_FLAGS:
-        case DECLARED_TYPE_EXPR:
-          // We'll need to reevaluate these once we support non-binary node properties
-        case UNRECOGNIZED:
-        case NODE_PROPERTY_UNSPECIFIED:
-          throw new RuntimeException("Hit unhandled node property: " + prop);
-      }
-    }
   }
 }

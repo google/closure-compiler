@@ -51,13 +51,16 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
@@ -980,6 +983,134 @@ public class Node {
     this.propListHead = rebuildListWithoutProp(this.propListHead, prop);
     if (value != 0) {
       this.propListHead = new IntPropListItem((byte) prop.ordinal(), value, this.propListHead);
+    }
+  }
+
+  private final Prop deserializeProp(NodeProperty nodeProperty) {
+    switch (nodeProperty) {
+      case ARROW_FN:
+        checkState(isFunction());
+        return Prop.ARROW_FN;
+      case ASYNC_FN:
+        checkState(isFunction());
+        return Prop.ASYNC_FN;
+      case GENERATOR_FN:
+        return Prop.GENERATOR_FN;
+      case IS_PARENTHESIZED:
+        checkState(IR.mayBeExpression(this));
+        return Prop.IS_PARENTHESIZED;
+      case SYNTHETIC:
+        checkState(token == Token.BLOCK);
+        return Prop.SYNTHETIC;
+      case ADDED_BLOCK:
+        return Prop.ADDED_BLOCK;
+      case IS_CONSTANT_NAME:
+        return Prop.IS_CONSTANT_NAME;
+      case IS_DECLARED_CONSTANT:
+      case IS_INFERRED_CONSTANT:
+        // These cases have special handling in deserializeProperties
+        throw new IllegalStateException("Hit unhandled ConstantVarFlags property: " + nodeProperty);
+      case IS_NAMESPACE:
+        return Prop.IS_NAMESPACE;
+      case DIRECT_EVAL:
+        return Prop.DIRECT_EVAL;
+      case FREE_CALL:
+        return Prop.FREE_CALL;
+      case SLASH_V:
+        return Prop.SLASH_V;
+      case REFLECTED_OBJECT:
+        return Prop.REFLECTED_OBJECT;
+      case STATIC_MEMBER:
+        return Prop.STATIC_MEMBER;
+      case YIELD_ALL:
+        return Prop.YIELD_ALL;
+      case EXPORT_DEFAULT:
+        return Prop.EXPORT_DEFAULT;
+      case EXPORT_ALL_FROM:
+        return Prop.EXPORT_ALL_FROM;
+      case IS_GENERATOR_MARKER:
+        return Prop.IS_GENERATOR_MARKER;
+      case IS_GENERATOR_SAFE:
+        return Prop.IS_GENERATOR_SAFE;
+      case COMPUTED_PROP_METHOD:
+        return Prop.COMPUTED_PROP_METHOD;
+      case COMPUTED_PROP_GETTER:
+        return Prop.COMPUTED_PROP_GETTER;
+      case COMPUTED_PROP_SETTER:
+        return Prop.COMPUTED_PROP_SETTER;
+      case COMPUTED_PROP_VARIABLE:
+        return Prop.COMPUTED_PROP_VARIABLE;
+      case COLOR_FROM_CAST:
+        checkState(getColor() != null, "Only use on nodes with colors present");
+        return Prop.COLOR_FROM_CAST;
+      case NON_INDEXABLE:
+        return Prop.NON_INDEXABLE;
+      case GOOG_MODULE:
+        return Prop.GOOG_MODULE;
+      case TRANSPILED:
+        return Prop.TRANSPILED;
+      case DELETED:
+        return Prop.DELETED;
+      case MODULE_ALIAS:
+        return Prop.MODULE_ALIAS;
+      case IS_UNUSED_PARAMETER:
+        return Prop.IS_UNUSED_PARAMETER;
+      case MODULE_EXPORT:
+        return Prop.MODULE_EXPORT;
+      case IS_SHORTHAND_PROPERTY:
+        return Prop.IS_SHORTHAND_PROPERTY;
+      case ES6_MODULE:
+        return Prop.ES6_MODULE;
+      case START_OF_OPT_CHAIN:
+        checkState(
+            isOptChainGetElem() || isOptChainGetProp() || isOptChainCall(),
+            "cannot make a non-optional node the start of an optional chain.");
+        return Prop.START_OF_OPT_CHAIN;
+      case TRAILING_COMMA:
+        return Prop.TRAILING_COMMA;
+      case FEATURE_SET:
+      case SIDE_EFFECT_FLAGS:
+      case DIRECTIVES:
+      case CONSTANT_VAR_FLAGS:
+      case DECLARED_TYPE_EXPR:
+        // We'll need to reevaluate these once we support non-binary node properties
+      case UNRECOGNIZED:
+      case NODE_PROPERTY_UNSPECIFIED:
+        throw new IllegalStateException("Hit unhandled node property: " + nodeProperty);
+    }
+    throw new AssertionError();
+  }
+
+  public final void deserializeProperties(List<NodeProperty> serializedNodeBooleanPropertyList) {
+    if (this.isRoot()) {
+      checkState(this.propListHead == null, this.propListHead);
+    } else {
+      checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
+    }
+
+    EnumSet<NodeProperty> propSet = EnumSet.noneOf(NodeProperty.class);
+    for (int i = 0; i < serializedNodeBooleanPropertyList.size(); i++) {
+      NodeProperty nodeProperty = serializedNodeBooleanPropertyList.get(i);
+      checkState(propSet.add(nodeProperty), "Found multiple node property: %s", nodeProperty);
+    }
+
+    if (propSet.contains(NodeProperty.IS_DECLARED_CONSTANT)
+        || propSet.contains(NodeProperty.IS_INFERRED_CONSTANT)) {
+      checkState(
+          isName() || isImportStar(),
+          "Should only be called on name or import * nodes. Found %s",
+          this);
+      int newConstantVarFlags =
+          (propSet.remove(NodeProperty.IS_DECLARED_CONSTANT) ? ConstantVarFlags.DECLARED : 0)
+              | (propSet.remove(NodeProperty.IS_INFERRED_CONSTANT) ? ConstantVarFlags.INFERRED : 0);
+      this.propListHead =
+          new IntPropListItem(
+              (byte) Prop.CONSTANT_VAR_FLAGS.ordinal(), newConstantVarFlags, this.propListHead);
+    }
+
+    for (NodeProperty nodeProperty : propSet) {
+      Prop prop = deserializeProp(nodeProperty);
+      this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
     }
   }
 
