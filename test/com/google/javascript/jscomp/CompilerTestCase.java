@@ -1848,6 +1848,7 @@ public abstract class CompilerTestCase {
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
     TranspilationPasses.addPostCheckTranspilationPasses(factories, options);
     TranspilationPasses.addRewritePolyfillPass(factories);
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
@@ -2033,13 +2034,16 @@ public abstract class CompilerTestCase {
 
       // Expected output parsed without implied block.
       checkState(externs.isRoot());
-      checkState(compareJsDoc);
 
       expectedRoot.detach();
 
-      assertNode(externs)
-          .usingSerializer(createPrettyPrinter(compiler))
-          .isEqualIncludingJsDocTo(expectedRoot);
+      if (compareJsDoc) {
+        assertNode(externs)
+            .usingSerializer(createPrettyPrinter(compiler))
+            .isEqualIncludingJsDocTo(expectedRoot);
+      } else {
+        assertNode(externs).usingSerializer(createPrettyPrinter(compiler)).isEqualTo(expectedRoot);
+      }
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expectedRoot);

@@ -154,6 +154,8 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
 
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
+
     if (options.needsTranspilationFrom(ES2015)) {
       if (options.getRewritePolyfills()) {
         if (options.getIsolatePolyfills()) {
@@ -504,6 +506,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(typesToColors);
+
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     if (options.closurePass) {
       passes.add(closureProvidesRequires);

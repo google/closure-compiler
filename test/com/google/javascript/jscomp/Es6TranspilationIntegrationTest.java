@@ -22,6 +22,8 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
+import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.ArrayList;
@@ -57,21 +59,33 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
+    disableCompareJsDoc(); // optimization passes see simplified JSDoc.
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
 
-    optimizer.addOneTimePass(
+    ArrayList<PassFactory> passes = new ArrayList<>();
+
+    passes.add(
         PassFactory.builder()
             .setName("es6InjectRuntimeLibraries")
             .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
             .setFeatureSet(ES2016_MODULES)
             .build());
 
-    ArrayList<PassFactory> passes = new ArrayList<>();
     TranspilationPasses.addPostCheckTranspilationPasses(passes, compiler.getOptions());
+
+    passes.add(
+        PassFactory.builder()
+            .setName("convertTypesToColors")
+            .setInternalFactory(
+                (c) -> new ConvertTypesToColors(c, SerializationOptions.INCLUDE_DEBUG_INFO))
+            .setFeatureSet(ES2016_MODULES)
+            .build());
+
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compiler.getOptions());
     optimizer.consume(passes);
 
     return optimizer;

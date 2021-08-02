@@ -71,6 +71,8 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
+    // TODO(b/191386936): move all these passes to addEarlyOptimizationTranspilationPasses
+
     // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
@@ -121,9 +123,6 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationFrom(ES2015)) {
-      // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
-      // with the features they transpile and as the passes themselves are updated to propagate type
-      // information to the transpiled code.
       // Binary and octal literals are effectively transpiled by the parser.
       // There's no transpilation we can do for the new regexp flags.
       passes.add(
@@ -156,6 +155,12 @@ public class TranspilationPasses {
       passes.add(es6SplitVariableDeclarations);
       passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
     }
+  }
+
+  /** Adds transpilation passes that should run at the beginning of the optimization phase */
+  public static void addEarlyOptimizationTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    // TODO(b/191386936): move all transpilation passes here.
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */
