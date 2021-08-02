@@ -54,6 +54,7 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
   private CompilerOptions fullyOptimizedCompilerOptions() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
     return options;
   }
@@ -76,7 +77,7 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void logicalAssignmentSimpleChecksOnly1() {
+  public void logicalAssignmentSimpleChecksOnly() {
     CompilerOptions options = checksOnlyCompilerOptions();
 
     testNoWarnings(options, "let x, y, z; alert(x ??= (y &&= z))");
@@ -140,5 +141,77 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
             new TestExternsBuilder().addExtra("let w, x, y, z").buildExternsFile("externs"));
 
     test(options, "w ||= (x &&= (y ??= z))", "w || (w = x && (x = y ?? (y = z)));");
+  }
+
+  @Test
+  public void logicalAssignmentSimpleTranspiledOutputRHSNotExecuted() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs.js"));
+
+    test(
+        options,
+        lines(
+            "let n = null;", //
+            "n &&= foo();",
+            "function foo() {",
+            " console.log('should not be executed');",
+            "}"),
+        "");
+  }
+
+  @Test
+  public void logicalAssignmentPropertyReferenceTranspiledOutput1() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const foo = {}, bar = {};", //
+            "alert(foo.x ||= (foo.y &&= (bar.z ??= 'something')));"),
+        lines(
+            "const a = {}, b = {};", //
+            "alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))))"));
+  }
+
+  @Test
+  public void logicalAssignmentPropertyReferenceTranspiledOutput2() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "function assignBaa({ obj }) {", //
+            " obj.baa ||= 'something';",
+            "}",
+            "",
+            "const obj = {};",
+            "assignBaa({ obj });",
+            "alert(obj.baa);"),
+        lines(
+            "const a = {};", //
+            "(function({b}) {",
+            " b.a || (b.a = 'something')",
+            "})",
+            "({b:a});",
+            "alert(a.a)"));
+  }
+
+  @Test
+  public void logicalAssignmentPropertyReferenceWithElementTranspiledOutput() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const foo = {}, bar = {};", //
+            "let x;",
+            "let y = 1",
+            "let z = 'z';",
+            "alert(foo[x] ||= (foo[y] &&= (bar[z] ??= 'something')));"),
+        lines(
+            "const a = {}, b = {};", //
+            "alert(a[void 0] || (a[void 0] = a[1] && (a[1] = b.z ?? (b.z = 'something'))))"));
   }
 }
