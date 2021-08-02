@@ -17,9 +17,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -39,6 +40,18 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             .addArguments()
             .addObject()
             .addMath()
+            .addExtra(
+                // stubs of runtime libraries
+                lines(
+                    "/** @const */",
+                    "var $jscomp = {};",
+                    "$jscomp.generator = {};",
+                    "$jscomp.generator.createGenerator = function() {};",
+                    "/** @constructor */",
+                    "$jscomp.generator.Context = function() {};",
+                    "/** @constructor */",
+                    "$jscomp.generator.Context.PropertyIterator = function() {};",
+                    "$jscomp.asyncExecutePromiseGeneratorFunction = function(program) {};"))
             .build());
   }
 
@@ -49,11 +62,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
-    // Es6RewriteGenerators uses named types declared in generator_engine.js
-    ensureLibraryInjected("es6/generator_engine");
-    // generator_engine depends on util/global, which declares externs for 'window' and 'global'
-    allowExternsChanges();
-    disableCompareSyntheticCode();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -85,7 +94,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     test(
         "/** @return {" + returnType + "} */ function *f() {" + beforeBody + "}",
         lines(
-            "/** @return {" + returnType + "} */",
             "function f() {",
             varDecls,
             "  return $jscomp.generator.createGenerator(",
@@ -118,8 +126,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testGeneratorForAsyncFunction() {
-    ensureLibraryInjected("es6/execute_async_generator");
-
     test(
         lines(
             "f = function() {",
@@ -197,10 +203,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "",
         "  $jscomp$generator$context.jumpToEnd();");
 
-    rewriteGeneratorBody(
-        "yield;",
-        lines(
-            "  return $jscomp$generator$context.yield(undefined, 0);"));
+    rewriteGeneratorBody("yield;", lines("  return $jscomp$generator$context.yield(void 0, 0);"));
 
     rewriteGeneratorBody(
         "yield 1;",
@@ -210,7 +213,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     test(
         "/** @param {*} a */ function *f(a, b) {}",
         lines(
-            "/** @param {*} a */",
             "function f(a, b) {",
             "  return $jscomp.generator.createGenerator(",
             "      f,",
@@ -341,7 +343,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
             "  i = 0;",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
+            "  return $jscomp$generator$context.yield(void 0, 2);",
             "}",
             "for (j = $jscomp$generator$context.yieldResult; j < 10; j++) { i += j; }",
             "$jscomp$generator$context.jumpToEnd();"));
@@ -450,7 +452,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  j = 0;",
             "}",
             "if ($jscomp$generator$context.nextAddress != 4) {",
-            "  return $jscomp$generator$context.yield(undefined, 4);",
+            "  return $jscomp$generator$context.yield(void 0, 4);",
             "}",
             "if (!($jscomp$generator$context.yieldResult)) {",
             "  return $jscomp$generator$context.jumpTo(0);",
@@ -509,7 +511,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         lines(
             "  if ($jscomp$generator$context.nextAddress == 1) {",
             "    JSCompiler_temp_const$jscomp$0 = a + (a = b);",
-            "    return $jscomp$generator$context.yield(undefined, 2);",
+            "    return $jscomp$generator$context.yield(void 0, 2);",
             "  }",
             "  return $jscomp$generator$context.return(",
             "JSCompiler_temp_const$jscomp$0 + (b = $jscomp$generator$context.yieldResult) + a);"));
@@ -571,7 +573,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "l: if (yield) { break l; }",
         lines(
             "  if ($jscomp$generator$context.nextAddress == 1)",
-            "    return $jscomp$generator$context.yield(undefined, 3);",
+            "    return $jscomp$generator$context.yield(void 0, 3);",
             "  if ($jscomp$generator$context.yieldResult) {",
             "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
@@ -581,7 +583,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "l: if (yield) { while (1) {break l;} }",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 3);",
+            "  return $jscomp$generator$context.yield(void 0, 3);",
             "}",
             "if ($jscomp$generator$context.yieldResult) {",
             "  while (1) {",
@@ -603,7 +605,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "l1: l2: if (yield) break l1; else break l2;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 3);",
+            "  return $jscomp$generator$context.yield(void 0, 3);",
             "}",
             "if($jscomp$generator$context.yieldResult) {",
             "  return $jscomp$generator$context.jumpTo(0);",
@@ -623,7 +625,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  if (!true) {",
             "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
-            "  return $jscomp$generator$context.yield(undefined, 4);",
+            "  return $jscomp$generator$context.yield(void 0, 4);",
             "}",
             "return $jscomp$generator$context.jumpTo(0);",
             "return $jscomp$generator$context.jumpTo(1);"));
@@ -671,7 +673,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "do { do { do { yield; } while (3) } while (2) } while (1)",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 10);",
+            "  return $jscomp$generator$context.yield(void 0, 10);",
             "}",
             "if (3) {",
             "  return $jscomp$generator$context.jumpTo(1);",
@@ -693,7 +695,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
+            "  return $jscomp$generator$context.yield(void 0, 2);",
             "}",
             "if ($jscomp$generator$context.yieldResult) { j = 1; }",
             "$jscomp$generator$context.jumpToEnd();"));
@@ -826,7 +828,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var $jscomp$generator$this = this;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1)",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
+            "  return $jscomp$generator$context.yield(void 0, 2);",
             "return $jscomp$generator$context.return(",
             "    $jscomp$generator$this[$jscomp$generator$context.yieldResult]);"));
   }
@@ -929,9 +931,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testYieldNoValue() {
-    rewriteGeneratorBody(
-        "yield;",
-        "return $jscomp$generator$context.yield(undefined, 0);");
+    rewriteGeneratorBody("yield;", "return $jscomp$generator$context.yield(void 0, 0);");
   }
 
   @Test
@@ -1133,14 +1133,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "case 7: return $jscomp$generator$context.yield(5, 1);"));
 
     rewriteGeneratorBody(
-        lines(
-          "switch (yield) {",
-          "  default:",
-          "  case 1:",
-          "    yield 1;}"),
+        lines("switch (yield) {", "  default:", "  case 1:", "    yield 1;}"),
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
+            "  return $jscomp$generator$context.yield(void 0, 2);",
             "}",
             "if ($jscomp$generator$context.nextAddress != 3) {",
             "  switch ($jscomp$generator$context.yieldResult) {",
@@ -1169,11 +1165,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
+            "  return $jscomp$generator$context.yield(void 0, 2);",
             "}",
             "for (i in $jscomp$generator$context.yieldResult) { }",
             "$jscomp$generator$context.jumpToEnd();"));
-
 
     rewriteGeneratorBodyWithVars(
         "for (var i in j) { yield i; }",
@@ -1192,7 +1187,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i, $jscomp$generator$forin$0;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  return $jscomp$generator$context.yield(undefined, 2)",
+            "  return $jscomp$generator$context.yield(void 0, 2)",
             "}",
             "if ($jscomp$generator$context.nextAddress != 3) {",
             "  $jscomp$generator$forin$0 = ",
@@ -1212,7 +1207,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "}",
             "if ($jscomp$generator$context.nextAddress != 5) {",
             "  JSCompiler_temp_const$jscomp$1 = i;",
-            "  return $jscomp$generator$context.yield(undefined, 5);",
+            "  return $jscomp$generator$context.yield(void 0, 5);",
             "}",
             "if (!((JSCompiler_temp_const$jscomp$1[$jscomp$generator$context.yieldResult] =",
             "    $jscomp$generator$forin$0.getNext()) != null)) {",
@@ -1273,7 +1268,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  return $jscomp$generator$context.leaveFinallyBlock(0);",
             "}",
             "e = $jscomp$generator$context.enterCatchBlock();",
-            "return $jscomp$generator$context.yield(undefined, 4)"));
+            "return $jscomp$generator$context.yield(void 0, 4)"));
   }
 
   @Test
@@ -1346,27 +1341,25 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(returnNode.isReturn(), returnNode);
     Node callNode = returnNode.getFirstChild();
     checkState(callNode.isCall(), callNode);
-    // TODO(lharker): this should really be {value: number} and may indicate a bug
-    // Possibly the same as https://github.com/google/closure-compiler/issues/2867.
-    assertThat(callNode.getJSType().toString()).isEqualTo("{value: VALUE}");
+    // TODO(b/142881197): we can't give a more accurate type right now.
+    assertNode(callNode).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     Node yieldFn = callNode.getFirstChild();
     Node jscompGeneratorContext = yieldFn.getFirstChild();
-    assertThat(yieldFn.getJSType().isFunctionType()).isTrue();
-    assertThat(jscompGeneratorContext.getJSType().toString())
-        .isEqualTo("$jscomp.generator.Context<number>");
+    assertThat(jscompGeneratorContext.getColor().getDebugInfo().getCompositeTypename())
+        .contains("$jscomp.generator.Context");
 
     // Check types on "1 + 2" are still present after transpilation
     Node yieldedValue = callNode.getSecondChild(); // 1 + 2
 
     checkState(yieldedValue.isAdd(), yieldedValue);
-    assertThat(yieldedValue.getJSType().toString()).isEqualTo("number");
-    assertThat(yieldedValue.getFirstChild().getJSType().toString()).isEqualTo("number"); // 1
-    assertThat(yieldedValue.getSecondChild().getJSType().toString()).isEqualTo("number"); // 2
+    assertNode(yieldedValue).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(yieldedValue.getFirstChild()).hasColorThat().isEqualTo(StandardColors.NUMBER); // 1
+    assertNode(yieldedValue.getSecondChild()).hasColorThat().isEqualTo(StandardColors.NUMBER); // 2
 
     Node zero = yieldedValue.getNext();
     checkState(0 == zero.getDouble(), zero);
-    assertThat(zero.getJSType().toString()).isEqualTo("number");
+    assertNode(zero).hasColorThat().isEqualTo(StandardColors.NUMBER);
   }
 
   @Test
@@ -1378,24 +1371,25 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(returnNode.isReturn(), returnNode);
     Node callNode = returnNode.getFirstChild();
     checkState(callNode.isCall(), callNode);
-    // TODO(lharker): this really should be {value: number}
-    assertThat(callNode.getJSType().toString()).isEqualTo("(undefined|{value: VALUE})");
+    // TODO(b/142881197): we can't give a more accurate type right now.
+    assertNode(callNode).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     Node yieldAllFn = callNode.getFirstChild();
     checkState(yieldAllFn.isGetProp());
-    assertThat(yieldAllFn.getJSType().isFunctionType()).isTrue();
 
     // Check that the original types on "[1, 2]" are still present after transpilation
     Node yieldedValue = callNode.getSecondChild(); // [1, 2]
 
     checkState(yieldedValue.isArrayLit(), yieldedValue);
-    assertThat(yieldedValue.getJSType().toString()).isEqualTo("Array<?>"); // [1, 2]
-    assertThat(yieldedValue.getFirstChild().getJSType().toString()).isEqualTo("number"); // 1
-    assertThat(yieldedValue.getSecondChild().getJSType().toString()).isEqualTo("number"); // 2
+    assertNode(yieldedValue)
+        .hasColorThat()
+        .isEqualTo(getLastCompiler().getColorRegistry().get(StandardColors.ARRAY_ID)); // [1, 2]
+    assertNode(yieldedValue.getFirstChild()).hasColorThat().isEqualTo(StandardColors.NUMBER); // 1
+    assertNode(yieldedValue.getSecondChild()).hasColorThat().isEqualTo(StandardColors.NUMBER); // 2
 
     Node zero = yieldedValue.getNext();
     checkState(0 == zero.getDouble(), zero);
-    assertThat(zero.getJSType().toString()).isEqualTo("number");
+    assertNode(zero).hasColorThat().isEqualTo(StandardColors.NUMBER);
   }
 
   @Test
@@ -1420,12 +1414,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     // $jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);
     Node assign = case1Node.getSecondChild().getFirstFirstChild();
     checkState(assign.isAssign(), assign);
-    assertThat(assign.getJSType().toString())
-        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
-    assertThat(assign.getFirstChild().getJSType().toString())
-        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
-    assertThat(assign.getSecondChild().getJSType().toString())
-        .isEqualTo("$jscomp.generator.Context.PropertyIterator");
+    assertThat(assign.getColor().getDebugInfo().getCompositeTypename())
+        .contains("$jscomp.generator.Context.PropertyIterator");
+    assertThat(assign.getFirstChild().getColor().getDebugInfo().getCompositeTypename())
+        .contains("$jscomp.generator.Context.PropertyIterator");
+    assertThat(assign.getSecondChild().getColor().getDebugInfo().getCompositeTypename())
+        .contains("$jscomp.generator.Context.PropertyIterator");
 
     // if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {
     Node case2Node = case1Node.getNext();
@@ -1433,20 +1427,26 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(ifNode.isIf(), ifNode);
     Node ifCond = ifNode.getFirstChild();
     checkState(ifCond.isNot(), ifCond);
-    assertThat(ifCond.getJSType().toString()).isEqualTo("boolean");
+    assertNode(ifCond).hasColorThat().isEqualTo(StandardColors.BOOLEAN);
     Node ne = ifCond.getFirstChild();
-    assertThat(ifCond.getJSType().toString()).isEqualTo("boolean");
+    assertNode(ifCond).hasColorThat().isEqualTo(StandardColors.BOOLEAN);
 
     Node lhs = ne.getFirstChild(); // i = $jscomp$generator$forin$0.getNext()
-    assertThat(lhs.getJSType().toString()).isEqualTo("(null|string)");
-    assertThat(lhs.getFirstChild().getJSType().toString()).isEqualTo("(null|string)");
-    assertThat(lhs.getSecondChild().getJSType().toString()).isEqualTo("(null|string)");
+    assertNode(lhs)
+        .hasColorThat()
+        .hasAlternates(StandardColors.NULL_OR_VOID, StandardColors.STRING);
+    assertNode(lhs)
+        .hasColorThat()
+        .hasAlternates(StandardColors.NULL_OR_VOID, StandardColors.STRING);
+    assertNode(lhs)
+        .hasColorThat()
+        .hasAlternates(StandardColors.NULL_OR_VOID, StandardColors.STRING);
     Node getNextFn = lhs.getSecondChild().getFirstChild();
-    assertThat(getNextFn.getJSType().isFunctionType()).isTrue();
+    assertNode(getNextFn).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
 
     Node rhs = ne.getSecondChild();
     checkState(rhs.isNull(), rhs);
-    assertThat(rhs.getJSType().toString()).isEqualTo("null");
+    assertNode(rhs).hasColorThat().isEqualTo(StandardColors.NULL_OR_VOID);
 
     // $jscomp$generator$context.jumpToEnd()
     Node case4Node = case2Node.getNext();
@@ -1456,9 +1456,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node jumpToEndFn = jumpToEndCall.getFirstChild();
     Node jscompGeneratorContext = jumpToEndFn.getFirstChild();
 
-    assertThat(jumpToEndCall.getJSType().toString()).isEqualTo("undefined");
-    assertThat(jscompGeneratorContext.getJSType().toString())
-        .isEqualTo("$jscomp.generator.Context<number>");
+    // assertThat(jumpToEndCall.getJSType().toString()).isEqualTo("undefined");
+    assertThat(jscompGeneratorContext.getColor().getDebugInfo().getCompositeTypename())
+        .contains("$jscomp.generator.Context");
   }
 
   @Test
@@ -1482,13 +1482,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     // Test that "e = $jscomp$generator$context.enterCatchBlock();" has the unknown type
     Node eAssign = case2Node.getFirstChild();
     checkState(eAssign.isAssign(), eAssign);
-    assertThat(eAssign.getJSType().toString()).isEqualTo("?");
-    assertThat(eAssign.getFirstChild().getJSType().toString()).isEqualTo("?");
-    assertThat(eAssign.getSecondChild().getJSType().toString()).isEqualTo("?");
+    assertNode(eAssign).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
+    assertNode(eAssign.getFirstChild()).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
+    assertNode(eAssign.getSecondChild()).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     Node enterCatchBlockFn = eAssign.getSecondChild().getFirstChild();
     checkState(enterCatchBlockFn.isGetProp());
-    assertThat(enterCatchBlockFn.getJSType().isFunctionType()).isTrue();
+    // this is loosely typed, but it's okay because optimizations don't care about callee types.
+    assertNode(enterCatchBlockFn).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
@@ -1500,21 +1501,21 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "a = 1, b = '2'; $jscomp$generator$context.jumpToEnd();");
     Node comma = exprResultNode.getFirstChild();
     checkState(comma.isComma(), comma);
-    assertThat(comma.getJSType().toString()).isEqualTo("string");
+    assertNode(comma).hasColorThat().isEqualTo(StandardColors.STRING);
 
     // a = 1
     Node assignA = comma.getFirstChild();
     checkState(assignA.isAssign(), assignA);
-    assertThat(assignA.getJSType().toString()).isEqualTo("number");
-    assertThat(assignA.getFirstChild().getJSType().toString()).isEqualTo("number");
-    assertThat(assignA.getSecondChild().getJSType().toString()).isEqualTo("number");
+    assertNode(assignA).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(assignA.getFirstChild()).hasColorThat().isEqualTo(StandardColors.NUMBER);
+    assertNode(assignA.getSecondChild()).hasColorThat().isEqualTo(StandardColors.NUMBER);
 
     // b = '2';
     Node assignB = comma.getSecondChild();
     checkState(assignB.isAssign(), assignB);
-    assertThat(assignB.getJSType().toString()).isEqualTo("string");
-    assertThat(assignB.getFirstChild().getJSType().toString()).isEqualTo("string");
-    assertThat(assignB.getSecondChild().getJSType().toString()).isEqualTo("string");
+    assertNode(assignB).hasColorThat().isEqualTo(StandardColors.STRING);
+    assertNode(assignB.getFirstChild()).hasColorThat().isEqualTo(StandardColors.STRING);
+    assertNode(assignB.getSecondChild()).hasColorThat().isEqualTo(StandardColors.STRING);
   }
 
   /**
@@ -1542,18 +1543,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(callNode.isCall(), callNode);
 
     Node createGenerator = callNode.getFirstChild();
-    assertThat(createGenerator.getJSType().isFunctionType())
-        .isTrue(); // $jscomp.generator.createGenerator
-    assertThat(createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString())
-        .isEqualTo("Generator<number,?,?>");
-
-    Node program = createGenerator.getNext().getNext();
-
-    assertWithMessage("Expected function: " + program.getJSType())
-        .that(program.getJSType().isFunctionType())
-        .isTrue();
-    assertThat(program.getJSType().toMaybeFunctionType().getReturnType().toString())
-        .isEqualTo("(undefined|{value: number})");
-    return program;
+    return createGenerator.getNext().getNext();
   }
 }

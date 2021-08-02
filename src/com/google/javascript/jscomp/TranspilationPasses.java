@@ -149,7 +149,6 @@ public class TranspilationPasses {
       passes.add(es6ForOf);
       passes.add(rewriteBlockScopedFunctionDeclaration);
       passes.add(rewriteBlockScopedDeclaration);
-      passes.add(rewriteGenerators);
     } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
@@ -161,6 +160,9 @@ public class TranspilationPasses {
   public static void addEarlyOptimizationTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
+    if (options.needsTranspilationFrom(ES2015)) {
+      passes.add(rewriteGenerators);
+    }
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */

@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -1959,8 +1958,8 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> new RuntimeTypeCheck(compiler, options.runtimeTypeCheckLogFunction))
           // TODO(bradfordcsmith): Drop support for this pass.
-          // It's never been updated to handle ES6+ code, because it isn't worth the effort.
-          .setFeatureSet(ES5)
+          // It's never been updated to handle ES2016+ code, because it isn't worth the effort.
+          .setFeatureSet(ES2015)
           .build();
 
   /** Generates unique ids. */

@@ -174,7 +174,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                 IR.var(cursorName.cloneTree(), IR.number(restIndex).setJSType(numberType)),
                 IR.lt(
                         cursorName.cloneTree(),
-                        IR.getprop(IR.name("arguments"), "length").setJSType(numberType))
+                        IR.getprop(astFactory.createArgumentsReference(), "length")
+                            .setJSType(numberType))
                     .setJSType(boolType),
                 IR.inc(cursorName.cloneTree(), false).setJSType(numberType),
                 IR.block(
@@ -186,7 +187,9 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                                             cursorName.cloneTree(),
                                             IR.number(restIndex).setJSType(numberType))
                                         .setJSType(numberType)),
-                                IR.getelem(IR.name("arguments"), cursorName.cloneTree())
+                                IR.getelem(
+                                        astFactory.createArgumentsReference(),
+                                        cursorName.cloneTree())
                                     .setJSType(numberType))
                             .setJSType(numberType))))
             .srcrefTreeIfMissing(restParam);

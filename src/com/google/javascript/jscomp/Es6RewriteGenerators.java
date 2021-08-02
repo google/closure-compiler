@@ -17,18 +17,19 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,42 +79,39 @@ final class Es6RewriteGenerators implements CompilerPass {
       FeatureSet.BARE_MINIMUM.with(Feature.GENERATORS);
 
   private final AbstractCompiler compiler;
+  private final StaticScope namespace;
+  private final AstFactory astFactory;
 
-  private final JSTypeRegistry registry;
-
-  private final boolean shouldAddTypes;
-
-  private final JSType unknownType;
-  private final JSType numberType;
-  private final JSType booleanType;
-  private final JSType nullType;
-  private final JSType nullableStringType;
-  private final JSType voidType;
+  private final Color nullableStringType;
+  private final Supplier<AstFactory.Type> generatorContextType;
+  private final Supplier<AstFactory.Type> propertyIteratorType;
 
   Es6RewriteGenerators(AbstractCompiler compiler) {
     checkNotNull(compiler);
     this.compiler = compiler;
-    registry = compiler.getTypeRegistry();
+    this.astFactory = compiler.createAstFactory();
+    this.namespace = compiler.getTranspilationNamespace();
 
-    if (compiler.hasTypeCheckingRun()) {
+    if (compiler.hasOptimizationColors()) {
       // typechecking has run, so we must preserve and propagate type information
-      shouldAddTypes = true;
-      unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
-      booleanType = registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
-      nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
       nullableStringType =
-          registry.createNullableType(registry.getNativeType(JSTypeNative.STRING_TYPE));
-      voidType = registry.getNativeType(JSTypeNative.VOID_TYPE);
+          Color.createUnion(ImmutableSet.of(StandardColors.NULL_OR_VOID, StandardColors.STRING));
     } else {
-      shouldAddTypes = false;
-      unknownType = null;
-      numberType = null;
-      booleanType = null;
-      nullType = null;
       nullableStringType = null;
-      voidType = null;
     }
+    generatorContextType =
+        Suppliers.memoize(
+            () ->
+                type(
+                    astFactory.createNewNode(
+                        astFactory.createQName(this.namespace, "$jscomp.generator.Context"))));
+    propertyIteratorType =
+        Suppliers.memoize(
+            () ->
+                type(
+                    astFactory.createNewNode(
+                        astFactory.createQName(
+                            this.namespace, "$jscomp.generator.Context.PropertyIterator"))));
   }
 
   @Override
@@ -239,36 +237,10 @@ final class Es6RewriteGenerators implements CompilerPass {
      */
     Node newGeneratorHoistBlock;
 
-    /** The original inferred return type of the Generator */
-    JSType originalGenReturnType;
-    JSType yieldType;
-
     SingleGeneratorFunctionTranspiler(Node genFunc, int genaratorNestingLevel) {
       this.generatorNestingLevel = genaratorNestingLevel;
       this.originalGeneratorBody = genFunc.getLastChild();
-      ObjectType contextType = null;
-      if (shouldAddTypes) {
-        // Find the yield type of the generator.
-        // e.g. given @return {!Generator<number>}, we want this.yieldType to be number.
-        yieldType = unknownType;
-        if (genFunc.getJSType() != null && genFunc.getJSType().isFunctionType()) {
-          FunctionType fnType = genFunc.getJSType().toMaybeFunctionType();
-          this.originalGenReturnType = fnType.getReturnType();
-          yieldType = JsIterables.getElementType(originalGenReturnType, registry);
-        }
-
-        JSType globalContextType = registry.getGlobalType("$jscomp.generator.Context");
-        if (globalContextType == null) {
-          // We don't have the es6/generator polyfill, which can happen in tests using a
-          // NonInjectingCompiler or if someone sets --inject_libraries=false. Don't crash, just
-          // back off on giving some type information.
-          contextType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
-        } else {
-          contextType =
-              registry.createTemplatizedType(globalContextType.toMaybeObjectType(), yieldType);
-        }
-      }
-      this.context = new TranspilationContext(contextType);
+      this.context = new TranspilationContext();
     }
 
     /**
@@ -311,15 +283,9 @@ final class Es6RewriteGenerators implements CompilerPass {
       //   function ($jscomp$generator$context) {
       //   }
       final Node program;
-      JSType programType =
-          shouldAddTypes
-              // function(!Context<YIELD_TYPE>): (void|{value: YIELD_TYPE})
-              ? registry.createFunctionType(
-                  registry.createUnionType(
-                      voidType, registry.createRecordType(ImmutableMap.of("value", yieldType))),
-                  context.contextType)
-              : null;
-      Node generatorBody = IR.block();
+      // function(!Context<YIELD_TYPE>): (void|{value: YIELD_TYPE})
+      Color programType = StandardColors.TOP_OBJECT;
+      Node generatorBody = astFactory.createBlock();
 
       final Node changeScopeNode;
       if (isTranspiledAsyncFunction(generatorFunction)) {
@@ -338,12 +304,6 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         // asyncExecutePromiseGeneratorFunction   =>   asyncExecutePromiseGeneratorProgram
         callTarget.setString("asyncExecutePromiseGeneratorProgram");
-        JSType oldType = callTarget.getJSType();
-        if (oldType != null && oldType.isFunctionType()) {
-          callTarget.setJSType(
-              registry.createFunctionType(
-                  oldType.toMaybeFunctionType().getReturnType(), programType));
-        }
 
         program = originalGeneratorBody.getParent();
         // function *() {...}   =>   function *(context) {}
@@ -356,45 +316,40 @@ final class Es6RewriteGenerators implements CompilerPass {
         checkState(genFuncName.isName());
         // The transpiled function needs to be able to refer to itself, so make sure it has a name.
         if (genFuncName.getString().isEmpty()) {
-          genFuncName.setString(context.getScopedName(GENERATOR_FUNCTION).getString());
+          genFuncName.setString(context.getScopedName(GENERATOR_FUNCTION));
         }
 
         // Prepare a "program" function:
         //   function ($jscomp$generator$context) {
         //   }
         program =
-            IR.function(
-                IR.name(""),
+            astFactory.createFunction(
+                "",
                 IR.paramList(context.getJsContextNameNode(originalGeneratorBody)),
-                generatorBody);
+                generatorBody,
+                type(programType));
 
         // $jscomp.generator.createGenerator
         Node createGenerator =
-            IR.getprop(
-                IR.getprop(IR.name("$jscomp").setJSType(unknownType), "generator")
-                    .setJSType(unknownType),
-                "createGenerator");
-        if (shouldAddTypes) {
-          createGenerator.setJSType(
-              registry.createFunctionType(originalGenReturnType, programType));
-        }
+            astFactory.createQName(namespace, "$jscomp.generator.createGenerator");
         // Replace original generator function body with:
         // return $jscomp.generator.createGenerator(<origGenerator>, <program function>);
         newGeneratorHoistBlock =
-            IR.block(
-                IR.returnNode(
-                        IR.call(
-                                createGenerator,
-                                // function name passed as parameter must have the type of the
-                                // generator function itself
-                                genFuncName.cloneNode().setJSType(generatorFunction.getJSType()),
-                                program)
-                            .setJSType(originalGenReturnType))
+            astFactory.createBlock(
+                astFactory
+                    .createReturn(
+                        // TODO(b/142881197): we can't give a more accurate type right now.
+                        astFactory.createCallWithUnknownType(
+                            createGenerator,
+                            // function name passed as parameter must have the type of the
+                            // generator function itself
+                            astFactory
+                                .createName(genFuncName.getString(), type(generatorFunction))
+                                .srcref(genFuncName),
+                            program))
                     .srcrefTree(originalGeneratorBody));
         originalGeneratorBody.replaceWith(newGeneratorHoistBlock);
       }
-
-      program.setJSType(programType);
 
       // New scopes and any changes to scopes should be reported individually.
       compiler.reportChangeToChangeScope(program);
@@ -410,10 +365,11 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       // Ensure that the state machine program ends
-      Node finalBlock = IR.block();
+      Node finalBlock = astFactory.createBlock();
       if (shouldAddFinalJump) {
         finalBlock.addChildToBack(
-            context.callContextMethodResult(originalGeneratorBody, "jumpToEnd"));
+            context.callContextMethodResult(
+                originalGeneratorBody, "jumpToEnd", type(StandardColors.NULL_OR_VOID)));
       }
       context.currentCase.jumpTo(context.programEndCase, finalBlock);
       context.currentCase.mayFallThrough = true;
@@ -633,7 +589,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       // Need to put expression nodes into return node so that they always stay expression nodes
       // If expression put into expression result YieldExposer may turn it into an "if" statement.
       boolean isExpression = IR.mayBeExpression(n);
-      Node block = IR.block(isExpression ? IR.returnNode(n) : n);
+      Node block = astFactory.createBlock(isExpression ? astFactory.createReturn(n) : n);
       NodeTraversal.traverse(compiler, n, new YieldExposer());
       // Make sure newly created statements are correctly marked for recursive transpileStatement()
       // calls.
@@ -663,7 +619,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       // Need to wrap a node so it can be replaced in the tree with some other node if nessesary.
-      Node wrapper = IR.mayBeStatement(n) ? IR.block(n) : IR.exprResult(n);
+      Node wrapper = IR.mayBeStatement(n) ? astFactory.createBlock(n) : astFactory.exprResult(n);
       NodeTraversal.traverse(compiler, wrapper, context.new UnmarkedNodeTranspiler());
       checkState(wrapper.hasOneChild());
       return wrapper.removeFirstChild();
@@ -723,14 +679,14 @@ final class Es6RewriteGenerators implements CompilerPass {
       ifBlock.detach();
       if (elseBlock == null) {
         // No "else" block, just create an empty one as will need it anyway.
-        elseBlock = IR.block().srcref(n);
+        elseBlock = astFactory.createBlock().srcref(n);
       } else {
         elseBlock.detach();
       }
 
       // Only "else" block is unmarked, swap "if" and "else" blocks and negate the condition.
       if (ifBlock.isGeneratorMarker() && !elseBlock.isGeneratorMarker()) {
-        condition = IR.not(condition).setJSType(booleanType).srcref(condition);
+        condition = astFactory.createNot(condition).srcref(condition);
         Node tmpNode = ifBlock;
         ifBlock = elseBlock;
         elseBlock = tmpNode;
@@ -745,7 +701,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           jumpToNode.setGeneratorSafe(true);
           ifBlock.addChildToBack(jumpToNode);
         }
-        transpileUnmarkedNode(IR.ifNode(condition, ifBlock).srcref(n));
+        transpileUnmarkedNode(astFactory.createIf(condition, ifBlock).srcref(n));
         transpileStatement(elseBlock);
         context.switchCaseTo(endCase);
         return;
@@ -757,7 +713,8 @@ final class Es6RewriteGenerators implements CompilerPass {
       // "if" and "else" blocks marked
       condition = prepareNodeForWrite(condition);
       Node newIfBlock = context.createJumpToBlock(ifCase, /** allowEmbedding=*/ true, n);
-      context.writeGeneratedNode(IR.ifNode(prepareNodeForWrite(condition), newIfBlock).srcref(n));
+      context.writeGeneratedNode(
+          astFactory.createIf(prepareNodeForWrite(condition), newIfBlock).srcref(n));
       transpileStatement(elseBlock);
       context.writeJumpTo(endCase, elseBlock);
       context.switchCaseTo(ifCase);
@@ -790,7 +747,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       if (!init.isEmpty()) {
         if (IR.mayBeExpression(init)) {
           // Convert expression into expression result.
-          init = IR.exprResult(init).srcref(init);
+          init = astFactory.exprResult(init).srcref(init);
         }
         transpileUnmarkedNode(init);
       }
@@ -805,8 +762,9 @@ final class Es6RewriteGenerators implements CompilerPass {
       if (!condition.isEmpty()) {
         condition = prepareNodeForWrite(maybeDecomposeExpression(condition.detach()));
         context.writeGeneratedNode(
-            IR.ifNode(
-                    IR.not(condition).setJSType(booleanType).srcref(condition),
+            astFactory
+                .createIf(
+                    astFactory.createNot(condition).srcref(condition),
                     context.createJumpToBlock(
                         endCase,
                         /** allowEmbedding= */
@@ -824,7 +782,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       context.switchCaseTo(incrementCase);
       if (!increment.isEmpty()) {
         increment = maybeDecomposeExpression(increment.detach());
-        transpileUnmarkedNode(IR.exprResult(increment).srcref(increment));
+        transpileUnmarkedNode(astFactory.exprResult(increment).srcref(increment));
       }
       context.writeJumpTo(startCase, n);
 
@@ -868,33 +826,38 @@ final class Es6RewriteGenerators implements CompilerPass {
       }
 
       // "$for$in"
+      Node child =
+          context.callContextMethod(target, "forIn", propertyIteratorType.get(), detachedExpr);
       Node forIn =
-          context
-              .getScopedName(GENERATOR_FORIN_PREFIX + compiler.getUniqueNameIdSupplier().get())
+          astFactory
+              .createName(
+                  context.getScopedName(
+                      GENERATOR_FORIN_PREFIX + compiler.getUniqueNameIdSupplier().get()),
+                  type(child))
               .srcref(target);
       // "$context.forIn(x)"
-      forIn.addChildToFront(context.callContextMethod(target, "forIn", detachedExpr));
-      ObjectType propertyIteratorType =
-          shouldAddTypes ? forIn.getFirstChild().getJSType().toMaybeObjectType() : null;
-      forIn.setJSType(propertyIteratorType);
+      forIn.addChildToFront(child);
       // "var ..., $for$in = $context.forIn(expr)"
       init.addChildToBack(forIn);
 
       // "$for$in.getNext()"
-      JSType t = shouldAddTypes ? propertyIteratorType.getPropertyType("getNext") : null;
       Node forInGetNext =
-          IR.getprop(forIn.cloneNode(), "getNext").setJSType(t).srcref(detachedExpr);
+          astFactory
+              .createGetProp(forIn.cloneNode(), "getNext", type(StandardColors.TOP_OBJECT))
+              .srcref(detachedExpr);
 
       // "(i = $for$in.getNext()) != null"
       Node forCond =
-          IR.ne(
-                  IR.assign(
-                          target.setJSType(nullableStringType),
-                          IR.call(forInGetNext).setJSType(nullableStringType).srcref(detachedExpr))
-                      .setJSType(nullableStringType)
+          astFactory
+              .createNe(
+                  astFactory
+                      .createAssign(
+                          target.setColor(nullableStringType),
+                          astFactory
+                              .createCall(forInGetNext, type(nullableStringType))
+                              .srcref(detachedExpr))
                       .srcref(detachedExpr),
-                  IR.nullNode().setJSType(nullType).srcref(forIn))
-              .setJSType(booleanType)
+                  astFactory.createNull().srcref(forIn))
               .srcref(detachedExpr);
       forCond.setGeneratorMarker(target.isGeneratorMarker());
 
@@ -920,8 +883,9 @@ final class Es6RewriteGenerators implements CompilerPass {
       Node condition = prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()));
       Node body = n.removeFirstChild();
       context.writeGeneratedNode(
-          IR.ifNode(
-                  IR.not(condition).setJSType(booleanType).srcref(condition),
+          astFactory
+              .createIf(
+                  astFactory.createNot(condition).srcref(condition),
                   context.createJumpToBlock(
                       endCase,
                       /** allowEmbedding= */
@@ -959,7 +923,8 @@ final class Es6RewriteGenerators implements CompilerPass {
       context.switchCaseTo(continueCase);
       Node condition = prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()));
       context.writeGeneratedNode(
-          IR.ifNode(
+          astFactory
+              .createIf(
                   condition,
                   context.createJumpToBlock(
                       startCase,
@@ -1200,16 +1165,12 @@ final class Es6RewriteGenerators implements CompilerPass {
       boolean thisReferenceFound;
       boolean argumentsReferenceFound;
 
-      /** The JSType for this context. May be null. */
-      final ObjectType contextType;
-
-      TranspilationContext(ObjectType contextType) {
+      TranspilationContext() {
         programEndCase = new Case();
         checkState(programEndCase.id == 0);
         currentCase = new Case();
         checkState(currentCase.id == 1);
         allCases.add(currentCase);
-        this.contextType = contextType;
       }
 
       /**
@@ -1371,11 +1332,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         //   c();
         if (allCases.size() == 2 || allCases.size() == 3) {
           generatorBody.addChildToBack(
-              IR.ifNode(
-                      IR.eq(
-                              getContextField(generatorBody, "nextAddress"),
-                              IR.number(1).setJSType(numberType))
-                          .setJSType(booleanType),
+              astFactory
+                  .createIf(
+                      astFactory.createEq(
+                          getContextField(generatorBody, "nextAddress"),
+                          astFactory.createNumber(1)),
                       allCases.remove(0).caseBlock)
                   .srcrefTreeIfMissing(generatorBody));
         }
@@ -1390,11 +1351,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         //   b();
         if (allCases.size() == 2) {
           generatorBody.addChildToBack(
-              IR.ifNode(
-                      IR.ne(
-                              getContextField(generatorBody, "nextAddress"),
-                              IR.number(allCases.get(1).id).setJSType(numberType))
-                          .setJSType(booleanType),
+              astFactory
+                  .createIf(
+                      astFactory.createNe(
+                          getContextField(generatorBody, "nextAddress"),
+                          astFactory.createNumber(allCases.get(1).id)),
                       allCases.remove(0).caseBlock)
                   .srcrefTreeIfMissing(generatorBody));
         }
@@ -1471,42 +1432,45 @@ final class Es6RewriteGenerators implements CompilerPass {
 
       /** Returns the name node of context parameter passed to the program. */
       Node getJsContextNameNode(Node sourceNode) {
-        return getScopedName(GENERATOR_CONTEXT).setJSType(this.contextType).srcref(sourceNode);
+        return astFactory
+            .createName(getScopedName(GENERATOR_CONTEXT), generatorContextType.get())
+            .srcref(sourceNode);
       }
 
       /** Returns unique name in the current context. */
-      Node getScopedName(String name) {
-        return IR.name(name + (generatorNestingLevel == 0 ? "" : "$" + generatorNestingLevel));
+      String getScopedName(String name) {
+        return name + (generatorNestingLevel == 0 ? "" : "$" + generatorNestingLevel);
       }
 
       /** Creates node that access a specified field of the current context. */
       Node getContextField(Node sourceNode, String fieldName) {
-        return IR.getprop(getJsContextNameNode(sourceNode), fieldName)
-            .setJSType(shouldAddTypes ? contextType.getPropertyType(fieldName) : null)
+        return astFactory
+            .createGetPropWithUnknownType(getJsContextNameNode(sourceNode), fieldName)
             .srcref(sourceNode);
       }
 
       /** Creates node that make a call to a context function. */
-      Node callContextMethod(Node sourceNode, String methodName, Node... args) {
+      Node callContextMethod(
+          Node sourceNode, String methodName, AstFactory.Type type, Node... args) {
         Node contextField = getContextField(sourceNode, methodName);
-        Node callNode = IR.call(contextField, args).srcref(sourceNode);
-        if (shouldAddTypes) {
-          callNode.setJSType(
-              contextField.getJSType().isFunctionType()
-                  ? contextField.getJSType().toMaybeFunctionType().getReturnType()
-                  : unknownType);
-        }
+        Node callNode = astFactory.createCall(contextField, type, args).srcref(sourceNode);
         return callNode;
       }
 
       /** Creates node that make a call to a context function. */
-      Node callContextMethodResult(Node sourceNode, String methodName, Node... args) {
-        return IR.exprResult(callContextMethod(sourceNode, methodName, args)).srcref(sourceNode);
+      Node callContextMethodResult(
+          Node sourceNode, String methodName, AstFactory.Type type, Node... args) {
+        return astFactory
+            .exprResult(callContextMethod(sourceNode, methodName, type, args))
+            .srcref(sourceNode);
       }
 
       /** Creates node that returns the result of a call to a context function. */
-      Node returnContextMethod(Node sourceNode, String methodName, Node... args) {
-        return IR.returnNode(callContextMethod(sourceNode, methodName, args)).srcref(sourceNode);
+      Node returnContextMethod(
+          Node sourceNode, String methodName, AstFactory.Type type, Node... args) {
+        return astFactory
+            .createReturn(callContextMethod(sourceNode, methodName, type, args))
+            .srcref(sourceNode);
       }
 
       /**
@@ -1536,7 +1500,8 @@ final class Es6RewriteGenerators implements CompilerPass {
        * Returns a node that instructs a state machine program to jump to a selected case section.
        */
       Node createJumpToNode(Case section, Node sourceNode) {
-        return returnContextMethod(sourceNode, "jumpTo", section.getNumber(sourceNode));
+        return returnContextMethod(
+            sourceNode, "jumpTo", type(StandardColors.NULL_OR_VOID), section.getNumber(sourceNode));
       }
 
       /** Instructs a state machine program to jump to a selected case section. */
@@ -1554,8 +1519,13 @@ final class Es6RewriteGenerators implements CompilerPass {
       Node createJumpToBlock(Case section, boolean allowEmbedding, Node sourceNode) {
         checkState(section.embedInto == null);
         Node jumpBlock =
-            IR.block(
-                    callContextMethodResult(sourceNode, "jumpTo", section.getNumber(sourceNode)),
+            astFactory
+                .createBlock(
+                    callContextMethodResult(
+                        sourceNode,
+                        "jumpTo",
+                        type(StandardColors.NULL_OR_VOID),
+                        section.getNumber(sourceNode)),
                     createBreakNodeFor(sourceNode))
                 .srcref(sourceNode);
         if (allowEmbedding) {
@@ -1577,7 +1547,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         }
         if (breakSuppressors == 0) {
           // continue;  =>  $context.jumpTo(x); break;
-          callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode))
+          callContextMethodResult(
+                  sourceNode,
+                  jumpMethod,
+                  type(StandardColors.NULL_OR_VOID),
+                  section.getNumber(sourceNode))
               .insertBefore(sourceNode);
           sourceNode.replaceWith(createBreakNodeFor(sourceNode));
         } else {
@@ -1590,7 +1564,11 @@ final class Es6RewriteGenerators implements CompilerPass {
           //   return $context.jumpTo(x); // next address, so "return" is used instead.
           // }
           sourceNode.replaceWith(
-              returnContextMethod(sourceNode, jumpMethod, section.getNumber(sourceNode)));
+              returnContextMethod(
+                  sourceNode,
+                  jumpMethod,
+                  type(StandardColors.NULL_OR_VOID),
+                  section.getNumber(sourceNode)));
         }
       }
 
@@ -1603,11 +1581,12 @@ final class Es6RewriteGenerators implements CompilerPass {
         ArrayList<Node> args = new ArrayList<>();
         args.add(
             expression == null
-                ? IR.name("undefined").setJSType(voidType).srcref(sourceNode)
+                ? astFactory.createUndefinedValue().srcrefTree(sourceNode)
                 : expression);
         args.add(jumpToSection.getNumber(sourceNode));
         context.writeGeneratedNode(
-            returnContextMethod(sourceNode, "yield", args.toArray(new Node[0])));
+            returnContextMethod(
+                sourceNode, "yield", type(StandardColors.UNKNOWN), args.toArray(new Node[0])));
         context.currentCase.mayFallThrough = false;
       }
 
@@ -1618,16 +1597,21 @@ final class Es6RewriteGenerators implements CompilerPass {
       void yieldAll(Node expression, TranspilationContext.Case jumpToSection, Node sourceNode) {
         writeGeneratedNode(
             returnContextMethod(
-                sourceNode, "yieldAll", expression, jumpToSection.getNumber(sourceNode)));
+                sourceNode,
+                "yieldAll",
+                type(StandardColors.UNKNOWN),
+                expression,
+                jumpToSection.getNumber(sourceNode)));
         context.currentCase.mayFallThrough = false;
       }
 
       /** Instructs a state machine program to return a given expression. */
       Node returnExpression(Node sourceNode, @Nullable Node expression) {
         if (expression == null) {
-          return callContextMethod(sourceNode, "return");
+          return callContextMethod(sourceNode, "return", type(StandardColors.NULL_OR_VOID));
         }
-        return callContextMethod(sourceNode, "return", expression);
+        return callContextMethod(
+            sourceNode, "return", type(StandardColors.NULL_OR_VOID), expression);
       }
 
       /** Instructs a state machine program to consume a yield result after yielding. */
@@ -1700,7 +1684,11 @@ final class Es6RewriteGenerators implements CompilerPass {
           }
         }
         writeGeneratedNode(
-            callContextMethodResult(sourceNode, methodName, args.toArray(new Node[0])));
+            callContextMethodResult(
+                sourceNode,
+                methodName,
+                type(StandardColors.NULL_OR_VOID),
+                args.toArray(new Node[0])));
       }
 
       /**
@@ -1717,7 +1705,11 @@ final class Es6RewriteGenerators implements CompilerPass {
           args.add(nextCatchCase.getNumber(sourceNode));
         }
         writeGeneratedNodeAndBreak(
-            callContextMethodResult(sourceNode, "leaveTryBlock", args.toArray(new Node[0])));
+            callContextMethodResult(
+                sourceNode,
+                "leaveTryBlock",
+                type(StandardColors.NULL_OR_VOID),
+                args.toArray(new Node[0])));
       }
 
       /** Writes a statement Node that should be placed at the beginning of catch block. */
@@ -1738,12 +1730,17 @@ final class Es6RewriteGenerators implements CompilerPass {
         }
 
         Node enterCatchBlockCall =
-            callContextMethod(exceptionName, "enterCatchBlock", args.toArray(new Node[0]));
-        exceptionName.setJSType(enterCatchBlockCall.getJSType());
+            callContextMethod(
+                exceptionName,
+                "enterCatchBlock",
+                type(StandardColors.UNKNOWN),
+                args.toArray(new Node[0]));
+        exceptionName.setColor(enterCatchBlockCall.getColor());
         writeGeneratedNode(
-            IR.exprResult(
-                    IR.assign(exceptionName, enterCatchBlockCall)
-                        .setJSType(enterCatchBlockCall.getJSType())
+            astFactory
+                .exprResult(
+                    astFactory
+                        .createAssign(exceptionName, enterCatchBlockCall)
                         .srcref(exceptionName))
                 .srcref(exceptionName));
       }
@@ -1769,7 +1766,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           if (nextCatchCase != null || nextFinallyCase != null) {
             args.add(
                 nextCatchCase == null
-                    ? IR.number(0).setJSType(numberType).srcref(sourceNode)
+                    ? astFactory.createNumber(0).srcref(sourceNode)
                     : nextCatchCase.getNumber(sourceNode));
             if (nextFinallyCase != null) {
               args.add(nextFinallyCase.getNumber(sourceNode));
@@ -1778,17 +1775,21 @@ final class Es6RewriteGenerators implements CompilerPass {
         } else {
           args.add(
               nextCatchCase == null
-                  ? IR.number(0).setJSType(numberType).srcref(sourceNode)
+                  ? astFactory.createNumber(0).srcref(sourceNode)
                   : nextCatchCase.getNumber(sourceNode));
           args.add(
               nextFinallyCase == null
-                  ? IR.number(0).setJSType(numberType).srcref(sourceNode)
+                  ? astFactory.createNumber(0).srcref(sourceNode)
                   : nextFinallyCase.getNumber(sourceNode));
-          args.add(IR.number(nestedFinallyBlockCount).srcref(sourceNode));
+          args.add(astFactory.createNumber(nestedFinallyBlockCount).srcref(sourceNode));
         }
 
         writeGeneratedNode(
-            callContextMethodResult(sourceNode, "enterFinallyBlock", args.toArray(new Node[0])));
+            callContextMethodResult(
+                sourceNode,
+                "enterFinallyBlock",
+                type(StandardColors.NULL_OR_VOID),
+                args.toArray(new Node[0])));
 
         ++nestedFinallyBlockCount;
       }
@@ -1798,11 +1799,15 @@ final class Es6RewriteGenerators implements CompilerPass {
         ArrayList<Node> args = new ArrayList<>();
         args.add(endCase.getNumber(sourceNode));
         if (--nestedFinallyBlockCount != 0) {
-          args.add(IR.number(nestedFinallyBlockCount).srcref(sourceNode));
+          args.add(astFactory.createNumber(nestedFinallyBlockCount).srcref(sourceNode));
         }
 
         writeGeneratedNodeAndBreak(
-            callContextMethodResult(sourceNode, "leaveFinallyBlock", args.toArray(new Node[0])));
+            callContextMethodResult(
+                sourceNode,
+                "leaveFinallyBlock",
+                type(StandardColors.NULL_OR_VOID),
+                args.toArray(new Node[0])));
       }
 
       /** Changes the {@link #currentCase} to a new one. */
@@ -1904,11 +1909,11 @@ final class Es6RewriteGenerators implements CompilerPass {
         /** Creates a new empty case section and assings a new id. */
         Case() {
           this.id = caseIdCounter++;
-          this.caseBlock = IR.block().srcref(originalGeneratorBody);
+          this.caseBlock = astFactory.createBlock().srcref(originalGeneratorBody);
         }
 
         Node createCaseNode() {
-          return IR.caseNode(IR.number(id).setJSType(numberType).srcref(caseBlock), caseBlock)
+          return IR.caseNode(astFactory.createNumber(id).srcref(caseBlock), caseBlock)
               .srcref(caseBlock);
         }
 
@@ -1917,7 +1922,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           if (jumpTo != null) {
             return jumpTo.getNumber(sourceNode);
           }
-          Node node = IR.number(id).setJSType(numberType).srcref(sourceNode);
+          Node node = astFactory.createNumber(id).srcref(sourceNode);
           references.add(node);
           return node;
         }
@@ -2076,7 +2081,7 @@ final class Es6RewriteGenerators implements CompilerPass {
 
         /** Replaces reference to <code>this</code> with <code>$jscomp$generator$this</code>. */
         void visitThis(Node n) {
-          Node newThis = context.getScopedName(GENERATOR_THIS).setJSType(n.getJSType());
+          Node newThis = astFactory.createName(context.getScopedName(GENERATOR_THIS), type(n));
           n.replaceWith(newThis);
           if (!thisReferenceFound) {
             Node var = IR.var(newThis.cloneNode().srcref(n), n).srcref(newGeneratorHoistBlock);
@@ -2090,7 +2095,8 @@ final class Es6RewriteGenerators implements CompilerPass {
          * </code>.
          */
         void visitArguments(Node n) {
-          Node newArguments = context.getScopedName(GENERATOR_ARGUMENTS).srcref(n);
+          Node newArguments =
+              astFactory.createName(context.getScopedName(GENERATOR_ARGUMENTS), type(n)).srcref(n);
           n.replaceWith(newArguments);
           if (!argumentsReferenceFound) {
             Node var = IR.var(newArguments.cloneNode(), n).srcref(newGeneratorHoistBlock);
@@ -2121,7 +2127,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           if (commaExpression == null) {
             varStatement.detach();
           } else {
-            varStatement.replaceWith(IR.exprResult(commaExpression));
+            varStatement.replaceWith(astFactory.exprResult(commaExpression));
           }
           // Move declaration without initial values to just before the program method definition.
           hoistNode(varStatement);
@@ -2201,8 +2207,8 @@ final class Es6RewriteGenerators implements CompilerPass {
             if (varName.hasChildren()) {
               Node copiedVarName = varName.cloneNode().setJSDocInfo(null);
               Node assign =
-                  IR.assign(copiedVarName, varName.removeFirstChild())
-                      .setJSType(varName.getJSType())
+                  astFactory
+                      .createAssign(copiedVarName, varName.removeFirstChild())
                       .srcref(varName);
               assignments.add(assign);
             }
@@ -2212,9 +2218,7 @@ final class Es6RewriteGenerators implements CompilerPass {
             commaExpression =
                 commaExpression == null
                     ? assignment
-                    : IR.comma(commaExpression, assignment)
-                        .setJSType(assignment.getJSType())
-                        .srcref(assignment);
+                    : astFactory.createComma(commaExpression, assignment).srcref(assignment);
           }
           return commaExpression;
         }
