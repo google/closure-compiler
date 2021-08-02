@@ -66,10 +66,10 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.HamtPMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
+import com.google.javascript.rhino.Msg;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.PMap;
 import com.google.javascript.rhino.QualifiedName;
-import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
@@ -88,7 +88,6 @@ import javax.annotation.Nullable;
  * The type registry is used to resolve named types.
  *
  * <p>This class is not thread-safe.
- *
  */
 public final class JSTypeRegistry {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
@@ -2079,7 +2078,7 @@ public final class JSTypeRegistry {
             thisType = ObjectType.cast(candidateThisType.restrictByNotNullOrUndefined());
             if (thisType == null) {
               reporter.warning(
-                  SimpleErrorReporter.getMessage0("msg.jsdoc.function.newnotobject"),
+                  Msg.JSDOC_FUNCTION_NEWNOTOBJECT.format(),
                   sourceName,
                   contextNode.getLineno(),
                   contextNode.getCharno());
@@ -2107,7 +2106,7 @@ public final class JSTypeRegistry {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
                   reporter.warning(
-                      SimpleErrorReporter.getMessage0("msg.jsdoc.function.varargs"),
+                      Msg.JSDOC_FUNCTION_VARARGS.format(),
                       sourceName,
                       arg.getLineno(),
                       arg.getCharno());

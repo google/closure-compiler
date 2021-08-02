@@ -23,8 +23,8 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Msg;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
 
 /**
@@ -106,16 +106,15 @@ public final class TypeTransformationParser {
     return typeTransformationAst;
   }
 
-  private void addNewWarning(String messageId, String messageArg) {
+  private void addNewWarning(Msg messageId, String messageArg) {
     // TODO(lpino): Use the exact lineno and charno, it is currently using
     // the lineno and charno of the parent @template
     // TODO(lpino): Use only constants as parameters of this method
     errorReporter.warning(
-        "Bad type annotation. "
-            + SimpleErrorReporter.getMessage1(messageId, messageArg),
-            sourceFile.getName(),
-            templateLineno,
-            templateCharno);
+        "Bad type annotation. " + messageId.format(messageArg),
+        sourceFile.getName(),
+        templateLineno,
+        templateCharno);
   }
 
   private Keywords nameToKeyword(String s) {
@@ -210,23 +209,23 @@ public final class TypeTransformationParser {
   }
 
   private void warnInvalid(String msg) {
-    addNewWarning("msg.jsdoc.typetransformation.invalid", msg);
+    addNewWarning(Msg.JSDOC_TYPETRANSFORMATION_INVALID, msg);
   }
 
   private void warnInvalidExpression(String msg) {
-    addNewWarning("msg.jsdoc.typetransformation.invalid.expression", msg);
+    addNewWarning(Msg.JSDOC_TYPETRANSFORMATION_INVALID_EXPRESSION, msg);
   }
 
   private void warnMissingParam(String msg) {
-    addNewWarning("msg.jsdoc.typetransformation.missing.param", msg);
+    addNewWarning(Msg.JSDOC_TYPETRANSFORMATION_MISSING_PARAM, msg);
   }
 
   private void warnExtraParam(String msg) {
-    addNewWarning("msg.jsdoc.typetransformation.extra.param", msg);
+    addNewWarning(Msg.JSDOC_TYPETRANSFORMATION_EXTRA_PARAM, msg);
   }
 
   private void warnInvalidInside(String msg) {
-    addNewWarning("msg.jsdoc.typetransformation.invalid.inside", msg);
+    addNewWarning(Msg.JSDOC_TYPETRANSFORMATION_INVALID_INSIDE, msg);
   }
 
   private boolean checkParameterCount(Node expr, Keywords keyword) {

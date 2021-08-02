@@ -44,62 +44,44 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * A simple {@link ErrorReporter} that collects warnings and errors and makes
- * them accessible via {@link #errors} and {@link #warnings}.
- *
+ * A simple {@link ErrorReporter} that collects warnings and errors and makes them accessible via
+ * {@link #errors} and {@link #warnings}.
  */
 public class SimpleErrorReporter implements ErrorReporter {
-    @Nullable
-    private List<String> warnings = null;
-    @Nullable
-    private List<String> errors = null;
+  @Nullable private List<String> warnings = null;
+  @Nullable private List<String> errors = null;
 
-    @Override
-    public void warning(String message, String sourceName, int line,
-                        int lineOffset) {
-        if (warnings == null) {
-          warnings = new ArrayList<>();
-        }
-        warnings.add(formatDetailedMessage(message, sourceName, line));
+  @Override
+  public void warning(String message, String sourceName, int line, int lineOffset) {
+    if (warnings == null) {
+      warnings = new ArrayList<>();
     }
+    warnings.add(formatDetailedMessage(message, sourceName, line));
+  }
 
-    @Override
-    public void error(String message, String sourceName, int line,
-                      int lineOffset) {
-        if (errors == null) {
-          errors = new ArrayList<>();
-        }
-        errors.add(formatDetailedMessage(message, sourceName, line));
+  @Override
+  public void error(String message, String sourceName, int line, int lineOffset) {
+    if (errors == null) {
+      errors = new ArrayList<>();
     }
+    errors.add(formatDetailedMessage(message, sourceName, line));
+  }
 
-    private static String formatDetailedMessage(
-        String message, String sourceName, int lineNumber) {
-      String details = message;
-      if (sourceName == null || lineNumber <= 0) {
-        return details;
-      }
-      StringBuilder buf = new StringBuilder(details);
-      buf.append(" (");
-      if (sourceName != null) {
-        buf.append(sourceName);
-      }
-      if (lineNumber > 0) {
-        buf.append('#');
-        buf.append(lineNumber);
-      }
-      buf.append(')');
-      return buf.toString();
+  private static String formatDetailedMessage(String message, String sourceName, int lineNumber) {
+    String details = message;
+    if (sourceName == null || lineNumber <= 0) {
+      return details;
     }
-
-    public static String getMessage0(String messageId) {
-      return getMessage(messageId);
+    StringBuilder buf = new StringBuilder(details);
+    buf.append(" (");
+    if (sourceName != null) {
+      buf.append(sourceName);
     }
-
-    public static String getMessage1(String messageId, Object arg1) {
-      return getMessage(messageId, arg1);
+    if (lineNumber > 0) {
+      buf.append('#');
+      buf.append(lineNumber);
     }
-
-    private static String getMessage(String messageId, Object... arguments) {
-    return ErrorFormat.format(messageId, arguments);
+    buf.append(')');
+    return buf.toString();
   }
 }

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.SimpleErrorReporter;
+import com.google.javascript.rhino.Msg;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -126,15 +126,11 @@ class RhinoErrorReporter {
           // Duplicate parameter
           .put(replacePlaceHolders("Duplicate parameter name \"{0}\""), DUPLICATE_PARAM)
           // Duplicate visiblity
-          .put(
-              replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.jsdoc.extra.visibility")),
-              DUPLICATE_VISIBILITY)
+          .put(replacePlaceHolders(Msg.JSDOC_EXTRA_VISIBILITY.format()), DUPLICATE_VISIBILITY)
           .put(Pattern.compile("Unnecessary escape:.*"), UNNECESSARY_ESCAPE)
           .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
           // Unknown @annotations.
-          .put(
-              replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
-              BAD_JSDOC_ANNOTATION)
+          .put(replacePlaceHolders(Msg.BAD_JSDOC_TAG.format()), BAD_JSDOC_ANNOTATION)
           .put(
               Pattern.compile(
                   "^Keywords and reserved words are not allowed as unquoted property.*"),
