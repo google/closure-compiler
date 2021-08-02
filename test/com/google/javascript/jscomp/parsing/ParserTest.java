@@ -3816,6 +3816,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\05`", "Invalid escape sequence");
     parseError("`hello\\06`", "Invalid escape sequence");
     parseError("`hello\\07`", "Invalid escape sequence");
+
+    // newline before invalid escape sequence
+    parseError("`\n\\1`", "Invalid escape sequence");
   }
 
   @Test

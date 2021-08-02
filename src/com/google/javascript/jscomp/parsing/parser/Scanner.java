@@ -917,6 +917,8 @@ public class Scanner {
   private TemplateLiteralToken nextTemplateLiteralTokenShared(
       TokenType endType, TokenType middleType) {
     int beginIndex = index;
+    // Save the starting position to use with the multi-line safe version of getTokenRange().
+    SourcePosition startingPosition = getPosition(beginIndex);
     SkipTemplateCharactersResult skipTemplateCharactersResult = skipTemplateCharacters();
     if (isAtEnd()) {
       reportError(getPosition(beginIndex), "Unterminated template literal");
@@ -931,7 +933,7 @@ public class Scanner {
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getPosition(),
-            getTokenRange(beginIndex - 1));
+            getTokenRange(startingPosition));
       case '$':
         nextChar(); // $
         nextChar(); // {
