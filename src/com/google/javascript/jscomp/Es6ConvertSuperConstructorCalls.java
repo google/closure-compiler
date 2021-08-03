@@ -327,18 +327,26 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       }
     } else if (declaration.isAssign() && declaration.getFirstChild() == declaredVarOrProp) {
       declaredValue = checkNotNull(declaration.getSecondChild());
-    } else if (declaration.isObjectLit() && declaredVarOrProp.hasOneChild()){
+    } else if (declaration.isObjectLit() && declaredVarOrProp.hasOneChild()) {
       declaredValue = checkNotNull(declaredVarOrProp.getFirstChild());
     } else {
       throw new IllegalStateException(
           "Unexpected declaration format:\n" + declaration.toStringTree());
     }
+    return isNodeKnownToOnlyReturnUndefined(declaredValue);
+  }
 
-    if (declaredValue.isFunction()) {
-      Node functionBody = checkNotNull(declaredValue.getChildAtIndex(2));
-      return !(new UndefinedReturnValueCheck().mayReturnDefinedValue(functionBody));
-    } else if (declaredValue.isQualifiedName()) {
-      return isKnownToReturnOnlyUndefined(declaredValue.getQualifiedName());
+  private boolean isNodeKnownToOnlyReturnUndefined(Node node) {
+    if (node.isFunction()) {
+      Node functionBody = checkNotNull(node.getChildAtIndex(2));
+      return !new UndefinedReturnValueCheck().mayReturnDefinedValue(functionBody);
+    } else if (node.isQualifiedName()) {
+      return isKnownToReturnOnlyUndefined(node.getQualifiedName());
+    } else if (node.isHook()) {
+      // cond ? left : right;
+      Node left = node.getSecondChild();
+      Node right = node.getLastChild();
+      return isNodeKnownToOnlyReturnUndefined(left) && isNodeKnownToOnlyReturnUndefined(right);
     } else {
       // TODO(bradfordcsmith): What cases are these? Can we do better?
       return false;

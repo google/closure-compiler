@@ -256,6 +256,40 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testComplexBaseWithConditional() {
+    test(
+        lines(
+            "/** @define {boolean} */", //
+            "const COND = goog.define('COND', false);",
+            "class Base1 {}",
+            "class Base2 extends Base1 {}",
+            "/** @type {typeof Base1} */",
+            "const ActualBase = COND ? Base1 : Base2;",
+            "class Sub extends ActualBase {}"),
+        lines(
+            "/** @define {boolean} */ const COND = goog.define(\"COND\", false);", //
+            "/** @constructor */ let Base1 = function() {",
+            "};",
+            "/**",
+            " * @constructor",
+            " * @extends {Base1}",
+            " */",
+            "let Base2 = function() {",
+            "  Base1.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(Base2, Base1);",
+            "/** @type {typeof Base1} */ const ActualBase = COND ? Base1 : Base2;",
+            "/**",
+            " * @constructor",
+            " * @extends {ActualBase}",
+            " */",
+            "let Sub = function() {",
+            "  ActualBase.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(Sub, ActualBase);"));
+  }
+
+  @Test
   public void testClassWithNoJsDoc() {
     test("class C { }", "/** @constructor */ let C = function() { };");
   }
