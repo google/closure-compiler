@@ -147,7 +147,6 @@ public class TranspilationPasses {
       passes.add(es6RewriteRestAndSpread);
       passes.add(lateConvertEs6ToEs3);
       passes.add(es6ForOf);
-      passes.add(rewriteBlockScopedFunctionDeclaration);
     } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
@@ -160,6 +159,7 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
     if (options.needsTranspilationFrom(ES2015)) {
+      passes.add(rewriteBlockScopedFunctionDeclaration);
       passes.add(rewriteBlockScopedDeclaration);
       passes.add(rewriteGenerators);
     }
