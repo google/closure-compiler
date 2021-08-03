@@ -181,12 +181,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     destDeclaration.setJSDocInfo(builder.build());
   }
 
-  private static void maybeAddConstJSDoc(Node srcDeclaration, Node srcParent, Node srcName,
-      Node destDeclaration) {
-    if (srcDeclaration.isConst()
-        // Don't add @const for the left side of a for/in. If we do we get warnings from the NTI.
-        // TODO(lharker): Check if this condition is still necessary, since NTI is deleted
-        && !(srcParent.isForIn() && srcDeclaration == srcParent.getFirstChild())) {
+  private static void maybeAddConstJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
+    if (srcDeclaration.isConst()) {
       extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
       JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(destDeclaration.getJSDocInfo());
       builder.recordConstancy();
@@ -199,11 +195,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     while (declarationList.hasMoreThanOneChild()) {
       Node name = declarationList.getLastChild();
       Node newDeclaration = IR.var(name.detach()).srcref(declarationList);
-      maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
+      maybeAddConstJSDoc(declarationList, name, newDeclaration);
       newDeclaration.insertAfter(declarationList);
       compiler.reportChangeToEnclosingScope(parent);
     }
-    maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
+    maybeAddConstJSDoc(declarationList, declarationList.getFirstChild(), declarationList);
     declarationList.setToken(Token.VAR);
   }
 
@@ -466,7 +462,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                   Node newReference = cloneWithType(reference);
                   Node assign = createAssignNode(newReference, reference.removeFirstChild());
                   extractInlineJSDoc(declaration, reference, declaration);
-                  maybeAddConstJSDoc(declaration, grandParent, reference, declaration);
+                  maybeAddConstJSDoc(declaration, reference, declaration);
                   assign.setJSDocInfo(declaration.getJSDocInfo());
 
                   Node replacement = IR.exprResult(assign).srcrefTreeIfMissing(declaration);

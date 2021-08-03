@@ -313,7 +313,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  var i = undefined;",
             "}"));
 
-    test(lines(
+    test(
+        lines(
             "for (const i in [0, 1]) {",
             "  let f = function() {",
             "    let i = 0;",
@@ -323,7 +324,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "}"),
         lines(
-            "for (var i in [0, 1]) {",
+            "for (/** @const */ var i in [0, 1]) {",
             "  var f = function() {",
             "    var i = 0;",
             "    if (true) {",
@@ -682,7 +683,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "/** @const */ var obj = {a: 1, b: 2, c: 3, skipMe: 4};",
             "/** @const */ var arr = [];",
             "var $jscomp$loop$0 = {};",
-            "for (var p in obj) {",
+            "for (/** @const */ var p in obj) {",
             "  $jscomp$loop$0.$jscomp$loop$prop$p$1 = p;",
             "  $jscomp$loop$0: {",
             "    if ($jscomp$loop$0.$jscomp$loop$prop$p$1 == 'skipMe') {",
