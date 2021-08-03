@@ -248,6 +248,10 @@ final class ModuleImportResolver {
         // Exporting an import from an invalid module load or early reference.
         namespace.defineInferredProperty(
             exportKey, registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), bindingSourceNode);
+        updateAstForExport(
+            bindingSourceNode,
+            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
+            /* typedefType= */ null);
         continue;
       }
 
@@ -264,7 +268,17 @@ final class ModuleImportResolver {
         namespace.defineDeclaredProperty(exportKey, exportType, bindingSourceNode);
       }
 
-      bindingSourceNode.setTypedefTypeProp(originalName.getNameNode().getTypedefTypeProp());
+      updateAstForExport(
+          bindingSourceNode, exportType, originalName.getNameNode().getTypedefTypeProp());
+    }
+  }
+
+  private void updateAstForExport(Node bindingSourceNode, JSType exportType, JSType typedefType) {
+    bindingSourceNode.setJSType(exportType);
+    bindingSourceNode.setTypedefTypeProp(typedefType);
+    if (bindingSourceNode.getParent().isExportSpec()) {
+      // given  `export {x as y} from './a/b'` update the y NAME node
+      bindingSourceNode.getNext().setJSType(exportType);
     }
   }
 

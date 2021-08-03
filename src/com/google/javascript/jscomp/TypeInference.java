@@ -409,18 +409,14 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
             module,
             syntacticBlockScope);
         return;
+      case GOOG_MODULE:
       case LEGACY_GOOG_MODULE:
-        // Update the global scope for the implicit assignment "legacy.module.id = exports;" created
-        // by `goog.module.declareLegacyNamespace();`
         TypedVar exportsVar =
             checkNotNull(
                 syntacticBlockScope.getVar("exports"),
                 "Missing exports var for %s",
                 module.metadata());
-        if (exportsVar.getType() == null) {
-          return;
-        }
-        JSType exportsType = exportsVar.getType();
+        JSType exportsType = exportsVar.getType() != null ? exportsVar.getType() : unknownType;
         // Store the type of the namespace on the AST for the convenience of later passes that want
         // to access it.
         Node rootNode = syntacticBlockScope.getRootNode();
@@ -432,7 +428,12 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
           Node paramList = NodeUtil.getFunctionParameters(rootNode.getParent());
           paramList.getOnlyChild().setJSType(exportsType);
         }
+        if (!module.metadata().isLegacyGoogModule() || exportsVar.getType() == null) {
+          break;
+        }
 
+        // Update the global scope for the implicit assignment "legacy.module.id = exports;" created
+        // by `goog.module.declareLegacyNamespace();`
         String moduleId = module.closureNamespace();
         TypedScope globalScope = syntacticBlockScope.getGlobalScope();
         TypedVar globalVar = globalScope.getVar(moduleId);
@@ -687,9 +688,18 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case THROW:
       case ITER_SPREAD:
       case OBJECT_SPREAD:
+      case IMPORT:
+      case IMPORT_SPECS:
+      case IMPORT_STAR:
         // these nodes are untyped but have children that may affect the flow scope and need to
         // be typed.
         scope = traverseChildren(n, scope);
+        isTypeable = false;
+        break;
+
+      case IMPORT_SPEC:
+        // these nodes are untyped but have children that need to be typed.
+        traverseImportSpec(scope, n);
         isTypeable = false;
         break;
 
@@ -828,9 +838,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case DEFAULT_CASE:
       case WITH:
       case DEBUGGER:
-      case IMPORT:
-      case IMPORT_SPEC:
-      case IMPORT_SPECS:
       case EXPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.
         isTypeable = false;
@@ -1546,6 +1553,16 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       }
     }
     n.setJSType(type);
+    return scope;
+  }
+
+  private FlowScope traverseImportSpec(FlowScope scope, Node spec) {
+    Node exportedName = spec.getFirstChild();
+    Node localName = spec.getSecondChild();
+
+    scope = traverse(localName, scope);
+
+    exportedName.setJSType(localName.getJSType());
     return scope;
   }
 

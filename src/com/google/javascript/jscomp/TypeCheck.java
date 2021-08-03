@@ -1879,28 +1879,35 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param t The node traversal object that supplies context, such as the scope chain to use in
    *     name lookups as well as error reporting.
    * @param n The node being visited.
-   * @param parent The parent of the node n.
    * @return whether the node is typeable or not
    */
   boolean visitName(NodeTraversal t, Node n, Node parent) {
+    // Skip empty function expression names. They don't need a type.
+    boolean isFunctionName = n.getParent().isFunction() && n.isFirstChildOf(parent);
+    if (isFunctionName && n.getString().isEmpty()) {
+      return false;
+    }
+
+    // the compiler's unknown type reporting allows certain names to be untyped if declared but
+    // never used in an expression. The associated AST nodes still need to be typed to prevent
+    // future passes from crashing, though.
+    boolean reportIfMissingType = true;
+
     // At this stage, we need to determine whether this is a leaf
     // node in an expression (which therefore needs to have a type
     // assigned for it) versus some other decorative node that we
-    // can safely ignore.  Function names, arguments (children of PARAM_LIST nodes) and
-    // variable declarations are ignored.
-    // TODO(user): remove this short-circuiting in favor of a
-    // pre order traversal of the FUNCTION, CATCH, PARAM_LIST and VAR nodes.
+    // can safely ignore.
     Token parentNodeType = parent.getToken();
-    if (parentNodeType == Token.FUNCTION
+    if (isFunctionName
         || parentNodeType == Token.CATCH
         || parentNodeType == Token.PARAM_LIST
         || NodeUtil.isNameDeclaration(parent)) {
-      return false;
+      reportIfMissingType = false;
     }
 
     // Not need to type first key in for-in or for-of.
     if (NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == n) {
-      return false;
+      reportIfMissingType = false;
     }
 
     JSType type = n.getJSType();
@@ -1913,7 +1920,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
     }
     ensureTyped(n, type);
-    return true;
+    return reportIfMissingType;
   }
 
   /**

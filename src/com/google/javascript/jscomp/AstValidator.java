@@ -257,9 +257,8 @@ public final class AstValidator implements CompilerPass {
   }
 
   public void validateExpression(Node n) {
-    if (!typeValidationMode.equals(TypeInfoValidation.NONE)) {
-      validateExpressionType(n);
-    }
+    validateTypeInformation(n);
+
     switch (n.getToken()) {
         // Childless expressions
       case NEW_TARGET:
@@ -488,7 +487,17 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateExpressionType(Node n) {
+  /**
+   * Enforces the given node has a type if we are validating JSTypes or Colors
+   *
+   * @param n a Node which we expect to have a type attached (i.e. not a control-flow-only node like
+   *     a BLOCK or IF)
+   */
+  private void validateTypeInformation(Node n) {
+    if (typeValidationMode.equals(TypeInfoValidation.NONE)) {
+      return;
+    }
+
     if (this.typeValidationMode.equals(TypeInfoValidation.JSTYPE)) {
       JSType type = n.getJSType();
 
@@ -498,10 +507,6 @@ public final class AstValidator implements CompilerPass {
     }
 
     switch (n.getToken()) {
-      case NAME:
-        validateNameType(n);
-        break;
-
       case CALL:
         if (!n.getFirstChild().isSuper()) {
           // TODO(sdh): need to validate super() using validateNewType() instead, if it existed
@@ -511,21 +516,6 @@ public final class AstValidator implements CompilerPass {
 
       default:
         expectSomeTypeInformation(n);
-    }
-  }
-
-  private void validateNameType(Node nameNode) {
-    // TODO(bradfordcsmith): Looking at ancestors of nameNode is a hack that will prevent validation
-    // from working on detached nodes.
-    // Calling code should correctly determine the context and call different methods as
-    // appropriate.
-    if (NodeUtil.isExpressionResultUsed(nameNode) && !NodeUtil.isNormalGet(nameNode.getParent())) {
-      // If the expression result is used, it must have a type.
-      // However, we don't always add a type when the name is just part of a getProp or getElem.
-      // That's OK, because we'll do type checking on the getProp/Elm itself, which has a type.
-      // TODO(b/74537281): Why do we sometimes have type information for names used in getprop
-      // or getelem expressions and sometimes not?
-      expectSomeTypeInformation(nameNode);
     }
   }
 
@@ -1006,12 +996,17 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.NAME, n);
     validateNonEmptyString(n);
     validateChildCount(n);
+    validateTypeInformation(n);
   }
 
   private void validateOptionalName(Node n) {
     validateNodeType(Token.NAME, n);
     validateNonNullString(n);
     validateChildCount(n);
+    boolean isEmpty = n.getString() != null && n.getString().isEmpty();
+    if (!isEmpty) {
+      validateTypeInformation(n);
+    }
   }
 
   private void validateEmptyName(Node n) {
@@ -1142,9 +1137,7 @@ public final class AstValidator implements CompilerPass {
   private void validateSuper(Node superNode) {
     validateFeature(Feature.SUPER, superNode);
     validateChildless(superNode);
-    if (!typeValidationMode.equals(TypeInfoValidation.NONE)) {
-      expectSomeTypeInformation(superNode);
-    }
+    validateTypeInformation(superNode);
     Node superParent = superNode.getParent();
     Node methodNode = NodeUtil.getEnclosingNonArrowFunction(superParent);
 

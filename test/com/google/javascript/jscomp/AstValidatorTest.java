@@ -113,6 +113,8 @@ public final class AstValidatorTest extends CompilerTestCase {
             "}",
             ""));
 
+    this.typeInfoValidationMode = TypeInfoValidation.NONE; // synthetic AST w/o types
+
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
     c.addChildToBack(members);
@@ -1261,6 +1263,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Modules need to be set up better than we're doing here to avoid type check throwing an
     // exception
     disableTypeCheck();
+    this.typeInfoValidationMode = TypeInfoValidation.NONE;
     testFeatureValidation("export {x};", Feature.MODULES);
     testFeatureValidation("import {x} from './foo.js';", Feature.MODULES);
   }

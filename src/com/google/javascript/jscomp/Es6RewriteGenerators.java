@@ -317,6 +317,9 @@ final class Es6RewriteGenerators implements CompilerPass {
         // The transpiled function needs to be able to refer to itself, so make sure it has a name.
         if (genFuncName.getString().isEmpty()) {
           genFuncName.setString(context.getScopedName(GENERATOR_FUNCTION));
+          if (astFactory.isAddingColors()) {
+            genFuncName.setColor(StandardColors.TOP_OBJECT);
+          }
         }
 
         // Prepare a "program" function:
