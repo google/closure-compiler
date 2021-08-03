@@ -68,6 +68,17 @@ public class TestExternsBuilder {
           "  childCtor.superClass_ = parentCtor.prototype;",
           "};");
 
+  /**
+   * There are some rare cases where we want to use the closure externs defined above as if they
+   * were sources.
+   *
+   * <p>Using this method avoids the automatic addition of the `@fileoverview` comment containing
+   * `@externs`, which forces the compiler to treat the code as externs definitions.
+   */
+  public static String getClosureExternsAsSource() {
+    return CLOSURE_EXTERNS;
+  }
+
   // Runtime library stubs that are not technically externs but serve a similar purpose.
   private static final String JSCOMP_LIBRARIES =
       lines(
@@ -941,6 +952,13 @@ public class TestExternsBuilder {
 
   public String build() {
     List<String> externSections = new ArrayList<>();
+    externSections.add(
+        lines(
+            "/**", //
+            " * @fileoverview",
+            " * @externs",
+            " */",
+            ""));
     if (includeBigIntExterns) {
       externSections.add(BIGINT_EXTERNS);
     }

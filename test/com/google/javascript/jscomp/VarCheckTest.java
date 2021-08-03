@@ -66,8 +66,7 @@ public final class VarCheckTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setClosurePass(true);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
-    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
-        strictModuleDepErrorLevel);
+    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK, strictModuleDepErrorLevel);
     if (externValidationErrorLevel != null) {
       options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION, externValidationErrorLevel);
     }
@@ -77,7 +76,8 @@ public final class VarCheckTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
+      @Override
+      public void process(Node externs, Node root) {
         new VarCheck(compiler, validityCheck).process(externs, root);
         if (!validityCheck && !compiler.hasErrors()) {
           // If the original test turned off sanity check, make sure our synthesized
@@ -242,14 +242,13 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testMultiplyDeclaredConsts_withES6Modules() {
-    testError("export function f() { const x = 1; const x = 2; }",
+    testError(
+        "export function f() { const x = 1; const x = 2; }",
         BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
-    testError("export const x = 1; export var x = 2;",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("export const x = 1; export var x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
-    testError("export const a = 1, a = 2;",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("export const a = 1, a = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   @Test
@@ -281,8 +280,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("let x; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("const x = 1; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("class x{ } let x;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError("export default class x{ } let x;",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("export default class x{ } let x;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   @Test
@@ -419,8 +417,7 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testNewInExterns() {
     // Class is not hoisted.
-    test(
-        externs("x = new Klass();"), srcs("class Klass{}"), error(VarCheck.UNDEFINED_VAR_ERROR));
+    test(externs("x = new Klass();"), srcs("class Klass{}"), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test
@@ -502,8 +499,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("function fn(){ var b = a; }", VarCheck.UNDEFINED_VAR_ERROR);
 
     // Default parameters
-    testError(
-        "function fn(a = b) { function g(a = 3) { var b; } }", VarCheck.UNDEFINED_VAR_ERROR);
+    testError("function fn(a = b) { function g(a = 3) { var b; } }", VarCheck.UNDEFINED_VAR_ERROR);
     testError("function f(x=a) { let a; }", VarCheck.UNDEFINED_VAR_ERROR);
     testError("function f(x=a) { { let a; } }", VarCheck.UNDEFINED_VAR_ERROR);
     testError("function f(x=b) { function a(x=1) { var b; } }", VarCheck.UNDEFINED_VAR_ERROR);
@@ -553,10 +549,9 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testMissingModuleDependencyLetAndConst() {
-    testIndependentModules("let x = 10;", "let y = x++;",
-        null, VarCheck.MISSING_MODULE_DEP_ERROR);
-    testIndependentModules("const x = 10;", "const y = x + 1;",
-        null, VarCheck.MISSING_MODULE_DEP_ERROR);
+    testIndependentModules("let x = 10;", "let y = x++;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
+    testIndependentModules(
+        "const x = 10;", "const y = x + 1;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
   }
 
   @Test
@@ -566,10 +561,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testViolatedModuleDependencyLetAndConst() {
-    testDependentModules("let y = x++;", "let x = 10;",
-        VarCheck.VIOLATED_MODULE_DEP_ERROR);
-    testDependentModules("const y = x + 1;", "const x = 10;",
-        VarCheck.VIOLATED_MODULE_DEP_ERROR);
+    testDependentModules("let y = x++;", "let x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
+    testDependentModules("const y = x + 1;", "const x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
   }
 
   @Test
@@ -601,7 +594,8 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testDependentStrictModuleDependencyCheck() {
     strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testDependentModules("var f = function() {return new B();};",
+    testDependentModules(
+        "var f = function() {return new B();};",
         "var B = function() {}",
         VarCheck.STRICT_MODULE_DEP_ERROR);
   }
@@ -609,9 +603,11 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testIndependentStrictModuleDependencyCheck() {
     strictModuleDepErrorLevel = CheckLevel.ERROR;
-    testIndependentModules("var f = function() {return new B();};",
+    testIndependentModules(
+        "var f = function() {return new B();};",
         "var B = function() {}",
-        VarCheck.STRICT_MODULE_DEP_ERROR, null);
+        VarCheck.STRICT_MODULE_DEP_ERROR,
+        null);
   }
 
   @Test
@@ -773,15 +769,14 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testDuplicateVar() {
-    testError("/** @define {boolean} */ var DEF = false; var DEF = true;",
-        VAR_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "/** @define {boolean} */ var DEF = false; var DEF = true;", VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   @Test
   public void testDontAllowSuppressDupeOnLet() {
     testError(
-        "let a; /** @suppress {duplicate} */ let a; ",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+        "let a; /** @suppress {duplicate} */ let a; ", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
     testError(
         "function f() { let a; /** @suppress {duplicate} */ let a; }",
@@ -821,16 +816,14 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testLetConstRedeclareWithFunctions_withEs6Modules() {
-    testError("function f() {} let f = 1; export {f};",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError("let f = 1; function f() {}  export {f};",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError("const f = 1; function f() {} export {f};",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError("function f() {} const f = 1;  export {f};",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError("export default function f() {}; let f = 5;",
-        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("function f() {} let f = 1; export {f};", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("let f = 1; function f() {}  export {f};", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "const f = 1; function f() {} export {f};", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "function f() {} const f = 1;  export {f};", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "export default function f() {}; let f = 5;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   @Test
@@ -875,8 +868,7 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testFunctionRedeclared3() {
     testError("{ function f() {}; let f = 0; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
-    testError(
-        "if (0) { function f() {}; const f = 0;}", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("if (0) { function f() {}; const f = 0;}", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError(
         "try { function f() {}; class f {}; } catch (e) {}",
         BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
@@ -936,7 +928,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogModule_withDefaultExports() {
     testSame(
         srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "goog.module('a.b'); exports = function() {};"));
   }
 
@@ -945,7 +937,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(
         srcs(
             // Referencing 'exports' inside a function is strange but allowed.
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "goog.module('a.b'); exports.f = function() { exports.f(); };"));
   }
 
@@ -953,46 +945,42 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogModule_withNamedExports() {
     testSame(
         srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "goog.module('a.b'); exports.f = function() {}; exports.x = 0;"));
   }
 
   @Test
   public void testGoogProvide_simpleName() {
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
-            + "goog.provide('A'); var A = class {};");
-    testSame(
-        new TestExternsBuilder().addClosureExterns().build() + "goog.provide('A'); A = class {};");
+        TestExternsBuilder.getClosureExternsAsSource() + "goog.provide('A'); var A = class {};");
+    testSame(TestExternsBuilder.getClosureExternsAsSource() + "goog.provide('A'); A = class {};");
   }
 
   @Test
   public void testGoogProvide_simpleName_earlyReference() {
+    testSame(TestExternsBuilder.getClosureExternsAsSource() + "A.B = class {}; goog.provide('A');");
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
-            + "A.B = class {}; goog.provide('A');");
-    testSame(
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "A.B = class {}; goog.provide('A'); var A = class {};");
   }
 
   @Test
   public void testGoogProvide_multipleRootsInSameFile() {
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "goog.provide('A'); goog.provide('B'); var A = class {}; var B = class {};");
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "goog.provide('A.a'); goog.provide('B.b'); A.a = 0; B.b = 1");
   }
 
   @Test
   public void testGoogProvide_complexName() {
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "goog.provide('foo.A'); foo.A = class {};");
     testSame(
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "goog.provide('foo.bar.A'); foo.bar.A = class {};");
   }
 
@@ -1000,7 +988,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogLegacyModule() {
     testSame(
         srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "goog.module('foo.A'); goog.module.declareLegacyNamespace(); exports = class {};",
             "new foo.A();"));
   }
@@ -1008,15 +996,12 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testGoogNonLegacyModule() {
     testError(
-        srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
-            "goog.module('foo.A');",
-            "foo.A();"),
+        srcs(TestExternsBuilder.getClosureExternsAsSource(), "goog.module('foo.A');", "foo.A();"),
         error(UNDEFINED_VAR_ERROR));
 
     testError(
         srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "goog.module('foo.A'); exports = class {};",
             "new foo.A();"),
         error(UNDEFINED_VAR_ERROR));
@@ -1026,7 +1011,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogLegacyModule_inLoadModule() {
     testSame(
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
+          TestExternsBuilder.getClosureExternsAsSource(),
           lines(
               "goog.loadModule(function(exports) {", //
               "  goog.module('foo.A');",
@@ -1042,7 +1027,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogNonLegacyModule_inLoadModule() {
     testError(
         srcs(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             lines(
                 "goog.loadModule(function(exports) {", //
                 "  goog.module('foo.A');",
@@ -1139,7 +1124,7 @@ public final class VarCheckTest extends CompilerTestCase {
         SourceFile.fromCode(
             "weak.js",
             lines(
-                new TestExternsBuilder().addClosureExterns().build(), //
+                TestExternsBuilder.getClosureExternsAsSource(), //
                 "goog.provide('foo.bar');"),
             SourceKind.WEAK));
 
@@ -1163,7 +1148,7 @@ public final class VarCheckTest extends CompilerTestCase {
         SourceFile.fromCode(
             "weak.js",
             lines(
-                new TestExternsBuilder().addClosureExterns().build(), //
+                TestExternsBuilder.getClosureExternsAsSource(), //
                 "goog.provide('foo.bar');"),
             SourceKind.WEAK));
 
@@ -1189,7 +1174,7 @@ public final class VarCheckTest extends CompilerTestCase {
         SourceFile.fromCode(
             "weak.js",
             lines(
-                new TestExternsBuilder().addClosureExterns().build(), //
+                TestExternsBuilder.getClosureExternsAsSource(), //
                 "goog.module('foo.bar'); goog.module.declareLegacyNamespace();"),
             SourceKind.WEAK));
 
@@ -1215,7 +1200,7 @@ public final class VarCheckTest extends CompilerTestCase {
     strongModule.add(
         SourceFile.fromCode(
             "strong0.js",
-            lines(new TestExternsBuilder().addClosureExterns().build(), "goog.provide('foo.qux');"),
+            lines(TestExternsBuilder.getClosureExternsAsSource(), "goog.provide('foo.qux');"),
             SourceKind.STRONG));
     strongModule.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
 
@@ -1229,6 +1214,7 @@ public final class VarCheckTest extends CompilerTestCase {
   private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;
+
     VariableTestCheck(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
@@ -1250,13 +1236,11 @@ public final class VarCheckTest extends CompilerTestCase {
     }
   }
 
-  public void checkSynthesizedExtern(
-      String input, String expectedExtern) {
+  public void checkSynthesizedExtern(String input, String expectedExtern) {
     checkSynthesizedExtern("", input, expectedExtern);
   }
 
-  public void checkSynthesizedExtern(
-      String extern, String input, String expectedExtern) {
+  public void checkSynthesizedExtern(String extern, String input, String expectedExtern) {
     declarationCheck = !validityCheck;
     disableCompareAsTree();
     testExternChanges(extern, input, expectedExtern);

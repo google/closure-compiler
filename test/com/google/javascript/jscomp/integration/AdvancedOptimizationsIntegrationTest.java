@@ -464,7 +464,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          new TestExternsBuilder().addClosureExterns().build(),
+          TestExternsBuilder.getClosureExternsAsSource(),
           lines(
               "goog.module('a.b.c');",
               "exports = class Foo {",
@@ -792,7 +792,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .buildExternsFile("externs.js")); // add Closure base.js as srcs
     String source =
         lines(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "/** @constructor */",
             "var Foo = function() {};",
             "goog.addSingletonGetter = function(o) {",
@@ -987,7 +987,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     externs = ImmutableList.of();
     test(
         options,
-        new TestExternsBuilder().addClosureExterns().build()
+        TestExternsBuilder.getClosureExternsAsSource()
             + "goog.addSingletonGetter = function(ctor) {\n"
             + "  ctor.getInstance = function() {\n"
             + "    return ctor.instance_ || (ctor.instance_ = new ctor());\n"
@@ -1347,7 +1347,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         lines(
-            new TestExternsBuilder().addClosureExterns().build(),
+            TestExternsBuilder.getClosureExternsAsSource(),
             "/** @constructor */",
             "var Foo = function() {}",
             "/**",
