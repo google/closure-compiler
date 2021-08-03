@@ -278,8 +278,6 @@ enum NodeProperty {
   IS_CONSTANT_NAME = 6;
   // The variable creates a namespace.
   IS_NAMESPACE = 7;
-  // The ES5 directives on this node.
-  DIRECTIVES = 8;
   // ES5 distinguishes between direct and indirect calls to eval.
   DIRECT_EVAL = 9;
   // A CALL without an explicit "this" value.
