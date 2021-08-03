@@ -46,6 +46,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -157,7 +158,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
             "    $jscomp$key$x=$jscomp$iter$0.next();",
             "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
             "  let x = $jscomp$key$x.value;",
             "  {}",
             "}"));
@@ -167,7 +167,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
             "    $jscomp$key$x=$jscomp$iter$0.next();",
             "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
             "  x = $jscomp$key$x.value;",
             "  {}",
             "}"));

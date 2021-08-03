@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
@@ -874,7 +875,7 @@ final class AstFactory {
       result.setJSType(instanceType);
         break;
       case COLOR:
-        result.setColor(getInstanceOfColor(classType.getColor()));
+        result.setColor(getInstanceOfColor(classType.getColor(colorRegistry)));
         break;
       case NONE:
         break;
@@ -1429,7 +1430,7 @@ final class AstFactory {
         result.setJSType(type.getJSType(registry));
         break;
       case COLOR:
-        result.setColor(type.getColor());
+        result.setColor(type.getColor(colorRegistry));
         break;
       case NONE:
         break;
@@ -1439,7 +1440,7 @@ final class AstFactory {
   interface Type {
     JSType getJSType(JSTypeRegistry registry);
 
-    Color getColor();
+    Color getColor(ColorRegistry registry);
   }
 
   private static final class TypeOnNode implements Type {
@@ -1455,7 +1456,7 @@ final class AstFactory {
     }
 
     @Override
-    public Color getColor() {
+    public Color getColor(ColorRegistry registry) {
       return checkNotNull(this.n.getColor(), n);
     }
   }
@@ -1464,27 +1465,37 @@ final class AstFactory {
     private final JSType jstype;
     private final JSTypeNative jstypeNative;
     private final Color color;
+    private final ColorId colorId;
+
+    JSTypeOrColor(JSTypeNative jstypeNative, ColorId colorId) {
+      this.jstypeNative = jstypeNative;
+      this.jstype = null;
+      this.color = null;
+      this.colorId = colorId;
+    }
 
     JSTypeOrColor(JSTypeNative jstypeNative, Color color) {
       this.jstypeNative = jstypeNative;
       this.jstype = null;
       this.color = color;
+      this.colorId = null;
     }
 
     JSTypeOrColor(JSType jstype, Color color) {
       this.jstype = jstype;
       this.jstypeNative = null;
       this.color = color;
+      this.colorId = null;
     }
 
     @Override
     public JSType getJSType(JSTypeRegistry registry) {
-      return this.jstype != null ? checkNotNull(this.jstype) : registry.getNativeType(jstypeNative);
+      return this.jstype != null ? this.jstype : registry.getNativeType(jstypeNative);
     }
 
     @Override
-    public Color getColor() {
-      return checkNotNull(this.color);
+    public Color getColor(ColorRegistry registry) {
+      return this.color != null ? this.color : registry.get(checkNotNull(this.colorId));
     }
   }
 
@@ -1499,6 +1510,10 @@ final class AstFactory {
 
   static Type type(Color type) {
     return new JSTypeOrColor((JSType) null, type);
+  }
+
+  static Type type(ColorId type) {
+    return new JSTypeOrColor(null, type);
   }
 
   static Type type(JSType type, Color color) {
