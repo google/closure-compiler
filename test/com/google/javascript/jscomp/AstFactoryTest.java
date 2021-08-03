@@ -1537,7 +1537,7 @@ public class AstFactoryTest {
   public void testCreateAssignFromNodes_colors() {
     AstFactory astFactory = createTestAstFactoryWithColors();
 
-    Node lhs = astFactory.createName("x", StandardColors.STRING);
+    Node lhs = astFactory.createName("x", type(StandardColors.STRING));
     Node rhs = astFactory.createNumber(0);
 
     Node assign = astFactory.createAssign(lhs, rhs);
@@ -1861,7 +1861,7 @@ public class AstFactoryTest {
     // When
     Node newExpr =
         astFactory.createNewNode(
-            astFactory.createName("Example", classNode.getColor()), first, second);
+            astFactory.createName("Example", type(classNode.getColor())), first, second);
 
     // Then
     assertNode(newExpr).isEquivalentTo(expected);

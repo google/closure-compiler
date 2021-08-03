@@ -38,6 +38,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     super.setUp();
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -168,9 +169,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  var x$0, y$1;",
             "  alert(y$1);",
             "}"));
-    test(
-        "var x, y; for (let x, y;;) {}",
-        "var x, y; for (var x$0 = undefined, y$1 = undefined;;) {}");
+    test("var x, y; for (let x, y;;) {}", "var x, y; for (var x$0 = void 0, y$1 = void 0;;) {}");
   }
 
   @Test
@@ -185,7 +184,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "  if (b) {",
             "    let x;",
-            "    assert(x === undefined);",
+            "    assert(x === void 0);",
             "  }",
             "  assert(x === 1);",
             "}"),
@@ -198,7 +197,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "  if (b) {",
             "    var x$1;",
-            "    assert(x$1 === undefined);",
+            "    assert(x$1 === void 0);",
             "  }",
             "  assert(x === 1);",
             "}"));
@@ -211,7 +210,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    assert(x === 2);",
             "    if (b) {",
             "      let x;",
-            "      assert(x === undefined);",
+            "      assert(x === void 0);",
             "    }",
             "  }",
             "}"),
@@ -222,7 +221,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    assert(x === 2);",
             "    if (b) {",
             "      var x$0;",
-            "      assert(x$0 === undefined);",
+            "      assert(x$0 === void 0);",
             "    }",
             "  }",
             "}"));
@@ -293,25 +292,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  }",
             "}"));
 
-    test(
-        "for (let i = 0;;) { let i; }",
-        "for (var i = 0;;) { var i$0 = undefined; }");
+    test("for (let i = 0;;) { let i; }", "for (var i = 0;;) { var i$0 = void 0; }");
 
     test(
         "for (let i = 0;;) {} let i;",
         "for (var i$0 = 0;;) {} var i;");
 
     test(
-        lines(
-            "for (var x in y) {",
-            "  /** @type {number} */",
-            "  let i;",
-            "}"),
-        lines(
-            "for (var x in y) {",
-            "  /** @type {number} */",
-            "  var i = undefined;",
-            "}"));
+        lines("for (var x in y) {", "  /** @type {number} */", "  let i;", "}"),
+        lines("for (var x in y) {", "  var i = void 0;", "}"));
 
     test(
         lines(
@@ -513,46 +502,43 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "  x++;",
             "}"));
 
-    // Preserve type annotation
     test(
         "for (;;) { /** @type {number} */ let x = 3; var f = function() { return x; } }",
         lines(
             "var $jscomp$loop$0 = {};",
             "for (;;$jscomp$loop$0 = ",
             "    {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1}) {",
-            "  /** @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() { return $jscomp$loop$0.$jscomp$loop$prop$x$1}",
             "  }($jscomp$loop$0);",
             "}"));
 
-    // Preserve inline type annotation
     test(
         "for (;;) { let /** number */ x = 3; var f = function() { return x; } }",
         lines(
             "var $jscomp$loop$0 = {};",
             "for (;;",
             "    $jscomp$loop$0 = {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1}) {",
-            "  /** @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() { return $jscomp$loop$0.$jscomp$loop$prop$x$1}",
             "  }($jscomp$loop$0);",
             "}"));
 
-    // Preserve inline type annotation and constancy
+    // Preserve constancy
     test(
         "for (;;) { const /** number */ x = 3; var f = function() { return x; } }",
         lines(
             "var $jscomp$loop$0 = {};",
             "for (;;",
             "    $jscomp$loop$0 = {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1}) {",
-            "  /** @const @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
+            "  /** @const */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() { return $jscomp$loop$0.$jscomp$loop$prop$x$1}",
             "  }($jscomp$loop$0);",
             "}"));
 
-    // Preserve inline type annotation on declaration lists
     test(
         lines(
             "for (;;) { let /** number */ x = 3, /** number */ y = 4;",
@@ -561,15 +547,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "var $jscomp$loop$0 = {};",
             "for (;;$jscomp$loop$0 = {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1,",
             "    $jscomp$loop$prop$y$2: $jscomp$loop$0.$jscomp$loop$prop$y$2}) {",
-            "  /** @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
-            "  /** @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$y$2 = 4;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$y$2 = 4;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() { return $jscomp$loop$0.$jscomp$loop$prop$x$1",
             " + $jscomp$loop$0.$jscomp$loop$prop$y$2}",
             "  }($jscomp$loop$0);",
             "}"));
 
-    // Preserve inline type annotation and constancy on declaration lists
+    // Preserve constancy on declaration lists
     test(
         lines(
             "for (;;) { const /** number */ x = 3, /** number */ y = 4;",
@@ -578,8 +564,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "var $jscomp$loop$0 = {};",
             "for (;;$jscomp$loop$0 = {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1,",
             "     $jscomp$loop$prop$y$2: $jscomp$loop$0.$jscomp$loop$prop$y$2}) {",
-            "  /** @const @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
-            "  /** @const @type {number} */ $jscomp$loop$0.$jscomp$loop$prop$y$2 = 4;",
+            "  /** @const */ $jscomp$loop$0.$jscomp$loop$prop$x$1 = 3;",
+            "  /** @const */ $jscomp$loop$0.$jscomp$loop$prop$y$2 = 4;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() {",
             "        return $jscomp$loop$0.$jscomp$loop$prop$x$1 ",
@@ -589,7 +575,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
 
     // No-op, vars don't need transpilation
-    testSame("for (;;) { var /** number */ x = 3; var f = function() { return x; } }");
+    testSame("for (;;) { var x = 3; var f = function() { return x; } }");
 
     test(
         lines("var i;", "for (i = 0;;) {", "  let x = 0;", "  var f = function() { x; };", "}"),
@@ -650,7 +636,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "var $jscomp$loop$0 = {};",
             "for(;;",
             "    $jscomp$loop$0 = {$jscomp$loop$prop$x$1: $jscomp$loop$0.$jscomp$loop$prop$x$1}) {",
-            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = undefined;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = void 0;",
             "  foo(function($jscomp$loop$0) {",
             "    return function() {",
             "      return $jscomp$loop$0.$jscomp$loop$prop$x$1;",
@@ -875,7 +861,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "for (; i < 10;",
             "   $jscomp$loop$2 = {$jscomp$loop$prop$i$0$3: $jscomp$loop$2.$jscomp$loop$prop$i$0$3,",
             "    $jscomp$loop$prop$j$1$4: $jscomp$loop$2.$jscomp$loop$prop$j$1$4}, i++) {",
-            "    $jscomp$loop$2.$jscomp$loop$prop$i$0$3 = undefined;",
+            "    $jscomp$loop$2.$jscomp$loop$prop$i$0$3 = void 0;",
             "    $jscomp$loop$2.$jscomp$loop$prop$j$1$4 = 0;",
             "  arr.push((function($jscomp$loop$2) {",
             "      return function() { ",
@@ -1337,8 +1323,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         lines(
             "var $jscomp$loop$0 = {};",
             "while(true) {",
-            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = undefined;",
-            "  $jscomp$loop$0.$jscomp$loop$prop$y$2 = undefined;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$1 = void 0;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$y$2 = void 0;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() {",
             "      $jscomp$loop$0.$jscomp$loop$prop$x$1 = 1;",
@@ -1362,8 +1348,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         lines(
             "var $jscomp$loop$0 = {};",
             "while(true) {",
-            "  $jscomp$loop$0.$jscomp$loop$prop$x$2 = undefined;",
-            "  $jscomp$loop$0.$jscomp$loop$prop$y$1 = undefined;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$x$2 = void 0;",
+            "  $jscomp$loop$0.$jscomp$loop$prop$y$1 = void 0;",
             "  var f = function($jscomp$loop$0) {",
             "    return function() {",
             "      $jscomp$loop$0.$jscomp$loop$prop$y$1 = 2;",
@@ -1468,78 +1454,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "    }($jscomp$loop$0));",
             "  }",
             "}"));
-  }
-
-  @Test
-  public void testRenameJsDoc() {
-    test(lines(
-        "function f() {",
-        "  let Foo = 4;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */",
-        "    let Foo = function(){};",
-        "    let /** Foo */ f = new Foo;",
-        "    return f;",
-        "  }",
-        "}"),
-        lines(
-        "function f() {",
-        "  var Foo = 4;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */",
-        "    var Foo$0 = function(){};",
-        "    var /** Foo$0 */ f$1 = new Foo$0;",
-        "    return f$1;",
-        "  }",
-        "}"));
-
-    test(lines(
-        "function f() {",
-        "  let Foo = 4;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */",
-        "    let Foo = function(){};",
-        "    let f = /** @param {Foo} p1 @return {Foo} */ function(p1) {",
-        "        return new Foo;",
-        "    };",
-        "    return f;",
-        "  }",
-        "}"),
-        lines(
-        "function f() {",
-        "  var Foo = 4;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */",
-        "    var Foo$0 = function(){};",
-        "    var f$1 = /** @param {Foo$0} p1 @return {Foo$0} */ function(p1) {",
-        "        return new Foo$0;",
-        "    };",
-        "    return f$1;",
-        "  }",
-        "}"));
-
-    test(lines(
-        "function f() {",
-        "  let Foo = 4;",
-        "  let Bar = 5;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */ let Foo = function(){};",
-        "    /** @constructor */ let Bar = function(){};",
-        "    let /** Foo | Bar */ f = new Foo;",
-        "    return f;",
-        "  }",
-        "}"),
-        lines(
-        "function f() {",
-        "  var Foo = 4;",
-        "  var Bar = 5;",
-        "  if (Foo > 2) {",
-        "    /** @constructor */ var Foo$0 = function(){};",
-        "    /** @constructor */ var Bar$1 = function(){};",
-        "    var /** Foo$0 | Bar$1 */ f$2 = new Foo$0;",
-        "    return f$2;",
-        "  }",
-        "}"));
   }
 
   @Test

@@ -127,10 +127,6 @@ final class AstFactory {
     checkState(!this.isAddingColors(), "method not supported for colors");
   }
 
-  private void assertNotAddingJSTypes() {
-    checkState(!this.isAddingTypes(), "method not supported for JSTypes");
-  }
-
   /**
    * Returns a new EXPR_RESULT node.
    *
@@ -461,11 +457,6 @@ final class AstFactory {
     Node result = IR.name(name);
     setJSTypeOrColor(type(nativeType, StandardColors.UNKNOWN), result);
     return result;
-  }
-
-  Node createName(String name, Color color) {
-    assertNotAddingJSTypes();
-    return createName(name, type(unknownType, color));
   }
 
   Node createName(String name, Type type) {
