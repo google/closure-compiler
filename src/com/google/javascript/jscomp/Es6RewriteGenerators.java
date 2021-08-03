@@ -1453,8 +1453,7 @@ final class Es6RewriteGenerators implements CompilerPass {
       Node callContextMethod(
           Node sourceNode, String methodName, AstFactory.Type type, Node... args) {
         Node contextField = getContextField(sourceNode, methodName);
-        Node callNode = astFactory.createCall(contextField, type, args).srcref(sourceNode);
-        return callNode;
+        return astFactory.createCall(contextField, type, args).srcref(sourceNode);
       }
 
       /** Creates node that make a call to a context function. */
