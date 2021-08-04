@@ -102,6 +102,12 @@ FileSystemFlags.prototype.create;
 FileSystemFlags.prototype.exclusive;
 
 /**
+ * @see http://www.w3.org/TR/file-system-api/#the-entry-interface
+ * @constructor
+ */
+function Entry() {};
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
  * @constructor
  * @extends {Entry}
@@ -159,12 +165,6 @@ function DirectoryReader() {};
  */
 DirectoryReader.prototype.readEntries = function(
     successCallback, errorCallback) {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#the-entry-interface
- * @constructor
- */
-function Entry() {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-isFile
