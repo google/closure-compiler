@@ -1159,6 +1159,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @GwtIncompatible("Unnecessary")
   protected int doRun() throws IOException {
+    CompileMetricsRecorderInterface metricsRecorder = getCompileMetricsRecorder();
+    metricsRecorder.recordActionStart();
     if (this.config.printVersion) {
       this.defaultJsOutput.println(this.getVersionText());
       this.defaultJsOutput.flush();
@@ -1274,26 +1276,30 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     } else if (options.getInstrumentForCoverageOnly()) {
       result = instrumentForCoverage();
     } else if (config.shouldSaveAfterStage1()) {
-      result = performStage1andSave(config.getSaveCompilationStateToFilename());
+      result = performStage1andSave(config.getSaveCompilationStateToFilename(), metricsRecorder);
     } else if (typedAstListInputFilename != null) {
-      result = parseAndPerformStages2and3();
+      result = parseAndPerformStages2and3(metricsRecorder);
     } else if (config.shouldRestoreAndPerformStage2AndSave()) {
       result =
           restoreAndPerformStage2AndSave(
               config.getContinueSavedCompilationFileName(),
-              config.getSaveCompilationStateToFilename());
+              config.getSaveCompilationStateToFilename(),
+              metricsRecorder);
     } else if (config.shouldRestoreAndPerformStages2And3()) {
-      result = restoreAndPerformStages2and3(config.getContinueSavedCompilationFileName());
+      result =
+          restoreAndPerformStages2and3(
+              config.getContinueSavedCompilationFileName(), metricsRecorder);
       if (modules != null) {
         modules = ImmutableList.copyOf(compiler.getModules());
       }
     } else if (config.shouldRestoreAndPerformStage3()) {
-      result = restoreAndPerformStage3(config.getContinueSavedCompilationFileName());
+      result =
+          restoreAndPerformStage3(config.getContinueSavedCompilationFileName(), metricsRecorder);
       if (modules != null) {
         modules = ImmutableList.copyOf(compiler.getModules());
       }
     } else {
-      result = performFullCompilation();
+      result = performFullCompilation(metricsRecorder);
     }
 
     if (createCommonJsModules) {
@@ -1311,16 +1317,29 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    return processResults(result, modules, options);
+    int exitStatus = processResults(result, modules, options);
+    metricsRecorder.recordResultMetrics(compiler, result);
+    return exitStatus;
+  }
+
+  /**
+   * Child classes should override this if they want to actually record metrics about the
+   * compilation.
+   */
+  protected CompileMetricsRecorderInterface getCompileMetricsRecorder() {
+    return new DummyCompileMetricsRecorder();
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result performStage1andSave(String filename) {
+  private Result performStage1andSave(
+      String filename, CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("stage 1");
     Result result;
     try (BufferedOutputStream serializedOutputStream =
         new BufferedOutputStream(new FileOutputStream(filename))) {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage1Passes();
       }
       if (!compiler.hasErrors()) {
@@ -1349,9 +1368,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result parseAndPerformStages2and3() {
+  private Result parseAndPerformStages2and3(CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("skip-checks compile");
     try {
       compiler.parseForCompilation();
+      metricsRecorder.recordStartState(compiler);
       if (!compiler.hasErrors()) {
         compiler.stage2Passes();
         if (!compiler.hasErrors()) {
@@ -1368,11 +1389,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result restoreAndPerformStage2AndSave(String inputFilename, String outputFilename) {
+  private Result restoreAndPerformStage2AndSave(
+      String inputFilename,
+      String outputFilename,
+      CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("stage 2/3");
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(inputFilename))) {
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage2Passes();
         if (!compiler.hasErrors()) {
           try (BufferedOutputStream serializedOutputStream =
@@ -1395,11 +1421,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result restoreAndPerformStages2and3(String filename) {
+  private Result restoreAndPerformStages2and3(
+      String filename, CompileMetricsRecorderInterface metricsRecorder) {
+    // From the outside this looks like the second stage of a 2-stage compile.
+    metricsRecorder.recordActionName("stage 2/2");
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage2Passes();
         if (!compiler.hasErrors()) {
           compiler.stage3Passes();
@@ -1417,11 +1447,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result restoreAndPerformStage3(String filename) {
+  private Result restoreAndPerformStage3(
+      String filename, CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("stage 3/3");
     try (BufferedInputStream serializedInputStream =
         new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage3Passes();
       }
       compiler.performPostCompilationTasks();
@@ -1436,11 +1469,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result performFullCompilation() {
+  private Result performFullCompilation(CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("full compile");
     Result result;
     try {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage1Passes();
         if (!compiler.hasErrors()) {
           compiler.stage2Passes();
