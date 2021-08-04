@@ -266,7 +266,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      doStatementNormalizations(t, n);
+      doStatementNormalizations(n);
       return true;
     }
 
@@ -304,6 +304,12 @@ class Normalize implements CompilerPass {
         case CAST:
           compiler.reportChangeToEnclosingScope(n);
           n.replaceWith(n.removeFirstChild());
+          break;
+
+        case ASSIGN_OR:
+        case ASSIGN_AND:
+        case ASSIGN_COALESCE:
+          rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(t, n);
           break;
 
         default:
@@ -402,7 +408,7 @@ class Normalize implements CompilerPass {
     }
 
     /** Do normalizations that introduce new siblings or parents. */
-    private void doStatementNormalizations(NodeTraversal t, Node n) {
+    private void doStatementNormalizations(Node n) {
       if (n.isLabel()) {
         normalizeLabels(n);
       }
@@ -423,12 +429,9 @@ class Normalize implements CompilerPass {
         moveNamedFunctions(n.getLastChild());
       }
 
-      if (NodeUtil.isCompoundAssignmentOp(n)) {
-        if (NodeUtil.isLogicalAssignmentOp(n)) {
-          rewriteLogicalAssignmentOperatorsHelper.visitLogicalAssignmentOperator(t, n);
-        } else {
-          normalizeAssignShorthand(n);
-        }
+      if (NodeUtil.isCompoundAssignmentOp(n) && !NodeUtil.isLogicalAssignmentOp(n)) {
+        // Logical assignments should be handled in visit(), not here
+        normalizeAssignShorthand(n);
       }
     }
 

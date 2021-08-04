@@ -399,6 +399,34 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLogicalAssignmentNestedName() {
+    test(
+        srcs("a ||= (b &&= (c ??= d));"), //
+        expected("a || (a = (b && (b = (c ?? (c = d)))));"));
+  }
+
+  @Test
+  public void logicalAssignmentNestedPropertyReference() {
+    test(
+        lines(
+            "const foo = {}, bar = {};", //
+            "foo.x ||= (foo.y &&= (bar.z ??= 'something'));"),
+        lines(
+            "const foo = {}; const bar = {};", //
+            "let $jscomp$logical$assign$tmpm1146332801$0;",
+            "let $jscomp$logical$assign$tmpm1146332801$1;",
+            "let $jscomp$logical$assign$tmpm1146332801$2;",
+            "($jscomp$logical$assign$tmpm1146332801$2 = foo).x",
+            "   ||",
+            "($jscomp$logical$assign$tmpm1146332801$2.x",
+            " = ($jscomp$logical$assign$tmpm1146332801$1 = foo).y",
+            "   &&",
+            "($jscomp$logical$assign$tmpm1146332801$1.y",
+            " = ($jscomp$logical$assign$tmpm1146332801$0 = bar).z",
+            "   ?? ($jscomp$logical$assign$tmpm1146332801$0.z = 'something')));"));
+  }
+
+  @Test
   public void testDuplicateVarInExterns() {
     test(
         externs("var extern;"),

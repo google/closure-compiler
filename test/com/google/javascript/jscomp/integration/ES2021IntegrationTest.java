@@ -51,6 +51,14 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
     return options;
   }
 
+  private CompilerOptions optimizedWithoutTranspilationCompilerOptions() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    return options;
+  }
+
   private CompilerOptions fullyOptimizedCompilerOptions() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -102,6 +110,46 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
             "window.a = function() {", //
             "  return '2';",
             "};"));
+  }
+
+  @Test
+  public void logicalAssignmentSimpleNotTranspiledOutput() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "let x = 0, y = {}", //
+            "alert(x ??= y)"),
+        lines(
+            "let a = 0, b = {}", //
+            "alert(a ??= b)"));
+  }
+
+  @Test
+  public void logicalAssignmentPropertyReferenceNotTranspiledOutput1() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const foo = {}", //
+            "foo.x &&= 'something';"),
+        lines("let a; (a = {}).a && (a.a = 'something')"));
+  }
+
+  @Test
+  public void logicalAssignmentPropertyReferenceNotTranspiledOutput2() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const foo = {}, bar = {};", //
+            "alert(foo.x ||= (foo.y &&= (bar.z ??= 'something')));"),
+        lines(
+            "const a = {}, b = {};", //
+            "alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))))"));
   }
 
   @Test
@@ -213,5 +261,46 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         lines(
             "const a = {}, b = {};", //
             "alert(a[void 0] || (a[void 0] = a[1] && (a[1] = b.z ?? (b.z = 'something'))))"));
+  }
+
+  @Test
+  public void logicalAsssignmentsSimpleCastType_supportedOnlyWithoutTranspilation() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("let x").buildExternsFile("externs"));
+
+    test(options, "/** @type {?} */ (x) ||= 's'", "x ||= 's'");
+  }
+
+  @Test
+  public void logicalAsssignmentsPropertyReferenceCastType_supportedOnlyWithoutTranspilation() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const obj = {};", //
+            "obj.baa = true;",
+            "/** @type {?} */ (obj.baa) &&= 5"),
+        lines(
+            "const a = {a:!0}", //
+            "a.a && (a.a = 5)"));
+  }
+
+  @Test
+  public void logicalAsssignmentsPropRefWithElementCastType_supportedOnlyWithoutTranspilation() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("let foo, x").buildExternsFile("externs"));
+
+    test(
+        options,
+        "/** @type {number} */ (foo[x]) ??= 5",
+        lines(
+            "let a, b;", //
+            "(a = foo)[b = x] ?? (a[b] = 5)"));
   }
 }
