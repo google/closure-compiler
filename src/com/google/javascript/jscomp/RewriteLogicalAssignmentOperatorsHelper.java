@@ -46,6 +46,15 @@ class RewriteLogicalAssignmentOperatorsHelper {
 
     Node replacement;
 
+    while (left.isCast()) {
+      // This pass runs after type checking, which is what requires the CAST nodes.
+      // They aren't needed after that, but they are still in the AST until
+      // Normalization removes them. So, it's safe to just remove this CAST now to simplify things.
+      // If this pass moves after Normalization, then it will no longer be necessary to check for
+      // CAST nodes.
+      left = left.removeFirstChild();
+    }
+
     if (left.isName()) {
       replacement = handleLHSName(logicalAssignment, left, right);
 

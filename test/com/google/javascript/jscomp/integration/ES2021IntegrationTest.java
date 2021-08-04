@@ -303,4 +303,45 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
             "let a, b;", //
             "(a = foo)[b = x] ?? (a[b] = 5)"));
   }
+
+  @Test
+  public void logicalAsssignmentsSimpleCastType_supportedWithTranspilation() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("let x").buildExternsFile("externs"));
+
+    test(options, "/** @type {?} */ (x) ||= 's'", "x || (x = 's')");
+  }
+
+  @Test
+  public void logicalAsssignmentsPropertyReferenceCastType_supportedWithTranspilation() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "const obj = {};", //
+            "obj.baa = true;",
+            "/** @type {?} */ (obj.baa) &&= 5"),
+        lines(
+            "const a = {a:!0}", //
+            "a.a && (a.a = 5)"));
+  }
+
+  @Test
+  public void logicalAsssignmentsPropRefWithElementCastType_supportedWithTranspilation() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("let foo, x").buildExternsFile("externs"));
+
+    test(
+        options,
+        "/** @type {number} */ (foo[x]) ??= 5",
+        lines(
+            "let a, b;", //
+            "(a = foo)[b = x] ?? (a[b] = 5)"));
+  }
 }
