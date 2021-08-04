@@ -79,13 +79,8 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2020 = ES2020_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES2021_MODULES =
-      ES2020_MODULES.with(LangVersion.ES2021.features());
-
-  public static final FeatureSet ES2021 = ES2021_MODULES.without(Feature.MODULES);
-
   // Set of all fully supported features, even those part of language versions not fully supported
-  public static final FeatureSet ES_NEXT = ES2021_MODULES.with(LangVersion.ES_NEXT.features());
+  public static final FeatureSet ES_NEXT = ES2020_MODULES.with(LangVersion.ES_NEXT.features());
 
   // Set of features fully supported in checks, even those not fully supported in optimizations
   public static final FeatureSet ES_NEXT_IN = ES_NEXT.with(LangVersion.ES_NEXT_IN.features());
@@ -124,7 +119,6 @@ public final class FeatureSet implements Serializable {
     ES2018,
     ES2019,
     ES2020,
-    ES2021,
     ES_NEXT_IN,
     ES_NEXT,
     ES_UNSUPPORTED,
@@ -222,12 +216,10 @@ public final class FeatureSet implements Serializable {
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
     OPTIONAL_CHAINING("Optional chaining", LangVersion.ES2020),
 
-    // ES 2021 Stage 4
-    NUMERIC_SEPARATOR("numeric separator", LangVersion.ES2021),
-    LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES2021),
-
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
+    NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT), // Part of ES2021
+    LOGICAL_ASSIGNMENT("Logical assignments", LangVersion.ES_NEXT),
 
     // ES_NEXT_IN: Features fully supported in checks, but not yet fully supported in optimizations
 
@@ -286,9 +278,6 @@ public final class FeatureSet implements Serializable {
     }
     if (ES2020_MODULES.contains(this)) {
       return "es_2020";
-    }
-    if (ES2021_MODULES.contains(this)) {
-      return "es_2021";
     }
     if (ES_NEXT.contains(this)) {
       return "es_next";
@@ -443,8 +432,6 @@ public final class FeatureSet implements Serializable {
         return ES2019;
       case "es_2020":
         return ES2020;
-      case "es_2021":
-        return ES2021;
       case "es_next":
         return ES_NEXT;
       case "es_next_in":

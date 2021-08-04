@@ -2975,9 +2975,6 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2020. */
     ECMASCRIPT_2020,
 
-    /** ECMAScript standard approved in 2021. */
-    ECMASCRIPT_2021,
-
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
@@ -3051,8 +3048,6 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES2019_MODULES;
         case ECMASCRIPT_2020:
           return FeatureSet.ES2020_MODULES;
-        case ECMASCRIPT_2021:
-          return FeatureSet.ES2021_MODULES;
         case ECMASCRIPT_NEXT:
           return FeatureSet.ES_NEXT;
         case NO_TRANSPILE:
