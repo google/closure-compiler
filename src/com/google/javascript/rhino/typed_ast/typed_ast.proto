@@ -270,8 +270,6 @@ enum NodeProperty {
   SYNTHETIC = 3;
   // Used to indicate BLOCK that is added
   ADDED_BLOCK = 4;
-  // Function or constructor call side effect flags.
-  SIDE_EFFECT_FLAGS = 5;
   // The variable or property is constant.
   // TODO(lukes): either document the differences or otherwise reconcile with
   // CONSTANT_VAR_FLAGS
@@ -320,9 +318,6 @@ enum NodeProperty {
   COMPUTED_PROP_SETTER = 25;
   // A computed property that's a variable, e.g. [prop]: string;
   COMPUTED_PROP_VARIABLE = 26;
-  // Used to attach TypeDeclarationNode ASTs to Nodes which represent a typed
-  // NAME or FUNCTION.
-  DECLARED_TYPE_EXPR = 27;
   // Indicates that this epxression was casted but we don't necessarily know to
   // which type
   COLOR_FROM_CAST = 28;
@@ -331,8 +326,6 @@ enum NodeProperty {
   // Indicates that a SCRIPT node is a goog.module. Remains set after the
   // goog.module is desugared.
   GOOG_MODULE = 30;
-  // Attaches a FeatureSet to SCRIPT nodes.
-  FEATURE_SET = 32;
   // Indicates that a SCRIPT represents a transpiled file
   TRANSPILED = 34;
   // For passes that work only on deleted funs.

@@ -1068,10 +1068,7 @@ public class Node {
         return Prop.START_OF_OPT_CHAIN;
       case TRAILING_COMMA:
         return Prop.TRAILING_COMMA;
-      case FEATURE_SET:
-      case SIDE_EFFECT_FLAGS:
       case CONSTANT_VAR_FLAGS:
-      case DECLARED_TYPE_EXPR:
         // We'll need to reevaluate these once we support non-binary node properties
       case UNRECOGNIZED:
       case NODE_PROPERTY_UNSPECIFIED:
