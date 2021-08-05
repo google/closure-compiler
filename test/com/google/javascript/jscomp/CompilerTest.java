@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
@@ -2719,6 +2720,74 @@ public final class CompilerTest {
     assertThat(compiler.getErrors()).hasSize(1);
     assertError(getOnlyElement(compiler.getErrors()))
         .hasMessage("File strongly reachable from an entry point must not be weak: weak.js");
+  }
+
+  @Test
+  public void librariesInjectedInStage1_notReinjectedInStage2() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+
+    Compiler compiler = new Compiler();
+
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    compiler.init(ImmutableList.of(), inputs, options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.ensureLibraryInjected("base", /* force= */ true);
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    compiler.saveState(byteArrayOutputStream);
+    byteArrayOutputStream.close();
+
+    compiler = new Compiler();
+    compiler.init(ImmutableList.of(), inputs, options);
+    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
+
+    Node oldAst = compiler.getJsRoot().cloneTree();
+
+    // should not change the AST as 'base' was already injected.
+    compiler.ensureLibraryInjected("base", /* force= */ true);
+
+    assertNode(compiler.getJsRoot()).isEqualTo(oldAst);
+  }
+
+  @Test
+  public void injectLibrariesBeforeAndAfterStage1() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+
+    Compiler compiler = new Compiler();
+
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    compiler.init(ImmutableList.of(), inputs, options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.ensureLibraryInjected("base", /* force= */ true);
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    compiler.saveState(byteArrayOutputStream);
+    byteArrayOutputStream.close();
+
+    compiler = new Compiler();
+    compiler.init(ImmutableList.of(), inputs, options);
+
+    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
+
+    Node oldAst = compiler.getJsRoot().cloneTree();
+
+    compiler.ensureLibraryInjected("es6/set", /* force= */ true);
+
+    assertNode(compiler.getJsRoot()).isNotEqualTo(oldAst);
+
+    String source = compiler.toSource();
+    int jscompDefinition = source.indexOf("var $jscomp");
+    int jscompPolyfillDefinition = source.indexOf("$jscomp.polyfill");
+
+    // The definition of $jscomp.polyfill should be injected after the definition of 'var $jscomp',
+    // not before.
+    assertThat(jscompDefinition).isLessThan(jscompPolyfillDefinition);
   }
 
   @Test

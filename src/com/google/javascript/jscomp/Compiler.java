@@ -175,9 +175,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Warnings guard for filtering warnings.
   private WarningsGuard warningsGuard;
 
-  // Compile-time injected libraries. The node points to the last node of
-  // the library, so code can be inserted after.
-  private final Map<String, Node> injectedLibraries = new LinkedHashMap<>();
+  // Compile-time injected libraries
+  private final LinkedHashSet<String> injectedLibraries = new LinkedHashSet<>();
 
   // Node of the final injected library. Future libraries will be injected
   // after this node.
@@ -3436,7 +3435,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   protected Node ensureLibraryInjected(String resourceName, boolean force) {
     boolean shouldInject =
         force || (!options.skipNonTranspilationPasses && !options.preventLibraryInjection);
-    if (injectedLibraries.containsKey(resourceName) || !shouldInject) {
+    if (injectedLibraries.contains(resourceName) || !shouldInject) {
       return lastInjectedLibrary;
     }
 
@@ -3498,7 +3497,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       parent.addChildrenAfter(firstChild, lastInjectedLibrary);
     }
     lastInjectedLibrary = lastChild;
-    injectedLibraries.put(resourceName, lastChild);
+    injectedLibraries.add(resourceName);
 
     reportChangeToEnclosingScope(parent);
     return lastChild;
@@ -3570,8 +3569,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return compilerExecutor;
   }
 
-  /** Serializable state of the compiler. */
+  /**
+   * Serializable state of the compiler specific to multistage binary builds
+   *
+   * <p>Only contains state that does not make sense in 'multilevel' binary builds (where
+   * library-level TypedASTs are the input). Such state belongs in the jscomp.TypedAst proto.
+   */
   private static class CompilerState implements Serializable {
+
     private final FeatureSet featureSet;
     private final boolean typeCheckingHasRun;
     private final boolean hasRegExpGlobalReferences;
@@ -3587,6 +3592,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
+    private final LinkedHashSet<String> injectedLibraries;
+    private final int lastInjectedLibraryIndexInFirstScript;
 
     CompilerState(Compiler compiler) {
       this.featureSet = checkNotNull(compiler.featureSet);
@@ -3604,6 +3611,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.inputSourceMaps = compiler.inputSourceMaps;
       this.changeStamp = compiler.changeStamp;
       this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllModules());
+      this.injectedLibraries = compiler.injectedLibraries;
+      this.lastInjectedLibraryIndexInFirstScript =
+          compiler.lastInjectedLibrary != null
+              ? compiler.jsRoot.getFirstChild().getIndexOfChild(compiler.lastInjectedLibrary)
+              : -1;
     }
   }
 
@@ -3672,6 +3684,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     scriptNodeByFilename.clear();
     typeCheckingHasRun = compilerState.typeCheckingHasRun;
     injectedLibraries.clear();
+    injectedLibraries.addAll(compilerState.injectedLibraries);
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     setLifeCycleStage(compilerState.lifeCycleStage);
     moduleGraph = compilerState.moduleGraph;
@@ -3715,6 +3728,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // TypedASTs
     restoreCompilerInputsToJSModules(
         ImmutableList.copyOf(getModules()), compilerState.moduleToInputList);
+    lastInjectedLibrary =
+        compilerState.lastInjectedLibraryIndexInFirstScript != -1
+            ? jsRoot
+                .getFirstChild()
+                .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript)
+            : null;
 
     if (tracker != null) {
       tracker.updateAfterDeserialize(jsRoot);
