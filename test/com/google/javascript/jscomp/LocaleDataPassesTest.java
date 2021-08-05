@@ -1317,4 +1317,19 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
         LocaleDataPasses.LOCALE_FILE_MALFORMED,
         "Malformed locale data file. Object literal or alias expected");
   }
+
+  @Test
+  public void testMinimalInvalidGoogLocaleRef() {
+    multiTestProtectionError(
+        lines(
+            "/**",
+            " * @fileoverview", // no @localeFile
+            " */",
+            "goog.provide('some.Obj');",
+            "",
+            "console.log(goog.LOCALE);",
+            ""),
+        LocaleDataPasses.UNEXPECTED_GOOG_LOCALE,
+        "`goog.LOCALE` appears in a file lacking `@localeFile`.");
+  }
 }

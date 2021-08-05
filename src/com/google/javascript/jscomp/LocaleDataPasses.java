@@ -49,6 +49,10 @@ final class LocaleDataPasses {
   static final String GOOG_LOCALE_REPLACEMENT = "__JSC_LOCALE__";
   static final String LOCALE_VALUE_REPLACEMENT = "__JSC_LOCALE_VALUE__";
 
+  static final DiagnosticType UNEXPECTED_GOOG_LOCALE =
+      DiagnosticType.error(
+          "JSC_UNEXPECTED_GOOG_LOCALE", "`goog.LOCALE` appears in a file lacking `@localeFile`.");
+
   public static final DiagnosticType LOCALE_FILE_MALFORMED =
       DiagnosticType.error("JSC_LOCALE_FILE_MALFORMED", "Malformed locale data file. {0}");
 
@@ -99,6 +103,7 @@ final class LocaleDataPasses {
       NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
       NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
 
+      NodeTraversal.traverse(compiler, root, new CheckLocaleUsage(compiler));
       ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
       NodeTraversal.traverse(compiler, root, protectLocaleCallback);
       ExtractAndProtectLocaleData localeDataCallback = new ExtractAndProtectLocaleData(compiler);
@@ -110,6 +115,35 @@ final class LocaleDataPasses {
     public LocaleData getLocaleValuesDataMaps() {
       checkNotNull(localeData, "process must be called before getLocaleValuesDataMaps");
       return localeData;
+    }
+  }
+
+  private static class CheckLocaleUsage implements NodeTraversal.Callback {
+    private final AbstractCompiler compiler;
+
+    CheckLocaleUsage(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      // Skip any scripts that have the `@localeFile` annotation.
+      // They are expected to contain `goog.LOCALE`, so we don't need to check for it.
+      return !isScriptWithLocaleFileAnnotation(n);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (isGoogDotLocaleReference(n)) {
+        if (n.isFirstChildOf(parent) && NodeUtil.isAssignmentOp(parent)) {
+          // We're checking to make sure that any *read* of `goog.LOCALE` appears in a location that
+          // is formatted properly for late localization.
+          // Assignment to `goog.LOCALE` probably happens only in `closure/base.js`, and if it does
+          // happen somewhere else we should probably allow that, too.
+        } else {
+          compiler.report(JSError.make(n, UNEXPECTED_GOOG_LOCALE));
+        }
+      }
     }
   }
 
@@ -677,8 +711,6 @@ final class LocaleDataPasses {
    * them with a call to an extern value.
    */
   private static class ProtectCurrentLocale implements NodeTraversal.Callback {
-    private final Node qnameForGoogLocale = IR.getprop(IR.name("goog"), "LOCALE");
-
     private final AbstractCompiler compiler;
     private boolean replaced = false;
 
@@ -696,7 +728,7 @@ final class LocaleDataPasses {
       if (parent != null
           && parent.isAssign()
           && parent.getFirstChild() == n
-          && n.matchesQualifiedName(qnameForGoogLocale)) {
+          && isGoogDotLocaleReference(n)) {
 
         Node value = parent.getLastChild();
         Node replacement = IR.name(GOOG_LOCALE_REPLACEMENT);
@@ -709,6 +741,24 @@ final class LocaleDataPasses {
         replaced = true;
       }
     }
+  }
+
+  private static boolean isScriptWithLocaleFileAnnotation(Node n) {
+    if (!n.isScript()) {
+      return false;
+    } else {
+      JSDocInfo jsDocInfo = n.getJSDocInfo();
+      return jsDocInfo != null && jsDocInfo.isLocaleFile();
+    }
+  }
+
+  // matching against an actual Node is faster than matching against the string "goog.LOCALE"
+  private static final Node QNAME_FOR_GOOG_LOCALE = IR.getprop(IR.name("goog"), "LOCALE");
+
+  private static boolean isGoogDotLocaleReference(Node n) {
+    // NOTE: Theoretically there could be a local variable named `goog`, but it's not worth checking
+    // for that.
+    return n.matchesQualifiedName(QNAME_FOR_GOOG_LOCALE);
   }
 
   /**
