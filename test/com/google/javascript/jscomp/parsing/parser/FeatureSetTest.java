@@ -50,7 +50,8 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.ALL).contains(FeatureSet.ES_UNSUPPORTED);
     assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
-    assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2020);
+    assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2021);
+    assertFS(FeatureSet.ES2021).contains(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2020).contains(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2019).contains(FeatureSet.ES2018);
     assertFS(FeatureSet.ES2018).contains(FeatureSet.ES2017);
@@ -63,6 +64,7 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsModuleOrdering() {
+    assertFS(FeatureSet.ES2021_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2021);
     assertFS(FeatureSet.ES2020_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2019_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2018_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2018);
@@ -88,6 +90,8 @@ public final class FeatureSetTest {
     assertThat(FeatureSet.ES2019_MODULES.version()).isEqualTo("es_2019");
     assertThat(FeatureSet.ES2020.version()).isEqualTo("es_2020");
     assertThat(FeatureSet.ES2020_MODULES.version()).isEqualTo("es_2020");
+    assertThat(FeatureSet.ES2021.version()).isEqualTo("es_2021");
+    assertThat(FeatureSet.ES2021_MODULES.version()).isEqualTo("es_2021");
     assertThat(FeatureSet.ALL.version()).isEqualTo("all");
   }
 
@@ -98,7 +102,7 @@ public final class FeatureSetTest {
     // `version()` will return the lowest equivalent version that contains features.
     // This could be es_XXX, es_next, etc. and will change as new features are added and removed
     // from these `FeatureSet`s.
-    assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_2021");
     assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next_in");
     assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_next_in");
   }
@@ -115,6 +119,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es9")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es_2019")).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.valueOf("es_2020")).equals(FeatureSet.ES2020);
+    assertFS(FeatureSet.valueOf("es_2021")).equals(FeatureSet.ES2021);
     assertFS(FeatureSet.valueOf("es_next")).equals(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.valueOf("es_next_in")).equals(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.valueOf("es_unsupported")).equals(FeatureSet.ES_UNSUPPORTED);
