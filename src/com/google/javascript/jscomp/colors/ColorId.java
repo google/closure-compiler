@@ -63,11 +63,11 @@ public final class ColorId implements Serializable, LogsGson.Able {
   }
 
   public static ColorId fromBytes(ByteString bytes) {
-    return fromBytesAt(bytes, bytes.size(), BYTESTRING_AT);
+    return fromBytesAt(bytes, bytes.size(), ByteString::byteAt);
   }
 
   public static ColorId fromBytes(byte[] bytes) {
-    return fromBytesAt(bytes, bytes.length, BYTEARRAY_AT);
+    return fromBytesAt(bytes, bytes.length, (s, i) -> s[i]);
   }
 
   @VisibleForTesting
@@ -171,10 +171,6 @@ public final class ColorId implements Serializable, LogsGson.Able {
   private interface ByteAt<T> {
     byte get(T source, int index);
   }
-
-  private static final ByteAt<ByteString> BYTESTRING_AT = (s, i) -> s.byteAt(i);
-
-  private static final ByteAt<byte[]> BYTEARRAY_AT = (s, i) -> s[i];
 
   private static final ByteAt<String> ASCII_AT =
       (s, i) -> {
