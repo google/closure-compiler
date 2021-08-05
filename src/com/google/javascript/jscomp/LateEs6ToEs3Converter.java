@@ -18,18 +18,16 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,9 +50,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
           Feature.COMPUTED_PROPERTIES,
           Feature.MEMBER_DECLARATIONS,
           Feature.TEMPLATE_LITERALS);
-  // addTypes indicates whether we should add type information when transpiling.
-  private final boolean addTypes;
-  private final JSType stringType;
 
   // We want to insert the call to `var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...` just
   // before this node. For the first script, this node is right after the runtime injected function
@@ -69,10 +64,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.templateLiteralConverter = new Es6TemplateLiterals(compiler);
-    // Only add type information if typechecking has been run.
-    this.addTypes = compiler.hasTypeCheckingRun();
-    JSTypeRegistry registry = compiler.getTypeRegistry();
-    this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
   }
 
   @Override
@@ -133,8 +124,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
         }
         break;
       case TAGGED_TEMPLATELIT:
-        templateLiteralConverter.visitTaggedTemplateLiteral(
-            t, n, addTypes, templateLitInsertionPoint);
+        templateLiteralConverter.visitTaggedTemplateLiteral(t, n, templateLitInsertionPoint);
         break;
       case TEMPLATELIT:
         if (!parent.isTaggedTemplateLit()) {
@@ -187,7 +177,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
     checkArgument(obj.isObjectLit());
     List<Node> props = new ArrayList<>();
     Node currElement = obj.getFirstChild();
-    JSType objectType = obj.getJSType();
+    AstFactory.Type objectType = type(obj);
 
     while (currElement != null) {
       if (currElement.getBooleanProp(Node.COMPUTED_PROP_GETTER)
@@ -225,14 +215,14 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
         boolean isQuotedAccess = propdef.isQuotedString();
 
         propdef.setToken(Token.STRINGLIT);
-        propdef.setJSType(stringType);
+        propdef.setColor(StandardColors.STRING);
         propdef.putBooleanProp(Node.QUOTED_PROP, false);
 
         Node objNameNode = astFactory.createName(objName, objectType);
         Node access =
             isQuotedAccess
                 ? astFactory.createGetElem(objNameNode, propdef)
-                : astFactory.createGetProp(objNameNode, propdef.getString());
+                : astFactory.createGetProp(objNameNode, propdef.getString(), type(propdef));
         result = astFactory.createComma(astFactory.createAssign(access, val), result);
       }
     }

@@ -36,6 +36,7 @@ public final class StandardColors {
   // These IDs are randomly chosen.
   public static final ColorId ARGUMENTS_ID = ColorId.fromUnsigned(0x1939a66d);
   public static final ColorId ARRAY_ID = ColorId.fromUnsigned(0x79d4a603);
+  public static final ColorId I_TEMPLATE_ARRAY_ID = ColorId.fromUnsigned(0x46ab3f0e);
   public static final ColorId ITERATOR_ID = ColorId.fromUnsigned(0x417ed2ab);
   public static final ColorId ASYNC_ITERATOR_ITERABLE_ID = ColorId.fromUnsigned(0xcb382e0a);
   public static final ColorId PROMISE_ID = ColorId.fromUnsigned(0x39581abf);
@@ -180,6 +181,7 @@ public final class StandardColors {
           .add(ARRAY_ID)
           .add(ARGUMENTS_ID)
           .add(ASYNC_ITERATOR_ITERABLE_ID)
+          .add(I_TEMPLATE_ARRAY_ID)
           .add(ITERATOR_ID)
           .add(PROMISE_ID)
           .build();
