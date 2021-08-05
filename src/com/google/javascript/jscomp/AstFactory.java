@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -42,6 +43,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -71,6 +73,12 @@ final class AstFactory {
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
   private final JSType unknownType;
+  private static final Supplier<Color> bigintNumberStringColor =
+      Suppliers.memoize(
+          () ->
+              Color.createUnion(
+                  ImmutableSet.of(
+                      StandardColors.BIGINT, StandardColors.STRING, StandardColors.NUMBER)));
 
   enum TypeMode {
     JSTYPE,
@@ -390,6 +398,17 @@ final class AstFactory {
   }
 
   /**
+   * Creates a new `let` declaration statement for a single variable name.
+   *
+   * <p>Takes the type for the variable name from the value node.
+   *
+   * <p>e.g. `let variableName = value;`
+   */
+  Node createSingleLetNameDeclaration(String variableName, Node value) {
+    return IR.let(createName(variableName, type(value)), value);
+  }
+
+  /**
    * Creates a new `var` declaration statement for a single variable name with void type and no
    * JSDoc.
    *
@@ -581,6 +600,30 @@ final class AstFactory {
   }
 
   /**
+   * Creates a Node representing <receiver>.prototype
+   *
+   * <p>For example, given the AST for `Foo`, returns `Foo.prototype`
+   */
+  Node createPrototypeAccess(Node receiver) {
+    Node result = IR.getprop(receiver, "prototype");
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(getJsTypeForProperty(receiver, "prototype"));
+        break;
+      case COLOR:
+        ImmutableSet<Color> possiblePrototypes = receiver.getColor().getPrototypes();
+        result.setColor(
+            possiblePrototypes.isEmpty()
+                ? StandardColors.UNKNOWN
+                : Color.createUnion(possiblePrototypes));
+        break;
+      case NONE:
+        break;
+    }
+    return result;
+  }
+
+  /**
    * Creates an access of the given {@code qname} on {@code $jscomp.global}
    *
    * <p>For example, given "Object.defineProperties", returns an AST representation of
@@ -744,6 +787,41 @@ final class AstFactory {
       case NONE:
         break;
     }
+    return result;
+  }
+
+  Node createAdd(Node left, Node right) {
+    Node result = IR.add(left, right);
+    // Note: this result type could be made tighter if it proves useful for optimizations later on
+    // like setting the string type if both operands are strings.
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(getNativeType(JSTypeNative.BIGINT_NUMBER_STRING));
+        break;
+      case COLOR:
+        result.setColor(bigintNumberStringColor.get());
+        break;
+      case NONE:
+        break;
+    }
+    return result;
+  }
+
+  Node createSub(Node left, Node right) {
+    Node result = IR.sub(left, right);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
+    return result;
+  }
+
+  Node createInc(Node operand, boolean isPost) {
+    Node result = IR.inc(operand, isPost);
+    setJSTypeOrColor(type(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER), result);
+    return result;
+  }
+
+  Node createLessThan(Node left, Node right) {
+    Node result = IR.lt(left, right);
+    setJSTypeOrColor(type(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN), result);
     return result;
   }
 
@@ -1506,6 +1584,10 @@ final class AstFactory {
 
   static Type type(JSType type) {
     return new JSTypeOrColor(type, null);
+  }
+
+  static Type type(JSTypeNative type) {
+    return new JSTypeOrColor(type, (Color) null);
   }
 
   static Type type(Color type) {

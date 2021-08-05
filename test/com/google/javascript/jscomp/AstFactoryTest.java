@@ -923,6 +923,132 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateAdd_stringAndNumber_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node zero = astFactory.createNumber(0);
+    Node str = astFactory.createString("x");
+
+    Node add = astFactory.createAdd(zero, str);
+    assertNode(add).hasToken(Token.ADD);
+    assertThat(childList(add)).containsExactly(zero, str);
+    assertNode(add).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.BIGINT_NUMBER_STRING));
+  }
+
+  @Test
+  public void testCreateAdd_stringAndNumber_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node zero = astFactory.createNumber(0);
+    Node str = astFactory.createString("x");
+
+    Node add = astFactory.createAdd(zero, str);
+    assertNode(add).hasToken(Token.ADD);
+    assertThat(childList(add)).containsExactly(zero, str);
+    assertNode(add)
+        .hasColorThat()
+        .hasAlternates(StandardColors.BIGINT, StandardColors.NUMBER, StandardColors.STRING);
+  }
+
+  @Test
+  public void testCreateSub_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node sub = astFactory.createSub(zero, one);
+
+    assertNode(sub).hasToken(Token.SUB);
+    assertThat(childList(sub)).containsExactly(zero, one);
+    assertNode(sub).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
+  public void testCreateSub_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node sub = astFactory.createSub(zero, one);
+
+    assertNode(sub).hasToken(Token.SUB);
+    assertThat(childList(sub)).containsExactly(zero, one);
+    assertNode(sub).hasColorThat().isEqualTo(StandardColors.NUMBER);
+  }
+
+  @Test
+  public void testCreateLessThan_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node lt = astFactory.createLessThan(zero, one);
+
+    assertNode(lt).hasToken(Token.LT);
+    assertThat(childList(lt)).containsExactly(zero, one);
+    assertNode(lt).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void testCreateLessThan_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node zero = astFactory.createNumber(0);
+    Node one = astFactory.createNumber(1);
+
+    Node lt = astFactory.createLessThan(zero, one);
+
+    assertNode(lt).hasToken(Token.LT);
+    assertThat(childList(lt)).containsExactly(zero, one);
+    assertNode(lt).hasColorThat().isEqualTo(StandardColors.BOOLEAN);
+  }
+
+  @Test
+  public void testCreateInc_prefix_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node x = astFactory.createNameWithUnknownType("x");
+
+    Node inc = astFactory.createInc(x, /* isPost= */ false);
+
+    assertNode(inc).hasToken(Token.INC);
+    assertThat(inc.getBooleanProp(Node.INCRDECR_PROP)).isFalse();
+    assertThat(childList(inc)).containsExactly(x);
+    assertNode(inc).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
+  public void testCreateInc_postfix_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node x = astFactory.createNameWithUnknownType("x");
+
+    Node inc = astFactory.createInc(x, /* isPost= */ true);
+
+    assertNode(inc).hasToken(Token.INC);
+    assertThat(inc.getBooleanProp(Node.INCRDECR_PROP)).isTrue();
+    assertThat(childList(inc)).containsExactly(x);
+    assertNode(inc).hasJSTypeThat().isEqualTo(getNativeType(JSTypeNative.NUMBER_TYPE));
+  }
+
+  @Test
+  public void testCreateInc_prefix_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node x = astFactory.createNameWithUnknownType("x");
+
+    Node inc = astFactory.createInc(x, /* isPost= */ false);
+
+    assertNode(inc).hasToken(Token.INC);
+    assertThat(inc.getBooleanProp(Node.INCRDECR_PROP)).isFalse();
+    assertThat(childList(inc)).containsExactly(x);
+    assertNode(inc).hasColorThat().isEqualTo(StandardColors.NUMBER);
+  }
+
+  @Test
   public void testCreateCallWithTypeFromNode() {
     AstFactory astFactory = createTestAstFactory();
 
