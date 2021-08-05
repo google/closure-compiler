@@ -1267,14 +1267,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     if (config.skipNormalOutputs) {
+      metricsRecorder.recordActionName("skip normal outputs");
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
       compiler.orderInputsWithLargeStack();
     } else if (compiler.hasErrors()) {
+      metricsRecorder.recordActionName("initialization errors occurred");
       // init() or initModules() encountered an error.
       compiler.generateReport();
       result = compiler.getResult();
     } else if (options.getInstrumentForCoverageOnly()) {
-      result = instrumentForCoverage();
+      result = instrumentForCoverage(metricsRecorder);
     } else if (config.shouldSaveAfterStage1()) {
       result = performStage1andSave(config.getSaveCompilationStateToFilename(), metricsRecorder);
     } else if (typedAstListInputFilename != null) {
@@ -1372,8 +1374,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     metricsRecorder.recordActionName("skip-checks compile");
     try {
       compiler.parseForCompilation();
-      metricsRecorder.recordStartState(compiler);
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.stage2Passes();
         if (!compiler.hasErrors()) {
           compiler.stage3Passes();
@@ -1470,7 +1472,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   @GwtIncompatible("Unnecessary")
   private Result performFullCompilation(CompileMetricsRecorderInterface metricsRecorder) {
-    metricsRecorder.recordActionName("full compile");
+    // This is the code path taken when "building" a library by just checking it for errors
+    // and generating an .ijs file and also when doing a full compilation.
+    metricsRecorder.recordActionName(
+        compiler.getOptions().checksOnly ? "checks-only" : "full compile");
     Result result;
     try {
       compiler.parseForCompilation();
@@ -1495,11 +1500,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result instrumentForCoverage() {
+  private Result instrumentForCoverage(CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("instrument for coverage");
     Result result;
     try {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
         compiler.instrumentForCoverage();
       }
     } finally {
