@@ -126,11 +126,11 @@ public final class ReportDecoder {
       Map<String, InstrumentationPoint> mapping, Map<String, Long> frequencies) {
     // Decode each entry into InstrumentionPoint.
     Stream<InstrumentationPoint> instrumentationPoints =
-        frequencies.entrySet().stream()
+        mapping.entrySet().stream()
             .map(
                 (entry) ->
-                    mapping.get(entry.getKey()).toBuilder()
-                        .setTimesExecuted(entry.getValue())
+                    entry.getValue().toBuilder()
+                        .setTimesExecuted(frequencies.getOrDefault(entry.getKey(), 0L))
                         .build());
 
     // Group instrumentation points by files and convert them to FileProfile object, one per file.
