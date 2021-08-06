@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
-
   private static final String EXTERNS_BASE = new TestExternsBuilder().addJSCompLibraries().build();
 
   public Es6RewriteRestAndSpreadTest() {
@@ -59,6 +58,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeInfoValidation();
     enableTypeCheck();
+    replaceTypesWithColors();
   }
 
   // Spreading into array literals.
@@ -579,14 +579,12 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
   @Test
   public void testUnusedRestParameterAtPositionZeroWithTypingOnFunction() {
-    test(
-        "/** @param {...number} zero */ function f(...zero) {}",
-        "/** @param {...number} zero */ function f(zero) {}");
+    test("/** @param {...number} zero */ function f(...zero) {}", "function f(zero) {}");
   }
 
   @Test
   public void testUnusedRestParameterAtPositionZeroWithInlineTyping() {
-    test("function f(/** ...number */ ...zero) {}", "function f(/** ...number */ zero) {}");
+    test("function f(/** ...number */ ...zero) {}", "function f(zero) {}");
   }
 
   @Test
@@ -594,7 +592,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
         lines(
-            "/** @param {...number} two */",
             "function f(zero, one, two) {",
             "  var $jscomp$restParams = [];",
             "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
@@ -613,7 +610,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         "/** @param {...number} two */ var f = function(zero, one, ...two) { return two; }",
         lines(
-            "/** @param {...number} two */ var f = function(zero, one, two) {",
+            "var f = function(zero, one, two) {",
             "  var $jscomp$restParams = [];",
             "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
             "      ++$jscomp$restIndex) {",
@@ -631,7 +628,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test(
         "/** @param {...number} two */ ns.f = function(zero, one, ...two) { return two; }",
         lines(
-            "/** @param {...number} two */ ns.f = function(zero, one, two) {",
+            "ns.f = function(zero, one, two) {",
             "  var $jscomp$restParams = [];",
             "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
             "      ++$jscomp$restIndex) {",

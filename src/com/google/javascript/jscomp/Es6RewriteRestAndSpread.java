@@ -17,16 +17,14 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,34 +46,14 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private final AstFactory astFactory;
   private final StaticScope namespace;
 
-  private final JSType arrayType;
-  private final JSType boolType;
-  private final JSType concatFnType;
-  private final JSType nullType;
-  private final JSType numberType;
-  private final JSType functionFunctionType;
+  private static final AstFactory.Type arrayType = type(StandardColors.ARRAY_ID);
+  private static final AstFactory.Type concatFnType = type(StandardColors.TOP_OBJECT);
+  private static final AstFactory.Type numberType = type(StandardColors.NUMBER);
 
   public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
-
-    if (compiler.hasTypeCheckingRun()) {
-      JSTypeRegistry registry = compiler.getTypeRegistry();
-      this.arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
-      this.boolType = registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
-      this.concatFnType = arrayType.findPropertyType("concat");
-      this.nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
-      this.numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
-      this.functionFunctionType = registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
-    } else {
-      this.arrayType = null;
-      this.boolType = null;
-      this.concatFnType = null;
-      this.nullType = null;
-      this.numberType = null;
-      this.functionFunctionType = null;
-    }
   }
 
   @Override
@@ -123,12 +101,14 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     }
 
     // Don't insert these directly, just clone them.
-    Node newArrayName = IR.name(REST_PARAMS).setJSType(arrayType);
-    Node cursorName = IR.name(REST_INDEX).setJSType(numberType);
+    Node newArrayName = astFactory.createName(REST_PARAMS, arrayType);
+    Node cursorName = astFactory.createName(REST_INDEX, numberType);
 
     Node newBlock = IR.block().srcref(functionBody);
-    Node name = IR.name(paramName);
-    Node let = IR.let(name, newArrayName).srcrefTreeIfMissing(functionBody);
+    Node let =
+        astFactory
+            .createSingleLetNameDeclaration(paramName, newArrayName)
+            .srcrefTreeIfMissing(functionBody);
     newBlock.addChildToFront(let);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
@@ -138,33 +118,32 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       child = next;
     }
 
-    Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), arrayLitWithJSType());
+    Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), astFactory.createArraylit());
     functionBody.addChildToFront(newArrayDeclaration.srcrefTreeIfMissing(restParam));
 
     // TODO(b/74074478): Use a general utility method instead of an inlined loop.
     Node copyLoop =
-        IR.forNode(
-                IR.var(cursorName.cloneTree(), IR.number(restIndex).setJSType(numberType)),
-                IR.lt(
-                        cursorName.cloneTree(),
-                        IR.getprop(astFactory.createArgumentsReference(), "length")
-                            .setJSType(numberType))
-                    .setJSType(boolType),
-                IR.inc(cursorName.cloneTree(), false).setJSType(numberType),
-                IR.block(
-                    IR.exprResult(
-                        IR.assign(
-                                IR.getelem(
-                                    newArrayName.cloneTree(),
-                                    IR.sub(
-                                            cursorName.cloneTree(),
-                                            IR.number(restIndex).setJSType(numberType))
-                                        .setJSType(numberType)),
-                                IR.getelem(
-                                        astFactory.createArgumentsReference(),
-                                        cursorName.cloneTree())
-                                    .setJSType(numberType))
-                            .setJSType(numberType))))
+        astFactory
+            .createFor(
+                IR.var(cursorName.cloneTree(), astFactory.createNumber(restIndex)),
+                astFactory.createLessThan(
+                    cursorName.cloneTree(),
+                    astFactory.createGetProp(
+                        astFactory.createArgumentsReference(),
+                        "length",
+                        type(StandardColors.NUMBER))),
+                astFactory.createInc(cursorName.cloneTree(), false),
+                astFactory.createBlock(
+                    astFactory.exprResult(
+                        astFactory.createAssign(
+                            astFactory.createGetElem(
+                                newArrayName.cloneTree(),
+                                astFactory.createSub(
+                                    cursorName.cloneTree(), astFactory.createNumber(restIndex))),
+                            astFactory
+                                .createGetElem(
+                                    astFactory.createArgumentsReference(), cursorName.cloneTree())
+                                .setColor(StandardColors.NUMBER)))))
             .srcrefTreeIfMissing(restParam);
     copyLoop.insertAfter(newArrayDeclaration);
 
@@ -260,7 +239,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         }
       } else {
         if (currGroup == null) {
-          currGroup = arrayLitWithJSType();
+          currGroup = astFactory.createArraylit();
         }
         currGroup.addChildToBack(currElement);
       }
@@ -292,15 +271,15 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       baseArrayLit = groups.remove(0);
     } else {
       // [].concat(g0, g1, g2, ..., gn)
-      baseArrayLit = arrayLitWithJSType();
+      baseArrayLit = astFactory.createArraylit();
     }
 
     final Node joinedGroups;
     if (groups.isEmpty()) {
       joinedGroups = baseArrayLit;
     } else {
-      Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
-      joinedGroups = astFactory.createCall(concat, groups.toArray(new Node[0]));
+      Node concat = astFactory.createGetProp(baseArrayLit, "concat", concatFnType);
+      joinedGroups = astFactory.createCall(concat, type(spreadParent), groups.toArray(new Node[0]));
     }
 
     joinedGroups.srcrefTreeIfMissing(spreadParent);
@@ -357,24 +336,25 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         //
         // TODO(nickreid): Stop distringuishing between array literals and variables when this pass
         // is moved after type-checking.
-        Node baseArrayLit = groups.get(0).isArrayLit() ? groups.remove(0) : arrayLitWithJSType();
-        Node concat = IR.getprop(baseArrayLit, "concat").setJSType(concatFnType);
-        joinedGroups = IR.call(concat, groups.toArray(new Node[0])).setJSType(arrayType);
+        Node baseArrayLit =
+            groups.get(0).isArrayLit() ? groups.remove(0) : astFactory.createArraylit();
+        Node concat = astFactory.createGetProp(baseArrayLit, "concat", concatFnType);
+        joinedGroups = astFactory.createCall(concat, arrayType, groups.toArray(new Node[0]));
       }
     }
     boolean isFreeCall = spreadParent.getBooleanProp(Node.FREE_CALL);
 
     final Node callToApply;
     if (calleeMayHaveSideEffects && callee.isGetProp() && !isFreeCall) {
-      JSType receiverType = callee.getFirstChild().getJSType(); // Type of `foo()`.
-
       // foo().method(...[a, b, c])
       //   must convert to
       // var freshVar;
       // (freshVar = foo()).method.apply(freshVar, [a, b, c])
       Node freshVar =
-          IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get())
-              .setJSType(receiverType);
+          astFactory.createName(
+              FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get(),
+              // Type of `foo()`.
+              type(callee.getFirstChild()));
       Node freshVarDeclaration = IR.var(freshVar.cloneTree());
 
       Node statementContainingSpread = NodeUtil.getEnclosingStatement(spreadParent);
@@ -382,10 +362,13 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
       freshVarDeclaration.insertBefore(statementContainingSpread);
       callee.addChildToFront(
-          IR.assign(freshVar.cloneTree(), callee.removeFirstChild()).setJSType(receiverType));
+          astFactory.createAssign(freshVar.cloneTree(), callee.removeFirstChild()));
 
       callToApply =
-          IR.call(getpropInferringJSType(callee, "apply"), freshVar.cloneTree(), joinedGroups);
+          astFactory.createCallWithUnknownType(
+              astFactory.createGetPropWithUnknownType(callee, "apply"),
+              freshVar.cloneTree(),
+              joinedGroups);
     } else {
       // foo.method(...[a, b, c]) -> foo.method.apply(foo, [a, b, c])
       // foo['method'](...[a, b, c]) -> foo['method'].apply(foo, [a, b, c])
@@ -394,11 +377,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       Node context =
           (callee.isGetProp() || callee.isGetElem()) && !isFreeCall
               ? callee.getFirstChild().cloneTree()
-              : nullWithJSType();
-      callToApply = IR.call(getpropInferringJSType(callee, "apply"), context, joinedGroups);
+              : astFactory.createNull();
+      callToApply =
+          astFactory.createCall(
+              astFactory.createGetPropWithUnknownType(callee, "apply"),
+              type(spreadParent),
+              context,
+              joinedGroups);
     }
 
-    callToApply.setJSType(spreadParent.getJSType());
+    callToApply.setColor(spreadParent.getColor());
     callToApply.srcrefTreeIfMissing(spreadParent);
     spreadParent.replaceWith(callToApply);
     compiler.reportChangeToEnclosingScope(callToApply);
@@ -432,16 +420,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     if (groups.get(0).isArrayLit()) {
       baseArrayLit = groups.remove(0);
     } else {
-      baseArrayLit = arrayLitWithJSType();
+      baseArrayLit = astFactory.createArraylit();
     }
-    baseArrayLit.addChildToFront(nullWithJSType());
+    baseArrayLit.addChildToFront(astFactory.createNull());
     Node joinedGroups =
         groups.isEmpty()
             ? baseArrayLit
-            : IR.call(
-                    IR.getprop(baseArrayLit, "concat").setJSType(concatFnType),
-                    groups.toArray(new Node[0]))
-                .setJSType(arrayType);
+            : astFactory.createCall(
+                astFactory.createGetProp(baseArrayLit, "concat", concatFnType),
+                arrayType,
+                groups.toArray(new Node[0]));
 
     if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
       // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
@@ -456,56 +444,20 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // Function.prototype.bind.apply =>
     //      function(function(new:[spreadParent], ...?), !Array<?>):function(new:[spreadParent])
     Node bindApply =
-        getpropInferringJSType(
-            getpropInferringJSType(
-                getpropInferringJSType(
-                    IR.name("Function").setJSType(functionFunctionType), "prototype"),
+        astFactory.createGetPropWithUnknownType(
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createPrototypeAccess(astFactory.createName(this.namespace, "Function")),
                 "bind"),
             "apply");
     Node result =
         IR.newNode(
-                callInferringJSType(
+                astFactory.createCallWithUnknownType(
                     bindApply, callee, joinedGroups /* function(new:[spreadParent]) */))
-            .setJSType(spreadParent.getJSType());
+            .setColor(spreadParent.getColor());
 
     result.srcrefTreeIfMissing(spreadParent);
     spreadParent.replaceWith(result);
     compiler.reportChangeToEnclosingScope(result);
   }
 
-  private Node arrayLitWithJSType() {
-    return IR.arraylit().setJSType(arrayType);
-  }
-
-  private Node nullWithJSType() {
-    return IR.nullNode().setJSType(nullType);
-  }
-
-  private Node getpropInferringJSType(Node receiver, String propName) {
-    Node getprop = IR.getprop(receiver, propName);
-
-    JSType receiverType = receiver.getJSType();
-    if (receiverType == null) {
-      return getprop;
-    }
-
-    JSType getpropType = receiverType.findPropertyType(propName);
-    if (getpropType == null && receiverType instanceof FunctionType) {
-      getpropType = ((FunctionType) receiverType).getPropertyType(propName);
-    }
-
-    return getprop.setJSType(getpropType);
-  }
-
-  private Node callInferringJSType(Node callee, Node... args) {
-    Node call = IR.call(callee, args);
-
-    JSType calleeType = callee.getJSType();
-    if (!(calleeType instanceof FunctionType)) {
-      return call;
-    }
-
-    JSType returnType = ((FunctionType) calleeType).getReturnType();
-    return call.setJSType(returnType);
-  }
 }
