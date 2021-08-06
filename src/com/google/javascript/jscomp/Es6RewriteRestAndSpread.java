@@ -21,11 +21,8 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -36,11 +33,6 @@ import java.util.List;
 /** Converts REST parameters and SPREAD expressions. */
 public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
-
-  static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION =
-      DiagnosticType.warning(
-          "BAD_REST_PARAMETER_ANNOTATION",
-          "Missing \"...\" in type annotation for rest parameter.");
 
   // The name of the index variable for populating the rest parameter array.
   private static final String REST_INDEX = "$jscomp$restIndex";
@@ -123,25 +115,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // Swap the existing param into the list, moving requisite AST annotations.
     nameNode.setJSDocInfo(restParam.getJSDocInfo());
     restParam.replaceWith(nameNode.detach());
-
-    // Make sure rest parameters are typechecked.
-    JSDocInfo inlineInfo = restParam.getJSDocInfo();
-    JSDocInfo functionInfo = NodeUtil.getBestJSDocInfo(paramList.getParent());
-    final JSTypeExpression paramTypeAnnotation;
-    if (inlineInfo != null) {
-      paramTypeAnnotation = inlineInfo.getType();
-    } else if (functionInfo != null) {
-      paramTypeAnnotation = functionInfo.getParameterType(paramName);
-    } else {
-      paramTypeAnnotation = null;
-    }
-
-    // TODO(lharker): we should report this error in typechecking, not during transpilation, so
-    // that it also occurs when natively typechecking ES6.
-    if (paramTypeAnnotation != null
-        && paramTypeAnnotation.getRoot().getToken() != Token.ITER_REST) {
-      compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
-    }
 
     if (!functionBody.hasChildren()) {
       // If function has no body, we are done!

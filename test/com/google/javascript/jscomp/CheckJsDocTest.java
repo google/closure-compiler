@@ -783,6 +783,45 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testValidRestParameter() {
+    testNoWarning(srcs("function f(...args) {}"));
+    testNoWarning(srcs("/** @param {...string} args */ function f(...args) {}"));
+    testNoWarning(srcs("function f(...[x, y, ...args]) {}"));
+    testNoWarning(srcs("/** @param {...number} args */ function f(...[x, y, ...args]) {}"));
+    testNoWarning(srcs("function f(.../** ...string */ args) {}"));
+  }
+
+  @Test
+  public void testRestParameter_missingVarArgsInParamJSDoc() {
+    test(
+        srcs("/** @param {string} args */ function f(...args) {}"),
+        warning(CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION));
+  }
+
+  @Test
+  public void testRestParameter_missingVarArgsInDestructuringParamJSDoc() {
+    test(
+        srcs("/** @param {number} rest */ function f(...[x, y, ...args]) {}"),
+        warning(CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION));
+    test(
+        srcs(
+            lines(
+                "/**",
+                " * @param {number} p",
+                " * @param {string} rest",
+                " */",
+                "function f(p, ...[x, y, ...args]) {}")),
+        warning(CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION));
+  }
+
+  @Test
+  public void testRestParameter_missingVarArgsInInlineJSDoc() {
+    test(
+        srcs("function f(.../** string */ args) {}"),
+        warning(CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION));
+  }
+
+  @Test
   public void testDefaultParam() {
     testError("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
     testSame("function f(/** number= */ x=0) {}");

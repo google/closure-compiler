@@ -476,8 +476,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testBadRestJSDoc() {
-    // TODO(lharker): this should warn that the "number" should be "...number".
-    // Currently we issue this warning in Es6RewriteRestAndSpread.
     testTypes(
         "/** @param {number} numbers */ function f(...numbers) { var /** null */ n = numbers; }",
         lines(

@@ -645,21 +645,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Test
-  public void testWarningAboutRestParameterMissingInlineVarArgTyping() {
-    // Warn on /** number */
-    testWarning(
-        "function f(/** number */ ...zero) {}",
-        Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
-  }
-
-  @Test
-  public void testWarningAboutRestParameterMissingVarArgTypingOnFunction() {
-    testWarning(
-        "/** @param {number} zero */ function f(...zero) {}",
-        Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
-  }
-
-  @Test
   public void testUnusedRestParameterAtPositionTwoWithUsedParameterAtPositionOne() {
     test(
         "function f(zero, one, ...two) {one = (one === undefined) ? 1 : one;}",

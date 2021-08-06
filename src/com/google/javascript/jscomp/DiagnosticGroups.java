@@ -476,6 +476,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "misplacedTypeAnnotation",
           CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR,
+          CheckJSDoc.BAD_REST_PARAMETER_ANNOTATION,
           CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL,
           CheckJSDoc.DISALLOWED_MEMBER_JSDOC,
           CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION,
