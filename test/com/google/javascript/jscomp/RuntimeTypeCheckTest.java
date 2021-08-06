@@ -46,6 +46,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
+    enableTypeInfoValidation();
   }
 
   @Test

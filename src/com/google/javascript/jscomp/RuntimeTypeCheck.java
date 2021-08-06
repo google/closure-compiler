@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
@@ -73,18 +74,20 @@ class RuntimeTypeCheck implements CompilerPass {
       };
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
   private final JSTypeRegistry typeRegistry;
   private final String logFunction;
 
   RuntimeTypeCheck(AbstractCompiler compiler, @Nullable String logFunction) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
     this.typeRegistry = compiler.getTypeRegistry();
     this.logFunction = logFunction;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new AddMarkers(compiler));
+    NodeTraversal.traverse(compiler, root, new AddMarkers(compiler, astFactory));
     NodeTraversal.traverse(compiler, root, new AddChecks());
     addBoilerplateCode();
     new Normalize(compiler, false).process(externs, root);
@@ -104,10 +107,12 @@ class RuntimeTypeCheck implements CompilerPass {
   private static class AddMarkers extends NodeTraversal.AbstractPostOrderCallback {
 
     private final AbstractCompiler compiler;
+    private final AstFactory astFactory;
     private NodeTraversal traversal;
 
-    private AddMarkers(AbstractCompiler compiler) {
+    private AddMarkers(AbstractCompiler compiler, AstFactory astFactory) {
       this.compiler = compiler;
+      this.astFactory = astFactory;
     }
 
     @Override
@@ -178,8 +183,11 @@ class RuntimeTypeCheck implements CompilerPass {
      */
     private Node addMarkerToClass(
         String markerName, @Nullable String unused, Node classMembers, Node srcref) {
-      Node function = IR.function(IR.name(""), IR.paramList(), IR.block());
-      Node member = IR.computedProp(IR.string(markerName), function).srcrefTree(srcref);
+      Node function =
+          astFactory.createFunction(
+              "", IR.paramList(), IR.block(), AstFactory.type(JSTypeNative.FUNCTION_TYPE));
+      Node member =
+          IR.computedProp(astFactory.createString(markerName), function).srcrefTree(srcref);
       member.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
       classMembers.addChildToBack(member);
 
@@ -207,12 +215,14 @@ class RuntimeTypeCheck implements CompilerPass {
         return nodeToInsertAfter;
       }
 
-      Node classNode = NodeUtil.newQName(compiler, className);
+      Node classNode = astFactory.createQNameWithUnknownType(className);
       Node assign =
           IR.exprResult(
-                  IR.assign(
-                      IR.getelem(IR.getprop(classNode, "prototype"), IR.string(markerName)),
-                      IR.trueNode()))
+                  astFactory.createAssign(
+                      astFactory.createGetElem(
+                          astFactory.createPrototypeAccess(classNode),
+                          astFactory.createString(markerName)),
+                      astFactory.createBoolean(true)))
               .srcrefTree(srcref);
 
       assign.insertAfter(nodeToInsertAfter);
@@ -303,7 +313,6 @@ class RuntimeTypeCheck implements CompilerPass {
 
         if (checkNode == null) {
           // We don't know how to check this parameter type.
-          paramName = paramName.getNext();
           continue;
         }
 
@@ -372,7 +381,7 @@ class RuntimeTypeCheck implements CompilerPass {
         alternates = ImmutableList.of(type);
       }
 
-      Node arrayNode = IR.arraylit();
+      Node arrayNode = astFactory.createArraylit();
       for (JSType alternate : alternates) {
         Node checkerNode = createCheckerNode(alternate);
         if (checkerNode == null) {
@@ -380,7 +389,7 @@ class RuntimeTypeCheck implements CompilerPass {
         }
         arrayNode.addChildToBack(checkerNode);
       }
-      return IR.call(jsCode("checkType"), expr, arrayNode);
+      return astFactory.createCallWithUnknownType(jsCode("checkType"), expr, arrayNode);
     }
 
     /**
@@ -396,7 +405,8 @@ class RuntimeTypeCheck implements CompilerPass {
           || type.isNumberValueType()
           || type.isStringValueType()
           || type.isVoidType()) {
-        return IR.call(jsCode("valueChecker"), IR.string(type.toString()));
+        return astFactory.createCallWithUnknownType(
+            jsCode("valueChecker"), astFactory.createString(type.toString()));
       } else if (type.isInstanceType()) {
         ObjectType objType = (ObjectType) type;
 
@@ -408,15 +418,17 @@ class RuntimeTypeCheck implements CompilerPass {
 
         StaticSourceFile sourceFile = NodeUtil.getSourceFile(objType.getConstructor().getSource());
         if (sourceFile == null || sourceFile.isExtern()) {
-          return IR.call(jsCode("externClassChecker"), IR.string(refName));
+          return astFactory.createCallWithUnknownType(
+              jsCode("externClassChecker"), astFactory.createString(refName));
         }
 
-        return IR.call(
+        return astFactory.createCallWithUnknownType(
             jsCode(objType.getConstructor().isInterface() ? "interfaceChecker" : "classChecker"),
-            IR.string(refName));
+            astFactory.createString(refName));
 
       } else if (type.isFunctionType()) {
-        return IR.call(jsCode("valueChecker"), IR.string("function"));
+        return astFactory.createCallWithUnknownType(
+            jsCode("valueChecker"), astFactory.createString("function"));
       } else {
         // We don't check this type (e.g. unknown & all types).
         return null;
@@ -456,9 +468,9 @@ class RuntimeTypeCheck implements CompilerPass {
         logFunction);
     Node logOverride =
         IR.exprResult(
-                IR.assign(
-                    NodeUtil.newQName(compiler, "$jscomp.typecheck.log"),
-                    NodeUtil.newQName(compiler, logFunction)))
+                astFactory.createAssign(
+                    astFactory.createQNameWithUnknownType("$jscomp.typecheck.log"),
+                    astFactory.createQNameWithUnknownType(logFunction)))
             .srcrefTree(node);
     checkState(node.getParent().isScript(), node.getParent());
     logOverride.insertAfter(node);
@@ -466,6 +478,6 @@ class RuntimeTypeCheck implements CompilerPass {
   }
 
   private Node jsCode(String prop) {
-    return NodeUtil.newQName(compiler, "$jscomp.typecheck." + prop);
+    return astFactory.createQNameWithUnknownType("$jscomp.typecheck." + prop);
   }
 }
