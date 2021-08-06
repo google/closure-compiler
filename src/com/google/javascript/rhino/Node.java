@@ -73,7 +73,7 @@ import javax.annotation.Nullable;
  */
 public class Node {
 
-  private enum Prop {
+  enum Prop {
     // Is this Node within parentheses
     IS_PARENTHESIZED,
     // Contains non-JSDoc comment
@@ -986,95 +986,39 @@ public class Node {
     }
   }
 
-  private final Prop deserializeProp(NodeProperty nodeProperty) {
-    switch (nodeProperty) {
-      case ARROW_FN:
-        checkState(isFunction());
-        return Prop.ARROW_FN;
-      case ASYNC_FN:
-        checkState(isFunction());
-        return Prop.ASYNC_FN;
-      case GENERATOR_FN:
-        return Prop.GENERATOR_FN;
-      case IS_PARENTHESIZED:
-        checkState(IR.mayBeExpression(this));
-        return Prop.IS_PARENTHESIZED;
-      case SYNTHETIC:
-        checkState(token == Token.BLOCK);
-        return Prop.SYNTHETIC;
-      case ADDED_BLOCK:
-        return Prop.ADDED_BLOCK;
-      case IS_CONSTANT_NAME:
-        return Prop.IS_CONSTANT_NAME;
-      case IS_DECLARED_CONSTANT:
-      case IS_INFERRED_CONSTANT:
-        // These cases have special handling in deserializeProperties
-        throw new IllegalStateException("Hit unhandled ConstantVarFlags property: " + nodeProperty);
-      case IS_NAMESPACE:
-        return Prop.IS_NAMESPACE;
-      case DIRECT_EVAL:
-        return Prop.DIRECT_EVAL;
-      case FREE_CALL:
-        return Prop.FREE_CALL;
-      case SLASH_V:
-        return Prop.SLASH_V;
-      case REFLECTED_OBJECT:
-        return Prop.REFLECTED_OBJECT;
-      case STATIC_MEMBER:
-        return Prop.STATIC_MEMBER;
-      case YIELD_ALL:
-        return Prop.YIELD_ALL;
-      case EXPORT_DEFAULT:
-        return Prop.EXPORT_DEFAULT;
-      case EXPORT_ALL_FROM:
-        return Prop.EXPORT_ALL_FROM;
-      case IS_GENERATOR_MARKER:
-        return Prop.IS_GENERATOR_MARKER;
-      case IS_GENERATOR_SAFE:
-        return Prop.IS_GENERATOR_SAFE;
-      case COMPUTED_PROP_METHOD:
-        return Prop.COMPUTED_PROP_METHOD;
-      case COMPUTED_PROP_GETTER:
-        return Prop.COMPUTED_PROP_GETTER;
-      case COMPUTED_PROP_SETTER:
-        return Prop.COMPUTED_PROP_SETTER;
-      case COMPUTED_PROP_VARIABLE:
-        return Prop.COMPUTED_PROP_VARIABLE;
-      case COLOR_FROM_CAST:
-        checkState(getColor() != null, "Only use on nodes with colors present");
-        return Prop.COLOR_FROM_CAST;
-      case NON_INDEXABLE:
-        return Prop.NON_INDEXABLE;
-      case GOOG_MODULE:
-        return Prop.GOOG_MODULE;
-      case TRANSPILED:
-        return Prop.TRANSPILED;
-      case DELETED:
-        return Prop.DELETED;
-      case MODULE_ALIAS:
-        return Prop.MODULE_ALIAS;
-      case IS_UNUSED_PARAMETER:
-        return Prop.IS_UNUSED_PARAMETER;
-      case MODULE_EXPORT:
-        return Prop.MODULE_EXPORT;
-      case IS_SHORTHAND_PROPERTY:
-        return Prop.IS_SHORTHAND_PROPERTY;
-      case ES6_MODULE:
-        return Prop.ES6_MODULE;
-      case START_OF_OPT_CHAIN:
-        checkState(
-            isOptChainGetElem() || isOptChainGetProp() || isOptChainCall(),
-            "cannot make a non-optional node the start of an optional chain.");
-        return Prop.START_OF_OPT_CHAIN;
-      case TRAILING_COMMA:
-        return Prop.TRAILING_COMMA;
-      case CONSTANT_VAR_FLAGS:
-        // We'll need to reevaluate these once we support non-binary node properties
-      case UNRECOGNIZED:
-      case NODE_PROPERTY_UNSPECIFIED:
-        throw new IllegalStateException("Hit unhandled node property: " + nodeProperty);
+  private static final Prop[] PROP_VALUES = Prop.values();
+
+  public final EnumSet<NodeProperty> serializeProperties() {
+    EnumSet<NodeProperty> propSet = EnumSet.noneOf(NodeProperty.class);
+    for (PropListItem propListItem = this.propListHead;
+        propListItem != null;
+        propListItem = propListItem.next) {
+      Prop prop = PROP_VALUES[propListItem.propType];
+
+      switch (prop) {
+        case TYPE_BEFORE_CAST:
+          propSet.add(NodeProperty.COLOR_FROM_CAST);
+          break;
+        case CONSTANT_VAR_FLAGS:
+          int intVal = propListItem.getIntValue();
+          if (anyBitSet(intVal, ConstantVarFlags.INFERRED)) {
+            propSet.add(NodeProperty.IS_INFERRED_CONSTANT);
+          }
+          if (anyBitSet(intVal, ConstantVarFlags.DECLARED)) {
+            propSet.add(NodeProperty.IS_DECLARED_CONSTANT);
+          }
+          break;
+        default:
+          if (propListItem instanceof Node.IntPropListItem) {
+            NodeProperty nodeProperty = PropTranslator.serialize(prop);
+            if (nodeProperty != null) {
+              propSet.add(nodeProperty);
+            }
+          }
+          break;
+      }
     }
-    throw new AssertionError();
+    return propSet;
   }
 
   public final void deserializeProperties(List<NodeProperty> serializedNodeBooleanPropertyList) {
@@ -1090,6 +1034,23 @@ public class Node {
       checkState(propSet.add(nodeProperty), "Found multiple node property: %s", nodeProperty);
     }
 
+    if (propSet.contains(NodeProperty.ARROW_FN) || propSet.contains(NodeProperty.ASYNC_FN)) {
+      checkState(isFunction());
+    }
+    if (propSet.contains(NodeProperty.IS_PARENTHESIZED)) {
+      checkState(IR.mayBeExpression(this));
+    }
+    if (propSet.contains(NodeProperty.SYNTHETIC)) {
+      checkState(token == Token.BLOCK);
+    }
+    if (propSet.contains(NodeProperty.COLOR_FROM_CAST)) {
+      checkState(getColor() != null, "Only use on nodes with colors present");
+    }
+    if (propSet.contains(NodeProperty.START_OF_OPT_CHAIN)) {
+      checkState(
+          isOptChainGetElem() || isOptChainGetProp() || isOptChainCall(),
+          "cannot make a non-optional node the start of an optional chain.");
+    }
     if (propSet.contains(NodeProperty.IS_DECLARED_CONSTANT)
         || propSet.contains(NodeProperty.IS_INFERRED_CONSTANT)) {
       checkState(
@@ -1105,7 +1066,7 @@ public class Node {
     }
 
     for (NodeProperty nodeProperty : propSet) {
-      Prop prop = deserializeProp(nodeProperty);
+      Prop prop = PropTranslator.deserialize(nodeProperty);
       this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
     }
   }

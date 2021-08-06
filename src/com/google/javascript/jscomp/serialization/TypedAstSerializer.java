@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
-import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 
@@ -151,7 +150,7 @@ final class TypedAstSerializer {
     }
     builder.setKind(kindTranslator(n));
     valueTranslator(builder, n);
-    builder.addAllBooleanProperty(booleanPropTranslator(n));
+    builder.addAllBooleanProperty(n.serializeProperties());
     int sourceFile = getSourceFilePointer(n);
     builder.setSourceFile(sourceFile);
 
@@ -201,123 +200,6 @@ final class TypedAstSerializer {
     if (type != null) {
       builder.setType(this.typesToPointers.get(type));
     }
-  }
-
-  private EnumSet<NodeProperty> booleanPropTranslator(Node n) {
-    EnumSet<NodeProperty> props = EnumSet.noneOf(NodeProperty.class);
-    if (n.isArrowFunction()) {
-      props.add(NodeProperty.ARROW_FN);
-    }
-    if (n.isAsyncFunction()) {
-      props.add(NodeProperty.ASYNC_FN);
-    }
-    if (n.isGeneratorFunction()) {
-      props.add(NodeProperty.GENERATOR_FN);
-    }
-    if (n.isYieldAll()) {
-      props.add(NodeProperty.YIELD_ALL);
-    }
-    if (n.getIsParenthesized()) {
-      props.add(NodeProperty.IS_PARENTHESIZED);
-    }
-    if (n.isSyntheticBlock()) {
-      props.add(NodeProperty.SYNTHETIC);
-    }
-    if (n.isAddedBlock()) {
-      props.add(NodeProperty.ADDED_BLOCK);
-    }
-    if (n.isStaticMember()) {
-      props.add(NodeProperty.STATIC_MEMBER);
-    }
-    if (n.isYieldAll()) {
-      props.add(NodeProperty.YIELD_ALL);
-    }
-    if (n.isGeneratorMarker()) {
-      props.add(NodeProperty.IS_GENERATOR_MARKER);
-    }
-    if (n.isGeneratorSafe()) {
-      props.add(NodeProperty.IS_GENERATOR_SAFE);
-    }
-    if (n.getJSTypeBeforeCast() != null) {
-      props.add(NodeProperty.COLOR_FROM_CAST);
-    }
-    if (!n.isIndexable()) {
-      props.add(NodeProperty.NON_INDEXABLE);
-    }
-    if (n.isDeleted()) {
-      props.add(NodeProperty.DELETED);
-    }
-    if (n.isUnusedParameter()) {
-      props.add(NodeProperty.IS_UNUSED_PARAMETER);
-    }
-    if (n.isShorthandProperty()) {
-      props.add(NodeProperty.IS_SHORTHAND_PROPERTY);
-    }
-    if (n.isOptionalChainStart()) {
-      props.add(NodeProperty.START_OF_OPT_CHAIN);
-    }
-    if (n.hasTrailingComma()) {
-      props.add(NodeProperty.TRAILING_COMMA);
-    }
-
-    if (n.getBooleanProp(Node.IS_CONSTANT_NAME)) {
-      props.add(NodeProperty.IS_CONSTANT_NAME);
-    }
-    if ((n.isName() || n.isImportStar()) && n.isDeclaredConstantVar()) {
-      props.add(NodeProperty.IS_DECLARED_CONSTANT);
-    }
-    if ((n.isName() || n.isImportStar()) && n.isInferredConstantVar()) {
-      props.add(NodeProperty.IS_INFERRED_CONSTANT);
-    }
-    if (n.getBooleanProp(Node.IS_NAMESPACE)) {
-      props.add(NodeProperty.IS_NAMESPACE);
-    }
-    if (n.getBooleanProp(Node.DIRECT_EVAL)) {
-      props.add(NodeProperty.DIRECT_EVAL);
-    }
-    if (n.getBooleanProp(Node.FREE_CALL)) {
-      props.add(NodeProperty.FREE_CALL);
-    }
-    if (n.getBooleanProp(Node.SLASH_V)) {
-      props.add(NodeProperty.SLASH_V);
-    }
-    if (n.getBooleanProp(Node.REFLECTED_OBJECT)) {
-      props.add(NodeProperty.REFLECTED_OBJECT);
-    }
-    if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
-      props.add(NodeProperty.EXPORT_DEFAULT);
-    }
-    if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
-      props.add(NodeProperty.EXPORT_ALL_FROM);
-    }
-    if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)) {
-      props.add(NodeProperty.COMPUTED_PROP_METHOD);
-    }
-    if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
-      props.add(NodeProperty.COMPUTED_PROP_GETTER);
-    }
-    if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-      props.add(NodeProperty.COMPUTED_PROP_SETTER);
-    }
-    if (n.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
-      props.add(NodeProperty.COMPUTED_PROP_VARIABLE);
-    }
-    if (n.getBooleanProp(Node.GOOG_MODULE)) {
-      props.add(NodeProperty.GOOG_MODULE);
-    }
-    if (n.getBooleanProp(Node.TRANSPILED)) {
-      props.add(NodeProperty.TRANSPILED);
-    }
-    if (n.getBooleanProp(Node.MODULE_ALIAS)) {
-      props.add(NodeProperty.MODULE_ALIAS);
-    }
-    if (n.getBooleanProp(Node.MODULE_EXPORT)) {
-      props.add(NodeProperty.MODULE_EXPORT);
-    }
-    if (n.getBooleanProp(Node.ES6_MODULE)) {
-      props.add(NodeProperty.ES6_MODULE);
-    }
-    return props;
   }
 
   private void valueTranslator(AstNode.Builder builder, Node n) {
