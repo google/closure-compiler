@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
@@ -283,12 +282,6 @@ final class AstFactory {
     // We prefer `void 0` as being shorter than `undefined`.
     // Also, it's technically possible for malicious code to assign a value to `undefined`.
     return createVoid(createNumber(0));
-  }
-
-  Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
-    Node result = IR.cast(child, jsdoc);
-    setJSTypeOrColor(type(unknownType, StandardColors.UNKNOWN), result);
-    return result;
   }
 
   Node createNot(Node child) {

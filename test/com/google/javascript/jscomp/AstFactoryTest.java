@@ -33,8 +33,6 @@ import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
@@ -215,21 +213,6 @@ public class AstFactoryTest {
     Node voidNode = astFactory.createVoid(astFactory.createNumber(0));
     assertNode(voidNode).hasType(Token.VOID);
     assertNode(voidNode).hasColorThat().isEqualTo(StandardColors.NULL_OR_VOID);
-  }
-
-  @Test
-  public void testCreateCastToUnknown() {
-    AstFactory astFactory = createTestAstFactory();
-
-    Node numberNode = astFactory.createNumber(0);
-    JSDocInfo.Builder infoBuilder = JSDocInfo.builder();
-    infoBuilder.recordType(new JSTypeExpression(new Node(Token.QMARK), "test.js"));
-    JSDocInfo info = infoBuilder.build();
-    Node castNode = astFactory.createCastToUnknown(numberNode, info);
-
-    assertNode(castNode).hasType(Token.CAST);
-    assertNode(castNode).hasJSTypeThat().isUnknown();
-    assertThat(castNode.getJSDocInfo()).isEqualTo(info);
   }
 
   @Test
