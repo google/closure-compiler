@@ -309,7 +309,12 @@ final class AstFactory {
     return result;
   }
 
-  /** Creates a THIS node with the correct type for the given function node. */
+  /**
+   * Creates a THIS node with the correct type for the given function node.
+   *
+   * @deprecated TODO(b/193800507): delete this method.
+   */
+  @Deprecated
   Node createThisForFunction(Node functionNode) {
     assertNotAddingColors();
     final Node result = IR.thisNode();
@@ -319,7 +324,12 @@ final class AstFactory {
     return result;
   }
 
-  /** Creates a SUPER node with the correct type for the given function node. */
+  /**
+   * Creates a SUPER node with the correct type for the given function node.
+   *
+   * @deprecated TODO(b/193800507): delete this method.
+   */
+  @Deprecated
   Node createSuperForFunction(Node functionNode) {
     assertNotAddingColors();
     final Node result = IR.superNode();
@@ -366,7 +376,12 @@ final class AstFactory {
     return functionType;
   }
 
-  /** Creates a NAME node having the type of "this" appropriate for the given function node. */
+  /**
+   * Creates a NAME node having the type of "this" appropriate for the given function node.
+   *
+   * @deprecated TODO(b/193800507): delete this method.
+   */
+  @Deprecated
   Node createThisAliasReferenceForFunction(String aliasName, Node functionNode) {
     assertNotAddingColors();
     final Node result = IR.name(aliasName);
@@ -380,7 +395,10 @@ final class AstFactory {
    * Creates a statement declaring a const alias for "this" to be used in the given function node.
    *
    * <p>e.g. `const aliasName = this;`
+   *
+   * @deprecated TODO(b/193800507): delete this method.
    */
+  @Deprecated
   Node createThisAliasDeclarationForFunction(String aliasName, Node functionNode) {
     assertNotAddingColors();
     return createSingleConstNameDeclaration(
@@ -518,7 +536,9 @@ final class AstFactory {
    * Looks up the type of a name from a {@link TypedScope} created from typechecking
    *
    * @param globalTypedScope Must be the top, global scope.
+   * @deprecated Prefer {@link #createQName(StaticScope, String)}
    */
+  @Deprecated
   Node createQName(TypedScope globalTypedScope, String qname) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
     assertNotAddingColors();
@@ -641,6 +661,11 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * @deprecated TODO(b/193800507): delete this g4 fix method. Use {@link #createGetProp(Node,
+   *     String, Type)} instead.
+   */
+  @Deprecated
   Node createGetProp(Node receiver, String propertyName) {
     assertNotAddingColors();
     Node result = IR.getprop(receiver, propertyName);
@@ -656,7 +681,12 @@ final class AstFactory {
     return result;
   }
 
-  /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
+  /**
+   * Creates a tree of nodes representing `receiver.name1.name2.etc`.
+   *
+   * @deprecated TODO(b/193800507): delete this method.
+   */
+  @Deprecated
   Node createGetProps(Node receiver, Iterable<String> propertyNames) {
     assertNotAddingColors();
     Node result = receiver;
@@ -666,7 +696,12 @@ final class AstFactory {
     return result;
   }
 
-  /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
+  /**
+   * Creates a tree of nodes representing `receiver.name1.name2.etc`.
+   *
+   * @deprecated TODO(b/193800507): delete this method.
+   */
+  @Deprecated
   Node createGetProps(Node receiver, String firstPropName, String... otherPropNames) {
     assertNotAddingColors();
     Node result = createGetProp(receiver, firstPropName);
@@ -825,6 +860,11 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * @deprecated TODO(b/193800507): delete this method. Use {@link #createCall(Node, Type, Node...)}
+   *     instead.
+   */
+  @Deprecated
   Node createCall(Node callee, Node... args) {
     assertNotAddingColors();
     Node result = NodeUtil.newCallNode(callee, args);
@@ -907,6 +947,8 @@ final class AstFactory {
         : Color.createUnion(possibleInstanceColors);
   }
 
+  /** @deprecated TODO(b/193800507): delete this method. */
+  @Deprecated
   Node createObjectGetPrototypeOfCall(StaticScope scope, Node argObjectNode) {
     assertNotAddingColors();
     Node objectGetPrototypeOf = createQName(scope, "Object.getPrototypeOf");
@@ -1036,7 +1078,10 @@ final class AstFactory {
    * @param paramList PARAM_LIST node
    * @param body BLOCK node
    * @param type type to apply to the function itself
+   * @deprecated TODO(b/193800507): delete this method. Use {@link #createFunction(String, Node,
+   *     Node, Type)} instead.
    */
+  @Deprecated
   Node createFunction(String name, Node paramList, Node body, JSType type) {
     assertNotAddingColors();
     return createFunction(name, paramList, body, type(type));
