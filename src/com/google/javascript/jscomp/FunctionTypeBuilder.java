@@ -439,13 +439,12 @@ final class FunctionTypeBuilder {
 
     if (info != null && info.hasBaseType()) {
       if (isConstructor || isInterface) {
-        ObjectType infoBaseType =
-            info.getBaseType().evaluate(templateScope, typeRegistry).toMaybeObjectType();
-        if (!areCompatibleExtendsTypes(infoBaseType, classExtendsType)) {
+        JSType infoBaseType = info.getBaseType().evaluate(templateScope, typeRegistry);
+        if (!areCompatibleExtendsTypes(infoBaseType.toMaybeObjectType(), classExtendsType)) {
           this.isKnownAmbiguous = true;
         }
         if (infoBaseType.setValidator(new ExtendedTypeValidator())) {
-          baseType = infoBaseType;
+          baseType = infoBaseType.toObjectType();
         }
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());

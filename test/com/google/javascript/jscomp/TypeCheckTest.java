@@ -13657,6 +13657,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassExtendPrimitive() {
+    testTypes(
+        "/** @extends {number} */ class C extends number {}", "C @extends non-object type number");
+  }
+
+  @Test
   public void testInheritanceCheck1() {
     testTypes(
         "/** @constructor */function Super() {};"
