@@ -235,9 +235,9 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   @Test
   public void testNoWarningMultipleFiles() {
     testSame(
-        new String[] {
-          "goog.require('Foo'); var foo = new Foo();", "goog.require('Bar'); var bar = new Bar();"
-        });
+        srcs(
+            "goog.require('Foo'); var foo = new Foo();",
+            "goog.require('Bar'); var bar = new Bar();"));
   }
 
   @Test

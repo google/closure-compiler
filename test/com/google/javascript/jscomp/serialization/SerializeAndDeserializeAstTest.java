@@ -495,7 +495,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     this.test(code, code);
   }
 
-  @Override
   public void testSame(String[] sources) {
     this.testAndReturnResult(srcs(sources), expected(sources));
   }

@@ -276,7 +276,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   }
 
   private void checkNoWarning(String... js) {
-    testSame(js);
+    testSame(srcs(js));
   }
 
   private void checkMissingWarning(String... js) {

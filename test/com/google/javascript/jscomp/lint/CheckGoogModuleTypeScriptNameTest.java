@@ -48,7 +48,7 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
   @Test
   public void testNoWarning() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "gws/js/test.js", "goog.module('google3.gws.js.test');\nalert(1);")));
   }
@@ -56,7 +56,7 @@ public final class CheckGoogModuleTypeScriptNameTest extends CompilerTestCase {
   @Test
   public void testNoWarning_notOnAllowList() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode("javascript/apps/foo/test.js", "goog.module('test');\nalert(1);")));
   }
 

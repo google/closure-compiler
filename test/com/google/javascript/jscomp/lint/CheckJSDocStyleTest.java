@@ -1243,11 +1243,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         srcs(""));
 
     test(
-        new String[] {
+        srcs(
             "/** @fileoverview Some externs.\n * @externs\n */ /** @const */ var example;",
-            "/** @fileoverview Some more.\n * @externs\n */ /** @const */ var example2;",
-        },
-        new String[] {});
+            "/** @fileoverview Some more.\n * @externs\n */ /** @const */ var example2;"),
+        expected(new String[] {}));
   }
 
   @Test
