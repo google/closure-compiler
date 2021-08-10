@@ -52,8 +52,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTrailingCommaInArrayAndObjectWithPrettyPrint() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
-    assertPrettyPrintSame("({a:1, b:2, });\n");
-    assertPrettyPrintSame("[1, 2, 3, ];\n");
+    assertPrettyPrintSame("({a:1, b:2,});\n");
+    assertPrettyPrintSame("[1, 2, 3,];\n");
+    // An array starting with a hole is printed ideally but this is very rare.
     assertPrettyPrintSame("[, ];\n");
   }
 
@@ -134,10 +135,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTrailingCommaInParameterListWithPrettyPrint() {
     languageMode = LanguageMode.UNSUPPORTED;
-    assertPrettyPrintSame("function f(a, b, ) {\n}\n");
-    assertPrettyPrintSame("f(1, 2, );\n");
-    assertPrettyPrintSame("f?.(1, 2, );\n");
-    assertPrettyPrintSame("let x = new Number(1, );\n");
+    assertPrettyPrintSame("function f(a, b,) {\n}\n");
+    assertPrettyPrintSame("f(1, 2,);\n");
+    assertPrettyPrintSame("f?.(1, 2,);\n");
+    assertPrettyPrintSame("let x = new Number(1,);\n");
   }
 
   @Test

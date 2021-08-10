@@ -407,6 +407,12 @@ public final class CodePrinter {
     }
 
     @Override
+    void optionalListSeparator() {
+      add(",");
+      maybeLineBreak();
+    }
+
+    @Override
     void endFunction(boolean statementContext) {
       super.endFunction(statementContext);
       if (statementContext) {

@@ -52,7 +52,6 @@ public class CodeGenerator {
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
   private final boolean useOriginalName;
-  private final boolean prettyPrint;
   private final FeatureSet outputFeatureSet;
   private final JSDocInfoPrinter jsDocInfoPrinter;
 
@@ -65,7 +64,6 @@ public class CodeGenerator {
     printNonJSDocComments = false;
     quoteKeywordProperties = false;
     useOriginalName = false;
-    prettyPrint = false;
     this.outputFeatureSet = FeatureSet.BARE_MINIMUM;
     this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
@@ -81,7 +79,6 @@ public class CodeGenerator {
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.outputFeatureSet = options.getOutputFeatureSet();
-    this.prettyPrint = options.isPrettyPrint();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
@@ -118,7 +115,7 @@ public class CodeGenerator {
       // Don't print an empty jsdoc
       if (!jsdocAsString.equals("/** */ ")) {
         add(jsdocAsString);
-        if (prettyPrint && !node.isCast()) {
+        if (!node.isCast()) {
           cc.endLine();
         }
       }
@@ -1133,8 +1130,8 @@ public class CodeGenerator {
             checkState(NodeUtil.isObjLitProperty(c) || c.isSpread(), c);
             add(c);
           }
-          if (first != null && prettyPrint && node.hasTrailingComma()) {
-            cc.listSeparator();
+          if (first != null && node.hasTrailingComma()) {
+            cc.optionalListSeparator();
           }
           add("}");
           if (needsParens) {
@@ -1823,10 +1820,8 @@ public class CodeGenerator {
         addExpr(n, minPrecedence, getContextForNoInOperator(lhsContext));
       }
     }
-    if (prettyPrint
-        && isArrayOrFunctionArgument
-        && checkNotNull(firstInList.getParent()).hasTrailingComma()) {
-      cc.listSeparator();
+    if (isArrayOrFunctionArgument && checkNotNull(firstInList.getParent()).hasTrailingComma()) {
+      cc.optionalListSeparator();
     }
   }
 
@@ -1898,8 +1893,10 @@ public class CodeGenerator {
       lastWasEmpty = n.isEmpty();
     }
 
-    if (lastWasEmpty || (prettyPrint && checkNotNull(firstInList.getParent()).hasTrailingComma())) {
+    if (lastWasEmpty) {
       cc.listSeparator();
+    } else if (firstInList.getParent().hasTrailingComma()) {
+      cc.optionalListSeparator();
     }
   }
 

@@ -192,6 +192,8 @@ public abstract class CodeConsumer {
     maybeLineBreak();
   }
 
+  void optionalListSeparator() {}
+
   /**
    * Indicates the end of a statement and a ';' may need to be added.
    * But we don't add it now, in case we're at the end of a block (in which
