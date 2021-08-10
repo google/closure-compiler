@@ -62,70 +62,62 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
   @Test
   public void testLocalRelativePathStayTheSame() {
     ignoreWarnings(LOAD_WARNING);
-    testSame(ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/file.js", "import './foo.js';")));
 
-    testSame(ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import './foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/nested/file.js", "import './foo.js';")));
 
-    testSame(ImmutableList.of(SourceFile.fromCode("/file.js", "import './nested/foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/file.js", "import './nested/foo.js';")));
 
-    testSame(
-        ImmutableList.of(SourceFile.fromCode("http://google.com/file.js", "import './foo.js';")));
+    testSame(srcs(SourceFile.fromCode("http://google.com/file.js", "import './foo.js';")));
   }
 
   @Test
   public void testRelativeParentPathStayTheSame() {
     ignoreWarnings(LOAD_WARNING);
-    testSame(ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
 
-    testSame(
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../nested/foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/nested/file.js", "import '../nested/foo.js';")));
 
-    testSame(ImmutableList.of(SourceFile.fromCode("/p0/p1/file.js", "import '../p2/foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/p0/p1/file.js", "import '../p2/foo.js';")));
 
-    testSame(ImmutableList.of(SourceFile.fromCode("/p0/p1/file.js", "import '../../foo.js';")));
-
-    testSame(
-        ImmutableList.of(
-            SourceFile.fromCode("http://google.com/nested/file.js", "import '../foo.js';")));
+    testSame(srcs(SourceFile.fromCode("/p0/p1/file.js", "import '../../foo.js';")));
+    testSame(srcs(SourceFile.fromCode("http://google.com/nested/file.js", "import '../foo.js';")));
   }
 
   @Test
   public void testAbsolutePathsStayTheSame() {
     // Absolute means that with a scheme, not those starting with "/"
     testSame(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "http://google.com/file.js", "import 'http://google.com/other/file.js';")));
 
     testSame(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "http://golang.org/file.js", "import 'http://google.com/other/file.js';")));
 
-    testSame(
-        ImmutableList.of(
-            SourceFile.fromCode(
-                "/file.js", "import 'http://google.com/other/file.js';")));
+    testSame(srcs(SourceFile.fromCode("/file.js", "import 'http://google.com/other/file.js';")));
   }
 
   @Test
   public void testRootedPathsBecomeRelative() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import '/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import '/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
+        srcs(SourceFile.fromCode("/nested/file.js", "import '/foo.js';")),
+        expected(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '/path/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../path/foo.js';")));
+        srcs(SourceFile.fromCode("/nested/file.js", "import '/path/foo.js';")),
+        expected(SourceFile.fromCode("/nested/file.js", "import '../path/foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import '/nested/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './nested/foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import '/nested/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './nested/foo.js';")));
   }
 
   @Test
@@ -134,35 +126,32 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
     prefixReplacements = ImmutableMap.of("raw0/", "/mapped0/", "raw1/", "/mapped1/");
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import 'raw0/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './mapped0/foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import 'raw0/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './mapped0/foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import 'raw0/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../mapped0/foo.js';")));
+        srcs(SourceFile.fromCode("/nested/file.js", "import 'raw0/foo.js';")),
+        expected(SourceFile.fromCode("/nested/file.js", "import '../mapped0/foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import 'raw0/bar/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './mapped0/bar/foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import 'raw0/bar/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './mapped0/bar/foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import 'raw1/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './mapped1/foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import 'raw1/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './mapped1/foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/mapped1/file.js", "import 'raw1/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/mapped1/file.js", "import './foo.js';")));
+        srcs(SourceFile.fromCode("/mapped1/file.js", "import 'raw1/foo.js';")),
+        expected(SourceFile.fromCode("/mapped1/file.js", "import './foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("http://google.com/file.js", "import 'raw1/foo.js';")),
-        ImmutableList.of(
-            SourceFile.fromCode("http://google.com/file.js", "import './mapped1/foo.js';")));
+        srcs(SourceFile.fromCode("http://google.com/file.js", "import 'raw1/foo.js';")),
+        expected(SourceFile.fromCode("http://google.com/file.js", "import './mapped1/foo.js';")));
 
     test(
-        ImmutableList.of(
-            SourceFile.fromCode("http://google.com/nested/file.js", "import 'raw1/foo.js';")),
-        ImmutableList.of(
-            SourceFile.fromCode("http://google.com/file.js", "import '../mapped1/foo.js';")));
+        srcs(SourceFile.fromCode("http://google.com/nested/file.js", "import 'raw1/foo.js';")),
+        expected(SourceFile.fromCode("http://google.com/file.js", "import '../mapped1/foo.js';")));
   }
 
   @Test
@@ -171,15 +160,15 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
     moduleRoots = ImmutableList.of("root1", "root2");
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import '/root1/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import '/root1/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '/root2/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
+        srcs(SourceFile.fromCode("/nested/file.js", "import '/root2/foo.js';")),
+        expected(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
 
     test(
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import '/root1/bar/foo.js';")),
-        ImmutableList.of(SourceFile.fromCode("/file.js", "import './bar/foo.js';")));
+        srcs(SourceFile.fromCode("/file.js", "import '/root1/bar/foo.js';")),
+        expected(SourceFile.fromCode("/file.js", "import './bar/foo.js';")));
   }
 }

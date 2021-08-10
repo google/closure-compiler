@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -188,9 +187,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testFilenameContainsAt() {
     test(
-        ImmutableList.of(
-            SourceFile.fromCode("unusual@name", "alert(class {});")),
-        ImmutableList.of(
+        srcs(SourceFile.fromCode("unusual@name", "alert(class {});")),
+        expected(
             SourceFile.fromCode(
                 "unusual@name",
                 lines(
@@ -201,9 +199,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   @Test
   public void testFilenameContainsPlus() {
     test(
-        ImmutableList.of(
-            SourceFile.fromCode("+some/+path/file", "alert(class {});")),
-        ImmutableList.of(
+        srcs(SourceFile.fromCode("+some/+path/file", "alert(class {});")),
+        expected(
             SourceFile.fromCode(
                 "+path/file",
                 lines(

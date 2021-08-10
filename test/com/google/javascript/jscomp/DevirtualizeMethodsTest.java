@@ -1372,13 +1372,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE),
-          // m2
-          "",
-        });
+        srcs(modules),
+        expected(
+            // m1
+            semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE),
+            // m2
+            ""));
   }
 
   @Test
@@ -1392,13 +1391,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          "",
-          // m2
-          semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE)
-        });
+        srcs(modules),
+        expected(
+            // m1
+            "",
+            // m2
+            semicolonJoin(ModuleTestInput.REWRITTEN_DEFINITION, ModuleTestInput.REWRITTEN_USE)));
   }
 
   @Test
@@ -1412,13 +1410,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          semicolonJoin(ModuleTestInput.REWRITTEN_USE, ModuleTestInput.REWRITTEN_DEFINITION),
-          // m2
-          ""
-        });
+        srcs(modules),
+        expected(
+            // m1
+            semicolonJoin(ModuleTestInput.REWRITTEN_USE, ModuleTestInput.REWRITTEN_DEFINITION),
+            // m2
+            ""));
   }
 
   @Test
@@ -1432,13 +1429,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          ModuleTestInput.REWRITTEN_DEFINITION,
-          // m2
-          ModuleTestInput.REWRITTEN_USE
-        });
+        srcs(modules),
+        expected(
+            // m1
+            ModuleTestInput.REWRITTEN_DEFINITION,
+            // m2
+            ModuleTestInput.REWRITTEN_USE));
   }
 
   @Test
@@ -1449,7 +1445,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             .addChunk(ModuleTestInput.DEFINITION)
             .build();
 
-    testSame(modules);
+    testSame(srcs(modules));
   }
 
   @Override

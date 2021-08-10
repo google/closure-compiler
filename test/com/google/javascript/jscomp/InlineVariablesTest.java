@@ -244,8 +244,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testInlineAcrossModules() {
     // TODO(kushal): Make decision about overlap with CrossChunkCodeMotion
     test(
-        JSChunkGraphBuilder.forUnordered().addChunk("var a = 2;").addChunk("var b = a;").build(),
-        new String[] {"", "var b = 2;"});
+        srcs(
+            JSChunkGraphBuilder.forUnordered()
+                .addChunk("var a = 2;")
+                .addChunk("var b = a;")
+                .build()),
+        expected("", "var b = 2;"));
   }
 
   @Test
@@ -413,25 +417,16 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testCrossFunctionsAsLeftLeaves() {
     // Ensures getNext() understands how to walk past a function leaf
     test(
-        new String[] { "var x = function() {};", "",
-            "function cow() {} var z = x;"},
-        new String[] { "", "", "function cow() {} var z = function() {};" });
+        srcs("var x = function() {};", "", "function cow() {} var z = x;"),
+        expected("", "", "function cow() {} var z = function() {};"));
     test(
-        new String[] { "var x = function() {};", "",
-            "var cow = function() {}; var z = x;"},
-        new String[] { "", "",
-            "var cow = function() {}; var z = function() {};" });
-    testSame(
-        new String[] { "var x = a;", "",
-            "(function() { a++; })(); var z = x;"});
+        srcs("var x = function() {};", "", "var cow = function() {}; var z = x;"),
+        expected("", "", "var cow = function() {}; var z = function() {};"));
+    testSame(srcs("var x = a;", "", "(function() { a++; })(); var z = x;"));
     test(
-        new String[] { "var x = a;", "",
-            "function cow() { a++; }; cow(); var z = x;"},
-        new String[] { "var x = a;", "",
-            ";(function cow(){ a++; })(); var z = x;"});
-    testSame(
-        new String[] { "var x = a;", "",
-            "cow(); var z = x; function cow() { a++; };"});
+        srcs("var x = a;", "", "function cow() { a++; }; cow(); var z = x;"),
+        expected("var x = a;", "", ";(function cow(){ a++; })(); var z = x;"));
+    testSame(srcs("var x = a;", "", "cow(); var z = x; function cow() { a++; };"));
   }
 
   // Test movement of constant values
@@ -1739,6 +1734,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
       "use(function f() {});"
     };
 
-    test(srcs, expected);
+    test(srcs(srcs), expected(expected));
   }
 }

@@ -2788,18 +2788,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testCrossModuleInlining1() {
     test(
-        JSChunkGraphBuilder.forChain()
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+                // m2
+                .addChunk("foo()")
+                .build()),
+        expected(
             // m1
-            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+            "",
             // m2
-            .addChunk("foo()")
-            .build(),
-        new String[] {
-          // m1
-          "",
-          // m2
-          "f(1)+g(2)+h(3);"
-        });
+            "f(1)+g(2)+h(3);"));
   }
 
   // Inline a single reference function into shallow modules, only if it
@@ -2807,24 +2807,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testCrossModuleInlining2() {
     testSame(
-        JSChunkGraphBuilder.forChain()
-            .addChunk("foo()")
-            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("foo()")
+                .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+                .build()));
 
     test(
-        JSChunkGraphBuilder.forChain()
-            // m1
-            .addChunk("foo()")
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("foo()")
+                // m2
+                .addChunk("function foo(){return f();}")
+                .build()),
+        expected( // m1
+            "f();",
             // m2
-            .addChunk("function foo(){return f();}")
-            .build(),
-        new String[] {
-          // m1
-          "f();",
-          // m2
-          ""
-        });
+            ""));
   }
 
   // Inline a multi-reference functions into shallow modules, only if it
@@ -2832,26 +2832,27 @@ public class InlineFunctionsTest extends CompilerTestCase {
   @Test
   public void testCrossModuleInlining3() {
     testSame(
-        JSChunkGraphBuilder.forChain()
-            .addChunk("foo()")
-            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
-            .addChunk("foo()")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("foo()")
+                .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+                .addChunk("foo()")
+                .build()));
 
     test(
-        JSChunkGraphBuilder.forChain()
-            .addChunk("foo()")
-            .addChunk("function foo(){return f();}")
-            .addChunk("foo()")
-            .build(),
-        new String[] {
-          // m1
-          "f();",
-          // m2
-          "",
-          // m3
-          "f();"
-        });
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("foo()")
+                .addChunk("function foo(){return f();}")
+                .addChunk("foo()")
+                .build()),
+        expected(
+            // m1
+            "f();",
+            // m2
+            "",
+            // m3
+            "f();"));
   }
 
   @Test

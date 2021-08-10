@@ -30,7 +30,6 @@ import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERT
 import static com.google.javascript.jscomp.modules.EsModuleProcessor.NAMESPACE_IMPORT_CANNOT_USE_STAR;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -167,12 +166,12 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   void testModulesError(String input, DiagnosticType error) {
     testError(
-        ImmutableList.of(
+        srcs(
             CLOSURE_PROVIDE,
             CLOSURE_MODULE,
             CLOSURE_LEGACY_MODULE,
             SourceFile.fromCode("testcode", input)),
-        error);
+        error(error));
   }
 
   @Test
@@ -693,20 +692,20 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testGoogRequireTypeForNonEs6LhsNonConst() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines("goog.module('my.module');", "var es6 = goog.requireType('es6');"))),
-        REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST);
+        error(REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST));
 
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
                 "closure.js",
                 lines("goog.module('my.module');", "let { x } = goog.requireType('es6');"))),
-        REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST);
+        error(REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST));
   }
 
   @Test
@@ -799,12 +798,12 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testRequireAndStoreGlobalUnqualifiedProvide() {
     test(
-        ImmutableList.of(
+        srcs(
             CLOSURE_BASE,
             SourceFile.fromCode("provide.js", "goog.provide('foo')"),
             SourceFile.fromCode(
                 "testcode", lines("const foo = goog.require('foo');", "use(foo);", "export {};"))),
-        ImmutableList.of(
+        expected(
             CLOSURE_BASE,
             SourceFile.fromCode("provide.js", "goog.provide('foo')"),
             SourceFile.fromCode(
@@ -929,7 +928,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
         warning(UNRECOGNIZED_TYPE_ERROR));
 
     testError(
-        ImmutableList.of(
+        srcs(
             CLOSURE_BASE,
             SourceFile.fromCode("es6.js", "export {}; goog.declareModuleId('es6');"),
             SourceFile.fromCode(
@@ -939,7 +938,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                     "let alias = goog.forwardDeclare('es6');",
                     "let /** !alias.Type */ x;",
                     "alias = goog.modle.get('es6');"))),
-        FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
+        error(FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST));
   }
 
   @Test
@@ -1082,7 +1081,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
         warning(UNRECOGNIZED_TYPE_ERROR));
 
     testError(
-        ImmutableList.of(
+        srcs(
             CLOSURE_BASE,
             SourceFile.fromCode("es6.js", "export class Type {} goog.declareModuleId('es6');"),
             SourceFile.fromCode(
@@ -1092,7 +1091,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                     "let alias = goog.forwardDeclare('es6');",
                     "let /** !alias.Type */ x;",
                     "alias = goog.modle.get('es6');"))),
-        FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST);
+        error(FORWARD_DECLARE_FOR_ES6_SHOULD_BE_CONST));
   }
 
   @Test

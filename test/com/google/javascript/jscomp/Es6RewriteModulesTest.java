@@ -301,14 +301,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     // TODO(b/144059297): Make this test pass when type checking runs first.
     enableRunTypeCheckAfterProcessing();
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "externsMod.js",
                 lines(
                     "/** @fileoverview @externs */",
                     "export let /** !number */ externalName;",
                     ""))),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        error(Es6ToEs3Util.CANNOT_CONVERT_YET));
   }
 
   @Test
@@ -317,8 +317,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     allowExternsChanges();
     test(
-        // Inputs
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "mod1.js",
                 lines(
@@ -331,8 +330,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                     "import {externalName as localName} from './mod1.js'",
                     "alert(localName);",
                     ""))),
-        // Outputs
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(
                 "mod2.js",
                 lines(
@@ -1006,12 +1004,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     moduleRoots = ImmutableList.of("/base");
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 "import * as foo from '/mod/name.js';")),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),

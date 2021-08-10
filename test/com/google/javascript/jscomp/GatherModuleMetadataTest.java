@@ -87,7 +87,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testGoogProvideWithGoogDeclaredInOtherFile() {
     // Closure's base.js declare the global goog. It should be ignored when scanning the provide'd
     // file. Only local variables named goog should cause the pass to back off.
-    testSame(new String[] {"var goog;", "goog.provide('my.provide');"});
+    testSame(srcs("var goog;", "goog.provide('my.provide');"));
     assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.provide");
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.provide");
     assertThat(m.googNamespaces()).containsExactly("my.provide");
@@ -419,7 +419,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testEs6ModuleDeclareModuleIdImportedGoog() {
     testSame(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode("goog.js", ""),
             SourceFile.fromCode(
                 "testcode",

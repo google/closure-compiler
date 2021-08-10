@@ -280,22 +280,21 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   @Test
   public void testModulesInExterns() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "externsMod.js",
                 lines(
                     "/** @fileoverview @externs */",
                     "export let /** !number */ externalName;",
                     ""))),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        error(Es6ToEs3Util.CANNOT_CONVERT_YET));
   }
 
   @Test
   public void testModulesInTypeSummary() {
     allowExternsChanges();
     test(
-        // Inputs
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "mod1.js",
                 lines(
@@ -308,8 +307,7 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
                     "import {externalName as localName} from './mod1.js'",
                     "alert(localName);",
                     ""))),
-        // Outputs
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(
                 "mod2.js",
                 lines(
@@ -945,12 +943,12 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 "import * as foo from '/mod/name.js';")),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
