@@ -373,7 +373,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist_regexp: 'file.ts$'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("file.closure.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("file.closure.js", "eval()")));
   }
 
   @Test
@@ -386,11 +386,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  whitelist: 'file.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("test/google3/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
   }
 
   @Test
@@ -403,11 +402,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: 'file.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("test/google3/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
   }
 
   @Test
@@ -420,15 +418,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: 'file.ts'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("file.closure.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file.closure.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("file.closure.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("test/google3/file.closure.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/bin/file.closure.js", "eval()")));
     testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file.closure.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(
-            SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.closure.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.closure.js", "eval()")));
+        srcs(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.closure.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bazel-out/k8-opt/bin/file.closure.js", "eval()")));
   }
 
   @Test
@@ -442,16 +437,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: 'file2.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file1.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file2.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file1.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file2.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file1.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file2.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file1.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("test/google3/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("test/google3/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/bin/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/bin/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bazel-out/k8-opt/bin/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bazel-out/k8-opt/bin/file2.js", "eval()")));
   }
 
   @Test
@@ -464,7 +457,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  whitelist: '/file.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("/file.js", "eval()")));
   }
 
   @Test
@@ -477,7 +470,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: '/file.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("/file.js", "eval()")));
   }
 
   @Test
@@ -491,8 +484,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: '/file2.js'\n "
             + "}";
 
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("/file1.js", "eval()")));
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("/file2.js", "eval()")));
   }
 
   @Test
@@ -505,8 +498,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  whitelist: 'genfiles/file.js'\n "
             + "}";
 
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
   }
 
   @Test
@@ -519,8 +511,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: 'genfiles/file.js'\n "
             + "}";
 
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
   }
 
   @Test
@@ -534,10 +525,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  allowlist: 'genfiles/file2.js'\n "
             + "}";
 
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file1.js", "eval()")));
-    testNoWarning(
-        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file2.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file1.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file2.js", "eval()")));
   }
 
   @Test
@@ -550,7 +539,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  only_apply_to: 'foo.js'\n "
             + "}";
     ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("foo.js", "eval()"));
-    testWarning(inputs, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+    testWarning(
+        srcs(inputs),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage("Violation: eval is not allowed"));
   }
 
   @Test
@@ -564,7 +556,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("foo.closure.js", "eval()"));
-    testWarning(inputs, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+    testWarning(
+        srcs(inputs),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage("Violation: eval is not allowed"));
   }
 
   @Test
@@ -576,7 +571,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  error_message: 'eval is not allowed'\n"
             + "  only_apply_to: 'foo.js'\n "
             + "}";
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bar.js", "eval()")));
   }
 
   @Test
@@ -590,7 +585,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
     ImmutableList<SourceFile> input =
         ImmutableList.of(SourceFile.fromCode("foo_test.js", "eval()"));
-    testWarning(input, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+    testWarning(
+        srcs(input),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage("Violation: eval is not allowed"));
   }
 
   @Test
@@ -604,7 +602,10 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "}";
     ImmutableList<SourceFile> input =
         ImmutableList.of(SourceFile.fromCode("foo_test.closure.js", "eval()"));
-    testWarning(input, CheckConformance.CONFORMANCE_VIOLATION, "Violation: eval is not allowed");
+    testWarning(
+        srcs(input),
+        warning(CheckConformance.CONFORMANCE_VIOLATION)
+            .withMessage("Violation: eval is not allowed"));
   }
 
   @Test
@@ -616,7 +617,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "  error_message: 'eval is not allowed'\n"
             + "  only_apply_to_regexp: 'test.js$'\n "
             + "}";
-    testNoWarning(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
+    testNoWarning(srcs(SourceFile.fromCode("bar.js", "eval()")));
   }
 
   @Test
@@ -911,13 +912,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
   private void testConformance(String src1, String src2) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("SRC1", src1), SourceFile.fromCode("SRC2", src2));
-    testNoWarning(inputs);
+    testNoWarning(srcs(inputs));
   }
 
   private void testConformance(String src1, String src2, DiagnosticType warning) {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("SRC1", src1), SourceFile.fromCode("SRC2", src2));
-    testWarning(inputs, warning);
+    testWarning(srcs(inputs), warning(warning));
   }
 
   @Test

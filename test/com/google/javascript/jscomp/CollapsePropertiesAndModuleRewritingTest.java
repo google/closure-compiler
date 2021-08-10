@@ -132,7 +132,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 "/** @const */ module$mod1.Foo = Foo$$module$mod1;")));
     expectedModules[1].addDependency(expectedModules[0]);
 
-    test(inputModules, expectedModules);
+    test(srcs(inputModules), expected(expectedModules));
   }
 
   @Test
@@ -165,6 +165,6 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             "mod1.js",
             "/** @const */ var module$mod1={}; /** @const */ module$mod1.default = 123;"));
 
-    test(inputs, expected);
+    test(srcs(inputs), expected(expected));
   }
 }

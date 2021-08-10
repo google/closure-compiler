@@ -39,32 +39,39 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   public void testVarDeclarations_acrossModules() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a")
-            .build(),
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1; export {a}")
-            .addChunk("import {a} from './m0.js'; a")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1;")
+                .addChunk("a")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1; export {a}")
+                .addChunk("import {a} from './m0.js'; a")
+                .build()));
+
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1, b = 2, c = 3;")
-            .addChunk("a;c;")
-            .build(),
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1, b = 2, c = 3; export {a, c};")
-            .addChunk("import {a, c} from './m0.js'; a; c;")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1, b = 2, c = 3;")
+                .addChunk("a;c;")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1, b = 2, c = 3; export {a, c};")
+                .addChunk("import {a, c} from './m0.js'; a; c;")
+                .build()));
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1, b = 2, c = 3;")
-            .addChunk("b;c;")
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk("var a = 1, b = 2, c = 3; export {b,c};")
-            .addChunk("import {b, c} from './m0.js'; b;c;")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1, b = 2, c = 3;")
+                .addChunk("b;c;")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("var a = 1, b = 2, c = 3; export {b,c};")
+                .addChunk("import {b, c} from './m0.js'; b;c;")
+                .build()));
   }
 
   @Test
@@ -86,7 +93,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
     expected[0].add(SourceFile.fromCode("m0-1", ""));
 
-    test(original, expected);
+    test(srcs(original), expected(expected));
   }
 
   @Test
@@ -104,7 +111,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .addChunkWithName("import {a} from './m0.js'; a", "/js/m1")
             .build();
 
-    test(original, expected);
+    test(srcs(original), expected(expected));
   }
 
   @Test
@@ -117,9 +124,10 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .build();
 
     testError(
-        original,
-        UNABLE_TO_COMPUTE_RELATIVE_PATH,
-        "Unable to compute relative import path from \"/js/m1.js\" to \"other/m0.js\"");
+        srcs(original),
+        error(UNABLE_TO_COMPUTE_RELATIVE_PATH)
+            .withMessage(
+                "Unable to compute relative import path from \"/js/m1.js\" to \"other/m0.js\""));
   }
 
   @Test
@@ -132,9 +140,10 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .build();
 
     testError(
-        original,
-        UNABLE_TO_COMPUTE_RELATIVE_PATH,
-        "Unable to compute relative import path from \"js/m1.js\" to \"/other/m0.js\"");
+        srcs(original),
+        error(UNABLE_TO_COMPUTE_RELATIVE_PATH)
+            .withMessage(
+                "Unable to compute relative import path from \"js/m1.js\" to \"/other/m0.js\""));
   }
 
   @Test
@@ -152,7 +161,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .addChunkWithName("import {a} from './m0.js'; a", "js/m1")
             .build();
 
-    test(original, expected);
+    test(srcs(original), expected(expected));
   }
 
   @Test
@@ -164,16 +173,10 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .addChunkWithName("a", "m1")
             .build();
 
-    JSChunk[] expected =
-        JSChunkGraphBuilder.forStar() //
-            .addChunkWithName("var a = 1; export {a}", "js/m0")
-            .addChunkWithName("import {a} from './js/m0.js'; a", "m1")
-            .build();
-
     testError(
-        original,
-        UNABLE_TO_COMPUTE_RELATIVE_PATH,
-        "Unable to compute relative import path from \"m1.js\" to \"js/m0.js\"");
+        srcs(original),
+        error(UNABLE_TO_COMPUTE_RELATIVE_PATH)
+            .withMessage("Unable to compute relative import path from \"m1.js\" to \"js/m0.js\""));
   }
 
   @Test
@@ -191,7 +194,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .addChunkWithName("import {a} from '../m0.js'; a", "js/m1")
             .build();
 
-    test(original, expected);
+    test(srcs(original), expected(expected));
   }
 
   @Test
@@ -210,7 +213,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
                 "import {a} from '../../js/other/path/one/m0.js'; a", "external/path/m1")
             .build();
 
-    test(original, expected);
+    test(srcs(original), expected(expected));
   }
 
   @Test
@@ -222,191 +225,208 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .build();
 
     testError(
-        original,
-        UNABLE_TO_COMPUTE_RELATIVE_PATH,
-        "Unable to compute relative import path from \"../node_modules/m1.js\" to \"js/m0.js\"");
+        srcs(original),
+        error(UNABLE_TO_COMPUTE_RELATIVE_PATH)
+            .withMessage(
+                "Unable to compute relative import path from \"../node_modules/m1.js\" to"
+                    + " \"js/m0.js\""));
   }
 
   @Test
   public void testForcedESModuleSemantics() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("var b = 1;")
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk("var a = 1; export {};")
-            .addChunk("import './m0.js'; var b = 1;")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1;")
+                .addChunk("var b = 1;")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("var a = 1; export {};")
+                .addChunk("import './m0.js'; var b = 1;")
+                .build()));
   }
 
   @Test
   public void testAssignToImport() {
     testError(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("var a = 1;")
-            .addChunk("a = 2;")
-            .build(),
-        ASSIGNMENT_TO_IMPORT,
-        "Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned");
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("var a = 1;")
+                .addChunk("a = 2;")
+                .build()),
+        error(ASSIGNMENT_TO_IMPORT)
+            .withMessage("Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned"));
   }
 
   @Test
   public void testChunkDependenciesCreateImportStatementsForSideEffects() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk("window.a = true")
-            .addChunk("console.log(window.a) // should be true")
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk("window.a = true; export {};")
-            .addChunk("import './m0.js'; console.log(window.a);")
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk("window.a = true")
+                .addChunk("console.log(window.a) // should be true")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("window.a = true; export {};")
+                .addChunk("import './m0.js'; console.log(window.a);")
+                .build()));
   }
 
   @Test
   public void testDynamicImportRewriting1() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk(
-                lines(
-                    "import('./m1.js')",
-                    "    .then("
-                        + DYNAMIC_IMPORT_CALLBACK_FN
-                        + "(function () { return module$i1; }))",
-                    "    .then(function (ns) { console.log(ns.default); });"))
-            .addChunk(
-                lines(
-                    "const a$$module$i1 = 1;",
-                    "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
-                    "/** @const */ var module$i1 = {};",
-                    "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;"))
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk(
-                lines(
-                    "import('./m1.js')",
-                    "    .then(function ($) { return $.module$i1; })",
-                    "    .then(function (ns) { console.log(ns.default); });",
-                    "export {};"))
-            .addChunk(
-                lines(
-                    "import './m0.js';",
-                    "const a$$module$i1 = 1;",
-                    "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
-                    "/** @const */ var module$i1 = {};",
-                    "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;",
-                    "export {module$i1};"))
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk(
+                    lines(
+                        "import('./m1.js')",
+                        "    .then("
+                            + DYNAMIC_IMPORT_CALLBACK_FN
+                            + "(function () { return module$i1; }))",
+                        "    .then(function (ns) { console.log(ns.default); });"))
+                .addChunk(
+                    lines(
+                        "const a$$module$i1 = 1;",
+                        "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
+                        "/** @const */ var module$i1 = {};",
+                        "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;"))
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    lines(
+                        "import('./m1.js')",
+                        "    .then(function ($) { return $.module$i1; })",
+                        "    .then(function (ns) { console.log(ns.default); });",
+                        "export {};"))
+                .addChunk(
+                    lines(
+                        "import './m0.js';",
+                        "const a$$module$i1 = 1;",
+                        "var $jscompDefaultExport$$module$i1 = a$$module$i1;",
+                        "/** @const */ var module$i1 = {};",
+                        "/** @const */ module$i1.default = $jscompDefaultExport$$module$i1;",
+                        "export {module$i1};"))
+                .build()));
   }
 
   @Test
   public void testDynamicImportRewriting2() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk(
-                lines(
-                    "const a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
-            .addChunk(
-                lines(
-                    "import('./m0.js')",
-                    "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => module$i0))",
-                    "    .then((ns) => console.log(ns.default));"))
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk(
-                lines(
-                    "const a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
-                    "export {module$i0};"))
-            .addChunk(
-                lines(
-                    "import './m0.js';",
-                    "import('./m0.js')",
-                    "    .then(($) => $.module$i0)",
-                    "    .then((ns) => console.log(ns.default));"))
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk(
+                    lines(
+                        "const a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                .addChunk(
+                    lines(
+                        "import('./m0.js')",
+                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => module$i0))",
+                        "    .then((ns) => console.log(ns.default));"))
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    lines(
+                        "const a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
+                        "export {module$i0};"))
+                .addChunk(
+                    lines(
+                        "import './m0.js';",
+                        "import('./m0.js')",
+                        "    .then(($) => $.module$i0)",
+                        "    .then((ns) => console.log(ns.default));"))
+                .build()));
   }
 
   @Test
   public void testDynamicImportWithoutCallback() {
     ignoreWarnings(LOAD_WARNING);
     test(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk(
-                lines(
-                    "var a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
-            .addChunk(lines("import('./m0.js')", "    .then((ns) => console.log(ns.default));"))
-            .build(),
-        JSChunkGraphBuilder.forStar()
-            .addChunk(
-                lines(
-                    "var a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
-                    "export {};"))
-            .addChunk(
-                lines(
-                    "import './m0.js';",
-                    "import('./m0.js')",
-                    "    .then((ns) => console.log(ns.default));"))
-            .build());
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk(
+                    lines(
+                        "var a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                .addChunk(lines("import('./m0.js')", "    .then((ns) => console.log(ns.default));"))
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    lines(
+                        "var a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;",
+                        "export {};"))
+                .addChunk(
+                    lines(
+                        "import './m0.js';",
+                        "import('./m0.js')",
+                        "    .then((ns) => console.log(ns.default));"))
+                .build()));
   }
 
   @Test
   public void testDynamicImportRewritingErrors1() {
     ignoreWarnings(LOAD_WARNING);
     testError(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk(
-                lines(
-                    "var a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
-            .addChunk(
-                lines(
-                    "import('./m0.js')",
-                    "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => {}))",
-                    "    .then((ns) => console.log(ns.default));"))
-            .build(),
-        UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK,
-        "Dynamic import callback encountered wih an invalid format. "
-            + "Unable to find valid namespace reference.");
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk(
+                    lines(
+                        "var a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                .addChunk(
+                    lines(
+                        "import('./m0.js')",
+                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(() => {}))",
+                        "    .then((ns) => console.log(ns.default));"))
+                .build()),
+        error(UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK)
+            .withMessage(
+                "Dynamic import callback encountered wih an invalid format. "
+                    + "Unable to find valid namespace reference."));
   }
 
   @Test
   public void testDynamicImportRewritingErrors2() {
     ignoreWarnings(LOAD_WARNING);
     testError(
-        JSChunkGraphBuilder.forStar() //
-            .addChunk(
-                lines(
-                    "var a$$module$i0 = 1;",
-                    "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
-                    "/** @const */ var module$i0 = {};",
-                    "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
-            .addChunk(
-                lines(
-                    "import('./m0.js')",
-                    "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(true))",
-                    "    .then((ns) => console.log(ns.default));"))
-            .build(),
-        UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK,
-        "Dynamic import callback encountered wih an invalid format. "
-            + "Unable to find valid callback function.");
+        srcs(
+            JSChunkGraphBuilder.forStar() //
+                .addChunk(
+                    lines(
+                        "var a$$module$i0 = 1;",
+                        "var $jscompDefaultExport$$module$i0 = a$$module$i0;",
+                        "/** @const */ var module$i0 = {};",
+                        "/** @const */ module$i0.default = $jscompDefaultExport$$module$i0;"))
+                .addChunk(
+                    lines(
+                        "import('./m0.js')",
+                        "    .then(" + DYNAMIC_IMPORT_CALLBACK_FN + "(true))",
+                        "    .then((ns) => console.log(ns.default));"))
+                .build()),
+        error(UNRECOGNIZED_DYNAMIC_IMPORT_CALLBACK)
+            .withMessage(
+                "Dynamic import callback encountered wih an invalid format. "
+                    + "Unable to find valid callback function."));
   }
 }

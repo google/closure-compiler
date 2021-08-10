@@ -184,36 +184,39 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';"
-              + "var $$S_ffffffffffffffffffff = 'ffffffffffffffffffff';"
-              + "function f(a) { alert($$S_ffffffffffffffffffff + $$S_ffffffffffffffffffff + a); }"
-              + "function g() { alert($$S_ciaociaociaociaociao); }",
-          // m2
-          "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d"
-              + " = '---------hi---------';"
-              + "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d"
-              + " = '--------adios-------'; "
-              + "var $$S_hhhhhhhhhhhhhhhhhhhh = 'hhhhhhhhhhhhhhhhhhhh';"
-              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
-              + "f('bye');"
-              + "function h(a) { alert($$S_hhhhhhhhhhhhhhhhhhhh + $$S_hhhhhhhhhhhhhhhhhhhh + a); }",
-          // m3
-          "var $$S_zzzzzzzzzzzzzzzzzzzz = 'zzzzzzzzzzzzzzzzzzzz';"
-              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
-              + "h($$S_ciaociaociaociaociao + "
-              + "$$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
-              + "(function() { alert($$S_zzzzzzzzzzzzzzzzzzzz + $$S_zzzzzzzzzzzzzzzzzzzz) })();",
-          // m4
-          "var $$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d"
-              + " = '-------peaches------';"
-              + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
-              + "alert($$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
-              + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);"
-              + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);",
-        });
+        srcs(modules),
+        expected(
+            // m1
+            "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';"
+                + "var $$S_ffffffffffffffffffff = 'ffffffffffffffffffff';"
+                + "function f(a) { "
+                + "  alert($$S_ffffffffffffffffffff + $$S_ffffffffffffffffffff + a); "
+                + "}"
+                + "function g() { alert($$S_ciaociaociaociaociao); }",
+            // m2
+            "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d"
+                + " = '---------hi---------';"
+                + "var $$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d"
+                + " = '--------adios-------'; "
+                + "var $$S_hhhhhhhhhhhhhhhhhhhh = 'hhhhhhhhhhhhhhhhhhhh';"
+                + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+                + "f('bye');"
+                + "function h(a) {"
+                + "  alert($$S_hhhhhhhhhhhhhhhhhhhh + $$S_hhhhhhhhhhhhhhhhhhhh + a);"
+                + "}",
+            // m3
+            "var $$S_zzzzzzzzzzzzzzzzzzzz = 'zzzzzzzzzzzzzzzzzzzz';"
+                + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+                + "h($$S_ciaociaociaociaociao + "
+                + "$$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
+                + "(function() { alert($$S_zzzzzzzzzzzzzzzzzzzz + $$S_zzzzzzzzzzzzzzzzzzzz) })();",
+            // m4
+            "var $$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d"
+                + " = '-------peaches------';"
+                + "f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);"
+                + "alert($$S_$2d$2d$2d$2d$2d$2d$2d$2d_adios$2d$2d$2d$2d$2d$2d$2d);"
+                + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);"
+                + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);"));
   }
 
   @Test
@@ -236,24 +239,23 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m1
-          lines(
-              "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
-              "function g() { alert($$S_ciaociaociaociaociao); }"),
-          // m2
-          lines(
-              "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
-              "function h(a) {"
-                  + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
-                  + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
-                  + "}"),
-          // m3
-          "h($$S_ciaociaociaociaociao + 'adios');",
-          // m4
-          "g();",
-        });
+        srcs(modules),
+        expected(
+            // m1
+            lines(
+                "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
+                "function g() { alert($$S_ciaociaociaociaociao); }"),
+            // m2
+            lines(
+                "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
+                "function h(a) {"
+                    + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
+                    + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
+                    + "}"),
+            // m3
+            "h($$S_ciaociaociaociaociao + 'adios');",
+            // m4
+            "g();"));
   }
 
   @Test
@@ -270,19 +272,18 @@ public final class AliasStringsTest extends CompilerTestCase {
     // The "ciao" string is used in m1 and m2.
     // Since m2 depends on m1, we should create the module there and not force it into m0.
     test(
-        modules,
-        new String[] {
-          // m0
-          "",
-          // m1
-          lines(
-              "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
-              "function g() { alert($$S_ciaociaociaociaociao); }"),
-          // m2
-          "h($$S_ciaociaociaociaociao + 'adios');",
-          // m3
-          "g();",
-        });
+        srcs(modules),
+        expected(
+            // m0
+            "",
+            // m1
+            lines(
+                "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
+                "function g() { alert($$S_ciaociaociaociaociao); }"),
+            // m2
+            "h($$S_ciaociaociaociaociao + 'adios');",
+            // m3
+            "g();"));
   }
 
   @Test
@@ -295,14 +296,13 @@ public final class AliasStringsTest extends CompilerTestCase {
             .build();
 
     test(
-        modules,
-        new String[] {
-          // m0
-          "var $$S_goodgoodgoodgoodgood='goodgoodgoodgoodgood'",
-          // m1
-          "function foo() {f($$S_goodgoodgoodgoodgood)}",
-          // m2
-          "function foo() {f($$S_goodgoodgoodgoodgood)}",
-        });
+        srcs(modules),
+        expected(
+            // m0
+            "var $$S_goodgoodgoodgoodgood='goodgoodgoodgoodgood'",
+            // m1
+            "function foo() {f($$S_goodgoodgoodgoodgood)}",
+            // m2
+            "function foo() {f($$S_goodgoodgoodgoodgood)}"));
   }
 }

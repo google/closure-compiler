@@ -1065,7 +1065,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   private void checkNoWarning(String... js) {
-    testSame(js);
+    testSame(srcs(js));
   }
 
   private void checkRequireWarning(String namespace, String... js) {

@@ -33,7 +33,6 @@ import static com.google.javascript.jscomp.CheckAccessControls.EXTEND_FINAL_CLAS
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 
-import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -461,10 +460,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testPrivateAccessForProperties2() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}",
-        "/** @private */ Foo.prototype.bar_ = function() {};"
-        + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}",
+            "/** @private */ Foo.prototype.bar_ = function() {};"
+                + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();"));
   }
 
   @Test
@@ -804,114 +804,118 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testProtectedAccessForProperties1() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.prototype.bar = function() {};"
-        + "(new Foo).bar();",
-        "Foo.prototype.baz = function() { this.bar(); };"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}"
+                + "/** @protected */ Foo.prototype.bar = function() {};"
+                + "(new Foo).bar();",
+            "Foo.prototype.baz = function() { this.bar(); };"));
   }
 
   @Test
   public void testProtectedAccessForProperties2() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.prototype.bar = function() {};"
-        + "(new Foo).bar();",
-        "/** @constructor \n * @extends {Foo} */"
-        + "function SubFoo() { this.bar(); }"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}"
+                + "/** @protected */ Foo.prototype.bar = function() {};"
+                + "(new Foo).bar();",
+            "/** @constructor \n * @extends {Foo} */" + "function SubFoo() { this.bar(); }"));
   }
 
   @Test
   public void testProtectedAccessForProperties3() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.prototype.bar = function() {};"
-        + "(new Foo).bar();",
-        "/** @constructor \n * @extends {Foo} */"
-        + "function SubFoo() { }"
-        + "SubFoo.baz = function() { (new Foo).bar(); }"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}"
+                + "/** @protected */ Foo.prototype.bar = function() {};"
+                + "(new Foo).bar();",
+            "/** @constructor \n * @extends {Foo} */"
+                + "function SubFoo() { }"
+                + "SubFoo.baz = function() { (new Foo).bar(); }"));
   }
 
   @Test
   public void testProtectedAccessForProperties4() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.bar = function() {};",
-        "/** @constructor \n * @extends {Foo} */"
-        + "function SubFoo() { Foo.bar(); }"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}" + "/** @protected */ Foo.bar = function() {};",
+            "/** @constructor \n * @extends {Foo} */" + "function SubFoo() { Foo.bar(); }"));
   }
 
   @Test
   public void testProtectedAccessForProperties5() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.prototype.bar = function() {};"
-        + "(new Foo).bar();",
-        "/** @constructor \n * @extends {Foo} */"
-        + "var SubFoo = function() { this.bar(); }"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {}"
+                + "/** @protected */ Foo.prototype.bar = function() {};"
+                + "(new Foo).bar();",
+            "/** @constructor \n * @extends {Foo} */" + "var SubFoo = function() { this.bar(); }"));
   }
 
   @Test
   public void testProtectedAccessForProperties6() {
     testSame(
-        new String[] {
-          "/** @constructor */ goog.Foo = function() {};"
-              + "/** @protected */ goog.Foo.prototype.bar = function() {};",
-          "/** @constructor \n * @extends {goog.Foo} */"
-              + "goog.SubFoo = function() { this.bar(); };"
-        });
+        srcs(
+            "/** @constructor */ goog.Foo = function() {};"
+                + "/** @protected */ goog.Foo.prototype.bar = function() {};",
+            "/** @constructor \n * @extends {goog.Foo} */"
+                + "goog.SubFoo = function() { this.bar(); };"));
   }
 
   @Test
   public void testProtectedAccessForProperties7() {
-    testSame(new String[] {
-        "/** @constructor */ var Foo = function() {};"
-        + "Foo.prototype = { /** @protected */ bar: function() {} }",
-        "/** @constructor \n * @extends {Foo} */"
-        + "var SubFoo = function() { this.bar(); };"
-        + "SubFoo.prototype = { moo: function() { this.bar(); }};"});
+    testSame(
+        srcs(
+            "/** @constructor */ var Foo = function() {};"
+                + "Foo.prototype = { /** @protected */ bar: function() {} }",
+            "/** @constructor \n * @extends {Foo} */"
+                + "var SubFoo = function() { this.bar(); };"
+                + "SubFoo.prototype = { moo: function() { this.bar(); }};"));
   }
 
   @Test
   public void testProtectedAccessForProperties8() {
-    testSame(new String[] {
-        "/** @constructor */ var Foo = function() {};"
-        + "Foo.prototype = { /** @protected */ bar: function() {} }",
-        "/** @constructor \n * @extends {Foo} */"
-        + "var SubFoo = function() {};"
-        + "SubFoo.prototype = { get moo() { this.bar(); }};"});
+    testSame(
+        srcs(
+            "/** @constructor */ var Foo = function() {};"
+                + "Foo.prototype = { /** @protected */ bar: function() {} }",
+            "/** @constructor \n * @extends {Foo} */"
+                + "var SubFoo = function() {};"
+                + "SubFoo.prototype = { get moo() { this.bar(); }};"));
   }
 
   @Test
   public void testProtectedAccessForProperties9() {
-    testSame(new String[] {
-        "/** @constructor */ var Foo = function() {};"
-        + "Foo.prototype = { /** @protected */ bar: function() {} }",
-        "/** @constructor \n * @extends {Foo} */"
-        + "var SubFoo = function() {};"
-        + "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"});
+    testSame(
+        srcs(
+            "/** @constructor */ var Foo = function() {};"
+                + "Foo.prototype = { /** @protected */ bar: function() {} }",
+            "/** @constructor \n * @extends {Foo} */"
+                + "var SubFoo = function() {};"
+                + "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"));
   }
 
   @Test
   public void testProtectedAccessForProperties10() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.js",
-            "/** @constructor */ var Foo = function() {};"
-            + "/** @protected */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode(
-            "sub_foo.js",
-            "/** @constructor @extends {Foo} */"
-            + "var SubFoo = function() {};"
-            + "(function() {"
-            + "SubFoo.prototype.baz = function() { this.bar(); }"
-            + "})();")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.js",
+                "/** @constructor */ var Foo = function() {};"
+                    + "/** @protected */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "sub_foo.js",
+                "/** @constructor @extends {Foo} */"
+                    + "var SubFoo = function() {};"
+                    + "(function() {"
+                    + "SubFoo.prototype.baz = function() { this.bar(); }"
+                    + "})();")));
   }
 
   @Test
   public void testProtectedAccessForProperties11() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "foo.js",
                 lines(
@@ -924,12 +928,12 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
                     "goog.require('Foo');",
                     "/** @constructor @implements {Foo} */",
                     "function Bar() { Foo.prop; };"))));
-}
+  }
 
   @Test
   public void testProtectedAccessForProperties12() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "a.js",
                 lines(
@@ -962,7 +966,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testProtectedAccessForProperties13() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "a.js",
                 lines(
@@ -1324,20 +1328,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testNoProtectedAccessForPropertiesWithNoRhs() {
-    testSame(new String[] {
-        lines(
-            "/** @constructor */ function Foo() {}",
-            "/** @protected */ Foo.prototype.x;"),
-        lines(
-            "/** @constructor @extends {Foo} */ function Bar() {}",
-            "/** @protected */ Bar.prototype.x;")
-    });
+    testSame(
+        srcs(
+            lines("/** @constructor */ function Foo() {}", "/** @protected */ Foo.prototype.x;"),
+            lines(
+                "/** @constructor @extends {Foo} */ function Bar() {}",
+                "/** @protected */ Bar.prototype.x;")));
   }
 
   @Test
   public void testPackagePrivateAccessForNames() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1346,7 +1348,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"), //
                 lines("name;"))),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1354,7 +1356,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // TODO(b/133450410): This should be a visibility violation.
     disableRewriteClosureCode();
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1371,7 +1373,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testPackagePrivateAccessForNames_esModule() {
     // TODO(b/133450410): This should be a visibility violation.
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1392,60 +1394,64 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testPackagePrivateAccessForProperties2() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
-            "/** @constructor */ function Foo() {}"),
-        SourceFile.fromCode(
-            Compiler.joinPathParts("baz", "quux.js"),
-            "/** @package */ Foo.prototype.bar = function() {};"
-            + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"), "/** @constructor */ function Foo() {}"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "/** @package */ Foo.prototype.bar = function() {};"
+                    + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
   }
 
   @Test
   public void testPackagePrivateAccessForProperties3() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "bar.js"),
-            "/** @constructor */ function Foo() {}"
-            + "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
-        SourceFile.fromCode(Compiler.joinPathParts("foo", "baz.js"),
-            "Foo.prototype.baz = function() { this.bar(); };")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/** @constructor */ function Foo() {}"
+                    + "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "baz.js"),
+                "Foo.prototype.baz = function() { this.bar(); };")));
   }
 
   @Test
   public void testPackagePrivateAccessForProperties4() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "bar.js"),
-            "/** @constructor */ function Foo() {}"
-            + "/** @package */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "baz.js"),
-            "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/** @constructor */ function Foo() {}"
+                    + "/** @package */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "baz.js"),
+                "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
   }
 
   @Test
   public void testPackagePrivateAccessForProperties5() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */\n"
-                + "function Parent () {\n"
-                + "  /** @package */\n"
-                + "  this.prop = 'foo';\n"
-                + "};"),
+                    + "function Parent () {\n"
+                    + "  /** @package */\n"
+                    + "  this.prop = 'foo';\n"
+                    + "};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/**\n"
-                + " * @constructor\n"
-                + " * @extends {Parent}\n"
-                + " */\n"
-                + "function Child() {\n"
-                + "  this.prop = 'asdf';\n"
-                + "}\n"
-                + "Child.prototype = new Parent();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                    + " * @constructor\n"
+                    + " * @extends {Parent}\n"
+                    + " */\n"
+                    + "function Child() {\n"
+                    + "  this.prop = 'asdf';\n"
+                    + "}\n"
+                    + "Child.prototype = new Parent();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1492,85 +1498,83 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testNoPackagePrivateAccessForProperties1() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} (new Foo).bar();"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/** @package */ Foo.prototype.bar = function() {};"
-                + "Foo.prototype.baz = function() { this.bar(); };")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                    + "Foo.prototype.baz = function() { this.bar(); };")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoPackagePrivateAccessForProperties2() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"
-                + "Foo.prototype.baz = function() { this.bar(); };"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"
+                    + "Foo.prototype.baz = function() { this.bar(); };"),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "(new Foo).bar();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoPackagePrivateAccessForProperties3() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoPackagePrivateAccessForProperties4() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
-                "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() { this.bar(); }")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                "/** @constructor \n * @extends {Foo} */ " + "function SubFoo() { this.bar(); }")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoPackagePrivateAccessForNamespaces() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @const */ var foo = {};\n"
-                + "/** @package */ foo.bar = function() {};"),
+                "/** @const */ var foo = {};\n" + "/** @package */ foo.bar = function() {};"),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "foo.bar();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoPackagePrivateAccessForProperties5() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {};"
-                + "SubFoo.prototype.baz = function() { this.bar(); }")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                    + "function SubFoo() {};"
+                    + "SubFoo.prototype.baz = function() { this.bar(); }")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1578,17 +1582,17 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // Overriding a private property with a non-package-private property
     // in a different file causes problems.
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {};"
-                + "SubFoo.prototype.bar = function() {};")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                    + "function SubFoo() {};"
+                    + "SubFoo.prototype.bar = function() {};")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1597,18 +1601,18 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // non-package-private property in the same file, but you'll get
     // yelled at when you try to use it.
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
-                + "/** @package */ Foo.prototype.bar = function() {};"
-                + "/** @constructor \n * @extends {Foo} */ "
-                + "function SubFoo() {};"
-                + "SubFoo.prototype.bar = function() {};"),
+                    + "/** @package */ Foo.prototype.bar = function() {};"
+                    + "/** @constructor \n * @extends {Foo} */ "
+                    + "function SubFoo() {};"
+                    + "SubFoo.prototype.bar = function() {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "SubFoo.prototype.baz = function() { this.bar(); }")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1747,63 +1751,65 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_TwoFiles() {
-    testSame(new String[] {
-        "/** @struct @constructor */\n"
-        + "Foo = function() {};\n"
-        + "/** @protected */\n"
-        + "Foo.prototype.protectedMethod = function() {};\n",
-        "  /**\n"
-        + "* @fileoverview\n"
-        + "* @package\n"
-        + "*/\n"
-        + "/** @struct @constructor @extends {Foo} */\n"
-        + "Bar = function() {};\n"
-        + "/** @override @protected */\n"
-        + "Bar.prototype.protectedMethod = function() {};\n"});
+    testSame(
+        srcs(
+            "/** @struct @constructor */\n"
+                + "Foo = function() {};\n"
+                + "/** @protected */\n"
+                + "Foo.prototype.protectedMethod = function() {};\n",
+            "  /**\n"
+                + "* @fileoverview\n"
+                + "* @package\n"
+                + "*/\n"
+                + "/** @struct @constructor @extends {Foo} */\n"
+                + "Bar = function() {};\n"
+                + "/** @override @protected */\n"
+                + "Bar.prototype.protectedMethod = function() {};\n"));
   }
 
   @Test
   public void testPublicFileOverviewVisibilityDoesNotApplyToNameWithExplicitPackageVisibility() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @public\n"
-                + " */\n"
-                + "/** @constructor @package */ function Foo() {};"),
+                    + " * @fileoverview\n"
+                    + " * @public\n"
+                    + " */\n"
+                    + "/** @constructor @package */ function Foo() {};"),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testPackageFileOverviewVisibilityDoesNotApplyToNameWithExplicitPublicVisibility() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "bar.js"),
-            "/**\n"
-            + " * @fileoverview\n"
-            + " * @package\n"
-            + " */\n"
-            + "/** @constructor @public */ function Foo() {};"),
-        SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/**\n"
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "/** @constructor @public */ function Foo() {};"),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")));
   }
 
   @Test
   public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "/** @constructor */\n"
-                + "var Foo = function() {};\n"),
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "var Foo = function() {};\n"),
             SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
@@ -1811,7 +1817,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
     // TODO(b/133450410): Requiring 'Foo' should be a visibility violation.
     disableRewriteClosureCode();
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1832,7 +1838,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility_esModule() {
     // TODO(b/133450410): Importing 'Foo' should be a visibility violation.
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1851,27 +1857,27 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void
       testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "bar.js"),
-            "/**\n"
-            + " * @fileoverview\n"
-            + " * @package\n"
-            + " */\n"
-            + "/** @constructor */\n"
-            + "Foo = function() {};\n"
-            + "/** @public */\n"
-            + "Foo.prototype.bar = function() {};\n"),
-        SourceFile.fromCode(
-            Compiler.joinPathParts("baz", "quux.js"),
-            "var foo = new Foo();\n"
-            + "foo.bar();")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/**\n"
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "Foo = function() {};\n"
+                    + "/** @public */\n"
+                    + "Foo.prototype.bar = function() {};\n"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "var foo = new Foo();\n" + "foo.bar();")));
   }
 
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
@@ -1887,7 +1893,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace2() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines("/**", " * @fileoverview", " * @package", " */", "goog.provide('foo.bar');")),
@@ -1898,7 +1904,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace3() {
     testNoWarning(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
@@ -1914,7 +1920,7 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   @Test
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
@@ -1925,119 +1931,119 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
                     + "one.two.three = function(){};"),
             SourceFile.fromCode(
                 "baz.js", "goog.require('one.two');\n" + "var x = one.two.three();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void
       testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @public\n"
-                + " */\n"
-                + "/** @constructor */\n"
-                + "Foo = function() {};\n"
-                + "/** @package */\n"
-                + "Foo.prototype.bar = function() {};\n"),
+                    + " * @fileoverview\n"
+                    + " * @public\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "Foo = function() {};\n"
+                    + "/** @package */\n"
+                    + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"),
-                "var foo = new Foo();\n"
-                + "foo.bar();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                Compiler.joinPathParts("baz", "quux.js"), "var foo = new Foo();\n" + "foo.bar();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testPublicFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            Compiler.joinPathParts("foo", "bar.js"),
-            "/**\n"
-            + " * @fileoverview\n"
-            + " * @public\n"
-            + " */\n"
-            + "/** @constructor */\n"
-            + "Foo = function() {};\n"
-            + "Foo.prototype.bar = function() {};\n"),
-        SourceFile.fromCode(
-            Compiler.joinPathParts("baz", "quux.js"),
-            "var foo = new Foo();\n"
-            + "foo.bar();")));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/**\n"
+                    + " * @fileoverview\n"
+                    + " * @public\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "Foo = function() {};\n"
+                    + "Foo.prototype.bar = function() {};\n"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"),
+                "var foo = new Foo();\n" + "foo.bar();")));
   }
 
   @Test
   public void testPackageFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "/** @constructor */\n"
-                + "Foo = function() {};\n"
-                + "Foo.prototype.bar = function() {};\n"),
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "Foo = function() {};\n"
+                    + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"),
-                "var foo = new Foo();\n"
-                + "foo.bar();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                Compiler.joinPathParts("baz", "quux.js"), "var foo = new Foo();\n" + "foo.bar();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testFileOverviewVisibilityComesFromDeclarationFileNotUseFile() {
     testError(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "/** @constructor */\n"
-                + "Foo = function() {};\n"
-                + "Foo.prototype.bar = function() {};\n"),
+                    + " * @fileoverview\n"
+                    + " * @package\n"
+                    + " */\n"
+                    + "/** @constructor */\n"
+                    + "Foo = function() {};\n"
+                    + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("baz", "quux.js"),
                 "/**\n"
-                + " * @fileoverview\n"
-                + " * @public\n"
-                + " */\n"
-                + "var foo = new Foo();\n"
-                + "foo.bar();")),
-        BAD_PACKAGE_PROPERTY_ACCESS);
+                    + " * @fileoverview\n"
+                    + " * @public\n"
+                    + " */\n"
+                    + "var foo = new Foo();\n"
+                    + "foo.bar();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   @Test
   public void testNoExceptionsWithBadConstructors1() {
-    testSame(new String[] {"function Foo() { (new SubFoo).bar(); } "
-        + "/** @constructor */ function SubFoo() {}"
-        + "/** @protected */ SubFoo.prototype.bar = function() {};"});
+    testSame(
+        srcs(
+            "function Foo() { (new SubFoo).bar(); } "
+                + "/** @constructor */ function SubFoo() {}"
+                + "/** @protected */ SubFoo.prototype.bar = function() {};"));
   }
 
   @Test
   public void testNoExceptionsWithBadConstructors2() {
-    testSame(new String[] {"/** @constructor */ function Foo() {} "
-        + "Foo.prototype.bar = function() {};"
-        + "/** @constructor */"
-        + "function SubFoo() {}"
-        + "/** @protected */ "
-        + "SubFoo.prototype.bar = function() { (new Foo).bar(); };"});
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() {} "
+                + "Foo.prototype.bar = function() {};"
+                + "/** @constructor */"
+                + "function SubFoo() {}"
+                + "/** @protected */ "
+                + "SubFoo.prototype.bar = function() { (new Foo).bar(); };"));
   }
 
   @Test
   public void testGoodOverrideOfProtectedProperty() {
-    testSame(new String[] {
-        "/** @constructor */ function Foo() { } "
-        + "/** @protected */ Foo.prototype.bar = function() {};",
-        "/** @constructor \n * @extends {Foo} */ "
-        + "function SubFoo() {}"
-        + "/** @inheritDoc */ SubFoo.prototype.bar = function() {};",
-    });
+    testSame(
+        srcs(
+            "/** @constructor */ function Foo() { } "
+                + "/** @protected */ Foo.prototype.bar = function() {};",
+            "/** @constructor \n * @extends {Foo} */ "
+                + "function SubFoo() {}"
+                + "/** @inheritDoc */ SubFoo.prototype.bar = function() {};"));
   }
 
   @Test
@@ -2066,31 +2072,29 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
 
   @Test
   public void testAccessOfStaticMethodOnPrivateConstructor() {
-    testSame(new String[] {
-        "/** @constructor \n * @private */ function Foo() { } "
-        + "Foo.create = function() { return new Foo(); };",
-        "Foo.create()",
-    });
+    testSame(
+        srcs(
+            "/** @constructor \n * @private */ function Foo() { } "
+                + "Foo.create = function() { return new Foo(); };",
+            "Foo.create()"));
   }
 
   @Test
   public void testAccessOfStaticMethodOnPrivateQualifiedConstructor() {
     testSame(
-        new String[] {
-          "/** @constructor \n * @private */ goog.Foo = function() { }; "
-              + "goog.Foo.create = function() { return new goog.Foo(); };",
-          "goog.Foo.create()",
-        });
+        srcs(
+            "/** @constructor \n * @private */ goog.Foo = function() { }; "
+                + "goog.Foo.create = function() { return new goog.Foo(); };",
+            "goog.Foo.create()"));
   }
 
   @Test
   public void testInstanceofOfPrivateConstructor() {
     testSame(
-        new String[] {
-          "/** @constructor \n * @private */ goog.Foo = function() { }; "
-              + "goog.Foo.create = function() { return new goog.Foo(); };",
-          "goog instanceof goog.Foo",
-        });
+        srcs(
+            "/** @constructor \n * @private */ goog.Foo = function() { }; "
+                + "goog.Foo.create = function() { return new goog.Foo(); };",
+            "goog instanceof goog.Foo"));
   }
 
   @Test
