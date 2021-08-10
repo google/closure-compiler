@@ -34,6 +34,14 @@ import java.util.List;
 public abstract class RefactoringTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  public static String lines(String line) {
+    return line;
+  }
+
+  public static String lines(String... lines) {
+    return LINE_JOINER.join(lines);
+  }
+
   protected abstract Scanner getScanner();
 
   protected abstract String getExterns();
