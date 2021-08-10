@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config;
@@ -167,5 +168,15 @@ public abstract class CodePrinterTestBase {
 
   protected void assertPrintSame(String js) {
     assertPrint(js, js);
+  }
+
+  protected static final Joiner LINE_JOINER = Joiner.on('\n');
+
+  public static String lines(String line) {
+    return line;
+  }
+
+  public static String lines(String... lines) {
+    return LINE_JOINER.join(lines);
   }
 }

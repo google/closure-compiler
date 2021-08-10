@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -36,7 +35,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class CodePrinterTest extends CodePrinterTestBase {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
   public void testBigInt() {
@@ -1348,12 +1346,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testNonNullTypes() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "/** @return {!Foo} */",
             "Foo.prototype.f = function() { return new Foo; };"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " */",
@@ -1372,13 +1370,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = {};",
             "/** @const */ goog.java = {};",
             "/** @typedef {Array<number>} */ goog.java.Long;",
             "/** @param {!goog.java.Long} a*/",
             "function f(a){};"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = {};",
             "/** @const */ goog.java = {};",
             "goog.java.Long;",
@@ -1393,16 +1391,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testTypeAnnotationsAssign() {
     assertTypeAnnotations(
         "/** @constructor */ var Foo = function(){}",
-        LINE_JOINER.join("/**\n * @constructor\n */", "var Foo = function() {\n};\n"));
+        lines("/**\n * @constructor\n */", "var Foo = function() {\n};\n"));
   }
 
   @Test
   public void testTypeAnnotationsNamespace_varWithoutJSDoc() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "var a = {};", //
             "/** @constructor */ a.Foo = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};", //
             "/**",
             " * @constructor",
@@ -1414,11 +1412,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsNamespace_varWithConstJSDoc() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */", //
             "var a = {};",
             "/** @constructor */ a.Foo = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/**",
             " * @constructor",
@@ -1430,10 +1428,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsNamespace_constDeclarationWithoutJSDoc() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "const a = {};", //
             "/** @constructor */ a.Foo = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "const a = {};", //
             "/**",
             " * @constructor",
@@ -1445,11 +1443,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsNamespace_constDeclarationWithJSDoc() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @export */",
             "const a = {};", //
             "/** @constructor */ a.Foo = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @export */ const a = {};", //
             "/**",
             " * @constructor",
@@ -1461,13 +1459,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsNamespace_qnameWithConstJSDoc() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var a = {};",
             "/** @const */",
             "a.b = {};",
             "/** @constructor */ a.b.Foo = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/** @const */ a.b = {};",
             "/**",
@@ -1480,11 +1478,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsMemberSubclass() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/** @constructor */ a.Foo = function(){};",
             "/** @constructor \n @extends {a.Foo} */ a.Bar = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/**\n * @constructor\n */",
             "a.Foo = function() {\n};",
@@ -1496,11 +1494,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsInterface() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/** @interface */ a.Foo = function(){};",
             "/** @interface \n @extends {a.Foo} */ a.Bar = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/**\n * @interface\n */",
             "a.Foo = function() {\n};",
@@ -1512,13 +1510,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsMultipleInterface() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/** @interface */ a.Foo1 = function(){};",
             "/** @interface */ a.Foo2 = function(){};",
             "/** @interface \n @extends {a.Foo1} \n @extends {a.Foo2} */",
             "a.Bar = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/**\n * @interface\n */",
             "a.Foo1 = function() {\n};",
@@ -1533,7 +1531,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsMember() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */ a.Foo = function(){}",
             "/** @param {string} foo",
@@ -1541,7 +1539,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "a.Foo.prototype.foo = function(foo) { return 3; };",
             "/** @type {!Array|undefined} */",
             "a.Foo.prototype.bar = [];"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/**\n * @constructor\n */",
             "a.Foo = function() {\n};",
@@ -1558,7 +1556,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testTypeAnnotationsMemberStub() {
     // TODO(blickly): Investigate why the method's type isn't preserved.
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I(){};",
             "/** @return {undefined} @param {number} x */ I.prototype.method;"),
         "/**\n * @interface\n */\nfunction I() {\n}\nI.prototype.method;\n");
@@ -1567,7 +1565,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testTypeAnnotationsImplements() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/** @constructor */ a.Foo = function(){};",
             "/** @interface */ a.I = function(){};",
@@ -1576,7 +1574,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "/** @constructor \n @extends {a.Foo}",
             " * @implements {a.I} \n @implements {a.I2}",
             " */ a.Bar = function(){}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var a = {};",
             "/**\n * @constructor\n */",
             "a.Foo = function() {\n};",
@@ -1758,7 +1756,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // x is unused, so NTI infers that x can be omitted.
     assertTypeAnnotations(
         "var a = function(x) {}",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {?} x",
             " * @return {undefined}",
@@ -1770,7 +1768,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testOptionalTypesAnnotation() {
     assertTypeAnnotations(
         "/** @param {string=} x */ var a = function(x) {}",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {string=} x",
             " * @return {undefined}",
@@ -1782,7 +1780,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testOptionalTypesAnnotation2() {
     assertTypeAnnotations(
         "/** @param {undefined=} x */ var a = function(x) {}",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {undefined=} x",
             " * @return {undefined}",
@@ -1794,7 +1792,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testVariableArgumentsTypesAnnotation() {
     assertTypeAnnotations(
         "/** @param {...string} x */ var a = function(x) {}",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {...string} x",
             " * @return {undefined}",
@@ -1841,11 +1839,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEnumAnnotation2() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = goog || {};",
             "/** @enum {string} */ goog.Enum = {FOO: 'x', BAR: 'y'};",
             "/** @const */ goog.Enum2 = goog.x ? {} : goog.Enum;"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = goog || {};",
             "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
             "/** @type {(!Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n"));
@@ -1861,9 +1859,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEnumAnnotation4() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
-            "/** @enum {number} */ var E = {A:1, B:2};", "function f(/** !E */ x) { return x; }"),
-        LINE_JOINER.join(
+        lines("/** @enum {number} */ var E = {A:1, B:2};", "function f(/** !E */ x) { return x; }"),
+        lines(
             "/** @enum {number} */",
             "var E = {A:1, B:2};",
             "/**",
@@ -1879,12 +1876,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testClosureLibraryTypeAnnotationExamples() {
     assertTypeAnnotations(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = goog || {};",
             "/** @param {Object} obj */goog.removeUid = function(obj) {};",
             "/** @param {Object} obj The object to remove the field from. */",
             "goog.removeHashCode = goog.removeUid;"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = goog || {};",
             "/**",
             " * @param {(Object|null)} obj",
@@ -1942,7 +1939,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testDeprecatedAnnotationIncludesNewline() {
     String js =
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @type {number}",
             " * @deprecated See {@link replacementClass} for more details.",
@@ -2848,7 +2845,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("/** @const */ var ns={}");
 
     assertPrintSame(
-        LINE_JOINER.join(
+        lines(
             "/**", //
             " * @const",
             " * @suppress {const,duplicate}",
@@ -3126,11 +3123,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testGeneratorYieldPretty() {
-    assertPrettyPrint(
-        "function *f() {yield 1}", LINE_JOINER.join("function* f() {", "  yield 1;", "}", ""));
+    assertPrettyPrint("function *f() {yield 1}", lines("function* f() {", "  yield 1;", "}", ""));
 
-    assertPrettyPrint(
-        "function *f() {yield}", LINE_JOINER.join("function* f() {", "  yield;", "}", ""));
+    assertPrettyPrint("function *f() {yield}", lines("function* f() {", "  yield;", "}", ""));
   }
 
   @Test
@@ -3320,15 +3315,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testPrettyArrowFunction() {
     assertPrettyPrint(
         "if (x) {var f = ()=>{alert(1); alert(2)}}",
-        LINE_JOINER.join(
-            "if (x) {", "  var f = () => {", "    alert(1);", "    alert(2);", "  };", "}", ""));
+        lines("if (x) {", "  var f = () => {", "    alert(1);", "    alert(2);", "  };", "}", ""));
   }
 
   @Test
   public void testPrettyPrint_switch() {
     assertPrettyPrint(
         "switch(something){case 0:alert(0);break;case 1:alert(1);break}",
-        LINE_JOINER.join(
+        lines(
             "switch(something) {",
             "  case 0:",
             "    alert(0);",
@@ -3343,7 +3337,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testBlocksInCaseArePreserved() {
     String js =
-        LINE_JOINER.join(
+        lines(
             "switch(something) {",
             "  case 0:",
             "    {",
@@ -3366,7 +3360,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testBlocksArePreserved() {
     String js =
-        LINE_JOINER.join(
+        lines(
             "console.log(0);",
             "{",
             "  let x = 1;",
@@ -3694,8 +3688,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEs6NewTargetConditional() {
     assertPrint(
-        LINE_JOINER.join(
-            "function f() {", "  if (!new.target) throw 'Must be called with new!';", "}"),
+        lines("function f() {", "  if (!new.target) throw 'Must be called with new!';", "}"),
         "function f(){if(!new.target)throw\"Must be called with new!\";}");
   }
 
