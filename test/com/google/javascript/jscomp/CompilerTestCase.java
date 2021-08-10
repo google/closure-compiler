@@ -2168,7 +2168,7 @@ public abstract class CompilerTestCase {
     return new FlatSources(Arrays.asList(files));
   }
 
-  protected static Sources srcs(JSChunk[] modules) {
+  protected static Sources srcs(JSChunk... modules) {
     return new ModuleSources(modules);
   }
 
