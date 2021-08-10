@@ -459,7 +459,34 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     return n.isMemberFunctionDef() && n.getParent().isClassMembers();
   }
 
-  private static boolean allDefinitionsAreCandidateFunctions(Node n) {
+  /**
+   * When class fields are set to RHS with side effects, the order of execution may be moved into
+   * incorrect order if optimized in this pass. Example:
+   *
+   * <p>class C { field2 = alert(2);", constructor(a) {", use(a); } } var c = new C(alert(1));
+   *
+   * <p>would optimize to
+   *
+   * <p>class C { field2 = alert(2);", constructor(a) {", var a = alert(1) use(a); } } var c = new
+   * C(alert(1));
+   *
+   * <p>which would mean alert(2) gets executed before alert(1) - this behavior is incorrect.
+   *
+   * <p>So, if there are any RHS side effects, we skip the optimization.
+   */
+  private boolean classContainsClassFieldWithRHSSideEffects(Node classNode) {
+    Node classMembersNode = NodeUtil.getClassMembers(classNode);
+    for (Node child = classMembersNode.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isMemberFieldDef()
+          && !child.isStaticMember()
+          && astAnalyzer.mayHaveSideEffects(child)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean allDefinitionsAreCandidateFunctions(Node n) {
     switch (n.getToken()) {
       case CLASS:
         if (NodeUtil.isNamedClassExpression(n)) {
@@ -472,6 +499,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           if (constructorMemberFunctionDef == null) {
             // unable to find the constructor
             // TODO(bradfordcsmith): Ideally we should find the parent class constructor.
+            return false;
+          } else if (classContainsClassFieldWithRHSSideEffects(n)) {
             return false;
           } else {
             Node functionNode = constructorMemberFunctionDef.getOnlyChild();

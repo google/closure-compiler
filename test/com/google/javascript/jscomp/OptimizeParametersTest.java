@@ -1452,6 +1452,70 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewriteUsedClassConstructorWithClassStaticField() {
+    test(
+        lines(
+            "class C {", //
+            "  static field2 = alert();",
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C(1);"),
+        lines(
+            "class C {", //
+            "  static field2 = alert();",
+            "  constructor( ) {",
+            "    var a = 1;", // moved from parameter list
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static field2 = alert();",
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C(alert());"),
+        lines(
+            "class C {", //
+            "  static field2 = alert();",
+            "  constructor() {",
+            "    var a = alert();",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();"));
+  }
+
+  @Test
+  public void testNoRewriteUsedClassConstructorWithClassNonstaticField() {
+    testSame(
+        lines(
+            "class C {", //
+            "  field2 = alert();",
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C(1);"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  field2 = alert();",
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C(alert());"));
+  }
+
+  @Test
   public void testNoRewriteUsedClassMethodParam1() {
     testSame(lines(
         "class C { method(a) { use(a); } }",
@@ -1637,5 +1701,15 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testRemoveOptionalDestructuringParam() {
     test("function f({x}) {} f();", "function f() { var {x} = void 0; } f();");
     test("function f({x} = {}) {} f();", "function f() { var {x} = {}; } f();");
+  }
+
+  @Test
+  public void testClassField() {
+    testSame(
+        lines(
+            "class C {", //
+            "  x = function(a,b) { return a + b };",
+            "}",
+            "new C().x(1,2)"));
   }
 }
