@@ -614,12 +614,13 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testStarStrictModuleDependencyCheck() {
     strictModuleDepErrorLevel = CheckLevel.WARNING;
     testSame(
-        JSChunkGraphBuilder.forStar()
-            .addChunk("function a() {}")
-            .addChunk("function b() { a(); c(); }")
-            .addChunk("function c() { a(); }")
-            .build(),
-        VarCheck.STRICT_MODULE_DEP_ERROR);
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("function a() {}")
+                .addChunk("function b() { a(); c(); }")
+                .addChunk("function c() { a(); }")
+                .build()),
+        warning(VarCheck.STRICT_MODULE_DEP_ERROR));
   }
 
   @Test
@@ -662,11 +663,11 @@ public final class VarCheckTest extends CompilerTestCase {
       m2.addDependency(m1);
     }
     if (error == null && warning == null) {
-      test(new JSChunk[] {m1, m2}, new String[] {code1, code2});
+      test(srcs(m1, m2), expected(code1, code2));
     } else if (error == null) {
-      test(new JSChunk[] {m1, m2}, new String[] {code1, code2}, warning(warning));
+      test(srcs(m1, m2), expected(code1, code2), warning(warning));
     } else {
-      testError(srcs(new JSChunk[] {m1, m2}), error(error));
+      testError(srcs(m1, m2), error(error));
     }
   }
 
@@ -1010,17 +1011,16 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testGoogLegacyModule_inLoadModule() {
     testSame(
-        new String[] {
-          TestExternsBuilder.getClosureExternsAsSource(),
-          lines(
-              "goog.loadModule(function(exports) {", //
-              "  goog.module('foo.A');",
-              "  goog.module.declareLegacyNamespace();",
-              "  exports = class {};",
-              "  return exports;",
-              "});"),
-          "new foo.A();"
-        });
+        srcs(
+            TestExternsBuilder.getClosureExternsAsSource(),
+            lines(
+                "goog.loadModule(function(exports) {", //
+                "  goog.module('foo.A');",
+                "  goog.module.declareLegacyNamespace();",
+                "  exports = class {};",
+                "  return exports;",
+                "});"),
+            "new foo.A();"));
   }
 
   @Test
@@ -1108,10 +1108,7 @@ public final class VarCheckTest extends CompilerTestCase {
                 "weakVar();"),
             SourceKind.WEAK));
 
-    testSame(
-        new JSChunk[] {
-          weakModule,
-        });
+    testSame(srcs(weakModule));
   }
 
   @Test
@@ -1180,12 +1177,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
 
-    test(
-        srcs(
-            new JSChunk[] {
-              strongModule, weakModule,
-            }),
-        error(VarCheck.UNDEFINED_VAR_ERROR));
+    test(srcs(strongModule, weakModule), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test

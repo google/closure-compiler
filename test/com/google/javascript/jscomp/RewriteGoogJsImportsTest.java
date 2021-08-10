@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_IMPORT_M
 import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_REEXPORTED;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.RewriteGoogJsImports.Mode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -175,7 +174,7 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   @Test
   public void testReexportGoog() {
     testError(
-        ImmutableList.of(
+        srcs(
             BASE,
             GOOG,
             SourceFile.fromCode(
@@ -183,10 +182,10 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
                 lines(
                     "import * as goog from './closure/goog.js';", //
                     "export {goog};"))),
-        GOOG_JS_REEXPORTED);
+        error(GOOG_JS_REEXPORTED));
 
     testError(
-        ImmutableList.of(
+        srcs(
             BASE,
             GOOG,
             SourceFile.fromCode(
@@ -194,19 +193,18 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
                 lines(
                     "import * as goog from './closure/goog.js';", //
                     "export default goog;"))),
-        GOOG_JS_REEXPORTED);
+        error(GOOG_JS_REEXPORTED));
 
     testError(
-        ImmutableList.of(
-            BASE, GOOG, SourceFile.fromCode("testcode", "export * from './closure/goog.js';")),
-        GOOG_JS_REEXPORTED);
+        srcs(BASE, GOOG, SourceFile.fromCode("testcode", "export * from './closure/goog.js';")),
+        error(GOOG_JS_REEXPORTED));
 
     testError(
-        ImmutableList.of(
+        srcs(
             BASE,
             GOOG,
             SourceFile.fromCode("testcode", "export {require} from './closure/goog.js';")),
-        GOOG_JS_REEXPORTED);
+        error(GOOG_JS_REEXPORTED));
   }
 
   /** this is just to make sure the presence of import.meta does not cause a compiler failure */

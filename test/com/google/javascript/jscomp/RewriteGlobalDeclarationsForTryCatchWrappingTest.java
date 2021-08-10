@@ -56,8 +56,11 @@ public final class RewriteGlobalDeclarationsForTryCatchWrappingTest extends Comp
   @Test
   public void testFunctionDeclarationsInModule() {
     test(
-        JSChunkGraphBuilder.forUnordered().addChunk("a; function f(){} function g(){}").build(),
-        new String[] {"var f = function(){}; var g = function(){}; a"});
+        srcs(
+            JSChunkGraphBuilder.forUnordered()
+                .addChunk("a; function f(){} function g(){}")
+                .build()),
+        expected("var f = function(){}; var g = function(){}; a"));
   }
 
   @Test

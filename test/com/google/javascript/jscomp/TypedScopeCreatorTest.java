@@ -2806,14 +2806,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testClassDeclarationWithExtends_googModuleGet() {
     testSame(
-        new String[] {
-          lines(
-              "goog.module('a.Bar');", //
-              "class Bar {}",
-              "BAR: Bar;",
-              "exports = Bar;"),
-          "class Foo extends goog.module.get('a.Bar') {}"
-        });
+        srcs(
+            lines(
+                "goog.module('a.Bar');", //
+                "class Bar {}",
+                "BAR: Bar;",
+                "exports = Bar;"),
+            "class Foo extends goog.module.get('a.Bar') {}"));
     TypedScope moduleScope = getLabeledStatement("BAR").enclosingScope;
     FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
     FunctionType bar = (FunctionType) findNameType("Bar", moduleScope);
@@ -2830,14 +2829,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testClassDeclarationWithExtends_googModuleGetProperty() {
     testSame(
-        new String[] {
-          lines(
-              "goog.module('a.b');", //
-              "class Bar {}",
-              "BAR: Bar;",
-              "exports = {Bar};"),
-          "class Foo extends goog.module.get('a.b').Bar {}"
-        });
+        srcs(
+            lines(
+                "goog.module('a.b');", //
+                "class Bar {}",
+                "BAR: Bar;",
+                "exports = {Bar};"),
+            "class Foo extends goog.module.get('a.b').Bar {}"));
     TypedScope moduleScope = getLabeledStatement("BAR").enclosingScope;
     FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
     FunctionType bar = (FunctionType) findNameType("Bar", moduleScope);
@@ -2854,15 +2852,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testClassDeclarationWithExtends_googModuleGetNestedProperty() {
     testSame(
-        new String[] {
-          lines(
-              "goog.module('a.b');", //
-              "class Bar {}",
-              "Bar.NestedClass = class {};",
-              "NESTED_CLASS: Bar.NestedClass;",
-              "exports = {Bar};"),
-          "class Foo extends goog.module.get('a.b').Bar.NestedClass {}"
-        });
+        srcs(
+            lines(
+                "goog.module('a.b');", //
+                "class Bar {}",
+                "Bar.NestedClass = class {};",
+                "NESTED_CLASS: Bar.NestedClass;",
+                "exports = {Bar};"),
+            "class Foo extends goog.module.get('a.b').Bar.NestedClass {}"));
     TypedScope moduleScope = getLabeledStatement("NESTED_CLASS").enclosingScope;
     FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
     FunctionType nestedClass =
@@ -4896,10 +4893,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testScriptAndGoogModuleWithShadowedVar() {
     testSame(
-        new String[] {
-          "var x = 0; GLOBAL_X: x;", //
-          "goog.module('a'); var x = 'str'; LOCAL_X: x;"
-        });
+        srcs(
+            "var x = 0; GLOBAL_X: x;", //
+            "goog.module('a'); var x = 'str'; LOCAL_X: x;"));
     TypedScope globalScope = getLabeledStatement("GLOBAL_X").enclosingScope;
     TypedScope localScope = getLabeledStatement("LOCAL_X").enclosingScope;
 
@@ -4914,10 +4910,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testTwoGoogModulesWithSameNamedVar() {
     testSame(
-        new String[] {
-          "goog.module('a'); var x = 'str'; MOD_A_X: x;", //
-          "goog.module('b'); var x = 0; MOD_B_X: x"
-        });
+        srcs(
+            "goog.module('a'); var x = 'str'; MOD_A_X: x;", //
+            "goog.module('b'); var x = 0; MOD_B_X: x"));
 
     assertScope(globalScope).doesNotDeclare("x");
 
@@ -4932,10 +4927,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testTwoGoogModuleWithSameNamedFunctionDeclaration() {
     testSame(
-        new String[] {
-          "goog.module('a'); function foo() {} MOD_A_FOO: foo;", //
-          "goog.module('b'); function foo() {} MOD_B_FOO: foo;"
-        });
+        srcs(
+            "goog.module('a'); function foo() {} MOD_A_FOO: foo;", //
+            "goog.module('b'); function foo() {} MOD_B_FOO: foo;"));
 
     assertScope(globalScope).doesNotDeclare("foo");
 
@@ -5368,7 +5362,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequireModuleWithoutExports() {
-    testSame(new String[] {"goog.module('a');", "goog.module('b'); const a = goog.require('a');"});
+    testSame(srcs("goog.module('a');", "goog.module('b'); const a = goog.require('a');"));
   }
 
   @Test
@@ -6780,16 +6774,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testInferredLegacyNsExport() {
     processClosurePrimitives = true;
     testSame(
-        new String[] {
-          lines(
-              "goog.module('a.b.c')",
-              "goog.module.declareLegacyNamespace();",
-              "MOD: 0;",
-              "",
-              "/** @return {number} */",
-              "function getNumber() { return 0; }",
-              "exports = getNumber();")
-        });
+        srcs(
+            lines(
+                "goog.module('a.b.c')",
+                "goog.module.declareLegacyNamespace();",
+                "MOD: 0;",
+                "",
+                "/** @return {number} */",
+                "function getNumber() { return 0; }",
+                "exports = getNumber();")));
 
     TypedVar ab = globalScope.getVar("a.b");
     assertThat(ab).isNotInferred();
@@ -6807,19 +6800,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testInferredLegacyNsExport_bundled() {
     processClosurePrimitives = true;
     testSame(
-        new String[] {
-          lines(
-              "goog.loadModule(function(exports) {",
-              "goog.module('a.b.c')",
-              "goog.module.declareLegacyNamespace();",
-              "MOD: 0;",
-              "",
-              "/** @return {number} */",
-              "function getNumber() { return 0; }",
-              "exports = getNumber();",
-              "return exports;",
-              "});")
-        });
+        srcs(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "goog.module('a.b.c')",
+                "goog.module.declareLegacyNamespace();",
+                "MOD: 0;",
+                "",
+                "/** @return {number} */",
+                "function getNumber() { return 0; }",
+                "exports = getNumber();",
+                "return exports;",
+                "});")));
 
     TypedVar ab = globalScope.getVar("a.b");
     assertThat(ab).isNotInferred();

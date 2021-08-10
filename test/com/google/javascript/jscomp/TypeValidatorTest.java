@@ -272,231 +272,241 @@ public final class TypeValidatorTest extends CompilerTestCase {
 
   @Test
   public void testModuloNullUndef1() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function f(/** number */ to, /** (number|null) */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "function f(/** number */ to, /** (number|null) */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef2() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function f(/** number */ to, /** (number|undefined) */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "function f(/** number */ to, /** (number|undefined) */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef3() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "function f(/** !Foo */ to, /** ?Foo */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @constructor */",
+                    "function Foo() {}",
+                    "function f(/** !Foo */ to, /** ?Foo */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef4() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "/** @constructor @extends {Foo} */",
-                "function Bar() {}",
-                "function f(/** !Foo */ to, /** ?Bar */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @constructor */",
+                    "function Foo() {}",
+                    "/** @constructor @extends {Foo} */",
+                    "function Bar() {}",
+                    "function f(/** !Foo */ to, /** ?Bar */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef5() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function f(/** {a: number} */ to, /** {a: (null|number)} */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "function f(/** {a: number} */ to, /** {a: (null|number)} */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef6() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function f(/** {a: number} */ to, /** ?{a: (null|number)} */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "function f(/** {a: number} */ to, /** ?{a: (null|number)} */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef7() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "function f(/** function():!Foo */ to, /** function():?Foo */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @constructor */",
+                    "function Foo() {}",
+                    "function f(/** function():!Foo */ to, /** function():?Foo */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef8() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/**",
-                " * @constructor",
-                " * @template T",
-                " */",
-                "function Foo() {}",
-                "function f(/** !Foo<number> */ to, /** !Foo<(number|null)> */ from) {",
-                "  to = from;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/**",
+                    " * @constructor",
+                    " * @template T",
+                    " */",
+                    "function Foo() {}",
+                    "function f(/** !Foo<number> */ to, /** !Foo<(number|null)> */ from) {",
+                    "  to = from;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef9() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @interface */",
-                "function Foo() {}",
-                "/** @type {function(?number)} */",
-                "Foo.prototype.prop;",
-                "/** @constructor @implements {Foo} */",
-                "function Bar() {}",
-                "/** @type {function(number)} */",
-                "Bar.prototype.prop;"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @interface */",
+                    "function Foo() {}",
+                    "/** @type {function(?number)} */",
+                    "Foo.prototype.prop;",
+                    "/** @constructor @implements {Foo} */",
+                    "function Bar() {}",
+                    "/** @type {function(number)} */",
+                    "Bar.prototype.prop;"))));
   }
 
   @Test
   public void testModuloNullUndef10() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @constructor */",
-                "function Bar() {}",
-                "/** @type {!number} */",
-                "Bar.prototype.prop;",
-                "function f(/** ?number*/ n) {",
-                "  (new Bar).prop = n;",
-                "}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @constructor */",
+                    "function Bar() {}",
+                    "/** @type {!number} */",
+                    "Bar.prototype.prop;",
+                    "function f(/** ?number*/ n) {",
+                    "  (new Bar).prop = n;",
+                    "}"))));
   }
 
   @Test
   public void testModuloNullUndef11() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function f(/** number */ n) {}",
-                "f(/** @type {?number} */ (null));"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines("function f(/** number */ n) {}", "f(/** @type {?number} */ (null));"))));
   }
 
   @Test
   public void testModuloNullUndef12() {
     // Only warn for the file not ending in .java.js
-    testWarning(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.js",
-            lines(
-                "function f(/** number */ to, /** (number|null) */ from) {",
-                "  to = from;",
-                "}")),
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "function g(/** number */ to, /** (number|null) */ from) {",
-                "  to = from;",
-                "}"))),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning(
+        srcs(
+            SourceFile.fromCode(
+                "foo.js",
+                lines(
+                    "function f(/** number */ to, /** (number|null) */ from) {",
+                    "  to = from;",
+                    "}")),
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "function g(/** number */ to, /** (number|null) */ from) {",
+                    "  to = from;",
+                    "}"))),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   @Test
   public void testModuloNullUndef13() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            "var /** @type {{ a:number }} */ x = null;")));
+    testSame(srcs(SourceFile.fromCode("foo.java.js", "var /** @type {{ a:number }} */ x = null;")));
   }
 
   @Test
   public void testInheritanceModuloNullUndef1() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @constructor */",
-                "function Foo() {}",
-                "/** @return {string} */",
-                "Foo.prototype.toString = function() { return ''; };",
-                "/** @constructor @extends {Foo} */",
-                "function Bar() {}",
-                "/**",
-                " * @override",
-                " * @return {?string}",
-                " */",
-                "Bar.prototype.toString = function() { return null; };"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @constructor */",
+                    "function Foo() {}",
+                    "/** @return {string} */",
+                    "Foo.prototype.toString = function() { return ''; };",
+                    "/** @constructor @extends {Foo} */",
+                    "function Bar() {}",
+                    "/**",
+                    " * @override",
+                    " * @return {?string}",
+                    " */",
+                    "Bar.prototype.toString = function() { return null; };"))));
   }
 
   @Test
   public void testInheritanceModuloNullUndef2() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @interface */",
-                "function Foo() {}",
-                "/** @return {string} */",
-                "Foo.prototype.toString = function() {};",
-                "/** @constructor @implements {Foo} */",
-                "function Bar() {}",
-                "/**",
-                " * @override",
-                " * @return {?string}",
-                " */",
-                "Bar.prototype.toString = function() {};"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @interface */",
+                    "function Foo() {}",
+                    "/** @return {string} */",
+                    "Foo.prototype.toString = function() {};",
+                    "/** @constructor @implements {Foo} */",
+                    "function Bar() {}",
+                    "/**",
+                    " * @override",
+                    " * @return {?string}",
+                    " */",
+                    "Bar.prototype.toString = function() {};"))));
   }
 
   @Test
   public void testInheritanceModuloNullUndef3() {
-    testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.java.js",
-            lines(
-                "/** @interface */",
-                "function High1() {}",
-                "/** @type {number} */",
-                "High1.prototype.prop;",
-                "/** @interface */",
-                "function High2() {}",
-                "/** @type {?number} */",
-                "High2.prototype.prop;",
-                "/**",
-                " * @interface",
-                " * @extends {High1}",
-                " * @extends {High2}",
-                " */",
-                "function Low() {}"))));
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo.java.js",
+                lines(
+                    "/** @interface */",
+                    "function High1() {}",
+                    "/** @type {number} */",
+                    "High1.prototype.prop;",
+                    "/** @interface */",
+                    "function High2() {}",
+                    "/** @type {?number} */",
+                    "High2.prototype.prop;",
+                    "/**",
+                    " * @interface",
+                    " * @extends {High1}",
+                    " * @extends {High2}",
+                    " */",
+                    "function Low() {}"))));
   }
 
   @Test
