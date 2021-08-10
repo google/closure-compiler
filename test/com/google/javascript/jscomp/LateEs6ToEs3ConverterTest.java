@@ -235,14 +235,14 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("`hello\r\nworld`", "'hello\\nworld'");
     test("`hello\n\nworld`", "'hello\\n\\nworld'");
     test("`hello\\r\\nworld`", "'hello\\r\\nworld'");
-    test("`${world}`", "'' + world");
-    test("`hello ${world}`", "'hello ' + world");
-    test("`${hello} world`", "hello + ' world'");
-    test("`${hello}${world}`", "'' + hello + world");
-    test("`${a} b ${c} d ${e}`", "a + ' b ' + c + ' d ' + e");
-    test("`hello ${a + b}`", "'hello ' + (a + b)");
-    test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
-    test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
+    test("`${world}`", "String(world)");
+    test("`hello ${world}`", "'hello ' + String(world)");
+    test("`${hello} world`", "String(hello) + ' world'");
+    test("`${hello}${world}`", "String(hello) + String(world)");
+    test("`${a} b ${c} d ${e}`", "String(a) + ' b ' + String(c) + ' d ' + String(e)");
+    test("`hello ${a + b}`", "'hello ' + String((a + b))");
+    test("`hello ${a, b, c}`", "'hello ' + String((a, b, c))");
+    test("`hello ${a ? b : c}${a * b}`", "'hello ' + String((a ? b : c)) + String((a * b))");
   }
 
   /**

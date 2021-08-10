@@ -2768,7 +2768,7 @@ public final class CommandLineRunnerTest {
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
             "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
             "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
-            "var Foo,x=\"\"+Foo"));
+            "var Foo,x=String(Foo)"));
 
     test(
         "const x = `\\${Foo}`;",
@@ -2784,14 +2784,14 @@ public final class CommandLineRunnerTest {
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
             "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
             "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
-            "var Foo,x=Foo+\"${Foo}\""));
+            "var Foo,x=String(Foo)+\"${Foo}\""));
     test(
         "let Foo; const x = `\\${Foo}${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
             "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
             "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
-            "var Foo,x=\"${Foo}\"+Foo"));
+            "var Foo,x=\"${Foo}\"+String(Foo)"));
   }
 
   /** windows shells can add extra quotes to an argument */

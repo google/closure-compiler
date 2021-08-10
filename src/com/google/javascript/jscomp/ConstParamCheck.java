@@ -145,6 +145,9 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
         return false;
       }
       return isSafeValue(var.getScope(), initialValue);
+    } else if (argument.isCall() && argument.getFirstChild().getQualifiedName().equals("String")) {
+      // already safe values wrapped in the String constructor are constant as well.
+      return isSafeValue(scope, argument.getSecondChild());
     }
     return false;
   }
