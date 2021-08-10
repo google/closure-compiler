@@ -3611,4 +3611,73 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  }",
             "}"));
   }
+
+  @Test
+  public void testClassField() {
+    test(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "   /** @type {someType} */",
+            "    this.field = function f(){ function g() {} g() };",
+            "  }",
+            "}",
+            "C.staticField = function f(){ function g() {} g() };"),
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    this.field = function f(){ void 0 };",
+            "  }",
+            "}",
+            "C.staticField = function f$jscomp$1() { void 0};"));
+    test(
+        lines(
+            "class C {", //
+            "  field = function f(){ function g() {} g() };",
+            "  static staticField = function f(){ function g() {} g() };",
+            "}"),
+        lines(
+            "class C {", //
+            "  field = function f(){ void 0 };",
+            "  static staticField = function f$jscomp$1() { void 0};",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "   /** @return {number} */",
+            "    this.field = function() {return 1 };",
+            "  }",
+            "}",
+            "C.staticField = function() {return 1 };",
+            "console.log(new C().field());",
+            "console.log(C.staticField());"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.field = function() {return 1 };",
+            "  }",
+            "}",
+            "C.staticField = function() {return 1 };",
+            "console.log(new C().field());",
+            "console.log(C.staticField());"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  field = function() {return 1 };",
+            "  static staticField = function() {return 1 };",
+            "}",
+            "console.log(new C().field());",
+            "console.log(C.staticField());"));
+
+    testSame(
+        lines(
+            "function f({x}) {", //
+            "  return x;",
+            "}",
+            "class Foo { x = 0; }",
+            "f(new Foo());"));
+  }
 }

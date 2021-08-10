@@ -1706,4 +1706,34 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "function foo() { a.property = 0; }",
             "foo();"));
   }
+
+  @Test
+  public void testClassField() {
+    fold(
+        lines(
+            "class C {", //
+            "  f1 = (5,2);",
+            "}"),
+        lines(
+            "class C {", //
+            "  f1 = 2;",
+            "}"));
+  }
+
+  @Test
+  public void testThis() {
+    fold(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.f1 = (5,2);",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.f1 = 2;",
+            "  }",
+            "}"));
+  }
 }

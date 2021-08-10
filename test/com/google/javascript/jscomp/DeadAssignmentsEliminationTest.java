@@ -1053,6 +1053,32 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "print(x);"));
   }
 
+  @Test
+  public void testClassField() {
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            "  static [x = 'field1'] = (x = 5);",
+            "  [x = 'field2'] = 7;",
+            "}"),
+        lines(
+            "let x;", //
+            "class C {",
+            "  static ['field1'] = 5;",
+            "  ['field2'] = 7;",
+            "}"));
+
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            "  static [x = 'field1'] = (x = 5);",
+            "  [x = 'field2'] = 7;",
+            "}",
+            "use(x);"));
+  }
+
   private void inFunction(String src) {
     inFunction(src, src);
   }
