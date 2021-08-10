@@ -318,6 +318,29 @@ final class AstFactory {
   }
 
   /**
+   * Creates a THIS node with the correct type for the given ES6 class constructor node.
+   *
+   * <p>With the optimization colors type system, we can support inferring the type of this for
+   * constructors but not generic functions annotated @this, which is why this method is
+   * preferrable.
+   */
+  Node createThisForConstructor(Node functionNode) {
+    checkState(NodeUtil.isEs6Constructor(functionNode), functionNode);
+    final Node result = IR.thisNode();
+    switch (this.typeMode) {
+      case JSTYPE:
+        result.setJSType(getTypeOfThisForFunctionNode(functionNode));
+        break;
+      case COLOR:
+        result.setColor(getInstanceOfColor(functionNode.getColor()));
+        break;
+      case NONE:
+        break;
+    }
+    return result;
+  }
+
+  /**
    * Creates a SUPER node with the correct type for the given function node.
    *
    * @deprecated TODO(b/193800507): delete this method.
