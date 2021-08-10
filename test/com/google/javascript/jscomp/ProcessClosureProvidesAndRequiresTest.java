@@ -572,48 +572,48 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Test
   public void testGoodCrossModuleRequire1() {
     test(
-        JSChunkGraphBuilder.forStar()
-            .addChunk("goog.provide('goog.ui');")
-            .addChunk("")
-            .addChunk("goog.require('goog.ui');")
-            .build(),
-        new String[] {
-          "/** @const */ goog.ui = {};", "", "",
-        });
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("goog.provide('goog.ui');")
+                .addChunk("")
+                .addChunk("goog.require('goog.ui');")
+                .build()),
+        expected("/** @const */ goog.ui = {};", "", ""));
   }
 
   @Test
   public void testGoodCrossModuleRequire2() {
     test(
-        JSChunkGraphBuilder.forStar()
-            .addChunk("")
-            .addChunk("")
-            .addChunk("")
-            .addChunk("goog.provide('goog.ui'); goog.require('goog.ui');")
-            .build(),
-        new String[] {
-          "", "", "", "/** @const */ goog.ui = {};",
-        });
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("")
+                .addChunk("")
+                .addChunk("")
+                .addChunk("goog.provide('goog.ui'); goog.require('goog.ui');")
+                .build()),
+        expected("", "", "", "/** @const */ goog.ui = {};"));
   }
 
   @Test
   public void testCrossModuleRequireType() {
     test(
-        JSChunkGraphBuilder.forStar()
-            .addChunk("")
-            .addChunk("goog.requireType('goog.ui');")
-            .addChunk("")
-            .addChunk("goog.provide('goog.ui')")
-            .build(),
-        new String[] {"", "", "", "/** @const */ goog.ui = {};"});
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("")
+                .addChunk("goog.requireType('goog.ui');")
+                .addChunk("")
+                .addChunk("goog.provide('goog.ui')")
+                .build()),
+        expected("", "", "", "/** @const */ goog.ui = {};"));
     test(
-        JSChunkGraphBuilder.forStar()
-            .addChunk("")
-            .addChunk("")
-            .addChunk("goog.provide('goog.ui');")
-            .addChunk("goog.requireType('goog.ui');")
-            .build(),
-        new String[] {"", "", "/** @const */ goog.ui = {};", ""});
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk("")
+                .addChunk("")
+                .addChunk("goog.provide('goog.ui');")
+                .addChunk("goog.requireType('goog.ui');")
+                .build()),
+        expected("", "", "/** @const */ goog.ui = {};", ""));
   }
 
   @Test

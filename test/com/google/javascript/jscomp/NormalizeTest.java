@@ -660,19 +660,18 @@ public final class NormalizeTest extends CompilerTestCase {
 
     // Verify import * as <alias> is renamed.
     test(
-        new String[] {"let a = 5;", "import * as a from './a.js'; const TAU = 2 * a.PI;"},
-        new String[] {
-          "let a = 5;", "import * as a$jscomp$1 from './a.js'; const TAU = 2 * a$jscomp$1.PI"
-        });
+        srcs("let a = 5;", "import * as a from './a.js'; const TAU = 2 * a.PI;"),
+        expected(
+            "let a = 5;", "import * as a$jscomp$1 from './a.js'; const TAU = 2 * a$jscomp$1.PI"));
 
     // Verify exported and imported names are untouched.
     test(
-        new String[] {"var a;", "let a; export {a as a};"},
-        new String[] {"var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"});
+        srcs("var a;", "let a; export {a as a};"),
+        expected("var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"));
 
     test(
-        new String[] {"var a;", "import {a as a} from './foo.js'; let b = a;"},
-        new String[] {"var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"});
+        srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),
+        expected("var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"));
   }
 
   @Test

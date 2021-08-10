@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,8 +43,8 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
     return compiler;
   }
 
-  private void testDoesntChange(List<SourceFile> js) {
-    test(js, js);
+  private void testDoesntChange(Sources js) {
+    testSame(js);
   }
 
   // Nearly all of the tests in this file were written at a time when
@@ -59,7 +57,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testInlineCollapsedProp() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -76,7 +74,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "var A$$0x = null;",
                     "var x = A.x;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -91,7 +89,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testNoInlineNonJ2clProps() {
     testDoesntChange(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -113,7 +111,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testNoInlineNonJ2clPropsValue() {
     testDoesntChange(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -135,7 +133,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testNoStripDefineProperties() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -165,7 +163,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "    }",
                     "  },",
                     "});"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -190,7 +188,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testInlineDefinePropertiesGetter() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -210,7 +208,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = 3;",
                     "var xx = A.x;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -225,7 +223,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testInlineDefinePropertiesSetter() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -245,7 +243,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = 3;",
                     "A.x = 10;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -260,7 +258,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testInlineGettersInQualifier() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -280,7 +278,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = null;",
                     "var xy = A.x.y;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -295,7 +293,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testInlineGettersInQualifierNoSetter() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -312,7 +310,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = null;",
                     "var xy = A.x.y;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -327,7 +325,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testNoInlineCompoundAssignment() {
     testDoesntChange(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -353,7 +351,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   public void testNoInlineIncrementGetter() {
     // Test ++
     testDoesntChange(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -376,7 +374,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
 
     // Test --
     testDoesntChange(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -401,7 +399,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Test
   public void testNoInlineSetterOnlyGetter() {
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(
@@ -418,7 +416,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = null;",
                     "A.x = null;"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "someFile.js",
                 lines(

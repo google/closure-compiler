@@ -2474,52 +2474,50 @@ public class PolymerPassTest extends CompilerTestCase {
     for (int i = 1; i <= 2; i++) {
       this.polymerVersion = i;
       test(
-          new String[] {
-            lines(
-                "/** @polymerBehavior */",
-                "var FunBehavior = {",
-                "  /** @protected */",
-                "  doSomethingFun: function() {},",
-                "};"),
-            lines(
-                "var A = Polymer({",
-                "  is: 'x-element',",
-                "  callBehaviorMethod: function() {",
-                "    this.doSomethingFun();",
-                "  },",
-                "  behaviors: [ FunBehavior ],",
-                "});"),
-          },
-          new String[] {
-            lines(
-                "/** @polymerBehavior @nocollapse */",
-                "var FunBehavior = {",
-                "  /**",
-                "   * @suppress {checkTypes|globalThis|visibility}",
-                "   */",
-                "  doSomethingFun: function() {},",
-                "};"),
-            lines(
-                "/**",
-                " * @constructor",
-                " * @extends {PolymerElement}",
-                " * @implements {PolymerAInterface0}",
-                " */",
-                "var A = function() {};",
-                "",
-                "/**",
-                " * @public",
-                " * @suppress {unusedPrivateMembers}",
-                " */",
-                "A.prototype.doSomethingFun = function(){};",
-                "",
-                "A = Polymer(/** @lends {A.prototype} */ {",
-                "  is: 'x-element',",
-                "  /** @this {A} */",
-                "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
-                "  behaviors: [FunBehavior],",
-                "})"),
-          });
+          srcs(
+              lines(
+                  "/** @polymerBehavior */",
+                  "var FunBehavior = {",
+                  "  /** @protected */",
+                  "  doSomethingFun: function() {},",
+                  "};"),
+              lines(
+                  "var A = Polymer({",
+                  "  is: 'x-element',",
+                  "  callBehaviorMethod: function() {",
+                  "    this.doSomethingFun();",
+                  "  },",
+                  "  behaviors: [ FunBehavior ],",
+                  "});")),
+          expected(
+              lines(
+                  "/** @polymerBehavior @nocollapse */",
+                  "var FunBehavior = {",
+                  "  /**",
+                  "   * @suppress {checkTypes|globalThis|visibility}",
+                  "   */",
+                  "  doSomethingFun: function() {},",
+                  "};"),
+              lines(
+                  "/**",
+                  " * @constructor",
+                  " * @extends {PolymerElement}",
+                  " * @implements {PolymerAInterface0}",
+                  " */",
+                  "var A = function() {};",
+                  "",
+                  "/**",
+                  " * @public",
+                  " * @suppress {unusedPrivateMembers}",
+                  " */",
+                  "A.prototype.doSomethingFun = function(){};",
+                  "",
+                  "A = Polymer(/** @lends {A.prototype} */ {",
+                  "  is: 'x-element',",
+                  "  /** @this {A} */",
+                  "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
+                  "  behaviors: [FunBehavior],",
+                  "})")));
     }
   }
 

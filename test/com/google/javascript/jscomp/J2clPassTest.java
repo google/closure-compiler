@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +57,7 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -70,7 +68,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Arrays.$instanceIsOfType());",
                     "alert(Arrays.$castTo());",
                     "alert(Arrays.$stampType());"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -93,14 +91,14 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
                     declarations, //
                     "",
                     "alert(Casts.$to());"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
@@ -121,7 +119,7 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
@@ -129,7 +127,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "",
                     "var Foo = function() {};",
                     "FooInterface.$markImplementor(Foo);"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
@@ -154,7 +152,7 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -164,7 +162,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert($jscomp.scope.Arrays.$init());",
                     "alert($jscomp.scope.Arrays.$instanceIsOfType());",
                     "alert($jscomp.scope.Arrays.$castTo());"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -188,14 +186,14 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
                     declarations, //
                     "",
                     "alert($jscomp.scope.Casts.$to());"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
@@ -218,7 +216,7 @@ public class J2clPassTest extends CompilerTestCase {
             "}");
 
     test(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
@@ -226,7 +224,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "",
                     "$jscomp.scope.Foo = function() {};",
                     "$jscomp.scope.FooInterface.$markImplementor($jscomp.scope.Foo);"))),
-        Lists.newArrayList(
+        expected(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
@@ -240,7 +238,7 @@ public class J2clPassTest extends CompilerTestCase {
   public void testUnexpectedFunctionDoesntInline() {
     // Arrays functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -253,7 +251,7 @@ public class J2clPassTest extends CompilerTestCase {
 
     // Casts functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
@@ -272,7 +270,7 @@ public class J2clPassTest extends CompilerTestCase {
   public void testUnqualifiedDoesntInline() {
     // Arrays functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
                 lines(
@@ -289,7 +287,7 @@ public class J2clPassTest extends CompilerTestCase {
 
     // Casts functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
@@ -298,7 +296,7 @@ public class J2clPassTest extends CompilerTestCase {
 
     // Interface $markImplementor() functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
                 lines(
@@ -315,7 +313,7 @@ public class J2clPassTest extends CompilerTestCase {
   public void testWrongFileNameDoesntInline() {
     // Arrays functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "Arrays2.impl.java.js",
                 lines(
@@ -333,7 +331,7 @@ public class J2clPassTest extends CompilerTestCase {
 
     // Casts functions.
     testSame(
-        Lists.newArrayList(
+        srcs(
             SourceFile.fromCode(
                 "Casts2.impl.java.js",
                 lines(
@@ -350,7 +348,7 @@ public class J2clPassTest extends CompilerTestCase {
   @Test
   public void testMarksChanges() {
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(
@@ -359,7 +357,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "Casts.$to = function(instance) { return instance; }",
                     "",
                     "alert(Casts.$to(function(a) { return a; }));"))),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
                 lines(

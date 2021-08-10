@@ -60,14 +60,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "var name = require('./other'); name.call(null)",
         lines("var name = module$other.default;", "module$other.default.call(null);"));
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), "module.exports = {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
                 lines(
                     "var name = require('../mod/name');",
                     "(function() { let foo = name; foo(); })();"))),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(
                 Compiler.joinPathParts("mod", "name.js"),
                 "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
@@ -215,12 +215,12 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ module$foo$bar.default = module$other.default;"));
 
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(Compiler.joinPathParts("foo", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines("var name = require('./name');", "module.exports = name;"))),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(Compiler.joinPathParts("foo", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
@@ -614,8 +614,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                 "exports = Bar;")));
     JSChunk[] modules = {module};
     test(
-        modules,
-        null,
+        srcs(modules),
+        expected((String[]) null),
         new Diagnostic(
             ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT.level,
             ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
@@ -896,7 +896,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
     test(
-        ImmutableList.of(
+        srcs(
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "mod", "name.js"), "module.exports = {}"),
             SourceFile.fromCode(
@@ -904,7 +904,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                 lines(
                     "var name = require('/mod/name');",
                     "(function() { let foo = name; foo(); })();"))),
-        ImmutableList.of(
+        expected(
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "mod", "name.js"),
                 "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
@@ -1401,7 +1401,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                     "/** @const */ var module$webpack$buildin$module = {};",
                     "/** @const */ module$webpack$buildin$module.default = ",
                     "    function(module) { return module; };")));
-    test(inputs, expecteds);
+    test(srcs(inputs), expected(expecteds));
   }
 
   // https://github.com/google/closure-compiler/issues/2932

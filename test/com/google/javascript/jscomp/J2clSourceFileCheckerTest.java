@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,7 +45,7 @@ public class J2clSourceFileCheckerTest extends CompilerTestCase {
 
   @Test
   public void testShouldRunJ2clPassesWithJ2clSources() {
-    testSame(ImmutableList.of(J2CL_SOURCE_FILE));
+    testSame(srcs(J2CL_SOURCE_FILE));
     assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
   }
 }

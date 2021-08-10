@@ -91,9 +91,9 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   private void testWithInversion(String[] original, String[] expected) {
     invert = false;
-    test(original, expected);
+    test(srcs(original), expected(expected));
     invert = true;
-    test(expected, original);
+    test(srcs(expected), expected(original));
     invert = false;
   }
 
@@ -1047,12 +1047,12 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // are renamed to a$jscomp$1. Rewrite this test after that behavior is implemented.
     this.useDefaultRenamer = true;
     test(
-        new String[] {"var a;", "let a; export {a as a};"},
-        new String[] {"var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"});
+        srcs("var a;", "let a; export {a as a};"),
+        expected("var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"));
 
     test(
-        new String[] {"var a;", "import {a as a} from './foo.js'; let b = a;"},
-        new String[] {"var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"});
+        srcs("var a;", "import {a as a} from './foo.js'; let b = a;"),
+        expected("var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"));
   }
 
   @Test

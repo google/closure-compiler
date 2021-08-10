@@ -36,7 +36,7 @@ class ModulesTestUtils {
             SourceFile.fromCode("other.js", "goog.provide('module$other');"),
             SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"),
             SourceFile.fromCode(fileName, expected));
-    test.test(inputs, expecteds);
+    test.test(CompilerTestCase.srcs(inputs), CompilerTestCase.expected(expecteds));
   }
 
   static void testSameModules(CompilerTestCase test, String input) {
@@ -48,7 +48,7 @@ class ModulesTestUtils {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
-    test.testError(inputs, error);
+    test.testError(CompilerTestCase.srcs(inputs), CompilerTestCase.error(error));
   }
 
   static void testModulesWarning(
@@ -56,6 +56,6 @@ class ModulesTestUtils {
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
-    test.testWarning(inputs, warning);
+    test.testWarning(CompilerTestCase.srcs(inputs), CompilerTestCase.warning(warning));
   }
 }

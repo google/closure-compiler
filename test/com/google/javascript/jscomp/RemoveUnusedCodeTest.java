@@ -765,13 +765,14 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testModule() {
     test(
-        JSChunkGraphBuilder.forUnordered()
-            .addChunk(
-                "var unreferenced=1; function x() { foo(); }"
-                    + "function uncalled() { var x; return 2; }")
-            .addChunk("var a,b; function foo() { this.foo(a); } x()")
-            .build(),
-        new String[] {"function x(){foo()}", "var a;function foo(){this.foo(a)}x()"});
+        srcs(
+            JSChunkGraphBuilder.forUnordered()
+                .addChunk(
+                    "var unreferenced=1; function x() { foo(); }"
+                        + "function uncalled() { var x; return 2; }")
+                .addChunk("var a,b; function foo() { this.foo(a); } x()")
+                .build()),
+        expected("function x(){foo()}", "var a;function foo(){this.foo(a)}x()"));
   }
 
   @Test
