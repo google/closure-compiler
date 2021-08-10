@@ -371,14 +371,13 @@ public abstract class CodeConsumer {
   }
 
   /**
-   * If the body of a for loop or the then clause of an if statement has
-   * a single statement, should it be wrapped in a block?  Doing so can
-   * help when pretty-printing the code, and permits putting a debugging
-   * breakpoint on the statement inside the condition.
+   * If the body of a for loop or the then clause of an if statement has a single statement, should
+   * it be wrapped in a block? Doing so can help when pretty-printing the code, and permits putting
+   * a debugging breakpoint on the statement inside the condition.
    *
    * @return {@boolean true} if such expressions should be wrapped
    */
-  boolean shouldPreserveExtraBlocks() {
+  boolean shouldPreserveExtras() {
     return false;
   }
 

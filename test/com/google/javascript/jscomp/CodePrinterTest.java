@@ -129,7 +129,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // manually because a new node with no elements and a trailing comma is a syntax error.
     Node newNode = IR.newNode(IR.name("f"));
     newNode.setTrailingComma(true);
-    assertPrettyPrintNode("new f", newNode);
+    assertPrettyPrintNode("new f()", newNode);
   }
 
   @Test
@@ -1361,7 +1361,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @return {!Foo}",
             " */",
             "Foo.prototype.f = function() {",
-            "  return new Foo;",
+            "  return new Foo();",
             "};\n"));
   }
 
