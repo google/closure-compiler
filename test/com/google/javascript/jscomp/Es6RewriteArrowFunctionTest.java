@@ -40,7 +40,6 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     enableTypeInfoValidation();
     enableTypeCheck();
-    replaceTypesWithColors();
   }
 
   @Override
@@ -441,7 +440,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCapturingThisInArrowWithNestedConstructor() {
+  public void testCapturingThisInArrowWithNestedConstutor() {
     test(
         lines(
             "({",
@@ -463,7 +462,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  g: function() {",
             "    const $jscomp$this = this;",
             "    var setup = function() {",
-            "      /** @constructor */",
+            "      /** @constructor @struct */",
             "      function Foo() { this.x = 5; }",
             "",
             "      $jscomp$this.f = new Foo;",
