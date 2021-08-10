@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
@@ -1440,6 +1441,82 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             " * @constructor",
             " */",
             "var Foo = function() {",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void exportTranspiledEs6ClassHierarchy() {
+    enableTranspile();
+    compileAndCheck(
+        // transpilation requires
+        new TestExternsBuilder().addEs6ClassTranspilationExterns().build(),
+        lines(
+            "class SuperClass {}",
+            "goog.exportSymbol('Foo', SuperClass);",
+            "",
+            "class SubClass extends SuperClass {}",
+            "goog.exportSymbol('Bar', SubClass);",
+            ""),
+        lines(
+            "/**",
+            // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
+            " * @extends {SuperClass}",
+            " * @constructor",
+            " */",
+            "var Bar = function() {",
+            "};",
+            "/**",
+            " * @constructor",
+            " */",
+            "var Foo = function() {",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void exportTranspiledPartialEs6ClassHierarchy() {
+    enableTranspile();
+    compileAndCheck(
+        // transpilation requires
+        new TestExternsBuilder().addEs6ClassTranspilationExterns().build(),
+        lines(
+            "class SuperClass {}",
+            "",
+            "class SubClass extends SuperClass {}",
+            "goog.exportSymbol('Bar', SubClass);",
+            ""),
+        lines(
+            "/**",
+            // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
+            " * @extends {SuperClass}",
+            " * @constructor",
+            " */",
+            "var Bar = function() {",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void exportTranspiledEs6ClassExtendingNonExportedEs5Class() {
+    enableTranspile();
+    compileAndCheck(
+        // transpilation requires
+        new TestExternsBuilder().addEs6ClassTranspilationExterns().build(),
+        lines(
+            "/** @constructor */",
+            "function SuperClass() {}",
+            "",
+            "class SubClass extends SuperClass {}",
+            "goog.exportSymbol('Bar', SubClass);",
+            ""),
+        lines(
+            "/**",
+            // TODO(b/123352214): SuperClass should be called Foo in exported @extends annotation
+            " * @extends {SuperClass}",
+            " * @constructor",
+            " */",
+            "var Bar = function() {",
             "};",
             ""));
   }

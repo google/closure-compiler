@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.javascript.jscomp.AstFactory.type;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -49,14 +50,12 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
   static final String CLASS_DECL_VAR = "$classdecl$var";
 
   private final AbstractCompiler compiler;
-  private final AstFactory astFactory;
   private final ExpressionDecomposer expressionDecomposer;
   private int classDeclVarCounter = 0;
   private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.astFactory = compiler.createAstFactory();
     this.expressionDecomposer = compiler.createDefaultExpressionDecomposer();
   }
 
@@ -125,7 +124,7 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
           Var var = t.getScope().getVar(nameNode.getString());
           if (var != null && var.getNameNode() == klass.nameNode) {
             Node newNameNode =
-                astFactory.createName(klass.outerName, type(nameNode)).srcref(nameNode);
+                IR.name(klass.outerName).setJSType(nameNode.getJSType()).srcref(nameNode);
             nameNode.replaceWith(newNameNode);
             compiler.reportChangeToEnclosingScope(newNameNode);
             return;
@@ -169,8 +168,10 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
     JSDocInfo info = NodeUtil.getBestJSDocInfo(classNode);
 
     Node statement = NodeUtil.getEnclosingStatement(parent);
+    JSType classType = classNode.getJSType();
+    checkState(!compiler.hasTypeCheckingRun() || classType != null);
     // class name node used as LHS in newly created assignment
-    Node classNameLhs = astFactory.createName(name, type(classNode));
+    Node classNameLhs = IR.name(name).setJSType(classType);
     // class name node that replaces the class literal in the original statement
     Node classNameRhs = classNameLhs.cloneTree();
     classNode.replaceWith(classNameRhs);
