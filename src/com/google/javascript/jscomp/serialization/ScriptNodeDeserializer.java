@@ -25,8 +25,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
-import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.IOException;
 import java.math.BigInteger;
 import javax.annotation.Nullable;
 
@@ -68,15 +69,18 @@ public final class ScriptNodeDeserializer {
 
     Node run() {
       try {
+        CodedInputStream astStream = this.owner().scriptBytes.newCodedInput();
+        astStream.setRecursionLimit(Integer.MAX_VALUE); // The real limit is stack space.
+
         Node scriptNode =
             this.visit(
-                AstNode.parseFrom(this.owner().scriptBytes, ExtensionRegistry.getEmptyRegistry()),
+                AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
                 null,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
         scriptNode.putProp(Node.FEATURE_SET, this.scriptFeatures);
         return scriptNode;
-      } catch (InvalidProtocolBufferException ex) {
-        throw new MalformedTypedAstException(ex);
+      } catch (IOException ex) {
+        throw new MalformedTypedAstException(this.owner().sourceFile, ex);
       }
     }
 

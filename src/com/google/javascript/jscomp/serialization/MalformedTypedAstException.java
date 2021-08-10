@@ -47,4 +47,8 @@ public final class MalformedTypedAstException extends RuntimeException {
   public MalformedTypedAstException(Object msg) {
     super(msg.toString());
   }
+
+  public MalformedTypedAstException(Object msg, Throwable cause) {
+    super(msg.toString(), cause);
+  }
 }
