@@ -90,7 +90,6 @@ class RuntimeTypeCheck implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new AddMarkers(compiler, astFactory));
     NodeTraversal.traverse(compiler, root, new AddChecks());
     addBoilerplateCode();
-    new RemoveCastNodes(compiler).process(externs, root);
     new Normalize(compiler, false).process(externs, root);
   }
 

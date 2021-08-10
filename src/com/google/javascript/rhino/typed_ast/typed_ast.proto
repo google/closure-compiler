@@ -255,6 +255,8 @@ enum NodeKind {
   COMPUTED_PROP_FIELD = 634;
 
   // Next other: 635
+
+  CAST = 800;
 }
 
 // Rename to `BooleanNodeProperty` if/when we also need non-boolean properties

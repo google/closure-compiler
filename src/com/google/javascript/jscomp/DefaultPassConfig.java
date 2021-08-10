@@ -484,12 +484,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureProvidesRequires);
     }
 
-    if (!options.checksOnly || options.getTypedAstOutputFile() != null) {
-      // Remove CAST nodes if we're serializing compiler state or proceeding to optimizations.
-      // Otherwise preserve CAST nodes for use by refactoring tooling.
-      checks.add(removeCastNodes);
-    }
-
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
@@ -2741,13 +2735,6 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CheckConformance(
                       compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
-          .setFeatureSetForChecks()
-          .build();
-
-  private final PassFactory removeCastNodes =
-      PassFactory.builder()
-          .setName("removeCastNodes")
-          .setInternalFactory(RemoveCastNodes::new)
           .setFeatureSetForChecks()
           .build();
 

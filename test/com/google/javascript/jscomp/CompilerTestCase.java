@@ -1570,7 +1570,6 @@ public abstract class CompilerTestCase {
         if (i == 0) {
           if (multistageCompilation) {
             if (inputs != null) {
-              recentChange.reset();
               compiler =
                   CompilerTestCaseUtils.multistageSerializeAndDeserialize(
                       this, compiler, inputs, recentChange);
@@ -1578,14 +1577,10 @@ public abstract class CompilerTestCase {
               externsRoot = compiler.getExternsRoot();
               mainRoot = compiler.getJsRoot();
               lastCompiler = compiler;
-              hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
             }
           } else if (replaceTypesWithColors) {
-            recentChange.reset();
-            new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
             new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
                 .process(externsRoot, mainRoot);
-            hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
 
           if (!librariesToInject.isEmpty() && injectLibrariesFromTypedAsts) {
@@ -1943,11 +1938,6 @@ public abstract class CompilerTestCase {
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
           .process(externsRoot, mainRoot);
-    }
-
-    // Normalize CAST nodes from the expected AST if asked.
-    if (replaceTypesWithColors || multistageCompilation) {
-      new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
     }
 
     // Only run the normalize pass, if asked.
