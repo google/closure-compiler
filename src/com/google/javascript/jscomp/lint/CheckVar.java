@@ -28,7 +28,7 @@ public final class CheckVar extends AbstractPostOrderCallback implements Compile
       DiagnosticType.disabled(
           "JSC_VAR",
           "Using `var` (prefer `const` or `let`)."
-      );
+          );
 
   private final AbstractCompiler compiler;
 
