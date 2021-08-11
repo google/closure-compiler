@@ -71,6 +71,7 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
+
     // TODO(b/191386936): move all these passes to addEarlyOptimizationTranspilationPasses
 
     // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
@@ -120,6 +121,10 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationFrom(ES2016)) {
       passes.add(rewriteExponentialOperator);
+    }
+
+    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
+      passes.add(rewriteClassFields);
     }
 
     if (options.needsTranspilationFrom(ES2015)) {
@@ -276,6 +281,13 @@ public class TranspilationPasses {
       PassFactory.builder()
           .setName(PassNames.ES6_EXTRACT_CLASSES)
           .setInternalFactory(Es6ExtractClasses::new)
+          .setFeatureSetForChecks()
+          .build();
+
+  static final PassFactory rewriteClassFields =
+      PassFactory.builder()
+          .setName("RewriteClassFields")
+          .setInternalFactory(RewriteClassFields::new)
           .setFeatureSetForChecks()
           .build();
 
