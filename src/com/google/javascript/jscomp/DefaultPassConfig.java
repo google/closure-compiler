@@ -367,7 +367,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(analyzerChecks);
     }
 
-    if (options.isCheckingMissingOverrideTypes()) {
+    if (options.isTypecheckingEnabled() && options.isCheckingMissingOverrideTypes()) {
       checks.add(checkMissingOverrideTypes);
     }
 
