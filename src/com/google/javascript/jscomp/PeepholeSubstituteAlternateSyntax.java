@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.regex.Pattern;
 
 /**
  * A peephole optimization that minimizes code by simplifying conditional
@@ -35,18 +34,9 @@ import java.util.regex.Pattern;
 class PeepholeSubstituteAlternateSyntax
   extends AbstractPeepholeOptimization {
 
-  private static final CodeGenerator REGEXP_ESCAPER =
-      CodeGenerator.forCostEstimation(
-          null /* blow up if we try to produce code */);
-
   private final boolean late;
 
   private static final int STRING_SPLIT_OVERHEAD = ".split('.')".length();
-
-  static final DiagnosticType INVALID_REGULAR_EXPRESSION_FLAGS =
-    DiagnosticType.warning(
-        "JSC_INVALID_REGULAR_EXPRESSION_FLAGS",
-        "Invalid flags to RegExp constructor: {0}");
 
   /**
    * @param late When late is false, this mean we are currently running before
@@ -440,36 +430,31 @@ class PeepholeSubstituteAlternateSyntax
 
       String className = constructorNameNode.getString();
 
-      if ("RegExp".equals(className)) {
-        // "RegExp("boo", "g")" --> /boo/g
-        return tryFoldRegularExpressionConstructor(n);
-      } else {
-        boolean constructorHasArgs = constructorNameNode.getNext() != null;
+      boolean constructorHasArgs = constructorNameNode.getNext() != null;
 
-        if ("Object".equals(className) && !constructorHasArgs) {
-          // "Object()" --> "{}"
-          newLiteralNode = IR.objectlit();
-        } else if ("Array".equals(className)) {
-          // "Array(arg0, arg1, ...)" --> "[arg0, arg1, ...]"
-          Node arg0 = constructorNameNode.getNext();
-          FoldArrayAction action = isSafeToFoldArrayConstructor(arg0);
+      if ("Object".equals(className) && !constructorHasArgs) {
+        // "Object()" --> "{}"
+        newLiteralNode = IR.objectlit();
+      } else if ("Array".equals(className)) {
+        // "Array(arg0, arg1, ...)" --> "[arg0, arg1, ...]"
+        Node arg0 = constructorNameNode.getNext();
+        FoldArrayAction action = isSafeToFoldArrayConstructor(arg0);
 
-          if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS ||
-              action == FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS) {
-            newLiteralNode = IR.arraylit();
-            n.removeFirstChild(); // discard the function name
-            Node elements = n.removeChildren();
-            if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS) {
-              newLiteralNode.addChildrenToFront(elements);
-            }
+        if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS
+            || action == FoldArrayAction.SAFE_TO_FOLD_WITHOUT_ARGS) {
+          newLiteralNode = IR.arraylit();
+          n.removeFirstChild(); // discard the function name
+          Node elements = n.removeChildren();
+          if (action == FoldArrayAction.SAFE_TO_FOLD_WITH_ARGS) {
+            newLiteralNode.addChildrenToFront(elements);
           }
         }
+      }
 
-        if (newLiteralNode != null) {
-          n.replaceWith(newLiteralNode);
-          reportChangeToEnclosingScope(newLiteralNode);
-          return newLiteralNode;
-        }
+      if (newLiteralNode != null) {
+        n.replaceWith(newLiteralNode);
+        reportChangeToEnclosingScope(newLiteralNode);
+        return newLiteralNode;
       }
     }
     return n;
@@ -511,59 +496,6 @@ class PeepholeSubstituteAlternateSyntax
       }
     }
     return action;
-  }
-
-  private Node tryFoldRegularExpressionConstructor(Node n) {
-    Node parent = n.getParent();
-    Node constructor = n.getFirstChild();
-    Node pattern = constructor.getNext();  // e.g.  ^foobar$
-    Node flags = null != pattern ? pattern.getNext() : null;  // e.g. gi
-
-    if (null == pattern || (null != flags && null != flags.getNext())) {
-      // too few or too many arguments
-      return n;
-    }
-
-    if ( // is pattern folded
-    pattern.isStringLit()
-        // make sure empty pattern doesn't fold to a comment //
-        && !"".equals(pattern.getString())
-        // make sure empty pattern doesn't fold to a comment /*
-        && !pattern.getString().startsWith("*")
-        && (null == flags || flags.isStringLit())
-        // don't escape patterns with Unicode escapes since Safari behaves badly
-        // (read can't parse or crashes) on regex literals with Unicode escapes
-        && (isEcmaScript5OrGreater() || !containsUnicodeEscape(pattern.getString()))) {
-
-      // Make sure that / is escaped, so that it will fit safely in /brackets/
-      // and make sure that no LineTerminatorCharacters appear literally inside
-      // the pattern.
-      // pattern is a string value with \\ and similar already escaped
-      pattern = makeForwardSlashBracketSafe(pattern);
-
-      Node regexLiteral;
-      if (null == flags || "".equals(flags.getString())) {
-        // fold to /foobar/
-        regexLiteral = IR.regexp(pattern);
-      } else {
-        // fold to /foobar/gi
-        if (!areValidRegexpFlags(flags.getString())) {
-          report(INVALID_REGULAR_EXPRESSION_FLAGS, flags);
-          return n;
-        }
-        if (!areSafeFlagsToFold(flags.getString())) {
-          return n;
-        }
-        flags.detach();
-        regexLiteral = IR.regexp(pattern, flags);
-      }
-
-      n.replaceWith(regexLiteral);
-      reportChangeToEnclosingScope(parent);
-      return regexLiteral;
-    }
-
-    return n;
   }
 
   private Node reduceSubstractionAssignment(Node n) {
@@ -702,126 +634,5 @@ class PeepholeSubstituteAlternateSyntax
       break;
     }
     return delimiters[i];
-  }
-
-  private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmiuys]*$");
-
-  /**
-   * are the given flags valid regular expression flags? JavaScript recognizes several suffix flags
-   * for regular expressions, 'g' - global replace, 'i' - case insensitive, 'm' - multi-line, 'u' -
-   * unicode, 'y'- sticky. They are case insensitive, and JavaScript does not recognize the extended
-   * syntax mode, single-line mode, or expression replacement mode from Perl 5.
-   */
-  private static boolean areValidRegexpFlags(String flags) {
-    return REGEXP_FLAGS_RE.matcher(flags).matches();
-  }
-
-  /**
-   * are the given flags safe to fold?
-   * We don't fold the regular expression if global ('g') flag is on,
-   * because in this case it isn't really a constant: its 'lastIndex'
-   * property contains the state of last execution, so replacing
-   * 'new RegExp('foobar','g')' with '/foobar/g' may change the behavior of
-   * the program if the RegExp is used inside a loop, for example.
-   * <p>
-   * ECMAScript 5 explicitly disallows pooling of regular expression literals so
-   * in ECMAScript 5, {@code /foo/g} and {@code new RegExp('foo', 'g')} are
-   * equivalent.
-   * From section 7.8.5:
-   * "Then each time the literal is evaluated, a new object is created as if by
-   * the expression new RegExp(Pattern, Flags) where RegExp is the standard
-   * built-in constructor with that name."
-   */
-  private boolean areSafeFlagsToFold(String flags) {
-    return isEcmaScript5OrGreater() || flags.indexOf('g') < 0;
-  }
-
-  /**
-   * returns a string node that can safely be rendered inside /brackets/.
-   */
-  private static Node makeForwardSlashBracketSafe(Node n) {
-    String s = n.getString();
-    // sb contains everything in s[0:pos]
-    StringBuilder sb = null;
-    int pos = 0;
-    boolean isEscaped = false;
-    boolean inCharset = false;
-    for (int i = 0; i < s.length(); ++i) {
-      char ch = s.charAt(i);
-      switch (ch) {
-        case '\\':
-          isEscaped = !isEscaped;
-          continue;
-        case '/':
-          // Escape a literal forward slash if it is not already escaped and is
-          // not inside a character set.
-          //     new RegExp('/') -> /\//
-          // but the following do not need extra escaping
-          //     new RegExp('\\/') -> /\//
-          //     new RegExp('[/]') -> /[/]/
-          if (!isEscaped && !inCharset) {
-            if (null == sb) { sb = new StringBuilder(s.length() + 16); }
-            sb.append(s, pos, i).append('\\');
-            pos = i;
-          }
-          break;
-        case '[':
-          if (!isEscaped) {
-            inCharset = true;
-          }
-          break;
-        case ']':
-          if (!isEscaped) {
-            inCharset = false;
-          }
-          break;
-        case '\r': case '\n': case '\u2028': case '\u2029':
-          // LineTerminators cannot appear raw inside a regular
-          // expression literal.
-          // They can't appear legally in a quoted string, but when
-          // the quoted string from
-          //     new RegExp('\n')
-          // reaches here, the quoting has been removed.
-          // Requote just these code-points.
-          if (null == sb) { sb = new StringBuilder(s.length() + 16); }
-          if (isEscaped) {
-            sb.append(s, pos, i - 1);
-          } else {
-            sb.append(s, pos, i);
-          }
-          switch (ch) {
-            case '\r': sb.append("\\r"); break;
-            case '\n': sb.append("\\n"); break;
-            case '\u2028': sb.append("\\u2028"); break;
-            case '\u2029': sb.append("\\u2029"); break;
-          }
-          pos = i + 1;
-          break;
-      }
-      isEscaped = false;
-    }
-
-    if (null == sb) { return n.cloneTree(); }
-
-    sb.append(s, pos, s.length());
-    return IR.string(sb.toString()).srcref(n);
-  }
-
-  /**
-   * true if the JavaScript string would contain a Unicode escape when written
-   * out as the body of a regular expression literal.
-   */
-  static boolean containsUnicodeEscape(String s) {
-    String esc = REGEXP_ESCAPER.regexpEscape(s);
-    for (int i = -1; (i = esc.indexOf("\\u", i + 1)) >= 0;) {
-      int nSlashes = 0;
-      while (i - nSlashes > 0 && '\\' == esc.charAt(i - nSlashes - 1)) {
-        ++nSlashes;
-      }
-      // if there are an even number of slashes before the \ u then it is a
-      // Unicode literal.
-      if (0 == (nSlashes & 1)) { return true; }
-    }
-    return false;
   }
 }
