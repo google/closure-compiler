@@ -1092,16 +1092,6 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output.
-   *
-   * @param srcs Input chunks
-   * @param expected Expected chunks
-   */
-  protected void test(JSChunk[] srcs, JSChunk[] expected) {
-    test(srcs(srcs), expected(expected));
-  }
-
-  /**
    * Verifies that the compiler generates the given error for the given input.
    *
    * @param js Input
@@ -1138,24 +1128,6 @@ public abstract class CompilerTestCase {
   protected void testError(Sources js, DiagnosticType error) {
     assertThat(error).isNotNull();
     test(js, error(error));
-  }
-
-  /** Verifies that the compiler generates the given warning for the given input. */
-  protected void testError(List<SourceFile> inputs, DiagnosticType error) {
-    assertThat(error).isNotNull();
-    test(srcs(inputs), error(error));
-  }
-
-  /** Verifies that the compiler generates the given warning for the given input. */
-  protected void testError(List<SourceFile> inputs, DiagnosticType error, String description) {
-    assertThat(error).isNotNull();
-    test(srcs(inputs), error(error).withMessage(description));
-  }
-
-  /** Verifies that the compiler generates the given error for the given input. */
-  protected void testError(JSChunk[] srcs, DiagnosticType error, String description) {
-    assertThat(error).isNotNull();
-    test(srcs(srcs), error(error).withMessage(description));
   }
 
   /**
@@ -1198,12 +1170,6 @@ public abstract class CompilerTestCase {
     test(srcs, warning(warning));
   }
 
-  /** Verifies that the compiler generates the given warning for the given input. */
-  protected void testWarning(List<SourceFile> inputs, DiagnosticType warning) {
-    assertThat(warning).isNotNull();
-    test(srcs(inputs), warning(warning));
-  }
-
   /**
    * Verifies that the compiler generates the given warning and description for the given input.
    *
@@ -1213,12 +1179,6 @@ public abstract class CompilerTestCase {
   protected void testWarning(String js, DiagnosticType warning, String description) {
     assertThat(warning).isNotNull();
     test(srcs(js), warning(warning).withMessage(description));
-  }
-
-  /** Verifies that the compiler generates the given warning for the given input. */
-  protected void testWarning(List<SourceFile> inputs, DiagnosticType warning, String description) {
-    assertThat(warning).isNotNull();
-    test(srcs(inputs), warning(warning).withMessage(description));
   }
 
   /** Verifies that the compiler generates the given warning for the given input. */
@@ -1245,11 +1205,6 @@ public abstract class CompilerTestCase {
   /** Verifies that the compiler generates no warnings for the given input. */
   public void testNoWarning(Externs externs, Sources srcs) {
     test(externs, srcs);
-  }
-
-  /** Verifies that the compiler generates no warnings for the given input. */
-  public void testNoWarning(List<SourceFile> inputs) {
-    test(srcs(inputs));
   }
 
   /**
@@ -1298,26 +1253,6 @@ public abstract class CompilerTestCase {
     return null;
   }
 
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output.
-   *
-   * @param js Inputs
-   * @param expected Expected JS output
-   */
-  protected void test(String[] js, String[] expected) {
-    test(srcs(js), expected(expected));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output.
-   *
-   * @param js Inputs
-   * @param expected Expected JS output
-   */
-  protected void test(List<SourceFile> js, List<SourceFile> expected) {
-    test(srcs(js), expected(expected));
-  }
-
   protected static List<SourceFile> createSources(String name, String... sources) {
     if (sources == null) {
       return null;
@@ -1334,29 +1269,6 @@ public abstract class CompilerTestCase {
       expectedSources.add(SourceFile.fromCode(name + i, sources.get(i)));
     }
     return expectedSources;
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output.
-   *
-   * @param modules Module inputs
-   * @param expected Expected JS outputs (one per module)
-   */
-  protected void test(JSChunk[] modules, String[] expected) {
-    test(srcs(modules), expected(expected));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output and (optionally) that
-   * an expected warning is issued. Or, if an error is expected, this method just verifies that the
-   * error is encountered.
-   *
-   * @param modules Module inputs
-   * @param expected Expected JS outputs (one per module)
-   * @param diagnostic the warning or error expected
-   */
-  protected void test(JSChunk[] modules, String[] expected, Diagnostic diagnostic) {
-    test(srcs(modules), expected(expected), diagnostic);
   }
 
   /**
@@ -1377,43 +1289,6 @@ public abstract class CompilerTestCase {
    */
   protected void testSame(String js, DiagnosticType warning) {
     test(srcs(js), expected(js), warning(warning));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input.
-   *
-   * @param js Inputs and outputs
-   */
-  protected void testSame(String[] js) {
-    test(srcs(js), expected(js));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input.
-   *
-   * @param js Inputs and outputs
-   */
-  protected void testSame(List<SourceFile> js) {
-    test(srcs(js), expected(js));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as the input.
-   *
-   * @param modules Module inputs
-   */
-  protected void testSame(JSChunk[] modules) {
-    test(srcs(modules), expected(modules));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as the input.
-   *
-   * @param modules Module inputs
-   * @param warning A warning, or null for no expected warning.
-   */
-  protected void testSame(JSChunk[] modules, DiagnosticType warning) {
-    test(srcs(modules), expected(modules), warning(warning));
   }
 
   /**
@@ -1908,7 +1783,7 @@ public abstract class CompilerTestCase {
   }
 
   /** Parses expected JS inputs and returns the root of the parse tree. */
-  protected Node parseExpectedJs(List<SourceFile> inputs) {
+  private Node parseExpectedJs(List<SourceFile> inputs) {
     Compiler compiler = createCompiler();
 
     compiler.init(externsInputs, inputs, getOptions());
