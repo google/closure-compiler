@@ -1342,6 +1342,11 @@ class RemoveUnusedCode implements CompilerPass {
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
+    } else if (astAnalyzer.mayHaveSideEffects(classBodyNode)) {
+      keepLog.log(KeepLogRecord.forReferenceNode(classNameNode, "class body with side effects"));
+      varInfo.setIsExplicitlyNotRemovable();
+      traverseNode(baseClassExpression, scope);
+      traverseClassMembers(classBodyNode, classScope);
     } else {
       RemovableBuilder builder =
           new RemovableBuilder()

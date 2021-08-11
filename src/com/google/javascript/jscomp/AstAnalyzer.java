@@ -321,6 +321,7 @@ public class AstAnalyzer {
 
       case CLASS_MEMBERS:
         for (Node member = n.getFirstChild(); member != null; member = member.getNext()) {
+          // TODO(user): add check for class fields
           if (member.isComputedProp()
               && checkForStateChangeHelper(member.getFirstChild(), checkForNewObjects)) {
             return true;

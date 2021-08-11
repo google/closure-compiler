@@ -1645,6 +1645,26 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testComputedPropSideEffects() {
+    testSame(
+        lines(
+            "class C {", //
+            "  [alert(1)](){}",
+            "}"));
+  }
+
+  // TODO(user): static class fields with
+  @Test
+  public void testStaticClassFieldDoesntDetectSideEffects() {
+    test(
+        lines(
+            "class C {", //
+            "  static y = alert(2);",
+            "}"),
+        "");
+  }
+
+  @Test
   public void testReferencesInClasses() {
     testSame(
         lines(
