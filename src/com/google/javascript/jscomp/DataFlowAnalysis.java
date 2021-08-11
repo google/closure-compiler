@@ -28,14 +28,17 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * A framework to help writing static program analysis. A subclass of
@@ -88,7 +91,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   private final ControlFlowGraph<N> cfg;
   final JoinOp<L> joinOp;
-  protected final Set<DiGraphNode<N, Branch>> orderedWorkSet;
+  protected final UniqueQueue<DiGraphNode<N, Branch>> workQueue;
 
   /*
    * Feel free to increase this to a reasonable number if you are finding that
@@ -122,12 +125,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   DataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
     this.cfg = targetCfg;
     this.joinOp = joinOp;
-    Comparator<DiGraphNode<N, Branch>> nodeComparator = cfg.getOptionalNodeComparator(isForward());
-    if (nodeComparator != null) {
-      this.orderedWorkSet = new TreeSet<>(nodeComparator);
-    } else {
-      this.orderedWorkSet = new LinkedHashSet<>();
-    }
+    this.workQueue = new UniqueQueue<>(cfg.getOptionalNodeComparator(isForward()));
   }
 
   /**
@@ -191,13 +189,12 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   final void analyze(int maxSteps) {
     initialize();
     int step = 0;
-    while (!orderedWorkSet.isEmpty()) {
+    while (!this.workQueue.isEmpty()) {
       if (step > maxSteps) {
         throw new MaxIterationsExceededException(
             "Analysis did not terminate after " + maxSteps + " iterations");
       }
-      DiGraphNode<N, Branch> curNode = orderedWorkSet.iterator().next();
-      orderedWorkSet.remove(curNode);
+      DiGraphNode<N, Branch> curNode = this.workQueue.removeFirst();
       joinInputs(curNode);
       if (flow(curNode)) {
         // If there is a change in the current node, we want to grab the list
@@ -207,7 +204,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
         for (DiGraphNode<N, Branch> nextNode : nextNodes) {
           if (nextNode != cfg.getImplicitReturn()) {
-            orderedWorkSet.add(nextNode);
+            this.workQueue.add(nextNode);
           }
         }
       }
@@ -239,12 +236,12 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     // TODO(user): Calling clear doesn't deallocate the memory in a
     // LinkedHashSet. Consider creating a new work set if we plan to repeatedly
     // call analyze.
-    orderedWorkSet.clear();
+    workQueue.clear();
     for (DiGraphNode<N, Branch> node : cfg.getNodes()) {
       node.setAnnotation(
           new LinearFlowState<>(createInitialEstimateLattice(), createInitialEstimateLattice()));
       if (node != cfg.getImplicitReturn()) {
-        orderedWorkSet.add(node);
+        workQueue.add(node);
       }
     }
   }
@@ -392,7 +389,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     protected void initialize() {
-      orderedWorkSet.clear();
+      workQueue.clear();
       for (DiGraphNode<N, Branch> node : getCfg().getNodes()) {
         int outEdgeCount = getCfg().getOutEdges(node.getValue()).size();
         List<L> outLattices = new ArrayList<>();
@@ -402,7 +399,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         node.setAnnotation(new BranchedFlowState<>(
             createInitialEstimateLattice(), outLattices));
         if (node != getCfg().getImplicitReturn()) {
-          orderedWorkSet.add(node);
+          workQueue.add(node);
         }
       }
     }
@@ -518,6 +515,36 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           || compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
       }
+    }
+  }
+
+  private static final class UniqueQueue<T> {
+    private final HashSet<T> seenSet = new HashSet<>();
+    private final Queue<T> queue;
+
+    UniqueQueue(@Nullable Comparator<T> priority) {
+      this.queue = (priority == null) ? new ArrayDeque<>() : new PriorityQueue<>(priority);
+    }
+
+    boolean isEmpty() {
+      return this.queue.isEmpty();
+    }
+
+    T removeFirst() {
+      T t = this.queue.poll();
+      this.seenSet.remove(t);
+      return t;
+    }
+
+    void add(T t) {
+      if (this.seenSet.add(t)) {
+        this.queue.add(t);
+      }
+    }
+
+    void clear() {
+      this.seenSet.clear();
+      this.queue.clear();
     }
   }
 }
