@@ -1647,7 +1647,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);

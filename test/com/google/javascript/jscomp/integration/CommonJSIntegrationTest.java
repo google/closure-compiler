@@ -416,7 +416,6 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         DiagnosticGroups.MISSING_PROPERTIES);
   }
 
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);

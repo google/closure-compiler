@@ -155,7 +155,6 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
             "foo.log('foobar');"));
   }
 
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     if (useSimpleMode) {

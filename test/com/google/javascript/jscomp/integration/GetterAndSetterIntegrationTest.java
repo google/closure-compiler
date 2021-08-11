@@ -58,7 +58,6 @@ import org.junit.runners.JUnit4;
 public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
 
   /** Creates a CompilerOptions object with google coding conventions. */
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

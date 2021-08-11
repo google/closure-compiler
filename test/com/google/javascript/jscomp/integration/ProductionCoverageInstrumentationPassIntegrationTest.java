@@ -466,7 +466,6 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
                 .buildExternsFile("externs"));
   }
 
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
 

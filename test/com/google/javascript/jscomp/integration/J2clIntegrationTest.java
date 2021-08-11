@@ -143,7 +143,6 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
     inputFileNameSuffix = ".java.js";
   }
 
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

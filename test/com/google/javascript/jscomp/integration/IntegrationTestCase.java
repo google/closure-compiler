@@ -380,6 +380,4 @@ abstract class IntegrationTestCase {
     return compiler.getRoot().getLastChild();
   }
 
-  /** Creates a CompilerOptions object with google coding conventions. */
-  protected abstract CompilerOptions createCompilerOptions();
 }

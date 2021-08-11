@@ -3757,7 +3757,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
-  @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
