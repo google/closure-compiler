@@ -3604,24 +3604,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testDestructuringCannotConvert() {
-    CompilerOptions options = createCompilerOptions();
-
-    test(
-        options,
-        "for (var   [x] = [], {y} = {}, z = 2;;) {}",
-        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
-    test(
-        options,
-        "for (let   [x] = [], {y} = {}, z = 2;;) {}",
-        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
-    test(
-        options,
-        "for (const [x] = [], {y} = {}, z = 2;;) {}",
-        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
-  }
-
-  @Test
   public void testDefaultParameterRemoval() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);

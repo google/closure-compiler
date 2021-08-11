@@ -69,10 +69,10 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCannotSplitInForLoopInitializer() {
-    testError("for (var   [a] = [], b = 3;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    testError("for (let   [a] = [], b = 3;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    testError("for (const [a] = [], b = 3;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+  public void testIgnoreForLoopInitializer() {
+    testSame("for (var   [a] = [], b = 3;;) {}");
+    testSame("for (let   [a] = [], b = 3;;) {}");
+    testSame("for (const [a] = [], b = 3;;) {}");
   }
 
   @Test

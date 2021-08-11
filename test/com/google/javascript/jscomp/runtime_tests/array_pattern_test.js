@@ -286,3 +286,37 @@ function testIterable_default() {
   [a='a', b, c] = gen();
   assertArrayEquals([0, undefined, 2], [a, b, c]);
 }
+
+function testForLoopInitializer_var() {
+  for (var a = 0, [b, c] = [a, 3]; b < c; b++) {
+    a--;
+  }
+
+  assertArrayEquals([-3, 3, 3], [a, b, c]);
+}
+
+function testForLoopInitializer_const() {
+  const a = 5;
+
+  var counter = 0;
+  for (const a = 0, [b, c] = [a, 3]; counter < 3; counter++) {
+    assertArrayEquals([0, 0, 3], [a, b, c]);
+  }
+
+  assertEquals(5, a);
+}
+
+function testForLoopInitializer_let() {
+  let a = 5;
+
+  const aClosures = [];
+  const bClosures = [];
+  for (let a = 0, [b, c] = [a, 3]; b < c; a--, b++) {
+    aClosures.push(() => a);
+    bClosures.push(() => b);
+  }
+
+  assertArrayEquals([0, -1, -2], aClosures.map((fn) => fn()));
+  assertArrayEquals([0, 1, 2], bClosures.map((fn) => fn()));
+  assertEquals(5, a);
+}

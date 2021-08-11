@@ -226,3 +226,34 @@ function testGetpropAsAssignmentTarget() {
     assertEquals(9, o['w']);
   }
 }
+
+function testForLoopInitializer_var() {
+  for (var a = 0, {b, c} = {b: a, c: 3}; b < c; b++) {
+    a--;
+  }
+
+  assertArrayEquals([-3, 3, 3], [a, b, c]);
+}
+
+function testForLoopInitializer_const() {
+  const a = 5;
+
+  var counter = 0;
+  for (const a = 0, {b, c} = {b: a, c: 3}; counter < 3; counter++) {
+    assertArrayEquals([0, 0, 3], [a, b, c]);
+  }
+
+  assertEquals(5, a);
+}
+
+function testForLoopInitializer_let() {
+  let a = 5;
+
+  const closures = [];
+  for (let a = 0, {b, c} = {b: a, c: 3}; b < c; b++) {
+    closures.push(() => b);
+  }
+
+  assertArrayEquals([0, 1, 2], closures.map((fn) => fn()));
+  assertEquals(5, a);
+}

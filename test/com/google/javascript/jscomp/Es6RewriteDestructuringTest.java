@@ -141,6 +141,79 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectDestructuring_inVanillaForInitialize_var() {
+    test(
+        lines(
+            "A: B: for (",
+            "    var z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
+            "    true;",
+            "    c++) {",
+            "}"),
+        lines(
+            "var z = 1;",
+            "var $jscomp$destructuring$var0 = foo();",
+            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;",
+            "var b = $jscomp$destructuring$var1.a === undefined ?",
+            "    'default' : $jscomp$destructuring$var1.a;",
+            "",
+            "var x = 0;",
+            "var $jscomp$destructuring$var2 = bar();",
+            "var c = $jscomp$destructuring$var2.c;",
+            "A: B: for (; true; c++) {}"));
+  }
+
+  @Test
+  public void testObjectDestructuring_inVanillaForInitialize_const() {
+    test(
+        lines(
+            "A: B: for (",
+            "    const z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
+            "    true;",
+            "    c++) {",
+            "}"),
+        lines(
+            "{",
+            "  const z = 1;",
+            "  /** @const */ var $jscomp$destructuring$var0 = foo();",
+            "  /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;",
+            "  const b = $jscomp$destructuring$var1.a === undefined ?",
+            "      'default' : $jscomp$destructuring$var1.a;",
+            "  {",
+            "    const x = 0;",
+            "    /** @const */ var $jscomp$destructuring$var2 = bar();",
+            "    const c = $jscomp$destructuring$var2.c;",
+            "    A: B: for (; true; c++) {}",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testObjectDestructuring_inVanillaForInitialize_let() {
+    test(
+        lines(
+            "A: B: for (",
+            "    let z = 1, {x: {a: b = 'default'}} = foo(), x = 0, {c} = bar();",
+            "    true;",
+            "    c++) {",
+            "}"),
+        lines(
+            "A: B: for (let z = 1, b, $jscomp$destructuring$var0$unused = (() => {",
+            "     let $jscomp$destructuring$var1 = foo();",
+            "     var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;",
+            "     var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;",
+            "     b = $jscomp$destructuring$var3.a === undefined ? ",
+            "         'default' : $jscomp$destructuring$var3.a;",
+            "     return $jscomp$destructuring$var1;",
+            "   })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {",
+            "     let $jscomp$destructuring$var5 = bar();",
+            "     var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;",
+            "     c = $jscomp$destructuring$var6.c;",
+            "     return $jscomp$destructuring$var5;",
+            "   })(); true; c++) {",
+            "}"));
+  }
+
+  @Test
   public void testObjectDestructuringNested() {
     test(
         "var {a: {b}} = foo();",
@@ -432,6 +505,66 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  use(x);",
             "  use(y);",
             "}"));
+  }
+
+  @Test
+  public void testArrayDestructuring_inVanillaForInitializer_var() {
+    test(
+        "A: B: for (var z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
+        lines(
+            "var z = 1;",
+            "var $jscomp$destructuring$var0 = $jscomp.makeIterator(foo());",
+            "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
+            "var a = $jscomp$destructuring$var1 === undefined ?",
+            "    'default' : $jscomp$destructuring$var1;",
+            "",
+            "var x = 0;",
+            "var $jscomp$destructuring$var2 = $jscomp.makeIterator(bar());",
+            "var c = $jscomp$destructuring$var2.next().value;",
+            "",
+            "A: B: for (; true; c++) {}"));
+  }
+
+  @Test
+  public void testArrayDestructuring_inVanillaForInitializer_const() {
+    test(
+        "A: B: for (const z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
+        lines(
+            "{",
+            "  const z = 1;",
+            "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(foo());",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
+            "  const a = $jscomp$destructuring$var1 === undefined ?",
+            "      'default' : $jscomp$destructuring$var1;",
+            "  {",
+            "    const x = 0;",
+            "    var $jscomp$destructuring$var2 = $jscomp.makeIterator(bar());",
+            "    const c = $jscomp$destructuring$var2.next().value;",
+            "    A: B: for (; true; c++) {}",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testArrayDestructuring_inVanillaForInitializer_let() {
+
+    test(
+        "A: B: for (let z = 1, [a = 'default'] = foo(), x = 0, [c] = bar(); true; c++) { }",
+        lines(
+            "A: B: for (let z = 1, a, $jscomp$destructuring$var0$unused = (() => {",
+            "   let $jscomp$destructuring$var1 = foo();",
+            "   var $jscomp$destructuring$var2 = $jscomp.makeIterator($jscomp$destructuring$var1);",
+            "   var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.next().value;",
+            "   a = $jscomp$destructuring$var3 === undefined ?",
+            "       'default' : $jscomp$destructuring$var3;",
+            "   return $jscomp$destructuring$var1;",
+            " })(), x = 0, c, $jscomp$destructuring$var4$unused = (() => {",
+            "   let $jscomp$destructuring$var5 = bar();",
+            "   var $jscomp$destructuring$var6 = $jscomp.makeIterator($jscomp$destructuring$var5);",
+            "   c = $jscomp$destructuring$var6.next().value;",
+            "   return $jscomp$destructuring$var5;",
+            " })();",
+            "true; c++) {}"));
   }
 
   @Test
