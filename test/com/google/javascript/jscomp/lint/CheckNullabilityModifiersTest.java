@@ -268,11 +268,18 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
         "/** @constructor */ function C() {} /** @private {Object} */ C.prop = null;");
     checkNullMissingWarning(
         "/** @constructor */ function C() { /** @private {Object} */ this.foo = null; }");
+    checkNullMissingWarning(
+        "/** @constructor */ function C() { /** @private {Object|string} */ this.foo = null; }");
+    checkNullMissingWarning(
+        "/** @constructor */ function C() { /** @private {!String|Symbol} */ this.foo = null; }");
 
     checkNoWarning("/** @type {?Object} */ var x = null;");
     checkNoWarning("/** @constructor */ function C() {} /** @private {?Symbol} */ C.prop = null;");
     checkNoWarning(
         "/** @constructor */ function C() { /** @private {?Object} */ this.foo = null; }");
+    // don't recommend making 'Type' nullable since it's not the root of the type expression
+    checkMissingWarning("/** @type {!Array<Type>} */ let arr = null;");
+    checkMissingWarning("/** @type {?{prop: Type}} */ let o = null;");
   }
 
   private void checkNoWarning(String... js) {

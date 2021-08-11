@@ -202,8 +202,13 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
           // Whether the node is the type name in a typeof expression.
           boolean isTypeOfType = parent != null && parent.isTypeOf();
 
+          // Whether the node is definitely a possible type for the rValue e.g. 'Type' in @type
+          // {Type} or @type {Type|number} but not in @type {!Array<Type>}
+          boolean isAppliedToRValue =
+              node == root || (parent != null && parent.getToken() == Token.PIPE);
+
           if (isReference && !hasBang && !hasQmark && !isNewOrThis && !isTypeOfType) {
-            if (rValue != null && rValue.isNull()) {
+            if (isAppliedToRValue && rValue != null && rValue.isNull()) {
               nullMissingCandidates.add(node);
             } else {
               missingCandidates.add(node);
