@@ -23,7 +23,7 @@ import static java.util.Comparator.comparingInt;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -333,7 +333,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
             continue NEXT_CROSS_CFG_NODE;
           }
 
-          FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
+          LinearFlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
 
           // Check the live states and add edge when possible.
 
@@ -353,7 +353,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
             continue NEXT_INTRA_CFG_NODE;
           }
 
-          FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
+          LinearFlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
           boolean v1OutLive = state.getOut().isLive(v1Index);
           boolean v2OutLive = state.getOut().isLive(v2Index);
           CombinedLiveRangeChecker checker = new CombinedLiveRangeChecker(

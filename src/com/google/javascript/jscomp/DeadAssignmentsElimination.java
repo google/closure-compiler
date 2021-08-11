@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -151,8 +151,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     Iterable<? extends DiGraphNode<Node, Branch>> nodes = cfg.getNodes();
 
     for (DiGraphNode<Node, Branch> cfgNode : nodes) {
-      FlowState<LiveVariableLattice> state =
-          cfgNode.getAnnotation();
+      LinearFlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
       Node n = cfgNode.getValue();
       if (n == null) {
         continue;
@@ -187,23 +186,28 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     }
   }
 
-  private void tryRemoveAssignment(NodeTraversal t, Node n,
-      FlowState<LiveVariableLattice> state, Map<String, Var> allVarsInFn) {
+  private void tryRemoveAssignment(
+      NodeTraversal t,
+      Node n,
+      LinearFlowState<LiveVariableLattice> state,
+      Map<String, Var> allVarsInFn) {
     tryRemoveAssignment(t, n, n, state, allVarsInFn);
   }
 
   /**
-   * Determines if any local variables are dead after the instruction {@code n}
-   * and are assigned within the subtree of {@code n}. Removes those assignments
-   * if there are any.
+   * Determines if any local variables are dead after the instruction {@code n} and are assigned
+   * within the subtree of {@code n}. Removes those assignments if there are any.
    *
    * @param n Target instruction.
-   * @param exprRoot The CFG node where the liveness information in state is
-   *     still correct.
+   * @param exprRoot The CFG node where the liveness information in state is still correct.
    * @param state The liveness information at {@code n}.
    */
-  private void tryRemoveAssignment(NodeTraversal t, Node n, Node exprRoot,
-      FlowState<LiveVariableLattice> state, Map<String, Var> allVarsInFn) {
+  private void tryRemoveAssignment(
+      NodeTraversal t,
+      Node n,
+      Node exprRoot,
+      LinearFlowState<LiveVariableLattice> state,
+      Map<String, Var> allVarsInFn) {
 
     Node parent = n.getParent();
     boolean isDeclarationNode = NodeUtil.isNameDeclaration(parent);

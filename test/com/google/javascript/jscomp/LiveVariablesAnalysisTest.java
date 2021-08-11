@@ -22,7 +22,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -521,7 +521,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertLiveBeforeX(String src, String var, boolean async) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
     assertWithMessage(src + " should contain a label 'X:'").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should be live before X")
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
@@ -533,7 +533,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertLiveAfterX(String src, String var, boolean async) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, async);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should be live after X")
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
@@ -541,7 +541,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveAfterX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live after X")
         .that(state.getOut().isLive(liveness.getVarIndex(var)))
@@ -549,7 +549,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveBeforeX(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src, false);
     assertWithMessage("Label X should be in the input program.").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live before X")
         .that(state.getIn().isLive(liveness.getVarIndex(var)))
@@ -557,7 +557,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertLiveAfterDecl(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
     assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
     assertWithMessage("Variable" + var + " should be live after its declaration")
@@ -566,7 +566,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveAfterDecl(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
     assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live after its declaration")
@@ -575,7 +575,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private void assertNotLiveBeforeDecl(String src, String var) {
-    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+    LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
         getFlowStateAtDeclaration(src, var);
     assertWithMessage("Variable " + var + " should be declared").that(state).isNotNull();
     assertWithMessage("Variable " + var + " should not be live before its declaration")
@@ -583,13 +583,13 @@ public final class LiveVariablesAnalysisTest {
         .isFalse();
   }
 
-  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
+  private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
       String src, boolean async) {
     liveness = computeLiveness(src, async);
     return getFlowStateAtX(liveness.getCfg().getEntry().getValue(), liveness.getCfg());
   }
 
-  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
+  private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
       Node node, ControlFlowGraph<Node> cfg) {
     if (node.isLabel()) {
       if (node.getFirstChild().getString().equals("X")) {
@@ -597,7 +597,7 @@ public final class LiveVariablesAnalysisTest {
       }
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-      FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(c, cfg);
+      LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(c, cfg);
       if (state != null) {
         return state;
       }
@@ -605,7 +605,7 @@ public final class LiveVariablesAnalysisTest {
     return null;
   }
 
-  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
+  private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
       String src, String name) {
     liveness = computeLiveness(src, false);
     return getFlowStateAtDeclaration(
@@ -616,7 +616,7 @@ public final class LiveVariablesAnalysisTest {
    * Use this for lexical declarations which can't be labelled; e.g. `LABEL: let x = 0;` is invalid
    * syntax.
    */
-  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
+  private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
       Node node, ControlFlowGraph<Node> cfg, String name) {
     if (NodeUtil.isNameDeclaration(node)) {
       if (node.getFirstChild().getString().equals(name)) {
@@ -624,7 +624,7 @@ public final class LiveVariablesAnalysisTest {
       }
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-      FlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
+      LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> state =
           getFlowStateAtDeclaration(c, cfg, name);
       if (state != null) {
         return state;

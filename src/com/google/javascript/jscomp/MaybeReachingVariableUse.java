@@ -172,9 +172,10 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    *
    * @param n node
    * @param input - Backward dataflow analyses compute their LatticeElement bottom-up (i.e.
-   *     FlowState.out to FlowState.in). See {@link DataFlowAnalysis#flow(DiGraphNode)}. Here param
-   *     `input` is the readonly input FlowState.out that was constructed as `FlowState.in` in the
-   *     previous iteration, or the initial lattice element if this is the first iteration.
+   *     LinearFlowState.out to LinearFlowState.in). See {@link DataFlowAnalysis#flow(DiGraphNode)}.
+   *     Here param `input` is the readonly input LinearFlowState.out that was constructed as
+   *     `LinearFlowState.in` in the previous iteration, or the initial lattice element if this is
+   *     the first iteration.
    */
   @Override
   ReachingUses flowThrough(Node n, ReachingUses input) {
@@ -382,7 +383,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
   Collection<Node> getUses(String name, Node defNode) {
     GraphNode<Node, Branch> n = getCfg().getNode(defNode);
     checkNotNull(n);
-    FlowState<ReachingUses> state = n.getAnnotation();
+    LinearFlowState<ReachingUses> state = n.getAnnotation();
     return state.getOut().mayUseMap.get(allVarsInFn.get(name));
   }
 }

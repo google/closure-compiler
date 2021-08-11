@@ -241,8 +241,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     // call analyze.
     orderedWorkSet.clear();
     for (DiGraphNode<N, Branch> node : cfg.getNodes()) {
-      node.setAnnotation(new FlowState<>(createInitialEstimateLattice(),
-          createInitialEstimateLattice()));
+      node.setAnnotation(
+          new LinearFlowState<>(createInitialEstimateLattice(), createInitialEstimateLattice()));
       if (node != cfg.getImplicitReturn()) {
         orderedWorkSet.add(node);
       }
@@ -255,15 +255,15 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * @return {@code true} if the flow state differs from the previous state.
    */
   protected boolean flow(DiGraphNode<N, Branch> node) {
-    FlowState<L> state = node.getAnnotation();
+    LinearFlowState<L> state = node.getAnnotation();
     if (isForward()) {
-      L outBefore = state.out;
-      state.out = flowThrough(node.getValue(), state.in);
-      return !outBefore.equals(state.out);
+      L outBefore = state.getOut();
+      state.setOut(flowThrough(node.getValue(), state.getIn()));
+      return !outBefore.equals(state.getOut());
     } else {
-      L inBefore = state.in;
-      state.in = flowThrough(node.getValue(), state.out);
-      return !inBefore.equals(state.in);
+      L inBefore = state.getIn();
+      state.setIn(flowThrough(node.getValue(), state.getOut()));
+      return !inBefore.equals(state.getIn());
     }
   }
 
@@ -274,19 +274,19 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * @param node Node to compute new join.
    */
   protected void joinInputs(DiGraphNode<N, Branch> node) {
-    FlowState<L> state = node.getAnnotation();
+    LinearFlowState<L> state = node.getAnnotation();
     if (isForward()) {
       if (cfg.getEntry() == node) {
         state.setIn(createEntryLattice());
       } else {
         List<? extends DiGraphNode<N, Branch>> inNodes = cfg.getDirectedPredNodes(node);
         if (inNodes.size() == 1) {
-          FlowState<L> inNodeState = inNodes.get(0).getAnnotation();
+          LinearFlowState<L> inNodeState = inNodes.get(0).getAnnotation();
           state.setIn(inNodeState.getOut());
         } else if (inNodes.size() > 1) {
           List<L> values = new ArrayList<>(inNodes.size());
           for (DiGraphNode<N, Branch> currentNode : inNodes) {
-            FlowState<L> currentNodeState = currentNode.getAnnotation();
+            LinearFlowState<L> currentNodeState = currentNode.getAnnotation();
             values.add(currentNodeState.getOut());
           }
           state.setIn(joinOp.apply(values));
@@ -299,13 +299,13 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         if (inNode == cfg.getImplicitReturn()) {
           state.setOut(createEntryLattice());
         } else {
-          FlowState<L> inNodeState = inNode.getAnnotation();
+          LinearFlowState<L> inNodeState = inNode.getAnnotation();
           state.setOut(inNodeState.getIn());
         }
       } else if (inNodes.size() > 1) {
         List<L> values = new ArrayList<>(inNodes.size());
         for (DiGraphNode<N, Branch> currentNode : inNodes) {
-          FlowState<L> currentNodeState = currentNode.getAnnotation();
+          LinearFlowState<L> currentNodeState = currentNode.getAnnotation();
           values.add(currentNodeState.getIn());
         }
         state.setOut(joinOp.apply(values));
@@ -313,64 +313,65 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
   }
 
-  /**
-   * The in and out states of a node.
-   *
-   * @param <L> Input and output lattice element type.
-   */
-  static class FlowState<L extends LatticeElement> implements Annotation {
-    private L in;
-    private L out;
+  /** The in and out states of a node. */
+  private abstract static class FlowState<I, O> implements Annotation {
+    private I in;
+    private O out;
 
-    /**
-     * Private constructor. No other classes should create new states.
-     *
-     * @param inState Input.
-     * @param outState Output.
-     */
-    private FlowState(L inState, L outState) {
-      checkNotNull(inState);
-      checkNotNull(outState);
-      this.in = inState;
-      this.out = outState;
+    protected FlowState(I in, O out) {
+      checkNotNull(in);
+      checkNotNull(out);
+      this.in = in;
+      this.out = out;
     }
 
-    L getIn() {
+    final I getIn() {
       return in;
     }
 
-    void setIn(L in) {
+    final void setIn(I in) {
       checkNotNull(in);
       this.in = in;
     }
 
-    L getOut() {
+    final O getOut() {
       return out;
     }
 
-    void setOut(L out) {
+    final void setOut(O out) {
       checkNotNull(out);
       this.out = out;
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
       return SimpleFormat.format("IN: %s OUT: %s", in, out);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
       if (o instanceof FlowState) {
-        FlowState<?> that = (FlowState<?>) o;
-        return that.in.equals(this.in)
-            && that.out.equals(this.out);
+        FlowState<?, ?> that = (FlowState<?, ?>) o;
+        return that.in.equals(this.in) && that.out.equals(this.out);
       }
       return false;
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
       return Objects.hash(in, out);
+    }
+  }
+
+  static final class LinearFlowState<L extends LatticeElement> extends FlowState<L, L> {
+    private LinearFlowState(L in, L out) {
+      super(in, out);
+    }
+  }
+
+  static final class BranchedFlowState<L extends LatticeElement> extends FlowState<L, List<L>> {
+    private BranchedFlowState(L in, List<L> out) {
+      super(in, out);
     }
   }
 
@@ -431,11 +432,11 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     @Override
     protected final boolean flow(DiGraphNode<N, Branch> node) {
       BranchedFlowState<L> state = node.getAnnotation();
-      List<L> outBefore = state.out;
-      state.out = branchedFlowThrough(node.getValue(), state.in);
-      checkState(outBefore.size() == state.out.size());
+      List<L> outBefore = state.getOut();
+      state.setOut(branchedFlowThrough(node.getValue(), state.getIn()));
+      checkState(outBefore.size() == state.getOut().size());
       for (int i = 0; i < outBefore.size(); i++) {
-        if (!outBefore.get(i).equals(state.out.get(i))) {
+        if (!outBefore.get(i).equals(state.getOut().get(i))) {
           return true;
         }
       }
@@ -451,8 +452,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       for (DiGraphNode<N, Branch> predNode : predNodes) {
         BranchedFlowState<L> predNodeState = predNode.getAnnotation();
 
-        L in = predNodeState.out.get(
-            getCfg().getDirectedSuccNodes(predNode).indexOf(node));
+        L in = predNodeState.getOut().get(getCfg().getDirectedSuccNodes(predNode).indexOf(node));
 
         values.add(in);
       }
@@ -461,59 +461,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       } else if (!values.isEmpty()) {
         state.setIn(joinOp.apply(values));
       }
-    }
-  }
-
-  /**
-   * The in and out states of a node.
-   *
-   * @param <L> Input and output lattice element type.
-   */
-  static class BranchedFlowState<L extends LatticeElement>
-      implements Annotation {
-    private L in;
-    private List<L> out;
-
-    /**
-     * Private constructor. No other classes should create new states.
-     *
-     * @param inState Input.
-     * @param outState Output.
-     */
-    private BranchedFlowState(L inState, List<L> outState) {
-      checkNotNull(inState);
-      checkNotNull(outState);
-      this.in = inState;
-      this.out = outState;
-    }
-
-    L getIn() {
-      return in;
-    }
-
-    void setIn(L in) {
-      checkNotNull(in);
-      this.in = in;
-    }
-
-    @Override
-    public String toString() {
-      return SimpleFormat.format("IN: %s OUT: %s", in, out);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (o instanceof BranchedFlowState) {
-        BranchedFlowState<?> that = (BranchedFlowState<?>) o;
-        return that.in.equals(this.in)
-            && that.out.equals(this.out);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(in, out);
     }
   }
 

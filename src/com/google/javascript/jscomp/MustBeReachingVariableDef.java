@@ -473,7 +473,7 @@ final class MustBeReachingVariableDef
   Definition getDef(String name, Node useNode) {
     checkArgument(getCfg().hasNode(useNode));
     GraphNode<Node, Branch> n = getCfg().getNode(useNode);
-    FlowState<MustDef> state = n.getAnnotation();
+    LinearFlowState<MustDef> state = n.getAnnotation();
     return state.getIn().reachingDef.get(allVarsInFn.get(name));
   }
 

@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
-import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.MaxIterationsExceededException;
 import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -900,13 +900,13 @@ public final class DataFlowAnalysisTest {
 
   static void verifyInHas(GraphNode<Instruction, Branch> node, Variable var,
       Integer constant) {
-    FlowState<ConstPropLatticeElement> fState = node.getAnnotation();
+    LinearFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
     veritfyLatticeElementHas(fState.getIn(), var, constant);
   }
 
   static void verifyOutHas(GraphNode<Instruction, Branch> node, Variable var,
       Integer constant) {
-    FlowState<ConstPropLatticeElement> fState = node.getAnnotation();
+    LinearFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
     veritfyLatticeElementHas(fState.getOut(), var, constant);
   }
 
