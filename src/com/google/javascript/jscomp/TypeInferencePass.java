@@ -30,10 +30,6 @@ import com.google.javascript.rhino.jstype.JSTypeResolver;
 /** A compiler pass to run the type inference analysis. */
 class TypeInferencePass {
 
-  static final DiagnosticType DATAFLOW_ERROR = DiagnosticType.error(
-      "JSC_INTERNAL_ERROR_DATAFLOW",
-      "non-monotonic data-flow analysis");
-
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
@@ -126,11 +122,7 @@ class TypeInferencePass {
             scope,
             scopeCreator,
             assertionFunctionLookup);
-    try {
-      typeInference.analyze();
-    } catch (DataFlowAnalysis.MaxIterationsExceededException e) {
-      compiler.report(JSError.make(n, DATAFLOW_ERROR));
-    }
+    typeInference.analyze();
   }
 
   private static class FirstScopeBuildingCallback extends AbstractScopedCallback {
