@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Comparator.comparingInt;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -94,41 +93,39 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   final JoinOp<L> joinOp;
   protected final UniqueQueue<DiGraphNode<N, Branch>> workQueue;
 
-  /**
-   * The maximum number of steps per individual CFG node before we assume the analysis is divergent.
-   *
-   * <p>TODO(b/196398705): This is way too high. Find traversal ordering heurisitc that reduces it.
+  /*
+   * Feel free to increase this to a reasonable number if you are finding that
+   * more and more passes need more steps before finding a fixed-point.
+   * If you just have a special case, consider calling
+   * {@link #analyze(int)} instead.
    */
-  public static final int MAX_STEPS_PER_NODE = 20000;
+  public static final int MAX_STEPS = 2000000;
 
   /**
    * Constructs a data flow analysis.
    *
    * <p>Typical usage
-   *
    * <pre>
    * DataFlowAnalysis dfa = ...
    * dfa.analyze();
    * </pre>
    *
-   * {@link #analyze()} annotates the result to the control flow graph by means of {@link
-   * DiGraphNode#setAnnotation} without any modification of the graph itself. Additional calls to
-   * {@link #analyze()} recomputes the analysis which can be useful if the control flow graph has
-   * been modified.
+   * {@link #analyze()} annotates the result to the control flow graph by
+   * means of {@link DiGraphNode#setAnnotation} without any
+   * modification of the graph itself. Additional calls to {@link #analyze()}
+   * recomputes the analysis which can be useful if the control flow graph
+   * has been modified.
    *
-   * @param cfg The control flow graph object that this object performs on. Modification of the
-   *     graph requires a separate call to {@link #analyze()}.
+   * @param targetCfg The control flow graph object that this object performs
+   *     on. Modification of the graph requires a separate call to
+   *     {@link #analyze()}.
+   *
    * @see #analyze()
    */
-  DataFlowAnalysis(ControlFlowGraph<N> cfg, JoinOp<L> joinOp) {
-    this.cfg = cfg;
+  DataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
+    this.cfg = targetCfg;
     this.joinOp = joinOp;
-
-    Comparator<DiGraphNode<N, Branch>> optComparator = cfg.getOptionalNodeComparator(isForward());
-    if (optComparator != null) {
-      optComparator = comparingInt(this::getStepCount).thenComparing(optComparator);
-    }
-    this.workQueue = new UniqueQueue<>(optComparator);
+    this.workQueue = new UniqueQueue<>(cfg.getOptionalNodeComparator(isForward()));
   }
 
   /**
@@ -163,6 +160,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   abstract L flowThrough(N node, L input);
 
   /**
+   * Finds a fixed-point solution using at most {@link #MAX_STEPS}
+   * iterations.
+   *
+   * @see #analyze(int)
+   */
+  final void analyze() {
+    analyze(MAX_STEPS);
+  }
+
+  /**
    * Finds a fixed-point solution. The function has the side effect of replacing the existing node
    * annotations with the computed solutions using {@link
    * com.google.javascript.jscomp.graph.GraphNode#setAnnotation(Annotation)}.
@@ -174,16 +181,20 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * that depend on the node's newly modified output value will need to recompute their output state
    * again. Each step will perform a computation at one node until no extra computation will modify
    * any existing output state anymore.
+   *
+   * @param maxSteps Max number of iterations before the method stops and throw a {@link
+   *     MaxIterationsExceededException}. This will prevent the analysis from going into a infinite
+   *     loop.
    */
-  final void analyze() {
+  final void analyze(int maxSteps) {
     initialize();
+    int step = 0;
     while (!this.workQueue.isEmpty()) {
-      DiGraphNode<N, Branch> curNode = this.workQueue.removeFirst();
-      FlowState<?, ?> curState = curNode.getAnnotation();
-      if (curState.stepCount++ > MAX_STEPS_PER_NODE) {
-        throw new IllegalStateException("Dataflow analysis appears to diverge around: " + curNode);
+      if (step > maxSteps) {
+        throw new MaxIterationsExceededException(
+            "Analysis did not terminate after " + maxSteps + " iterations");
       }
-
+      DiGraphNode<N, Branch> curNode = this.workQueue.removeFirst();
       joinInputs(curNode);
       if (flow(curNode)) {
         // If there is a change in the current node, we want to grab the list
@@ -197,6 +208,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           }
         }
       }
+      step++;
     }
     if (isForward()) {
       joinInputs(getCfg().getImplicitReturn());
@@ -300,7 +312,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   /** The in and out states of a node. */
   private abstract static class FlowState<I, O> implements Annotation {
-    private int stepCount = 0;
     private I in;
     private O out;
 
@@ -361,9 +372,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
   }
 
-  private int getStepCount(DiGraphNode<N, Branch> node) {
-    FlowState<?, ?> state = node.getAnnotation();
-    return state.stepCount;
+  /**
+   * The exception to be thrown if the analysis has been running for a long
+   * number of iterations. Chances are the analysis is not monotonic, a
+   * fixed-point cannot be found and it is currently stuck in an infinite loop.
+   */
+  static class MaxIterationsExceededException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    MaxIterationsExceededException(String msg) {
+      super(msg);
+    }
   }
 
   abstract static class BranchedForwardDataFlowAnalysis

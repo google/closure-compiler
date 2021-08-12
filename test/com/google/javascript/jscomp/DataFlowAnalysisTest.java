@@ -17,13 +17,15 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static java.util.Comparator.comparingInt;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.MaxIterationsExceededException;
 import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -33,6 +35,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -859,71 +862,40 @@ public final class DataFlowAnalysisTest {
     verifyBranchedInHas(n4, a, 0);
   }
 
-  static final class DivergentAnalysis
-      extends DataFlowAnalysis<DivergentAnalysis.Counter, DivergentAnalysis.Step> {
-
-    static final class Counter {
-      int count = 0;
-    }
-
-    static final class Step implements LatticeElement {
-
-      Step() {}
-
-      @Override
-      public int hashCode() {
-        return 0;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        return false;
-      }
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param targetCfg Control Flow Graph.
-     */
-    DivergentAnalysis(ControlFlowGraph<Counter> targetCfg) {
-      super(targetCfg, (inputs) -> inputs.get(0));
-    }
-
-    @Override
-    boolean isForward() {
-      return true;
-    }
-
-    @Override
-    Step flowThrough(Counter node, Step input) {
-      node.count++;
-      return input;
-    }
-
-    @Override
-    Step createEntryLattice() {
-      return new Step();
-    }
-
-    @Override
-    Step createInitialEstimateLattice() {
-      return new Step();
-    }
-  }
+  private static final int MAX_STEP = 10;
 
   @Test
   public void testMaxIterationsExceededException() {
-    DivergentAnalysis.Counter entrypoint = new DivergentAnalysis.Counter();
-    ControlFlowGraph<DivergentAnalysis.Counter> cfg =
-        new ControlFlowGraph<>(entrypoint, true, true);
+    Variable a = new Variable("a");
+    Instruction inst1 = new ArithmeticInstruction(a, a, Operation.ADD, a);
+    ControlFlowGraph<Instruction> cfg =
+        new ControlFlowGraph<Instruction>(inst1, true, true) {
+          @Override
+          public Comparator<DiGraphNode<Instruction, Branch>> getOptionalNodeComparator(
+              boolean isForward) {
+            return comparingInt(arg -> arg.getValue().order);
+          }
+        };
+    cfg.createNode(inst1);
 
-    cfg.connect(entrypoint, ControlFlowGraph.Branch.UNCOND, entrypoint);
-    DivergentAnalysis constProp = new DivergentAnalysis(cfg);
-
-    Exception e = assertThrows(Exception.class, constProp::analyze);
-    assertThat(entrypoint.count).isEqualTo(DataFlowAnalysis.MAX_STEPS_PER_NODE + 1);
-    assertThat(e).hasMessageThat().startsWith("Dataflow analysis appears to diverge around: ");
+    // We have MAX_STEP + 1 nodes, it is impossible to finish the analysis with
+    // MAX_STEP number of steps.
+    for (int i = 0; i < MAX_STEP + 1; i++) {
+      Instruction inst2 = new ArithmeticInstruction(a, a, Operation.ADD, a);
+      inst2.order = i + 1;
+      cfg.createNode(inst2);
+      cfg.connect(inst1, ControlFlowGraph.Branch.UNCOND, inst2);
+      inst1 = inst2;
+    }
+    DummyConstPropagation constProp = new DummyConstPropagation(cfg);
+    try {
+      constProp.analyze(MAX_STEP);
+      assertWithMessage("Expected MaxIterationsExceededException to be thrown.").fail();
+    } catch (MaxIterationsExceededException e) {
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Analysis did not terminate after " + MAX_STEP + " iterations");
+    }
   }
 
   static void verifyInHas(GraphNode<Instruction, Branch> node, Variable var,
