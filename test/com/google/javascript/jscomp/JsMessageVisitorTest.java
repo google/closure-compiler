@@ -936,6 +936,26 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
+  public void testUsingMsgPrefixWithFallback_duplicateUnnamedKeys_rename() {
+    renameMessages = true;
+    extractMessages(
+        lines(
+            "function f() {",
+            "  /** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');",
+            "  /** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');",
+            "  var x = goog.getMsgWithFallback(",
+            "      MSG_UNNAMED_1, MSG_UNNAMED_2);",
+            "}",
+            "function g() {",
+            "  /** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');",
+            "  /** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');",
+            "  var x = goog.getMsgWithFallback(",
+            "      MSG_UNNAMED_1, MSG_UNNAMED_2);",
+            "}"));
+    assertNoErrors();
+  }
+
+  @Test
   public void testUsingMsgPrefixWithFallback_module() {
     extractMessages(
         LINE_JOINER.join(

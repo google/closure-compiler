@@ -117,6 +117,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    */
   private final Map<String, MessageLocation> messageNames = new HashMap<>();
 
+  /** Track unnamed messages by Var, not string, as they are not guaranteed to be globally unique */
   private final Map<Var, JsMessage> unnamedMessages = new HashMap<>();
 
   /**
@@ -170,8 +171,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private void checkMessageInitialization(NodeTraversal traversal, Node node) {
     final Node parent = node.getParent();
 
-    String messageKey;
     final String originalMessageKey;
+    String possiblyObfuscatedMessageKey;
     final Node msgNode;
     final boolean isVar;
 
@@ -182,7 +183,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           return;
         }
 
-        messageKey = node.getString();
+        possiblyObfuscatedMessageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
         isVar = true;
@@ -195,7 +196,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
           return;
         }
 
-        messageKey = getProp.getString();
+        possiblyObfuscatedMessageKey = getProp.getString();
         originalMessageKey = getProp.getOriginalName();
         msgNode = node.getLastChild();
         isVar = false;
@@ -216,7 +217,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         }
         checkState(parent.isObjectLit(), parent);
 
-        messageKey = node.getString();
+        possiblyObfuscatedMessageKey = node.getString();
         originalMessageKey = node.getOriginalName();
         msgNode = node.getFirstChild();
         isVar = false;
@@ -226,9 +227,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         return;
     }
 
-    if (originalMessageKey != null) {
-      messageKey = originalMessageKey;
-    }
+    String messageKey =
+        originalMessageKey != null ? originalMessageKey : possiblyObfuscatedMessageKey;
 
     // If we've reached this point, then messageKey is the name of a variable or a property that is
     // being assigned a value and msgNode is the Node representing the value being assigned.
@@ -293,7 +293,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     if (!isUnnamedMsg && !extractedMessage.isExternal()) {
       checkIfMessageDuplicated(messageKey, msgNode);
     }
-    trackMessage(traversal, extractedMessage, messageKey, msgNode, isUnnamedMsg);
+    if (isUnnamedMsg) {
+      trackUnnamedMessage(traversal, extractedMessage, possiblyObfuscatedMessageKey);
+    } else {
+      trackNormalMessage(extractedMessage, messageKey, msgNode);
+    }
 
     if (extractedMessage.isEmpty()) {
       // value of the message is an empty string. Translators do not like it.
@@ -335,16 +339,21 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * types are trackable, because that would require a more sophisticated analysis. e.g., function
    * f(s) { s.MSG_UNNAMED_X = 'Some untrackable message'; }
    */
-  private void trackMessage(
-      NodeTraversal t, JsMessage message, String msgName, Node msgNode, boolean isUnnamedMessage) {
-    if (!isUnnamedMessage) {
+  private void trackNormalMessage(JsMessage message, String msgName, Node msgNode) {
       MessageLocation location = new MessageLocation(message, msgNode);
       messageNames.put(msgName, location);
-    } else {
-      Var var = t.getScope().getVar(msgName);
-      if (var != null) {
-        unnamedMessages.put(var, message);
-      }
+  }
+
+  /**
+   * Track an unnamed message for later retrieval.
+   *
+   * <p>This is used for figuring out message fallbacks. Message duplicates are allowed for unnamed
+   * messages.
+   */
+  private void trackUnnamedMessage(NodeTraversal t, JsMessage message, String msgNameInScope) {
+    Var var = t.getScope().getVar(msgNameInScope);
+    if (var != null) {
+      unnamedMessages.put(var, message);
     }
   }
 
@@ -392,19 +401,20 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     return false;
   }
 
-  /** Get a previously tracked message. */
-  private JsMessage getTrackedMessage(NodeTraversal t, String msgName) {
-    boolean isUnnamedMessage = isUnnamedMessageName(msgName);
-    if (!isUnnamedMessage) {
-      MessageLocation location = messageNames.get(msgName);
-      return location == null ? null : location.message;
-    } else {
-      Var var = t.getScope().getVar(msgName);
-      if (var != null) {
-        return unnamedMessages.get(var);
-      }
+  /** Get a previously tracked unnamed message */
+  private JsMessage getTrackedUnnamedMessage(NodeTraversal t, String msgNameInScope) {
+    Var var = t.getScope().getVar(msgNameInScope);
+    if (var != null) {
+      return unnamedMessages.get(var);
     }
     return null;
+  }
+
+  /** Get a previously tracked message. */
+  private JsMessage getTrackedNormalMessage(String msgName) {
+      MessageLocation location = messageNames.get(msgName);
+      return location == null ? null : location.message;
+
   }
 
   /**
@@ -826,21 +836,16 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     }
 
     Node firstArg = call.getSecondChild();
-    String name = getMessageNameFromNode(firstArg);
-    JsMessage firstMessage = getTrackedMessage(t, name);
+    JsMessage firstMessage = getJsMessageFromNode(t, firstArg);
     if (firstMessage == null) {
-      compiler.report(JSError.make(firstArg, FALLBACK_ARG_ERROR, name));
+      compiler.report(JSError.make(firstArg, FALLBACK_ARG_ERROR, firstArg.getQualifiedName()));
       return;
     }
 
     Node secondArg = firstArg.getNext();
-    name = getMessageNameFromNode(secondArg);
-    if (name == null) {
-      name = secondArg.getString();
-    }
-    JsMessage secondMessage = getTrackedMessage(t, name);
+    JsMessage secondMessage = getJsMessageFromNode(t, secondArg);
     if (secondMessage == null) {
-      compiler.report(JSError.make(secondArg, FALLBACK_ARG_ERROR, name));
+      compiler.report(JSError.make(secondArg, FALLBACK_ARG_ERROR, secondArg.getQualifiedName()));
       return;
     }
 
@@ -878,7 +883,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   private static boolean isMessageIdentifier(Node node) {
-    return getMessageNameFromNode(node) != null;
+    String qname = node.getQualifiedName();
+    return qname != null && qname.contains(MSG_PREFIX);
   }
 
   /**
@@ -891,16 +897,18 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *   <li>a GETPROP node (e.g. some.import.MSG_FOO)
    * </ol>
    */
-  private static String getMessageNameFromNode(Node node) {
+  private JsMessage getJsMessageFromNode(NodeTraversal t, Node node) {
     String messageName = node.getQualifiedName();
-    if (messageName == null) {
+    if (messageName == null || !messageName.contains(MSG_PREFIX)) {
       return null;
     }
 
-    if (messageName.contains(MSG_PREFIX)) {
-      return messageName.substring(messageName.indexOf(MSG_PREFIX));
+    String messageKey = messageName.substring(messageName.indexOf(MSG_PREFIX));
+    if (isUnnamedMessageName(messageKey)) {
+      return getTrackedUnnamedMessage(t, messageName);
+    } else {
+      return getTrackedNormalMessage(messageKey);
     }
-    return null;
   }
 
   /** Returns whether the given message name is in the unnamed namespace. */
