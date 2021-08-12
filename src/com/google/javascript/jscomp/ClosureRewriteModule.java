@@ -30,7 +30,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -353,7 +352,7 @@ final class ClosureRewriteModule implements CompilerPass {
     }
   }
 
-  private class ScriptRecorder implements Callback {
+  private class ScriptRecorder implements NodeTraversal.Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -422,7 +421,7 @@ final class ClosureRewriteModule implements CompilerPass {
     }
   }
 
-  private class ScriptUpdater implements Callback {
+  private class ScriptUpdater implements NodeTraversal.Callback {
     final Deque<ScriptDescription> scriptDescriptions;
 
     ScriptUpdater(Deque<ScriptDescription> scriptDescriptions) {
@@ -1341,9 +1340,10 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   /**
-   * For exports like "exports = {prop: value}" update the declarations to enforce
-   * @const ness (and typedef exports).
-   * TODO(blickly): Remove as much of this functionality as possible, now that these style of
+   * For exports like "exports = {prop: value}" update the declarations to enforce &#64;const ness
+   * (and typedef exports).
+   *
+   * <p>TODO(blickly): Remove as much of this functionality as possible, now that these style of
    * exports are rewritten in ScriptPreprocess step.
    */
   private void maybeUpdateExportObjectLiteral(NodeTraversal t, Node n) {
@@ -1601,12 +1601,11 @@ final class ClosureRewriteModule implements CompilerPass {
   private void recordNameToInline(String aliasName, String newName, @Nullable String namespaceId) {
     checkNotNull(aliasName);
     checkNotNull(newName);
-    checkState(
-        null
-            == currentScript.namesToInlineByAlias.put(
-                aliasName, new AliasName(newName, namespaceId)),
-        "Already found a mapping for inlining short name: %s",
-        aliasName);
+    // This intentionally overwrites a possibly pre-existing alias of the same name.
+    // User code might import the same name twice, with the same variable name. That's an error
+    // (duplicate variable definition, reported in TypeValidator), but this code still shouldn't
+    // crash on it.
+    currentScript.namesToInlineByAlias.put(aliasName, new AliasName(newName, namespaceId));
   }
 
   /**

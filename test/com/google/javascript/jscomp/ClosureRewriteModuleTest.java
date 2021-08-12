@@ -47,7 +47,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   private boolean preserveClosurePrimitives = false;
 
   public ClosureRewriteModuleTest() {
-    super(new TestExternsBuilder().addClosureExterns().build());
+    super(new TestExternsBuilder().addClosureExterns().addConsole().build());
   }
 
   @Override
@@ -2074,6 +2074,25 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         expected(
             "/** @const */ var module$exports$ns$a = {};",
             "/** @const */ var module$exports$ns$a = {};"));
+  }
+
+  @Test
+  public void testDuplicateRequireDoesntCrash() {
+    ignoreWarnings(DiagnosticGroups.DUPLICATE_VARS);
+    test(
+        srcs(
+            lines("goog.module('ns.b');", "exports = 1;"),
+            lines(
+                "goog.module('ns.a');",
+                "const b = goog.require('ns.b');",
+                "const b = goog.require('ns.b');",
+                "console.log(b);")),
+        expected(
+            lines("/** @const */", "var module$exports$ns$b = 1;"),
+            lines(
+                "/** @const */",
+                "var module$exports$ns$a = {};",
+                "console.log(module$exports$ns$b);")));
   }
 
   @Test
