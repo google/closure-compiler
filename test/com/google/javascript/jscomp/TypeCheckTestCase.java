@@ -16,12 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIPTION_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -32,6 +35,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 
@@ -214,6 +218,27 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     }
   }
 
+  private void testTypesWithExternsDiagnosticTypes(
+      String externs, String js, List<DiagnosticType> expectedTypes, boolean isError) {
+    parseAndTypeCheck(externs, js);
+
+    if (isError) {
+      assertWithMessage("Regarding errors:")
+          .that(compiler.getErrors())
+          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+          .containsExactlyElementsIn(expectedTypes)
+          .inOrder();
+      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
+    } else {
+      assertWithMessage("Regarding warnings:")
+          .that(compiler.getWarnings())
+          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+          .containsExactlyElementsIn(expectedTypes)
+          .inOrder();
+      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
+    }
+  }
+
   protected void testTypesWithExterns(String externs, String js, String description) {
     testTypesWithExterns(externs, js, description, false);
   }
@@ -236,6 +261,71 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected void testTypesWithExtraExterns(String externs, String js, DiagnosticType diag) {
     testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, diag, false);
+  }
+
+  final TypeTestBuilder newTest() {
+    return new TypeTestBuilder();
+  }
+
+  @CheckReturnValue
+  public final class TypeTestBuilder {
+    private String source;
+    private String externs;
+    private boolean includeDefaultExterns = false;
+    private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
+    private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
+    private boolean diagnosticsAreErrors = false;
+
+    public TypeTestBuilder addSource(String... x) {
+      checkState(this.source == null, "Can only have one source right now.");
+      this.source = lines(x);
+      return this;
+    }
+
+    public TypeTestBuilder addExterns(String... x) {
+      checkState(this.externs == null, "Can only have one externs right now.");
+      this.externs = lines(x);
+      return this;
+    }
+
+    public TypeTestBuilder includeDefaultExterns() {
+      this.includeDefaultExterns = true;
+      return this;
+    }
+
+    public TypeTestBuilder diagnosticsAreErrors() {
+      this.diagnosticsAreErrors = true;
+      return this;
+    }
+
+    public TypeTestBuilder addDiagnostic(DiagnosticType x) {
+      this.diagnosticTypes.add(x);
+      return this;
+    }
+
+    public TypeTestBuilder addDiagnostic(String x) {
+      this.diagnosticDescriptions.add(x);
+      return this;
+    }
+
+    public void run() {
+      checkState(
+          this.diagnosticTypes.isEmpty() || this.diagnosticDescriptions.isEmpty(),
+          "Cannot expect both diagnostic types and diagnostic descriptions");
+      checkState(this.source != null, "Must provide source");
+
+      String allExterns =
+          String.join(
+              "\n", this.includeDefaultExterns ? DEFAULT_EXTERNS : "", nullToEmpty(this.externs));
+
+      if (!this.diagnosticTypes.isEmpty()) {
+        testTypesWithExternsDiagnosticTypes(
+            allExterns, this.source, this.diagnosticTypes, this.diagnosticsAreErrors);
+      } else {
+        testTypesWithExterns(
+            allExterns, this.source, this.diagnosticDescriptions, this.diagnosticsAreErrors);
+      }
+    }
   }
 
   /** Parses and type checks the JavaScript code. */

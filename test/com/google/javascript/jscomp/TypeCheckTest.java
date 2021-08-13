@@ -16226,13 +16226,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void getNotFirstChildOfOptionalGetElemNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
-    testTypes(
-        lines(
+    newTest()
+        .addSource(
             "/** @param {?Object} x */", //
             "function f(x) {", //
             "  x?.[y.z];", //
-            "}"),
-        "Property z never defined on y" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION);
+            "}")
+        .addDiagnostic("Property z never defined on y" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
+        .run();
   }
 
   @Test
