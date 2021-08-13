@@ -80,7 +80,7 @@ import javax.annotation.Nullable;
 /**
  * Type inference within a script node or a function body, using the data-flow analysis framework.
  */
-class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Node, FlowScope> {
+class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
 
   // TODO(johnlenz): We no longer make this check, but we should.
   static final DiagnosticType FUNCTION_LITERAL_UNDEFINED_THIS =
@@ -458,14 +458,23 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   @Override
+  final boolean isForward() {
+    return true;
+  }
+
+  @Override
+  final boolean isBranched() {
+    return true;
+  }
+
+  @Override
   @SuppressWarnings({"fallthrough", "incomplete-switch"})
-  List<FlowScope> branchedFlowThrough(Node source, FlowScope input) {
+  List<FlowScope> branchFlow(Node source, FlowScope output) {
     // NOTE(nicksantos): Right now, we just treat ON_EX edges like UNCOND
     // edges. If we wanted to be perfect, we'd actually JOIN all the out
     // lattices of this flow with the in lattice, and then make that the out
     // lattice for the ON_EX edge. But it's probably too expensive to be
     // worthwhile.
-    FlowScope output = flowThrough(source, input);
     Node condition = null;
     FlowScope conditionFlowScope = null;
     BooleanOutcomePair conditionOutcomes = null;

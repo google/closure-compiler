@@ -21,8 +21,6 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
-import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -760,14 +758,22 @@ public final class DataFlowAnalysisTest {
     return analysis.getEscapedLocals();
   }
 
-  /**
-   * A simple forward constant propagation.
-   */
-  static class BranchedDummyConstPropagation extends
-      BranchedForwardDataFlowAnalysis<Instruction, ConstPropLatticeElement> {
+  /** A simple forward constant propagation. */
+  static class BranchedDummyConstPropagation
+      extends DataFlowAnalysis<Instruction, ConstPropLatticeElement> {
 
     BranchedDummyConstPropagation(ControlFlowGraph<Instruction> targetCfg) {
       super(targetCfg, new ConstPropJoinOp());
+    }
+
+    @Override
+    boolean isForward() {
+      return true;
+    }
+
+    @Override
+    boolean isBranched() {
+      return true;
     }
 
     @Override
@@ -782,8 +788,7 @@ public final class DataFlowAnalysisTest {
     }
 
     @Override
-    List<ConstPropLatticeElement> branchedFlowThrough(Instruction node,
-        ConstPropLatticeElement input) {
+    List<ConstPropLatticeElement> branchFlow(Instruction node, ConstPropLatticeElement input) {
       List<ConstPropLatticeElement> result = new ArrayList<>();
       List<? extends DiGraphEdge<Instruction, Branch>> outEdges = getCfg().getOutEdges(node);
       if (node.isArithmetic()) {
@@ -841,22 +846,22 @@ public final class DataFlowAnalysisTest {
     constProp.analyze();
 
     // We cannot conclude anything from if (a).
-    verifyBranchedInHas(n1, a, null);
-    verifyBranchedInHas(n1, b, null);
-    verifyBranchedInHas(n1, c, null);
+    verifyInHas(n1, a, null);
+    verifyInHas(n1, b, null);
+    verifyInHas(n1, c, null);
 
     // Nothing is known on the true branch.
-    verifyBranchedInHas(n2, a, null);
-    verifyBranchedInHas(n2, b, null);
-    verifyBranchedInHas(n2, c, null);
+    verifyInHas(n2, a, null);
+    verifyInHas(n2, b, null);
+    verifyInHas(n2, c, null);
 
     // Verify that we have a = 0 on the false branch.
-    verifyBranchedInHas(n3, a, 0);
-    verifyBranchedInHas(n3, b, null);
-    verifyBranchedInHas(n3, c, null);
+    verifyInHas(n3, a, 0);
+    verifyInHas(n3, b, null);
+    verifyInHas(n3, c, null);
 
     // After the merge we should still have a = 0.
-    verifyBranchedInHas(n4, a, 0);
+    verifyInHas(n4, a, 0);
   }
 
   static final class DivergentAnalysis
@@ -936,12 +941,6 @@ public final class DataFlowAnalysisTest {
       Integer constant) {
     LinearFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
     veritfyLatticeElementHas(fState.getOut(), var, constant);
-  }
-
-  static void verifyBranchedInHas(GraphNode<Instruction, Branch> node,
-      Variable var, Integer constant) {
-    BranchedFlowState<ConstPropLatticeElement> fState = node.getAnnotation();
-    veritfyLatticeElementHas(fState.getIn(), var, constant);
   }
 
   static void veritfyLatticeElementHas(ConstPropLatticeElement el, Variable var, Integer constant) {

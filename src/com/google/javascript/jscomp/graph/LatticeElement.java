@@ -16,9 +16,5 @@
 
 package com.google.javascript.jscomp.graph;
 
-/**
- * A lattice element.
- */
-public interface LatticeElement {
-
-}
+/** A lattice element. */
+public interface LatticeElement extends Annotation {}

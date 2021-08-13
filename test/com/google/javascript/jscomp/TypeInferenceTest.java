@@ -51,7 +51,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
-import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeInference.BigIntPresence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -240,7 +240,7 @@ public final class TypeInferenceTest {
     }
     scopeCreator.undoTypeAliasChains();
     // Create the control graph.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, cfgRoot);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     // Create a simple reverse abstract interpreter.
@@ -250,7 +250,7 @@ public final class TypeInferenceTest {
         new TypeInference(compiler, cfg, rai, assumedScope, scopeCreator, ASSERTION_FUNCTION_MAP);
     dfa.analyze();
     // Get the scope of the implicit return.
-    BranchedFlowState<FlowScope> rtnState = cfg.getImplicitReturn().getAnnotation();
+    LinearFlowState<FlowScope> rtnState = cfg.getImplicitReturn().getAnnotation();
     if (cfgRoot.isFunction()) {
       // Reset the flow scope's syntactic scope to the function block, rather than the function
       // node
