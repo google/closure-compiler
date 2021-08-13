@@ -55,7 +55,6 @@ import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNestedNames;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
-import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckProvidesSorted;
@@ -1818,7 +1817,6 @@ public final class DefaultPassConfig extends PassConfig {
                 ImmutableList.Builder<Callback> callbacks = ImmutableList.builder();
                 if (options.enables(DiagnosticGroups.ANALYZER_CHECKS_INTERNAL)) {
                   callbacks
-                      .add(new CheckNullableReturn(compiler))
                       .add(new CheckArrayWithGoogObject(compiler))
                       .add(new ImplicitNullabilityCheck(compiler))
                       .add(new CheckNestedNames(compiler));

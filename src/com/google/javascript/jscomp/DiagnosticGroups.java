@@ -46,7 +46,6 @@ import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNestedNames;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
-import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckProvidesSorted;
@@ -613,8 +612,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "analyzerChecksInternal", // undocumented
           CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT,
-          CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           ImplicitNullabilityCheck.IMPLICITLY_NONNULL_JSDOC,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE);
