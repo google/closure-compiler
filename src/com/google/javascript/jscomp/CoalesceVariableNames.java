@@ -76,6 +76,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   private final Comparator<Var> coloringTieBreaker =
       comparingInt((Var arg) -> liveness.getVarIndex(arg.getName()));
 
+  /** A stack of shouldOptimizeScope results. */
+  private final Deque<Boolean> shouldOptimizeScopeStack = new ArrayDeque<>();
+
   /**
    * @param usePseudoNames For debug purposes, when merging variable foo and bar
    * to foo, rename both variable to foo_bar.
@@ -121,11 +124,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void enterScope(NodeTraversal t) {
-    Scope scope = t.getScope();
     if (!shouldOptimizeScope(t)) {
+      shouldOptimizeScopeStack.push(false);
       return;
     }
+    shouldOptimizeScopeStack.push(true);
 
+    Scope scope = t.getScope();
     checkState(scope.isFunctionScope(), scope);
 
     // live variables analysis is based off of the control flow graph
@@ -164,7 +169,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void exitScope(NodeTraversal t) {
-    if (!shouldOptimizeScope(t)) {
+    if (!shouldOptimizeScopeStack.pop()) {
       return;
     }
     colorings.pop();
