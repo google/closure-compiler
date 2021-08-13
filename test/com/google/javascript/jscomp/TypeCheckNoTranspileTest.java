@@ -5610,7 +5610,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "default value has wrong type",
             "found   : {g: function(string): undefined}",
-            "required: (undefined|{g: function(number): undefined})"));
+            "required: (undefined|{g: function(number): undefined})",
+            "missing : []",
+            "mismatch: [g]"));
   }
 
   @Test

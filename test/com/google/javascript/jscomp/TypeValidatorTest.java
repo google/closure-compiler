@@ -146,6 +146,70 @@ public final class TypeValidatorTest extends CompilerTestCase {
                     "mismatch: [e]")));
   }
 
+  @Test
+  public void missingPropertiesPrintedWithMismatch_defaultParam() {
+    test(
+        externs(""),
+        srcs(
+            lines(
+                "/** @unrestricted */",
+                "class NumberFormatSymbolsMap {",
+                "  constructor() {}",
+                "}",
+                "/** @type {string} */",
+                "NumberFormatSymbolsMap.prototype.DEF_CURRENCY_CODE;",
+                "",
+                "var /** !NumberFormatSymbolsMap */ numberSymbol;",
+                "/**",
+                " * @record",
+                " */",
+                "const Type = class {",
+                "  constructor() {",
+                "    /** @type {string} */ this.CURRENCY_PATTERN;",
+                "    /** @type {string} */ this.DEF_CURRENCY_CODE;",
+                "  }",
+                "};",
+                "/**",
+                " * @param {!Type=} symbols",
+                " * @constructor",
+                " */",
+                "let NumberFormat = function(symbols) {};",
+                "new NumberFormat(numberSymbol);")),
+        warning(TYPE_MISMATCH_WARNING).withMessageContaining("missing : [CURRENCY_PATTERN]"));
+  }
+
+  @Test
+  public void missingPropertiesPrintedWithMismatch_nullableParam() {
+    test(
+        externs(""),
+        srcs(
+            lines(
+                "/** @unrestricted */",
+                "class NumberFormatSymbolsMap {",
+                "  constructor() {}",
+                "}",
+                "/** @type {string} */",
+                "NumberFormatSymbolsMap.prototype.DEF_CURRENCY_CODE;",
+                "",
+                "var /** !NumberFormatSymbolsMap */ numberSymbol;",
+                "/**",
+                " * @record",
+                " */",
+                "const Type = class {",
+                "  constructor() {",
+                "    /** @type {string} */ this.CURRENCY_PATTERN;",
+                "    /** @type {string} */ this.DEF_CURRENCY_CODE;",
+                "  }",
+                "};",
+                "/**",
+                " * @param {?Type} symbols",
+                " * @constructor",
+                " */",
+                "let NumberFormat = function(symbols) {};",
+                "new NumberFormat(numberSymbol);")),
+        warning(TYPE_MISMATCH_WARNING).withMessageContaining("missing : [CURRENCY_PATTERN]"));
+  }
+
   /**
    * Make sure the 'found' and 'required' strings are not identical when there is a mismatch. See
    * https://code.google.com/p/closure-compiler/issues/detail?id=719.

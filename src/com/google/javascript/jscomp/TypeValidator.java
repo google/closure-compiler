@@ -1063,10 +1063,21 @@ class TypeValidator implements Serializable {
     if (!found.isSubtypeOf(required, this.subtypingMode)) {
       Set<String> missing = null;
       Set<String> mismatch = null;
+      JSType structuralType = null;
       if (required.isStructuralType()) {
+        structuralType = required;
+      } else if (required.isUnionType()) {
+        JSType restrictedType = required.restrictByNotNullOrUndefined();
+        if (restrictedType.isStructuralType()) {
+          // restrict to unions created by undefined `{!Type=}` type or by nullable `{?Type}` type.
+          structuralType = restrictedType;
+        }
+      }
+
+      if (structuralType != null) {
         missing = new TreeSet<>();
         mismatch = new TreeSet<>();
-        ObjectType requiredObject = required.toMaybeObjectType();
+        ObjectType requiredObject = structuralType.toMaybeObjectType();
         ObjectType foundObject = found.toMaybeObjectType();
         if (requiredObject != null && foundObject != null) {
           for (String property : requiredObject.getPropertyNames()) {

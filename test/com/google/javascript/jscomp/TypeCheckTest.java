@@ -20561,7 +20561,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;"),
         lines("/** @type {I2} */", "var o1 = {length : 'test'};"),
-        lines("initializing variable", "found   : {length: string}", "required: (I2|null)"));
+        lines(
+            "initializing variable",
+            "found   : {length: string}",
+            "required: (I2|null)",
+            "missing : []",
+            "mismatch: [length]"));
   }
 
   @Test
