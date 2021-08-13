@@ -69,7 +69,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   // Whether this instance has already rewritten goog.provides, which can only happen once
   private boolean hasRewritingOccurred = false;
   private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
-  private final Set<Node> previouslyProvidedDefinitions = new HashSet<>();
   private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(
@@ -567,12 +566,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       return this.fromLegacyModule;
     }
 
-    private boolean hasCandidateDefinitionNotFromPreviousPass() {
-      // Exclude 'candidate definitions' that were added by previous pass runs because when
-      // rewriting provides, we can erase definitions that the compiler itself added, but not
-      // definitions that a user added.
-      return candidateDefinition != null
-          && !previouslyProvidedDefinitions.contains(candidateDefinition);
+    private boolean hasCandidateDefinition() {
+      return candidateDefinition != null;
     }
 
     /**
@@ -657,8 +652,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
 
       // Handle the case where there is a duplicate definition for an explicitly
       // provided symbol.
-      if (hasCandidateDefinitionNotFromPreviousPass() && explicitNode != null) {
-
+      if (hasCandidateDefinition() && explicitNode != null) {
         // Does this need a VAR keyword?
         replacementNode = candidateDefinition;
         if (candidateDefinition.isExprResult()) {
@@ -757,7 +751,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       if (compiler.getCodingConvention().isConstant(namespace)) {
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      if (!hasCandidateDefinitionNotFromPreviousPass()) {
+      if (!hasCandidateDefinition()) {
         decl.setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
 
@@ -773,7 +767,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       Node lhs = astFactory.createQNameWithUnknownType(namespace).srcrefTree(firstNode);
       Node decl = IR.exprResult(astFactory.createAssign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
-      if (!hasCandidateDefinitionNotFromPreviousPass()) {
+      if (!hasCandidateDefinition()) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
       checkState(isNamespacePlaceholder(decl));
