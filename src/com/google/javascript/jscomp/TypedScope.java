@@ -20,14 +20,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.modules.Module;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -247,16 +245,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
         // TODO(bradfordcsmith): update this for destructuring
         && var.getParentNode().isVar()  // NOTE: explicitly excludes let/const
         && !var.isExtern();
-  }
-
-  public JSType getNamespaceOrTypedefType(String typeName) {
-    StaticTypedSlot slot = getSlot(typeName);
-    return slot == null ? null : slot.getType();
-  }
-
-  public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
-    StaticTypedSlot slot = getSlot(typeName);
-    return slot == null ? null : slot.getJSDocInfo();
   }
 
   /**
