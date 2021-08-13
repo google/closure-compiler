@@ -1653,15 +1653,60 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "}"));
   }
 
-  // TODO(user): static class fields with
   @Test
-  public void testStaticClassFieldDoesntDetectSideEffects() {
+  public void testNonstaticClassFieldWithSideEffectsDoesRemove() {
     test(
         lines(
             "class C {", //
-            "  static y = alert(2);",
+            "  y = alert(1);",
             "}"),
         "");
+
+    test(
+        lines(
+            "class C {", //
+            "  ['y'] = alert(1);",
+            "}"),
+        "");
+  }
+
+  @Test
+  public void testStaticClassFieldDetectsSideEffects() {
+    testSame(
+        lines(
+            "class C {", //
+            "  static y = alert(1);",
+            "}"));
+  }
+
+  @Test
+  public void testComputedClassFieldDetectsSideEffects() {
+    testSame(
+        lines(
+            "class C {", //
+            "  [alert(1)];",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  [alert(1)] = 'str';",
+            "}"));
+  }
+
+  @Test
+  public void testStaticComputedClassFieldDetectsSideEffects() {
+    testSame(
+        lines(
+            "class C {", //
+            "  static [alert(1)];",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  static [alert(1)] = 'str';",
+            "}"));
   }
 
   @Test

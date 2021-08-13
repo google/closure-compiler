@@ -479,7 +479,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     for (Node child = classMembersNode.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isMemberFieldDef()
           && !child.isStaticMember()
-          && astAnalyzer.mayHaveSideEffects(child)) {
+          && child.getFirstChild() != null
+          && astAnalyzer.mayHaveSideEffects(child.getFirstChild())) {
         return true;
       }
     }

@@ -311,6 +311,26 @@ public class AstAnalyzer {
         // simply defining a member function, getter, or setter has no side effects
         return false;
 
+      case COMPUTED_PROP:
+        if (n.getParent().isClassMembers()) {
+          return checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects);
+        }
+        break; // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
+      case MEMBER_FIELD_DEF:
+        if (n.isStaticMember()
+            && n.getFirstChild() != null
+            && checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects)) {
+          return true;
+        }
+        return false;
+      case COMPUTED_FIELD_DEF:
+        if (checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects)
+            || (n.isStaticMember()
+                && n.getSecondChild() != null
+                && checkForStateChangeHelper(n.getSecondChild(), checkForNewObjects))) {
+          return true;
+        }
+        return false;
       case CLASS:
         return checkForNewObjects
             || NodeUtil.isClassDeclaration(n)
@@ -321,9 +341,7 @@ public class AstAnalyzer {
 
       case CLASS_MEMBERS:
         for (Node member = n.getFirstChild(); member != null; member = member.getNext()) {
-          // TODO(user): add check for class fields
-          if (member.isComputedProp()
-              && checkForStateChangeHelper(member.getFirstChild(), checkForNewObjects)) {
+          if (checkForStateChangeHelper(member, checkForNewObjects)) {
             return true;
           }
         }
@@ -382,9 +400,7 @@ public class AstAnalyzer {
       case EMPTY:
       case TEMPLATELIT:
       case TEMPLATELIT_STRING:
-      case COMPUTED_PROP: // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
         break;
-
       case STRING_KEY:
         if (parent.isObjectPattern()) {
           // This STRING_KEY names a property being read from.
