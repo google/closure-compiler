@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -39,18 +40,36 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
+    return options;
+  }
+
+  private CompilerOptions checksOnlyCompilerOptions() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setChecksOnly(true);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    return options;
+  }
+
+  private CompilerOptions fullyOptimizedCompilerOptions() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
     return options;
   }
 
   @Test
   public void publicClassFields_supportedInChecksOnlyMode() {
-    CompilerOptions options = createCompilerOptions();
+    CompilerOptions options = checksOnlyCompilerOptions();
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
     testNoWarnings(
         options,
         lines(
@@ -64,9 +83,9 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void publicClassFields_supportedInChecksOnlyMode2() {
-    CompilerOptions options = createCompilerOptions();
-
+    CompilerOptions options = checksOnlyCompilerOptions();
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
     testNoWarnings(
         options,
         lines(
@@ -79,7 +98,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void publicClassFields_supportedInChecksOnlyMode3() {
-    CompilerOptions options = createCompilerOptions();
+    CompilerOptions options = checksOnlyCompilerOptions();
 
     test(
         options,
@@ -95,31 +114,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void publicClassFields_cannotBeOutputYet() {
-    CompilerOptions options = createCompilerOptions();
-    options.setChecksOnly(false);
-
-    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
-    test(
-        options,
-        new String[] {
-          lines(
-              "class MyClass {", //
-              "  /** @type {string} */",
-              "  x = '';",
-              "  y;",
-              "}",
-              "console.log(new MyClass().x);")
-        },
-        /* compiled= */ null,
-        new DiagnosticGroup[] {DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS});
-  }
-
-  @Test
   public void computedPublicClassFields_supportedInChecksOnlyMode() {
-    CompilerOptions options = createCompilerOptions();
-
+    CompilerOptions options = checksOnlyCompilerOptions();
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
     testNoWarnings(
         options,
         lines(
@@ -134,9 +132,9 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void computedPublicClassFields_supportedInChecksOnlyMode2() {
-    CompilerOptions options = createCompilerOptions();
-
+    CompilerOptions options = checksOnlyCompilerOptions();
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
     testNoWarnings(
         options,
         lines(
@@ -151,7 +149,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   // users should be careful about tags on computed fields
   @Test
   public void computedPublicClassFields_supportedInChecksOnlyMode3() {
-    CompilerOptions options = createCompilerOptions();
+    CompilerOptions options = checksOnlyCompilerOptions();
 
     testNoWarnings(
         options,
@@ -166,12 +164,16 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void computedPublicClassFields_supportedInChecksOnlyMode4() {
-    CompilerOptions options = createCompilerOptions();
+    CompilerOptions options = checksOnlyCompilerOptions();
+
     // test will give JSC_ILLEGAL_PROPERTY_ACCESS error because @dict or @restricted is missing
     test(
         options,
         new String[] {
-          lines("class MyClass {", "  [3 + 4] = 5;", "}"),
+          lines(
+              "class MyClass {", //
+              "  [3 + 4] = 5;",
+              "}"),
         },
         /* compiled= */ null,
         new DiagnosticGroup[] {DiagnosticGroups.CHECK_TYPES});
@@ -179,7 +181,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void publicMixedClassFields_supportedInChecksOnlyMode() {
-    CompilerOptions options = createCompilerOptions();
+    CompilerOptions options = checksOnlyCompilerOptions();
 
     testNoWarnings(
         options,
@@ -192,6 +194,137 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "  2 = 4;",
             "  d;",
             "  ['e'];",
+            "}"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInOptimizationsMode() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+    options.setPrintSourceAfterEachPass(true);
+
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "class C {",
+            "  f1 = 1;",
+            "static f2 = 3;",
+            "  m1() {return this.f1}",
+            "}",
+            "console.log(new C().f1);",
+            "console.log(C.f2);",
+            "console.log(new C().m1());"),
+        lines("console.log(1);", "console.log(3);", "console.log(1);"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInOptimizationsMode1() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+    options.setPrintSourceAfterEachPass(true);
+
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "class MyClass {", //
+            "  /** @type {number} */",
+            "  f1 = 2;",
+            "  /** @type {string} */",
+            "  f2 = 'hi';",
+            "  f3 = function() { return this.f1 };",
+            "  m1() { return this.f2; }",
+            "}",
+            "console.log(new MyClass().f1);",
+            "console.log(new MyClass().f2);",
+            "console.log(new MyClass().f3());",
+            "console.log(new MyClass().m1());"),
+        lines("console.log(2);", "console.log('hi');", "console.log(2);", "console.log('hi');"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInOptimizationsMode2() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "/** @dict */",
+            "class MyClass {", //
+            "  ['f1'] = 2;",
+            "  'f2' = 'hi';",
+            "  2 = 4;",
+            "  ['m1']() { return this['f1']; }",
+            "}",
+            "console.log(new MyClass()['f1']);",
+            "console.log(new MyClass()[2]);",
+            "console.log(new MyClass()['m1']());"),
+        lines(
+            "class a {", //
+            "  ['f1'] = 2;",
+            "  'f2' = 'hi';",
+            "  2 = 4;",
+            "  ['m1']() { return this.f1; }",
+            "}",
+            "console.log((new a).f1);",
+            "console.log((new a)[2]);",
+            "console.log((new a).m1());"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInOptimizationsMode3() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "/** @unrestricted */",
+            "class MyClass {", //
+            "  f1 = 1;",
+            "  ['a'] = 'hi';",
+            "  ['f3'] = function() { return this.f1; };",
+            "}",
+            "console.log(new MyClass().f1);",
+            "console.log(new MyClass()['a']);",
+            "console.log(new MyClass()['f3']());"),
+        lines(
+            "class a {", //
+            "  b = 1;",
+            "  ['a'] = 'hi';",
+            "  ['f3'] = function() { return this.b; };",
+            "}",
+            "console.log(1);",
+            "console.log(new a().a);",
+            "console.log(new a().f3());"));
+  }
+
+  @Test
+  public void publicClassFields_supportedInOptimizationsMode4() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    test(
+        options,
+        lines(
+            "/** @unrestricted */",
+            "class MyClass {", //
+            "  static f1 = alert(2);",
+            "  ['f2'] = 'hi';",
+            "  'f3' = 5;",
+            "  4 = 4;",
+            "  f5;",
+            "  ['f6'] = alert(1);",
+            "}"),
+        lines(
+            "/** @unrestricted */",
+            "class a {", //
+            "  static a = alert(2);",
+            "  ['f2'] = 'hi';",
+            "  'f3' = 5;",
+            "  4 = 4;",
+            "  ['f6'] = alert(1);",
             "}"));
   }
 }
