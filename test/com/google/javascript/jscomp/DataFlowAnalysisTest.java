@@ -23,16 +23,12 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
@@ -788,26 +784,25 @@ public final class DataFlowAnalysisTest {
     }
 
     @Override
-    List<ConstPropLatticeElement> branchFlow(Instruction node, ConstPropLatticeElement input) {
-      List<ConstPropLatticeElement> result = new ArrayList<>();
-      List<? extends DiGraphEdge<Instruction, Branch>> outEdges = getCfg().getOutEdges(node);
-      if (node.isArithmetic()) {
-        assertThat(outEdges.size()).isLessThan(2);
-        ConstPropLatticeElement aResult = flowThroughArithmeticInstruction(
-            (ArithmeticInstruction) node, input);
-        result.addAll(Collections.nCopies(outEdges.size(), aResult));
-      } else {
-        BranchInstruction branchInst = (BranchInstruction) node;
-        for (DiGraphEdge<Instruction, Branch> branch : outEdges) {
-          ConstPropLatticeElement edgeResult = new ConstPropLatticeElement(input);
-          if (branch.getValue() == Branch.ON_FALSE &&
-              branchInst.getCondition().isVariable()) {
-            edgeResult.constMap.put((Variable) branchInst.getCondition(), 0);
-          }
-          result.add(edgeResult);
+    FlowBrancher<ConstPropLatticeElement> createFlowBrancher(
+        Instruction node, ConstPropLatticeElement input) {
+      ConstPropLatticeElement aResult =
+          node.isArithmetic()
+              ? flowThroughArithmeticInstruction((ArithmeticInstruction) node, input)
+              : null;
+
+      return (Branch branch) -> {
+        if (aResult != null) {
+          return aResult;
         }
-      }
-      return result;
+
+        BranchInstruction branchInst = (BranchInstruction) node;
+        ConstPropLatticeElement edgeResult = new ConstPropLatticeElement(input);
+        if (branch == Branch.ON_FALSE && branchInst.getCondition().isVariable()) {
+          edgeResult.constMap.put((Variable) branchInst.getCondition(), 0);
+        }
+        return edgeResult;
+      };
     }
 
     @Override

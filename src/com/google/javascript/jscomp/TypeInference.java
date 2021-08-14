@@ -41,7 +41,6 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
@@ -66,11 +65,9 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -468,47 +465,40 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   @Override
-  @SuppressWarnings({"fallthrough", "incomplete-switch"})
-  List<FlowScope> branchFlow(Node source, FlowScope output) {
-    // NOTE(nicksantos): Right now, we just treat ON_EX edges like UNCOND
-    // edges. If we wanted to be perfect, we'd actually JOIN all the out
-    // lattices of this flow with the in lattice, and then make that the out
-    // lattice for the ON_EX edge. But it's probably too expensive to be
-    // worthwhile.
-    Node condition = null;
-    FlowScope conditionFlowScope = null;
-    BooleanOutcomePair conditionOutcomes = null;
+  FlowBrancher<FlowScope> createFlowBrancher(Node source, FlowScope output) {
+    return new FlowBrancher<FlowScope>() {
+      // NOTE(nicksantos): Right now, we just treat ON_EX edges like UNCOND
+      // edges. If we wanted to be perfect, we'd actually JOIN all the out
+      // lattices of this flow with the in lattice, and then make that the out
+      // lattice for the ON_EX edge. But it's probably too expensive to be
+      // worthwhile.
 
-    List<? extends DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(source);
-    List<FlowScope> result = new ArrayList<>(branchEdges.size());
-    for (DiGraphEdge<Node, Branch> branchEdge : branchEdges) {
-      Branch branch = branchEdge.getValue();
-      FlowScope newScope = output;
+      Node condition = null;
+      FlowScope conditionFlowScope = null;
+      BooleanOutcomePair conditionOutcomes = null;
 
-      switch (branch) {
-        case ON_TRUE:
-          if (NodeUtil.isEnhancedFor(source)) {
-            newScope = initializeEnhancedForScope(source, output);
-            break;
-          }
+      @Override
+      public FlowScope branchFlow(Branch branch) {
+        switch (branch) {
+          case ON_TRUE:
+            if (NodeUtil.isEnhancedFor(source)) {
+              return initializeEnhancedForScope(source, output);
+            }
+            // FALL THROUGH
 
-          // FALL THROUGH
-
-        case ON_FALSE:
-          if (condition == null) {
-            condition = NodeUtil.getConditionExpression(source);
-            if (condition == null && source.isCase()) {
-              condition = source;
-
-              // conditionFlowScope is cached from previous iterations
-              // of the loop.
-              if (conditionFlowScope == null) {
+          case ON_FALSE:
+            if (condition == null) {
+              if (source.isCase()) {
+                condition = source;
                 conditionFlowScope = traverse(condition.getFirstChild(), output);
+              } else {
+                condition = NodeUtil.getConditionExpression(source);
+                if (condition == null) {
+                  return output;
+                }
               }
             }
-          }
 
-          if (condition != null) {
             if (condition.isAnd() || condition.isOr()) {
               // When handling the short-circuiting binary operators,
               // the outcome scope on true can be different than the outcome
@@ -522,41 +512,32 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
               // extra computation for an edge case. This seems to be
               // a "good enough" approximation.
 
-              // conditionOutcomes is cached from previous iterations
-              // of the loop.
+              // conditionOutcomes is cached from previous calls to the brancher
               if (conditionOutcomes == null) {
                 conditionOutcomes =
                     condition.isAnd()
                         ? traverseAnd(condition, output)
                         : traverseOr(condition, output);
               }
-              newScope =
-                  reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-                      condition,
-                      conditionOutcomes.getOutcomeFlowScope(
-                          condition.getToken(), branch == Branch.ON_TRUE),
-                      Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
-            } else {
-              // conditionFlowScope is cached from previous iterations
-              // of the loop.
-              if (conditionFlowScope == null) {
-                conditionFlowScope = traverse(condition, output);
-              }
-              newScope =
-                  reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-                      condition,
-                      conditionFlowScope,
-                      Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
+              return reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+                  condition,
+                  conditionOutcomes.getOutcomeFlowScope(
+                      condition.getToken(), branch == Branch.ON_TRUE),
+                  Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
             }
-          }
-          break;
-        default:
-          break;
-      }
 
-      result.add(newScope);
-    }
-    return result;
+            // conditionFlowScope is cached from previous calls to the brancher
+            if (conditionFlowScope == null) {
+              conditionFlowScope = traverse(condition, output);
+            }
+            return reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+                condition, conditionFlowScope, Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
+
+          default:
+            return output;
+        }
+      }
+    };
   }
 
   private FlowScope traverse(Node n, FlowScope scope) {

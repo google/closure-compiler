@@ -78,7 +78,7 @@ import javax.annotation.Nullable;
  *   <li>Initial Entry Value: Implement {@link #createEntryLattice()}.
  *   <li>Initial Estimate: Implement {@link #createInitialEstimateLattice()}.
  *   <li>(Optional) Branch Operation: Return true from {@link #isBranched()} and implement {@link
- *       #branchFlow}.
+ *       #createFlowBrancher}.
  * </ol>
  *
  * <p>Upon execution of the {@link #analyze()} method, nodes of the input control flow graph will be
@@ -144,23 +144,29 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     return joinOp.apply(ImmutableList.of(latticeA, latticeB));
   }
 
-  /** Whether or not {@link #branchFlow} should be used. */
+  /** Whether or not {@link #createFlowBrancher} should be used. */
   boolean isBranched() {
     return false;
   }
 
   /**
-   * Branches a flow state into a distinct state for each output edge.
+   * Gets a new brancher for an analysis step.
    *
-   * <p>The individual edge states are annotated onto each edge and compared against the previous
-   * state to determine whether a fixed-point has been reached.
+   * <p>The brancher is invoked for each output edge. The returned states are annotated onto each
+   * edge and compared against the previous state to determine whether a fixed-point has been
+   * reached.
    *
    * @param node The node at which to branch.
    * @param output The output state of {@link #flowThrough} at node.
-   * @return Exactly one state for each output edge, in the same order as the graph.
    */
-  List<L> branchFlow(N node, L output) {
+  FlowBrancher<L> createFlowBrancher(N node, L output) {
     throw new UnsupportedOperationException();
+  }
+
+  /** A callback that branches a flow state into a distinct state for each output edge. */
+  @FunctionalInterface
+  interface FlowBrancher<L> {
+    L branchFlow(Branch branch);
   }
 
   /**
@@ -268,14 +274,10 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       boolean changed = !outBefore.equals(state.getOut());
 
       if (this.isBranched()) {
-        List<? extends DiGraphEdge<N, Branch>> outEdges = node.getOutEdges();
-        List<L> outBranches = this.branchFlow(node.getValue(), state.getOut());
-        checkState(outEdges.size() == outBranches.size());
-
-        for (int i = 0; i < outEdges.size(); i++) {
-          DiGraphEdge<N, Branch> outEdge = outEdges.get(i);
+        FlowBrancher<L> brancher = this.createFlowBrancher(node.getValue(), state.getOut());
+        for (DiGraphEdge<N, Branch> outEdge : node.getOutEdges()) {
           L outBranchBefore = outEdge.getAnnotation();
-          outEdge.setAnnotation(outBranches.get(i));
+          outEdge.setAnnotation(brancher.branchFlow(outEdge.getValue()));
           if (!changed) {
             changed = !outBranchBefore.equals(outEdge.getAnnotation());
           }
