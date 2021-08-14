@@ -361,6 +361,10 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       this.out = out;
     }
 
+    int getStepCount() {
+      return this.stepCount;
+    }
+
     final L getIn() {
       return in;
     }

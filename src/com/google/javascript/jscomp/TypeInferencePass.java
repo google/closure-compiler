@@ -18,14 +18,23 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static java.util.Comparator.comparingInt;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
+import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
+import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 
 /** A compiler pass to run the type inference analysis. */
 class TypeInferencePass {
@@ -37,6 +46,9 @@ class TypeInferencePass {
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
 
+  // (stepCount, Token) -> populationCount
+  private final LinkedHashMap<Integer, HashMultiset<Token>> stepCountHistogram;
+
   TypeInferencePass(
       AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
@@ -47,6 +59,7 @@ class TypeInferencePass {
     this.scopeCreator = scopeCreator;
     this.assertionFunctionLookup =
         AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
+    this.stepCountHistogram = compiler.isDebugLoggingEnabled() ? new LinkedHashMap<>() : null;
   }
 
   /**
@@ -110,19 +123,50 @@ class TypeInferencePass {
       }
     }
 
+    if (this.stepCountHistogram != null) {
+      try (LogFile histogram =
+          this.compiler.createOrReopenLog(this.getClass(), "step_histogram.log")) {
+        histogram.log("step_count token population");
+
+        int[] totals = new int[] {0, 0};
+        this.stepCountHistogram.keySet().stream()
+            .sorted(Comparator.<Integer>naturalOrder().reversed())
+            .forEach(
+                (stepCount) ->
+                    this.stepCountHistogram.get(stepCount).entrySet().stream()
+                        .sorted(comparingInt(Multiset.Entry::getCount))
+                        .forEach(
+                            (e) -> {
+                              totals[0] += stepCount * e.getCount();
+                              totals[1] += e.getCount();
+                              histogram.log("%s %s %s", stepCount, e.getElement(), e.getCount());
+                            }));
+        histogram.log("%s TOTAL %s", totals[0], totals[1]);
+      }
+    }
+
     return this.topScope;
   }
 
   private void inferScope(Node n, TypedScope scope) {
+    ControlFlowGraph<Node> cfg = computeCfg(n);
     TypeInference typeInference =
         new TypeInference(
-            compiler,
-            computeCfg(n),
-            reverseInterpreter,
-            scope,
-            scopeCreator,
-            assertionFunctionLookup);
+            compiler, cfg, reverseInterpreter, scope, scopeCreator, assertionFunctionLookup);
     typeInference.analyze();
+
+    if (this.stepCountHistogram != null) {
+      for (DiGraphNode<Node, ?> node : cfg.getNodes()) {
+        if (node == cfg.getImplicitReturn()) {
+          continue;
+        }
+
+        LinearFlowState<?> state = node.getAnnotation();
+        this.stepCountHistogram
+            .computeIfAbsent(state.getStepCount(), (k) -> HashMultiset.create())
+            .add(node.getValue().getToken());
+      }
+    }
   }
 
   private static class FirstScopeBuildingCallback extends AbstractScopedCallback {
