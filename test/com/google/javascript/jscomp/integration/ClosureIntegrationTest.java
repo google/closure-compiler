@@ -306,6 +306,32 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
+  /**
+   * Tests that `goog.getLocale()` may be passed to `goog.string.Const.from()` without triggering
+   * the error message normally reported for non-const-string parameters, even when both have been
+   * aliased.
+   */
+  @Test
+  public void testGoogGetLocalePassedToConstFrom() {
+    String source =
+        lines(
+            "goog.string = {};", //
+            "goog.string.Const = {};",
+            "goog.string.Const.from = function(x) {};",
+            "goog.getLocale = function() {};",
+            "var mkConst = goog.string.Const.from;",
+            "var x = goog.getLocale();",
+            "mkConst(x);");
+
+    // Without collapsed properties.
+    CompilerOptions options = createCompilerOptions();
+    testSame(options, source);
+
+    // With collapsed properties.
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
+    testSame(options, source);
+  }
+
   @Test
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
@@ -659,7 +685,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(options, code, CLOSURE_COLLAPSED + "var ns$FLAG = false;");
   }
 
-
   @Test
   public void testI18nMessageValidation_throughModuleExport() {
     CompilerOptions options = createCompilerOptions();
@@ -952,10 +977,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setDependencyOptions(DependencyOptions.sortOnly());
     options.setClosurePass(true);
-    test(
-        options,
-        "goog.provide('x'); goog.require('x');",
-        "var x = {};");
+    test(options, "goog.provide('x'); goog.require('x');", "var x = {};");
   }
 
   @Test
@@ -965,8 +987,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          "goog.require('x');",
-          "goog.provide('x');",
+          "goog.require('x');", "goog.provide('x');",
         },
         new String[] {
           "goog.provide('x');",
@@ -986,24 +1007,26 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" +
-        "var CLOSURE_DEFINES = {\n" +
-        "  'FOO': 1,\n" +
-        "  'BAR': true\n" +
-        "};\n" +
-        "\n" +
-        "/** @define {number} */ var FOO = 0;\n" +
-        "/** @define {boolean} */ var BAR = false;\n" +
-        "";
+    String code =
+        lines(
+            "var CLOSURE_DEFINES = {", //
+            "  'FOO': 1,",
+            "  'BAR': true",
+            "};",
+            "",
+            "/** @define {number} */ var FOO = 0;",
+            "/** @define {boolean} */ var BAR = false;",
+            "");
 
-    String result = "" +
-        "var CLOSURE_DEFINES = {\n" +
-        "  FOO: 1,\n" +
-        "  BAR: !0\n" +
-        "}," +
-        "FOO = 1," +
-        "BAR = !0" +
-        "";
+    String result =
+        lines(
+            "var CLOSURE_DEFINES = {", //
+            "  FOO: 1,",
+            "  BAR: !0",
+            "},",
+            "FOO = 1,",
+            "BAR = !0",
+            "");
 
     test(options, code, result);
   }
