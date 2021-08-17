@@ -905,22 +905,22 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     this.allowSourcelessWarnings();
     this.propertiesThatMustDisambiguate =
         ImmutableSet.of(
-            "mustDisambiguate0", //
-            "mustDisambiguate1");
+            "invalid0", //
+            "invalid1");
 
     test(
         srcs(
             lines(
                 "class Foo {",
-                "  mustDisambiguate0() { }",
-                "  mustDisambiguate1() { }",
+                "  invalid0() { }",
+                "  invalid1() { }",
                 "}",
                 "",
                 "function use(/** ? */ x) {",
-                "  x.mustDisambiguate0",
-                "  x.mustDisambiguate1",
-                "  x.mustDisambiguate0",
-                "  x.mustDisambiguate1",
+                "  x.invalid0",
+                "  x.invalid1",
+                "  x.invalid0",
+                "  x.invalid1",
                 "}")),
         error(DisambiguateProperties.PROPERTY_INVALIDATION),
         error(DisambiguateProperties.PROPERTY_INVALIDATION));

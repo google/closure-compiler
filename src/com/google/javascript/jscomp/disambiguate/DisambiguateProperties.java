@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -57,7 +58,7 @@ public final class DisambiguateProperties implements CompilerPass {
       DiagnosticType.error(
           "JSC_DISAMBIGUATE2_PROPERTY_INVALIDATION",
           "Property ''{0}'' was required to be disambiguated but was invalidated."
-          );
+              + "{1}");
 
   private final AbstractCompiler compiler;
   private final ImmutableSet<String> propertiesThatMustDisambiguate;
@@ -83,8 +84,6 @@ public final class DisambiguateProperties implements CompilerPass {
     ClusterPropagator propagator = new ClusterPropagator();
     UseSiteRenamer renamer =
         new UseSiteRenamer(
-            this.propertiesThatMustDisambiguate,
-            /* errorCb= */ this.compiler::report,
             /* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
 
     NodeTraversal.traverse(this.compiler, externs.getParent(), findRefs);
@@ -125,17 +124,33 @@ public final class DisambiguateProperties implements CompilerPass {
                 .sorted(comparingInt((x) -> x.index))
                 .collect(toImmutableList()));
 
-    // Ensure this step happens after logging PropertyReferenceIndexJson. Invalidating a property
-    // destroys its list of use sites, which we need to log.
     invalidateBasedOnType(flattener);
 
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
-    propIndex.values().forEach(renamer::renameUses);
+
+    for (PropertyClustering prop : propIndex.values()) {
+      renamer.renameUses(prop);
+      if (prop.isInvalidated() && this.propertiesThatMustDisambiguate.contains(prop.getName())) {
+        this.compiler.report(this.createInvalidationError(prop));
+      }
+    }
 
     this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
-    this.logForDiagnostics("mismatches", this.registry::getMismatchLocationsForDebugging);
+    this.logForDiagnostics("mismatches", this.registry.getMismatchLocationsForDebugging()::inverse);
 
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
+  }
+
+  private JSError createInvalidationError(PropertyClustering prop) {
+    String additionalContext = "";
+
+    return JSError.make(
+        null,
+        -1,
+        -1,
+        DisambiguateProperties.PROPERTY_INVALIDATION,
+        prop.getName(),
+        additionalContext);
   }
 
   private static ImmutableMap<String, Object> buildRenamingIndex(

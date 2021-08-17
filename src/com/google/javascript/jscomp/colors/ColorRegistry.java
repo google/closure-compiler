@@ -35,7 +35,7 @@ import java.util.LinkedHashMap;
 public final class ColorRegistry {
   private final ImmutableMap<ColorId, Color> nativeColors;
   private final ImmutableSetMultimap<Color, Color> colorToDisambiguationSupertypeGraph;
-  private final ImmutableSetMultimap<String, ColorId> mismatchLocations;
+  private final ImmutableSetMultimap<ColorId, String> mismatchLocations;
 
   private ColorRegistry(Builder builder) {
     this.nativeColors = ImmutableMap.copyOf(builder.nativeColors);
@@ -65,7 +65,7 @@ public final class ColorRegistry {
    * <p>This index is only intended for debugging. It may be empty or incomplete during production
    * compilations.
    */
-  public final ImmutableSetMultimap<String, ColorId> getMismatchLocationsForDebugging() {
+  public final ImmutableSetMultimap<ColorId, String> getMismatchLocationsForDebugging() {
     return this.mismatchLocations;
   }
 
@@ -79,7 +79,7 @@ public final class ColorRegistry {
     private final LinkedHashMap<ColorId, Color> nativeColors = new LinkedHashMap<>();
     private final SetMultimap<Color, Color> colorToDisambiguationSupertypeGraph =
         MultimapBuilder.linkedHashKeys().linkedHashSetValues().build();
-    private final SetMultimap<String, ColorId> mismatchLocations =
+    private final SetMultimap<ColorId, String> mismatchLocations =
         MultimapBuilder.linkedHashKeys().linkedHashSetValues().build();
 
     private Builder() {}
@@ -95,8 +95,8 @@ public final class ColorRegistry {
       return this;
     }
 
-    public Builder addMismatchLocations(String location, Iterable<ColorId> ids) {
-      this.mismatchLocations.putAll(location, ids);
+    public Builder addMismatchLocation(ColorId id, String location) {
+      this.mismatchLocations.put(id, location);
       return this;
     }
 

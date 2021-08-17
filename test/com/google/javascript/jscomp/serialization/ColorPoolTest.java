@@ -868,11 +868,11 @@ public class ColorPoolTest {
     assertThat(colorPool.getRegistry().getMismatchLocationsForDebugging())
         .isEqualTo(
             ImmutableSetMultimap.builder()
-                .put("location_0", StandardColors.BOOLEAN.getId())
-                .put("location_0", StandardColors.STRING.getId())
-                .put("location_0", StandardColors.SYMBOL.getId())
-                .put("location_1", StandardColors.NUMBER.getId())
-                .put("location_2", StandardColors.BIGINT.getId())
+                .put(StandardColors.BOOLEAN.getId(), "location_0")
+                .put(StandardColors.STRING.getId(), "location_0")
+                .put(StandardColors.SYMBOL.getId(), "location_0")
+                .put(StandardColors.NUMBER.getId(), "location_1")
+                .put(StandardColors.BIGINT.getId(), "location_2")
                 .build());
   }
 

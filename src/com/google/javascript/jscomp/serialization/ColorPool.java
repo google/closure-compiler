@@ -155,9 +155,9 @@ public final class ColorPool {
 
       if (typePool.hasDebugInfo()) {
         for (TypePool.DebugInfo.Mismatch m : typePool.getDebugInfo().getMismatchList()) {
-          this.registry.addMismatchLocations(
-              m.getSourceRef(),
-              m.getInvolvedColorList().stream().map(shard::getId).collect(toImmutableList()));
+          for (TypePointer pointer : m.getInvolvedColorList()) {
+            this.registry.addMismatchLocation(shard.getId(pointer), m.getSourceRef());
+          }
         }
       }
 

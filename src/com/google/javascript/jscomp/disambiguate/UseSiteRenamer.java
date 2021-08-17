@@ -20,9 +20,7 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 import java.util.Objects;
@@ -33,19 +31,12 @@ final class UseSiteRenamer {
 
   private static final String INVALIDATED_NAME_VALUE = "<INVALIDATED>";
 
-  private final ImmutableSet<String> propertiesThatMustDisambiguate;
-  private final Consumer<JSError> errorCb;
   private final Consumer<Node> mutationCb;
 
   private final ImmutableSetMultimap.Builder<String, String> renamingIndex =
       ImmutableSetMultimap.builder();
 
-  UseSiteRenamer(
-      ImmutableSet<String> propertiesThatMustDisambiguate,
-      Consumer<JSError> errorCb,
-      Consumer<Node> mutationCb) {
-    this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;
-    this.errorCb = errorCb;
+  UseSiteRenamer(Consumer<Node> mutationCb) {
     this.mutationCb = mutationCb;
   }
 
@@ -57,11 +48,6 @@ final class UseSiteRenamer {
   void renameUses(PropertyClustering prop) {
     if (prop.isInvalidated()) {
       this.renamingIndex.put(prop.getName(), INVALIDATED_NAME_VALUE);
-
-      if (this.propertiesThatMustDisambiguate.contains(prop.getName())) {
-        this.errorCb.accept(createInvalidationError(prop.getName()));
-      }
-
       return;
     }
 
@@ -108,9 +94,5 @@ final class UseSiteRenamer {
     }
 
     return "JSC$" + rep.getIndex() + "_" + prop.getName();
-  }
-
-  private static JSError createInvalidationError(String name) {
-    return JSError.make(null, -1, -1, DisambiguateProperties.PROPERTY_INVALIDATION, name);
   }
 }

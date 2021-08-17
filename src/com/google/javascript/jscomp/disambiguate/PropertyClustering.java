@@ -36,9 +36,9 @@ import javax.annotation.Nullable;
 final class PropertyClustering {
   private final String name;
 
-  @Nullable private LinkedHashMap<Node, ColorGraphNode> useSites = new LinkedHashMap<>();
+  private final LinkedHashMap<Node, ColorGraphNode> useSites = new LinkedHashMap<>();
 
-  @Nullable private StandardUnionFind<ColorGraphNode> clusters = new StandardUnionFind<>();
+  private final StandardUnionFind<ColorGraphNode> clusters = new StandardUnionFind<>();
 
   @Nullable private ColorGraphNode originalNameClusterRep;
 
@@ -60,23 +60,23 @@ final class PropertyClustering {
    * found. It prevents us from re-traversing the code.
    */
   LinkedHashMap<Node, ColorGraphNode> getUseSites() {
-    return checkNotNull(this.useSites);
+    return this.useSites;
   }
 
   StandardUnionFind<ColorGraphNode> getClusters() {
-    return checkNotNull(this.clusters);
+    return this.clusters;
   }
 
   /**
    * The current representative of the cluster of types whose properties must keep their original
-   * name
+   * name.
    *
    * <p>The following refers to all computations with respect to a single property name. Since
    * extern and enum properties cannot be renamed, all other types in a cluster with an extern type
    * or enum cannot rename their property either. In theory, there could be many such clusters
    * containing an extern or enum; however, in practice we conflate them into one. This is
    * equivalent because all of those clusters would end up using the same, unchanged, property name.
-   * This representation also simplifies tracking of such clusters..
+   * This representation also simplifies tracking of such clusters.
    *
    * <p>In practice the types in this cluster include
    *
@@ -103,9 +103,6 @@ final class PropertyClustering {
   }
 
   void invalidate(Invalidation invalidation) {
-    this.clusters = null;
-    this.originalNameClusterRep = null;
-    this.useSites = null;
     this.lastInvalidation = checkNotNull(invalidation);
   }
 

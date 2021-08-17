@@ -18,18 +18,14 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +36,6 @@ public final class UseSiteRenamerTest {
 
   private static final String PROP_NAME = "prop";
 
-  private final ArrayList<JSError> reportedErrors = new ArrayList<>();
   private final LinkedHashSet<Node> reportedMutations = new LinkedHashSet<>();
 
   private final PropertyClustering prop = new PropertyClustering(PROP_NAME);
@@ -72,11 +67,6 @@ public final class UseSiteRenamerTest {
     assertThat(this.reportedMutations).containsExactlyElementsIn(mutatedNodes);
   }
 
-  @After
-  public void verifyNoUnexpectedErrors() {
-    assertThat(this.reportedErrors).isEmpty();
-  }
-
   @Test
   public void renameUses_renamesConsistently_withinEachCluster() {
     // Given
@@ -100,7 +90,7 @@ public final class UseSiteRenamerTest {
     this.prop.getClusters().add(type2);
 
     // When
-    this.runRename(null);
+    this.runRename();
 
     // Then
     assertThat(name1b.getString()).isEqualTo(name1a.getString());
@@ -128,7 +118,7 @@ public final class UseSiteRenamerTest {
     this.prop.getClusters().add(type3);
 
     // When
-    this.runRename(null);
+    this.runRename();
 
     // Then
     assertThat(name1.getString()).isNotEqualTo(name2.getString());
@@ -161,7 +151,7 @@ public final class UseSiteRenamerTest {
     this.prop.getClusters().add(srcType);
 
     // When
-    this.runRename(null);
+    this.runRename();
 
     // Then
     assertThat(externName1.getString()).isEqualTo(PROP_NAME);
@@ -188,7 +178,7 @@ public final class UseSiteRenamerTest {
     this.prop.invalidate(Invalidation.wellKnownProperty());
 
     // When
-    this.runRename(null);
+    this.runRename();
 
     // Then
     assertThat(name1.getString()).isEqualTo(PROP_NAME);
@@ -215,7 +205,7 @@ public final class UseSiteRenamerTest {
     this.prop.getClusters().union(type1a, type1c);
 
     // When
-    this.runRename(null);
+    this.runRename();
 
     // Then
     assertThat(name1b.getString()).isEqualTo(PROP_NAME);
@@ -223,27 +213,8 @@ public final class UseSiteRenamerTest {
     assertThat(name1a.getString()).isEqualTo(PROP_NAME);
   }
 
-  @Test
-  public void renameUses_reportsInvalidation() {
-    // Given
-    this.prop.invalidate(Invalidation.wellKnownProperty());
-
-    // When
-    this.runRename(ImmutableSet.of(PROP_NAME));
-
-    // Then
-    assertError(this.reportedErrors.remove(0))
-        .hasType(DisambiguateProperties.PROPERTY_INVALIDATION);
-  }
-
-  private void runRename(@Nullable ImmutableSet<String> propertiesThatMustDisambiguate) {
-    if (propertiesThatMustDisambiguate == null) {
-      propertiesThatMustDisambiguate = ImmutableSet.of();
-    }
-
-    UseSiteRenamer renamer =
-        new UseSiteRenamer(
-            propertiesThatMustDisambiguate, this.reportedErrors::add, this.reportedMutations::add);
+  private void runRename() {
+    UseSiteRenamer renamer = new UseSiteRenamer(this.reportedMutations::add);
     renamer.renameUses(this.prop);
 
     this.renamingIndex = renamer.getRenamingIndex();
