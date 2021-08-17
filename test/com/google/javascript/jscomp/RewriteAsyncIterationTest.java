@@ -15,15 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.testing.CodeSubTree.findFunctionDefinition;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,69 +39,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             .addArguments()
             .addObject()
             .build());
-  }
-
-  // TODO(johnplaisted): This is copy and pasted from RewriteAsyncFunctionsTest. We should have
-  // a more formal AST matcher.
-  /** Represents a subtree of the output from a compilation. */
-  private static class CodeSubTree {
-    private final Node rootNode;
-
-    private CodeSubTree(Node rootNode) {
-      this.rootNode = rootNode;
-    }
-
-    /** Finds every instance of a given qualified name. */
-    private ImmutableList<Node> findMatchingQNameReferences(final String wantedQName) {
-      return findNodesAllowEmpty(rootNode, (node) -> node.matchesQualifiedName(wantedQName));
-    }
-  }
-
-  /** Returns the first function method definition found with the given name. */
-  private CodeSubTree findFunctionDefinition(String wantedMethodName) {
-    Node functionDefinitionNode =
-        findFirstNode(
-            getLastCompiler().getJsRoot(),
-            (node) ->
-                node.isFunction()
-                    && node.getFirstChild().isName()
-                    && wantedMethodName.equals(node.getFirstChild().getString()));
-
-    return new CodeSubTree(functionDefinitionNode);
-  }
-
-  /** Return a list of all Nodes matching the given predicate starting at the given root. */
-  private static ImmutableList<Node> findNodesAllowEmpty(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList.Builder<Node> listBuilder = ImmutableList.builder();
-    NodeUtil.visitPreOrder(
-        rootNode,
-        new Visitor() {
-          @Override
-          public void visit(Node node) {
-            if (predicate.test(node)) {
-              listBuilder.add(node);
-            }
-          }
-        });
-    return listBuilder.build();
-  }
-
-  /** Return a list of all Nodes matching the given predicate starting at the given root. */
-  private static ImmutableList<Node> findNodesNonEmpty(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList<Node> results = findNodesAllowEmpty(rootNode, predicate);
-    checkState(!results.isEmpty(), "no nodes found");
-    return results;
-  }
-
-  /**
-   * Return the shallowest and earliest of all Nodes matching the given predicate starting at the
-   * given root.
-   *
-   * <p>Throws an exception if none found.
-   */
-  private static Node findFirstNode(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList<Node> allMatchingNodes = findNodesNonEmpty(rootNode, predicate);
-    return allMatchingNodes.get(0);
   }
 
   @Before
@@ -140,8 +75,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  })());",
             "}"));
 
-    CodeSubTree bazSubTree = findFunctionDefinition("baz");
-    Node baz = bazSubTree.rootNode;
+    CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
+    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
@@ -170,8 +105,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  })());",
             "}"));
 
-    CodeSubTree bazSubTree = findFunctionDefinition("baz");
-    Node baz = bazSubTree.rootNode;
+    CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
+    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
@@ -196,7 +131,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  })());",
             "}"));
 
-    Node bar = findFunctionDefinition("baz").findMatchingQNameReferences("bar").get(0);
+    Node bar =
+        findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
 
     assertType(bar.getJSType()).toStringIsEqualTo("number");
   }
@@ -216,8 +152,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  })());",
             "}"));
 
-    CodeSubTree bazSubTree = findFunctionDefinition("baz");
-    Node baz = bazSubTree.rootNode;
+    CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
+    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
@@ -242,7 +178,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  })());",
             "}"));
 
-    Node bar = findFunctionDefinition("baz").findMatchingQNameReferences("bar").get(0);
+    Node bar =
+        findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
 
     // The generator yields numbers but yield expressions should always be "?" as next accepts "?"
     assertType(bar.getJSType()).toStringIsEqualTo("?");
@@ -476,8 +413,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "function foo() {}"));
 
     Node forNode =
-        findFunctionDefinition("abc")
-            .rootNode
+        findFunctionDefinition(getLastCompiler(), "abc")
+            .getRootNode()
             .getLastChild() // block
             .getFirstChild(); // for
     Node tempIterator0 = forNode.getFirstFirstChild();

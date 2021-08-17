@@ -15,20 +15,19 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.testing.CodeSubTree.findClassDefinition;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,81 +72,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Override
   protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
-  }
-
-  /** Represents a subtree of the output from a compilation. */
-  private static class CodeSubTree {
-    private final Node rootNode;
-
-    private CodeSubTree(Node rootNode) {
-      this.rootNode = rootNode;
-    }
-
-    /** Returns the SubTree rooted at the first class definition found with the given name. */
-    private CodeSubTree findClassDefinition(String wantedClassName) {
-      Node classNode =
-          findFirstNode(
-              rootNode, (node) -> node.isClass() && wantedClassName.equals(NodeUtil.getName(node)));
-      return new CodeSubTree(classNode);
-    }
-
-    /** Returns the first class method definiton found with the given name. */
-    private CodeSubTree findMethodDefinition(String wantedMethodName) {
-      Node methodDefinitionNode =
-          findFirstNode(
-              rootNode,
-              (node) -> node.isMemberFunctionDef() && wantedMethodName.equals(node.getString()));
-
-      return new CodeSubTree(methodDefinitionNode);
-    }
-
-    /** Executes an action for every instance of a given qualified name. */
-    private ImmutableList<Node> findMatchingQNameReferences(final String wantedQName) {
-      return findNodesAllowEmpty(rootNode, (node) -> node.matchesQualifiedName(wantedQName));
-    }
-  }
-
-  /**
-   * Returns a CodeSubTree for the first definition of the given class name in the output from the
-   * last compile.
-   */
-  private CodeSubTree findClassDefinition(String wantedClassName) {
-    return new CodeSubTree(getLastCompiler().getRoot().getSecondChild())
-        .findClassDefinition(wantedClassName);
-  }
-
-  /** Return a list of all Nodes matching the given predicate starting at the given root. */
-  private static ImmutableList<Node> findNodesAllowEmpty(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList.Builder<Node> listBuilder = ImmutableList.builder();
-    NodeUtil.visitPreOrder(
-        rootNode,
-        new Visitor() {
-          @Override
-          public void visit(Node node) {
-            if (predicate.test(node)) {
-              listBuilder.add(node);
-            }
-          }
-        });
-    return listBuilder.build();
-  }
-
-  /** Return a list of all Nodes matching the given predicate starting at the given root. */
-  private static ImmutableList<Node> findNodesNonEmpty(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList<Node> results = findNodesAllowEmpty(rootNode, predicate);
-    checkState(!results.isEmpty(), "no nodes found");
-    return results;
-  }
-
-  /**
-   * Return the shallowest and earliest of all Nodes matching the given predicate starting at the
-   * given root.
-   *
-   * <p>Throws an exception if none found.
-   */
-  private static Node findFirstNode(Node rootNode, Predicate<Node> predicate) {
-    ImmutableList<Node> allMatchingNodes = findNodesNonEmpty(rootNode, predicate);
-    return allMatchingNodes.get(0);
   }
 
   private final JSType getGlobalJSType(String globalTypeName) {
@@ -201,7 +125,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     ObjectType classXInstanceType = getGlobalObjectType("X");
 
     ImmutableList<Node> thisAliasNameReferences =
-        findClassDefinition("X")
+        findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
             .findMatchingQNameReferences("$jscomp$async$this");
     assertThat(thisAliasNameReferences).hasSize(2);
@@ -244,7 +168,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     ObjectType classXInstanceType = getGlobalObjectType("X");
 
     ImmutableList<Node> thisAliasNameReferences =
-        findClassDefinition("X")
+        findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
             .findMatchingQNameReferences("$jscomp$async$this");
     assertThat(thisAliasNameReferences).hasSize(2);
@@ -298,7 +222,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // type of A.prototype.m
     FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
 
-    CodeSubTree classXMethodMDefinition = findClassDefinition("X").findMethodDefinition("m");
+    CodeSubTree classXMethodMDefinition =
+        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
@@ -393,7 +318,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // type of A.prototype.m
     FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
 
-    CodeSubTree classXMethodMDefinition = findClassDefinition("X").findMethodDefinition("m");
+    CodeSubTree classXMethodMDefinition =
+        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
@@ -477,7 +403,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // type of A.prototype.m
     FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
 
-    CodeSubTree classXMethodMDefinition = findClassDefinition("X").findMethodDefinition("m");
+    CodeSubTree classXMethodMDefinition =
+        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
@@ -598,7 +525,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     FunctionType classAPropertyMType =
         classAConstructorType.getPropertyType("m").assertFunctionType();
 
-    CodeSubTree classXMethodDefinition = findClassDefinition("X").findMethodDefinition("asyncM");
+    CodeSubTree classXMethodDefinition =
+        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("asyncM");
 
     // Check type information on wrapper function for `super.m`
     ImmutableList<Node> superMethodWrapperNameNodes =
@@ -680,7 +608,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "}")));
 
     ImmutableList<Node> argumentsAliasRefs =
-        findClassDefinition("X")
+        findClassDefinition(getLastCompiler(), "X")
             .findMethodDefinition("m")
             .findMatchingQNameReferences("$jscomp$async$arguments");
     assertThat(argumentsAliasRefs).hasSize(2); // one declaration and 1 use
