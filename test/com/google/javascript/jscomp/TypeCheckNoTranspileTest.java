@@ -7363,11 +7363,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeCheckingEsModule_importSpecs() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     newTest().addSource("import {x} from './input0';").run();
   }
 
   @Test
   public void testTypeCheckingEsModule_importStar() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     newTest().addSource("import * as mod from './input0';").run();
   }
 
@@ -7466,6 +7468,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testDynamicImport() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     newTest()
         .addSource("/** @type {string} */", "let foo = import('./foo.js');")
         .addDiagnostic(lines("initializing variable", "found   : Promise<?>", "required: string"))

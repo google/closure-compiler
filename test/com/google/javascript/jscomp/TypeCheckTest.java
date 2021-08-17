@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
@@ -27976,6 +27977,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testDynamicImport1() {
+    compiler
+        .getOptions()
+        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
         .addSource("/** @type {number} */ var foo = import('foo.js');")
         .addDiagnostic(lines("initializing variable", "found   : Promise<?>", "required: number"))
@@ -27984,11 +27988,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testDynamicImport2() {
+    compiler
+        .getOptions()
+        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest().addSource("/** @type {Promise} */ var foo2 = import('foo.js');").run();
   }
 
   @Test
   public void testDynamicImport3() {
+    compiler
+        .getOptions()
+        .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
         .addSource("/** @type {Promise<{default: number}>} */ var foo = import('foo.js');")
         .run();

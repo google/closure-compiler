@@ -122,11 +122,11 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     compiler.init(ImmutableList.<SourceFile>of(), inputs, options);
     compiler.parseInputs();
-    assertThat(compiler.jsRoot.getParent()).isEqualTo(compiler.externAndJsRoot);
-    assertThat(compiler.externsRoot.getParent()).isEqualTo(compiler.externAndJsRoot);
-    assertThat(compiler.externAndJsRoot).isNotNull();
+    assertThat(compiler.getJsRoot().getParent()).isEqualTo(compiler.getRoot());
+    assertThat(compiler.getExternsRoot().getParent()).isEqualTo(compiler.getRoot());
+    assertThat(compiler.getRoot()).isNotNull();
 
-    Node jsRoot = compiler.jsRoot;
+    Node jsRoot = compiler.getJsRoot();
     assertThat(jsRoot.getChildCount()).isEqualTo(3);
   }
 
@@ -1174,7 +1174,7 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
-    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(4);
+    assertThat(compiler.getExternsRoot().getChildCount()).isEqualTo(4);
     assertExternIndex(compiler, 0, " [synthetic:externs] "); // added by VarCheck
     assertExternIndex(compiler, 1, "hops");
     assertExternIndex(compiler, 2, "beer");
@@ -1218,7 +1218,7 @@ public final class CompilerTest {
     final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.options = options;
+    compiler.initOptions(options);
     restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performOptimizations();
@@ -1271,7 +1271,7 @@ public final class CompilerTest {
     final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.options = options;
+    compiler.initOptions(options);
     restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performOptimizations();
@@ -1282,7 +1282,7 @@ public final class CompilerTest {
     final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.options = options;
+    compiler.initOptions(options);
     restoreCompilerState(compiler, stateAfterOptimizations);
 
     compiler.performFinalizations();
@@ -1344,7 +1344,7 @@ public final class CompilerTest {
     byteArrayOutputStream.close();
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.options = options;
+    compiler.initOptions(options);
     restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
     compiler.performOptimizations();
@@ -1489,14 +1489,14 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
     compiler.compile(externs, inputs, options);
 
-    assertThat(compiler.externsRoot.getChildCount()).isEqualTo(3);
+    assertThat(compiler.getExternsRoot().getChildCount()).isEqualTo(3);
     assertExternIndex(compiler, 0, " [synthetic:externs] "); // added by VarCheck
     assertExternIndex(compiler, 1, "something");
     assertExternIndex(compiler, 2, "moocher");
   }
 
   private void assertExternIndex(Compiler compiler, int index, String name) {
-    assertThat(compiler.externsRoot.getChildAtIndex(index))
+    assertThat(compiler.getExternsRoot().getChildAtIndex(index))
         .isSameInstanceAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
   }
 

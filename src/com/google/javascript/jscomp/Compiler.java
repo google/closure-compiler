@@ -153,7 +153,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       DiagnosticType.error(
           "JSC_MISSING_MODULE_ERROR", "unknown module \"{0}\" specified in entry point spec");
 
-  CompilerOptions options = null;
+  private CompilerOptions options = null;
 
   private PassConfig passes = null;
 
@@ -183,9 +183,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Node lastInjectedLibrary;
 
   // Parse tree root nodes
-  Node externsRoot;
-  Node jsRoot;
-  Node externAndJsRoot;
+  private Node externsRoot;
+  private Node jsRoot;
+  private Node externAndJsRoot;
 
   // Used for debugging; to see the compiled code between passes
   private String lastJsSource = null;

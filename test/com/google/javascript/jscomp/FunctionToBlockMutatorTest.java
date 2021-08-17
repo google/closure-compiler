@@ -20,10 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -280,21 +279,25 @@ public final class FunctionToBlockMutatorTest {
     compiler.initCompilerOptionsIfTesting();
     final FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, compiler.getUniqueNameIdSupplier());
-    Node expectedRoot = parse(compiler, expectedResult);
-    checkState(compiler.getErrorCount() == 0);
-    final Node expected = expectedRoot.getFirstChild();
-    final Node script = parse(compiler, code);
-    checkState(compiler.getErrorCount() == 0);
 
-    compiler.externsRoot = new Node(Token.ROOT);
-    compiler.jsRoot = IR.root(script);
-    compiler.externAndJsRoot = IR.root(compiler.externsRoot, compiler.jsRoot);
+    compiler.init(
+        ImmutableList.of(),
+        ImmutableList.of(SourceFile.fromCode("[testcode]", code)),
+        compiler.getOptions());
+    compiler.parse();
+    Node script = compiler.getRoot().getSecondChild().getFirstChild();
 
-    new Normalize(compiler, false).process(compiler.externsRoot, compiler.jsRoot);
-    GatherGetterAndSetterProperties.update(compiler, compiler.externsRoot, compiler.jsRoot);
-    new PureFunctionIdentifier.Driver(compiler).process(compiler.externsRoot, compiler.jsRoot);
+    new Normalize(compiler, false).process(compiler.getExternsRoot(), compiler.getJsRoot());
+    GatherGetterAndSetterProperties.update(
+        compiler, compiler.getExternsRoot(), compiler.getJsRoot());
+    new PureFunctionIdentifier.Driver(compiler)
+        .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
     final Node fnNode = findFunction(script, fnName);
+
+    Node expectedRoot = compiler.parseTestCode(expectedResult);
+    checkState(compiler.getErrorCount() == 0);
+    final Node expected = expectedRoot.getFirstChild();
 
     // inline tester
     Method tester =
@@ -363,11 +366,5 @@ public final class FunctionToBlockMutatorTest {
     }
 
     return null;
-  }
-
-  private static Node parse(Compiler compiler, String js) {
-    Node n = compiler.parseTestCode(js);
-    assertThat(compiler.getErrorCount()).isEqualTo(0);
-    return n;
   }
 }

@@ -346,19 +346,15 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
+    compiler.getOptions().setClosurePass(runClosurePass);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
-    compiler.setFeatureSet(compiler.getFeatureSet());
-    compiler.getOptions().setClosurePass(runClosurePass);
+    compiler.parse();
 
-    Node jsNode = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
-    Node externsNode = IR.root(compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
-    Node externAndJsRoot = IR.root(externsNode, jsNode);
-    compiler.jsRoot = jsNode;
-    compiler.externsRoot = externsNode;
-    compiler.externAndJsRoot = externAndJsRoot;
+    Node jsNode = compiler.getJsRoot();
+    Node externsNode = compiler.getExternsRoot();
     new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER).process(externsNode, jsNode);
     new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externsNode, jsNode);
 

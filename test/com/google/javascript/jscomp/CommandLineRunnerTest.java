@@ -612,7 +612,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void googFeatureSetYearIsNotDefinedWhenBrowserFeaturesetYearFlagIsNotSupplied() {
     testSame("var x = 3"); // input does not matter
-    assertThat(lastCompiler.options.getDefineReplacements())
+    assertThat(lastCompiler.getOptions().getDefineReplacements())
         .doesNotContainKey("goog.FEATURESET_YEAR");
   }
 
@@ -626,8 +626,9 @@ public final class CommandLineRunnerTest {
             "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
     String expected = "goog.FEATURESET_YEAR=2019";
     test(original, expected);
-    assertThat(lastCompiler.options.getDefineReplacements()).containsKey("goog.FEATURESET_YEAR");
-    Node n = lastCompiler.options.getDefineReplacements().get("goog.FEATURESET_YEAR");
+    assertThat(lastCompiler.getOptions().getDefineReplacements())
+        .containsKey("goog.FEATURESET_YEAR");
+    Node n = lastCompiler.getOptions().getDefineReplacements().get("goog.FEATURESET_YEAR");
     assertThat(n.getDouble()).isEqualTo(2019.0);
   }
 
@@ -682,7 +683,7 @@ public final class CommandLineRunnerTest {
     test(original, expected);
     /* Browser's year is not expected to match output language's year
     Flag value --browser_featureset_year=2012 corresponds to output ECMASCRIPT5_STRICT */
-    assertThat(lastCompiler.options.getOutputFeatureSet())
+    assertThat(lastCompiler.getOptions().getOutputFeatureSet())
         .isEqualTo(LanguageMode.ECMASCRIPT5_STRICT.toFeatureSet());
   }
 

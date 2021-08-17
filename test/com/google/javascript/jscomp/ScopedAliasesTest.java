@@ -91,7 +91,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   private static final Postcondition VERIFY_TYPES =
       (Compiler compiler) ->
-          new TypeVerifyingPass(compiler).process(compiler.externsRoot, compiler.jsRoot);
+          new TypeVerifyingPass(compiler).process(compiler.getExternsRoot(), compiler.getJsRoot());
 
   @Test
   public void testLet() {
