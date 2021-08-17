@@ -1734,24 +1734,10 @@ public final class CompilerTest {
   public void testAnnotation() {
     Compiler compiler = new Compiler();
 
-    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY)).isNull();
+    assertThat(compiler.runJ2clPasses()).isFalse();
 
-    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
-    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
-        .isEqualTo(Boolean.TRUE);
-  }
-
-  @Test
-  public void testSetAnnotationTwice() {
-    Compiler compiler = new Compiler();
-
-    compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, true);
-    try {
-      compiler.setAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY, false);
-      assertWithMessage("It didn't fail for overwriting existing annotation.").fail();
-    } catch (IllegalArgumentException expected) {
-      return;
-    }
+    compiler.setRunJ2clPasses(true);
+    assertThat(compiler.runJ2clPasses()).isTrue();
   }
 
   @Test

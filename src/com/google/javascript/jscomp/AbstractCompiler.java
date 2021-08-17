@@ -16,11 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +46,6 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,8 +59,6 @@ import javax.annotation.Nullable;
 public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
   static final DiagnosticType READ_ERROR =
       DiagnosticType.error("JSC_READ_ERROR", "Cannot read file {0}: {1}");
-
-  protected Map<String, Object> annotationMap = new HashMap<>();
 
   private int currentPassIndex = -1;
 
@@ -569,29 +564,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Lookup the type of a module from its name. */
   abstract CompilerInput.ModuleType getModuleTypeByName(String moduleName);
 
-  /**
-   * Sets an annotation for the given key.
-   *
-   * @param key the annotation key
-   * @param object the object to store as the annotation
-   */
-  void setAnnotation(String key, Object object) {
-    checkArgument(object != null, "The stored annotation value cannot be null.");
-    Preconditions.checkArgument(
-        !annotationMap.containsKey(key), "Cannot overwrite the existing annotation '%s'.", key);
-    annotationMap.put(key, object);
-  }
+  /** Set whether J2CL passes should run */
+  abstract void setRunJ2clPasses(boolean runJ2clPasses);
 
-  /**
-   * Gets the annotation for the given key.
-   *
-   * @param key the annotation key
-   * @return the annotation object for the given key if it has been set, or null
-   */
-  @Nullable
-  Object getAnnotation(String key) {
-    return annotationMap.get(key);
-  }
+  /** Whether J2CL passes should run */
+  abstract boolean runJ2clPasses();
 
   /**
    * Returns a new AstFactory that will add type information to the nodes it creates if and only if

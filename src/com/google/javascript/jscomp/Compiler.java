@@ -236,6 +236,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Whether to assume there are references to the RegExp Global object properties. */
   private boolean hasRegExpGlobalReferences = true;
 
+  private boolean runJ2clPasses = false;
+
   /** Detects Google-specific coding conventions. */
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
@@ -3280,6 +3282,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     hasRegExpGlobalReferences = references;
   }
 
+  /** Set whether J2CL passes should run */
+  @Override
+  void setRunJ2clPasses(boolean runJ2clPasses) {
+    this.runJ2clPasses = runJ2clPasses;
+  }
+
+  /** Whether J2CL passes should run */
+  @Override
+  boolean runJ2clPasses() {
+    return runJ2clPasses;
+  }
+
   @Override
   void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch, Node collectionRoot) {
     checkState(collectionRoot.isScript() || collectionRoot.isRoot());
@@ -3590,7 +3604,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<String, Integer> cssNames;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
-    private final Map<String, Object> annotationMap;
+    private final boolean runJ2clPasses;
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
@@ -3609,7 +3623,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.cssNames = compiler.cssNames;
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
-      this.annotationMap = checkNotNull(compiler.annotationMap);
+      this.runJ2clPasses = compiler.runJ2clPasses;
       this.inputSourceMaps = compiler.inputSourceMaps;
       this.changeStamp = compiler.changeStamp;
       this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllModules());
@@ -3700,7 +3714,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     stringMap = null;
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
-    annotationMap = checkNotNull(compilerState.annotationMap);
+    runJ2clPasses = compilerState.runJ2clPasses;
     inputSourceMaps = compilerState.inputSourceMaps;
     changeStamp = compilerState.changeStamp;
 

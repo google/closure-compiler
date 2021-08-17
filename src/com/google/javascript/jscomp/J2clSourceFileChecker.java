@@ -50,7 +50,7 @@ final class J2clSourceFileChecker implements CompilerPass {
   }
 
   static void markToRunJ2clPasses(AbstractCompiler compiler) {
-    compiler.setAnnotation(HAS_J2CL_ANNOTATION_KEY, true);
+    compiler.setRunJ2clPasses(true);
   }
 
   /**
@@ -58,6 +58,6 @@ final class J2clSourceFileChecker implements CompilerPass {
    * example, if the compiler's HAS_J2CL annotation is false, it should.
    */
   static boolean shouldRunJ2clPasses(AbstractCompiler compiler) {
-    return Boolean.TRUE.equals(compiler.getAnnotation(HAS_J2CL_ANNOTATION_KEY));
+    return compiler.runJ2clPasses();
   }
 }
