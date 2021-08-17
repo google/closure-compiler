@@ -283,7 +283,8 @@ class StripCode implements CompilerPass {
         String name = nameNode.getString();
         // If this variable represents a collapsed property, it's the original property name we're
         // supposed to be matching against.
-        String possibleStripName = name.contains("$") ? name.replaceAll(".*\\$", "") : name;
+        int lastDollarSign = name.lastIndexOf('$');
+        String possibleStripName = lastDollarSign != -1 ? name.substring(lastDollarSign + 1) : name;
         if (isStripName(possibleStripName)
             || qualifiedNameBeginsWithStripType(nameNode)
             || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
