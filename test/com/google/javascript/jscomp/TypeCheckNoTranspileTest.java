@@ -167,40 +167,47 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArrowCorrectInheritsArguments() {
-    testTypesWithExtraExterns(
-        lines("/** @type {!Arguments} */ var arguments;"),
-        lines(
-            "/** @this {String} */ function fn() {",
-            "  {",
-            "    /** @return {null} */",
-            "    let fn = () => {",
-            "      return arguments;",
-            "    }",
-            "  }",
-            "}"),
-        lines("inconsistent return type", "found   : Arguments", "required: null"));
+    newTest()
+        .addExterns(lines("/** @type {!Arguments} */ var arguments;"))
+        .addSource(
+            lines(
+                "/** @this {String} */ function fn() {",
+                "  {",
+                "    /** @return {null} */",
+                "    let fn = () => {",
+                "      return arguments;",
+                "    }",
+                "  }",
+                "}"))
+        .addDiagnostic(lines("inconsistent return type", "found   : Arguments", "required: null"))
+        .run();
   }
 
   @Test
   public void testArrowBlocklessCorrectInheritsArguments() {
-    testTypesWithExtraExterns(
-        lines("/** @type {!Arguments} */ var arguments;"),
-        lines(
-            "/** @this {String} */ function fn() {",
-            "  {",
-            "    /** @return {null} */",
-            "    let fn = () => arguments;",
-            "  }",
-            "}"),
-        lines("inconsistent return type", "found   : Arguments", "required: null"));
+    newTest()
+        .addExterns(lines("/** @type {!Arguments} */ var arguments;"))
+        .addSource(
+            lines(
+                "/** @this {String} */ function fn() {",
+                "  {",
+                "    /** @return {null} */",
+                "    let fn = () => arguments;",
+                "  }",
+                "}"))
+        .addDiagnostic(lines("inconsistent return type", "found   : Arguments", "required: null"))
+        .run();
   }
 
   @Test
   public void testAsyncArrow_withValidBlocklessReturn_isAllowed() {
-    testTypesWithCommonExterns(
-        lines(
-            "function takesPromiseProvider(/** function():!Promise<number> */ getPromise) {}",
-            "takesPromiseProvider(async () => 1);"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesPromiseProvider(/** function():!Promise<number> */ getPromise) {}",
+                "takesPromiseProvider(async () => 1);"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -217,12 +224,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncArrow_withInferredReturnType_ofValidUnionType_isAllowed() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @param {function():(number|!Promise<string>)} getPromise */",
-            "function takesPromiseProvider(getPromise) {}",
-            "",
-            "takesPromiseProvider(async () => '');"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @param {function():(number|!Promise<string>)} getPromise */",
+                "function takesPromiseProvider(getPromise) {}",
+                "",
+                "takesPromiseProvider(async () => '');"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -242,37 +252,41 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testTypedefOfPropertyInBlock() {
     disableStrictMissingPropertyChecks();
-    testTypesWithExterns(
-        "/** @interface */ function Foo() {}",
-        lines(
-            "/** @constructor */",
-            "function Bar(/** !Foo */ foo) {",
-            "  /** @type {!Foo} */",
-            "  this.foo = foo;",
-            "  {",
-            "    /** @typedef {boolean} */",
-            "    this.foo.bar;",
-            "    (() => this.foo.bar)();",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns("/** @interface */ function Foo() {}")
+        .addSource(
+            lines(
+                "/** @constructor */",
+                "function Bar(/** !Foo */ foo) {",
+                "  /** @type {!Foo} */",
+                "  this.foo = foo;",
+                "  {",
+                "    /** @typedef {boolean} */",
+                "    this.foo.bar;",
+                "    (() => this.foo.bar)();",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testTypedefOfPropertyInFunctionScope() {
     disableStrictMissingPropertyChecks();
-    testTypesWithExterns(
-        "/** @interface */ function Foo() {}",
-        lines(
-            "/** @constructor */",
-            "function Bar(/** !Foo */ foo) {",
-            "  /** @type {!Foo} */",
-            "  this.foo = foo;",
-            "  /** @typedef {boolean} */",
-            "  this.foo.bar;",
-            "  {",
-            "    (() => this.foo.bar)();",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns("/** @interface */ function Foo() {}")
+        .addSource(
+            lines(
+                "/** @constructor */",
+                "function Bar(/** !Foo */ foo) {",
+                "  /** @type {!Foo} */",
+                "  this.foo = foo;",
+                "  /** @typedef {boolean} */",
+                "  this.foo.bar;",
+                "  {",
+                "    (() => this.foo.bar)();",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
@@ -423,24 +437,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArgumentSpreadNonIterable() {
-    testTypesWithExtraExterns(
-        "function use(x) {}",
-        "use(...1);",
-        lines(
-            "Spread operator only applies to Iterable types",
-            "found   : number",
-            "required: Iterable"));
+    newTest()
+        .addExterns("function use(x) {}")
+        .addSource("use(...1);")
+        .addDiagnostic(
+            lines(
+                "Spread operator only applies to Iterable types",
+                "found   : number",
+                "required: Iterable"))
+        .run();
   }
 
   @Test
   public void testArgumentSpreadNonIterable_optChainCall() {
-    testTypesWithExtraExterns(
-        "function use(x) {}",
-        "use?.(...1);",
-        lines(
-            "Spread operator only applies to Iterable types",
-            "found   : number",
-            "required: Iterable"));
+    newTest()
+        .addExterns("function use(x) {}")
+        .addSource("use?.(...1);")
+        .addDiagnostic(
+            lines(
+                "Spread operator only applies to Iterable types",
+                "found   : number",
+                "required: Iterable"))
+        .run();
   }
 
   @Test
@@ -678,23 +696,26 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testTypedefFieldInLoopLocal() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @typedef {{num: number, maybeNum: ?number}} */",
-            "let XType;",
-            "",
-            "/** @param {!Array<!XType>} xlist */",
-            "function f(xlist) {",
-            "  for (let i = 0; i < xlist.length; i++) {",
-            "    /** @type {!XType} */",
-            "    const x = xlist[i];",
-            "    if (x.maybeNum === null) {",
-            "      continue;",
-            "    }",
-            "    x.num = x.maybeNum;",
-            "  }",
-            "}",
-            ""));
+    newTest()
+        .addSource(
+            lines(
+                "/** @typedef {{num: number, maybeNum: ?number}} */",
+                "let XType;",
+                "",
+                "/** @param {!Array<!XType>} xlist */",
+                "function f(xlist) {",
+                "  for (let i = 0; i < xlist.length; i++) {",
+                "    /** @type {!XType} */",
+                "    const x = xlist[i];",
+                "    if (x.maybeNum === null) {",
+                "      continue;",
+                "    }",
+                "    x.num = x.maybeNum;",
+                "  }",
+                "}",
+                ""))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1181,32 +1202,40 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testForOf_wrongLoopVarType1() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<number>} */",
-            "var numArray = [1, 2];",
-            "/** @type {string} */",
-            "var elem = '';",
-            "for (elem of numArray) {",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<number>} */",
+                "var numArray = [1, 2];",
+                "/** @type {string} */",
+                "var elem = '';",
+                "for (elem of numArray) {",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_wrongLoopVarType2() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<number>} */",
-            "var numArray = [1, 2];",
-            "for (let /** string */ elem of numArray) {",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<number>} */",
+                "var numArray = [1, 2];",
+                "for (let /** string */ elem of numArray) {",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1225,37 +1254,47 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testForOf_wrongLoopVarType4a() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<!Object>} */",
-            "var arr = [1, 2];",
-            "for (let /** ?Object */ elem of arr) {",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<!Object>} */",
+                "var arr = [1, 2];",
+                "for (let /** ?Object */ elem of arr) {",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_wrongLoopVarType4b() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<?Object>} */",
-            "var arr = [1, 2];",
-            "for (let /** !Object */ elem of arr) {",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : (Object|null)",
-            "required: Object"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<?Object>} */",
+                "var arr = [1, 2];",
+                "for (let /** !Object */ elem of arr) {",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : (Object|null)",
+                "required: Object"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_wrongLoopVarType5() {
     // Test that we don't check the inferred type of n against the Iterable type
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<number>} */",
-            "var arr = [1, 2];",
-            "let n = null;",
-            "for (n of arr) {}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<number>} */",
+                "var arr = [1, 2];",
+                "let n = null;",
+                "for (n of arr) {}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1344,72 +1383,94 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testForOf_badEnumCreation() {
-    testTypesWithCommonExterns(
-        "for (var /** @enum */ myEnum of []) {}",
-        "enum initializer must be an object literal or an enum");
+    newTest()
+        .addSource("for (var /** @enum */ myEnum of []) {}")
+        .addDiagnostic("enum initializer must be an object literal or an enum")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_array1() {
-    testTypesWithCommonExterns("for (var elem of [1, 2]) {}");
+    newTest().addSource("for (var elem of [1, 2]) {}").includeDefaultExterns().run();
   }
 
   @Test
   public void testForOf_array2() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<number>} */ var arr = [1, 2];",
-            "function takesString(/** string */ s) {}",
-            "for (var elem of arr) { takesString(elem); }"),
-        lines(
-            "actual parameter 1 of takesString does not match formal parameter",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<number>} */ var arr = [1, 2];",
+                "function takesString(/** string */ s) {}",
+                "for (var elem of arr) { takesString(elem); }"))
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesString does not match formal parameter",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_array3() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @type {!Array<number>} */ var arr = [1, 2];",
-            "function takesNumber(/** number */ n) {}",
-            "for (var elem of arr) { takesNumber(elem); }"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @type {!Array<number>} */ var arr = [1, 2];",
+                "function takesNumber(/** number */ n) {}",
+                "for (var elem of arr) { takesNumber(elem); }"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_string1() {
-    testTypesWithCommonExterns(
-        lines(
-            "function takesString(/** string */ s) {}",
-            "for (var ch of 'a string') { takesString(ch); }"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesString(/** string */ s) {}",
+                "for (var ch of 'a string') { takesString(ch); }"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_string2() {
-    testTypesWithCommonExterns(
-        lines(
-            "function takesNumber(/** number */ n) {}",
-            "for (var ch of 'a string') { takesNumber(ch); }"),
-        lines(
-            "actual parameter 1 of takesNumber does not match formal parameter",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesNumber(/** number */ n) {}",
+                "for (var ch of 'a string') { takesNumber(ch); }"))
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNumber does not match formal parameter",
+                "found   : string",
+                "required: number"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_StringObject1() {
-    testTypesWithCommonExterns(
-        lines(
-            "function takesString(/** string */ s) {}",
-            "for (var ch of new String('boxed')) { takesString(elem); }"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesString(/** string */ s) {}",
+                "for (var ch of new String('boxed')) { takesString(elem); }"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testForOf_StringObject2() {
-    testTypesWithCommonExterns(
-        lines(
-            "function takesNumber(/** number */ n) {}",
-            "for (var ch of new String('boxed')) { takesNumber(elem); }"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesNumber(/** number */ n) {}",
+                "for (var ch of new String('boxed')) { takesNumber(elem); }"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1443,15 +1504,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testForOf_unionType1() {
     // TODO(b/77904110): Should be a type mismatch warning for passing a string to takesNumber
-    testTypesWithCommonExterns(
-        lines(
-            "function takesNumber(/** number */ n) {}",
-            "/** @param {(!Array<string>|undefined)} arr */",
-            "function f(arr) {",
-            "  for (let x of (arr || [])) {",
-            "    takesNumber(x);",
-            "  }",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesNumber(/** number */ n) {}",
+                "/** @param {(!Array<string>|undefined)} arr */",
+                "function f(arr) {",
+                "  for (let x of (arr || [])) {",
+                "    takesNumber(x);",
+                "  }",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1530,27 +1594,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testForOf_const() {
     // TypeCheck can now handle const
-    testTypesWithCommonExterns("/** @type {!Iterable} */ const it = []; for (const elem of it) {}");
+    newTest()
+        .addSource("/** @type {!Iterable} */ const it = []; for (const elem of it) {}")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testImplicitCastInForOf() {
-    testTypesWithExtraExterns(
-        lines(
-            "/** @constructor */ function Element() {};",
-            "/**",
-            " * @type {string}",
-            " * @implicitCast",
-            " */",
-            "Element.prototype.innerHTML;"),
-        lines(
-            "/** @param {?Element} element",
-            " * @param {!Array<string|number>} texts",
-            " */",
-            "function f(element, texts) {",
-            "  for (element.innerHTML of texts) {};",
-            "}",
-            ""));
+    newTest()
+        .addExterns(
+            lines(
+                "/** @constructor */ function Element() {};",
+                "/**",
+                " * @type {string}",
+                " * @implicitCast",
+                " */",
+                "Element.prototype.innerHTML;"))
+        .addSource(
+            lines(
+                "/** @param {?Element} element",
+                " * @param {!Array<string|number>} texts",
+                " */",
+                "function f(element, texts) {",
+                "  for (element.innerHTML of texts) {};",
+                "}",
+                ""))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1565,12 +1636,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator3() {
-    testTypesWithCommonExterns(
-        "/** @return {!Generator<string>} */ function* gen() {  yield 1; }",
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource("/** @return {!Generator<string>} */ function* gen() {  yield 1; }")
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1655,37 +1729,52 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator_returnsIterable1() {
-    testTypesWithCommonExterns("/** @return {!Iterable<?>} */ function *gen() {}");
+    newTest()
+        .addSource("/** @return {!Iterable<?>} */ function *gen() {}")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testGenerator_returnsIterable2() {
-    testTypesWithCommonExterns(
-        "/** @return {!Iterable<string>} */ function* gen() {  yield 1; }",
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource("/** @return {!Iterable<string>} */ function* gen() {  yield 1; }")
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testGenerator_returnsIterator1() {
-    testTypesWithCommonExterns("/** @return {!Iterator<?>} */ function *gen() {}");
+    newTest()
+        .addSource("/** @return {!Iterator<?>} */ function *gen() {}")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testGenerator_returnsIterator2() {
-    testTypesWithCommonExterns(
-        "/** @return {!Iterator<string>} */ function* gen() {  yield 1; }",
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : number",
-            "required: string"));
+    newTest()
+        .addSource("/** @return {!Iterator<string>} */ function* gen() {  yield 1; }")
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : number",
+                "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testGenerator_returnsIteratorIterable() {
-    testTypesWithCommonExterns("/** @return {!IteratorIterable<?>} */ function *gen() {}");
+    newTest()
+        .addSource("/** @return {!IteratorIterable<?>} */ function *gen() {}")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1727,13 +1816,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testGenerator_noDeclaredReturnType3() {
     // We infer gen() to return !Generator<?>, so don't warn for a type mismatch with string
-    testTypesWithCommonExterns(
-        lines(
-            "function *gen() {",
-            "  yield 1;",
-            "  yield 2;",
-            "}",
-            "var /** string */ g = gen().next().value;"));
+    newTest()
+        .addSource(
+            lines(
+                "function *gen() {",
+                "  yield 1;",
+                "  yield 2;",
+                "}",
+                "var /** string */ g = gen().next().value;"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1743,9 +1835,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator_return2() {
-    testTypesWithCommonExterns(
-        "/** @return {!Generator<string>} */ function *gen() {  return 1; }",
-        lines("inconsistent return type", "found   : number", "required: string"));
+    newTest()
+        .addSource("/** @return {!Generator<string>} */ function *gen() {  return 1; }")
+        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1758,12 +1852,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   // test yield*
   @Test
   public void testGenerator_yieldAll1() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {!Generator<number>} */",
-            "function *gen() {",
-            "  yield* [1, 2, 3];",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {!Generator<number>} */",
+                "function *gen() {",
+                "  yield* [1, 2, 3];",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -1778,36 +1875,43 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator_yieldAll3() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {!Generator<number>} */",
-            "function *gen1() {",
-            "  yield 1;",
-            "}",
-            "",
-            "/** @return {!Generator<number>} */",
-            "function *gen2() {",
-            "  yield* gen1();",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {!Generator<number>} */",
+                "function *gen1() {",
+                "  yield 1;",
+                "}",
+                "",
+                "/** @return {!Generator<number>} */",
+                "function *gen2() {",
+                "  yield* gen1();",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testGenerator_yieldAll4() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {!Generator<string>} */",
-            "function *gen1() {",
-            "  yield 'a';",
-            "}",
-            "",
-            "/** @return {!Generator<number>} */",
-            "function *gen2() {",
-            "  yield* gen1();",
-            "}"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {!Generator<string>} */",
+                "function *gen1() {",
+                "  yield 'a';",
+                "}",
+                "",
+                "/** @return {!Generator<number>} */",
+                "function *gen2() {",
+                "  yield* gen1();",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : string",
+                "required: number"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -2039,7 +2143,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testComputedProp_struct2() {
     // Allow Symbol properties in a struct
-    testTypesWithCommonExterns("/** @struct */ var obj = {[Symbol.iterator]: function() {}};");
+    newTest()
+        .addSource("/** @struct */ var obj = {[Symbol.iterator]: function() {}};")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -2158,15 +2265,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testTaggedTemplateLiteral_tagParameters1() {
     // ITemplateArray works as the first parameter
-    testTypesWithExtraExterns(
-        lines(
-            "/**",
-            " * @param {!ITemplateArray} template",
-            " * @param {...*} var_args Substitution values.",
-            " * @return {string}",
-            " */",
-            "String.raw = function(template, var_args) {};"),
-        "String.raw`one ${1} two`");
+    newTest()
+        .addExterns(
+            lines(
+                "/**",
+                " * @param {!ITemplateArray} template",
+                " * @param {...*} var_args Substitution values.",
+                " * @return {string}",
+                " */",
+                "String.raw = function(template, var_args) {};"))
+        .addSource("String.raw`one ${1} two`")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -2395,18 +2505,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testITemplateArray1() {
     // Test that ITemplateArray is Iterable and iterating over it produces a string
-    testTypesWithCommonExterns(
-        lines(
-            "function takesNumber(/** number */ n) {}",
-            "function f(/** !ITemplateArray */ arr) {",
-            "  for (let str of arr) {",
-            "    takesNumber(str);",
-            "  }",
-            "}"),
-        lines(
-            "actual parameter 1 of takesNumber does not match formal parameter",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addSource(
+            lines(
+                "function takesNumber(/** number */ n) {}",
+                "function f(/** !ITemplateArray */ arr) {",
+                "  for (let str of arr) {",
+                "    takesNumber(str);",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNumber does not match formal parameter",
+                "found   : string",
+                "required: number"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -4277,20 +4391,23 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAbstractInheritedSuperMethodCallInAbstractClass_warning() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @abstract */",
-            "class Base {",
-            "  /** @abstract */",
-            "  foo() {}",
-            "}",
-            "/** @abstract */",
-            "class Sub extends Base {",
-            "  bar() {",
-            "    super.foo();",
-            "  }",
-            "}"),
-        "Abstract super method Base.prototype.foo cannot be dereferenced");
+    newTest()
+        .addSource(
+            lines(
+                "/** @abstract */",
+                "class Base {",
+                "  /** @abstract */",
+                "  foo() {}",
+                "}",
+                "/** @abstract */",
+                "class Sub extends Base {",
+                "  bar() {",
+                "    super.foo();",
+                "  }",
+                "}"))
+        .addDiagnostic("Abstract super method Base.prototype.foo cannot be dereferenced")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -4891,39 +5008,55 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncFunction_cannotDeclareReturnToBe_Number() {
-    testTypesWithCommonExterns(
-        "/** @return {number} */ async function f() {}",
-        lines(
-            "The return type of an async function must be a supertype of Promise",
-            "found: number"));
+    newTest()
+        .addSource("/** @return {number} */ async function f() {}")
+        .addDiagnostic(
+            lines(
+                "The return type of an async function must be a supertype of Promise",
+                "found: number"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncFunction_cannotDeclareReturnToBe_Array() {
-    testTypesWithCommonExterns(
-        "/** @return {!Array} */ async function f() {}",
-        lines(
-            "The return type of an async function must be a supertype of Promise", "found: Array"));
+    newTest()
+        .addSource("/** @return {!Array} */ async function f() {}")
+        .addDiagnostic(
+            lines(
+                "The return type of an async function must be a supertype of Promise",
+                "found: Array"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncFunction_canDeclareReturnToBe_Object_andAccepts_undefined() {
-    testTypesWithCommonExterns("/** @return {!Object} */ async function f() { return undefined; }");
+    newTest()
+        .addSource("/** @return {!Object} */ async function f() { return undefined; }")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncFunction_canDeclareReturnToBe_allType_andAccepts_undefined() {
-    testTypesWithCommonExterns("/** @return {*} */ async function f() { return undefined; }");
+    newTest()
+        .addSource("/** @return {*} */ async function f() { return undefined; }")
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncReturnsPromise1() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {!Promise<number>} */",
-            "async function getANumber() {",
-            "  return 1;",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {!Promise<number>} */",
+                "async function getANumber() {",
+                "  return 1;",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -4942,22 +5075,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncFunction_canDeclareReturnToBe_nullablePromise() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {?Promise<string>} */",
-            "async function getAString() {",
-            "  return '';",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {?Promise<string>} */",
+                "async function getAString() {",
+                "  return '';",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncFunction_canDeclareReturnToBe_unionOfPromiseAndNumber() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @return {(number|!Promise<number>)} */",
-            "async function getAString() {",
-            "  return 1;",
-            "}"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @return {(number|!Promise<number>)} */",
+                "async function getAString() {",
+                "  return 1;",
+                "}"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -4988,37 +5127,45 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncFunction_cannotDeclareReturnToBe_aSubtypeOfPromise() {
-    testTypesWithCommonExterns(
-        lines(
-            "/** @extends {Promise<string>} */",
-            "class MyPromise extends Promise { }",
-            "",
-            "/** @return {!MyPromise} */",
-            "async function getAString() {",
-            "  return '';",
-            "}"),
-        lines(
-            "The return type of an async function must be a supertype of Promise",
-            "found: MyPromise"));
+    newTest()
+        .addSource(
+            lines(
+                "/** @extends {Promise<string>} */",
+                "class MyPromise extends Promise { }",
+                "",
+                "/** @return {!MyPromise} */",
+                "async function getAString() {",
+                "  return '';",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "The return type of an async function must be a supertype of Promise",
+                "found: MyPromise"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
   public void testAsyncFunction_cannotDeclareReturnToBe_aSiblingOfPromise() {
-    testTypesWithCommonExterns(
-        lines(
-            "/**",
-            " * @interface",
-            " * @extends {IThenable<string>}",
-            " */",
-            "class MyThenable { }",
-            "",
-            "/** @return {!MyThenable} */",
-            "async function getAString() {",
-            "  return '';",
-            "}"),
-        lines(
-            "The return type of an async function must be a supertype of Promise",
-            "found: MyThenable"));
+    newTest()
+        .addSource(
+            lines(
+                "/**",
+                " * @interface",
+                " * @extends {IThenable<string>}",
+                " */",
+                "class MyThenable { }",
+                "",
+                "/** @return {!MyThenable} */",
+                "async function getAString() {",
+                "  return '';",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "The return type of an async function must be a supertype of Promise",
+                "found: MyThenable"))
+        .includeDefaultExterns()
+        .run();
   }
 
   @Test
@@ -5541,23 +5688,27 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testValidArrayPatternInForInInitializer() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addString().build(),
-        lines(
-            "function f(/** !Object<string, number> */ obj) {",
-            "  for (const [/** string */ a, /** string */ b] in obj) {}",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addString().build())
+        .addSource(
+            lines(
+                "function f(/** !Object<string, number> */ obj) {",
+                "  for (const [/** string */ a, /** string */ b] in obj) {}",
+                "}"))
+        .run();
   }
 
   @Test
   public void testArrayPatternInForInInitializerWithTypeMismatch() {
     // TODO(b/77903996): this should cause a type mismatch warning
-    testTypesWithExterns(
-        new TestExternsBuilder().addString().build(),
-        lines(
-            "function f(/** !Object<string, number> */ obj) {",
-            "  for (const [/** number */ a, /** number */ b] in obj) {}",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addString().build())
+        .addSource(
+            lines(
+                "function f(/** !Object<string, number> */ obj) {",
+                "  for (const [/** number */ a, /** number */ b] in obj) {}",
+                "}"))
+        .run();
   }
 
   @Test
@@ -5582,11 +5733,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArrayPatternAssign_badInterfacePropertyCreation() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addArray().build(),
-        "/** @interface */ function Foo() {}; [Foo.prototype.bar] = [];",
-        "interface members can only be "
-            + "empty property declarations, empty functions, or goog.abstractMethod");
+    newTest()
+        .addExterns(new TestExternsBuilder().addArray().build())
+        .addSource("/** @interface */ function Foo() {}; [Foo.prototype.bar] = [];")
+        .addDiagnostic(
+            "interface members can only be "
+                + "empty property declarations, empty functions, or goog.abstractMethod")
+        .run();
   }
 
   @Test
@@ -5718,9 +5871,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArrayDestructuringStringIsAllowed() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addString().build(),
-        "const [] = 'foobar';"); // strings autobox to Strings, which implement Iterable
+    newTest()
+        .addExterns(new TestExternsBuilder().addString().build())
+        .addSource("const [] = 'foobar';")
+        .run(); // strings autobox to Strings, which implement Iterable
   }
 
   @Test
@@ -5768,9 +5922,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArrayPatternParameterCanBeOptional() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addArray().build(),
-        "/** @param {!Array<string>=} arr */ function f([x, y] = []) {}");
+    newTest()
+        .addExterns(new TestExternsBuilder().addArray().build())
+        .addSource("/** @param {!Array<string>=} arr */ function f([x, y] = []) {}")
+        .run();
   }
 
   @Test
@@ -5807,9 +5962,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArrayDestructuringParameterWithElision() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addArray().build(),
-        "/** @param {!Array<number>} numbers */ function f([, x, , y]) {}");
+    newTest()
+        .addExterns(new TestExternsBuilder().addArray().build())
+        .addSource("/** @param {!Array<number>} numbers */ function f([, x, , y]) {}")
+        .run();
   }
 
   @Test
@@ -6558,14 +6714,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncGeneratorWithYieldStarOtherAsyncGenerator() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen0() { yield 0; }",
-            "",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen1() { yield* asyncGen0(); }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen0() { yield 0; }",
+                "",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen1() { yield* asyncGen0(); }"))
+        .run();
   }
 
   @Test
@@ -6583,72 +6741,86 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncGeneratorYieldStarBoxableIterable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** string */ boxable;",
-            "/** @return {!AsyncGenerator<string>} */",
-            "async function* asyncGen() { yield* 'boxable'; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** string */ boxable;",
+                "/** @return {!AsyncGenerator<string>} */",
+                "async function* asyncGen() { yield* 'boxable'; }"))
+        .run();
 
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addArray().build(),
-        lines(
-            "let /** !Array<number> */ boxable;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield* boxable; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addArray().build())
+        .addSource(
+            lines(
+                "let /** !Array<number> */ boxable;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield* boxable; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorWithYieldStarSyncGenerator() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!Generator<number>} */",
-            "function* gen() { yield 0; }",
-            "",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield* gen(); }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!Generator<number>} */",
+                "function* gen() { yield 0; }",
+                "",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield* gen(); }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorUnion() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
-            "",
-            "/** @return {!AsyncGenerator<string|number>} */",
-            "async function* asyncGen() { yield* gen; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+                "",
+                "/** @return {!AsyncGenerator<string|number>} */",
+                "async function* asyncGen() { yield* gen; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorAndNonGeneratorUnion() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Generator<string>|!AsyncGenerator<number>|number */ gen;",
-            "",
-            "/** @return {!AsyncGenerator<string|number>} */",
-            "async function* asyncGen() { yield* gen; }"),
-        lines(
-            "Expression yield* expects an iterable or async iterable",
-            "found   : (AsyncGenerator<number,?,?>|Generator<string,?,?>|number)",
-            "required: (AsyncIterator|Iterator)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Generator<string>|!AsyncGenerator<number>|number */ gen;",
+                "",
+                "/** @return {!AsyncGenerator<string|number>} */",
+                "async function* asyncGen() { yield* gen; }"))
+        .addDiagnostic(
+            lines(
+                "Expression yield* expects an iterable or async iterable",
+                "found   : (AsyncGenerator<number,?,?>|Generator<string,?,?>|number)",
+                "required: (AsyncIterator|Iterator)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorWithYieldStarSyncAndAsyncGeneratorUnionMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
-            "",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield* gen; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : (number|string)",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+                "",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield* gen; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : (number|string)",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
@@ -6666,244 +6838,298 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testAsyncGeneratorWithMismatchYield() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield 'str'; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : string",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield 'str'; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : string",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitNonThenable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await 0; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await 0; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitNonThenableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await 'str'; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : string",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await 'str'; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : string",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitThenable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !IThenable<number> */ thenable;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await thenable; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !IThenable<number> */ thenable;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await thenable; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitThenableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !IThenable<string> */ thenable;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await thenable; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : string",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !IThenable<string> */ thenable;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await thenable; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : string",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitPromise() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await Promise.resolve(0); }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await Promise.resolve(0); }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldAwaitPromiseMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield await Promise.resolve('str'); }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : string",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield await Promise.resolve('str'); }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : string",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldPromise() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield Promise.resolve(0); }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield Promise.resolve(0); }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldPromiseMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield Promise.resolve('str'); }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : Promise<string>",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield Promise.resolve('str'); }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : Promise<string>",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldIThenable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !IThenable<number> */ thenable;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield thenable; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !IThenable<number> */ thenable;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield thenable; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldThenableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !IThenable<string> */ thenable;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield thenable; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : IThenable<string>",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !IThenable<string> */ thenable;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield thenable; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : IThenable<string>",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldIThenableUnionNonIThenable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** (!IThenable<number>|string) */ thenableOrString;",
-            "/** @return {!AsyncGenerator<number|string>} */",
-            "async function* asyncGen() { yield thenable; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** (!IThenable<number>|string) */ thenableOrString;",
+                "/** @return {!AsyncGenerator<number|string>} */",
+                "async function* asyncGen() { yield thenable; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorYieldIThenableUnionNonIThenableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** (!IThenable<number>|string) */ thenableOrString;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { yield thenableOrString; }"),
-        lines(
-            "Yielded type does not match declared return type.",
-            "found   : (IThenable<number>|string)",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** (!IThenable<number>|string) */ thenableOrString;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { yield thenableOrString; }"))
+        .addDiagnostic(
+            lines(
+                "Yielded type does not match declared return type.",
+                "found   : (IThenable<number>|string)",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnNothing() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */", "async function* asyncGen() { return; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnSameType() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return 0; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return 0; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnMismatchType() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return 'str'; }"),
-        lines(
-            "inconsistent return type",
-            "found   : string",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return 'str'; }"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type",
+                "found   : string",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnVoidPromise() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Promise<void> */ voidPromise;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return voidPromise; }"),
-        lines(
-            "inconsistent return type",
-            "found   : Promise<undefined>",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Promise<void> */ voidPromise;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return voidPromise; }"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type",
+                "found   : Promise<undefined>",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnUndefinedPromise() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Promise<undefined> */ undefPromise;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return undefPromise; }"),
-        lines(
-            "inconsistent return type",
-            "found   : Promise<undefined>",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Promise<undefined> */ undefPromise;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return undefPromise; }"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type",
+                "found   : Promise<undefined>",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnPromise() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Promise<number> */ promise;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return promise; }"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Promise<number> */ promise;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return promise; }"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorReturnPromiseMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Promise<string> */ promise;",
-            "/** @return {!AsyncGenerator<number>} */",
-            "async function* asyncGen() { return promise; }"),
-        lines(
-            "inconsistent return type",
-            "found   : Promise<string>",
-            "required: (IThenable<number>|number)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Promise<string> */ promise;",
+                "/** @return {!AsyncGenerator<number>} */",
+                "async function* asyncGen() { return promise; }"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type",
+                "found   : Promise<string>",
+                "required: (IThenable<number>|number)"))
+        .run();
   }
 
   @Test
   public void testAsyncGeneratorFunctionInferredToBeAsyncGenerator() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "async function* asyncGen() { return 0; }",
-            "let /** !AsyncGenerator<number> */ g = asyncGen();"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "async function* asyncGen() { return 0; }",
+                "let /** !AsyncGenerator<number> */ g = asyncGen();"))
+        .run();
   }
 
   @Test
@@ -6972,170 +7198,200 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testForAwaitOfAsyncIterator() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !AsyncIterable<number> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !AsyncIterable<number> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfNullableAsyncIterator() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** ?AsyncIterable<number> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
-            "found   : (AsyncIterable<number>|null)",
-            "required: (AsyncIterator|Iterator)"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** ?AsyncIterable<number> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
+                "found   : (AsyncIterable<number>|null)",
+                "required: (AsyncIterator|Iterator)"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfAsyncIteratorMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** !AsyncIterable<string> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** !AsyncIterable<string> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : string",
+                "required: number"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfSynchronousIterable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Iterable<number> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<number> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfSynchronousIterableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** !Iterable<string> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<string> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : string",
+                "required: number"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfBoxedSynchronousIterable() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** string */ gen;",
-            "async function foo() {",
-            "  for await (const /** string */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** string */ gen;",
+                "async function foo() {",
+                "  for await (const /** string */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfBoxedSynchronousIterableMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** string */ gen;",
-            "async function foo() {",
-            "  for await (const /** number */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : string",
-            "required: number"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** string */ gen;",
+                "async function foo() {",
+                "  for await (const /** number */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : string",
+                "required: number"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfAsyncAndSynchronousIterableUnion() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
-            "async function foo() {",
-            "  for await (const /** number|string */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+                "async function foo() {",
+                "  for await (const /** number|string */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfAsyncAndSynchronousIterableUnionMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
-            "async function foo() {",
-            "  for await (const /** boolean */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : (number|string)",
-            "required: boolean"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+                "async function foo() {",
+                "  for await (const /** boolean */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : (number|string)",
+                "required: boolean"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfAsyncAndBoxIterableUnion() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** !Iterable<number>|string */ gen;",
-            "async function foo() {",
-            "  for await (const /** number|string */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<number>|string */ gen;",
+                "async function foo() {",
+                "  for await (const /** number|string */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfAsyncAndBoxIterableUnionMismatch() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().addString().build(),
-        lines(
-            "let /** !Iterable<number>|string */ gen;",
-            "async function foo() {",
-            "  for await (const /** boolean */ n of gen) {",
-            "  }",
-            "}"),
-        lines(
-            "declared type of for-of loop variable does not match inferred type",
-            "found   : (number|string)",
-            "required: boolean"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
+        .addSource(
+            lines(
+                "let /** !Iterable<number>|string */ gen;",
+                "async function foo() {",
+                "  for await (const /** boolean */ n of gen) {",
+                "  }",
+                "}"))
+        .addDiagnostic(
+            lines(
+                "declared type of for-of loop variable does not match inferred type",
+                "found   : (number|string)",
+                "required: boolean"))
+        .run();
   }
 
   @Test
   public void testForAwaitOfUnknown() {
-    testTypesWithExterns(
-        new TestExternsBuilder().addAsyncIterable().build(),
-        lines(
-            "let /** ? */ gen;",
-            "async function foo() {",
-            "  for await (const /** null */ n of gen) {",
-            "  }",
-            "}"));
+    newTest()
+        .addExterns(new TestExternsBuilder().addAsyncIterable().build())
+        .addSource(
+            lines(
+                "let /** ? */ gen;",
+                "async function foo() {",
+                "  for await (const /** null */ n of gen) {",
+                "  }",
+                "}"))
+        .run();
   }
 
   @Test
@@ -7259,18 +7515,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testJsdocCanReferToGoogModuleType_withoutNamedType() {
-    testTypesWithExterns(
-        DEFAULT_EXTERNS,
-        lines(
-            "goog.loadModule(function(exports) {",
-            "  goog.module('a');",
-            "  exports.Foo = class {};",
-            "  return exports;",
-            "});",
-            "/** @type {!a.Foo<number>} */",
-            "let x;",
-            ""),
-        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+    newTest()
+        .addExterns(DEFAULT_EXTERNS)
+        .addSource(
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('a');",
+                "  exports.Foo = class {};",
+                "  return exports;",
+                "});",
+                "/** @type {!a.Foo<number>} */",
+                "let x;",
+                ""))
+        .addDiagnostic(RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS)
+        .run();
   }
 
   @Test
