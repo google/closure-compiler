@@ -35,26 +35,20 @@ public final class CheckMissingOverrideTypesTest {
   @RunWith(JUnit4.class)
   public static final class CheckGeneratedTypes extends CompilerTestCase {
 
-    private static final ResolutionMode MODULE_RESOLUTION_MODE = ResolutionMode.BROWSER;
-
     @Override
     @Before
     public void setUp() throws Exception {
       super.setUp();
+      enableTypeCheck();
+      enableParseTypeInfo();
       enableTypeInfoValidation();
       enableFixMissingOverrideTypes();
+      enableCreateModuleMap();
     }
 
     @Override
     protected CompilerPass getProcessor(Compiler compiler) {
-      return (Node externs, Node root) -> {
-        new GatherModuleMetadata(compiler, false, MODULE_RESOLUTION_MODE).process(externs, root);
-        new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
-        TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-        new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
-            .inferAllScopes(root.getParent());
-        new CheckMissingOverrideTypes(compiler).process(externs, root);
-      };
+      return new CheckMissingOverrideTypes(compiler);
     }
 
     // Test missing `*` param type in JSDoc
