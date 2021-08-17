@@ -63,8 +63,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new SerializeTypedAstPass(
-        compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS, consumer);
+    return new SerializeTypedAstPass(compiler, consumer);
   }
 
   @Override

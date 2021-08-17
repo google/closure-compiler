@@ -36,7 +36,7 @@ final class TypedAstSerializer {
 
   private final AbstractCompiler compiler;
   private final SerializationOptions serializationMode;
-  private final StringPool.Builder stringPool;
+  private final StringPool.Builder stringPool = StringPool.builder();
   private int previousLine;
   private int previousColumn;
   private final ArrayDeque<SourceFile> subtreeSourceFiles = new ArrayDeque<>();
@@ -44,19 +44,13 @@ final class TypedAstSerializer {
 
   private IdentityHashMap<JSType, TypePointer> typesToPointers = null;
 
-  private TypedAstSerializer(
-      AbstractCompiler compiler,
-      SerializationOptions serializationMode,
-      StringPool.Builder stringPoolBuilder) {
+  TypedAstSerializer(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.serializationMode = serializationMode;
-    this.stringPool = stringPoolBuilder;
-  }
-
-  static TypedAstSerializer createFromRegistryWithOptions(
-      AbstractCompiler compiler, SerializationOptions serializationMode) {
-    StringPool.Builder stringPoolBuilder = StringPool.builder();
-    return new TypedAstSerializer(compiler, serializationMode, stringPoolBuilder);
+    this.serializationMode =
+        this.compiler.isDebugLoggingEnabled()
+            ? SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS
+            : SerializationOptions.SKIP_DEBUG_INFO;
+    ;
   }
 
   /** Transforms the given compiler AST root nodes into into a serialized TypedAst object */

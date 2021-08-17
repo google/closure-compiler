@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
@@ -35,30 +34,10 @@ public final class SerializeTypedAstPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Consumer<TypedAst> consumer;
-  private final SerializationOptions serializationOptions;
 
-  public SerializeTypedAstPass(
-      AbstractCompiler compiler, SerializationOptions serializationOptions, OutputStream out) {
-    this(
-        compiler,
-        serializationOptions,
-        ast -> {
-          try {
-            ast.writeTo(out);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  @VisibleForTesting
-  SerializeTypedAstPass(
-      AbstractCompiler compiler,
-      SerializationOptions serializationOptions,
-      Consumer<TypedAst> astConsumer) {
+  SerializeTypedAstPass(AbstractCompiler compiler, Consumer<TypedAst> astConsumer) {
     this.compiler = compiler;
     this.consumer = astConsumer;
-    this.serializationOptions = serializationOptions;
   }
 
   public static SerializeTypedAstPass createFromOutputStream(AbstractCompiler c, OutputStream out) {
@@ -70,7 +49,7 @@ public final class SerializeTypedAstPass implements CompilerPass {
             throw new IllegalArgumentException("Cannot write to stream", e);
           }
         };
-    return new SerializeTypedAstPass(c, SerializationOptions.SKIP_DEBUG_INFO, toOutputStream);
+    return new SerializeTypedAstPass(c, toOutputStream);
   }
 
   public static SerializeTypedAstPass createFromPath(AbstractCompiler compiler, Path outputPath) {
@@ -82,13 +61,12 @@ public final class SerializeTypedAstPass implements CompilerPass {
             throw new IllegalArgumentException("Cannot create TypedAst output file", e);
           }
         };
-    return new SerializeTypedAstPass(compiler, SerializationOptions.SKIP_DEBUG_INFO, toPath);
+    return new SerializeTypedAstPass(compiler, toPath);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    TypedAstSerializer serializer =
-        TypedAstSerializer.createFromRegistryWithOptions(compiler, serializationOptions);
+    TypedAstSerializer serializer = new TypedAstSerializer(this.compiler);
     TypedAst ast = serializer.serializeRoots(externs, root);
     consumer.accept(ast);
   }
