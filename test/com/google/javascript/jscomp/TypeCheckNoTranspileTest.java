@@ -53,9 +53,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(johnlenz): infer simple functions return results.
 
     // Verify arrows have do not have an incorrect inferred return.
-    newTest()
-        .addSource(lines("let fn = () => {", "  return 1;", "};", "var /** null */ x = fn();"))
-        .run();
+    newTest().addSource("let fn = () => {", "  return 1;", "};", "var /** null */ x = fn();").run();
   }
 
   @Test
@@ -63,22 +61,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(johnlenz): infer simple functions return results.
 
     // Verify arrows have do not have an incorrect inferred return.
-    newTest().addSource(lines("let fn = () => 1;", "var /** null */ x = fn();")).run();
+    newTest().addSource("let fn = () => 1;", "var /** null */ x = fn();").run();
   }
 
   @Test
   public void testArrowRightScopeForBody() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {string} */ let a = 's';",
-                "/** ",
-                "  @param {number} a",
-                "  @return {null}",
-                "*/",
-                "let fn = (a) => {",
-                "  return a;",
-                "}"))
+            "/** @type {string} */ let a = 's';",
+            "/** ",
+            "  @param {number} a",
+            "  @return {null}",
+            "*/",
+            "let fn = (a) => {",
+            "  return a;",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : number", "required: null"))
         .run();
   }
@@ -87,14 +84,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrowRightBodyScopeForBlocklessBody() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {string} */ let a = 's';",
-                "/** ",
-                "  @param {number} a",
-                "  @return {null}",
-                "*/",
-                "let fn = (a) => a",
-                ""))
+            "/** @type {string} */ let a = 's';",
+            "/** ",
+            "  @param {number} a",
+            "  @return {null}",
+            "*/",
+            "let fn = (a) => a",
+            "")
         .addDiagnostic(lines("inconsistent return type", "found   : number", "required: null"))
         .run();
   }
@@ -103,15 +99,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrowCorrectThis() {
     newTest()
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  /** ",
-                "    @return {null}",
-                "  */",
-                "  let fn = () => {",
-                "    return this;",
-                "  }",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  /** ",
+            "    @return {null}",
+            "  */",
+            "  let fn = () => {",
+            "    return this;",
+            "  }",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : String", "required: null"))
         .run();
   }
@@ -120,13 +115,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrowBlocklessCorrectThis() {
     newTest()
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  /** ",
-                "    @return {null}",
-                "  */",
-                "  let fn = () => this;",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  /** ",
+            "    @return {null}",
+            "  */",
+            "  let fn = () => this;",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : String", "required: null"))
         .run();
   }
@@ -135,16 +129,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrowCorrectArguments() {
     newTest()
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  {",
-                "    /** @type {number} */ let arguments = 1;",
-                "    /** @return {null} */",
-                "    let fn = () => {",
-                "      return arguments;",
-                "    }",
-                "  }",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @type {number} */ let arguments = 1;",
+            "    /** @return {null} */",
+            "    let fn = () => {",
+            "      return arguments;",
+            "    }",
+            "  }",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : number", "required: null"))
         .run();
   }
@@ -153,14 +146,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrowBlocklessCorrectArguments() {
     newTest()
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  {",
-                "    /** @type {number} */ let arguments = 1;",
-                "    /** @return {null} */",
-                "    let fn = () => arguments;",
-                "  }",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @type {number} */ let arguments = 1;",
+            "    /** @return {null} */",
+            "    let fn = () => arguments;",
+            "  }",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : number", "required: null"))
         .run();
   }
@@ -168,17 +160,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testArrowCorrectInheritsArguments() {
     newTest()
-        .addExterns(lines("/** @type {!Arguments} */ var arguments;"))
+        .addExterns("/** @type {!Arguments} */ var arguments;")
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  {",
-                "    /** @return {null} */",
-                "    let fn = () => {",
-                "      return arguments;",
-                "    }",
-                "  }",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @return {null} */",
+            "    let fn = () => {",
+            "      return arguments;",
+            "    }",
+            "  }",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : Arguments", "required: null"))
         .run();
   }
@@ -186,15 +177,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testArrowBlocklessCorrectInheritsArguments() {
     newTest()
-        .addExterns(lines("/** @type {!Arguments} */ var arguments;"))
+        .addExterns("/** @type {!Arguments} */ var arguments;")
         .addSource(
-            lines(
-                "/** @this {String} */ function fn() {",
-                "  {",
-                "    /** @return {null} */",
-                "    let fn = () => arguments;",
-                "  }",
-                "}"))
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @return {null} */",
+            "    let fn = () => arguments;",
+            "  }",
+            "}")
         .addDiagnostic(lines("inconsistent return type", "found   : Arguments", "required: null"))
         .run();
   }
@@ -203,9 +193,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncArrow_withValidBlocklessReturn_isAllowed() {
     newTest()
         .addSource(
-            lines(
-                "function takesPromiseProvider(/** function():!Promise<number> */ getPromise) {}",
-                "takesPromiseProvider(async () => 1);"))
+            "function takesPromiseProvider(/** function():!Promise<number> */ getPromise) {}",
+            "takesPromiseProvider(async () => 1);")
         .includeDefaultExterns()
         .run();
   }
@@ -226,11 +215,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncArrow_withInferredReturnType_ofValidUnionType_isAllowed() {
     newTest()
         .addSource(
-            lines(
-                "/** @param {function():(number|!Promise<string>)} getPromise */",
-                "function takesPromiseProvider(getPromise) {}",
-                "",
-                "takesPromiseProvider(async () => '');"))
+            "/** @param {function():(number|!Promise<string>)} getPromise */",
+            "function takesPromiseProvider(getPromise) {}",
+            "",
+            "takesPromiseProvider(async () => '');")
         .includeDefaultExterns()
         .run();
   }
@@ -255,17 +243,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns("/** @interface */ function Foo() {}")
         .addSource(
-            lines(
-                "/** @constructor */",
-                "function Bar(/** !Foo */ foo) {",
-                "  /** @type {!Foo} */",
-                "  this.foo = foo;",
-                "  {",
-                "    /** @typedef {boolean} */",
-                "    this.foo.bar;",
-                "    (() => this.foo.bar)();",
-                "  }",
-                "}"))
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  {",
+            "    /** @typedef {boolean} */",
+            "    this.foo.bar;",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}")
         .run();
   }
 
@@ -275,17 +262,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns("/** @interface */ function Foo() {}")
         .addSource(
-            lines(
-                "/** @constructor */",
-                "function Bar(/** !Foo */ foo) {",
-                "  /** @type {!Foo} */",
-                "  this.foo = foo;",
-                "  /** @typedef {boolean} */",
-                "  this.foo.bar;",
-                "  {",
-                "    (() => this.foo.bar)();",
-                "  }",
-                "}"))
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  /** @typedef {boolean} */",
+            "  this.foo.bar;",
+            "  {",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}")
         .run();
   }
 
@@ -668,7 +654,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testExponent3() {
     newTest()
-        .addSource(lines("function fn(someUnknown) {", "  var y = true ** 3;", "}"))
+        .addSource("function fn(someUnknown) {", "  var y = true ** 3;", "}")
         .addDiagnostic(lines("left operand", "found   : boolean", "required: number"))
         .run();
   }
@@ -676,7 +662,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testExponent4() {
     newTest()
-        .addSource(lines("function fn(someUnknown) {", "  var y = 1; y **= true;", "}"))
+        .addSource("function fn(someUnknown) {", "  var y = 1; y **= true;", "}")
         .addDiagnostic(lines("right operand", "found   : boolean", "required: number"))
         .run();
   }
@@ -687,10 +673,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // rather than causing a redeclaration error.
     newTest()
         .addSource(
-            lines(
-                "try { throw 1; } catch (/** @type {number} */ err) {}",
-                "try { throw 'error'; } catch (/** @type {string} */ err) {}",
-                ""))
+            "try { throw 1; } catch (/** @type {number} */ err) {}",
+            "try { throw 'error'; } catch (/** @type {string} */ err) {}",
+            "")
         .run();
   }
 
@@ -698,22 +683,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testTypedefFieldInLoopLocal() {
     newTest()
         .addSource(
-            lines(
-                "/** @typedef {{num: number, maybeNum: ?number}} */",
-                "let XType;",
-                "",
-                "/** @param {!Array<!XType>} xlist */",
-                "function f(xlist) {",
-                "  for (let i = 0; i < xlist.length; i++) {",
-                "    /** @type {!XType} */",
-                "    const x = xlist[i];",
-                "    if (x.maybeNum === null) {",
-                "      continue;",
-                "    }",
-                "    x.num = x.maybeNum;",
-                "  }",
-                "}",
-                ""))
+            "/** @typedef {{num: number, maybeNum: ?number}} */",
+            "let XType;",
+            "",
+            "/** @param {!Array<!XType>} xlist */",
+            "function f(xlist) {",
+            "  for (let i = 0; i < xlist.length; i++) {",
+            "    /** @type {!XType} */",
+            "    const x = xlist[i];",
+            "    if (x.maybeNum === null) {",
+            "      continue;",
+            "    }",
+            "    x.num = x.maybeNum;",
+            "  }",
+            "}",
+            "")
         .includeDefaultExterns()
         .run();
   }
@@ -970,18 +954,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Tests that the qualified name alias.num is reset between loop iterations
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "",
-                "function f(/** {num: ?number} */ obj) {",
-                "  for (const _ in {}) {",
-                "    const alias = obj;",
-                "    if (alias.num === null) {",
-                "     continue;",
-                "    }",
-                "    takesNumber(alias.num);",
-                "  }",
-                "}"))
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "function f(/** {num: ?number} */ obj) {",
+            "  for (const _ in {}) {",
+            "    const alias = obj;",
+            "    if (alias.num === null) {",
+            "     continue;",
+            "    }",
+            "    takesNumber(alias.num);",
+            "  }",
+            "}")
         .run();
   }
 
@@ -1049,13 +1032,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGlobalTypedefWithLet() {
     newTest()
         .addSource(
-            lines(
-                "/** @typedef {number} */",
-                "let Bar;",
-                "/** @param {Bar} x */",
-                "function f(x) {}",
-                "f('3');",
-                ""))
+            "/** @typedef {number} */",
+            "let Bar;",
+            "/** @param {Bar} x */",
+            "function f(x) {}",
+            "f('3');",
+            "")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -1068,15 +1050,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testLocalTypedefWithLet() {
     newTest()
         .addSource(
-            lines(
-                "{",
-                "  /** @typedef {number} */",
-                "  let Bar;",
-                "  /** @param {Bar} x */",
-                "  function f(x) {}",
-                "  f('3');",
-                "}",
-                ""))
+            "{",
+            "  /** @typedef {number} */",
+            "  let Bar;",
+            "  /** @param {Bar} x */",
+            "  function f(x) {}",
+            "  f('3');",
+            "}",
+            "")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -1127,15 +1108,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // See comment in TypeInference#updateScopeForTypeChange
     newTest()
         .addSource(
-            lines(
-                "let foo;",
-                "/** @return {number} */",
-                "function getFoo() {",
-                "  return foo;",
-                "}",
-                "function setFoo(/** number */ num) {",
-                "  foo = num;",
-                "}"))
+            "let foo;",
+            "/** @return {number} */",
+            "function getFoo() {",
+            "  return foo;",
+            "}",
+            "function setFoo(/** number */ num) {",
+            "  foo = num;",
+            "}")
         .run();
   }
 
@@ -1148,10 +1128,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf2() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "/** @type {!Iterable<string>} */ var it;",
-                "for (var elem of it) { takesString(elem); }"))
+            "function takesString(/** string */ s) {}",
+            "/** @type {!Iterable<string>} */ var it;",
+            "for (var elem of it) { takesString(elem); }")
         .run();
   }
 
@@ -1159,10 +1138,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf3() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "/** @type {!Iterable<number>} */ var it;",
-                "for (var elem of it) { takesString(elem); }"))
+            "function takesString(/** string */ s) {}",
+            "/** @type {!Iterable<number>} */ var it;",
+            "for (var elem of it) { takesString(elem); }")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -1183,15 +1161,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // We infer the type of a qualified name in a for-of loop initializer
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "",
-                "function f(/** !Iterable<number> */ it) {",
-                "  var obj = {};",
-                "  for (obj.elem of it) {",
-                "    takesString(obj.elem);",
-                "  }",
-                "}"))
+            "function takesString(/** string */ s) {}",
+            "",
+            "function f(/** !Iterable<number> */ it) {",
+            "  var obj = {};",
+            "  for (obj.elem of it) {",
+            "    takesString(obj.elem);",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -1204,13 +1181,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_wrongLoopVarType1() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<number>} */",
-                "var numArray = [1, 2];",
-                "/** @type {string} */",
-                "var elem = '';",
-                "for (elem of numArray) {",
-                "}"))
+            "/** @type {!Array<number>} */",
+            "var numArray = [1, 2];",
+            "/** @type {string} */",
+            "var elem = '';",
+            "for (elem of numArray) {",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -1224,11 +1200,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_wrongLoopVarType2() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<number>} */",
-                "var numArray = [1, 2];",
-                "for (let /** string */ elem of numArray) {",
-                "}"))
+            "/** @type {!Array<number>} */",
+            "var numArray = [1, 2];",
+            "for (let /** string */ elem of numArray) {",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -1256,11 +1231,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_wrongLoopVarType4a() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<!Object>} */",
-                "var arr = [1, 2];",
-                "for (let /** ?Object */ elem of arr) {",
-                "}"))
+            "/** @type {!Array<!Object>} */",
+            "var arr = [1, 2];",
+            "for (let /** ?Object */ elem of arr) {",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -1269,11 +1243,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_wrongLoopVarType4b() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<?Object>} */",
-                "var arr = [1, 2];",
-                "for (let /** !Object */ elem of arr) {",
-                "}"))
+            "/** @type {!Array<?Object>} */",
+            "var arr = [1, 2];",
+            "for (let /** !Object */ elem of arr) {",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -1288,11 +1261,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Test that we don't check the inferred type of n against the Iterable type
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<number>} */",
-                "var arr = [1, 2];",
-                "let n = null;",
-                "for (n of arr) {}"))
+            "/** @type {!Array<number>} */",
+            "var arr = [1, 2];",
+            "let n = null;",
+            "for (n of arr) {}")
         .includeDefaultExterns()
         .run();
   }
@@ -1331,10 +1303,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_wrongLoopVarType7() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Iterable<string>} */ var it;",
-                "var /** !Object<string, number> */ obj = {};",
-                "for (obj['x'] of it) {}"))
+            "/** @type {!Iterable<string>} */ var it;",
+            "var /** !Object<string, number> */ obj = {};",
+            "for (obj['x'] of it) {}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -1360,10 +1331,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_illegalPropertyCreation() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Iterable<string>} */ var it;",
-                "const /** @struct */ obj = {};",
-                "for (obj.x of it) {}"))
+            "/** @type {!Iterable<string>} */ var it;",
+            "const /** @struct */ obj = {};",
+            "for (obj.x of it) {}")
         .addDiagnostic(
             "Cannot add a property to a struct instance after it is constructed. "
                 + "(If you already declared the property, make sure to give it a type.)")
@@ -1399,10 +1369,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_array2() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<number>} */ var arr = [1, 2];",
-                "function takesString(/** string */ s) {}",
-                "for (var elem of arr) { takesString(elem); }"))
+            "/** @type {!Array<number>} */ var arr = [1, 2];",
+            "function takesString(/** string */ s) {}",
+            "for (var elem of arr) { takesString(elem); }")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -1416,10 +1385,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_array3() {
     newTest()
         .addSource(
-            lines(
-                "/** @type {!Array<number>} */ var arr = [1, 2];",
-                "function takesNumber(/** number */ n) {}",
-                "for (var elem of arr) { takesNumber(elem); }"))
+            "/** @type {!Array<number>} */ var arr = [1, 2];",
+            "function takesNumber(/** number */ n) {}",
+            "for (var elem of arr) { takesNumber(elem); }")
         .includeDefaultExterns()
         .run();
   }
@@ -1428,9 +1396,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_string1() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "for (var ch of 'a string') { takesString(ch); }"))
+            "function takesString(/** string */ s) {}",
+            "for (var ch of 'a string') { takesString(ch); }")
         .includeDefaultExterns()
         .run();
   }
@@ -1439,9 +1406,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_string2() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "for (var ch of 'a string') { takesNumber(ch); }"))
+            "function takesNumber(/** number */ n) {}",
+            "for (var ch of 'a string') { takesNumber(ch); }")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -1455,9 +1421,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_StringObject1() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "for (var ch of new String('boxed')) { takesString(elem); }"))
+            "function takesString(/** string */ s) {}",
+            "for (var ch of new String('boxed')) { takesString(elem); }")
         .includeDefaultExterns()
         .run();
   }
@@ -1466,9 +1431,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_StringObject2() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "for (var ch of new String('boxed')) { takesNumber(elem); }"))
+            "function takesNumber(/** number */ n) {}",
+            "for (var ch of new String('boxed')) { takesNumber(elem); }")
         .includeDefaultExterns()
         .run();
   }
@@ -1477,22 +1441,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_iterableTypeIsNotFirstTemplateType() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "",
-                "/**",
-                " * @constructor",
-                " * @implements {Iterable<T>}",
-                " * @template S, T",
-                " */",
-                "function MyIterable() {}",
-                "",
-                "// Note that 'mi' is an Iterable<string>, not an Iterable<number>.",
-                "/** @type {!MyIterable<number, string>} */",
-                "var mi;",
-                "",
-                "for (var t of mi) { takesNumber(t); }",
-                ""))
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {Iterable<T>}",
+            " * @template S, T",
+            " */",
+            "function MyIterable() {}",
+            "",
+            "// Note that 'mi' is an Iterable<string>, not an Iterable<number>.",
+            "/** @type {!MyIterable<number, string>} */",
+            "var mi;",
+            "",
+            "for (var t of mi) { takesNumber(t); }",
+            "")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -1506,14 +1469,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(b/77904110): Should be a type mismatch warning for passing a string to takesNumber
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "/** @param {(!Array<string>|undefined)} arr */",
-                "function f(arr) {",
-                "  for (let x of (arr || [])) {",
-                "    takesNumber(x);",
-                "  }",
-                "}"))
+            "function takesNumber(/** number */ n) {}",
+            "/** @param {(!Array<string>|undefined)} arr */",
+            "function f(arr) {",
+            "  for (let x of (arr || [])) {",
+            "    takesNumber(x);",
+            "  }",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -1522,11 +1484,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_unionType2() {
     newTest()
         .addSource(
-            lines(
-                "/** @param {(number|undefined)} n */",
-                "function f(n) {",
-                "  for (let x of (n || [])) {}",
-                "}"))
+            "/** @param {(number|undefined)} n */",
+            "function f(n) {",
+            "  for (let x of (n || [])) {}",
+            "}")
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
@@ -1604,22 +1565,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testImplicitCastInForOf() {
     newTest()
         .addExterns(
-            lines(
-                "/** @constructor */ function Element() {};",
-                "/**",
-                " * @type {string}",
-                " * @implicitCast",
-                " */",
-                "Element.prototype.innerHTML;"))
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast",
+            " */",
+            "Element.prototype.innerHTML;")
         .addSource(
-            lines(
-                "/** @param {?Element} element",
-                " * @param {!Array<string|number>} texts",
-                " */",
-                "function f(element, texts) {",
-                "  for (element.innerHTML of texts) {};",
-                "}",
-                ""))
+            "/** @param {?Element} element",
+            " * @param {!Array<string|number>} texts",
+            " */",
+            "function f(element, texts) {",
+            "  for (element.innerHTML of texts) {};",
+            "}",
+            "")
         .includeDefaultExterns()
         .run();
   }
@@ -1662,12 +1621,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Test more complex type inference inside the yield expression
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Generator<{a: number, b: string}>} */",
-                "function *gen() {",
-                "  yield {a: 3, b: '4'};",
-                "}",
-                "var g = gen();"))
+            "/** @return {!Generator<{a: number, b: string}>} */",
+            "function *gen() {",
+            "  yield {a: 3, b: '4'};",
+            "}",
+            "var g = gen();")
         .run();
   }
 
@@ -1793,12 +1751,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGenerator_notAConstructor() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Generator<number>} */",
-                "function* gen() {",
-                "  yield 1;",
-                "}",
-                "var g = new gen;"))
+            "/** @return {!Generator<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var g = new gen;")
         .addDiagnostic("cannot instantiate non-constructor")
         .run();
   }
@@ -1818,12 +1775,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // We infer gen() to return !Generator<?>, so don't warn for a type mismatch with string
     newTest()
         .addSource(
-            lines(
-                "function *gen() {",
-                "  yield 1;",
-                "  yield 2;",
-                "}",
-                "var /** string */ g = gen().next().value;"))
+            "function *gen() {",
+            "  yield 1;",
+            "  yield 2;",
+            "}",
+            "var /** string */ g = gen().next().value;")
         .includeDefaultExterns()
         .run();
   }
@@ -1854,11 +1810,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGenerator_yieldAll1() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Generator<number>} */",
-                "function *gen() {",
-                "  yield* [1, 2, 3];",
-                "}"))
+            "/** @return {!Generator<number>} */", "function *gen() {", "  yield* [1, 2, 3];", "}")
         .includeDefaultExterns()
         .run();
   }
@@ -1877,16 +1829,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGenerator_yieldAll3() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Generator<number>} */",
-                "function *gen1() {",
-                "  yield 1;",
-                "}",
-                "",
-                "/** @return {!Generator<number>} */",
-                "function *gen2() {",
-                "  yield* gen1();",
-                "}"))
+            "/** @return {!Generator<number>} */",
+            "function *gen1() {",
+            "  yield 1;",
+            "}",
+            "",
+            "/** @return {!Generator<number>} */",
+            "function *gen2() {",
+            "  yield* gen1();",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -1895,16 +1846,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGenerator_yieldAll4() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Generator<string>} */",
-                "function *gen1() {",
-                "  yield 'a';",
-                "}",
-                "",
-                "/** @return {!Generator<number>} */",
-                "function *gen2() {",
-                "  yield* gen1();",
-                "}"))
+            "/** @return {!Generator<string>} */",
+            "function *gen1() {",
+            "  yield 'a';",
+            "}",
+            "",
+            "/** @return {!Generator<number>} */",
+            "function *gen2() {",
+            "  yield* gen1();",
+            "}")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -2076,15 +2026,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testComputedProp4() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ str) {}",
-                "",
-                "var obj = {",
-                "  /** @param {number} x */",
-                "  ['static']: (x) => {",
-                "    takesString(x);",
-                "  }",
-                "};"))
+            "function takesString(/** string */ str) {}",
+            "",
+            "var obj = {",
+            "  /** @param {number} x */",
+            "  ['static']: (x) => {",
+            "    takesString(x);",
+            "  }",
+            "};")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -2243,10 +2192,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Template strings can take any type.
     newTest()
         .addSource(
-            lines(
-                "function f(/** * */ anyTypeParam) {",
-                "  var /** string */ s = `template ${anyTypeParam} string`;",
-                "}"))
+            "function f(/** * */ anyTypeParam) {",
+            "  var /** string */ s = `template ${anyTypeParam} string`;",
+            "}")
         .run();
   }
 
@@ -2267,13 +2215,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // ITemplateArray works as the first parameter
     newTest()
         .addExterns(
-            lines(
-                "/**",
-                " * @param {!ITemplateArray} template",
-                " * @param {...*} var_args Substitution values.",
-                " * @return {string}",
-                " */",
-                "String.raw = function(template, var_args) {};"))
+            "/**",
+            " * @param {!ITemplateArray} template",
+            " * @param {...*} var_args Substitution values.",
+            " * @return {string}",
+            " */",
+            "String.raw = function(template, var_args) {};")
         .addSource("String.raw`one ${1} two`")
         .includeDefaultExterns()
         .run();
@@ -2443,14 +2390,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Infer the TAGGED_TEMPLATELIT to have the return type of the tag function
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "",
-                "/** @return {number} */",
-                "function returnsNumber(strings){",
-                "  return 1;",
-                "}",
-                "takesString(returnsNumber`str`);"))
+            "function takesString(/** string */ s) {}",
+            "",
+            "/** @return {number} */",
+            "function returnsNumber(strings){",
+            "  return 1;",
+            "}",
+            "takesString(returnsNumber`str`);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -2463,18 +2409,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testTaggedTemplateLiteral_returnType2() {
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ s) {}",
-                "/**",
-                " * @param {!ITemplateArray} strings",
-                " * @param {T} subExpr",
-                " * @param {*} var_args",
-                " * @return {T}",
-                " * @template T",
-                " */",
-                "function getFirstTemplateLitSub(strings, subExpr, var_args) { return subExpr; }",
-                "",
-                "takesString(getFirstTemplateLitSub`${1}`);"))
+            "function takesString(/** string */ s) {}",
+            "/**",
+            " * @param {!ITemplateArray} strings",
+            " * @param {T} subExpr",
+            " * @param {*} var_args",
+            " * @return {T}",
+            " * @template T",
+            " */",
+            "function getFirstTemplateLitSub(strings, subExpr, var_args) { return subExpr; }",
+            "",
+            "takesString(getFirstTemplateLitSub`${1}`);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -2507,13 +2452,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Test that ITemplateArray is Iterable and iterating over it produces a string
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "function f(/** !ITemplateArray */ arr) {",
-                "  for (let str of arr) {",
-                "    takesNumber(str);",
-                "  }",
-                "}"))
+            "function takesNumber(/** number */ n) {}",
+            "function f(/** !ITemplateArray */ arr) {",
+            "  for (let str of arr) {",
+            "    takesNumber(str);",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -2744,12 +2688,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassDeclarationTraditionalConstructorParametersMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @param {number} arg */",
-                "  constructor(arg) {}",
-                "}",
-                "new Foo('xyz');"))
+            "class Foo {",
+            "  /** @param {number} arg */",
+            "  constructor(arg) {}",
+            "}",
+            "new Foo('xyz');")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Foo does not match formal parameter",
@@ -2762,12 +2705,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassDeclarationInheritedConstructorParameters() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  constructor(/** number */ arg) {}",
-                "}",
-                "class Bar extends Foo {}",
-                "new Bar(42);"))
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {}",
+            "new Bar(42);")
         .run();
   }
 
@@ -2775,12 +2717,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassDeclarationInheritedConstructorParametersMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  constructor(/** number */ arg) {}",
-                "}",
-                "class Bar extends Foo {}",
-                "new Bar('xyz');"))
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {}",
+            "new Bar('xyz');")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Bar does not match formal parameter",
@@ -2792,7 +2733,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassDeclarationWithSemicolonsBetweenMembers() {
     newTest()
-        .addSource(lines("class Foo {", "  constructor() {};", "  foo() {};", "  bar() {};", "}"))
+        .addSource("class Foo {", "  constructor() {};", "  foo() {};", "  bar() {};", "}")
         .run();
   }
 
@@ -2800,10 +2741,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassPassedAsParameter() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {}",
-                "function foo(/** function(new: Foo) */ arg) {}",
-                "foo(class extends Foo {});"))
+            "class Foo {}",
+            "function foo(/** function(new: Foo) */ arg) {}",
+            "foo(class extends Foo {});")
         .run();
   }
 
@@ -2811,8 +2751,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassPassedAsParameterClassMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {}", "function foo(/** function(new: Foo) */ arg) {}", "foo(class {});"))
+            "class Foo {}", "function foo(/** function(new: Foo) */ arg) {}", "foo(class {});")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of foo does not match formal parameter",
@@ -2825,12 +2764,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassPassedAsParameterConstructorParamsMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  constructor(/** string */ arg) {}",
-                "}",
-                "function foo(/** function(new: Foo, number) */ arg) {}",
-                "foo(Foo);"))
+            "class Foo {",
+            "  constructor(/** string */ arg) {}",
+            "}",
+            "function foo(/** function(new: Foo, number) */ arg) {}",
+            "foo(Foo);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of foo does not match formal parameter",
@@ -3010,16 +2948,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // an interface should not result in actually sharing code.
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Bar {}",
-                "/** @interface */",
-                "class Baz {}",
-                "/**",
-                " * @interface",
-                " * @extends {Bar}",
-                " */",
-                "class Foo extends Baz {}"))
+            "/** @interface */",
+            "class Bar {}",
+            "/** @interface */",
+            "class Baz {}",
+            "/**",
+            " * @interface",
+            " * @extends {Bar}",
+            " */",
+            "class Foo extends Baz {}")
         .run();
   }
 
@@ -3063,13 +3000,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInterfaceExtendsFunctionCall() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo {}",
-                "/** @return {function(new:Foo)} */",
-                "function mixin() {}",
-                "/** @interface */",
-                "class Bar extends mixin() {}"))
+            "/** @interface */",
+            "class Foo {}",
+            "/** @return {function(new:Foo)} */",
+            "function mixin() {}",
+            "/** @interface */",
+            "class Bar extends mixin() {}")
         .addDiagnostic(
             "The right-hand side of an extends clause must be a qualified name, or else @extends"
                 + " must be specified in JSDoc")
@@ -3114,14 +3050,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassImplementsInterface() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} }",
-                "/** @implements {Foo} */",
-                "class Bar {",
-                "  /** @override */",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override */",
+            "  foo() {}",
+            "}")
         .run();
   }
 
@@ -3129,12 +3064,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassImplementsInterfaceViaParent() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class IFoo { /** @return {*} */ foo() {} }",
-                "class Foo { /** @return {number} */ foo() {} }",
-                "/** @implements {IFoo} */",
-                "class Zoo extends Foo {}"))
+            "/** @interface */",
+            "class IFoo { /** @return {*} */ foo() {} }",
+            "class Foo { /** @return {number} */ foo() {} }",
+            "/** @implements {IFoo} */",
+            "class Zoo extends Foo {}")
         .run();
   }
 
@@ -3142,14 +3076,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassExtendsAbstractClassesThatImplementsInterface() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class IFoo { foo() {} }",
-                "/** @abstract @implements {IFoo} */",
-                "class Foo { /** @override */ foo() {} }",
-                "/** @abstract @implements {IFoo} */",
-                "class Bar extends Foo {}",
-                "class Zoo extends Bar {}"))
+            "/** @interface */",
+            "class IFoo { foo() {} }",
+            "/** @abstract @implements {IFoo} */",
+            "class Foo { /** @override */ foo() {} }",
+            "/** @abstract @implements {IFoo} */",
+            "class Bar extends Foo {}",
+            "class Zoo extends Bar {}")
         .run();
   }
 
@@ -3157,11 +3090,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassMissingInterfaceMethod() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} }",
-                "/** @implements {Foo} */",
-                "class Bar {}"))
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {}")
         .addDiagnostic("property foo on interface Foo is not implemented by type Bar")
         .run();
   }
@@ -3170,14 +3102,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassCannotImplementInterfaceWithAPrototypeAssignment() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "function MyInterface() {}",
-                "/** @type {string} */",
-                "MyInterface.prototype.foo;",
-                "/** @constructor @implements {MyInterface} */",
-                "function MyClass() {}",
-                "MyClass.prototype = MyInterface.prototype;"))
+            "/** @interface */",
+            "function MyInterface() {}",
+            "/** @type {string} */",
+            "MyInterface.prototype.foo;",
+            "/** @constructor @implements {MyInterface} */",
+            "function MyClass() {}",
+            "MyClass.prototype = MyInterface.prototype;")
         .addDiagnostic("property foo on interface MyInterface is not implemented by type MyClass")
         .run();
   }
@@ -3200,13 +3131,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassMissingOverrideAnnotationForInterfaceMethod() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} }",
-                "/** @implements {Foo} */",
-                "class Bar {",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  foo() {}",
+            "}")
         .addDiagnostic(
             "property foo already defined on interface Foo; use @override to override it")
         .run();
@@ -3216,13 +3146,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAbstractClassMissingOverrideAnnotationForInterfaceMethod() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} }",
-                "/** @abstract @implements {Foo} */",
-                "class Bar {",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @abstract @implements {Foo} */",
+            "class Bar {",
+            "  foo() {}",
+            "}")
         .addDiagnostic(
             "property foo already defined on interface Foo; use @override to override it")
         .run();
@@ -3254,16 +3183,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassIncompatibleInterfaceMethodImplementation() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo {",
-                "  /** @return {number} */ foo() {}",
-                "}",
-                "/** @implements {Foo} */",
-                "class Bar {",
-                "  /** @override @return {number|string} */",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the foo property on type Bar and the type of the property it overrides"
@@ -3277,17 +3205,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassIncompatibleInterfaceMethodImplementationInheritedOverAbstractClass() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo {",
-                "  /** @return {number} */ foo() {}",
-                "}",
-                "/** @abstract @implements {Foo} */",
-                "class Bar {}",
-                "class Zoo extends Bar {",
-                "  /** @override @return {number|string} */",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @abstract @implements {Foo} */",
+            "class Bar {}",
+            "class Zoo extends Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the foo property on type Zoo and the type of the property it overrides"
@@ -3301,16 +3228,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAbstractClassIncompatibleInterfaceMethodImplementation() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo {",
-                "  /** @return {number} */ foo() {}",
-                "}",
-                "/** @abstract @implements {Foo} */",
-                "class Bar {",
-                "  /** @override @return {number|string} */",
-                "  foo() {}",
-                "}"))
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @abstract @implements {Foo} */",
+            "class Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the foo property on type Bar and the type of the property it overrides"
@@ -3324,13 +3250,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassMissingTransitiveInterfaceMethod() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} }",
-                "/** @interface @extends {Foo} */",
-                "class Bar {}",
-                "/** @implements {Bar} */",
-                "class Baz {}"))
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @interface @extends {Foo} */",
+            "class Bar {}",
+            "/** @implements {Bar} */",
+            "class Baz {}")
         .addDiagnostic("property foo on interface Foo is not implemented by type Baz")
         .run();
   }
@@ -3421,13 +3346,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInheritedInterfaceMethod() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Foo { foo() {} bar() {} }",
-                "/** @abstract */",
-                "class Bar { foo() {} }",
-                "/** @implements {Foo} */",
-                "class Baz extends Bar { /** @override */ bar() {} }"))
+            "/** @interface */",
+            "class Foo { foo() {} bar() {} }",
+            "/** @abstract */",
+            "class Bar { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Baz extends Bar { /** @override */ bar() {} }")
         .run();
   }
 
@@ -3465,14 +3389,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassConstructorTypeParametersNotIncludedOnClass() {
     newTest()
         .addSource(
-            lines(
-                "/** @template T */",
-                "class Foo {",
-                "  /** @template U */",
-                "  constructor() {}",
-                "}",
-                "var /** !Foo<string, string> */ x = new Foo();",
-                ""))
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor() {}",
+            "}",
+            "var /** !Foo<string, string> */ x = new Foo();",
+            "")
         .addDiagnostic(RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS)
         .run();
   }
@@ -3481,14 +3404,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassConstructorTypeParametersNotVisibleFromOtherMethods() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @template T */",
-                "  constructor() {}",
-                "  foo() {",
-                "    var /** T */ x;",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @template T */",
+            "  constructor() {}",
+            "  foo() {",
+            "    var /** T */ x;",
+            "  }",
+            "}")
         .addDiagnostic("Bad type annotation. Unknown type T")
         .run();
   }
@@ -3506,16 +3428,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(sdh): Induce a mismatch by assigning T to null, once typevars aren't treated as unknown
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /**",
-                "   * @param {T} arg",
-                "   * @template T := 'number' =:",
-                "   */",
-                "  constructor(arg) {",
-                "    var /** T */ x = arg;",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /**",
+            "   * @param {T} arg",
+            "   * @template T := 'number' =:",
+            "   */",
+            "  constructor(arg) {",
+            "    var /** T */ x = arg;",
+            "  }",
+            "}")
         .run();
   }
 
@@ -3523,14 +3444,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassTtlAllowedOnMethod() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @template T := 'number' =: */",
-                "  foo(/** T */ arg) {",
-                "    var /** T */ x = arg;",
-                "  }",
-                "}",
-                "new Foo().foo('x')"))
+            "class Foo {",
+            "  /** @template T := 'number' =: */",
+            "  foo(/** T */ arg) {",
+            "    var /** T */ x = arg;",
+            "  }",
+            "}",
+            "new Foo().foo('x')")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
@@ -3543,16 +3463,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassConstructorTypeParametersChecked() {
     newTest()
         .addSource(
-            lines(
-                "/** @template T */",
-                "class Foo {",
-                "  /** @template U */",
-                "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
-                "}",
-                "/** @param {string} arg",
-                "    @return {number} */",
-                "function f(arg) {}",
-                "var /** !Foo<number> */ foo = new Foo('x', f);"))
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
+            "}",
+            "/** @param {string} arg",
+            "    @return {number} */",
+            "function f(arg) {}",
+            "var /** !Foo<number> */ foo = new Foo('x', f);")
         .run();
   }
 
@@ -3579,16 +3498,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassConstructorTypeParametersWithParameterTypeMismatch() {
     newTest()
         .addSource(
-            lines(
-                "/** @template T */",
-                "class Foo {",
-                "  /** @template U */",
-                "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
-                "}",
-                "/** @param {string} arg",
-                "    @return {number} */",
-                "function f(arg) {}",
-                "var foo = new Foo(42, f);"))
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
+            "}",
+            "/** @param {string} arg",
+            "    @return {number} */",
+            "function f(arg) {}",
+            "var foo = new Foo(42, f);")
         .addDiagnostic(
             lines(
                 "actual parameter 2 of Foo does not match formal parameter",
@@ -3620,8 +3538,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassMethodParameters() {
     newTest()
         .addSource(
-            lines(
-                "class C {", "  /** @param {number} arg */", "  m(arg) {}", "}", "new C().m('x');"))
+            "class C {", "  /** @param {number} arg */", "  m(arg) {}", "}", "new C().m('x');")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of C.prototype.m does not match formal parameter",
@@ -3634,13 +3551,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInheritedMethodParameters() {
     newTest()
         .addSource(
-            lines(
-                "var B = class {",
-                "  /** @param {boolean} arg */",
-                "  method(arg) {}",
-                "};",
-                "var C = class extends B {};",
-                "new C().method(1);"))
+            "var B = class {",
+            "  /** @param {boolean} arg */",
+            "  method(arg) {}",
+            "};",
+            "var C = class extends B {};",
+            "new C().method(1);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of B.prototype.method does not match formal parameter",
@@ -3684,12 +3600,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testStaticMethodParameters() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @param {number} arg */",
-                "  static m(arg) {}",
-                "}",
-                "C.m('x');"))
+            "class C {", "  /** @param {number} arg */", "  static m(arg) {}", "}", "C.m('x');")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of C.m does not match formal parameter",
@@ -3702,13 +3613,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInheritedStaticMethodParameters() {
     newTest()
         .addSource(
-            lines(
-                "var B = class {",
-                "  /** @param {boolean} arg */",
-                "  static method(arg) {}",
-                "};",
-                "var C = class extends B {};",
-                "C.method(1);"))
+            "var B = class {",
+            "  /** @param {boolean} arg */",
+            "  static method(arg) {}",
+            "};",
+            "var C = class extends B {};",
+            "C.method(1);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of C.method does not match formal parameter",
@@ -3768,14 +3678,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInstanceMethodOverriddenWithMissingOverrideAnnotation() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  /** @param {string|number} arg */",
-                "  method(arg) {}",
-                "}",
-                "class Sub extends Base {",
-                "  method(arg) {}",
-                "}"))
+            "class Base {",
+            "  /** @param {string|number} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  method(arg) {}",
+            "}")
         .addDiagnostic(
             "property method already defined on superclass Base; use @override to override it")
         .run();
@@ -3785,15 +3694,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInstanceMethodOverriddenWithWidenedType() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  /** @param {string} arg */",
-                "  method(arg) {}",
-                "}",
-                "class Sub extends Base {",
-                "  /** @override @param {string|number} arg */",
-                "  method(arg) {}",
-                "}"))
+            "class Base {",
+            "  /** @param {string} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @param {string|number} arg */",
+            "  method(arg) {}",
+            "}")
         .run();
   }
 
@@ -3801,15 +3709,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInstanceMethodOverriddenWithIncompatibleType() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  /** @param {string|number} arg */",
-                "  method(arg) {}",
-                "}",
-                "class Sub extends Base {",
-                "  /** @override @param {string} arg */",
-                "  method(arg) {}",
-                "}"))
+            "class Base {",
+            "  /** @param {string|number} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @param {string} arg */",
+            "  method(arg) {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the method property type and the type of the property it overrides "
@@ -3823,15 +3730,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassInstanceMethodOverriddenWithIncompatibleType2() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  /** @return {string} */",
-                "  method() {}",
-                "}",
-                "class Sub extends Base {",
-                "  /** @override @return {string|number} */",
-                "  method() {}",
-                "}"))
+            "class Base {",
+            "  /** @return {string} */",
+            "  method() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @return {string|number} */",
+            "  method() {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the method property type and the type of the property it overrides "
@@ -3883,14 +3789,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testStaticMethod_thatIsNotAnOverride_atOverride_isBad() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  /**",
-                "   * @override",
-                "   * @param {string} arg",
-                "   */",
-                "  static method(arg) {}",
-                "}"))
+            "class Base {",
+            "  /**",
+            "   * @override",
+            "   * @param {string} arg",
+            "   */",
+            "  static method(arg) {}",
+            "}")
         .addDiagnostic(lines("property method not defined on any supertype of (typeof Base)"))
         .run();
   }
@@ -3922,14 +3827,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testStaticMethod_overriddenInBody_withSupertype_fromInline_isBad() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  static method(/** string|number */ arg) {}",
-                "}",
-                "class Sub extends Base {",
-                "  /** @override */",
-                "  static method(/** string */ arg) {}",
-                "}"))
+            "class Base {",
+            "  static method(/** string|number */ arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  static method(/** string */ arg) {}",
+            "}")
         .addDiagnostic(
             lines(
                 "mismatch of the method property type and the type of the property it overrides "
@@ -3961,18 +3865,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testStaticMethod_overriddenOutsideBody_withSupertype_isBad() {
     newTest()
         .addSource(
-            lines(
-                "class Base {",
-                "  static method(/** string|number */ arg) {}",
-                "}",
-                "",
-                "class Sub extends Base { }",
-                "",
-                "/**",
-                " * @override",
-                " * @param {string} arg",
-                " */",
-                "Sub.method = function(arg) {};"))
+            "class Base {",
+            "  static method(/** string|number */ arg) {}",
+            "}",
+            "",
+            "class Sub extends Base { }",
+            "",
+            "/**",
+            " * @override",
+            " * @param {string} arg",
+            " */",
+            "Sub.method = function(arg) {};")
         .addDiagnostic(
             lines(
                 "mismatch of the method property type and the type of the property it overrides "
@@ -4079,23 +3982,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassExtendsForwardReference_staticMethodThatIsAnOverride_atOverride_isOk() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {function(new: Parent): ?} */",
-                "function mixin() {}",
-                "/** @extends {Parent} */",
-                "class Middle extends mixin() {",
-                "  /** @override */",
-                "  static method() {}",
-                "}",
-                "",
-                "class Child extends Middle {",
-                "  /** @override */",
-                "  static method() {}",
-                "}",
-                "",
-                "class Parent {",
-                "  method() {}",
-                "}"))
+            "/** @return {function(new: Parent): ?} */",
+            "function mixin() {}",
+            "/** @extends {Parent} */",
+            "class Middle extends mixin() {",
+            "  /** @override */",
+            "  static method() {}",
+            "}",
+            "",
+            "class Child extends Middle {",
+            "  /** @override */",
+            "  static method() {}",
+            "}",
+            "",
+            "class Parent {",
+            "  method() {}",
+            "}")
         .run();
   }
 
@@ -4133,7 +4035,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassAnnotatedWithDictDotAccess() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource(lines("/** @dict */ class Foo {}", "var foo = new Foo();", "foo.x = 42;"))
+        .addSource("/** @dict */ class Foo {}", "var foo = new Foo();", "foo.x = 42;")
         .addDiagnostic("Cannot do '.' access on a dict")
         .run();
   }
@@ -4141,7 +4043,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassAnnotatedWithDictComputedAccess() {
     newTest()
-        .addSource(lines("/** @dict */ class Foo {}", "var foo = new Foo();", "foo['x'] = 42;"))
+        .addSource("/** @dict */ class Foo {}", "var foo = new Foo();", "foo['x'] = 42;")
         .run();
   }
 
@@ -4149,14 +4051,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperInConstructor() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  constructor(/** number */ arg) {}",
-                "}",
-                "class Bar extends Foo {",
-                "  constructor(/** string */ arg) { super(1); }",
-                "}",
-                "var /** !Foo */ foo = new Bar('x');"))
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor(/** string */ arg) { super(1); }",
+            "}",
+            "var /** !Foo */ foo = new Bar('x');")
         .run();
   }
 
@@ -4164,15 +4065,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperConstructorParameterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  constructor(/** number */ arg) {}",
-                "}",
-                "class Bar extends Foo {",
-                "  constructor() {",
-                "    super('x');",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super('x');",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of super does not match formal parameter",
@@ -4185,13 +4085,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperConstructorParameterCountMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {}",
-                "class Bar extends Foo {",
-                "  constructor() {",
-                "    super(1);",
-                "  }",
-                "}"))
+            "class Foo {}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super(1);",
+            "  }",
+            "}")
         .addDiagnostic(
             "Function super: called with 1 argument(s). Function requires at least 0 argument(s) "
                 + "and no more than 0 argument(s).")
@@ -4202,13 +4101,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodNotPresent() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {}",
-                "class Bar extends Foo {",
-                "  foo() {",
-                "    super.foo();",
-                "  }",
-                "}"))
+            "class Foo {}", "class Bar extends Foo {", "  foo() {", "    super.foo();", "  }", "}")
         .addDiagnostic("Property foo never defined on Foo")
         .run();
   }
@@ -4217,17 +4110,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodParameterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @param {string} arg */",
-                "  foo(arg) {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override */",
-                "  foo() {",
-                "    super.foo(42);",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo(42);",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
@@ -4240,17 +4132,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodCalledFromArrow() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @param {string} arg */",
-                "  foo(arg) {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override */",
-                "  foo() {",
-                "    () => super.foo(42);",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    () => super.foo(42);",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
@@ -4263,17 +4154,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodReturnType() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @return {string} */",
-                "  foo() {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override */",
-                "  foo() {",
-                "    var /** null */ x = super.foo();",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @return {string} */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    var /** null */ x = super.foo();",
+            "  }",
+            "}")
         .addDiagnostic(lines("initializing variable", "found   : string", "required: null"))
         .run();
   }
@@ -4282,16 +4172,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodFromDifferentMethod() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @return {string} */",
-                "  foo() {}",
-                "}",
-                "class Bar extends Foo {",
-                "  bar() {",
-                "    var /** null */ x = super.foo();",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @return {string} */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  bar() {",
+            "    var /** null */ x = super.foo();",
+            "  }",
+            "}")
         .addDiagnostic(lines("initializing variable", "found   : string", "required: null"))
         .run();
   }
@@ -4300,18 +4189,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodNotWidenedWhenOverrideWidens() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @param {string} arg */",
-                "  foo(arg) {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override @param {string|number} arg */",
-                "  foo(arg) {}",
-                "  bar() {",
-                "    super.foo(42);",
-                "  }",
-                "}"))
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override @param {string|number} arg */",
+            "  foo(arg) {}",
+            "  bar() {",
+            "    super.foo(42);",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
@@ -4351,18 +4239,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAbstractSuperMethodCall_warning() {
     newTest()
         .addSource(
-            lines(
-                "/** @abstract */",
-                "class Foo {",
-                "  /** @abstract */",
-                "  foo() {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override */",
-                "  foo() {",
-                "    super.foo();",
-                "  }",
-                "}"))
+            "/** @abstract */",
+            "class Foo {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}")
         .addDiagnostic("Abstract super method Foo.prototype.foo cannot be dereferenced")
         .run();
   }
@@ -4371,20 +4258,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAbstractInheritedSuperMethodCall_warning() {
     newTest()
         .addSource(
-            lines(
-                "/** @abstract */",
-                "class Foo {",
-                "  /** @abstract */",
-                "  foo() {}",
-                "}",
-                "/** @abstract */",
-                "class Bar extends Foo {}",
-                "class Baz extends Bar {",
-                "  /** @override */",
-                "  foo() {",
-                "    super.foo();",
-                "  }",
-                "}"))
+            "/** @abstract */",
+            "class Foo {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Bar extends Foo {}",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}")
         .addDiagnostic("Abstract super method Foo.prototype.foo cannot be dereferenced")
         .run();
   }
@@ -4393,18 +4279,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAbstractInheritedSuperMethodCallInAbstractClass_warning() {
     newTest()
         .addSource(
-            lines(
-                "/** @abstract */",
-                "class Base {",
-                "  /** @abstract */",
-                "  foo() {}",
-                "}",
-                "/** @abstract */",
-                "class Sub extends Base {",
-                "  bar() {",
-                "    super.foo();",
-                "  }",
-                "}"))
+            "/** @abstract */",
+            "class Base {",
+            "  /** @abstract */",
+            "  foo() {}",
+            "}",
+            "/** @abstract */",
+            "class Sub extends Base {",
+            "  bar() {",
+            "    super.foo();",
+            "  }",
+            "}")
         .addDiagnostic("Abstract super method Base.prototype.foo cannot be dereferenced")
         .includeDefaultExterns()
         .run();
@@ -4414,17 +4299,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testConcreteSuperMethodCall_noWarning() {
     newTest()
         .addSource(
-            lines(
-                "/** @abstract */",
-                "class Foo {",
-                "  foo() {}",
-                "}",
-                "class Bar extends Foo {",
-                "  /** @override */",
-                "  foo() {",
-                "    super.foo();",
-                "  }",
-                "}"))
+            "/** @abstract */",
+            "class Foo {",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}")
         .run();
   }
 
@@ -4524,8 +4408,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassTypeOfThisInConstructor() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {", "  constructor() {", "    var /** null */ foo = this;", "  }", "}"))
+            "class Foo {", "  constructor() {", "    var /** null */ foo = this;", "  }", "}")
         .addDiagnostic(lines("initializing variable", "found   : Foo", "required: null"))
         .run();
   }
@@ -4533,7 +4416,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassTypeOfThisInMethod() {
     newTest()
-        .addSource(lines("class Foo {", "  foo() {", "    var /** null */ foo = this;", "  }", "}"))
+        .addSource("class Foo {", "  foo() {", "    var /** null */ foo = this;", "  }", "}")
         .addDiagnostic(lines("initializing variable", "found   : Foo", "required: null"))
         .run();
   }
@@ -4555,61 +4438,54 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassGetter() {
-    newTest()
-        .addSource(lines("class C {", "  get x() {}", "}", "var /** null */ y = new C().x;"))
-        .run();
+    newTest().addSource("class C {", "  get x() {}", "}", "var /** null */ y = new C().x;").run();
   }
 
   @Test
   public void testClassGetterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @return {number} */",
-                "  get x() {}",
-                "}",
-                "var /** null */ y = new C().x;"))
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "}",
+            "var /** null */ y = new C().x;")
         .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
         .run();
   }
 
   @Test
   public void testClassStaticGetter() {
-    newTest()
-        .addSource(lines("class C {", "  static get x() {}", "}", "var /** null */ y = C.x;"))
-        .run();
+    newTest().addSource("class C {", "  static get x() {}", "}", "var /** null */ y = C.x;").run();
   }
 
   @Test
   public void testClassStaticGetterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @return {number} */",
-                "  static get x() {}",
-                "}",
-                "var /** null */ y = C.x;"))
+            "class C {",
+            "  /** @return {number} */",
+            "  static get x() {}",
+            "}",
+            "var /** null */ y = C.x;")
         .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
         .run();
   }
 
   @Test
   public void testClassSetter() {
-    newTest().addSource(lines("class C {", "  set x(arg) {}", "}", "new C().x = null;")).run();
+    newTest().addSource("class C {", "  set x(arg) {}", "}", "new C().x = null;").run();
   }
 
   @Test
   public void testClassSetterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @param {number} arg */",
-                "  set x(arg) {}",
-                "}",
-                "new C().x = null;"))
+            "class C {",
+            "  /** @param {number} arg */",
+            "  set x(arg) {}",
+            "}",
+            "new C().x = null;")
         .addDiagnostic(lines("assignment to property x of C", "found   : null", "required: number"))
         .run();
   }
@@ -4621,19 +4497,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticSetter() {
-    newTest().addSource(lines("class C {", "  static set x(arg) {}", "}", "C.x = null;")).run();
+    newTest().addSource("class C {", "  static set x(arg) {}", "}", "C.x = null;").run();
   }
 
   @Test
   public void testClassStaticSetterMismatch() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @param {number} arg */",
-                "  static set x(arg) {}",
-                "}",
-                "C.x = null;"))
+            "class C {",
+            "  /** @param {number} arg */",
+            "  static set x(arg) {}",
+            "}",
+            "C.x = null;")
         .addDiagnostic(lines("assignment to property x of C", "found   : null", "required: number"))
         .run();
   }
@@ -4642,15 +4517,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassGetterAndSetter() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @return {number} */",
-                "  get x() {}",
-                "  /** @param {number} arg */",
-                "  set x(arg) {}",
-                "}",
-                "var /** number */ y = new C().x;",
-                "new C().x = 42;"))
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "  /** @param {number} arg */",
+            "  set x(arg) {}",
+            "}",
+            "var /** number */ y = new C().x;",
+            "new C().x = 42;")
         .run();
   }
 
@@ -4658,13 +4532,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassGetterAndSetterNoJsDoc() {
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  get x() {}",
-                "  set x(arg) {}",
-                "}",
-                "var /** number */ y = new C().x;",
-                "new C().x = 42;"))
+            "class C {",
+            "  get x() {}",
+            "  set x(arg) {}",
+            "}",
+            "var /** number */ y = new C().x;",
+            "new C().x = 42;")
         .run();
   }
 
@@ -4706,16 +4579,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // This was fixed by always using structural equality when checking equality for RecordTypes
     newTest()
         .addSource(
-            lines(
-                "class C {",
-                "  /** @return {{x: number}} */",
-                "  get x() { return {x: 0}; }",
-                "  /** @param {{x: number}} arg */",
-                "  set x(arg) {}",
-                "}",
-                "const c = new C();",
-                "c.x = {x: 3};",
-                "const /** {x: number} */ something = c.x;"))
+            "class C {",
+            "  /** @return {{x: number}} */",
+            "  get x() { return {x: 0}; }",
+            "  /** @param {{x: number}} arg */",
+            "  set x(arg) {}",
+            "}",
+            "const c = new C();",
+            "c.x = {x: 3};",
+            "const /** {x: number} */ something = c.x;")
         .run();
   }
 
@@ -4725,21 +4597,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // compared structurally when checking equality.
     newTest()
         .addSource(
-            lines(
-                "/** @record */",
-                "function xRecord() {}",
-                "/** @type {number} */",
-                "xRecord.prototype.x;",
-                "",
-                "class C {",
-                "  /** @return {!xRecord} */",
-                "  get x() { return {x: 0}; }",
-                "  /** @param {{x: number}} arg */",
-                "  set x(arg) {}",
-                "}",
-                "const c = new C();",
-                "c.x = {x: 3};",
-                "const /** {x: number} */ something = c.x;"))
+            "/** @record */",
+            "function xRecord() {}",
+            "/** @type {number} */",
+            "xRecord.prototype.x;",
+            "",
+            "class C {",
+            "  /** @return {!xRecord} */",
+            "  get x() { return {x: 0}; }",
+            "  /** @param {{x: number}} arg */",
+            "  set x(arg) {}",
+            "}",
+            "const c = new C();",
+            "c.x = {x: 3};",
+            "const /** {x: number} */ something = c.x;")
         .addDiagnostic(
             lines(
                 "The types of the getter and setter for property 'x' do not match.",
@@ -4838,8 +4709,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassEs5ClassCannotExtendEs6Class() {
     newTest()
-        .addSource(
-            lines("class Base {}", "/** @constructor @extends {Base} */", "function Sub() {}"))
+        .addSource("class Base {}", "/** @constructor @extends {Base} */", "function Sub() {}")
         .addDiagnostic("ES5 class Sub cannot extend ES6 class Base")
         .run();
   }
@@ -4848,11 +4718,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassEs5ClassCanImplementEs6Interface() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Inter {}",
-                "/** @constructor @implements {Inter} */",
-                "function Sub() {}"))
+            "/** @interface */",
+            "class Inter {}",
+            "/** @constructor @implements {Inter} */",
+            "function Sub() {}")
         .run();
   }
 
@@ -4860,13 +4729,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassExtendsForwardReferencedClass() {
     newTest()
         .addSource(
-            lines(
-                "/** @const */ var ns = {};",
-                "(function() {",
-                "  ns.Base = class {};",
-                "})();",
-                "class Sub extends ns.Base {}",
-                "var /** !ns.Base */ x = new Sub();"))
+            "/** @const */ var ns = {};",
+            "(function() {",
+            "  ns.Base = class {};",
+            "})();",
+            "class Sub extends ns.Base {}",
+            "var /** !ns.Base */ x = new Sub();")
         .run();
   }
 
@@ -4882,7 +4750,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassExtendsCycle() {
     newTest()
-        .addSource(lines("class Foo extends Bar {}", "class Bar extends Foo {}"))
+        .addSource("class Foo extends Bar {}", "class Bar extends Foo {}")
         .addDiagnostic("Parse error. Cycle detected in inheritance chain of type Bar")
         .run();
   }
@@ -4900,9 +4768,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassExtendsCycleOnlyInAst() {
     // TODO(sdh): This should give an error.
-    newTest()
-        .addSource(lines("class Bar {}", "/** @extends {Bar} */", "class Foo extends Foo {}"))
-        .run();
+    newTest().addSource("class Bar {}", "/** @extends {Bar} */", "class Foo extends Foo {}").run();
   }
 
   @Test
@@ -4923,15 +4789,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassImplementsForwardReferencedInterface() {
     newTest()
         .addSource(
-            lines(
-                "/** @const */ var ns = {};",
-                "(function() {",
-                "  /** @interface */",
-                "  ns.Base = class {};",
-                "})();",
-                "/** @implements {ns.Base} */",
-                "class Sub {}",
-                "var /** !ns.Base */ x = new Sub();"))
+            "/** @const */ var ns = {};",
+            "(function() {",
+            "  /** @interface */",
+            "  ns.Base = class {};",
+            "})();",
+            "/** @implements {ns.Base} */",
+            "class Sub {}",
+            "var /** !ns.Base */ x = new Sub();")
         .run();
   }
 
@@ -4964,15 +4829,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // This is a weird thing to do but should not crash the compiler.
     newTest()
         .addSource(
-            lines(
-                "class Object {}",
-                "class Foo extends Object {",
-                "  /** @param {string} msg */",
-                "  constructor(msg) {",
-                "    super();",
-                "    this.msg = msg;",
-                "  }",
-                "}"))
+            "class Object {}",
+            "class Foo extends Object {",
+            "  /** @param {string} msg */",
+            "  constructor(msg) {",
+            "    super();",
+            "    this.msg = msg;",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "attempted re-definition of type Object",
@@ -5050,11 +4914,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncReturnsPromise1() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {!Promise<number>} */",
-                "async function getANumber() {",
-                "  return 1;",
-                "}"))
+            "/** @return {!Promise<number>} */",
+            "async function getANumber() {",
+            "  return 1;",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -5077,11 +4940,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncFunction_canDeclareReturnToBe_nullablePromise() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {?Promise<string>} */",
-                "async function getAString() {",
-                "  return '';",
-                "}"))
+            "/** @return {?Promise<string>} */",
+            "async function getAString() {",
+            "  return '';",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -5090,11 +4952,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncFunction_canDeclareReturnToBe_unionOfPromiseAndNumber() {
     newTest()
         .addSource(
-            lines(
-                "/** @return {(number|!Promise<number>)} */",
-                "async function getAString() {",
-                "  return 1;",
-                "}"))
+            "/** @return {(number|!Promise<number>)} */",
+            "async function getAString() {",
+            "  return 1;",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -5129,14 +4990,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncFunction_cannotDeclareReturnToBe_aSubtypeOfPromise() {
     newTest()
         .addSource(
-            lines(
-                "/** @extends {Promise<string>} */",
-                "class MyPromise extends Promise { }",
-                "",
-                "/** @return {!MyPromise} */",
-                "async function getAString() {",
-                "  return '';",
-                "}"))
+            "/** @extends {Promise<string>} */",
+            "class MyPromise extends Promise { }",
+            "",
+            "/** @return {!MyPromise} */",
+            "async function getAString() {",
+            "  return '';",
+            "}")
         .addDiagnostic(
             lines(
                 "The return type of an async function must be a supertype of Promise",
@@ -5149,17 +5009,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAsyncFunction_cannotDeclareReturnToBe_aSiblingOfPromise() {
     newTest()
         .addSource(
-            lines(
-                "/**",
-                " * @interface",
-                " * @extends {IThenable<string>}",
-                " */",
-                "class MyThenable { }",
-                "",
-                "/** @return {!MyThenable} */",
-                "async function getAString() {",
-                "  return '';",
-                "}"))
+            "/**",
+            " * @interface",
+            " * @extends {IThenable<string>}",
+            " */",
+            "class MyThenable { }",
+            "",
+            "/** @return {!MyThenable} */",
+            "async function getAString() {",
+            "  return '';",
+            "}")
         .addDiagnostic(
             lines(
                 "The return type of an async function must be a supertype of Promise",
@@ -5217,12 +5076,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitPromiseOfNumber1() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** !Promise<number> */ p) {",
-                "  takesNumber(await p);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<number> */ p) {",
+            "  takesNumber(await p);",
+            "}")
         .run();
   }
 
@@ -5230,12 +5088,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitPromiseOfNumber2() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** !Promise<string> */ p) {",
-                "  takesNumber(await p);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<string> */ p) {",
+            "  takesNumber(await p);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5250,12 +5107,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Promise.
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** !Promise<!Promise<number>> */ p) {",
-                "  takesNumber(await p);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<!Promise<number>> */ p) {",
+            "  takesNumber(await p);",
+            "}")
         .run();
   }
 
@@ -5263,12 +5119,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitPromiseOfUnknown() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** !Promise<?> */ p) {",
-                "  takesNumber(await p);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<?> */ p) {",
+            "  takesNumber(await p);",
+            "}")
         .run();
   }
 
@@ -5276,12 +5131,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitIThenable() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** !IThenable<string> */ p) {",
-                "  takesNumber(await p);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !IThenable<string> */ p) {",
+            "  takesNumber(await p);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5294,12 +5148,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitNumber() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** string */ str) {",
-                "  takesNumber(await str);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** string */ str) {",
+            "  takesNumber(await str);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5329,12 +5182,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitUnionType1() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** (number|!Promise<number>) */ param) {",
-                "  takesNumber(await param);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (number|!Promise<number>) */ param) {",
+            "  takesNumber(await param);",
+            "}")
         .run();
   }
 
@@ -5342,12 +5194,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitUnionType2() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** (string|!Promise<number>) */ param) {",
-                "  takesNumber(await param);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (string|!Promise<number>) */ param) {",
+            "  takesNumber(await param);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5360,12 +5211,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitUnionType3() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** (number|!Promise<string>) */ param) {",
-                "  takesNumber(await param);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (number|!Promise<string>) */ param) {",
+            "  takesNumber(await param);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5378,12 +5228,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testAwaitUnionOfPromiseAndIThenable() {
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number*/ num) {}",
-                "",
-                "async function f(/** (!IThenable<number>|!Promise<string>) */ param) {",
-                "  takesNumber(await param);",
-                "}"))
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (!IThenable<number>|!Promise<string>) */ param) {",
+            "  takesNumber(await param);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5397,12 +5246,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // We treat "?IThenable" the same as any other union type
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "",
-                "async function main(/** ?IThenable<number> */ iThenable) {",
-                "  takesNumber(await iThenable);",
-                "}"))
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "async function main(/** ?IThenable<number> */ iThenable) {",
+            "  takesNumber(await iThenable);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesNumber does not match formal parameter",
@@ -5419,12 +5267,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // `await thenable` evaluates to `thenable`, since `thenable.then` is not a function.
     newTest()
         .addSource(
-            lines(
-                "function takesNumber(/** number */ n) {}",
-                "",
-                "async function f(/** {then: string} */ thenable) {",
-                "  takesNumber(await thenable);",
-                "}"))
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "async function f(/** {then: string} */ thenable) {",
+            "  takesNumber(await thenable);",
+            "}")
         .run();
   }
 
@@ -5464,13 +5311,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // spurious warning here.
     newTest()
         .addSource(
-            lines(
-                "function takesString(/** string */ str) {}",
-                "",
-                "/** @param {string=} str */",
-                "function f(str = '') {",
-                "  return () => takesString(str);",
-                "}"))
+            "function takesString(/** string */ str) {}",
+            "",
+            "/** @param {string=} str */",
+            "function f(str = '') {",
+            "  return () => takesString(str);",
+            "}")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of takesString does not match formal parameter",
@@ -5522,12 +5368,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testDefaultParameterWithTypeInferredFromCallback() {
     newTest()
         .addSource(
-            lines(
-                "function f(/** function(number=) */ callback) {}",
-                "",
-                "f((x = 3) => {",
-                "  var /** number */ y = x;",
-                "})"))
+            "function f(/** function(number=) */ callback) {}",
+            "",
+            "f((x = 3) => {",
+            "  var /** number */ y = x;",
+            "})")
         .run();
   }
 
@@ -5554,17 +5399,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testOverridingMethodHasDefaultParameterInPlaceOfRequiredParam() {
     newTest()
         .addSource(
-            lines(
-                "class Parent {",
-                "  /** @param {number} num */",
-                "  f(num) {}",
-                "}",
-                "class Child extends Parent {",
-                "  /** @override */",
-                "  f(num = undefined) {}",
-                "}",
-                "(new Child()).f();",
-                "(new Child()).f(undefined);"))
+            "class Parent {",
+            "  /** @param {number} num */",
+            "  f(num) {}",
+            "}",
+            "class Child extends Parent {",
+            "  /** @override */",
+            "  f(num = undefined) {}",
+            "}",
+            "(new Child()).f();",
+            "(new Child()).f(undefined);")
         .run();
   }
 
@@ -5572,18 +5416,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testOverridingMethodAddsOptionalParameterWithDefaultValue() {
     newTest()
         .addSource(
-            lines(
-                "class Parent {",
-                "  /** @param {number} num */",
-                "  f(num) {}",
-                "}",
-                "class Child extends Parent {",
-                "  /** @override */",
-                "  f(num, otherParam = undefined) {}",
-                "}",
-                "(new Child()).f(3);",
-                "(new Child()).f(3, 'str');",
-                "(new Child()).f(3, undefined);"))
+            "class Parent {",
+            "  /** @param {number} num */",
+            "  f(num) {}",
+            "}",
+            "class Child extends Parent {",
+            "  /** @override */",
+            "  f(num, otherParam = undefined) {}",
+            "}",
+            "(new Child()).f(3);",
+            "(new Child()).f(3, 'str');",
+            "(new Child()).f(3, undefined);")
         .run();
   }
 
@@ -5663,10 +5506,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testValidArrayPatternInForOfInitializer() {
     newTest()
         .addSource(
-            lines(
-                "function f(/** !Iterable<!Iterable<number>> */ numberLists) {",
-                "  for (const [/** number */ x, /** number */ y] of numberLists) {}",
-                "}"))
+            "function f(/** !Iterable<!Iterable<number>> */ numberLists) {",
+            "  for (const [/** number */ x, /** number */ y] of numberLists) {}",
+            "}")
         .run();
   }
 
@@ -5674,10 +5516,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testArrayPatternInForOfInitializerWithTypeMismatch() {
     newTest()
         .addSource(
-            lines(
-                "function f(/** !Iterable<!Iterable<number>> */ numberLists) {",
-                "  for (const [/** number */ x, /** string */ y] of numberLists) {}",
-                "}"))
+            "function f(/** !Iterable<!Iterable<number>> */ numberLists) {",
+            "  for (const [/** number */ x, /** string */ y] of numberLists) {}",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -5691,10 +5532,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
-            lines(
-                "function f(/** !Object<string, number> */ obj) {",
-                "  for (const [/** string */ a, /** string */ b] in obj) {}",
-                "}"))
+            "function f(/** !Object<string, number> */ obj) {",
+            "  for (const [/** string */ a, /** string */ b] in obj) {}",
+            "}")
         .run();
   }
 
@@ -5704,10 +5544,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
-            lines(
-                "function f(/** !Object<string, number> */ obj) {",
-                "  for (const [/** number */ a, /** number */ b] in obj) {}",
-                "}"))
+            "function f(/** !Object<string, number> */ obj) {",
+            "  for (const [/** number */ a, /** number */ b] in obj) {}",
+            "}")
         .run();
   }
 
@@ -6002,10 +5841,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testObjectPatternDeclarationWithMissingPropertyWarningInForOf() {
     newTest()
         .addSource(
-            lines(
-                "function f(/** !Iterable<{a: number}> */ aNumberObj) {",
-                "  for (const {a, b} of aNumberObj) {}",
-                "}"))
+            "function f(/** !Iterable<{a: number}> */ aNumberObj) {",
+            "  for (const {a, b} of aNumberObj) {}",
+            "}")
         .addDiagnostic("Property b never defined on {a: number}")
         .run();
   }
@@ -6014,10 +5852,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForAwaitOfWithDestructuring() {
     newTest()
         .addSource(
-            lines(
-                "async function f(/** !Iterable<Promise<{a: number}>> */ o) {",
-                "  for await (const {a, b} of o) {}",
-                "}"))
+            "async function f(/** !Iterable<Promise<{a: number}>> */ o) {",
+            "  for await (const {a, b} of o) {}",
+            "}")
         .addDiagnostic("Property b never defined on {a: number}")
         .run();
   }
@@ -6077,13 +5914,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testEnumAliasedThroughDestructuringPassesTypechecking() {
     newTest()
         .addSource(
-            lines(
-                "const ns = {};",
-                "/** @enum {number} */",
-                "ns.myEnum = {FOO: 1, BAR: 2};",
-                "",
-                "const {myEnum} = ns;",
-                "const /** myEnum */ n = myEnum.FOO;"))
+            "const ns = {};",
+            "/** @enum {number} */",
+            "ns.myEnum = {FOO: 1, BAR: 2};",
+            "",
+            "const {myEnum} = ns;",
+            "const /** myEnum */ n = myEnum.FOO;")
         .run();
   }
 
@@ -6091,13 +5927,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testEnumAliasedThroughDestructuringReportsCorrectMissingPropWarning() {
     newTest()
         .addSource(
-            lines(
-                "const ns = {};",
-                "/** @enum {number} */",
-                "ns.myEnum = {FOO: 1, BAR: 2};",
-                "",
-                "const {myEnum} = ns;",
-                "const missing = myEnum.MISSING;"))
+            "const ns = {};",
+            "/** @enum {number} */",
+            "ns.myEnum = {FOO: 1, BAR: 2};",
+            "",
+            "const {myEnum} = ns;",
+            "const missing = myEnum.MISSING;")
         .addDiagnostic("element MISSING does not exist on this enum")
         .run();
   }
@@ -6108,9 +5943,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // function members.
     newTest()
         .addSource(
-            lines(
-                "/** @param {{g: function(number): undefined}=} x */",
-                "function f(x = {/** @param {string} x */ g(x) {}}) {}"))
+            "/** @param {{g: function(number): undefined}=} x */",
+            "function f(x = {/** @param {string} x */ g(x) {}}) {}")
         .addDiagnostic(
             lines(
                 "default value has wrong type",
@@ -6198,20 +6032,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGetterOverridesInstancePropertyFromInterface() {
     newTest()
         .addSource(
-            lines(
-                "/** @interface */",
-                "class Bar {",
-                "  constructor() {",
-                "    /** @type {number} */",
-                "    this.num;",
-                "  }",
-                "}",
-                "/** @implements {Bar} */",
-                "class Baz {",
-                "  /** @override */",
-                "  get num() { return 3; }",
-                "}",
-                "var /** string */ x = (new Baz).num;"))
+            "/** @interface */",
+            "class Bar {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.num;",
+            "  }",
+            "}",
+            "/** @implements {Bar} */",
+            "class Baz {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;")
         .run();
   }
 
@@ -6263,15 +6096,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMisplacedOverrideOnGetter() {
     newTest()
         .addSource(
-            lines(
-                "/** @abstract */",
-                "class Bar {}",
-                "/** @extends {Bar} */",
-                "class Baz extends Bar {",
-                "  /** @override */",
-                "  get num() { return 3; }",
-                "}",
-                "var /** string */ x = (new Baz).num;"))
+            "/** @abstract */",
+            "class Bar {}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;")
         .addDiagnostic("property num not defined on any superclass of Baz")
         .run();
   }
@@ -6425,14 +6257,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // we allow this when the superclass type is a template type in order to support mixins.
     newTest()
         .addSource(
-            lines(
-                "/**",
-                " * @template T",
-                " * @param {function(new:T)} superClass",
-                " */",
-                "function mixin(superClass) {",
-                "  class Changed extends superClass {}",
-                "}"))
+            "/**",
+            " * @template T",
+            " * @param {function(new:T)} superClass",
+            " */",
+            "function mixin(superClass) {",
+            "  class Changed extends superClass {}",
+            "}")
         .run();
   }
 
@@ -6440,29 +6271,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMixinImplementingInterfaceAndUnknownTemplatedSuperclass() {
     newTest()
         .addSource(
-            lines(
-                "/**",
-                " * @template T",
-                " * @param {function(new:T)} superClass",
-                " */",
-                "function mixin(superClass) {",
-                "  /** @implements {ChangedInterface} */",
-                "  class Changed extends superClass {",
-                "    /**",
-                "     * @override",
-                "     * @return {number} ",
-                "     */",
-                "    method() {",
-                "      return 3;",
-                "    }",
-                "  }",
-                "}",
-                "",
-                "/** @interface */",
-                "class ChangedInterface {",
-                "  /** @return {number} */",
-                "  method() {}",
-                "}"))
+            "/**",
+            " * @template T",
+            " * @param {function(new:T)} superClass",
+            " */",
+            "function mixin(superClass) {",
+            "  /** @implements {ChangedInterface} */",
+            "  class Changed extends superClass {",
+            "    /**",
+            "     * @override",
+            "     * @return {number} ",
+            "     */",
+            "    method() {",
+            "      return 3;",
+            "    }",
+            "  }",
+            "}",
+            "",
+            "/** @interface */",
+            "class ChangedInterface {",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}")
         .run();
   }
 
@@ -6578,12 +6408,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testLocalEnumDoesNotInfluenceGlobalDefaultNullablity() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {};",
-                "function f() {",
-                "  /** @enum {number} */ const Foo = {A: 1};",
-                "}",
-                "/** @type {Foo} */ let x = null;"))
+            "class Foo {};",
+            "function f() {",
+            "  /** @enum {number} */ const Foo = {A: 1};",
+            "}",
+            "/** @type {Foo} */ let x = null;")
         .run();
   }
 
@@ -6591,12 +6420,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGlobalEnumDoesNotInfluenceLocalDefaultNullablity() {
     newTest()
         .addSource(
-            lines(
-                "/** @enum {number} */ const Foo = {A: 1};",
-                "function f() {",
-                "  class Foo {};",
-                "  /** @type {Foo} */ let x = null;",
-                "}"))
+            "/** @enum {number} */ const Foo = {A: 1};",
+            "function f() {",
+            "  class Foo {};",
+            "  /** @type {Foo} */ let x = null;",
+            "}")
         .run();
   }
 
@@ -6604,13 +6432,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testLocalEnumAliasDoesNotInfluenceGlobalDefaultNullablity() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {};",
-                "/** @enum {number} */ const Bar = {A: 1};",
-                "function f() {",
-                "  const Foo = Bar;",
-                "}",
-                "/** @type {Foo} */ let x = null;"))
+            "class Foo {};",
+            "/** @enum {number} */ const Bar = {A: 1};",
+            "function f() {",
+            "  const Foo = Bar;",
+            "}",
+            "/** @type {Foo} */ let x = null;")
         .run();
   }
 
@@ -6717,12 +6544,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen0() { yield 0; }",
-                "",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen1() { yield* asyncGen0(); }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen0() { yield 0; }",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen1() { yield* asyncGen0(); }")
         .run();
   }
 
@@ -6744,19 +6570,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** string */ boxable;",
-                "/** @return {!AsyncGenerator<string>} */",
-                "async function* asyncGen() { yield* 'boxable'; }"))
+            "let /** string */ boxable;",
+            "/** @return {!AsyncGenerator<string>} */",
+            "async function* asyncGen() { yield* 'boxable'; }")
         .run();
 
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addArray().build())
         .addSource(
-            lines(
-                "let /** !Array<number> */ boxable;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield* boxable; }"))
+            "let /** !Array<number> */ boxable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* boxable; }")
         .run();
   }
 
@@ -6765,12 +6589,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!Generator<number>} */",
-                "function* gen() { yield 0; }",
-                "",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield* gen(); }"))
+            "/** @return {!Generator<number>} */",
+            "function* gen() { yield 0; }",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* gen(); }")
         .run();
   }
 
@@ -6779,11 +6602,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
-                "",
-                "/** @return {!AsyncGenerator<string|number>} */",
-                "async function* asyncGen() { yield* gen; }"))
+            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<string|number>} */",
+            "async function* asyncGen() { yield* gen; }")
         .run();
   }
 
@@ -6792,11 +6614,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Generator<string>|!AsyncGenerator<number>|number */ gen;",
-                "",
-                "/** @return {!AsyncGenerator<string|number>} */",
-                "async function* asyncGen() { yield* gen; }"))
+            "let /** !Generator<string>|!AsyncGenerator<number>|number */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<string|number>} */",
+            "async function* asyncGen() { yield* gen; }")
         .addDiagnostic(
             lines(
                 "Expression yield* expects an iterable or async iterable",
@@ -6810,11 +6631,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
-                "",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield* gen; }"))
+            "let /** !Generator<string>|!AsyncGenerator<number> */ gen;",
+            "",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield* gen; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6841,9 +6661,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield 'str'; }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield 'str'; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6857,9 +6676,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await 0; }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await 0; }")
         .run();
   }
 
@@ -6868,9 +6686,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await 'str'; }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await 'str'; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6884,10 +6701,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !IThenable<number> */ thenable;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await thenable; }"))
+            "let /** !IThenable<number> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await thenable; }")
         .run();
   }
 
@@ -6896,10 +6712,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !IThenable<string> */ thenable;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await thenable; }"))
+            "let /** !IThenable<string> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await thenable; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6913,9 +6728,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await Promise.resolve(0); }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await Promise.resolve(0); }")
         .run();
   }
 
@@ -6924,9 +6738,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield await Promise.resolve('str'); }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield await Promise.resolve('str'); }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6940,9 +6753,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield Promise.resolve(0); }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield Promise.resolve(0); }")
         .run();
   }
 
@@ -6951,9 +6763,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield Promise.resolve('str'); }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield Promise.resolve('str'); }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6967,10 +6778,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !IThenable<number> */ thenable;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield thenable; }"))
+            "let /** !IThenable<number> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenable; }")
         .run();
   }
 
@@ -6979,10 +6789,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !IThenable<string> */ thenable;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield thenable; }"))
+            "let /** !IThenable<string> */ thenable;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenable; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -6996,10 +6805,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** (!IThenable<number>|string) */ thenableOrString;",
-                "/** @return {!AsyncGenerator<number|string>} */",
-                "async function* asyncGen() { yield thenable; }"))
+            "let /** (!IThenable<number>|string) */ thenableOrString;",
+            "/** @return {!AsyncGenerator<number|string>} */",
+            "async function* asyncGen() { yield thenable; }")
         .run();
   }
 
@@ -7008,10 +6816,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** (!IThenable<number>|string) */ thenableOrString;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { yield thenableOrString; }"))
+            "let /** (!IThenable<number>|string) */ thenableOrString;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { yield thenableOrString; }")
         .addDiagnostic(
             lines(
                 "Yielded type does not match declared return type.",
@@ -7025,9 +6832,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return; }"))
+            "/** @return {!AsyncGenerator<number>} */", "async function* asyncGen() { return; }")
         .run();
   }
 
@@ -7036,9 +6841,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return 0; }"))
+            "/** @return {!AsyncGenerator<number>} */", "async function* asyncGen() { return 0; }")
         .run();
   }
 
@@ -7047,9 +6850,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return 'str'; }"))
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return 'str'; }")
         .addDiagnostic(
             lines(
                 "inconsistent return type",
@@ -7063,10 +6865,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Promise<void> */ voidPromise;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return voidPromise; }"))
+            "let /** !Promise<void> */ voidPromise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return voidPromise; }")
         .addDiagnostic(
             lines(
                 "inconsistent return type",
@@ -7080,10 +6881,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Promise<undefined> */ undefPromise;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return undefPromise; }"))
+            "let /** !Promise<undefined> */ undefPromise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return undefPromise; }")
         .addDiagnostic(
             lines(
                 "inconsistent return type",
@@ -7097,10 +6897,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Promise<number> */ promise;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return promise; }"))
+            "let /** !Promise<number> */ promise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return promise; }")
         .run();
   }
 
@@ -7109,10 +6908,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Promise<string> */ promise;",
-                "/** @return {!AsyncGenerator<number>} */",
-                "async function* asyncGen() { return promise; }"))
+            "let /** !Promise<string> */ promise;",
+            "/** @return {!AsyncGenerator<number>} */",
+            "async function* asyncGen() { return promise; }")
         .addDiagnostic(
             lines(
                 "inconsistent return type",
@@ -7126,9 +6924,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "async function* asyncGen() { return 0; }",
-                "let /** !AsyncGenerator<number> */ g = asyncGen();"))
+            "async function* asyncGen() { return 0; }",
+            "let /** !AsyncGenerator<number> */ g = asyncGen();")
         .run();
   }
 
@@ -7163,10 +6960,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // is correct.
     newTest()
         .addSource(
-            lines(
-                "let obj = {a: 1, b: 'str'};",
-                "let /** !{a: string, b: string, c: boolean} */ copy = {c: true, ...obj, a:"
-                    + " 'hello'};"))
+            "let obj = {a: 1, b: 'str'};",
+            "let /** !{a: string, b: string, c: boolean} */ copy = {c: true, ...obj, a:"
+                + " 'hello'};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -7201,12 +6997,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !AsyncIterable<number> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !AsyncIterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7215,12 +7010,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** ?AsyncIterable<number> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** ?AsyncIterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "Can only async iterate over a (non-null) Iterable or AsyncIterable type",
@@ -7234,12 +7028,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** !AsyncIterable<string> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -7253,12 +7046,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Iterable<number> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<number> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7267,12 +7059,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** !Iterable<string> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -7286,12 +7077,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** string */ gen;",
-                "async function foo() {",
-                "  for await (const /** string */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** string */ gen;",
+            "async function foo() {",
+            "  for await (const /** string */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7300,12 +7090,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** string */ gen;",
-                "async function foo() {",
-                "  for await (const /** number */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** string */ gen;",
+            "async function foo() {",
+            "  for await (const /** number */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -7319,12 +7108,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
-                "async function foo() {",
-                "  for await (const /** number|string */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** number|string */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7333,12 +7121,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
-                "async function foo() {",
-                "  for await (const /** boolean */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<number>|!AsyncIterable<string> */ gen;",
+            "async function foo() {",
+            "  for await (const /** boolean */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -7352,12 +7139,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** !Iterable<number>|string */ gen;",
-                "async function foo() {",
-                "  for await (const /** number|string */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<number>|string */ gen;",
+            "async function foo() {",
+            "  for await (const /** number|string */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7366,12 +7152,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().addString().build())
         .addSource(
-            lines(
-                "let /** !Iterable<number>|string */ gen;",
-                "async function foo() {",
-                "  for await (const /** boolean */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** !Iterable<number>|string */ gen;",
+            "async function foo() {",
+            "  for await (const /** boolean */ n of gen) {",
+            "  }",
+            "}")
         .addDiagnostic(
             lines(
                 "declared type of for-of loop variable does not match inferred type",
@@ -7385,12 +7170,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(new TestExternsBuilder().addAsyncIterable().build())
         .addSource(
-            lines(
-                "let /** ? */ gen;",
-                "async function foo() {",
-                "  for await (const /** null */ n of gen) {",
-                "  }",
-                "}"))
+            "let /** ? */ gen;",
+            "async function foo() {",
+            "  for await (const /** null */ n of gen) {",
+            "  }",
+            "}")
         .run();
   }
 
@@ -7419,14 +7203,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMethodWithAtConstructorDoesNotDeclareType_staticClassMethod() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @constructor */",
-                "  static Bar() { }",
-                "}",
-                "",
-                "var /** !Foo.Bar */ x;",
-                ""))
+            "class Foo {",
+            "  /** @constructor */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            "")
         .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
         .run();
   }
@@ -7435,14 +7218,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMethodWithAtConstructorDoesNotDeclareType_namespaceMemberMethod() {
     newTest()
         .addSource(
-            lines(
-                "const ns = {",
-                "  /** @constructor */",
-                "  Bar() { }",
-                "};",
-                "",
-                "var /** !ns.Bar */ x;",
-                ""))
+            "const ns = {",
+            "  /** @constructor */",
+            "  Bar() { }",
+            "};",
+            "",
+            "var /** !ns.Bar */ x;",
+            "")
         .addDiagnostic("Bad type annotation. Unknown type ns.Bar")
         .run();
   }
@@ -7451,14 +7233,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMethodWithAtInterfaceDoesNotDeclareType() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @interface */",
-                "  static Bar() { }",
-                "}",
-                "",
-                "var /** !Foo.Bar */ x;",
-                ""))
+            "class Foo {",
+            "  /** @interface */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            "")
         .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
         .run();
   }
@@ -7467,14 +7248,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testMethodWithAtRecordDoesNotDeclareType() {
     newTest()
         .addSource(
-            lines(
-                "class Foo {",
-                "  /** @record */",
-                "  static Bar() { }",
-                "}",
-                "",
-                "var /** !Foo.Bar */ x;",
-                ""))
+            "class Foo {",
+            "  /** @record */",
+            "  static Bar() { }",
+            "}",
+            "",
+            "var /** !Foo.Bar */ x;",
+            "")
         .addDiagnostic("Bad type annotation. Unknown type Foo.Bar")
         .run();
   }
@@ -7518,15 +7298,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     newTest()
         .addExterns(DEFAULT_EXTERNS)
         .addSource(
-            lines(
-                "goog.loadModule(function(exports) {",
-                "  goog.module('a');",
-                "  exports.Foo = class {};",
-                "  return exports;",
-                "});",
-                "/** @type {!a.Foo<number>} */",
-                "let x;",
-                ""))
+            "goog.loadModule(function(exports) {",
+            "  goog.module('a');",
+            "  exports.Foo = class {};",
+            "  return exports;",
+            "});",
+            "/** @type {!a.Foo<number>} */",
+            "let x;",
+            "")
         .addDiagnostic(RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS)
         .run();
   }
@@ -7599,12 +7378,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            lines(
-                "class A {}",
-                "/** @unrestricted */",
-                "class B extends A {",
-                "  foo() { this.x; this.x = 0; this[0]; this[0] = 0; }",
-                "}"))
+            "class A {}",
+            "/** @unrestricted */",
+            "class B extends A {",
+            "  foo() { this.x; this.x = 0; this[0]; this[0] = 0; }",
+            "}")
         .run();
   }
 
@@ -7631,13 +7409,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            lines(
-                "/** @constructor @struct */",
-                "function A() {}",
-                "/** @unrestricted */",
-                "class B extends A {",
-                "  foo() { this.x; this.x = 0; this[0]; this[0] = 0;}",
-                "}"))
+            "/** @constructor @struct */",
+            "function A() {}",
+            "/** @unrestricted */",
+            "class B extends A {",
+            "  foo() { this.x; this.x = 0; this[0]; this[0] = 0;}",
+            "}")
         .run();
   }
 
@@ -7692,7 +7469,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testDynamicImport() {
     newTest()
-        .addSource(lines("/** @type {string} */", "let foo = import('./foo.js');"))
+        .addSource("/** @type {string} */", "let foo = import('./foo.js');")
         .addDiagnostic(lines("initializing variable", "found   : Promise<?>", "required: string"))
         .run();
   }
@@ -7700,7 +7477,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testDynamicImportSpecifier() {
     newTest()
-        .addSource(lines("const bar = null;", "import(bar);"))
+        .addSource("const bar = null;", "import(bar);")
         .addDiagnostic(lines("dynamic import specifier", "found   : null", "required: string"))
         .run();
   }
