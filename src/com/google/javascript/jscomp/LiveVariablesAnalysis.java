@@ -97,6 +97,12 @@ class LiveVariablesAnalysis
       return liveSet.toString();
     }
 
+    // Returns the index of the first bit that is set to true that occurs
+    // on or after the specified starting index.
+    public int nextSetBit(int fromIndex) {
+      return liveSet.nextSetBit(fromIndex);
+    }
+
     @Override
     public int hashCode() {
       return liveSet.hashCode();
