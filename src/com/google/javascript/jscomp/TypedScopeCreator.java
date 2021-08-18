@@ -495,10 +495,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     Node externs = root.getFirstChild();
     Node js = root.getSecondChild();
     Map<String, ProvidedName> providedNames =
-        new ProcessClosureProvidesAndRequires(
-                compiler,
-                CheckLevel.OFF,
-                /* preserveGoogProvidesAndRequires= */ true)
+        new ProcessClosureProvidesAndRequires(compiler, /* preserveGoogProvidesAndRequires= */ true)
             .collectProvidedNames(externs, js);
 
     for (ProvidedName name : providedNames.values()) {

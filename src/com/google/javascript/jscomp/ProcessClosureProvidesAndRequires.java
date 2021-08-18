@@ -62,7 +62,6 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
-  private final CheckLevel requiresLevel;
   // If this is true, rewriting will not remove any goog.provide or goog.require calls
   private final boolean preserveGoogProvidesAndRequires;
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
@@ -73,11 +72,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
-      CheckLevel requiresLevel,
       boolean preserveGoogProvidesAndRequires) {
     this.compiler = compiler;
     this.chunkGraph = compiler.getModuleGraph();
-    this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
     this.astFactory = compiler.createAstFactory();
   }
@@ -206,17 +203,8 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     if (!verifyOnlyArgumentIsString(call)) {
       return;
     }
-    Node left = call.getFirstChild();
-    Node arg = left.getNext();
-    String ns = arg.getString();
-    ProvidedName provided = providedNames.get(ns);
 
-    // Requires should be removed before further processing.
-    // Some clients run closure pass multiple times, first with
-    // the checks for broken requires turned off. In these cases, we
-    // allow broken requires to be preserved by the first run to
-    // let them be caught in the subsequent run.
-    if (!preserveGoogProvidesAndRequires && (provided != null || requiresLevel.isOn())) {
+    if (!preserveGoogProvidesAndRequires) {
       requiresToBeRemoved.add(parent);
     }
   }

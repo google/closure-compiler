@@ -1470,8 +1470,7 @@ public abstract class CompilerTestCase {
         // Only rewrite provides once, if asked.
         if (rewriteClosureProvides && i == 0) {
           recentChange.reset();
-          new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
-              .process(externsRoot, mainRoot);
+          new ProcessClosureProvidesAndRequires(compiler, false).process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1811,8 +1810,7 @@ public abstract class CompilerTestCase {
     }
 
     if (rewriteClosureProvides && closurePassEnabledForExpected && !compiler.hasErrors()) {
-      new ProcessClosureProvidesAndRequires(compiler, CheckLevel.ERROR, false)
-          .process(externsRoot, mainRoot);
+      new ProcessClosureProvidesAndRequires(compiler, false).process(externsRoot, mainRoot);
     }
 
     // Only run the normalize pass, if asked.

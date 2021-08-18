@@ -96,7 +96,6 @@ public final class RefactoringDriver {
     options.setCheckSuspiciousCode(true);
     options.setCheckSymbols(true);
     options.setCheckTypes(true);
-    options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
     // TODO(bangert): Remove this -- we want to rewrite code before closure syntax is removed.
     // Unfortunately, setClosurePass is required, or code doesn't type check.
     options.setClosurePass(true);

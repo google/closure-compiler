@@ -40,10 +40,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
   private boolean preserveGoogProvidesAndRequires;
 
-  private ProcessClosureProvidesAndRequires createClosureProcessor(
-      Compiler compiler, CheckLevel requireCheckLevel) {
-    return new ProcessClosureProvidesAndRequires(
-        compiler, requireCheckLevel, preserveGoogProvidesAndRequires);
+  private ProcessClosureProvidesAndRequires createClosureProcessor(Compiler compiler) {
+    return new ProcessClosureProvidesAndRequires(compiler, preserveGoogProvidesAndRequires);
   }
 
   @Override
@@ -60,9 +58,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
-      verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
-      ProcessClosureProvidesAndRequires processor =
-          createClosureProcessor(compiler, CheckLevel.ERROR);
+      verifyCollectProvidedNamesDoesntChangeAst(externs, root, compiler);
+      ProcessClosureProvidesAndRequires processor = createClosureProcessor(compiler);
       processor.rewriteProvidesAndRequires(externs, root);
     };
   }
@@ -994,8 +991,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
   private Map<String, ProvidedName> getProvidedNameCollection(String js) {
     Compiler compiler = createCompiler();
-    ProcessClosureProvidesAndRequires processor =
-        createClosureProcessor(compiler, CheckLevel.ERROR);
+    ProcessClosureProvidesAndRequires processor = createClosureProcessor(compiler);
     Node jsRoot = compiler.parseTestCode(js);
     Node scopeRoot = IR.root(IR.root(), IR.root(jsRoot));
     Map<String, ProvidedName> providedNameMap =
@@ -1013,12 +1009,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
    * goog.provides but preserve the original AST structure for future checks.
    */
   private void verifyCollectProvidedNamesDoesntChangeAst(
-      Node externs, Node root, CheckLevel requireCheckLevel, Compiler compiler) {
+      Node externs, Node root, Compiler compiler) {
     // Validate that this does not modify the AST at all!
     Node originalExterns = externs.cloneTree();
     Node originalRoot = root.cloneTree();
-    ProcessClosureProvidesAndRequires processor =
-        createClosureProcessor(compiler, requireCheckLevel);
+    ProcessClosureProvidesAndRequires processor = createClosureProcessor(compiler);
     processor.collectProvidedNames(externs, root);
 
     assertNode(externs).isEqualIncludingJsDocTo(originalExterns);

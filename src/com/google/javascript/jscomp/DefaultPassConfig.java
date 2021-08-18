@@ -1271,7 +1271,6 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new ProcessClosureProvidesAndRequires(
                       compiler,
-                      options.brokenClosureRequiresLevel,
                       options.shouldPreservesGoogProvidesAndRequires()))
           .setFeatureSetForChecks()
           .build();

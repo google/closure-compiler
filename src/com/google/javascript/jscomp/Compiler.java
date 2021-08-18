@@ -522,10 +522,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
       options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
     }
-
-    if (options.brokenClosureRequiresLevel == CheckLevel.OFF) {
-      options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.OFF);
-    }
   }
 
   private ImmutableMap<SourceFile, JsAst> typedAstFilesystem;

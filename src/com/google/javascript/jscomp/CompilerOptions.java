@@ -362,16 +362,6 @@ public class CompilerOptions implements Serializable {
   // whether to skip the RemoveTypes pass
   private boolean shouldUnsafelyPreserveTypesForDebugging;
 
-  @Deprecated public CheckLevel brokenClosureRequiresLevel;
-
-  /**
-   * Sets the check level for bad Closure require calls. Do not use; this should always be an error.
-   */
-  @Deprecated
-  public void setBrokenClosureRequiresLevel(CheckLevel level) {
-    brokenClosureRequiresLevel = level;
-  }
-
   /** Deprecated. Please use setWarningLevel(DiagnosticGroups.GLOBAL_THIS, level) instead. */
   @Deprecated
   public void setCheckGlobalThisLevel(CheckLevel level) {}
@@ -1301,7 +1291,6 @@ public class CompilerOptions implements Serializable {
     checkSuspiciousCode = false;
     checkTypes = false;
     shouldUnsafelyPreserveTypesForDebugging = false;
-    brokenClosureRequiresLevel = CheckLevel.ERROR;
     computeFunctionSideEffects = false;
     extraAnnotationNames = null;
 
@@ -2733,7 +2722,6 @@ public class CompilerOptions implements Serializable {
         .add("assumeGettersArePure", assumeGettersArePure)
         .add("assumeStrictThis", assumeStrictThis())
         .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
-        .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
         .add("checkDeterminism", getCheckDeterminism())
         .add("checksOnly", checksOnly)
         .add("checkSuspiciousCode", checkSuspiciousCode)
