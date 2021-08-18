@@ -318,7 +318,7 @@ public class AstAnalyzer {
         break; // Assume that COMPUTED_PROP keys in OBJECT_PATTERN never trigger getters.
       case MEMBER_FIELD_DEF:
         if (n.isStaticMember()
-            && n.getFirstChild() != null
+            && n.hasChildren()
             && checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects)) {
           return true;
         }
