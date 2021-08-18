@@ -2570,6 +2570,20 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testClassFieldsInControlFlow() {
+    // Based on the class semantics, the static RHS expressions only execute after all of the
+    // computed properties, so `y` will get the string value rather than the boolean here.
+    inFunction(
+        lines(
+            "let y;", //
+            "class Foo {",
+            "  static [y = null] = (y = '');",
+            "  [y = false] = [y = null];",
+            "}"));
+    verify("y", STRING_TYPE);
+  }
+
+  @Test
   public void testAssignOrNoAssign() {
     // The two examples below show imprecision of || operator
     // The resulting type of Node n is (boolean|string), when it can be
@@ -4089,4 +4103,3 @@ public final class TypeInferenceTest {
     assuming(fullName, fnType);
   }
 }
-

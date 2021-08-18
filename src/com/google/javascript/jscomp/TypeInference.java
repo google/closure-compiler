@@ -1683,17 +1683,57 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     // clause and computed property keys are in the outer scope and must be traversed here.
     scope = traverse(n.getSecondChild(), scope);
     Node classMembers = NodeUtil.getClassMembers(n);
+
     for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
-      if (member.isComputedProp()
-          || member.isComputedFieldDef()
-          || (member.isMemberFieldDef() && member.hasChildren())) {
+      // Computed properties LHS need to happen before any RHS values
+      if (member.isComputedProp() || member.isComputedFieldDef()) {
         scope = traverse(member.getFirstChild(), scope);
-        if (member.isComputedFieldDef() && member.getSecondChild() != null) {
-          scope = traverse(member.getSecondChild(), scope);
-        }
       }
     }
+    for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
+      scope = traverseClassMemberRhs(member, scope);
+    }
     return scope;
+  }
+
+  private FlowScope traverseClassMemberRhs(Node member, FlowScope scope) {
+    switch (member.getToken()) {
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
+        Node rhs = getRhsOfField(member);
+        if (rhs != null) {
+          FlowScope rhsScope = traverse(rhs, scope);
+          if (member.isStaticMember()) {
+            return rhsScope;
+          }
+        }
+        return scope;
+      case MEMBER_FUNCTION_DEF:
+      case COMPUTED_PROP:
+      case GETTER_DEF:
+      case SETTER_DEF:
+        return scope;
+      default:
+        throw new AssertionError();
+    }
+  }
+
+  @Nullable
+  private static Node getRhsOfField(Node fieldNode) {
+    switch (fieldNode.getToken()) {
+      case MEMBER_FIELD_DEF:
+        if (fieldNode.hasOneChild()) {
+          return fieldNode.getFirstChild();
+        }
+        return null;
+      case COMPUTED_FIELD_DEF:
+        if (fieldNode.hasTwoChildren()) {
+          return fieldNode.getSecondChild();
+        }
+        return null;
+      default:
+        throw new AssertionError();
+    }
   }
 
   /** Traverse each element of the array. */
