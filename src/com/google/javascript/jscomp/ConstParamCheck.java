@@ -43,8 +43,6 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
   private static final Node CONST_FUNCTION_NAME =
       IR.getprop(IR.name("goog"), "string", "Const", "from");
   private static final Node CONST_FUNCTION_NAME_COLLAPSED = IR.name("goog$string$Const$from");
-  private static final Node LOCALE_FUNCTION_NAME = IR.getprop(IR.name("goog"), "getLocale");
-  private static final Node LOCALE_FUNCTION_NAME_COLLAPSED = IR.name("goog$getLocale");
 
   @VisibleForTesting
   static final DiagnosticType CONST_NOT_STRING_LITERAL_ERROR =
@@ -114,7 +112,6 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
    *   <li>The argument is a template into which only string literals are inserted, or
    *   <li>The argument is an expression that is a string literal, or
    *   <li>The argument is a ternary expression choosing between string literals, or
-   *   <li>The argument is a call to `goog.getLocale()` (effectively `goog.LOCALE`), or
    *   <li>The argument is a concatenation of the above.
    * </ol>
    *
@@ -150,17 +147,6 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
         return false;
       }
       return isSafeValue(var.getScope(), initialValue);
-    } else if (isGoogGetLocaleCall(argument)) {
-      return true;
-    }
-    return false;
-  }
-
-  private boolean isGoogGetLocaleCall(Node n) {
-    if (n.isCall() && n.hasOneChild()) {
-      Node callee = n.getOnlyChild();
-      return callee.matchesQualifiedName(LOCALE_FUNCTION_NAME)
-          || callee.matchesQualifiedName(LOCALE_FUNCTION_NAME_COLLAPSED);
     }
     return false;
   }

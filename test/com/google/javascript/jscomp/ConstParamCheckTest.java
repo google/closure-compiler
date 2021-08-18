@@ -30,8 +30,7 @@ public final class ConstParamCheckTest extends CompilerTestCase {
           "var goog = {};", //
           "goog.string = {};",
           "goog.string.Const = {};",
-          "goog.string.Const.from = function(x) {};",
-          "goog.getLocale = function() {};");
+          "goog.string.Const.from = function(x) {};");
 
   @Override
   @Before
@@ -457,15 +456,5 @@ public final class ConstParamCheckTest extends CompilerTestCase {
             "var [FOO, BAR] = ['a', 'b'];",
             "goog.string.Const.from(FOO);"),
         ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
-  }
-
-  @Test
-  public void testGoogGetLocale() {
-    // goog.getLocale() is now the preferred way to reference `goog.LOCALE` in most code.
-    // It is effectively a compile-time constant, so we need to treat it that way.
-    testSame(
-        lines(
-            CLOSURE_DEFS, //
-            "goog.string.Const.from(goog.getLocale());"));
   }
 }

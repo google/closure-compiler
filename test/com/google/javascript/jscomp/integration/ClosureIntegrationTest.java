@@ -306,32 +306,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
-  /**
-   * Tests that `goog.getLocale()` may be passed to `goog.string.Const.from()` without triggering
-   * the error message normally reported for non-const-string parameters, even when both have been
-   * aliased.
-   */
-  @Test
-  public void testGoogGetLocalePassedToConstFrom() {
-    String source =
-        lines(
-            "goog.string = {};", //
-            "goog.string.Const = {};",
-            "goog.string.Const.from = function(x) {};",
-            "goog.getLocale = function() {};",
-            "var mkConst = goog.string.Const.from;",
-            "var x = goog.getLocale();",
-            "mkConst(x);");
-
-    // Without collapsed properties.
-    CompilerOptions options = createCompilerOptions();
-    testSame(options, source);
-
-    // With collapsed properties.
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    testSame(options, source);
-  }
-
   @Test
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
