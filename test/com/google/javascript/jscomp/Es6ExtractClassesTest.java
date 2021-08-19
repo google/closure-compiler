@@ -42,6 +42,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableRewriteClosureCode();
     enableTypeCheck();
+    replaceTypesWithColors();
   }
 
   @Test
@@ -178,9 +179,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     test(
         "/** @unrestricted */ var foo = class bar {};",
         lines(
-            "/** @unrestricted */",
             "const testcode$classdecl$var0 = class {};",
-            "/** @unrestricted @constructor */",
+            "/** @constructor */",
             "var foo = testcode$classdecl$var0;"));
   }
 

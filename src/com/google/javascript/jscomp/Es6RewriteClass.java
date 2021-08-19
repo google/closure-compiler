@@ -17,10 +17,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvert;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -29,10 +32,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -56,24 +55,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  private final JSType objectPropertyDescriptorType;
   private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
   private final StaticScope transpilationNamespace;
 
   public Es6RewriteClass(AbstractCompiler compiler) {
     this.compiler = compiler;
-    JSTypeRegistry registry = compiler.getTypeRegistry();
     this.astFactory = compiler.createAstFactory();
     this.transpilationNamespace = compiler.getTranspilationNamespace();
-
-    // Finds the type for `ObjectPropertyDescriptor`. Fallback to the unknown type if it's not
-    // present, which may happen if typechecking hasn't run or this is a unit test w/o externs.
-    JSType actualObjectPropertyDescriptorType = registry.getGlobalType("ObjectPropertyDescriptor");
-    this.objectPropertyDescriptorType =
-        actualObjectPropertyDescriptorType != null
-            ? actualObjectPropertyDescriptorType
-            : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    convertSuperConstructorCalls = new Es6ConvertSuperConstructorCalls(compiler);
+    this.convertSuperConstructorCalls = new Es6ConvertSuperConstructorCalls(compiler);
   }
 
   @Override
@@ -155,8 +144,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           || (member.isGetterDef() || member.isSetterDef())) {
         visitNonMethodMember(member, metadata);
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
-        constructor = member.removeFirstChild().setJSType(classNode.getJSType());
-        constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());
+        constructor = member.removeFirstChild().setColor(classNode.getColor());
         if (!metadata.isAnonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
           // i.e. attaches the name to the ctor function.
@@ -186,6 +174,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           IR.exprResult(
               astFactory.createCall(
                   createObjectDotDefineProperties(),
+                  type(metadata.getClassPrototypeNode()),
                   metadata.getClassPrototypeNode().cloneTree(),
                   metadata.getDefinePropertiesObjForPrototype()));
       definePropsCall.srcrefTreeIfMissing(classNode);
@@ -197,6 +186,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           IR.exprResult(
               astFactory.createCall(
                   createObjectDotDefineProperties(),
+                  type(metadata.getFullClassNameNode()),
                   metadata.getFullClassNameNode().cloneTree(),
                   metadata.getDefinePropertiesObjForClass()));
       definePropsCall.srcrefTreeIfMissing(classNode);
@@ -209,26 +199,12 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
     Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
     if (metadata.hasSuperClass()) {
-      String superClassString = metadata.getSuperClassNameNode().getQualifiedName();
-      // Continue to add @extends to prevent an ExternsExportsPass error
-      if (newInfo.isInterfaceRecorded()) {
-        newInfo.recordExtendedInterface(
-            new JSTypeExpression(
-                new Node(Token.BANG, IR.string(superClassString))
-                    .srcrefTree(metadata.getSuperClassNameNode()),
-                metadata.getSuperClassNameNode().getSourceFileName()));
-      } else {
-        newInfo.recordBaseType(
-            new JSTypeExpression(
-                new Node(Token.BANG, IR.string(superClassString))
-                    .srcrefTree(metadata.getSuperClassNameNode()),
-                metadata.getSuperClassNameNode().getSourceFileName()));
-      }
       if (!classNode.isFromExterns()) {
         Node inheritsCall =
             IR.exprResult(
                     astFactory.createCall(
-                        astFactory.createQName(transpilationNamespace, "$jscomp.inherits"),
+                        astFactory.createQName(this.transpilationNamespace, "$jscomp.inherits"),
+                        type(StandardColors.NULL_OR_VOID),
                         metadata.getFullClassNameNode().cloneTree(),
                         metadata.getSuperClassNameNode().cloneTree()))
                 .srcrefTreeIfMissing(metadata.getSuperClassNameNode());
@@ -266,13 +242,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       parent.setJSDocInfo(newInfo.build());
     } else {
       throw new IllegalStateException("Unexpected parent node " + parent);
-    }
-
-    FunctionType classType = JSType.toMaybeFunctionType(classNode.getJSType());
-    if (classType != null) {
-      // classNode is no longer in the AST, so we need to update the reference to it that is
-      // stored in the class's type, if any.
-      classType.setSource(constructor);
     }
 
     t.reportCodeChange();
@@ -333,7 +302,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
     Node objectDefinePropertyCall =
         astFactory.createCall(
-            createObjectDotDefineProperty(), owner.cloneTree(), property, propertyDescriptor);
+            createObjectDotDefineProperty(),
+            type(owner),
+            owner.cloneTree(),
+            property,
+            propertyDescriptor);
 
     metadata.insertNodeAndAdvance(
         IR.exprResult(objectDefinePropertyCall).srcrefTreeIfMissing(computedMember));
@@ -373,7 +346,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       builder.kind(ClassProperty.PropertyKind.NORMAL_PROPERTY);
     }
 
-    builder.propertyKey(memberName);
+    builder.propertyKey(memberName).propertyType(member.getColor());
 
     JSDocInfo.Builder jsDoc = JSDocInfo.builder();
     jsDoc.recordNoCollapse();
@@ -445,15 +418,16 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           .srcrefTreeIfMissing(member);
     } else {
       Node methodName = member.getFirstFirstChild();
-      return astFactory.createGetProp(context, member.getString()).srcrefTree(methodName);
+      return astFactory
+          .createGetProp(context, member.getString(), type(member))
+          .srcrefTree(methodName);
     }
   }
 
   private Node createPropertyDescriptor() {
-    return IR.objectlit(
-            astFactory.createStringKey("configurable", astFactory.createBoolean(true)),
-            astFactory.createStringKey("enumerable", astFactory.createBoolean(true)))
-        .setJSType(objectPropertyDescriptorType);
+    return astFactory.createObjectLit(
+        astFactory.createStringKey("configurable", astFactory.createBoolean(true)),
+        astFactory.createStringKey("enumerable", astFactory.createBoolean(true)));
   }
 
   @AutoValue
@@ -509,6 +483,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
     abstract JSDocInfo jsDocInfo();
 
+    @Nullable
+    abstract Color propertyType();
+
     /**
      * Returns an EXPR_RESULT node that declares this property on the given node.
      *
@@ -537,7 +514,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           // No need to declare computed properties as they're unaffected by property collapsing
           throw new UnsupportedOperationException(this.toString());
         case NORMAL_PROPERTY:
-          decl = astFactory.createGetProp(toDeclareOn, propertyKey());
+          decl = astFactory.createGetProp(toDeclareOn, propertyKey(), type(propertyType()));
           break;
       }
 
@@ -557,6 +534,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       abstract Builder kind(PropertyKind value);
 
       abstract Builder jsDocInfo(JSDocInfo value);
+
+      abstract Builder propertyType(@Nullable Color type);
 
       abstract ClassProperty build();
     }
@@ -694,11 +673,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       }
 
       // TODO(sdh): are these types safe?
-      JSType classType = builder.getFullClassNameNode().getJSType();
+      AstFactory.Type classType = type(builder.getFullClassNameNode());
       builder.setClassPrototypeNode(
-          astFactory.createGetProp(builder.getFullClassNameNode().cloneTree(), "prototype"));
-      builder.setDefinePropertiesObjForClass(IR.objectlit().setJSType(classType));
-      builder.setDefinePropertiesObjForPrototype(IR.objectlit().setJSType(classType));
+          astFactory.createPrototypeAccess(builder.getFullClassNameNode().cloneTree()));
+      builder.setDefinePropertiesObjForClass(astFactory.createObjectLit(classType));
+      builder.setDefinePropertiesObjForPrototype(astFactory.createObjectLit(classType));
       return builder.build();
     }
 
