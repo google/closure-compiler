@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -94,18 +95,29 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
       return; // type related annotation exists in overridden property
     }
 
-    JSType type = n.getJSType();
-    if (type == null) {
+    Node func = NodeUtil.getEnclosingFunction(n);
+    if (func != null) {
+      // TODO(b/197000111): Delete this when override fixer can handle instance properties.
       return;
     }
 
-    Node target = n.getFirstChild();
-    if (!target.isThis()) {
+    Node owner = n.getFirstChild();
+    if (!owner.isThis()) {
       return; // e.g. `/** @override */ this.x;`
     }
 
+    ObjectType ownerType = ObjectType.cast(owner.getJSType());
+    if (ownerType == null) {
+      return;
+    }
+
+    JSType propType = ownerType.getPropertyType(n.getString());
+    if (propType == null) {
+      return;
+    }
+
     JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(jsDoc);
-    builder.recordType(new JSTypeExpression(typeToTypeAst(type), JSDOC_FILE_NAME));
+    builder.recordType(new JSTypeExpression(typeToTypeAst(propType), JSDOC_FILE_NAME));
     reportMissingOverrideTypes(n, builder.build());
   }
 
