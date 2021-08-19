@@ -20,8 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.MaybeReachingVariableUse.ReachingUses;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -75,7 +73,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
 
   MaybeReachingVariableUse(
       ControlFlowGraph<Node> cfg, Set<Var> escaped, Map<String, Var> allVarsInFn) {
-    super(cfg, new ReachingUsesJoinOp());
+    super(cfg);
     this.escaped = escaped;
     this.allVarsInFn = allVarsInFn;
   }
@@ -106,11 +104,9 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    */
   static final class ReachingUses implements LatticeElement {
     // Maps variables to all their uses that are upward exposed at the current cfgNode.
-    final Multimap<Var, Node> mayUseMap;
+    final HashMultimap<Var, Node> mayUseMap = HashMultimap.create();
 
-    public ReachingUses() {
-      mayUseMap = HashMultimap.create();
-    }
+    public ReachingUses() {}
 
     /**
      * Copy constructor.
@@ -118,7 +114,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
      * @param other The constructed object is a replicated copy of this element.
      */
     public ReachingUses(ReachingUses other) {
-      mayUseMap = MultimapBuilder.hashKeys().hashSetValues().build(other.mayUseMap);
+      this.mayUseMap.putAll(other.mayUseMap);
     }
 
     @Override
@@ -140,13 +136,16 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
    *
    * <p>The read of A "may be" exposed to A = 1 in the beginning.
    */
-  private static class ReachingUsesJoinOp implements JoinOp<ReachingUses> {
+  private static class ReachingUsesJoinOp implements FlowJoiner<ReachingUses> {
+    final ReachingUses result = new ReachingUses();
+
     @Override
-    public ReachingUses apply(List<ReachingUses> from) {
-      ReachingUses result = new ReachingUses();
-      for (ReachingUses uses : from) {
-        result.mayUseMap.putAll(uses.mayUseMap);
-      }
+    public void joinFlow(ReachingUses uses) {
+      this.result.mayUseMap.putAll(uses.mayUseMap);
+    }
+
+    @Override
+    public ReachingUses finish() {
       return result;
     }
   }
@@ -164,6 +163,11 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
   @Override
   ReachingUses createInitialEstimateLattice() {
     return new ReachingUses();
+  }
+
+  @Override
+  FlowJoiner<ReachingUses> createFlowJoiner() {
+    return new ReachingUsesJoinOp();
   }
 
   /**

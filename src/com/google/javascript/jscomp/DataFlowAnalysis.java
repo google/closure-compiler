@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.Annotation;
@@ -30,7 +29,6 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +89,6 @@ import javax.annotation.Nullable;
 abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   private final ControlFlowGraph<N> cfg;
-  private final JoinOp<L> joinOp;
   private final UniqueQueue<DiGraphNode<N, Branch>> workQueue;
 
   /**
@@ -120,9 +117,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    *     graph requires a separate call to {@link #analyze()}.
    * @see #analyze()
    */
-  DataFlowAnalysis(ControlFlowGraph<N> cfg, JoinOp<L> joinOp) {
+  DataFlowAnalysis(ControlFlowGraph<N> cfg) {
     this.cfg = cfg;
-    this.joinOp = joinOp;
     this.workQueue = new UniqueQueue<>(cfg.getOptionalNodeComparator(isForward()));
 
     if (this.isBranched()) {
@@ -140,13 +136,38 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     return cfg;
   }
 
-  protected final L join(L latticeA, L latticeB) {
-    return joinOp.apply(ImmutableList.of(latticeA, latticeB));
-  }
+  /**
+   * Checks whether the analysis is a forward flow analysis or backward flow analysis.
+   *
+   * @return {@code true} if it is a forward analysis.
+   */
+  abstract boolean isForward();
 
   /** Whether or not {@link #createFlowBrancher} should be used. */
   boolean isBranched() {
     return false;
+  }
+
+  final L join(L latticeA, L latticeB) {
+    FlowJoiner<L> joiner = this.createFlowJoiner();
+    joiner.joinFlow(latticeA);
+    joiner.joinFlow(latticeB);
+    return joiner.finish();
+  }
+
+  /**
+   * Gets a new joiner for an analysis step.
+   *
+   * <p>The joiner is invoked once for each input edge and then the final joined result is
+   * retrieved. No joiner will be created for a single input.
+   */
+  abstract FlowJoiner<L> createFlowJoiner();
+
+  /** A reducer that joins flow states from distinct input states into a single input state. */
+  interface FlowJoiner<L> {
+    void joinFlow(L input);
+
+    L finish();
   }
 
   /**
@@ -168,14 +189,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   interface FlowBrancher<L> {
     L branchFlow(Branch branch);
   }
-
-  /**
-   * Checks whether the analysis is a forward flow analysis or backward flow
-   * analysis.
-   *
-   * @return {@code true} if it is a forward analysis.
-   */
-  abstract boolean isForward();
 
   /**
    * Computes the output state for a given node given its input state.
@@ -319,11 +332,11 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
       default:
         {
-          List<L> values = new ArrayList<>(inEdges.size());
+          FlowJoiner<L> joiner = this.createFlowJoiner();
           for (DiGraphEdge<N, Branch> inEdge : inEdges) {
-            values.add(this.getInputFromEdge(inEdge));
+            joiner.joinFlow(this.getInputFromEdge(inEdge));
           }
-          result = this.joinOp.apply(values);
+          result = joiner.finish();
         }
     }
 

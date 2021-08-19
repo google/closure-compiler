@@ -113,7 +113,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       TypedScope syntacticScope,
       TypedScopeCreator scopeCreator,
       AssertionFunctionLookup assertionFunctionLookup) {
-    super(cfg, new LinkedFlowScope.FlowScopeJoinOp(compiler));
+    super(cfg);
     checkArgument(
         syntacticScope.isGlobal() || syntacticScope.isFunctionScope(),
         "Expected global or function scope, got %s",
@@ -462,6 +462,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   @Override
   final boolean isBranched() {
     return true;
+  }
+
+  @Override
+  FlowJoiner<FlowScope> createFlowJoiner() {
+    return new LinkedFlowScope.FlowScopeJoinOp(this.compiler);
   }
 
   @Override

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.DataFlowAnalysis.FlowJoiner;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
@@ -28,7 +29,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -55,7 +55,7 @@ final class MustBeReachingVariableDef
       AbstractCompiler compiler,
       Set<Var> escaped,
       Map<String, Var> allVarsInFn) {
-    super(cfg, new MustDefJoin());
+    super(cfg);
     this.compiler = compiler;
     this.escaped = escaped;
     this.allVarsInFn = allVarsInFn;
@@ -123,14 +123,11 @@ final class MustBeReachingVariableDef
     // When a Var "A" = "TOP", "A" does not exist in reachingDef's keySet.
     // When a Var "A" = Node N, "A" maps to that node.
     // When a Var "A" = "BOTTOM", "A" maps to null.
-    final Map<Var, Definition> reachingDef;
+    final HashMap<Var, Definition> reachingDef = new HashMap<>();
 
-    public MustDef() {
-      reachingDef = new HashMap<>();
-    }
+    public MustDef() {}
 
     public MustDef(Collection<Var> vars) {
-      this();
       for (Var var : vars) {
         reachingDef.put(var, new Definition(var.getScope().getRootNode()));
       }
@@ -142,7 +139,7 @@ final class MustBeReachingVariableDef
      * @param other The constructed object is a replicated copy of this element.
      */
     public MustDef(MustDef other) {
-      reachingDef = new HashMap<>(other.reachingDef);
+      this.reachingDef.putAll(other.reachingDef);
     }
 
     @Override
@@ -156,47 +153,33 @@ final class MustBeReachingVariableDef
     }
   }
 
-  private static class MustDefJoin extends JoinOp.BinaryJoinOp<MustDef> {
+  private static class MustDefJoin implements FlowJoiner<MustDef> {
+
+    final MustDef result = new MustDef();
+    final HashMap<Var, Definition> resultMap = result.reachingDef;
+
     @Override
-    public MustDef apply(MustDef a, MustDef b) {
-      MustDef result = new MustDef();
-      Map<Var, Definition> resultMap = result.reachingDef;
+    public void joinFlow(MustDef input) {
+      input.reachingDef.forEach(this::mergeVarDef);
+    }
 
-      // Take the join of all variables that are not TOP in this.
-      for (Map.Entry<Var, Definition> varEntry : a.reachingDef.entrySet()) {
-        Var var = varEntry.getKey();
-        Definition aDef = varEntry.getValue();
-
-        if (aDef == null) {
-          // "a" is BOTTOM implies that the variable has more than one possible
-          // definition. We set the join of this to be BOTTOM regardless of what
-          // "b" might be.
-          resultMap.put(var, null);
-          continue;
-        }
-
-        if (b.reachingDef.containsKey(var)) {
-          Definition bDef = b.reachingDef.get(var);
-
-          if (aDef.equals(bDef)) {
-            resultMap.put(var, aDef);
-          } else {
-            resultMap.put(var, null);
-          }
-        } else {
-          resultMap.put(var, aDef);
-        }
+    private void mergeVarDef(Var var, Definition def) {
+      final Definition resultDef;
+      if (def == null) {
+        resultDef = null;
+      } else if (!this.resultMap.containsKey(var)) {
+        resultDef = def;
+      } else if (def.equals(this.resultMap.get(var))) {
+        return;
+      } else {
+        resultDef = null;
       }
+      this.resultMap.put(var, resultDef);
+    }
 
-      // Take the join of all variables that are not TOP in other but it is TOP
-      // in this.
-      for (Map.Entry<Var, Definition> entry : b.reachingDef.entrySet()) {
-        Var var = entry.getKey();
-        if (!a.reachingDef.containsKey(var)) {
-          resultMap.put(var, entry.getValue());
-        }
-      }
-      return result;
+    @Override
+    public MustDef finish() {
+      return this.result;
     }
   }
 
@@ -213,6 +196,11 @@ final class MustBeReachingVariableDef
   @Override
   MustDef createInitialEstimateLattice() {
     return new MustDef();
+  }
+
+  @Override
+  MustDefJoin createFlowJoiner() {
+    return new MustDefJoin();
   }
 
   @Override
@@ -390,13 +378,13 @@ final class MustBeReachingVariableDef
       return;
     }
 
-    for (Var other : def.reachingDef.keySet()) {
-      Definition otherDef = def.reachingDef.get(other);
+    for (Map.Entry<Var, Definition> pair : def.reachingDef.entrySet()) {
+      Definition otherDef = pair.getValue();
       if (otherDef == null) {
         continue;
       }
       if (otherDef.depends.contains(var)) {
-        def.reachingDef.put(other, null);
+        pair.setValue(null);
       }
     }
 
@@ -423,14 +411,15 @@ final class MustBeReachingVariableDef
     }
 
     // Also, assume we no longer know anything that depends on a parameter.
-    for (Entry<Var, Definition> pair : output.reachingDef.entrySet()) {
+    for (Map.Entry<Var, Definition> pair : output.reachingDef.entrySet()) {
       Definition value = pair.getValue();
       if (value == null) {
         continue;
       }
       for (Var dep : value.depends) {
         if (isParameter(dep)) {
-          output.reachingDef.put(pair.getKey(), null);
+          pair.setValue(null);
+          break;
         }
       }
     }

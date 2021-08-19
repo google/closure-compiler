@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
+import com.google.javascript.jscomp.DataFlowAnalysis.FlowJoiner;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.HamtPMap;
 import com.google.javascript.rhino.JSDocInfo;
@@ -245,7 +246,8 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /** Join the two FlowScopes. */
-  static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
+  static class FlowScopeJoinOp implements FlowJoiner<FlowScope> {
+    LinkedFlowScope result = null;
     final CompilerInputProvider inputProvider;
 
     FlowScopeJoinOp(CompilerInputProvider inputProvider) {
@@ -264,12 +266,15 @@ class LinkedFlowScope implements FlowScope {
     // same syntactic scope.  So simply propagating either input's scope is
     // perfectly fine.
     @Override
-    public FlowScope apply(FlowScope a, FlowScope b) {
+    public void joinFlow(FlowScope input) {
       // To join the two scopes, we have to
-      LinkedFlowScope linkedA = (LinkedFlowScope) a;
-      LinkedFlowScope linkedB = (LinkedFlowScope) b;
-      if (linkedA.scopes == linkedB.scopes && linkedA.functionScope == linkedB.functionScope) {
-        return linkedA;
+      LinkedFlowScope linkedInput = (LinkedFlowScope) input;
+      if (this.result == null) {
+        this.result = linkedInput;
+        return;
+      } else if (this.result.scopes == linkedInput.scopes
+          && this.result.functionScope == linkedInput.functionScope) {
+        return;
       }
 
       // NOTE: it would be nice to put 'null' as the syntactic scope if they're not
@@ -286,12 +291,20 @@ class LinkedFlowScope implements FlowScope {
       // excessive map entry creation: find a common ancestor, etc.  One
       // interesting consequence of the current approach is that we may end up
       // adding irrelevant block-local variables to the joined scope unnecessarily.
-      TypedScope common = getCommonParentDeclarationScope(linkedA, linkedB);
-      return new LinkedFlowScope(
-          inputProvider,
-          join(linkedA, linkedB, common),
-          common,
-          linkedA.flowsFromBottom() ? linkedB.functionScope : linkedA.functionScope);
+      TypedScope common = getCommonParentDeclarationScope(this.result, linkedInput);
+      this.result =
+          new LinkedFlowScope(
+              inputProvider,
+              join(this.result, linkedInput, common),
+              common,
+              this.result.flowsFromBottom()
+                  ? linkedInput.functionScope
+                  : this.result.functionScope);
+    }
+
+    @Override
+    public FlowScope finish() {
+      return this.result;
     }
   }
 

@@ -21,8 +21,8 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.DataFlowAnalysis.FlowJoiner;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
-import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.InputId;
@@ -411,12 +411,22 @@ public final class DataFlowAnalysisTest {
     }
   }
 
-  private static class ConstPropJoinOp
-      extends BinaryJoinOp<ConstPropLatticeElement> {
+  private static class ConstPropJoinOp implements FlowJoiner<ConstPropLatticeElement> {
+
+    ConstPropLatticeElement result;
 
     @Override
-    public ConstPropLatticeElement apply(ConstPropLatticeElement a,
-        ConstPropLatticeElement b) {
+    public void joinFlow(ConstPropLatticeElement input) {
+      this.result = (this.result == null) ? input : apply(this.result, input);
+    }
+
+    @Override
+    public ConstPropLatticeElement finish() {
+      return this.result;
+    }
+
+    private static ConstPropLatticeElement apply(
+        ConstPropLatticeElement a, ConstPropLatticeElement b) {
       ConstPropLatticeElement result = new ConstPropLatticeElement();
       // By the definition of TOP of the lattice.
       if (a.isTop) {
@@ -453,12 +463,17 @@ public final class DataFlowAnalysisTest {
      * @param targetCfg Control Flow Graph.
      */
     DummyConstPropagation(ControlFlowGraph<Instruction> targetCfg) {
-      super(targetCfg, new ConstPropJoinOp());
+      super(targetCfg);
     }
 
     @Override
     boolean isForward() {
       return true;
+    }
+
+    @Override
+    FlowJoiner<ConstPropLatticeElement> createFlowJoiner() {
+      return new ConstPropJoinOp();
     }
 
     @Override
@@ -642,21 +657,6 @@ public final class DataFlowAnalysisTest {
     verifyOutHas(n4, c, null);
   }
 
-  @Test
-  public void testLatticeArrayMinimizationWhenMidpointIsEven() {
-    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(12)).isEqualTo(6);
-  }
-
-  @Test
-  public void testLatticeArrayMinimizationWhenMidpointRoundsDown() {
-    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(18)).isEqualTo(8);
-  }
-
-  @Test
-  public void testLatticeArrayMinimizationWithTwoElements() {
-    assertThat(JoinOp.BinaryJoinOp.computeMidPoint(2)).isEqualTo(1);
-  }
-
   // tests for computeEscaped method
 
   @Test
@@ -759,7 +759,7 @@ public final class DataFlowAnalysisTest {
       extends DataFlowAnalysis<Instruction, ConstPropLatticeElement> {
 
     BranchedDummyConstPropagation(ControlFlowGraph<Instruction> targetCfg) {
-      super(targetCfg, new ConstPropJoinOp());
+      super(targetCfg);
     }
 
     @Override
@@ -813,6 +813,11 @@ public final class DataFlowAnalysisTest {
     @Override
     ConstPropLatticeElement createInitialEstimateLattice() {
       return new ConstPropLatticeElement(true);
+    }
+
+    @Override
+    FlowJoiner<ConstPropLatticeElement> createFlowJoiner() {
+      return new ConstPropJoinOp();
     }
   }
 
@@ -887,7 +892,7 @@ public final class DataFlowAnalysisTest {
      * @param targetCfg Control Flow Graph.
      */
     DivergentAnalysis(ControlFlowGraph<Counter> targetCfg) {
-      super(targetCfg, (inputs) -> inputs.get(0));
+      super(targetCfg);
     }
 
     @Override
@@ -909,6 +914,19 @@ public final class DataFlowAnalysisTest {
     @Override
     Step createInitialEstimateLattice() {
       return new Step();
+    }
+
+    @Override
+    FlowJoiner<DivergentAnalysis.Step> createFlowJoiner() {
+      return new FlowJoiner<DivergentAnalysis.Step>() {
+        @Override
+        public void joinFlow(DivergentAnalysis.Step x) {}
+
+        @Override
+        public DivergentAnalysis.Step finish() {
+          return new Step();
+        }
+      };
     }
   }
 

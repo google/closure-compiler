@@ -49,13 +49,16 @@ class LiveVariablesAnalysis
 
   static final int MAX_VARIABLES_TO_ANALYZE = 100;
 
-  private static class LiveVariableJoinOp implements JoinOp<LiveVariableLattice> {
+  private final class LiveVariableJoinOp implements FlowJoiner<LiveVariableLattice> {
+    final LiveVariableLattice result = new LiveVariableLattice(orderedVars.size());
+
     @Override
-    public LiveVariableLattice apply(List<LiveVariableLattice> in) {
-      LiveVariableLattice result = new LiveVariableLattice(in.get(0));
-      for (int i = 1; i < in.size(); i++) {
-        result.liveSet.or(in.get(i).liveSet);
-      }
+    public void joinFlow(LiveVariableLattice x) {
+      this.result.liveSet.or(x.liveSet);
+    }
+
+    @Override
+    public LiveVariableLattice finish() {
       return result;
     }
   }
@@ -147,7 +150,7 @@ class LiveVariablesAnalysis
       @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
       SyntacticScopeCreator scopeCreator) {
-    super(cfg, new LiveVariableJoinOp());
+    super(cfg);
     checkState(jsScope.isFunctionScope(), jsScope);
 
     this.jsScope = jsScope;
@@ -207,6 +210,11 @@ class LiveVariablesAnalysis
   @Override
   LiveVariableLattice createInitialEstimateLattice() {
     return new LiveVariableLattice(orderedVars.size());
+  }
+
+  @Override
+  FlowJoiner<LiveVariableLattice> createFlowJoiner() {
+    return new LiveVariableJoinOp();
   }
 
   @Override
