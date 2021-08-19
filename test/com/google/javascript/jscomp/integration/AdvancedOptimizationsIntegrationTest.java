@@ -56,6 +56,100 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testBug196083761() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2020);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('base');", //
+              "class Base {", //
+              "  constructor({paramProblemFunc = problemFunc} = {}) {",
+              "    /** @public */",
+              "    this.prop = paramProblemFunc();",
+              "  }",
+              "}",
+              "",
+              "const problemFunc = () => 1;",
+              "Base.problemFunc = problemFunc;",
+              "",
+              "exports = {Base};",
+              ""),
+          lines(
+              "goog.module('child');", //
+              "",
+              "const {Base} = goog.require('base');",
+              "",
+              "class Child extends Base {",
+              "  constructor({paramProblemFunc = Base.problemFunc} = {}) {",
+              "    super({paramProblemFunc});",
+              "  }",
+              "}",
+              "",
+              "exports = {Child};",
+              ""),
+          lines(
+              "goog.module('grandchild');",
+              "",
+              "const {Child} = goog.require('child');",
+              "",
+              "class GrandChild extends Child {",
+              "  constructor() {",
+              "    super({paramProblemFunc: () => GrandChild.problemFunc() + 1});",
+              "  }",
+              "}",
+              "",
+              "console.log(new GrandChild().prop);",
+              ""),
+        },
+        new String[] {
+          "",
+          "",
+          lines(
+              "const $module$contents$base_problemFunc$$ = () => 1;",
+              "var $module$exports$base$Base$$ = class {",
+              "  constructor(",
+              "      {",
+              "        $paramProblemFunc$:$paramProblemFunc$$ =",
+              "            $module$contents$base_problemFunc$$",
+              "      } = {}) {",
+              "    this.$a$ = $paramProblemFunc$$();",
+              "  }",
+              "}, $module$exports$child$Child$$ = class extends $module$exports$base$Base$$ {",
+              "  constructor(",
+              "      {",
+              "        $paramProblemFunc$:$paramProblemFunc$jscomp$1$$ =",
+              "            $module$contents$base_problemFunc$$",
+              "      } = {}) {",
+              "    super({$paramProblemFunc$:$paramProblemFunc$jscomp$1$$});",
+              "  }",
+              "};",
+              "class $module$contents$grandchild_GrandChild$$",
+              "    extends $module$exports$child$Child$$ {",
+              "  constructor() {",
+              // TODO(b/196083761): Fix this!
+              // NOTE the call to `null()` here!
+              "    super({$paramProblemFunc$:() => null() + 1});",
+              "  }",
+              "}",
+              "console.log((new $module$contents$grandchild_GrandChild$$).$a$);",
+              "")
+        });
+  }
+
+  @Test
   public void testDisambiguationOfForwardReferencedAliasedInterface() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
