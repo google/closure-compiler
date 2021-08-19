@@ -31,6 +31,8 @@ message InstrumentationPoint {
 
   optional int32 column_number = 5;
 
+  // TODO(b/174873233): move this field out of the proto so that
+  // InstrumentationPoint remains *only* location proto and can be used as key.
   optional int64 times_executed = 6;
 }
 

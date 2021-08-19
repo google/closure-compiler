@@ -33,9 +33,13 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -133,9 +137,81 @@ public final class ReportDecoder {
                         .setTimesExecuted(frequencies.getOrDefault(entry.getKey(), 0L))
                         .build());
 
-    // Group instrumentation points by files and convert them to FileProfile object, one per file.
+    return ReportDecoder.createReportProfile(instrumentationPoints);
+  }
+
+  /**
+   * This function builds a report for given JS binary analyzing its content. If an instrumentation
+   * point is present in the JS binary - it will be marked as executed once. If the instrumentation
+   * point was removed by the compiler as dead code - it will be marked as executed zero times. This
+   * function doesn't give 100% guarantee for finding unused code but it provides good enough
+   * approximation to be useful.
+   *
+   * @param mapping Parsed instrumentation mapping. Use {@link #parseMapping} function to create it.
+   * @param fileContent Content of a JS binary compiled with production instrumentation enabled.
+   * @param instrumentationArrayName Name of the array that was passed as
+   *     --production_instrumentation_array_name flag when compiling JS binary.
+   * @return Report containing all instrumentation points. If a point times_executed is zero - it
+   *     means the function or branch was removed as dead code. If it's one - it's present in the JS
+   *     binary.
+   */
+  public static ReportProfile createProfileOfStaticallyUsedCode(
+      Map<String, InstrumentationPoint> mapping,
+      String fileContent,
+      String instrumentationArrayName) {
+    Matcher matcher =
+        Pattern.compile(instrumentationArrayName + "\\.push\\(['\"](.*?)['\"]\\)")
+            .matcher(fileContent);
+    final HashSet<String> encodedPoints = new HashSet<>();
+    while (matcher.find()) {
+      encodedPoints.add(matcher.group(1));
+    }
+    Stream<InstrumentationPoint> instrumentationPoints =
+        mapping.entrySet().stream()
+            .map(
+                (entry) ->
+                    entry.getValue().toBuilder()
+                        .setTimesExecuted(encodedPoints.contains(entry.getKey()) ? 1L : 0L)
+                        .build());
+    return ReportDecoder.createReportProfile(instrumentationPoints);
+  }
+
+  /**
+   * Given list of profiles merges them, summing up execution counts for instrumentation points used
+   * across multiple profiles. Be aware that instrumentation points are compared as equality so
+   * profiles should come from JS binaries compiled with at the same commit, otherwise changes in
+   * source code will cause differences in some instrumentation points.
+   */
+  public static ReportProfile mergeProfiles(List<ReportProfile> profiles) {
+    Map<InstrumentationPoint, Long> frequencies = new HashMap<>();
+    for (ReportProfile profile : profiles) {
+      for (FileProfile fileProfile : profile.getFileProfileList()) {
+        for (InstrumentationPoint point : fileProfile.getInstrumentationPointList()) {
+          frequencies.compute(
+              point.toBuilder().setTimesExecuted(0).build(),
+              (p, executed) -> (executed == null ? 0 : executed) + point.getTimesExecuted());
+        }
+      }
+    }
+    Stream<InstrumentationPoint> finalPoints =
+        frequencies.entrySet().stream()
+            .map(
+                (Map.Entry<InstrumentationPoint, Long> entry) ->
+                    entry.getKey().toBuilder().setTimesExecuted(entry.getValue()).build());
+    return ReportDecoder.createReportProfile(finalPoints);
+  }
+
+  /**
+   * Groups instrumentation points by files and convert them to FileProfile object, one per file and
+   * return as ReportProfile.
+   */
+  private static ReportProfile createReportProfile(
+      Stream<InstrumentationPoint> instrumentationPoints) {
     List<FileProfile> fileProfiles =
         instrumentationPoints
+            .sorted(
+                comparing(InstrumentationPoint::getFileName)
+                    .thenComparingInt(InstrumentationPoint::getLineNumber))
             .collect(Collectors.groupingBy(InstrumentationPoint::getFileName))
             .entrySet()
             .stream()
@@ -149,6 +225,7 @@ public final class ReportDecoder {
             .collect(Collectors.toList());
 
     return ReportProfile.newBuilder().addAllFileProfile(fileProfiles).build();
+
   }
 
   /**
