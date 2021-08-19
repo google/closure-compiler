@@ -268,12 +268,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     JsMessage.Builder builder = new JsMessage.Builder(isUnnamedMsg ? null : messageKey);
     OriginalMapping mapping =
-        compiler.getSourceMapping(
-            traversal.getSourceName(), traversal.getLineNumber(), traversal.getCharno());
+        compiler.getSourceMapping(traversal.getSourceName(), node.getLineno(), node.getCharno());
     if (mapping != null) {
       builder.setSourceName(mapping.getOriginalFile() + ":" + mapping.getLineNumber());
     } else {
-      builder.setSourceName(traversal.getSourceName() + ":" + traversal.getLineNumber());
+      builder.setSourceName(traversal.getSourceName() + ":" + node.getLineno());
     }
 
     try {
