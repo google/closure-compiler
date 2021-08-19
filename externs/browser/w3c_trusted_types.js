@@ -39,21 +39,24 @@ function TrustedTypePolicy() {}
 
 /**
  * @param {string} s
+ * @param {...*} args
  * @return {!TrustedHTML}
  */
-TrustedTypePolicy.prototype.createHTML = function(s) {};
+TrustedTypePolicy.prototype.createHTML = function(s, args) {};
 
 /**
  * @param {string} s
+ * @param {...*} args
  * @return {!TrustedScript}
  */
-TrustedTypePolicy.prototype.createScript = function(s) {};
+TrustedTypePolicy.prototype.createScript = function(s, args) {};
 
 /**
  * @param {string} s
+ * @param {...*} args
  * @return {!TrustedScriptURL}
  */
-TrustedTypePolicy.prototype.createScriptURL = function(s) {};
+TrustedTypePolicy.prototype.createScriptURL = function(s, args) {};
 
 
 /** @constructor */
