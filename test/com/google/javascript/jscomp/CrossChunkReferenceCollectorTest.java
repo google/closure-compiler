@@ -54,7 +54,12 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     testedCollector = new CrossChunkReferenceCollector(compiler, scopeCreator);
-    return testedCollector;
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        testedCollector.process(root);
+      }
+    };
   }
 
   @Test
