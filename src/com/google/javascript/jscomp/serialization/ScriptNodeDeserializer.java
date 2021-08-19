@@ -486,9 +486,6 @@ public final class ScriptNodeDeserializer {
       case ASSIGN_COALESCE:
         return new Node(Token.ASSIGN_COALESCE);
 
-      case CAST:
-        return new Node(Token.CAST);
-
       case EXPRESSION_STATEMENT:
         return new Node(Token.EXPR_RESULT);
       case BREAK_STATEMENT:

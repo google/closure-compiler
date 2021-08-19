@@ -417,9 +417,6 @@ final class TypedAstSerializer {
       case ASSIGN_COALESCE:
         return NodeKind.ASSIGN_COALESCE;
 
-      case CAST:
-        return NodeKind.CAST;
-
       case EXPR_RESULT:
         return NodeKind.EXPRESSION_STATEMENT;
       case BREAK:
@@ -574,6 +571,8 @@ final class TypedAstSerializer {
       case LB:
       case LC:
       case COLON:
+        // Closure-type-system-specific token
+      case CAST:
         // Unused tokens
       case PLACEHOLDER1:
       case PLACEHOLDER2:

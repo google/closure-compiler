@@ -301,11 +301,6 @@ class Normalize implements CompilerPass {
           annotateConstantsByConvention(n);
           break;
 
-        case CAST:
-          compiler.reportChangeToEnclosingScope(n);
-          n.replaceWith(n.removeFirstChild());
-          break;
-
         case ASSIGN_OR:
         case ASSIGN_AND:
         case ASSIGN_COALESCE:

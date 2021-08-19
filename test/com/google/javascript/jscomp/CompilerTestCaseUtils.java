@@ -28,6 +28,7 @@ public class CompilerTestCaseUtils {
       Compiler compiler,
       List<SourceFile> inputs,
       CodeChangeHandler changeHandler) {
+    new RemoveCastNodes(compiler).process(compiler.getExternsRoot(), compiler.getJsRoot());
     ErrorManager errorManager = compiler.getErrorManager();
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
       compiler.removeChangeHandler(changeHandler);
