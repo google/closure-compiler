@@ -418,8 +418,16 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "};",
             "goog.exportProperty(a.b, 'cprop', a.b.c)"),
         lines(
-            "var a;",
-            "a.b;",
+            "/**",
+            " * @const",
+            " * @suppress {const,duplicate}",
+            " */",
+            "var a = {};",
+            "/**",
+            " * @const",
+            " * @suppress {const,duplicate}",
+            " */",
+            "a.b = {};",
             "/**",
             " * @param {?} d",
             " * @param {?} e",
@@ -486,7 +494,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "goog.exportProperty(a.b, 'c', a.b.c);",
             "goog.exportProperty(a.b.prototype, 'c', a.b.prototype.c);"),
         lines(
-            "var a;",
+            "/**",
+            " * @const",
+            " * @suppress {const,duplicate}",
+            " */",
+            "var a = {};",
             "/**",
             " * @param {?} p1",
             " * @constructor",
@@ -1574,17 +1586,12 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "function F() { /** @export */ this.x = function(/** string */ x){};}",
             "goog.exportSymbol('F', F);"),
         lines(
-            "/**",
+            "/**", //
             " * @constructor",
             " */",
             "var F = function() {",
             "};",
-            "/**",
-            " * @param {string} x",
-            " * @return {undefined}",
-            " */",
-            "F.prototype.x = function(x) {",
-            "};",
+            "F.prototype.x;",
             ""));
   }
 

@@ -127,7 +127,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
         if (valueToExport != null) {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(valueToExport);
-          if (jsdoc != null && jsdoc.containsTypeDefinition()) {
+          if (valueToExport.isClass() || (jsdoc != null && jsdoc.containsTypeDefinition())) {
             exportedValueDefinesNewType = true;
           }
         }
@@ -569,8 +569,10 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     } else if (n.isAssign()) {
       // TODO(b/123718645): Add support for destructuring assignments
       Node lhs = n.getFirstChild();
-      if (lhs.isQualifiedName()) {
+      if (lhs.isQualifiedName() && (!lhs.hasChildren() || !lhs.getFirstChild().isThis())) {
         // qualified.name = value;
+        //   but not
+        // this.prop = value;
         definitionMap.put(lhs.getQualifiedName(), n.getLastChild());
       }
     } else if (n.isName()) {
