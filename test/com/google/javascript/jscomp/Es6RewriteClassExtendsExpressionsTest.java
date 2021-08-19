@@ -36,17 +36,19 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    disableTypeCheck();
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
+    enableTypeInfoValidation();
   }
 
   @Test
   public void testBasic() {
     test(
-        "const foo = {'bar': Object}; class Foo extends foo['bar'] {}",
+        "const foo = {'bar': Object}; /** @extends {Object} */ class Foo extends foo['bar'] {}",
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
+            "/** @extends {Object} */ ",
             "class Foo extends testcode$classextends$var0 {}"));
   }
 
@@ -71,6 +73,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "  };",
             "}",
             "class Foo {}",
+            "/** @extends {Object} */",
             "class Bar extends mixObject(Foo) {}"),
         lines(
             "/** @return {function(new:Object)} */",
@@ -81,6 +84,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "}",
             "class Foo {}",
             "const testcode$classextends$var0 = mixObject(Foo);",
+            "/** @extends {Object} */",
             "class Bar extends testcode$classextends$var0 {}"));
   }
 
@@ -96,25 +100,31 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   @Test
   public void testVarDeclaration() {
     test(
-        "const foo = {'bar': Object}; var Foo = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */ var Foo = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
-            "var Foo = class extends testcode$classextends$var0 {};"));
+            "/** @extends {Object} */ var Foo = class extends testcode$classextends$var0 {};"));
 
     test(
-        "const foo = {'bar': Object}; let Foo = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */ let Foo = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
-            "let Foo = class extends testcode$classextends$var0 {};"));
+            "/** @extends {Object} */ let Foo = class extends testcode$classextends$var0 {};"));
 
     test(
-        "const foo = {'bar': Object}; const Foo = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */ const Foo = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
-            "const Foo = class extends testcode$classextends$var0 {};"));
+            "/** @extends {Object} */ const Foo = class extends testcode$classextends$var0 {};"));
   }
 
   @Test
@@ -122,7 +132,10 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     test(
         lines(
             "const foo = {'bar': Object};",
-            "for (let Foo = class extends foo['bar'] {}, i = 0; i < 1; i++) {}"),
+            "for (let Foo = /** @extends {Object} */ class extends foo['bar'] {}, i = 0;",
+            "    i < 1;",
+            "    i++)",
+            "  {}"),
         lines(
             "const foo = {'bar': Object};",
             // use an iife since parent of the let isn't a block where we can add statements
@@ -130,48 +143,69 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             //     the temporary variable in the block containing the for-loop?
             "for (let Foo = (function() {",
             "    const testcode$classextends$var0 = foo['bar'];",
-            "    return class extends testcode$classextends$var0 {};",
+            "    return /** @extends {Object} */ class extends testcode$classextends$var0 {};",
             "  })(), i = 0; i < 1; i++) {}"));
   }
 
   @Test
   public void testAssign() {
     test(
-        "const foo = {'bar': Object}; var Foo; Foo = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "var Foo;",
+            "/** @extends {Object} */",
+            "Foo = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "var Foo;",
             "const testcode$classextends$var0 = foo['bar'];",
+            "/** @extends {Object} */",
             "Foo = class extends testcode$classextends$var0 {};"));
 
     test(
-        "const foo = {'bar': Object}; foo.baz = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */",
+            "foo.baz = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
+            "/** @extends {Object} */",
             "foo.baz = class extends testcode$classextends$var0 {};"));
 
     test(
-        "const foo = {'bar': Object}; foo.foo = foo.baz = class extends foo['bar'] {};",
         lines(
             "const foo = {'bar': Object};",
+            "/** @extends {Object} */",
+            "foo.foo = foo.baz = class extends foo['bar'] {};"),
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */",
             "foo.foo = foo.baz = (function() {",
             "  const testcode$classextends$var0 = foo['bar'];",
             "  return class extends testcode$classextends$var0 {};",
             "})();"));
 
     test(
-        "const foo = {'bar': Object}; foo['baz'] = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object};",
+            "/** @extends {Object} */",
+            "foo['baz'] = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
+            "/** @extends {Object} */",
             "foo['baz'] = class extends testcode$classextends$var0 {};"));
 
     test(
-        "const foo = {'bar': Object, baz: {}}; foo.baz['foo'] = class extends foo['bar'] {};",
+        lines(
+            "const foo = {'bar': Object, baz: {}};",
+            "/** @extends {Object} */",
+            "foo.baz['foo'] = class extends foo['bar'] {};"),
         lines(
             "const foo = {'bar': Object, baz: {}};",
             "const testcode$classextends$var0 = foo['bar'];",
+            "/** @extends {Object} */",
             "foo.baz['foo'] = class extends testcode$classextends$var0 {};"));
   }
 
@@ -181,11 +215,13 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         lines(
             "let baz = 1;",
             "const foo = {'bar': Object};",
+            "/** @extends {Object} */",
             "foo[baz++] = class extends foo['bar'] {};"),
         lines(
             "let baz = 1;",
             "const foo = {'bar': Object};",
             // Use an IIFE to preserve execution order when expressions have side effects.
+            "/** @extends {Object} */",
             "foo[baz++] = (function() {",
             "  const testcode$classextends$var0 = foo['bar'];",
             "  return class extends testcode$classextends$var0 {};",
@@ -198,20 +234,24 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         lines(
             "const foo = { 'bar': Object};",
             "function mayHaveSideEffects() {}",
-            "var baz = mayHaveSideEffects(), Foo = class extends foo['bar'] {};"),
+            "var baz = mayHaveSideEffects(),",
+            "    Foo = /** @extends {Object} */ class extends foo['bar'] {};"),
         lines(
             "const foo = { 'bar': Object};",
             "function mayHaveSideEffects() {}",
             "var baz = mayHaveSideEffects(), Foo = (function() {",
             "  const testcode$classextends$var0 = foo['bar'];",
-            "  return class extends testcode$classextends$var0 {};",
+            "  return /** @extends {Object} */ class extends testcode$classextends$var0 {};",
             "})();"));
 
     test(
-        "const foo = {'bar': Object}; const Foo = class extends foo['bar'] {}, baz = false;",
+        lines(
+            "const foo = {'bar': Object};",
+            "const Foo = /** @extends {Object} */ class extends foo['bar'] {}, baz = false;"),
         lines(
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
-            "const Foo = class extends testcode$classextends$var0 {}, baz = false;"));
+            "const Foo = /** @extends {Object} */ class extends testcode$classextends$var0 {}, baz"
+                + " = false;"));
   }
 }

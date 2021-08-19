@@ -18,12 +18,15 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.AstFactory.type;
 
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Extracts ES6 class extends expressions and creates an alias.
@@ -51,11 +54,13 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
   static final String CLASS_EXTENDS_VAR = "$classextends$var";
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
   private int classExtendsVarCounter = 0;
   private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6RewriteClassExtendsExpressions(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -132,9 +137,12 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
 
     Node statement = NodeUtil.getEnclosingStatement(classNode);
     Node originalExtends = classNode.getSecondChild();
-    originalExtends.replaceWith(IR.name(name).srcref(originalExtends));
+    originalExtends.replaceWith(
+        astFactory.createName(name, type(originalExtends)).srcref(originalExtends));
     Node extendsAlias =
-        IR.constNode(IR.name(name), originalExtends).srcrefTreeIfMissing(originalExtends);
+        astFactory
+            .createSingleConstNameDeclaration(name, originalExtends)
+            .srcrefTreeIfMissing(originalExtends);
     extendsAlias.insertBefore(statement);
     NodeUtil.addFeatureToScript(
         NodeUtil.getEnclosingScript(classNode), Feature.CONST_DECLARATIONS, compiler);
@@ -152,8 +160,13 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
     // to
     // `(function() { return class X extends something {}; })()`
     Node functionBody = IR.block();
-    Node function = IR.function(IR.name(""), IR.paramList(), functionBody);
-    Node call = NodeUtil.newCallNode(function);
+    Node function =
+        astFactory.createFunction(
+            "",
+            IR.paramList(),
+            functionBody,
+            type(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT));
+    Node call = astFactory.createCall(function, type(classNode));
     classNode.replaceWith(call);
     functionBody.addChildToBack(IR.returnNode(classNode));
     call.srcrefTreeIfMissing(classNode);

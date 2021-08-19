@@ -624,6 +624,7 @@ final class AstFactory {
         result.setJSType(getJsTypeForProperty(receiver, "prototype"));
         break;
       case COLOR:
+        checkNotNull(receiver.getColor(), "Missing color on %s", receiver);
         ImmutableSet<Color> possiblePrototypes = receiver.getColor().getPrototypes();
         result.setColor(
             possiblePrototypes.isEmpty()
