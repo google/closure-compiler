@@ -1798,6 +1798,7 @@ public class JSDocInfo implements Serializable {
 
     /** Adds an author to the current information. */
     public boolean addAuthor(String author) {
+      populated = true;
       if (shouldParseDocumentation()) {
         getPropWithDefault(AUTHORS, ArrayList::new).add(author);
       }
@@ -1807,6 +1808,7 @@ public class JSDocInfo implements Serializable {
 
     /** Adds a reference ("@see") to the current information. */
     public boolean addReference(String reference) {
+      populated = true;
       if (shouldParseDocumentation()) {
         getPropWithDefault(SEES, ArrayList::new).add(reference);
       }

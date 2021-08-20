@@ -556,6 +556,46 @@ public final class JSDocInfoPrinterTest {
                 ""));
   }
 
+  // Tests that a {@code @see} is sufficient to populate a JSDocInfo.
+  @Test
+  public void testJSDocIsPopulated_withSeeReferenceAlone() {
+    builder.addReference("SomeClassName for more details");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(LINE_JOINER.join("/**", " * @see SomeClassName for more details", " */", ""));
+  }
+
+  // Tests that an {@code @Author} is sufficient to populate a JSDocInfo.
+  @Test
+  public void testJSDocIsPopulated_withAuthorAlone() {
+    builder.addAuthor("John Doe.");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(LINE_JOINER.join("/**", " * @author John Doe.", " */", ""));
+  }
+
+  @Test
+  public void testSeeReferencePrintedWithOtherAnnotations() {
+    builder.recordType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), "<testSee>"));
+    builder.addReference("SomeClassName for more details");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            LINE_JOINER.join(
+                "/**", " * @see SomeClassName for more details", " * @type {string}", " */", ""));
+  }
+
+  @Test
+  public void testAuthorReferencePrintedWithOtherAnnotations() {
+    builder.recordType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), "<testAuthor>"));
+    builder.addAuthor("John Doe.");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(LINE_JOINER.join("/**", " * @author John Doe.", " * @type {string}", " */", ""));
+  }
+
   @Test
   public void testExterns() {
     testSameFileoverview("/** @externs */ ");

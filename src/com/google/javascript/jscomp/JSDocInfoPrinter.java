@@ -74,6 +74,13 @@ public final class JSDocInfoPrinter {
       parts.add("@" + Ascii.toLowerCase(info.getVisibility().toString()));
     }
 
+    if (info.getAuthors() != null) {
+      multiline = true;
+      for (String name : info.getAuthors()) {
+        parts.add("@author " + name);
+      }
+    }
+
     if (info.isAbstract()) {
       parts.add("@abstract");
     }
@@ -94,6 +101,13 @@ public final class JSDocInfoPrinter {
     if (description != null) {
       multiline = true;
       parts.add("@desc " + description);
+    }
+
+    if (info.getReferences() != null) {
+      multiline = true;
+      for (String desc : info.getReferences()) {
+        parts.add("@see " + desc);
+      }
     }
 
     if (info.isWizaction()) {
