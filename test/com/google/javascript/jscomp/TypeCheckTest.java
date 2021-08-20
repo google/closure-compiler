@@ -263,7 +263,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeCheck25() {
     newTest()
-        .addSource("function foo(/** {a: number} */ obj) {};", "foo({b: 'abc'});")
+        .addSource(
+            "function foo(/** {a: number} */ obj) {};", //
+            "foo({b: 'abc'});")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of foo does not match formal parameter",
@@ -277,7 +279,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeCheck26() {
     newTest()
-        .addSource("function foo(/** {a: number} */ obj) {};", "foo({a: 'abc'});")
+        .addSource(
+            "function foo(/** {a: number} */ obj) {};", //
+            "foo({a: 'abc'});")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of foo does not match formal parameter",
@@ -356,7 +360,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeCheckDefaultExterns() {
     this.newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
-        .addSource("/** @param {string} x */", "function f(x) {}", "f([].length);")
+        .addSource(
+            "/** @param {string} x */", //
+            "function f(x) {}",
+            "f([].length);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -499,7 +506,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {!window.Object<number>} a",
             " *  @return {string}",
             " */ var f = function(a) { return a[0]; };")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -511,7 +522,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {!window.Object<number>} a",
             " *  @return {string}",
             " */ var f = function(a) { return a[0]; };")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -719,23 +734,41 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // The precision of this test can be improved.
     // Boolean type is treated as {true, false}.
     newTest()
-        .addSource("/** @param {boolean} x */", " function assignOr(x) {", "   x ||= 'a';", " };")
-        .addDiagnostic(lines("assignment", "found   : string", "required: boolean"))
+        .addSource(
+            "/** @param {boolean} x */", //
+            " function assignOr(x) {",
+            "   x ||= 'a';",
+            " };")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : string",
+                "required: boolean"))
         .run();
   }
 
   @Test
   public void testAssignOrMayOrMayNotAssign() {
     newTest()
-        .addSource("/** @param {string} x */", " function assignOr(x) {", "   x ||= 5;", " };")
-        .addDiagnostic(lines("assignment", "found   : number", "required: string"))
+        .addSource(
+            "/** @param {string} x */", //
+            " function assignOr(x) {",
+            "   x ||= 5;",
+            " };")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
   @Test
   public void testAssignAndCheckRHSValid() {
     newTest()
-        .addSource("/** @type {string|undefined} */", "var a; a &&= 0;")
+        .addSource(
+            "/** @type {string|undefined} */", //
+            "var a; a &&= 0;")
         .addDiagnostic(
             lines(
                 "assignment", //
@@ -747,8 +780,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testAssignAndRHSNotExecuted() {
     newTest()
-        .addSource("let /** null */", "n = null;", "n &&= 'str';")
-        .addDiagnostic(lines("assignment", "found   : string", "required: null"))
+        .addSource(
+            "let /** null */", //
+            "n = null;",
+            "n &&= 'str';")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : string",
+                "required: null"))
         .run();
   }
 
@@ -756,8 +796,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testAssignCoalesceNoAssign() {
     newTest()
         .addSource(
-            "/**", " * @param {string} x */", " function assignCoalesce(x) {", "   x ??= 5;", " };")
-        .addDiagnostic(lines("assignment", "found   : number", "required: string"))
+            "/**", //
+            " * @param {string} x */",
+            " function assignCoalesce(x) {",
+            "   x ??= 5;",
+            " };")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -765,7 +813,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testAssignCoalesceCheckRHSValid() {
     newTest()
         .addSource("/** @type {string|undefined} */ var a; a ??= 0;")
-        .addDiagnostic(lines("assignment", "found   : number", "required: (string|undefined)"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : number",
+                "required: (string|undefined)"))
         .run();
   }
 
@@ -1862,7 +1914,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictPropertiesOnFunctions2() {
     newTest()
         .addSource(
-            "/** @param {Function} o\n @param {string} x */", "function s1(o,x) { o.x = x; }")
+            "/** @param {Function} o\n @param {string} x */", //
+            "function s1(o,x) { o.x = x; }")
         .addDiagnostic("Property x never defined on Function")
         .run();
   }
@@ -1934,7 +1987,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  o.x = 1;",
             "  return o.x;",
             "}")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -1972,7 +2029,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return o.x;",
             "}")
         .addDiagnostic(
-            lines("inconsistent return type", "found   : (number|string)", "required: string"))
+            lines(
+                "inconsistent return type", //
+                "found   : (number|string)",
+                "required: string"))
         .run();
   }
 
@@ -2114,7 +2174,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testAbstractMethodInAbstractEs6Class() {
-    newTest().addSource("/** @abstract */ class C {", "  /** @abstract */ foo() {}", "}").run();
+    newTest()
+        .addSource(
+            "/** @abstract */ class C {", //
+            "  /** @abstract */ foo() {}",
+            "}")
+        .run();
   }
 
   @Test
@@ -2132,7 +2197,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testAbstractMethodInConcreteEs6Class() {
     newTest()
-        .addSource("class C {", "  /** @abstract */ foo() {}", "}")
+        .addSource(
+            "class C {", //
+            "  /** @abstract */ foo() {}",
+            "}")
         .addDiagnostic(
             "Abstract methods can only appear in abstract classes. Please declare the class as "
                 + "@abstract")
@@ -2203,7 +2271,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testConcreteMethodInAbstractEs6Class1() {
     newTest()
-        .addSource("/** @abstract */ class A {", "  foo() {}", "}", "class B extends A {}")
+        .addSource(
+            "/** @abstract */ class A {", //
+            "  foo() {}",
+            "}",
+            "class B extends A {}")
         .includeDefaultExterns()
         .run();
   }
@@ -2237,7 +2309,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // TODO(moz): There's no need to tag methods with @abstract in interfaces, maybe give a warning
     // on this.
     newTest()
-        .addSource("/** @interface */ class I {", "  /** @abstract */ foo() {}", "};")
+        .addSource(
+            "/** @interface */ class I {", //
+            "  /** @abstract */ foo() {}",
+            "};")
         .includeDefaultExterns()
         .run();
   }
@@ -2710,7 +2785,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource("/**@param {!Object} a*/ function f(a) {return a < 3;}")
         .addDiagnostic(
             lines(
-                "left side of numeric comparison", "found   : Object", "required: (bigint|number)"))
+                "left side of numeric comparison", //
+                "found   : Object",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -2737,7 +2814,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/**@param {*} a*/ function f(a) {return a < 3;}")
         .addDiagnostic(
-            lines("left side of numeric comparison", "found   : *", "required: (bigint|number)"))
+            lines(
+                "left side of numeric comparison", //
+                "found   : *",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -3086,7 +3166,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {",
             "  var /** null */ n = x;",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : {a: number}", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : {a: number}",
+                "required: null"))
         .run();
   }
 
@@ -3263,7 +3347,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testFunctionArguments16() {
     newTest()
-        .addSource("/** @param {...number} var_args */", "function g(var_args) {}", "g(1, true);")
+        .addSource(
+            "/** @param {...number} var_args */", //
+            "function g(var_args) {}",
+            "g(1, true);")
         .addDiagnostic(
             lines(
                 "actual parameter 2 of g does not match formal parameter",
@@ -3276,7 +3363,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testUndefinedPassedForVarArgs() {
     newTest()
         .addSource(
-            "/** @param {...number} var_args */", "function g(var_args) {}", "g(undefined, 1);")
+            "/** @param {...number} var_args */", //
+            "function g(var_args) {}",
+            "g(undefined, 1);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of g does not match formal parameter",
@@ -3319,7 +3408,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {null} */ var a = firstOf('hi', 1);",
             "")
         .addDiagnostic(
-            lines("initializing variable", "found   : (number|string)", "required: null"))
+            lines(
+                "initializing variable", //
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
@@ -3334,7 +3426,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(...x) {",
             "  var /** string */ s = x[0];",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -3354,7 +3450,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {null} */ var a = firstOf('hi', 1);",
             "")
         .addDiagnostic(
-            lines("initializing variable", "found   : (number|string)", "required: null"))
+            lines(
+                "initializing variable", //
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
@@ -4236,7 +4335,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // up redeclaring it as undefined in the function block, which can cause spurious errors.
     newTest()
         .addSource(
-            "/** @suppress {duplicate} */", "function f(x) {", "  var x = x;", "  x.y = true;", "}")
+            "/** @suppress {duplicate} */", //
+            "function f(x) {",
+            "  var x = x;",
+            "  x.y = true;",
+            "}")
         .run();
   }
 
@@ -4244,7 +4347,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testShadowBleedingFunctionName() {
     // This is allowed and creates a new binding inside the function shadowing the bled name.
     newTest()
-        .addSource("var f = function x() {", "  var x;", "  var /** undefined */ y = x;", "};")
+        .addSource(
+            "var f = function x() {", //
+            "  var x;",
+            "  var /** undefined */ y = x;",
+            "};")
         .run();
   }
 
@@ -4348,7 +4455,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testStubFunctionDeclaration_static_onEs5Class() {
     testFunctionType(
-        lines("/** @constructor */ function f() {};", "/** @return {undefined} */ f.foo;"),
+        lines(
+            "/** @constructor */ function f() {};", //
+            "/** @return {undefined} */ f.foo;"),
         "f.foo",
         "function(): undefined");
   }
@@ -4364,7 +4473,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testStubFunctionDeclaration5() {
     testFunctionType(
-        lines("/** @constructor */ function f() { ", "  /** @type {Function} */ this.foo;", "}"),
+        lines(
+            "/** @constructor */ function f() { ", //
+            "  /** @type {Function} */ this.foo;",
+            "}"),
         "(new f).foo",
         createNullableType(getNativeFunctionType()).toString());
   }
@@ -4372,7 +4484,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testStubFunctionDeclaration6() {
     testFunctionType(
-        lines("/** @constructor */ function f() {} ", "/** @type {Function} */ f.prototype.foo;"),
+        lines(
+            "/** @constructor */ function f() {} ", //
+            "/** @type {Function} */ f.prototype.foo;"),
         "(new f).foo",
         createNullableType(getNativeFunctionType()).toString());
   }
@@ -4423,7 +4537,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar() {}",
             "Bar.prototype.method;",
             "var /** null */ n = (new Bar).method();")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -4442,7 +4560,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar() {}",
             "Bar.prototype.method;",
             "var /** null */ n = (new Bar).method();")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -4516,7 +4638,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "variable a.A redefined with type (typeof a.A), "
                 + "original definition at [testcode]:1 with type enum{a.A}",
             lines(
-                "assignment to property A of a", "found   : (typeof a.A)", "required: enum{a.A}")));
+                "assignment to property A of a", //
+                "found   : (typeof a.A)",
+                "required: enum{a.A}")));
   }
 
   @Test
@@ -4731,7 +4855,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForOf3() {
     newTest()
-        .addSource("/** @type {?Iterable<number>} */ var it = [1, 2, 3];", "for (let x of it) {}")
+        .addSource(
+            "/** @type {?Iterable<number>} */ var it = [1, 2, 3];", //
+            "for (let x of it) {}")
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
@@ -4744,7 +4870,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForOf4() {
     newTest()
-        .addSource("function f(/** !Iterator<number> */ it) {", "  for (let x of it) {}", "}")
+        .addSource(
+            "function f(/** !Iterator<number> */ it) {", //
+            "  for (let x of it) {}",
+            "}")
         .addDiagnostic(
             lines(
                 "Can only iterate over a (non-null) Iterable type",
@@ -4758,7 +4887,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testForOf5() {
     // 'string' is an Iterable<string> so it can be used in a for/of.
     newTest()
-        .addSource("function f(/** string */ ch, /** string */ str) {", "  for (ch of str) {}", "}")
+        .addSource(
+            "function f(/** string */ ch, /** string */ str) {", //
+            "  for (ch of str) {}",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -4766,7 +4898,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForOf6() {
     newTest()
-        .addSource("function f(/** !Array<number> */ a) {", "  for (let elem of a) {}", "}")
+        .addSource(
+            "function f(/** !Array<number> */ a) {", //
+            "  for (let elem of a) {}",
+            "}")
         .includeDefaultExterns()
         .run();
   }
@@ -5091,7 +5226,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @const */ var ns = {};",
             "/** @enum {string} */ ns.b = a;")
         .addDiagnostic(
-            lines("incompatible enum element types", "found   : number", "required: string"))
+            lines(
+                "incompatible enum element types", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -5466,17 +5604,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testAliasedEnum_rhsIsStubDeclaration() {
     newTest()
-        .addSource("let YourEnum;", "/** @enum */ const MyEnum = YourEnum;")
+        .addSource(
+            "let YourEnum;", //
+            "/** @enum */ const MyEnum = YourEnum;")
         .addDiagnostic(
-            lines("initializing variable", "found   : undefined", "required: enum{MyEnum}"))
+            lines(
+                "initializing variable", //
+                "found   : undefined",
+                "required: enum{MyEnum}"))
         .run();
   }
 
   @Test
   public void testAliasedEnum_rhsIsNonEnum() {
     newTest()
-        .addSource("let YourEnum = 0;", "/** @enum */ const MyEnum = YourEnum;")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: enum{MyEnum}"))
+        .addSource(
+            "let YourEnum = 0;", //
+            "/** @enum */ const MyEnum = YourEnum;")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: enum{MyEnum}"))
         .run();
   }
 
@@ -6659,7 +6808,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
 
     newTest()
-        .addSource("/**", " * @param {T} x", " * @template {?} T", " */", "function f(x) {}")
+        .addSource(
+            "/**", //
+            " * @param {T} x",
+            " * @template {?} T",
+            " */",
+            "function f(x) {}")
         .addDiagnostic("Illegal upper bound '?' on template type parameter T")
         .diagnosticsAreErrors()
         .run();
@@ -6711,7 +6865,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var a = f(0);")
         .addDiagnostic(BOUNDED_GENERICS_USE_MSG)
         .addDiagnostic(
-            lines("inconsistent return type", "found   : string", "required: T extends number"))
+            lines(
+                "inconsistent return type", //
+                "found   : string",
+                "required: T extends number"))
         .run();
   }
 
@@ -6835,7 +6992,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x,y) { y=x; }")
         .addDiagnostic(BOUNDED_GENERICS_USE_MSG)
         .addDiagnostic(
-            lines("assignment", "found   : number", "required: T extends (number|string)"))
+            lines(
+                "assignment", //
+                "found   : number",
+                "required: T extends (number|string)"))
         .run();
   }
 
@@ -6851,7 +7011,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x,y) { x=y; }")
         .addDiagnostic(BOUNDED_GENERICS_USE_MSG)
         .addDiagnostic(
-            lines("assignment", "found   : T extends (number|string)", "required: number"))
+            lines(
+                "assignment", //
+                "found   : T extends (number|string)",
+                "required: number"))
         .run();
   }
 
@@ -7235,7 +7398,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
 
     newTest()
-        .addSource("/**", " * @template {T} T", " */", "class Foo { }")
+        .addSource(
+            "/**", //
+            " * @template {T} T",
+            " */",
+            "class Foo { }")
         .addDiagnostic("Parse error. Cycle detected in inheritance chain of type T")
         .diagnosticsAreErrors()
         .run();
@@ -7246,7 +7413,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
 
     newTest()
-        .addSource("/**", " * @template {T} T", " * @template {T} U", " */", "class Foo { }")
+        .addSource(
+            "/**", //
+            " * @template {T} T",
+            " * @template {T} U",
+            " */",
+            "class Foo { }")
         .addDiagnostic("Parse error. Cycle detected in inheritance chain of type T")
         .addDiagnostic("Parse error. Cycle detected in inheritance chain of type U")
         .diagnosticsAreErrors()
@@ -7422,7 +7594,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function f(t) { t = new C(); }")
         .addDiagnostic(BOUNDED_GENERICS_USE_MSG)
-        .addDiagnostic(lines("assignment", "found   : C", "required: T extends (C|null)"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : C",
+                "required: T extends (C|null)"))
         .run();
   }
 
@@ -8518,7 +8694,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function g(/** !Generator<string> */ x) {",
             "  var /** null */ y = f(x);",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : string", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: null"))
         .includeDefaultExterns()
         .run();
   }
@@ -8536,7 +8716,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testArrayAccess2() {
     newTest()
         .addSource("var a = []; var b = a[[1,2]];")
-        .addDiagnostic(lines("restricted index type", "found   : Array<?>", "required: number"))
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : Array<?>",
+                "required: number"))
         .includeDefaultExterns()
         .run();
   }
@@ -8782,8 +8966,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testVar15NullishCoalesce() {
     newTest()
-        .addSource("/** @return {number} */", "function f() { var x = x ?? {}; return x; }")
-        .addDiagnostic(lines("inconsistent return type", "found   : {}", "required: number"))
+        .addSource(
+            "/** @return {number} */", //
+            "function f() { var x = x ?? {}; return x; }")
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : {}",
+                "required: number"))
         .run();
   }
 
@@ -8865,7 +9055,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Making sure that ?? returns LHS as long as it is not null/undefined
     // 0 is falsy but not null/undefined so c should always be a
     newTest()
-        .addSource("/** @type {number}  */var a;", "/** @type {number}  */var c = a ?? undefined;")
+        .addSource(
+            "/** @type {number}  */var a;", //
+            "/** @type {number}  */var c = a ?? undefined;")
         .run();
   }
 
@@ -8909,7 +9101,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNullishCoalesceAssignment2() {
     newTest()
         .addSource("/**@type {number} */var x;x=undefined ?? \"a\";")
-        .addDiagnostic(lines("assignment", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -8922,7 +9118,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var x = opt_x || [];",
             "  var /** undefined */ y = x;",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : Array", "required: undefined"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : Array",
+                "required: undefined"))
         .run();
   }
 
@@ -8935,7 +9135,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var x = opt_x ?? [];",
             "  var /** undefined */ y = x;",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : Array", "required: undefined"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : Array",
+                "required: undefined"))
         .run();
   }
 
@@ -9353,7 +9557,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testConstructorAliasWithBadAnnotation1() {
     newTest()
-        .addSource("/** @constructor */ function Foo() {}", "/** @record */ var Bar = Foo;")
+        .addSource(
+            "/** @constructor */ function Foo() {}", //
+            "/** @record */ var Bar = Foo;")
         .addDiagnostic("Annotation @record on Bar incompatible with aliased type.")
         .run();
   }
@@ -9361,7 +9567,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testConstructorAliasWithBadAnnotation2() {
     newTest()
-        .addSource("/** @constructor */ function Foo() {}", "/** @interface */ var Bar = Foo;")
+        .addSource(
+            "/** @constructor */ function Foo() {}", //
+            "/** @interface */ var Bar = Foo;")
         .addDiagnostic("Annotation @interface on Bar incompatible with aliased type.")
         .run();
   }
@@ -9369,7 +9577,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testConstructorAliasWithBadAnnotation3() {
     newTest()
-        .addSource("/** @interface */ function Foo() {}", "/** @record */ var Bar = Foo;")
+        .addSource(
+            "/** @interface */ function Foo() {}", //
+            "/** @record */ var Bar = Foo;")
         .addDiagnostic("Annotation @record on Bar incompatible with aliased type.")
         .run();
   }
@@ -9377,7 +9587,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testConstructorAliasWithBadAnnotation4() {
     newTest()
-        .addSource("/** @interface */ function Foo() {}", "/** @constructor */ var Bar = Foo;")
+        .addSource(
+            "/** @interface */ function Foo() {}", //
+            "/** @constructor */ var Bar = Foo;")
         .addDiagnostic("Annotation @constructor on Bar incompatible with aliased type.")
         .run();
   }
@@ -9395,7 +9607,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "var x = /** @type {!FooAlias} */ ({});",
             "var /** null */ n = x.foo();")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -9413,7 +9629,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "var x = /** @type {!ns.FooAlias} */ ({});",
             "var /** null */ n = x.foo();")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -9430,7 +9650,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "var x = /** @type {!FooAlias} */ ({});",
             "var /** null */ n = x.foo();")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -9538,7 +9762,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                     "  assertTruthy(str);",
                     "  const /** number */ n = str;",
                     "}"))
-        .addDiagnostic(lines("initializing variable", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -9552,7 +9780,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                     "  assertString(str);",
                     "  const /** number */ n = str;",
                     "}"))
-        .addDiagnostic(lines("initializing variable", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -9592,7 +9824,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testReturn5() {
     newTest()
         .addSource(
-            "/**", " * @param {number} n", " * @constructor", " */", "function fn(n){ return }")
+            "/**", //
+            " * @param {number} n",
+            " * @constructor",
+            " */",
+            "function fn(n){ return }")
         .run();
   }
 
@@ -9748,7 +9984,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {function():string} x */",
             "function f(x) {}",
             "f(/** asdf */ function() { return 123; });")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -10781,7 +11021,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testGlobalThisDoesNotIncludeVarsDeclaredWithConst() {
     newTest()
         .addSource(
-            "/** @param {string} msg */ ", "const alert = function(msg) {};", "this.alert('boo');")
+            "/** @param {string} msg */ ", //
+            "const alert = function(msg) {};",
+            "this.alert('boo');")
         .addDiagnostic("Property alert never defined on global this")
         .run();
   }
@@ -10790,7 +11032,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testGlobalThisDoesNotIncludeVarsDeclaredWithLet() {
     newTest()
         .addSource(
-            "/** @param {string} msg */ ", "let alert = function(msg) {};", "this.alert('boo');")
+            "/** @param {string} msg */ ", //
+            "let alert = function(msg) {};",
+            "this.alert('boo');")
         .addDiagnostic("Property alert never defined on global this")
         .run();
   }
@@ -10957,16 +11201,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testSwitchCase_primitiveDoesNotAutobox() {
     newTest()
         .addSource(
-            "/** @type {!String} */", "var a = new String('foo');", "switch (a) { case 'A': }")
+            "/** @type {!String} */", //
+            "var a = new String('foo');",
+            "switch (a) { case 'A': }")
         .addDiagnostic(
-            lines("case expression doesn't match switch", "found   : string", "required: String"))
+            lines(
+                "case expression doesn't match switch", //
+                "found   : string",
+                "required: String"))
         .run();
   }
 
   @Test
   public void testSwitchCase_unknownSwitchExprMatchesAnyCase() {
     newTest()
-        .addSource("var a = unknown;", "switch (a) { case 'A':break; case null:break; }")
+        .addSource(
+            "var a = unknown;", //
+            "switch (a) { case 'A':break; case null:break; }")
         .run();
   }
 
@@ -11688,7 +11939,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function G() {}",
             "/** @type {function(new:G)} */ var x = F;")
         .addDiagnostic(
-            lines("initializing variable", "found   : (typeof F)", "required: function(new:G): ?"))
+            lines(
+                "initializing variable", //
+                "found   : (typeof F)",
+                "required: function(new:G): ?"))
         .run();
   }
 
@@ -12153,7 +12407,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     this.newTest()
         .addExterns(new TestExternsBuilder().addString().build())
         .addSource(
-            "/** @type {String} */ var s = new String('foo');", "var b = s.match(/a/) != null;")
+            "/** @type {String} */ var s = new String('foo');", //
+            "var b = s.match(/a/) != null;")
         .run();
   }
 
@@ -12801,7 +13056,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "    x.onload = null;",
             "  };",
             "}")
-        .addDiagnostic(lines("assignment", "found   : null", "required: function(): undefined"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : null",
+                "required: function(): undefined"))
         .run();
   }
 
@@ -13959,7 +14218,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testFunctionBind4() {
     this.newTest()
         .addSource(
-            "/** @param {...number} x */", "function f(x) {}", "f.bind(null, 3, 3, 3)(true);")
+            "/** @param {...number} x */", //
+            "function f(x) {}",
+            "f.bind(null, 3, 3, 3)(true);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of function does not match formal parameter",
@@ -13973,7 +14234,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testFunctionBind5() {
     this.newTest()
         .addSource(
-            "/** @param {...number} x */", "function f(x) {}", "f.bind(null, true)(3, 3, 3);")
+            "/** @param {...number} x */", //
+            "function f(x) {}",
+            "f.bind(null, true)(3, 3, 3);")
         .addDiagnostic(
             lines(
                 "actual parameter 2 of f.bind does not match formal parameter",
@@ -13996,7 +14259,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }.bind(this);",
             "}")
         .addDiagnostic(
-            lines("assignment to property x of MyType", "found   : string", "required: number"))
+            lines(
+                "assignment to property x of MyType", //
+                "found   : string",
+                "required: number"))
         .includeDefaultExterns()
         .run();
   }
@@ -14013,7 +14279,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var m = new MyType;",
             "(function f() {this.x = 'str';}).bind(m);")
         .addDiagnostic(
-            lines("assignment to property x of MyType", "found   : string", "required: number"))
+            lines(
+                "assignment to property x of MyType", //
+                "found   : string",
+                "required: number"))
         .includeDefaultExterns()
         .run();
   }
@@ -14692,7 +14961,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testNativeCast4() {
     newTest()
-        .addSource("/** @param {number} x */ function f(x) {}", "f(Array(1));")
+        .addSource(
+            "/** @param {number} x */ function f(x) {}", //
+            "f(Array(1));")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -14704,7 +14975,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBadConstructorCall() {
     newTest()
-        .addSource("/** @constructor */ function Foo() {}", "Foo();")
+        .addSource(
+            "/** @constructor */ function Foo() {}", //
+            "Foo();")
         .addDiagnostic("Constructor (typeof Foo) should be called with the \"new\" keyword")
         .run();
   }
@@ -14975,7 +15248,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testAnonymousType1() {
     newTest()
-        .addSource("function f() { return {}; }", "/** @constructor */", "f().bar = function() {};")
+        .addSource(
+            "function f() { return {}; }", //
+            "/** @constructor */",
+            "f().bar = function() {};")
         .run();
   }
 
@@ -15066,7 +15342,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {Object} */ var n = {};",
             "/** @type {number} */ n.x = 1;",
             "/** @return {boolean} */ function f() { return n.x; }")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: boolean"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -15077,7 +15357,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @const */ var n = {};",
             "/** @type {number} */ n.x = 1;",
             "/** @return {boolean} */function f() { return n.x; }")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: boolean"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -15090,7 +15374,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {!Object} */ var n = {};",
             "/** @type {number} */ n.x = 1;",
             "/** @return {boolean} */function f() { return n.x; }")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: boolean"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -16243,7 +16531,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @return {string} ",
             " */",
             "var f = function(x) { return x.p; };")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -16264,7 +16556,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "var f = function(x) { return x.p; };")
         .addDiagnostic(
-            lines("inconsistent return type", "found   : (number|string)", "required: string"))
+            lines(
+                "inconsistent return type", //
+                "found   : (number|string)",
+                "required: string"))
         .run();
   }
 
@@ -16284,7 +16579,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @return {string} ",
             " */",
             "var f = function(x) { return x.p; };")
-        .addDiagnostic(lines("inconsistent return type", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -16733,7 +17032,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Low() {}",
             "function f(/** !Low */ x) { var /** null */ n = x.prop; }")
         .addDiagnostic(
-            lines("initializing variable", "found   : (number|string)", "required: null"))
+            lines(
+                "initializing variable", //
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
@@ -16758,7 +17060,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function Low() {}",
             "function f(/** !Low */ x) { var /** null */ n = x.prop; }")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -17702,7 +18008,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMissingProperty4b() {
     newTest()
-        .addSource("/** @constructor */ function Foo() {}", "(new Foo).b = 3;")
+        .addSource(
+            "/** @constructor */ function Foo() {}", //
+            "(new Foo).b = 3;")
         .addDiagnostic("Property b never defined on Foo")
         .run();
   }
@@ -17991,7 +18299,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty31a() {
     newTest()
         .addSource(
-            "/** @return {Array|number} */", "function f() {", " return [];", "}", "f().a = 3;")
+            "/** @return {Array|number} */", //
+            "function f() {",
+            " return [];",
+            "}",
+            "f().a = 3;")
         .addDiagnostic("Property a never defined on (Array|Number)")
         .run();
   }
@@ -18174,7 +18486,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     this.newTest()
         .addExterns(new TestExternsBuilder().addString().build())
-        .addSource("/** @return {string|number} */ function f() { return 3; }", "f().length;")
+        .addSource(
+            "/** @return {string|number} */ function f() { return 3; }", //
+            "f().length;")
         .run();
   }
 
@@ -18182,7 +18496,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty39b() {
     newTest()
         .addExterns(new TestExternsBuilder().addString().build())
-        .addSource("/** @return {string|number} */ function f() { return 3; }", "f().length;")
+        .addSource(
+            "/** @return {string|number} */ function f() { return 3; }", //
+            "f().length;")
         // TODO(johnlenz): enable this.
         // "Property length not defined on all member types of (String|Number)"
         .run();
@@ -18212,7 +18528,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty41a() {
     newTest()
         .addSource(
-            "/** @param {(Array|Date)} x */", "function f(x) { if (x.impossible) x.impossible(); }")
+            "/** @param {(Array|Date)} x */", //
+            "function f(x) { if (x.impossible) x.impossible(); }")
         .addDiagnostic("Property impossible never defined on (Array|Date)")
         .addDiagnostic("Property impossible never defined on (Array|Date)")
         .run();
@@ -18223,7 +18540,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @param {(Array|Date)} x */", "function f(x) { if (x.impossible) x.impossible(); }")
+            "/** @param {(Array|Date)} x */", //
+            "function f(x) { if (x.impossible) x.impossible(); }")
         .run();
   }
 
@@ -18251,7 +18569,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testMissingProperty_notReportedInPropertyAbsenceCheck() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource("function f(/** !Object */ x) {", "  if (x.y == null) throw new Error();", "}")
+        .addSource(
+            "function f(/** !Object */ x) {", //
+            "  if (x.y == null) throw new Error();",
+            "}")
         .run();
   }
 
@@ -18260,7 +18581,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void optChainGetPropAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
-    newTest().addSource("/** @param {?Object} x */", "function f(x) {", "  x.y?.z;", "}").run();
+    newTest()
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y?.z;",
+            "}")
+        .run();
   }
 
   // this is the same test as above except that it does not use optional chaining so it should
@@ -18269,7 +18596,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void normalGetPropNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource("/** @param {?Object} x */", "function f(x) {", "  x.y.z;", "}")
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y.z;",
+            "}")
         .addDiagnostic(
             "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
@@ -18280,7 +18611,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void optChainGetElemAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
-    newTest().addSource("/** @param {?Object} x */", "function f(x) {", "  x.y?.[z];", "}").run();
+    newTest()
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y?.[z];",
+            "}")
+        .run();
   }
 
   // this is the same test as above except that it does not use optional chaining so it should emit
@@ -18289,7 +18626,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void normalGetElemNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource("/** @param {?Object} x */", "function f(x) {", "  x.y[z];", "}")
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y[z];",
+            "}")
         .addDiagnostic(
             "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
@@ -18300,7 +18641,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void optChainCallAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
-    newTest().addSource("/** @param {?Object} x */", "function f(x) {", "  x.y?.();", "}").run();
+    newTest()
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y?.();",
+            "}")
+        .run();
   }
 
   // this is the same test as above except that it does not use optional chaining so it should emit
@@ -18309,7 +18656,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void normalCallNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource("/** @param {?Object} x */", "function f(x) {", "  x.y();", "}")
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x.y();",
+            "}")
         .addDiagnostic(
             "Property y never defined on Object" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
@@ -18322,7 +18673,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     disableStrictMissingPropertyChecks();
     newTest()
         .addSource(
-            "/** @param {?Object} x */", "function f(x) {", "  return false;", "}", "f?.(x.y)")
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  return false;",
+            "}",
+            "f?.(x.y)")
         .addDiagnostic("Property y never defined on x" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
   }
@@ -18333,7 +18688,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void getNotFirstChildOfOptionalGetElemNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     newTest()
-        .addSource("/** @param {?Object} x */", "function f(x) {", "  x?.[y.z];", "}")
+        .addSource(
+            "/** @param {?Object} x */", //
+            "function f(x) {",
+            "  x?.[y.z];",
+            "}")
         .addDiagnostic("Property z never defined on y" + POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION)
         .run();
   }
@@ -18780,7 +19139,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function aScope() {",
             "  x = fn(CGI_PARAM_RETRY_COUNT, 1);",
             "}")
-        .addDiagnostic(lines("assignment", "found   : (number|string)", "required: Object"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (number|string)",
+                "required: Object"))
         .run();
   }
 
@@ -18807,7 +19170,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTemplateType7() {
     this.newTest()
         .addExterns(new TestExternsBuilder().addArray().build())
-        .addSource("/** @type {!Array<string>} */", "var query = [];", "query.push(1);")
+        .addSource(
+            "/** @type {!Array<string>} */", //
+            "var query = [];",
+            "query.push(1);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of Array.prototype.push does not match formal parameter",
@@ -19239,7 +19605,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTemplateTypeCollidesWithParameter() {
     // Function templates are in the same scope as parameters, so cannot collide.
     newTest()
-        .addSource("/**", " * @param {T} T", " * @template T", " */", "function f(T) {}")
+        .addSource(
+            "/**", //
+            " * @param {T} T",
+            " * @template T",
+            " */",
+            "function f(T) {}")
         .addDiagnostic(
             "variable T redefined with type undefined, original definition at [testcode]:5 with"
                 + " type T")
@@ -19354,7 +19725,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTemplateTypeForwardReference_declaredMissing() {
     compiler.forwardDeclareType("Foo");
     compiler.forwardDeclareType("DoesNotExist");
-    newTest().addSource("/** @param {!Foo<DoesNotExist>} x */", "function f(x) {}").run();
+    newTest()
+        .addSource(
+            "/** @param {!Foo<DoesNotExist>} x */", //
+            "function f(x) {}")
+        .run();
   }
 
   @Test
@@ -19566,7 +19941,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "*/",
             "function f(x, z) {}",
             "f([], function() { /** @type {string} */ var x = this });")
-        .addDiagnostic(lines("initializing variable", "found   : Array<?>", "required: string"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : Array<?>",
+                "required: string"))
         .run();
   }
 
@@ -19755,7 +20134,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testRecordType1() {
     newTest()
-        .addSource("/** @param {{prop: number}} x */", "function f(x) {}", "f({});")
+        .addSource(
+            "/** @param {{prop: number}} x */", //
+            "function f(x) {}",
+            "f({});")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -19776,7 +20158,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testRecordType3() {
     newTest()
-        .addSource("/** @param {{prop: number}} x */", "function f(x) {}", "f({prop: 'x'});")
+        .addSource(
+            "/** @param {{prop: number}} x */", //
+            "function f(x) {}",
+            "f({prop: 'x'});")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of f does not match formal parameter",
@@ -21619,8 +22004,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIArrayLike8() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr2 = new Int8Array(10);", "arr2[true] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : boolean", "required: number"))
+        .addSource(
+            "var arr2 = new Int8Array(10);", //
+            "arr2[true] = 1;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -21628,8 +22019,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIArrayLike9() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr2 = new Int8Array2(10);", "arr2[true] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : boolean", "required: number"))
+        .addSource(
+            "var arr2 = new Int8Array2(10);", //
+            "arr2[true] = 1;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -21637,8 +22034,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIArrayLike10() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr2 = new Int8Array3(10);", "arr2[true] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : boolean", "required: number"))
+        .addSource(
+            "var arr2 = new Int8Array3(10);", //
+            "arr2[true] = 1;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -21646,8 +22049,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIArrayLike11() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr2 = new Int8Array4(10);", "arr2[true] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : boolean", "required: number"))
+        .addSource(
+            "var arr2 = new Int8Array4(10);", //
+            "arr2[true] = 1;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -21655,8 +22064,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIArrayLike12() {
     newTest()
         .addExterns(EXTERNS_WITH_IARRAYLIKE_DECLS)
-        .addSource("var arr2 = new BooleanArray5(10);", "arr2['prop'] = true;")
-        .addDiagnostic(lines("restricted index type", "found   : string", "required: number"))
+        .addSource(
+            "var arr2 = new BooleanArray5(10);", //
+            "arr2['prop'] = true;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -21669,7 +22084,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var arr2 = new BooleanArray5(10);",
             "arr2[numOrStr] = true;")
         .addDiagnostic(
-            lines("restricted index type", "found   : (number|string)", "required: number"))
+            lines(
+                "restricted index type", //
+                "found   : (number|string)",
+                "required: number"))
         .run();
   }
 
@@ -21852,7 +22270,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testIArrayLikeStructuralMatch3() {
     newTest()
-        .addSource("function f(/** !IArrayLike */ x){};", "f({length: 5})")
+        .addSource(
+            "function f(/** !IArrayLike */ x){};", //
+            "f({length: 5})")
         .includeDefaultExterns()
         .run();
   }
@@ -22079,7 +22499,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject1() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[0] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[0] = 1;")
         .includeDefaultExterns()
         .run();
   }
@@ -22088,7 +22510,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject2() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2['str'] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2['str'] = 1;")
         .includeDefaultExterns()
         .run();
   }
@@ -22097,9 +22521,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject3() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[true] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[true] = 1;")
         .addDiagnostic(
-            lines("restricted index type", "found   : boolean", "required: (number|string)"))
+            lines(
+                "restricted index type", //
+                "found   : boolean",
+                "required: (number|string)"))
         .run();
   }
 
@@ -22107,7 +22536,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject4() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[function(){}] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[function(){}] = 1;")
         .addDiagnostic(
             lines(
                 "restricted index type",
@@ -22120,8 +22551,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject5() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[{}] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : {}", "required: (number|string)"))
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[{}] = 1;")
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : {}",
+                "required: (number|string)"))
         .run();
   }
 
@@ -22129,9 +22566,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject6() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[undefined] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[undefined] = 1;")
         .addDiagnostic(
-            lines("restricted index type", "found   : undefined", "required: (number|string)"))
+            lines(
+                "restricted index type", //
+                "found   : undefined",
+                "required: (number|string)"))
         .run();
   }
 
@@ -22139,9 +22581,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject7() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr2 = new Object2();", "arr2[null] = 1;")
+        .addSource(
+            "var arr2 = new Object2();", //
+            "arr2[null] = 1;")
         .addDiagnostic(
-            lines("restricted index type", "found   : null", "required: (number|string)"))
+            lines(
+                "restricted index type", //
+                "found   : null",
+                "required: (number|string)"))
         .run();
   }
 
@@ -22149,8 +22596,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject8() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object2();", "/** @type {boolean} */", "var x = arr[3];")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: boolean"))
+        .addSource(
+            "var arr = new Object2();", //
+            "/** @type {boolean} */",
+            "var x = arr[3];")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -22158,7 +22612,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject9() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object2();", "/** @type {(number|string)} */", "var x = arr[3];")
+        .addSource(
+            "var arr = new Object2();", //
+            "/** @type {(number|string)} */",
+            "var x = arr[3];")
         .includeDefaultExterns()
         .run();
   }
@@ -22167,7 +22624,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject10() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object3();", "/** @type {number} */", "var x = arr[3];")
+        .addSource(
+            "var arr = new Object3();", //
+            "/** @type {number} */",
+            "var x = arr[3];")
         .includeDefaultExterns()
         .run();
   }
@@ -22176,8 +22636,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject11() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object3();", "/** @type {boolean} */", "var x = arr[3];")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: boolean"))
+        .addSource(
+            "var arr = new Object3();", //
+            "/** @type {boolean} */",
+            "var x = arr[3];")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -22185,8 +22652,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject12() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object3();", "/** @type {string} */", "var x = arr[3];")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: string"))
+        .addSource(
+            "var arr = new Object3();", //
+            "/** @type {string} */",
+            "var x = arr[3];")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -22194,8 +22668,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject13() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object3();", "arr[3] = false;")
-        .addDiagnostic(lines("assignment", "found   : boolean", "required: number"))
+        .addSource(
+            "var arr = new Object3();", //
+            "arr[3] = false;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -22203,8 +22683,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIObject14() {
     newTest()
         .addExterns(EXTERNS_WITH_IOBJECT_DECLS)
-        .addSource("var arr = new Object3();", "arr[3] = 'value';")
-        .addDiagnostic(lines("assignment", "found   : string", "required: number"))
+        .addSource(
+            "var arr = new Object3();", //
+            "arr[3] = 'value';")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -22277,7 +22763,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C1() {}",
             "/** @type {number} */",
             "C1.prototype.length;")
-        .addSource("/** @type{Interface1} */", "var obj1;", "var obj2 = new C1();", "obj1 = obj2;")
+        .addSource(
+            "/** @type{Interface1} */", //
+            "var obj1;",
+            "var obj2 = new C1();",
+            "obj1 = obj2;")
         .includeDefaultExterns()
         .run();
   }
@@ -22285,9 +22775,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testStructuralInterfaceMatching3() {
     newTest()
-        .addExterns("/** @record */", "function I1() {}", "", "/** @record */", "function I2() {}")
+        .addExterns(
+            "/** @record */", //
+            "function I1() {}",
+            "",
+            "/** @record */",
+            "function I2() {}")
         .addSource(
-            "/** @type {I1} */", "var i1;", "/** @type {I2} */", "var i2;", "i1 = i2;", "i2 = i1;")
+            "/** @type {I1} */", //
+            "var i1;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i1 = i2;",
+            "i2 = i1;")
         .includeDefaultExterns()
         .run();
   }
@@ -22295,9 +22795,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testStructuralInterfaceMatching4_1() {
     newTest()
-        .addExterns("/** @record */", "function I1() {}", "", "/** @record */", "function I2() {}")
+        .addExterns(
+            "/** @record */", //
+            "function I1() {}",
+            "",
+            "/** @record */",
+            "function I2() {}")
         .addSource(
-            "/** @type {I1} */", "var i1;", "/** @type {I2} */", "var i2;", "i2 = i1;", "i1 = i2;")
+            "/** @type {I1} */", //
+            "var i1;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i2 = i1;",
+            "i1 = i2;")
         .includeDefaultExterns()
         .run();
   }
@@ -22313,7 +22823,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function I3() {}",
             "/** @type {number} */",
             "I3.prototype.length;")
-        .addSource("/** @type {I1} */", "var i1;", "/** @type {I3} */", "var i3;", "i1 = i3;")
+        .addSource(
+            "/** @type {I1} */", //
+            "var i1;",
+            "/** @type {I3} */",
+            "var i3;",
+            "i1 = i3;")
         .includeDefaultExterns()
         .run();
   }
@@ -22351,8 +22866,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C2() {}",
             "/** @type {number} */",
             "C2.prototype.length;")
-        .addSource("/** @type {C1} */", "var c1;" + "/** @type {C2} */", "var c2;", "c1 = c2;")
-        .addDiagnostic(lines("assignment", "found   : (C2|null)", "required: (C1|null)"))
+        .addSource(
+            "/** @type {C1} */", //
+            "var c1;" + "/** @type {C2} */",
+            "var c2;",
+            "c1 = c2;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C2|null)",
+                "required: (C1|null)"))
         .run();
   }
 
@@ -22379,7 +22902,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "C4.prototype.length;",
             "/** @type {boolean} */",
             "C4.prototype.prop;")
-        .addSource("/** @type {I4} */", "var i4;" + "/** @type {C4} */", "var c4;", "i4 = c4;")
+        .addSource(
+            "/** @type {I4} */", //
+            "var i4;" + "/** @type {C4} */",
+            "var c4;",
+            "i4 = c4;")
         .includeDefaultExterns()
         .run();
   }
@@ -22401,7 +22928,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  function C5() {}",
             "  /** @type {C5} */",
             "  C5.prototype.next;")
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5 = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
         .includeDefaultExterns()
         .run();
   }
@@ -22423,7 +22954,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  function C5() {}",
             "  /** @type {C5} */",
             "  C5.prototype.next;")
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5 = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
         .includeDefaultExterns()
         .run();
   }
@@ -22445,8 +22980,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  function C5() {}",
             "  /** @type {C5} */",
             "  C5.prototype.next;")
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5 = c5;")
-        .addDiagnostic(lines("assignment", "found   : (C5|null)", "required: (I5|null)"))
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C5|null)",
+                "required: (I5|null)"))
         .run();
   }
 
@@ -22468,7 +23011,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C5() {}",
             "/** @type {C6} */",
             "C5.prototype.next;")
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5 = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
         .includeDefaultExterns()
         .run();
   }
@@ -22524,7 +23071,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD)
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5 = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
         .includeDefaultExterns()
         .run();
   }
@@ -22552,7 +23103,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // I5 and C5 shares the same type structure
     newTest()
         .addExterns(EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD)
-        .addSource("/** @type {I5} */", "var i5;" + "/** @type {C5} */", "var c5;", "i5.next = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;" + "/** @type {C5} */",
+            "var c5;",
+            "i5.next = c5;")
         .includeDefaultExterns()
         .run();
   }
@@ -22609,8 +23164,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // the type structure of I5 and C5 are different
     newTest()
         .addExterns(EXTERNS_FOR_LONG_NONMATCHING_CHAIN)
-        .addSource("/** @type {I5} */", "var i5;", "/** @type {C5} */", "var c5;", "i5 = c5;")
-        .addDiagnostic(lines("assignment", "found   : (C5|null)", "required: (I5|null)"))
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;",
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C5|null)",
+                "required: (I5|null)"))
         .includeDefaultExterns()
         .run();
   }
@@ -22643,10 +23207,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // the type structure of I5 and C5 are different
     newTest()
         .addExterns(EXTERNS_FOR_LONG_NONMATCHING_CHAIN)
-        .addSource("/** @type {I5} */", "var i5;", "/** @type {C5} */", "var c5;", "i5.next = c5;")
+        .addSource(
+            "/** @type {I5} */", //
+            "var i5;",
+            "/** @type {C5} */",
+            "var c5;",
+            "i5.next = c5;")
         .addDiagnostic(
             lines(
-                "assignment to property next of I5", "found   : (C5|null)", "required: (I5|null)"))
+                "assignment to property next of I5", //
+                "found   : (C5|null)",
+                "required: (I5|null)"))
         .includeDefaultExterns()
         .run();
   }
@@ -22671,7 +23242,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22695,8 +23272,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
-        .addDiagnostic(lines("assignment", "found   : (C7|null)", "required: (I7|null)"))
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C7|null)",
+                "required: (I7|null)"))
         .includeDefaultExterns()
         .run();
   }
@@ -22721,7 +23308,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(I5): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22746,7 +23339,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(I5, C5): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22770,7 +23369,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22791,7 +23396,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22812,7 +23423,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22833,7 +23450,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22854,7 +23477,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22878,8 +23507,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
-        .addDiagnostic(lines("assignment", "found   : (C7|null)", "required: (I7|null)"))
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C7|null)",
+                "required: (I7|null)"))
         .run();
   }
 
@@ -22899,7 +23538,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22921,7 +23566,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -22945,8 +23596,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
-        .addDiagnostic(lines("assignment", "found   : (C7|null)", "required: (I7|null)"))
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C7|null)",
+                "required: (I7|null)"))
         .run();
   }
 
@@ -22969,7 +23630,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
         .includeDefaultExterns()
         .run();
   }
@@ -23127,8 +23794,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_39() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
-        .addSource("/** @type {I2} */", "var o1 = {length : 'test'};")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
+        .addSource(
+            "/** @type {I2} */", //
+            "var o1 = {length : 'test'};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -23143,8 +23815,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_matching() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
-        .addSource("/** @type {I2} */", "var o1 = {length : 123};")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
+        .addSource(
+            "/** @type {I2} */", //
+            "var o1 = {length : 123};")
         .includeDefaultExterns()
         .run();
   }
@@ -23153,8 +23830,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_matching() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {", "  /** @type {number} */", "  this.length;", "}")
-        .addSource("/** @type {!I2} */", "var o1 = {length : 123};")
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}")
+        .addSource(
+            "/** @type {!I2} */", //
+            "var o1 = {length : 123};")
         .includeDefaultExterns()
         .run();
   }
@@ -23163,8 +23846,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_missing() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
-        .addSource("/** @type {!I2} */", "var o1 = {};")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
+        .addSource(
+            "/** @type {!I2} */", //
+            "var o1 = {};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -23180,8 +23868,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_missing() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {", "  /** @type {number} */", "  this.length;", "}")
-        .addSource("/** @type {!I2} */", "var o1 = {};")
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}")
+        .addSource(
+            "/** @type {!I2} */", //
+            "var o1 = {};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -23197,8 +23891,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_prototypeProp_mismatch() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
-        .addSource("/** @type {!I2} */", "var o1 = {length: null};")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
+        .addSource(
+            "/** @type {!I2} */", //
+            "var o1 = {length: null};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -23214,8 +23913,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_instanceProp_mismatch() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {", "  /** @type {number} */", "  this.length;", "}")
-        .addSource("/** @type {!I2} */", "var o1 = {length: null};")
+            "/** @record */", //
+            "function I2() {",
+            "  /** @type {number} */",
+            "  this.length;",
+            "}")
+        .addSource(
+            "/** @type {!I2} */", //
+            "var o1 = {length: null};")
         .addDiagnostic(
             lines(
                 "initializing variable",
@@ -23231,7 +23936,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_41() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
         .addSource(
             "/** @type {I2} */",
             "var o1 = {length : 123};",
@@ -23246,7 +23954,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching41_forObjectLiterals_41_1() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
         .addSource(
             "/** @type {I2} */",
             "var o1 = {length : 123};",
@@ -23261,7 +23972,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_42() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
         .addSource(
             "/** @type {{length: number}} */",
             "var o1 = {length : 123};",
@@ -23276,8 +23990,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStructuralInterfaceMatching_forObjectLiterals_43() {
     newTest()
         .addExterns(
-            "/** @record */", "function I2() {}", "/** @type {number} */", "I2.prototype.length;")
-        .addSource("var o1 = {length : 123};", "/** @type {I2} */", "var i;", "i = o1;")
+            "/** @record */", //
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;")
+        .addSource(
+            "var o1 = {length : 123};", //
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;")
         .includeDefaultExterns()
         .run();
   }
@@ -23292,7 +24013,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function C() {}",
             "/** @type {!Function} */ C.prototype.addEventListener;")
         .addSource(
-            "/** @param {C|I} x */", "function f(x) { x.addEventListener(); }", "f(new C());")
+            "/** @param {C|I} x */", //
+            "function f(x) { x.addEventListener(); }",
+            "f(new C());")
         .includeDefaultExterns()
         .run();
   }
@@ -23356,7 +24079,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @extends {I3}",
             " */",
             "function I4() {}")
-        .addSource("/** @type {I4} */", "var i4;", "/** @type {I2} */", "var i2;", "i4 = i2;")
+        .addSource(
+            "/** @type {I4} */", //
+            "var i4;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i4 = i2;")
         .includeDefaultExterns()
         .run();
   }
@@ -23393,7 +24121,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @extends {I2}",
             " */",
             "function I3() {}")
-        .addSource("/** @type {I3} */", "var i3;", "/** @type {I2} */", "var i2;", "i3 = i2;")
+        .addSource(
+            "/** @type {I3} */", //
+            "var i3;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i3 = i2;")
         .includeDefaultExterns()
         .run();
   }
@@ -23409,7 +24142,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @extends {I2}",
             " */",
             "function I3() {}")
-        .addSource("/** @type {I3} */", "var i3;", "/** @type {I2} */", "var i2;", "i3 = i2;")
+        .addSource(
+            "/** @type {I3} */", //
+            "var i3;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i3 = i2;")
         .includeDefaultExterns()
         .run();
   }
@@ -23504,7 +24242,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type{C1} */",
             "var obj2 = new C1();",
             "obj1 = obj2;")
-        .addDiagnostic(lines("assignment", "found   : (C1|null)", "required: (Interface1|null)"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C1|null)",
+                "required: (Interface1|null)"))
         .run();
   }
 
@@ -23528,8 +24270,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
-        .addDiagnostic(lines("assignment", "found   : (C7|null)", "required: (I7|null)"))
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C7|null)",
+                "required: (I7|null)"))
         .includeDefaultExterns()
         .run();
   }
@@ -23551,8 +24303,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C7() {}",
             "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
             "C7.prototype.getElement = function(){};")
-        .addSource("/** @type {I7} */", "var i7;", "/** @type {C7} */", "var c7;", "", "i7 = c7;")
-        .addDiagnostic(lines("assignment", "found   : (C7|null)", "required: (I7|null)"))
+        .addSource(
+            "/** @type {I7} */", //
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;")
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (C7|null)",
+                "required: (I7|null)"))
         .includeDefaultExterns()
         .run();
   }
@@ -23940,7 +24702,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCovarianceForRecordType5() {
     newTest()
         .addExterns(
-            "/** @constructor */", "function C() {}", "/** @constructor */", "function C2() {}")
+            "/** @constructor */", //
+            "function C() {}",
+            "/** @constructor */",
+            "function C2() {}")
         .addSource(
             "/** @type {{prop: C}} */",
             "var r1;",
@@ -24044,7 +24809,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var f = new Foo();",
             "f = r1;")
         .addDiagnostic(
-            lines("assignment", "found   : {\n  x: number,\n  y: string\n}", "required: Foo"))
+            lines(
+                "assignment", //
+                "found   : {\n  x: number,\n  y: string\n}",
+                "required: Foo"))
         .run();
   }
 
@@ -24088,7 +24856,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @return {string} */",
             "Bar.prototype.y = function(){return 'test';};")
         .addSource(
-            "function fun(/** Foo */f) {", "  f.y();", "}", "fun(new Bar1())", "fun(new Bar());")
+            "function fun(/** Foo */f) {", //
+            "  f.y();",
+            "}",
+            "fun(new Bar1())",
+            "fun(new Bar());")
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run();
   }
@@ -24105,7 +24877,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar() {}",
             "/** @return {undefined} */",
             "Bar.prototype.y = function(){};")
-        .addSource("/** @type{Foo} */", "var f = new Bar1();", "f.y();")
+        .addSource(
+            "/** @type{Foo} */", //
+            "var f = new Bar1();",
+            "f.y();")
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run(); // Only if strict warnings are enabled.
   }
@@ -24120,7 +24895,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C() {}",
             "/** @return {undefined} */",
             "C.prototype.y = function(){};")
-        .addSource("/** @type{{x: {obj: I}}} */", "var ri;", "ri.x.obj.y();")
+        .addSource(
+            "/** @type{{x: {obj: I}}} */", //
+            "var ri;",
+            "ri.x.obj.y();")
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run(); // Only if strict warnings are enabled.
   }
@@ -24137,7 +24915,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C() {}",
             "/** @return {undefined} */",
             "C.prototype.y = function(){};")
-        .addSource("/** @type{({x: {obj: I}}|{x: {obj: C}})} */", "var ri;", "ri.x.obj.y();")
+        .addSource(
+            "/** @type{({x: {obj: I}}|{x: {obj: C}})} */", //
+            "var ri;",
+            "ri.x.obj.y();")
         .includeDefaultExterns()
         .run();
   }
@@ -24153,7 +24934,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C() {}",
             "/** @return {undefined} */",
             "C.prototype.y = function(){};")
-        .addSource("/** @type{({x: {obj: I}}|{x: {obj: C}})} */", "var ri;", "ri.x.obj.y();")
+        .addSource(
+            "/** @type{({x: {obj: I}}|{x: {obj: C}})} */", //
+            "var ri;",
+            "ri.x.obj.y();")
         .run();
     // TODO(johnlenz): enable this.
     // "Property y not defined on all member types of (I|C)"
@@ -24194,7 +24978,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function C1() {}",
             "/** @return {string} */",
             "C1.prototype.y = function(){return 'test';};")
-        .addSource("/** @type{({x: {obj: C}}|{x: {obj: C1}})} */", "var ri;", "ri.x.obj.y();")
+        .addSource(
+            "/** @type{({x: {obj: C}}|{x: {obj: C1}})} */", //
+            "var ri;",
+            "ri.x.obj.y();")
         .includeDefaultExterns()
         .run();
   }
@@ -24212,7 +24999,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar() {}",
             "/** @return {number} */",
             "Bar.prototype.y = function(){return 1;};")
-        .addSource("/** @type {Foo} */ var f;", "f.y();")
+        .addSource(
+            "/** @type {Foo} */ var f;", //
+            "f.y();")
         .addDiagnostic(STRICT_INEXISTENT_PROPERTY)
         .run();
   }
@@ -24230,7 +25019,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar() {}",
             "/** @type {{x: number, y: number}} */",
             "Bar.prototype.prop;")
-        .addSource("/** @type {{x: number}} */ var f;", "f.z;")
+        .addSource(
+            "/** @type {{x: number}} */ var f;", //
+            "f.z;")
         .includeDefaultExterns()
         .run();
   }
@@ -24251,7 +25042,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar2() {}",
             "/** @type {number} */",
             "Bar2.prototype.prop;")
-        .addSource("/** @type {(Bar1|Bar2)} */ var b;", "var x = b.prop1")
+        .addSource(
+            "/** @type {(Bar1|Bar2)} */ var b;", //
+            "var x = b.prop1")
         .includeDefaultExterns()
         .run();
   }
@@ -24271,7 +25064,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function Bar2() {}",
             "/** @type {number} */",
             "Bar2.prototype.prop;")
-        .addSource("/** @type {(Bar1|Bar2)} */ var b;", "var x = b.prop1")
+        .addSource(
+            "/** @type {(Bar1|Bar2)} */ var b;", //
+            "var x = b.prop1")
         .run();
     // TODO(johnlenz): enable this.
     // "Property prop1 not defined on all member types of (Bar1|Bar2)"
@@ -24776,7 +25571,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType30() {
     newTest()
-        .addExterns("/** @constructor */", "function A() {}")
+        .addExterns(
+            "/** @constructor */", //
+            "function A() {}")
         .addSource(
             "/**",
             " * @type {{prop1: (A)}}",
@@ -24800,7 +25597,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testCovarianceForRecordType31() {
     newTest()
-        .addExterns("/** @constructor */", "function A() {}")
+        .addExterns(
+            "/** @constructor */", //
+            "function A() {}")
         .addSource(
             "/**",
             " * @type {{prop1: (A|null)}}",
@@ -24849,7 +25648,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testDuplicateVariableDefinition3() {
     newTest()
         .addSource(
-            "var ns = {};", "/** @type {{x:number}} */ ns.x;", "/** @type {{x:number}} */ ns.x;")
+            "var ns = {};", //
+            "/** @type {{x:number}} */ ns.x;",
+            "/** @type {{x:number}} */ ns.x;")
         .run();
   }
 
@@ -24857,7 +25658,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testDuplicateVariableDefinition3_1() {
     newTest()
         .addSource(
-            "var ns = {};", "/** @type {{x:number}} */ ns.x;", "/** @type {{x:string}} */ ns.x;")
+            "var ns = {};", //
+            "/** @type {{x:number}} */ ns.x;",
+            "/** @type {{x:string}} */ ns.x;")
         .addDiagnostic(
             "variable ns.x redefined with type {x: string}, original definition "
                 + "at [testcode]:2 with type {x: number}")
@@ -25106,18 +25909,30 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules3() {
-    newTest().addSource("function f(/** ?Object */ x) {", "  return {} instanceof x;", "}").run();
+    newTest()
+        .addSource(
+            "function f(/** ?Object */ x) {", //
+            "  return {} instanceof x;",
+            "}")
+        .run();
   }
 
   @Test
   public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules4() {
-    newTest().addSource("function f(/** ?Function */ x) {", "  return x();", "}").run();
+    newTest()
+        .addSource(
+            "function f(/** ?Function */ x) {", //
+            "  return x();",
+            "}")
+        .run();
   }
 
   @Test
   public void testEs5ClassExtendingEs6Class() {
     newTest()
-        .addSource("class Foo {}", "/** @constructor @extends {Foo} */ var Bar = function() {};")
+        .addSource(
+            "class Foo {}", //
+            "/** @constructor @extends {Foo} */ var Bar = function() {};")
         .addDiagnostic("ES5 class Bar cannot extend ES6 class Foo")
         .run();
   }
@@ -25125,7 +25940,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testEs5ClassExtendingEs6Class_noWarning() {
     newTest()
-        .addSource("class A {}", "/** @constructor @extends {A} */", "const B = createSubclass(A);")
+        .addSource(
+            "class A {}", //
+            "/** @constructor @extends {A} */",
+            "const B = createSubclass(A);")
         .run();
   }
 
@@ -25156,7 +25974,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // Github issue #2222: https://github.com/google/closure-compiler/issues/2222
   @Test
   public void testSetPrototypeToNewInstance() {
-    newTest().addSource("/** @constructor */", "function C() {}", "C.prototype = new C;").run();
+    newTest()
+        .addSource(
+            "/** @constructor */", //
+            "function C() {}",
+            "C.prototype = new C;")
+        .run();
   }
 
   @Test
@@ -25178,7 +26001,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var /** number */ z = y;",
             "}"),
         // Tests that the type of y is (NoResolvedType|null) and not (Foo|null)
-        lines("initializing variable", "found   : (NoResolvedType|null)", "required: number"));
+        lines(
+            "initializing variable", //
+            "found   : (NoResolvedType|null)",
+            "required: number"));
   }
 
   @Test
@@ -25238,7 +26064,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "var m = /** @type {!MyMap<string,number>} */ (new MyMap());",
             "var /** null */ n = getValueFromNameAndMap(m);")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -25264,7 +26094,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  /** @constructor */ function C(){ /** @const */ this.a = 1;}",
             "  /** @type {null} */ var x = new C().a;",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -25317,7 +26151,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators1() {
     newTest()
         .addSource("var x = 'asdf' - 1;")
-        .addDiagnostic(lines("left operand", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "left operand", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25325,7 +26163,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators2() {
     newTest()
         .addSource("var x = 1 - 'asdf';")
-        .addDiagnostic(lines("right operand", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "right operand", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25333,7 +26175,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators3() {
     newTest()
         .addSource("var x = 'asdf'; x++;")
-        .addDiagnostic(lines("increment/decrement", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "increment/decrement", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25341,7 +26187,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators4a() {
     newTest()
         .addSource("var x = -'asdf';")
-        .addDiagnostic(lines("sign operator", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "sign operator", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25366,7 +26216,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators6() {
     newTest()
         .addSource("var x = 'asdf'; x *= 2;")
-        .addDiagnostic(lines("left operand", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "left operand", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25374,7 +26228,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators7() {
     newTest()
         .addSource("var x = ~ 'asdf';")
-        .addDiagnostic(lines("bitwise NOT", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "bitwise NOT", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25383,7 +26241,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var x = 'asdf' | 1;")
         .addDiagnostic(
-            lines("bad left operand to bitwise operator", "found   : string", "required: number"))
+            lines(
+                "bad left operand to bitwise operator", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25391,7 +26252,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators9() {
     newTest()
         .addSource("var x = 'asdf' << 1;")
-        .addDiagnostic(lines("operator <<", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "operator <<", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25399,7 +26264,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictNumericOperators10() {
     newTest()
         .addSource("var x = 1 >>> 'asdf';")
-        .addDiagnostic(lines("operator >>>", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "operator >>>", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -25424,7 +26293,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; x++;")
         .addDiagnostic(
-            lines("increment/decrement", "found   : (bigint|string)", "required: (bigint|number)"))
+            lines(
+                "increment/decrement", //
+                "found   : (bigint|string)",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -25436,7 +26308,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; x--;")
         .addDiagnostic(
-            lines("increment/decrement", "found   : (bigint|string)", "required: (bigint|number)"))
+            lines(
+                "increment/decrement", //
+                "found   : (bigint|string)",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -25456,7 +26331,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; ~x;")
         .addDiagnostic(
-            lines("bitwise NOT", "found   : (bigint|string)", "required: (bigint|number)"))
+            lines(
+                "bitwise NOT", //
+                "found   : (bigint|string)",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -25501,7 +26379,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @type {bigint|string} */var x; -x;")
         .addDiagnostic(
-            lines("unary minus operator", "found   : (bigint|string)", "required: (bigint|number)"))
+            lines(
+                "unary minus operator", //
+                "found   : (bigint|string)",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -25765,7 +26646,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource("/** @type {bigint|number} */ var x; 'asdf' < x;")
         .addDiagnostic(
             lines(
-                "left side of numeric comparison", "found   : string", "required: (bigint|number)"))
+                "left side of numeric comparison", //
+                "found   : string",
+                "required: (bigint|number)"))
         .run();
   }
 
@@ -25821,7 +26704,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // to maintain consistency with TypeScript.
     newTest()
         .addSource("var arr = []; /** @type {bigint} */ var b; arr[b];")
-        .addDiagnostic(lines("restricted index type", "found   : bigint", "required: number"))
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : bigint",
+                "required: number"))
         .run();
   }
 
@@ -25838,7 +26725,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var arr = []; /** @type {bigint|number} */ var bn; arr[bn];")
         .addDiagnostic(
-            lines("restricted index type", "found   : (bigint|number)", "required: number"))
+            lines(
+                "restricted index type", //
+                "found   : (bigint|number)",
+                "required: number"))
         .run();
   }
 
@@ -25910,18 +26800,32 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testClassFieldTypeError1() {
     newTest()
-        .addSource("class C {", "  /** @type {string} */ ", "  x = 2;", "}")
+        .addSource(
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}")
         .addDiagnostic(
-            lines("assignment to property x of C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
   @Test
   public void testClassFieldStaticTypeError1() {
     newTest()
-        .addSource("class C {", "  /** @type {string} */ ", "  static x = 2;", "}")
+        .addSource(
+            "class C {", //
+            "  /** @type {string} */ ",
+            "  static x = 2;",
+            "}")
         .addDiagnostic(
-            lines("assignment to property x of C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -25938,7 +26842,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "}")
         .addDiagnostic(
-            lines("assignment to property x of C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -25946,9 +26853,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testClassFieldTypeError3() {
     newTest()
         .addSource(
-            "const obj = {};", "obj.C = class {", "  /** @type {string} */ ", "  x = 2;", "}")
+            "const obj = {};", //
+            "obj.C = class {",
+            "  /** @type {string} */ ",
+            "  x = 2;",
+            "}")
         .addDiagnostic(
-            lines("assignment to property x of obj.C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of obj.C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -25962,7 +26876,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  static x = 2;",
             "}")
         .addDiagnostic(
-            lines("assignment to property x of obj.C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of obj.C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -25998,7 +26915,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "class C { /** @type {string} */ x = y ?? 0; }",
             "}")
         .addDiagnostic(
-            lines("assignment to property x of C", "found   : number", "required: string"))
+            lines(
+                "assignment to property x of C", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -26039,7 +26959,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest().addSource("/** @unrestricted */ class C { 1 = 2; }").run();
     newTest()
         .addSource(
-            "/** @unrestricted */", "class C {", "  /** @type {string} */", "  [x] = 2;", "}")
+            "/** @unrestricted */", //
+            "class C {",
+            "  /** @type {string} */",
+            "  [x] = 2;",
+            "}")
         .run();
   }
 
@@ -26049,7 +26973,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest().addSource("/** @dict */ class C { static 'x' = 2; }").run();
     newTest().addSource("/** @dict */ class C { static 1 = 2; }").run();
     newTest()
-        .addSource("/** @dict */", "class C {", "  /** @type {string}*/", "  static [x] = 2;", "}")
+        .addSource(
+            "/** @dict */", //
+            "class C {",
+            "  /** @type {string}*/",
+            "  static [x] = 2;",
+            "}")
         .run();
 
     newTest().addSource("/** @unrestricted */ class C { static [x]=2; }").run();
@@ -26108,7 +27037,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("var x = true < 'asdf';")
         .addDiagnostic(
-            lines("expected matching types in comparison", "found   : string", "required: boolean"))
+            lines(
+                "expected matching types in comparison", //
+                "found   : string",
+                "required: boolean"))
         .run();
   }
 
@@ -26116,7 +27048,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testStrictComparison2() {
     newTest()
         .addSource(
-            "function f(/** (number|string) */ x, /** string */ y) {", "  return x < y;", "}")
+            "function f(/** (number|string) */ x, /** string */ y) {", //
+            "  return x < y;",
+            "}")
         .run();
   }
 
@@ -26126,13 +27060,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource("/** @type {symbol} */ var x; /** @type {?} */ var y; x < y")
         .addDiagnostic(
             lines(
-                "left side of comparison", "found   : symbol", "required: (bigint|number|string)"))
+                "left side of comparison", //
+                "found   : symbol",
+                "required: (bigint|number|string)"))
         .run();
   }
 
   @Test
   public void testComparisonInStrictModeNoSpuriousWarning() {
-    newTest().addSource("function f(x) {", "  var y = 'asdf';", "  var z = y < x;", "}").run();
+    newTest()
+        .addSource(
+            "function f(x) {", //
+            "  var y = 'asdf';",
+            "  var z = y < x;",
+            "}")
+        .run();
   }
 
   @Test
@@ -26149,7 +27091,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return (new Foo) < x;",
             "}")
         .addDiagnostic(
-            lines("left side of comparison", "found   : Foo", "required: (bigint|number|string)"))
+            lines(
+                "left side of comparison", //
+                "found   : Foo",
+                "required: (bigint|number|string)"))
         .run();
   }
 
@@ -26167,7 +27112,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return x < (new Bar);",
             "}")
         .addDiagnostic(
-            lines("right side of comparison", "found   : Bar", "required: (bigint|number|string)"))
+            lines(
+                "right side of comparison", //
+                "found   : Bar",
+                "required: (bigint|number|string)"))
         .run();
   }
 
@@ -26198,7 +27146,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var o = {};",
             "",
             "o[ES.A] = 1;")
-        .addDiagnostic(lines("restricted index type", "found   : ES<symbol>", "required: number"))
+        .addDiagnostic(
+            lines(
+                "restricted index type", //
+                "found   : ES<symbol>",
+                "required: number"))
         .run();
   }
 
@@ -26220,7 +27172,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testSymbol1() {
     newTest()
-        .addSource("/** @const */", "var o = {};", "", "if (o[Symbol.iterator]) { /** ok */ };")
+        .addSource(
+            "/** @const */", //
+            "var o = {};",
+            "",
+            "if (o[Symbol.iterator]) { /** ok */ };")
         .includeDefaultExterns()
         .run();
   }
@@ -26228,7 +27184,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testSymbol2() {
     newTest()
-        .addSource("/** @const */", "var o = new Symbol();")
+        .addSource(
+            "/** @const */", //
+            "var o = new Symbol();")
         .addDiagnostic("cannot instantiate non-constructor")
         .includeDefaultExterns()
         .run();
@@ -26334,7 +27292,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @implements {Toggle}",
             " */",
             "var MyElementWithToggle;")
-        .addSource("class SubToggle extends MyElementWithToggle {}", "(new SubToggle).foobar(123);")
+        .addSource(
+            "class SubToggle extends MyElementWithToggle {}", //
+            "(new SubToggle).foobar(123);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of MyElementWithToggle.prototype.foobar"
@@ -26356,7 +27316,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @implements {Toggle}",
             " */",
             "let MyElementWithToggle;")
-        .addSource("class SubToggle extends MyElementWithToggle {}", "(new SubToggle).foobar(123);")
+        .addSource(
+            "class SubToggle extends MyElementWithToggle {}", //
+            "(new SubToggle).foobar(123);")
         .addDiagnostic(
             lines(
                 "actual parameter 1 of MyElementWithToggle.prototype.foobar"
@@ -26414,7 +27376,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "    })(x);",
             "  }",
             "}")
-        .addDiagnostic(lines("sign operator", "found   : (number|string)", "required: number"))
+        .addDiagnostic(
+            lines(
+                "sign operator", //
+                "found   : (number|string)",
+                "required: number"))
         .run();
   }
 
@@ -26428,7 +27394,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "/** @return {number} */",
             "Foo.prototype.bar = function() {};")
-        .addDiagnostic(lines("inconsistent return type", "found   : string", "required: number"))
+        .addDiagnostic(
+            lines(
+                "inconsistent return type", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
@@ -26448,7 +27418,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "Foo.prototype.baz = function(x) {",
             "  var /** string */ y = x;",
             "};")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -26470,7 +27444,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "ns.Foo.prototype.baz = function(x) {",
             "  var /** string */ y = x;",
             "};")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: string"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -26522,7 +27500,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines("assignment", "found   : Promise<(number|string)>", "required: Promise<string>"))
+            lines(
+                "assignment", //
+                "found   : Promise<(number|string)>",
+                "required: Promise<string>"))
         .includeDefaultExterns()
         .run();
   }
@@ -26536,7 +27517,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines("assignment", "found   : IThenable<string>", "required: Array<string>"))
+            lines(
+                "assignment", //
+                "found   : IThenable<string>",
+                "required: Array<string>"))
         .run();
   }
 
@@ -26549,7 +27533,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = a;",
             "}")
         .addDiagnostic(
-            lines("assignment", "found   : Array<string>", "required: IThenable<string>"))
+            lines(
+                "assignment", //
+                "found   : Array<string>",
+                "required: IThenable<string>"))
         .run();
   }
 
@@ -26566,7 +27553,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function fn(/** !IThenable<string> */ a ) {",
             "  x = a;",
             "}")
-        .addDiagnostic(lines("assignment", "found   : IThenable<string>", "required: C<string>"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : IThenable<string>",
+                "required: C<string>"))
         .run();
   }
 
@@ -26583,7 +27574,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function fn(/** !C<string> */ a ) {",
             "  x = a;",
             "}")
-        .addDiagnostic(lines("assignment", "found   : C<string>", "required: IThenable<string>"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : C<string>",
+                "required: IThenable<string>"))
         .run();
   }
 
@@ -26866,7 +27861,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return null;",
             "}")
         .addDiagnostic(
-            lines("inconsistent return type", "found   : (number|string)", "required: null"))
+            lines(
+                "inconsistent return type", //
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
@@ -26880,22 +27878,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_namespace() {
-    newTest().addSource("/** @const */ var ns = {};", "var /** typeof ns */ x = ns;").run();
+    newTest()
+        .addSource(
+            "/** @const */ var ns = {};", //
+            "var /** typeof ns */ x = ns;")
+        .run();
   }
 
   @Test
   public void testTypeofType_namespaceMismatch() {
     newTest()
-        .addSource("/** @const */ var ns = {};", "var /** typeof ns */ x = {};")
-        .addDiagnostic(lines("initializing variable", "found   : {}", "required: {}"))
+        .addSource(
+            "/** @const */ var ns = {};", //
+            "var /** typeof ns */ x = {};")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: {}"))
         .run();
   }
 
   @Test
   public void testTypeofType_namespaceForwardReferenceMismatch() {
     newTest()
-        .addSource("var /** typeof ns */ x = {};", "/** @const */ var ns = {};")
-        .addDiagnostic(lines("initializing variable", "found   : {}", "required: {}"))
+        .addSource(
+            "var /** typeof ns */ x = {};", //
+            "/** @const */ var ns = {};")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: {}"))
         .run();
   }
 
@@ -26945,7 +27959,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTypeofType_enum() {
-    newTest().addSource("/** @enum */ var Foo = {A: 1}", "var /** typeof Foo */ x = Foo;").run();
+    newTest()
+        .addSource(
+            "/** @enum */ var Foo = {A: 1}", //
+            "var /** typeof Foo */ x = Foo;")
+        .run();
   }
 
   @Test
@@ -26961,9 +27979,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeofType_enumMismatch1() {
     newTest()
-        .addSource("/** @enum */ var Foo = {A: 1}", "var /** typeof Foo */ x = Foo.A;")
+        .addSource(
+            "/** @enum */ var Foo = {A: 1}", //
+            "var /** typeof Foo */ x = Foo.A;")
         .addDiagnostic(
-            lines("initializing variable", "found   : Foo<number>", "required: enum{Foo}"))
+            lines(
+                "initializing variable", //
+                "found   : Foo<number>",
+                "required: enum{Foo}"))
         .run();
   }
 
@@ -26974,7 +27997,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @enum */ var Foo = {A: 1}",
             "/** @enum */ var Bar = {A: 1}",
             "var /** typeof Foo */ x = Bar;")
-        .addDiagnostic(lines("initializing variable", "found   : enum{Bar}", "required: enum{Foo}"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : enum{Bar}",
+                "required: enum{Foo}"))
         .run();
   }
 
@@ -26989,7 +28016,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "/** @const {typeof ns2} */ var ns = /** @type {?} */ (ns1);",
             "/** @type {null} */ var x = ns.bar;")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -27020,7 +28051,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {string} */ ns1.bar;",
             "",
             "/** @type {null} */ var x = ns.bar;")
-        .addDiagnostic(lines("initializing variable", "found   : string", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: null"))
         .run();
   }
 
@@ -27032,14 +28067,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ ns1.Foo = function() {};",
             "/** @const {typeof ns1} */ var ns = /** @type {?} */ (x);",
             "/** @type {!ns.Foo} */ var x = null;")
-        .addDiagnostic(lines("initializing variable", "found   : null", "required: ns1.Foo"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : null",
+                "required: ns1.Foo"))
         .run();
   }
 
   @Test
   public void testTypeofType_unknownType() {
     newTest()
-        .addSource("var /** ? */ x;", "/** @type {typeof x} */ var y;")
+        .addSource(
+            "var /** ? */ x;", //
+            "/** @type {typeof x} */ var y;")
         .addDiagnostic("Missing type for `typeof` value. The value must be declared and const.")
         .run();
   }
@@ -27054,7 +28095,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             // Verify this works although we have never seen any assignments to `ns2.Foo`
             "/** @const {typeof ns2.Foo} */ var Foo2 = /** @type {?} */ (x);",
             "/** @type {null} */ var x = new Foo2();")
-        .addDiagnostic(lines("initializing variable", "found   : ns1.Foo", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : ns1.Foo",
+                "required: null"))
         .run();
   }
 
@@ -27126,7 +28171,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeofType_withGlobalInferredVariableWithFunctionExpression() {
     newTest()
         .addSource(
-            "var x = 1;", "var g = function (/** typeof x */ a) {}", "x = 'str';", "g(null);")
+            "var x = 1;", //
+            "var g = function (/** typeof x */ a) {}",
+            "x = 'str';",
+            "g(null);")
         .addDiagnostic(
             lines("Missing type for `typeof` value. The value must be declared and const."))
         .run();
@@ -27227,7 +28275,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "}")
         .addDiagnostic(
-            lines("initializing variable", "found   : null", "required: (number|string)"))
+            lines(
+                "initializing variable", //
+                "found   : null",
+                "required: (number|string)"))
         .run();
   }
 
@@ -27243,7 +28294,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var g = null",
             "}")
         .addDiagnostic(
-            lines("initializing variable", "found   : null", "required: (number|string)"))
+            lines(
+                "initializing variable", //
+                "found   : null",
+                "required: (number|string)"))
         .run();
   }
 
@@ -27260,7 +28314,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "}")
         .addDiagnostic(
-            lines("initializing variable", "found   : null", "required: (number|string)"))
+            lines(
+                "initializing variable", //
+                "found   : null",
+                "required: (number|string)"))
         .run();
   }
 
@@ -27275,7 +28332,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {E} */ let e = undefined;",
             "")
         .addDiagnostic(
-            lines("initializing variable", "found   : undefined", "required: Foo.E<number>"))
+            lines(
+                "initializing variable", //
+                "found   : undefined",
+                "required: Foo.E<number>"))
         .run();
   }
 
@@ -27288,7 +28348,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x *= 2;", // infer 'x' to now be 'number'
             "  var /** null */ y = x;",
             "}")
-        .addDiagnostic(lines("initializing variable", "found   : number", "required: null"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: null"))
         .run();
   }
 
@@ -27357,14 +28421,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Test that the native Thenable type is not nullable even without externs
     newTest()
         .addSource("var /** Thenable */ t = null;")
-        .addDiagnostic(lines("initializing variable", "found   : null", "required: {then: ?}"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : null",
+                "required: {then: ?}"))
         .run();
   }
 
   @Test
   public void testFunctionOnObjLitWithAngleBracketKey() {
     newTest()
-        .addSource("/** @const {!Object<function()>} */", "var x = {'<': function() {}};")
+        .addSource(
+            "/** @const {!Object<function()>} */", //
+            "var x = {'<': function() {}};")
         .run();
   }
 
@@ -27393,7 +28463,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testClassOnObjLitWithAngleBracketKey() {
     newTest()
         .addSource(
-            "/** @const */", "var x = {", "  /** @constructor */", "  '<': function() {},", "};")
+            "/** @const */", //
+            "var x = {",
+            "  /** @constructor */",
+            "  '<': function() {},",
+            "};")
         .run();
   }
 
@@ -27587,7 +28661,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testInvalidComparisonsInStrictOperatorsMode() {
     newTest()
         .addSource("function f(/** (void|string) */ x, /** void */ y) { return x < y; }")
-        .addDiagnostic(lines("right side of comparison", "found   : undefined", "required: string"))
+        .addDiagnostic(
+            lines(
+                "right side of comparison", //
+                "found   : undefined",
+                "required: string"))
         .run();
   }
 
@@ -27651,7 +28729,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCanUseConstToAssignValueToTypedef() {
-    newTest().addSource("/** @typedef {!Object<string, number>} */", "const Type = {};").run();
+    newTest()
+        .addSource(
+            "/** @typedef {!Object<string, number>} */", //
+            "const Type = {};")
+        .run();
   }
 
   @Test
@@ -27659,8 +28741,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Note: 'const' works but not 'let' because const declarations with a literal rhs have a
     // 'declared type'.
     newTest()
-        .addSource("/** @typedef {!Object<string, number>} */", "let Type = {};")
-        .addDiagnostic(lines("initializing variable", "found   : {}", "required: None"))
+        .addSource(
+            "/** @typedef {!Object<string, number>} */", //
+            "let Type = {};")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: None"))
         .run();
   }
 
@@ -27703,7 +28791,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "",
             "const /** !Baz */ x = foo;")
-        .addDiagnostic(lines("initializing variable", "found   : {self: {...}}", "required: Baz"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : {self: {...}}",
+                "required: Baz"))
         .run();
   }
 
@@ -27819,7 +28911,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                     "var /** null */ x = foo;",
                     "")
                 .addDiagnostic(
-                    lines("initializing variable", "found   : (number|string)", "required: null"))
+                    lines(
+                        "initializing variable", //
+                        "found   : (number|string)",
+                        "required: null"))
             ::run);
   }
 
@@ -27828,7 +28923,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @record */ var X = {};")
         .addDiagnostic(
-            lines("initializing variable", "found   : {}", "required: function(this:X): ?"))
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: function(this:X): ?"))
         .run();
   }
 
@@ -27837,7 +28935,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @record */ const X = {};")
         .addDiagnostic(
-            lines("initializing variable", "found   : {}", "required: function(this:X): ?"))
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: function(this:X): ?"))
         .run();
   }
 
@@ -27846,7 +28947,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource("/** @constructor */ const X = {};")
         .addDiagnostic(
-            lines("initializing variable", "found   : {}", "required: function(new:X): ?"))
+            lines(
+                "initializing variable", //
+                "found   : {}",
+                "required: function(new:X): ?"))
         .run();
   }
 
@@ -27924,7 +29028,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {?Foo} */",
             "var y;",
             "x = y;")
-        .addDiagnostic(lines("assignment", "found   : (null|number)", "required: number"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : (null|number)",
+                "required: number"))
         .run();
   }
 
@@ -27960,7 +29068,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "const b = a;",
             "")
         .addDiagnostic(
-            lines("initializing variable", "found   : (null|number)", "required: number"))
+            lines(
+                "initializing variable", //
+                "found   : (null|number)",
+                "required: number"))
         .run();
   }
 
@@ -28037,10 +29148,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleId() {
     newTest()
-        .addExterns("/** @const @suppress {duplicate} */", "var globalNs = {};")
+        .addExterns(
+            "/** @const @suppress {duplicate} */", //
+            "var globalNs = {};")
         .addSource(
-            "goog.module('globalNs');", "goog.module.declareLegacyNamespace();", "exports = 0;")
-        .addDiagnostic(lines("legacy goog.module export", "found   : number", "required: {}"))
+            "goog.module('globalNs');", //
+            "goog.module.declareLegacyNamespace();",
+            "exports = 0;")
+        .addDiagnostic(
+            lines(
+                "legacy goog.module export", //
+                "found   : number",
+                "required: {}"))
         .includeDefaultExterns()
         .run();
   }
@@ -28048,13 +29167,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleIdWithProperties() {
     newTest()
-        .addExterns("/** @const @suppress {duplicate} */", "var globalNs = {};")
+        .addExterns(
+            "/** @const @suppress {duplicate} */", //
+            "var globalNs = {};")
         .addSource(
             "goog.module('globalNs');",
             "goog.module.declareLegacyNamespace();",
             "exports.prop = 0;")
         .addDiagnostic(
-            lines("legacy goog.module export", "found   : {prop: number}", "required: {}"))
+            lines(
+                "legacy goog.module export", //
+                "found   : {prop: number}",
+                "required: {}"))
         .includeDefaultExterns()
         .run();
   }
@@ -28085,7 +29209,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testDynamicImportSpecifier() {
     newTest()
         .addSource("var foo = undefined; import(foo);")
-        .addDiagnostic(lines("dynamic import specifier", "found   : undefined", "required: string"))
+        .addDiagnostic(
+            lines(
+                "dynamic import specifier", //
+                "found   : undefined",
+                "required: string"))
         .run();
   }
 
@@ -28096,7 +29224,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
         .addSource("/** @type {number} */ var foo = import('foo.js');")
-        .addDiagnostic(lines("initializing variable", "found   : Promise<?>", "required: number"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : Promise<?>",
+                "required: number"))
         .run();
   }
 
