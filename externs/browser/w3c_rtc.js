@@ -2619,7 +2619,7 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
  *    successCallbackOrConstraints
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
- * @return {!Promise<!RTCSessionDescription>|undefined}
+ * @return {!Promise<!RTCSessionDescription>}
  */
 RTCPeerConnection.prototype.createOffer = function(successCallbackOrConstraints,
     errorCallback, constraints) {};
