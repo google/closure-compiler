@@ -2153,7 +2153,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private void outputInstrumentationMapping() throws IOException {
     if (!Strings.isNullOrEmpty(config.instrumentationMappingFile)) {
-      compiler.getInstrumentationMapping().save(config.instrumentationMappingFile);
+      String path = expandCommandLinePath(config.instrumentationMappingFile, /* forModule= */ null);
+      compiler.getInstrumentationMapping().save(path);
     }
   }
 

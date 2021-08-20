@@ -307,9 +307,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--instrument_mapping_report",
         usage =
-            "File where the encoded parameters created by Production "
-                + "Instrumentation are mapped to their pre-encoded values. Must "
-                + "be used in tandem with --instrument_for_coverage_option=PRODUCTION")
+            "File where the encoded parameters created by Production Instrumentation are mapped to"
+                + " their pre-encoded values. The %outname% placeholder will expand to the name of"
+                + " the output file that the source map corresponds to. Must be used in tandem with"
+                + " --instrument_for_coverage_option=PRODUCTION")
     private String instrumentationMappingOutputFile = "";
 
     @Option(
