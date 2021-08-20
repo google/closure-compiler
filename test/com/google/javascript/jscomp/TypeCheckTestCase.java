@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DESCRIP
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.AstValidator.TypeInfoValidation;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -39,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 
-abstract class TypeCheckTestCase extends CompilerTypeTestCase {
+public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   private boolean reportUnknownTypes = false;
   private boolean runClosurePass = false;
@@ -113,156 +114,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         objectType.getPropertyType(propertyName));
   }
 
-  protected void testTypes(String js) {
-    testTypes(js, (String) null);
-  }
-
-  protected void testTypes(String js, String description) {
-    testTypes(js, description, false);
-  }
-
-  protected void testTypes(String js, DiagnosticType type) {
-    testTypes(js, type, false);
-  }
-
-  protected void testTypes(String js, String description, boolean isError) {
-    testTypesWithExterns("", js, description, isError);
-  }
-
-  protected void testTypes(String js, List<String> descriptions) {
-    testTypesWithExterns("", js, descriptions, false);
-  }
-
-  void testTypes(String js, List<String> descriptions, boolean isError) {
-    testTypesWithExterns("", js, descriptions, isError);
-  }
-
-  void testTypes(String js, DiagnosticType diagnosticType, boolean isError) {
-    testTypesWithExterns("", js, diagnosticType, isError);
-  }
-
-  protected void testTypes(String js, String[] warnings) {
-    Node n = compiler.parseTestCode(js);
-    assertThat(compiler.getErrors()).isEmpty();
-    Node externsNode = IR.root();
-    // create a parent node for the extern and source blocks
-    Node root = IR.root(externsNode, IR.root(n));
-
-    makeTypeCheck().processForTesting(root.getFirstChild(), root.getSecondChild());
-    assertThat(compiler.getErrors()).isEmpty();
-    checkReportedWarningsHelper(warnings);
-  }
-
-  protected void testTypesWithCommonExterns(String js, List<String> descriptions) {
-    testTypesWithExterns(DEFAULT_EXTERNS, js, descriptions, false);
-  }
-
-  protected void testTypesWithCommonExterns(String js, String description) {
-    testTypesWithExterns(DEFAULT_EXTERNS, js, description, false);
-  }
-
-  protected void testTypesWithCommonExterns(String js) {
-    testTypesWithExterns(DEFAULT_EXTERNS, js, (DiagnosticType) null, false);
-  }
-
-  protected void testTypesWithExterns(
-      String externs, String js, String description, boolean isError) {
-    testTypesWithExterns(
-        externs,
-        js,
-        description != null ? ImmutableList.of(description) : ImmutableList.of(),
-        isError);
-  }
-
-  void testTypesWithExterns(String externs, String js, List<String> descriptions, boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    if (isError) {
-      assertWithMessage("Regarding errors:")
-          .that(compiler.getErrors())
-          .comparingElementsUsing(DESCRIPTION_EQUALITY)
-          .containsExactlyElementsIn(descriptions)
-          .inOrder();
-      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
-    } else {
-      assertWithMessage("Regarding warnings:")
-          .that(compiler.getWarnings())
-          .comparingElementsUsing(DESCRIPTION_EQUALITY)
-          .containsExactlyElementsIn(descriptions)
-          .inOrder();
-      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
-    }
-  }
-
-  void testTypesWithExterns(
-      String externs, String js, DiagnosticType diagnosticType, boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    ImmutableList<DiagnosticType> expectedTypes =
-        (diagnosticType == null) ? ImmutableList.of() : ImmutableList.of(diagnosticType);
-
-    if (isError) {
-      assertWithMessage("Regarding errors:")
-          .that(compiler.getErrors())
-          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-          .containsExactlyElementsIn(expectedTypes)
-          .inOrder();
-      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
-    } else {
-      assertWithMessage("Regarding warnings:")
-          .that(compiler.getWarnings())
-          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-          .containsExactlyElementsIn(expectedTypes)
-          .inOrder();
-      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
-    }
-  }
-
-  private void testTypesWithExternsDiagnosticTypes(
-      String externs, String js, List<DiagnosticType> expectedTypes, boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    if (isError) {
-      assertWithMessage("Regarding errors:")
-          .that(compiler.getErrors())
-          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-          .containsExactlyElementsIn(expectedTypes)
-          .inOrder();
-      assertWithMessage("Regarding warnings").that(compiler.getWarnings()).isEmpty();
-    } else {
-      assertWithMessage("Regarding warnings:")
-          .that(compiler.getWarnings())
-          .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-          .containsExactlyElementsIn(expectedTypes)
-          .inOrder();
-      assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
-    }
-  }
-
-  protected void testTypesWithExterns(String externs, String js, String description) {
-    testTypesWithExterns(externs, js, description, false);
-  }
-
-  protected void testTypesWithExterns(String externs, String js, DiagnosticType diagnosticType) {
-    testTypesWithExterns(externs, js, diagnosticType, false);
-  }
-
-  protected void testTypesWithExterns(String externs, String js) {
-    testTypesWithExterns(externs, js, (String) null, false);
-  }
-
-  protected void testTypesWithExtraExterns(String externs, String js) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, (String) null, false);
-  }
-
-  protected void testTypesWithExtraExterns(String externs, String js, String description) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
-  }
-
-  protected void testTypesWithExtraExterns(String externs, String js, DiagnosticType diag) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, diag, false);
-  }
-
   final TypeTestBuilder newTest() {
     return new TypeTestBuilder();
   }
@@ -275,6 +126,8 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     private final ArrayList<DiagnosticType> diagnosticTypes = new ArrayList<>();
     private final ArrayList<String> diagnosticDescriptions = new ArrayList<>();
     private boolean diagnosticsAreErrors = false;
+
+    private TypeTestBuilder() {}
 
     public TypeTestBuilder addSource(String... x) {
       checkState(this.source == null, "Can only have one source right now.");
@@ -318,14 +171,39 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
           String.join(
               "\n", this.includeDefaultExterns ? DEFAULT_EXTERNS : "", nullToEmpty(this.externs));
 
+      final List<Object> diagnostics;
+      final Correspondence<JSError, Object> correspondence;
       if (!this.diagnosticTypes.isEmpty()) {
-        testTypesWithExternsDiagnosticTypes(
-            allExterns, this.source, this.diagnosticTypes, this.diagnosticsAreErrors);
+        diagnostics = castAny(this.diagnosticTypes);
+        correspondence = castAny(DIAGNOSTIC_EQUALITY);
       } else {
-        testTypesWithExterns(
-            allExterns, this.source, this.diagnosticDescriptions, this.diagnosticsAreErrors);
+        diagnostics = castAny(this.diagnosticDescriptions);
+        correspondence = castAny(DESCRIPTION_EQUALITY);
       }
+
+      parseAndTypeCheck(allExterns, this.source);
+
+      final ImmutableList<JSError> assertedErrors;
+      final ImmutableList<JSError> emptyErrors;
+      if (this.diagnosticsAreErrors) {
+        assertedErrors = compiler.getErrors();
+        emptyErrors = compiler.getWarnings();
+      } else {
+        assertedErrors = compiler.getWarnings();
+        emptyErrors = compiler.getErrors();
+      }
+
+      assertThat(assertedErrors)
+          .comparingElementsUsing(correspondence)
+          .containsExactlyElementsIn(diagnostics)
+          .inOrder();
+      assertThat(emptyErrors).isEmpty();
     }
+  }
+
+  @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
+  private static <T> T castAny(Object x) {
+    return (T) x;
   }
 
   /** Parses and type checks the JavaScript code. */

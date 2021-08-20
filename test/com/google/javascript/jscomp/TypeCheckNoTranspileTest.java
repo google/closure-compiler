@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7353,19 +7352,20 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testImplicitUnrestrictedDoesNotOverridesSuperExplicitStruct() {
     disableStrictMissingPropertyChecks();
-    testTypes(
-        lines(
+    newTest()
+        .addSource(
             "/** @constructor @struct */",
             "function A() {}",
             "/** @constructor @extends {A} */",
             "function B() {}",
-            "B.prototype.foo = function() { this.x; this.x = 0; this[0]; this[0] = 0;};"),
-        ImmutableList.of(
-            "Property x never defined on B",
+            "B.prototype.foo = function() { this.x; this.x = 0; this[0]; this[0] = 0;};")
+        .addDiagnostic("Property x never defined on B")
+        .addDiagnostic(
             "Cannot add a property to a struct instance after it is constructed. (If you already"
-                + " declared the property, make sure to give it a type.)",
-            "Cannot do '[]' access on a struct",
-            "Cannot do '[]' access on a struct"));
+                + " declared the property, make sure to give it a type.)")
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .addDiagnostic("Cannot do '[]' access on a struct")
+        .run();
   }
 
   @Test
