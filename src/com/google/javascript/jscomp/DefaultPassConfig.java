@@ -469,7 +469,12 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.runtimeTypeCheck) {
+      // RuntimeTypeCheck depends on the AST being normalized. We immediately mark the AST
+      // unnormalized as subsequent passes may produce unnormalized code.
+      // TODO(b/197349249): always run normalize here.
+      checks.add(normalize);
       checks.add(runtimeTypeCheck);
+      checks.add(markUnnormalized);
     }
 
     if (!options.checksOnly) {

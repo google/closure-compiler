@@ -244,6 +244,18 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReturn_blocklessArrow() {
+    testChecks(
+        "/** @return {string} */ const f = () => 'x';",
+        lines(
+            "/** @return {string} */ const f = () => {",
+            "  return $jscomp.typecheck.checkType('x', [",
+            "      $jscomp.typecheck.valueChecker('string'),",
+            "  ]);",
+            "};"));
+  }
+
+  @Test
   public void testReturn_async() {
     testChecks(
         "/** @return {!Promise<string>} */ async function f() { return 'x'; }",
@@ -431,8 +443,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}",
             "function g() {",
             "  /** @constructor */ function inner$jscomp$1() {}",
-            // TODO(b/181031194): use a different string from f's 'inner' function.
-            "  inner$jscomp$1.prototype['instance_of__inner'] = true;",
+            "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;",
             "}"));
   }
 
@@ -450,8 +461,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}",
             "function g() {",
             "  class inner$jscomp$1 {",
-            // TODO(b/181031194): use a different string from f's 'inner' function.
-            "    ['instance_of__inner']() { }",
+            "    ['instance_of__inner$jscomp$1']() { }",
             "  }",
             "}"));
   }
@@ -721,7 +731,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     compiler.initOptions(getOptions());
     Node testNode = IR.exprResult(IR.nullNode());
     IR.script(testNode);
-    getProcessor(compiler).injectCustomLogFunction(testNode);
+    new RuntimeTypeCheck(compiler, logFunction).injectCustomLogFunction(testNode);
     assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=myLogFn");
   }
 
@@ -732,7 +742,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     compiler.initOptions(getOptions());
     Node testNode = IR.exprResult(IR.nullNode());
     IR.script(testNode);
-    getProcessor(compiler).injectCustomLogFunction(testNode);
+    new RuntimeTypeCheck(compiler, logFunction).injectCustomLogFunction(testNode);
     assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=my.log.fn");
   }
 
@@ -744,7 +754,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     Node testNode = IR.exprResult(IR.nullNode());
     IR.script(testNode);
     try {
-      getProcessor(compiler).injectCustomLogFunction(testNode);
+      new RuntimeTypeCheck(compiler, logFunction).injectCustomLogFunction(testNode);
       assertWithMessage("Expected an IllegalStateException").fail();
     } catch (IllegalStateException e) {
       assertThat(e).hasMessageThat().contains("not a valid qualified name");
@@ -772,7 +782,12 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected RuntimeTypeCheck getProcessor(final Compiler compiler) {
-    return new RuntimeTypeCheck(compiler, logFunction);
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return (externs, js) -> {
+      // explicitly initialize Normalize instead of using CompilerTestCase::enableNormalize as
+      // the latter assumes this unit test runs in stage 2, after type->color conversion.
+      new Normalize(compiler, false).process(externs, js);
+      new RuntimeTypeCheck(compiler, logFunction).process(externs, js);
+    };
   }
 }
