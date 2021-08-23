@@ -126,7 +126,12 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
       passes.add(rewriteClassFields);
     }
+  }
 
+  /** Adds transpilation passes that should run at the beginning of the optimization phase */
+  public static void addEarlyOptimizationTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    // TODO(b/191386936): move all transpilation passes here.
     if (options.needsTranspilationFrom(ES2015)) {
       // Binary and octal literals are effectively transpiled by the parser.
       // There's no transpilation we can do for the new regexp flags.
@@ -140,14 +145,6 @@ public class TranspilationPasses {
 
       passes.add(es6NormalizeShorthandProperties);
       passes.add(es6RewriteClassExtends);
-    }
-  }
-
-  /** Adds transpilation passes that should run at the beginning of the optimization phase */
-  public static void addEarlyOptimizationTranspilationPasses(
-      List<PassFactory> passes, CompilerOptions options) {
-    // TODO(b/191386936): move all transpilation passes here.
-    if (options.needsTranspilationFrom(ES2015)) {
       passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
