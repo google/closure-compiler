@@ -24,8 +24,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
-import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -64,6 +62,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     enableScriptFeatureValidation();
+    replaceTypesWithColors();
   }
 
   private static PassFactory makePassFactory(
@@ -79,14 +78,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
-    // TODO(b/191386936): remove this and add `replaceTypesWithColors()` once Es6ConvertSuper is
-    // moved into optimizations.
-    optimizer.addOneTimePass(makePassFactory("removeCastNodes", RemoveCastNodes::new));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "convertTypesToColors",
-            (currCompiler) ->
-                new ConvertTypesToColors(currCompiler, SerializationOptions.INCLUDE_DEBUG_INFO)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", Es6ExtractClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", Es6RewriteClass::new));
     return optimizer;

@@ -324,8 +324,8 @@ final class AstFactory {
    * constructors but not generic functions annotated @this, which is why this method is
    * preferrable.
    */
-  Node createThisForConstructor(Node functionNode) {
-    checkState(NodeUtil.isEs6Constructor(functionNode), functionNode);
+  Node createThisForEs6Class(Node functionNode) {
+    checkState(functionNode.isClass(), functionNode);
     final Node result = IR.thisNode();
     switch (this.typeMode) {
       case JSTYPE:

@@ -46,8 +46,11 @@ final class RewriteNewDotTarget implements CompilerPass {
             && NodeUtil.isEs6Constructor(enclosingNonArrowFunction)) {
           // Within an ES6 class constructor that we're about to transpile.
           // `new.target` -> `this.constructor`
+          Node enclosingClass = enclosingNonArrowFunction.getParent().getGrandparent();
           n.replaceWith(
-              createThisDotConstructorForFunction(enclosingNonArrowFunction, type(n))
+              astFactory
+                  .createGetProp(
+                      astFactory.createThisForEs6Class(enclosingClass), "constructor", type(n))
                   .srcrefTree(n));
           t.reportCodeChange();
         } else {
@@ -59,11 +62,6 @@ final class RewriteNewDotTarget implements CompilerPass {
         }
       }
     }
-  }
-
-  private Node createThisDotConstructorForFunction(Node functionNode, AstFactory.Type type) {
-    return astFactory.createGetProp(
-        astFactory.createThisForConstructor(functionNode), "constructor", type);
   }
 
   @Override

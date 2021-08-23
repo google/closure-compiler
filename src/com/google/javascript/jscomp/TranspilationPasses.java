@@ -140,7 +140,6 @@ public class TranspilationPasses {
 
       passes.add(es6NormalizeShorthandProperties);
       passes.add(es6RewriteClassExtends);
-      passes.add(es6ConvertSuper);
     }
   }
 
@@ -149,6 +148,7 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
     if (options.needsTranspilationFrom(ES2015)) {
+      passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
       passes.add(
