@@ -3621,7 +3621,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines(
             "var $jscomp$destructuring$var0 = {",
             "  func:(params)=>{",
-            "    params=params===undefined?{}:params;",
+            "    params=params===void 0?{}:params;",
             "    console.log(params);",
             "  }};",
             "var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);",

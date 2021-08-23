@@ -34,7 +34,9 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -51,6 +53,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Test
   public void testRenameVar() {
+    ignoreWarnings(TypeCheck.FUNCTION_MASKS_VARIABLE);
     test("var x = 5; function f(y=x) { var x; }",
         "var x = 5; function f(y=x) { var x$0; }");
 
@@ -70,15 +73,15 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
         lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
-            "  var x;",
-            "  { let x; x++; }",
+            "  var x = 0;",
+            "  { let x = 0; x++; }",
             "  x++;",
             "}"),
         lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
-            "  var x$0;",
-            "  { let x; x++; }",
+            "  var x$0 = 0;",
+            "  { let x = 0; x++; }",
             "  x$0++;",
             "}"));
 
@@ -86,12 +89,12 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
         lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
-            "  var x; { x++ };",
+            "  var x = 0; { x++ };",
             "}"),
         lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
-            "  var x$0; { x$0++ };",
+            "  var x$0 = 0; { x$0++ };",
             "}"));
 
     test(
@@ -125,6 +128,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Test
   public void testGlobalDeclaration() {
+    ignoreWarnings(TypeCheck.FUNCTION_MASKS_VARIABLE);
     test(
         lines(
             "function x() {}",
@@ -207,18 +211,18 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",
-            "  var x;",
-            "  { let y; y++; }",
-            "  { var y; y++; }",
+            "  var x = 0;",
+            "  { let y = 0; y++; }",
+            "  { var y = 0; y++; }",
             "  x++;",
             "}"),
         lines(
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",
-            "  var x$0;",
-            "  { let y; y++; }",
-            "  { var y$1; y$1++; }",
+            "  var x$0 = 0;",
+            "  { let y = 0; y++; }",
+            "  { var y$1 = 0; y$1++; }",
             "  x$0++;",
             "}"));
   }

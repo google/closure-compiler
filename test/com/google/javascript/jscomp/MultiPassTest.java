@@ -248,7 +248,7 @@ public final class MultiPassTest extends CompilerTestCase {
                 "var prefix;",
                 "for (;;function () {",
                 "   let $jscomp$destructuring$var0 = ",
-                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix));",
+                "       /\\.?([^.]+)$/.exec(prefix);",
                 "   var $jscomp$destructuring$var1 = ",
                 "$jscomp.makeIterator($jscomp$destructuring$var0);",
                 "   $jscomp$destructuring$var1.next();",
@@ -275,7 +275,7 @@ public final class MultiPassTest extends CompilerTestCase {
                 "var prefix;",
                 "for (;;function () {",
                 "   let $jscomp$destructuring$var0 = ",
-                "       /** @type {!Array<string>} */ (/\\.?([^.]+)$/.exec(prefix))",
+                "       /\\.?([^.]+)$/.exec(prefix)",
                 "   var $jscomp$destructuring$var1 = ",
                 "$jscomp.makeIterator($jscomp$destructuring$var0);",
                 "   $jscomp$destructuring$var1.next();",
@@ -365,7 +365,7 @@ public final class MultiPassTest extends CompilerTestCase {
     disableNormalize();
     allowExternsChanges();
     enableTypeInfoValidation();
-    disableMultistageCompilation();
+    replaceTypesWithColors();
 
     passes = new ArrayList<>();
     addRenameVariablesInParamListsPass();
