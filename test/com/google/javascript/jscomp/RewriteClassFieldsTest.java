@@ -33,6 +33,7 @@ public final class RewriteClassFieldsTest extends CompilerTestCase {
     super.setUp();
     enableTypeInfoValidation();
     enableTypeCheck();
+    replaceTypesWithColors();
   }
 
   @Override
