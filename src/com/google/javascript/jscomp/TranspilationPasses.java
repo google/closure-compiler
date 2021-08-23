@@ -118,16 +118,16 @@ public class TranspilationPasses {
       passes.add(removeTrailingCommaFromParamList);
       passes.add(rewriteAsyncFunctions);
     }
-
-    if (options.needsTranspilationFrom(ES2016)) {
-      passes.add(rewriteExponentialOperator);
-    }
   }
 
   /** Adds transpilation passes that should run at the beginning of the optimization phase */
   public static void addEarlyOptimizationTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
+    if (options.needsTranspilationFrom(ES2016)) {
+      passes.add(rewriteExponentialOperator);
+    }
+
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
       passes.add(rewriteClassFields);
     }

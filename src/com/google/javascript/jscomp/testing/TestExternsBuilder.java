@@ -823,6 +823,14 @@ public class TestExternsBuilder {
           " * @nosideeffects",
           " */",
           "Math.min = function(a, b) {};",
+          "",
+          "/**",
+          " * @param {number} a",
+          " * @param {number} b",
+          " * @return {number}",
+          " * @nosideeffects",
+          " */",
+          "Math.pow = function(a, b) {};",
           "");
 
   private boolean includeBigIntExterns = false;

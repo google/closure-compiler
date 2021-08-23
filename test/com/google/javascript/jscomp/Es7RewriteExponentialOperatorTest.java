@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.Es7RewriteExponentialOperator.TRANSPILE_EXPONENT_USING_BIGINT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,11 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     super.setUp();
     enableTypeInfoValidation();
     enableTypeCheck();
+    replaceTypesWithColors();
+  }
+
+  public Es7RewriteExponentialOperatorTest() {
+    super(new TestExternsBuilder().addMath().build());
   }
 
   @Override
