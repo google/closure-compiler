@@ -303,6 +303,8 @@ final class JSTypeReconserializer {
       for (String ownProperty : objType.getOwnPropertyNames()) {
         // TODO(b/169899789): consider omitting common, well-known properties like "prototype" to
         // save space.
+        // TODO(b/197522964): Only include property names referenced in some other part of the
+        // TypedAST so we can avoid serializing them.
         ownProperties.add(this.stringPoolBuilder.put(ownProperty));
       }
 
