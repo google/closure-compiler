@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import javax.annotation.Nullable;
@@ -35,12 +34,14 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   static final String THIS_VAR = "$jscomp$this";
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
   private final Deque<ThisAndArgumentsContext> contextStack;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.ARROW_FUNCTIONS);
 
   public Es6RewriteArrowFunction(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
     this.contextStack = new ArrayDeque<>();
   }
 
@@ -109,7 +110,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     }
 
     ThisAndArgumentsReferenceUpdater updater =
-        new ThisAndArgumentsReferenceUpdater(compiler, context);
+        new ThisAndArgumentsReferenceUpdater(compiler, context, astFactory);
     NodeTraversal.traverse(compiler, body, updater);
 
     t.reportCodeChange();
@@ -119,8 +120,8 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     Node scopeBody = context.scopeBody;
 
     if (context.needsThisVar) {
-      Node name = IR.name(THIS_VAR).setJSType(context.getThisType());
-      Node thisVar = IR.constNode(name, IR.thisNode().setJSType(context.getThisType()));
+      Node name = astFactory.createName(THIS_VAR, context.getThisType());
+      Node thisVar = IR.constNode(name, astFactory.createThis(context.getThisType()));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       thisVar.srcrefTreeIfMissing(scopeBody);
       makeTreeNonIndexable(thisVar);
@@ -137,9 +138,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     }
 
     if (context.needsArgumentsVar) {
-      Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType());
-      Node argumentsVar =
-          IR.constNode(name, IR.name("arguments").setJSType(context.getArgumentsType()));
+      Node argumentsVar = astFactory.createArgumentsAliasDeclaration(ARGUMENTS_VAR);
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       scopeBody.addChildToFront(argumentsVar);
 
@@ -168,10 +167,9 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     Node lastSuperStatement = null; // Last statement in the body that refers to super().
 
     boolean needsThisVar = false;
-    private @Nullable JSType thisType;
+    @Nullable private AstFactory.Type thisType;
 
     boolean needsArgumentsVar = false;
-    private @Nullable JSType argumentsType;
 
     private ThisAndArgumentsContext(Node scopeBody, boolean isConstructor) {
       this.scopeBody = scopeBody;
@@ -179,29 +177,17 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
     }
 
     @Nullable
-    JSType getThisType() {
+    AstFactory.Type getThisType() {
       return thisType;
     }
 
-    ThisAndArgumentsContext setNeedsThisVarWithType(JSType type) {
-      if (compiler.hasTypeCheckingRun()) {
-        checkNotNull(type);
-      }
+    ThisAndArgumentsContext setNeedsThisVarWithType(AstFactory.Type type) {
       thisType = type;
       needsThisVar = true;
       return this;
     }
 
-    @Nullable
-    JSType getArgumentsType() {
-      return argumentsType;
-    }
-
-    ThisAndArgumentsContext setNeedsArgumentsVarWithType(JSType type) {
-      if (compiler.hasTypeCheckingRun()) {
-        checkNotNull(type);
-      }
-      argumentsType = type;
+    ThisAndArgumentsContext setNeedsArgumentsVar() {
       needsArgumentsVar = true;
       return this;
     }
@@ -226,19 +212,21 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   private static class ThisAndArgumentsReferenceUpdater implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
     private final ThisAndArgumentsContext context;
+    private final AstFactory astFactory;
 
     public ThisAndArgumentsReferenceUpdater(
-        AbstractCompiler compiler, ThisAndArgumentsContext context) {
+        AbstractCompiler compiler, ThisAndArgumentsContext context, AstFactory astFactory) {
       this.compiler = compiler;
       this.context = context;
+      this.astFactory = astFactory;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isThis()) {
-        context.setNeedsThisVarWithType(n.getJSType());
+        context.setNeedsThisVarWithType(AstFactory.type(n));
 
-        Node name = IR.name(THIS_VAR).setJSType(context.getThisType()).srcref(n);
+        Node name = astFactory.createName(THIS_VAR, context.getThisType()).srcref(n);
         name.makeNonIndexable();
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("this");
@@ -246,9 +234,9 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
 
         n.replaceWith(name);
       } else if (n.isName() && n.getString().equals("arguments")) {
-        context.setNeedsArgumentsVarWithType(n.getJSType());
+        context.setNeedsArgumentsVar();
 
-        Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType()).srcref(n);
+        Node name = astFactory.createName(ARGUMENTS_VAR, AstFactory.type(n)).srcref(n);
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("arguments");
         }

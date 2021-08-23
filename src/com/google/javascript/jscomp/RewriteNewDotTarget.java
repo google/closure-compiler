@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvertYet;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -46,7 +47,8 @@ final class RewriteNewDotTarget implements CompilerPass {
           // Within an ES6 class constructor that we're about to transpile.
           // `new.target` -> `this.constructor`
           n.replaceWith(
-              createThisDotConstructorForFunction(enclosingNonArrowFunction).srcrefTree(n));
+              createThisDotConstructorForFunction(enclosingNonArrowFunction, type(n))
+                  .srcrefTree(n));
           t.reportCodeChange();
         } else {
           // Getting new.target correct in functions other than transpiled ES6 class constructors
@@ -59,8 +61,9 @@ final class RewriteNewDotTarget implements CompilerPass {
     }
   }
 
-  private Node createThisDotConstructorForFunction(Node functionNode) {
-    return astFactory.createGetProp(astFactory.createThisForFunction(functionNode), "constructor");
+  private Node createThisDotConstructorForFunction(Node functionNode, AstFactory.Type type) {
+    return astFactory.createGetProp(
+        astFactory.createThisForConstructor(functionNode), "constructor", type);
   }
 
   @Override
