@@ -1967,7 +1967,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> new RuntimeTypeCheck(compiler, options.runtimeTypeCheckLogFunction))
           // TODO(bradfordcsmith): Drop support for this pass.
           // It's never been updated to handle ES2016+ code, because it isn't worth the effort.
-          .setFeatureSet(ES2015)
+          .setFeatureSetForChecks()
           .build();
 
   /** Generates unique ids. */
