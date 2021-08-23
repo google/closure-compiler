@@ -329,10 +329,9 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     /**
      * Creates a new reference to the variable used to hold the value of `this` for async functions.
      */
-    private Node createThisVariableReference() {
+    private Node createThisVariableReference(AstFactory.Type typeOfThis) {
       recordAsyncThisReplacementWasDone();
-      return astFactory.createThisAliasReferenceForFunction(
-          ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode());
+      return astFactory.createName(ASYNC_THIS, typeOfThis);
     }
 
     /** Creates a correctly typed `this` node for this context. */
@@ -396,7 +395,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
             break;
 
           case THIS:
-            n.replaceWith(asyncThisAndArgumentsContext.createThisVariableReference());
+            n.replaceWith(asyncThisAndArgumentsContext.createThisVariableReference(type(n)));
             compiler.reportChangeToChangeScope(contextRootNode);
             break;
 
@@ -422,8 +421,10 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
                 // ...)
                 getPropReplacement = astFactory.createGetProp(getPropReplacement, "call");
                 astFactory
-                    .createThisAliasReferenceForFunction(
-                        ASYNC_THIS, asyncThisAndArgumentsContext.getContextRootNode())
+                    .createThisAliasReferenceForEs6Class(
+                        ASYNC_THIS,
+                        NodeUtil.getEnclosingClass(
+                            asyncThisAndArgumentsContext.getContextRootNode()))
                     .srcref(superDotProperty)
                     .insertAfter(superDotProperty);
                 asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone();

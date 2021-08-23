@@ -318,25 +318,15 @@ final class AstFactory {
   }
 
   /**
-   * Creates a THIS node with the correct type for the given ES6 class constructor node.
+   * Creates a THIS node with the correct type for the given ES6 class node.
    *
    * <p>With the optimization colors type system, we can support inferring the type of this for
-   * constructors but not generic functions annotated @this, which is why this method is
-   * preferrable.
+   * constructors but not generic functions annotated @this
    */
   Node createThisForEs6Class(Node functionNode) {
     checkState(functionNode.isClass(), functionNode);
     final Node result = IR.thisNode();
-    switch (this.typeMode) {
-      case JSTYPE:
-        result.setJSType(getTypeOfThisForFunctionNode(functionNode));
-        break;
-      case COLOR:
-        result.setColor(getInstanceOfColor(functionNode.getColor()));
-        break;
-      case NONE:
-        break;
-    }
+    setJSTypeOrColor(getTypeOfThisForEs6Class(functionNode), result);
     return result;
   }
 
@@ -367,6 +357,20 @@ final class AstFactory {
   }
 
   @Nullable
+  private Type getTypeOfThisForEs6Class(Node functionNode) {
+    checkArgument(functionNode.isClass(), functionNode);
+    switch (this.typeMode) {
+      case JSTYPE:
+        return type(getTypeOfThisForFunctionNode(functionNode));
+      case COLOR:
+        return type(getInstanceOfColor(functionNode.getColor()));
+      case NONE:
+        return noTypeInformation();
+    }
+    throw new AssertionError();
+  }
+
+  @Nullable
   private JSType getTypeOfSuperForFunctionNode(Node functionNode) {
     assertNotAddingColors();
     if (isAddingTypes()) {
@@ -378,7 +382,10 @@ final class AstFactory {
   }
 
   private FunctionType getFunctionType(Node functionNode) {
-    checkState(functionNode.isFunction(), "not a function: %s", functionNode);
+    checkState(
+        functionNode.isFunction() || functionNode.isClass(),
+        "not a function or class: %s",
+        functionNode);
     assertNotAddingColors();
     // If the function declaration was cast to a different type, we want the original type
     // from before the cast.
@@ -393,17 +400,14 @@ final class AstFactory {
   }
 
   /**
-   * Creates a NAME node having the type of "this" appropriate for the given function node.
+   * Creates a NAME node having the type of "this" appropriate for the given ES6 class node
    *
-   * @deprecated TODO(b/193800507): delete this method.
+   * <p>With the optimization colors type system, we can support inferring the type of this for
+   * classes but not generic functions annotated @this.
    */
-  @Deprecated
-  Node createThisAliasReferenceForFunction(String aliasName, Node functionNode) {
-    assertNotAddingColors();
+  Node createThisAliasReferenceForEs6Class(String aliasName, Node functionNode) {
     final Node result = IR.name(aliasName);
-    if (isAddingTypes()) {
-      result.setJSType(getTypeOfThisForFunctionNode(functionNode));
-    }
+    setJSTypeOrColor(getTypeOfThisForEs6Class(functionNode), result);
     return result;
   }
 

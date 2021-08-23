@@ -500,13 +500,7 @@ public class AstFactoryTest {
             .getFirstChild(); // class node
     ObjectType instanceType = classNode.getJSTypeRequired().assertFunctionType().getInstanceType();
 
-    Node methodFunction =
-        classNode
-            .getLastChild() // class members
-            .getFirstChild() // member method definition
-            .getOnlyChild(); // method function
-
-    Node thisAlias = astFactory.createThisAliasReferenceForFunction("thisAlias", methodFunction);
+    Node thisAlias = astFactory.createThisAliasReferenceForEs6Class("thisAlias", classNode);
     assertNode(thisAlias).hasType(Token.NAME);
     assertThat(thisAlias.getString()).isEqualTo("thisAlias");
     assertNode(thisAlias).hasJSTypeThat().isEqualTo(instanceType);
@@ -524,14 +518,11 @@ public class AstFactoryTest {
                 "}",
                 ""));
 
-    Node methodFunction =
+    Node classNode =
         root.getFirstChild() // script
-            .getFirstChild() // class
-            .getLastChild() // class members
-            .getFirstChild() // member method def
-            .getOnlyChild(); // member function
+            .getFirstChild(); // class
 
-    Node thisAlias = astFactory.createThisAliasReferenceForFunction("thisAlias", methodFunction);
+    Node thisAlias = astFactory.createThisAliasReferenceForEs6Class("thisAlias", classNode);
     assertNode(thisAlias).hasType(Token.NAME);
     assertThat(thisAlias.getString()).isEqualTo("thisAlias");
     assertThat(thisAlias.getJSType()).isNull();
