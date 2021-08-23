@@ -53,7 +53,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
    */
   @FunctionalInterface
   interface IsPropertyReflector {
-    boolean test(String name);
+    boolean test(Node nameNode);
   }
 
   private LinkedHashMap<String, PropertyClustering> propIndex = new LinkedHashMap<>();
@@ -117,8 +117,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
       return;
     }
 
-    String functionName = target.getOriginalQualifiedName();
-    if (functionName != null && this.isPropertyReflector.test(functionName)) {
+    if (this.isPropertyReflector.test(target)) {
       this.handlePropertyReflectorCall(call);
     } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
       this.handleObjectDefineProperties(call);

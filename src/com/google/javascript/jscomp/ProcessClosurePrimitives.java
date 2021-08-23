@@ -704,11 +704,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
 
   private void checkPropertyRenameCall(Node call) {
     Node callee = call.getFirstChild();
-    String calleeName = callee.getOriginalQualifiedName();
-    if (calleeName == null
-        || !compiler.getCodingConvention().isPropertyRenameFunction(calleeName)) {
+    // TODO(b/193038601): make this work when the callee is a module import
+    if (!compiler.getCodingConvention().isPropertyRenameFunction(callee)) {
       return;
     }
+    String calleeName = callee.getQualifiedName();
 
     switch (call.getChildCount() - 1) {
       case 1:

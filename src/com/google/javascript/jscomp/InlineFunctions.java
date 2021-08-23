@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -381,7 +382,7 @@ class InlineFunctions implements CompilerPass {
     }
 
     // Don't inline this special function
-    if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
+    if (compiler.getCodingConvention().isPropertyRenameFunction(fn.getNameNode())) {
       return false;
     }
 
@@ -972,6 +973,9 @@ class InlineFunctions implements CompilerPass {
     /** Gets the name of the function */
     public String getName();
 
+    /** Gets the name node of the function */
+    public Node getNameNode();
+
     /** Gets the function node */
     public Node getFunctionNode();
 
@@ -992,6 +996,11 @@ class InlineFunctions implements CompilerPass {
     @Override
     public String getName() {
       return fn.getFirstChild().getString();
+    }
+
+    @Override
+    public Node getNameNode() {
+      return fn.getFirstChild();
     }
 
     @Override
@@ -1026,6 +1035,11 @@ class InlineFunctions implements CompilerPass {
     }
 
     @Override
+    public Node getNameNode() {
+      return var.getFirstChild();
+    }
+
+    @Override
     public Node getFunctionNode() {
       return var.getFirstFirstChild();
     }
@@ -1047,17 +1061,24 @@ class InlineFunctions implements CompilerPass {
   private static class FunctionExpression implements Function {
     private final Node fn;
     private final String fakeName;
+    private final Node fakeNameNode;
 
     public FunctionExpression(Node fn, int index) {
       this.fn = fn;
       // A number is not a valid function JavaScript identifier
       // so we don't need to worry about collisions.
       this.fakeName = String.valueOf(index);
+      this.fakeNameNode = IR.name(fakeName);
     }
 
     @Override
     public String getName() {
       return fakeName;
+    }
+
+    @Override
+    public Node getNameNode() {
+      return fakeNameNode;
     }
 
     @Override

@@ -558,7 +558,9 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
           NodeTraversal.traverse(compiler, s, new LabelledStatementCollector());
           this.flattener = new StubColorGraphNodeFactory();
           this.finder =
-              new ColorFindPropertyReferences(this.flattener, propertyReflectorNames::contains);
+              new ColorFindPropertyReferences(
+                  this.flattener,
+                  (node) -> propertyReflectorNames.contains(node.getQualifiedName()));
           NodeTraversal.traverse(this.compiler, e.getParent(), checkNotNull(this.finder));
         };
 

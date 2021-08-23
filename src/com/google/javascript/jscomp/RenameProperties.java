@@ -343,9 +343,7 @@ class RenameProperties implements CompilerPass {
           // We replace property renaming function calls with a string
           // containing the renamed property.
           Node fnName = n.getFirstChild();
-          if (compiler
-              .getCodingConvention()
-              .isPropertyRenameFunction(fnName.getOriginalQualifiedName())) {
+            if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
             callNodeToParentMap.put(n, parent);
             countCallCandidates(t, n);
           }
@@ -393,7 +391,7 @@ class RenameProperties implements CompilerPass {
                 // function
                 && compiler
                     .getCodingConvention()
-                    .isPropertyRenameFunction(parent.getFirstChild().getOriginalQualifiedName())) {
+                    .isPropertyRenameFunction(parent.getFirstChild())) {
               Node exprResult = parent.getParent();
               if (exprResult.isExprResult()
                   && NodeUtil.isStatementBlock(exprResult.getParent())

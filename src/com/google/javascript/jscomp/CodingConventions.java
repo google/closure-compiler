@@ -24,6 +24,7 @@ import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -267,8 +268,8 @@ public final class CodingConventions {
     }
 
     @Override
-    public boolean isPropertyRenameFunction(String name) {
-      return nextConvention.isPropertyRenameFunction(name);
+    public boolean isPropertyRenameFunction(Node nameNode) {
+      return nextConvention.isPropertyRenameFunction(nameNode);
     }
 
     @Override
@@ -294,6 +295,9 @@ public final class CodingConventions {
    */
   @Immutable
   private static class DefaultCodingConvention implements CodingConvention {
+
+    private static final QualifiedName JSCOMP_REFLECT_PROPERTY =
+        QualifiedName.of("$jscomp.reflectProperty");
 
     private static final long serialVersionUID = 1L;
 
@@ -487,8 +491,10 @@ public final class CodingConventions {
     }
 
     @Override
-    public boolean isPropertyRenameFunction(String name) {
-      return NodeUtil.JSC_PROPERTY_NAME_FN.equals(name) || "$jscomp.reflectProperty".equals(name);
+    public boolean isPropertyRenameFunction(Node nameNode) {
+      return nameNode.matchesName(NodeUtil.JSC_PROPERTY_NAME_FN)
+          || JSCOMP_REFLECT_PROPERTY.matches(nameNode)
+          || nameNode.matchesName("$jscomp$reflectProperty");
     }
 
     @Override

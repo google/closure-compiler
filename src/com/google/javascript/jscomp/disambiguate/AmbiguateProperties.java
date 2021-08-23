@@ -406,10 +406,7 @@ public class AmbiguateProperties implements CompilerPass {
         return;
       }
 
-      String renameFunctionName = target.getOriginalQualifiedName();
-      if (renameFunctionName != null
-          && compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
-
+      if (compiler.getCodingConvention().isPropertyRenameFunction(target)) {
         Node propName = call.getSecondChild();
         if (propName == null || !propName.isStringLit()) {
           return;

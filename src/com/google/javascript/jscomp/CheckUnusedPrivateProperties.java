@@ -133,9 +133,7 @@ class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callba
         // Look for properties referenced through a property rename function.
         Node target = n.getFirstChild();
         if (n.hasMoreThanOneChild()
-            && compiler
-                .getCodingConvention()
-                .isPropertyRenameFunction(target.getOriginalQualifiedName())) {
+            && compiler.getCodingConvention().isPropertyRenameFunction(target)) {
            Node propName = target.getNext();
           if (propName.isStringLit()) {
             used.add(propName.getString());

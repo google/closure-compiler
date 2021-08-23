@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.GenerateExports;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.ModuleIdentifier;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
@@ -1282,6 +1283,52 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     // options.setChecksOnly(true);
 
     test(options, new String[] {"goog.reflect.objectProperty();"}, (String[]) null);
+  }
+
+  @Test
+  public void testGoogReflectObjectPropertyCall_returnsRenamedProperty() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setGeneratePseudoNames(true);
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.reflect');",
+              "goog.reflect.objectProperty = function(prop, obj) { return prop; };"),
+          "alert(goog.reflect.objectProperty('prop', {prop: 0}));"
+        },
+        new String[] {lines("goog.$reflect$ = {};"), "alert('$prop$');"});
+  }
+
+  @Test
+  public void
+      testGoogReflectObjectPropertyCall_inModule_withoutPropertyCollapsing_returnsRenamedProperty() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setGeneratePseudoNames(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.NONE);
+    // forces the SourceInformationAnnotator to run
+    // TODO(b/193048186): remove this once SourceInformationAnnotator always runs
+    options.setReplaceStringsFunctionDescriptions(ImmutableList.of("\"Error(?)\""));
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.provide('goog.reflect');",
+              "goog.reflect.objectProperty = function(prop, obj) { return prop; };"),
+          lines(
+              "goog.module('m');",
+              "const reflect = goog.require('goog.reflect');",
+              "alert(reflect.objectProperty('prop', {prop: 0}));")
+        },
+        new String[] {
+          "goog.$reflect$ = {};", lines("var module$exports$m = {};", "alert('$prop$');")
+        });
   }
 
   @Test
