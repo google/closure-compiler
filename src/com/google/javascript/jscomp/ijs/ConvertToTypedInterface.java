@@ -380,8 +380,17 @@ public class ConvertToTypedInterface implements CompilerPass {
       NO_JSDOC,
     }
 
-    static final Comparator<String> SHORT_TO_LONG =
-        comparing(name -> name.replaceAll("[^.]", "").length());
+    static int countDots(String name) {
+      int count = 0;
+      for (int i = 0; i < name.length(); i++) {
+        if (name.charAt(i) == '.') {
+          count++;
+        }
+      }
+      return count;
+    }
+
+    static final Comparator<String> SHORT_TO_LONG = comparing(SimplifyDeclarations::countDots);
 
     static final Comparator<PotentialDeclaration> DECLARATIONS_FIRST =
         comparing(
