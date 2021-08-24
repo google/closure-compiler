@@ -31,6 +31,7 @@ public class ReportBigIntLiteralTranspilationUnsupportedTest extends CompilerTes
   public void enableTypeCheckBeforePass() {
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override

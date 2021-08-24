@@ -30,6 +30,7 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override

@@ -87,6 +87,12 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.add(rewriteLogicalAssignmentOperatorsPass);
     }
+  }
+
+  /** Adds transpilation passes that should run at the beginning of the optimization phase */
+  public static void addEarlyOptimizationTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    // TODO(b/191386936): move all transpilation passes here.
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
@@ -99,12 +105,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.add(rewriteNullishCoalesceOperator);
     }
-  }
-
-  /** Adds transpilation passes that should run at the beginning of the optimization phase */
-  public static void addEarlyOptimizationTranspilationPasses(
-      List<PassFactory> passes, CompilerOptions options) {
-    // TODO(b/191386936): move all transpilation passes here.
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.add(rewriteCatchWithNoBinding);

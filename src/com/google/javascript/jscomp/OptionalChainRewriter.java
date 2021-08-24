@@ -156,7 +156,7 @@ class OptionalChainRewriter {
       chainParent.addChildToFront(tmpThisNode);
       final Node dotCallNode =
           astFactory
-              .createGetProp(optChainReplacement, "call")
+              .createGetPropWithUnknownType(optChainReplacement, "call")
               .srcrefTreeIfMissing(optChainReplacement);
       chainParent.addChildToFront(dotCallNode);
     }
@@ -262,7 +262,9 @@ class OptionalChainRewriter {
       receiverNode = fullChainStart.removeFirstChild();
       fullChainStart.addChildToFront(tmpThisNode);
       fullChainStart.addChildToFront(
-          astFactory.createGetProp(tmpReceiverNode, "call").srcrefTreeIfMissing(receiverNode));
+          astFactory
+              .createGetPropWithUnknownType(tmpReceiverNode, "call")
+              .srcrefTreeIfMissing(receiverNode));
     } else {
       // `expr?.x.y`
       // needs to become

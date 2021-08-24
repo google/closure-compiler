@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.AstFactory.type;
+
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -69,10 +71,10 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
     Node right = n.getLastChild().detach();
 
     Node let = astFactory.createSingleLetNameDeclaration(tempVarName);
-    Node assignName = astFactory.createName(tempVarName, left.getJSType());
+    Node assignName = astFactory.createName(tempVarName, type(left));
     Node assign = astFactory.createAssign(assignName, left);
     Node ne = astFactory.createNe(assign, astFactory.createNull());
-    Node hookName = astFactory.createName(tempVarName, left.getJSType());
+    Node hookName = astFactory.createName(tempVarName, type(left));
     Node hook = astFactory.createHook(ne, hookName, right);
 
     let.srcrefTreeIfMissing(left);

@@ -296,6 +296,7 @@ public final class RewriteOptionalChainingOperatorTest {
       super.setUp();
       enableTypeCheck();
       enableTypeInfoValidation();
+      replaceTypesWithColors();
     }
 
     @Override
@@ -327,6 +328,7 @@ public final class RewriteOptionalChainingOperatorTest {
       super.setUp();
       enableTypeCheck();
       enableTypeInfoValidation();
+      replaceTypesWithColors();
     }
 
     @Override
