@@ -341,6 +341,39 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInnerSuperCallInAsyncGenerator() {
+    test(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async *m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$asyncIter$this = this;",
+            "    const $jscomp$asyncIter$super$get$m =",
+            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
+            "    return new $jscomp.AsyncGeneratorWrapper(",
+            "        function* () {",
+            "          return $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this);",
+            "        }());",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testCannotConvertSuperGetElemInAsyncGenerator() {
     // The rewriting gets partially done before we notice and report that we cannot convert
     // the code. The partially done code is invalid, so we must disable AST validation to see the
