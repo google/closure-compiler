@@ -20,9 +20,6 @@ import static com.google.javascript.jscomp.CheckMissingOverrideTypes.OVERRIDE_WI
 import static com.google.javascript.jscomp.TypeCheck.INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -621,6 +618,67 @@ public final class CheckMissingOverrideTypesTest {
     }
 
     @Test
+    public void testClassTypeParam_acrossModuleImportChain_nullableUnionType() {
+      test(
+          srcs(
+              lines("goog.module('a');", "class objT {}", "exports.objT = objT;"),
+              lines(
+                  "goog.module('b');",
+                  "const {objT} = goog.require('a');",
+                  "class Foo {",
+                  "  /** @param {?objT} arg */",
+                  "  method(arg) {}",
+                  "}",
+                  "exports.Foo = Foo;"),
+              lines(
+                  "goog.module('c');",
+                  "const {Foo} = goog.require('b')",
+                  "class Bar extends Foo {",
+                  "  /** @override */",
+                  "  method(arg) {",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(
+                  lines(
+                      "/**",
+                      " * @param {?a.objT} arg", // reports fully qualified type `a.objT`
+                      " * @override",
+                      " */")));
+    }
+
+    @Test
+    public void testClassTypeParam_acrossModuleImportChain_nonNullableUnionType() {
+      test(
+          srcs(
+              lines(
+                  "goog.module('a');", "class A {}", "class B {}", "exports.A = A; exports.B = B;"),
+              lines(
+                  "goog.module('b');",
+                  "const {A, B} = goog.require('a');",
+                  "class Foo {",
+                  "  /** @param {(!A|!B)} arg */",
+                  "  method(arg) {}",
+                  "}",
+                  "exports.Foo = Foo;"),
+              lines(
+                  "goog.module('c');",
+                  "const {Foo} = goog.require('b')",
+                  "class Bar extends Foo {",
+                  "  /** @override */",
+                  "  method(arg) {",
+                  "  }",
+                  "}")),
+          error(OVERRIDE_WITHOUT_ALL_TYPES)
+              .withMessageContaining(
+                  lines(
+                      "/**",
+                      " * @param {(!a.A|!a.B)} arg", // reports fully qualified type `a.A` and `a.B`
+                      " * @override",
+                      " */")));
+    }
+
+    @Test
     public void testInterfaceTypeParam_acrossModuleImportChain() {
       test(
           srcs(
@@ -937,7 +995,6 @@ public final class CheckMissingOverrideTypesTest {
   /** Tests the syntax of the generated replacement JSDoc comment. */
   @RunWith(JUnit4.class)
   public static final class CheckGeneratedSyntax extends CompilerTestCase {
-    private static final ResolutionMode MODULE_RESOLUTION_MODE = ResolutionMode.BROWSER;
 
     @Override
     @Before
@@ -947,18 +1004,12 @@ public final class CheckMissingOverrideTypesTest {
       enableParseTypeInfo();
       enableTypeInfoValidation();
       enableFixMissingOverrideTypes();
+      enableCreateModuleMap();
     }
 
     @Override
     protected CompilerPass getProcessor(Compiler compiler) {
-      return (Node externs, Node root) -> {
-        new GatherModuleMetadata(compiler, false, MODULE_RESOLUTION_MODE).process(externs, root);
-        new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
-        TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-        new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
-            .inferAllScopes(root.getParent());
-        new CheckMissingOverrideTypes(compiler).process(externs, root);
-      };
+      return new CheckMissingOverrideTypes(compiler);
     }
 
     @Test

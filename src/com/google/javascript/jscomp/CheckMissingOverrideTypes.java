@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
@@ -33,6 +34,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -276,28 +278,46 @@ public final class CheckMissingOverrideTypes extends AbstractPostOrderCallback
   }
 
   private static Node typeToTypeAst(JSType type) {
+    return JsDocInfoParser.parseTypeString(typeToAnnotationString(type));
+  }
+
+  // Converts a type to its annotation string
+  private static String typeToAnnotationString(JSType type) {
     if (omitExplicitNullability(type)) {
       // Display name e.g. `<Any Type>` or `<unknown>` does not parse as a node; simply use `*` or
       // `?`.
-      return JsDocInfoParser.parseTypeString(type.toString());
+      return type.toString();
     }
-
     if (type.isLiteralObject() && type.toMaybeObjectType().getOwnPropertyNames().isEmpty()) {
       // The overridden property is inferred as an `{}` object literal type.
       // `{}` crashes JSDocInfoPrinter when printed in an annotation.
-      return JsDocInfoParser.parseTypeString(NON_NULLABLE_OBJECT_TYPE);
+      return NON_NULLABLE_OBJECT_TYPE;
     }
-
-    final String typeName;
     if (type.hasDisplayName()) {
       // use display name for e.g. `!ns.enumNum` instead of `number`
       String explicitNullability = type.isNullable() ? "?" : "!";
-      typeName = explicitNullability + type.getDisplayName();
-    } else {
-      // e.g. `{{X:!ns.Local}}`
-      typeName = type.toAnnotationString(Nullability.EXPLICIT);
+      return explicitNullability + type.getDisplayName();
     }
-    return JsDocInfoParser.parseTypeString(typeName);
+    if (type.isUnionType()) {
+      ImmutableList<JSType> alternates = type.toMaybeUnionType().getAlternates();
+      if (alternates.size() == 2 && alternates.stream().anyMatch(JSType::isNullType)) {
+        // special case `{(SomeTypeName|null)}` to produce `{?SomeTypeName}`
+        JSType alternate = type.restrictByNotNull();
+        if (!omitExplicitNullability(alternate) && alternate.hasDisplayName()) {
+          // ensure to skip adding `?` nullability for primitives. e.g  {(number|null)}
+          return "?" + alternate.getDisplayName();
+        }
+      }
+
+      TreeSet<String> sortedNames = new TreeSet<>();
+      for (JSType child : alternates) {
+        sortedNames.add(typeToAnnotationString(child));
+      }
+      return "(" + String.join("|", sortedNames) + ")";
+    }
+
+    // e.g. `{{X:!ns.Local}}`
+    return type.toAnnotationString(Nullability.EXPLICIT);
   }
 
   /**
