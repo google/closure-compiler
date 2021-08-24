@@ -73,6 +73,12 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
 
     // TODO(b/191386936): move all these passes to addEarlyOptimizationTranspilationPasses
+  }
+
+  /** Adds transpilation passes that should run at the beginning of the optimization phase */
+  public static void addEarlyOptimizationTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    // TODO(b/191386936): move all transpilation passes here.
 
     // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
@@ -87,12 +93,6 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
       passes.add(rewriteLogicalAssignmentOperatorsPass);
     }
-  }
-
-  /** Adds transpilation passes that should run at the beginning of the optimization phase */
-  public static void addEarlyOptimizationTranspilationPasses(
-      List<PassFactory> passes, CompilerOptions options) {
-    // TODO(b/191386936): move all transpilation passes here.
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
