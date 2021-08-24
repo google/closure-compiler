@@ -907,21 +907,24 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
           break;
         }
       case FOR_OF:
-      case FOR_AWAIT_OF:
         {
           // for/of. The type of `item` is the type parameter of the Iterable type.
-          // for/await/of. go one layer deeper: the type paramter of the Iterable type should be
-          // IThenable, and `item` is the type parameter of the IThenable type
           JSType objType = getJSType(obj).autobox();
 
-          // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
           TemplateType templateType = registry.getIterableTemplate();
-          JSType iterableType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
-          if (source.isForAwaitOf()) {
-            newType = Promises.getResolvedType(registry, iterableType);
-          } else {
-            newType = iterableType;
-          }
+          // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
+          newType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
+          break;
+        }
+      case FOR_AWAIT_OF:
+        {
+          // for/await/of. the iterated object is either of the Iterable or AsyncIterable type.
+          // the type of `item` is the Promise.resolve() type of the object's type parameter.
+          JSType iterableType =
+              JsIterables.maybeBoxIterableOrAsyncIterable(getJSType(obj), registry)
+                  .orElse(unknownType);
+
+          newType = Promises.getResolvedType(registry, iterableType);
           break;
         }
       default:

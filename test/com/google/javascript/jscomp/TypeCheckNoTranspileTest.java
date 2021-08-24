@@ -7752,7 +7752,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testForAwaitOf_loopVarInferred() {
+  public void testForAwaitOf_nonAsyncIterable_loopVarInferred() {
     newTest()
         .addSource(
             "async function f(/** !Iterable<!Promise<string>> */ o) {",
@@ -7765,6 +7765,40 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
                 "initializing variable", //
                 "found   : string",
                 "required: number"))
+        .run();
+  }
+
+  @Test
+  public void testForAwaitOf_asyncIterable_loopVarInferred() {
+    newTest()
+        .addSource(
+            "async function f(/** !AsyncIterable<string> */ o) {",
+            "  for await (const s of o) {",
+            "    const /** number */ n = s;",
+            "  }",
+            "}")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: number"))
+        .run();
+  }
+
+  @Test
+  public void testForAwaitOf_unionOfIterableAndAsyncIterable_loopVarInferred() {
+    newTest()
+        .addSource(
+            "async function f(/** !AsyncIterable<string>|!Iterable<number> */ o) {",
+            "  for await (const s of o) {",
+            "    const /** null */ n = s;",
+            "  }",
+            "}")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : (number|string)",
+                "required: null"))
         .run();
   }
 
