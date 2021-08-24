@@ -201,6 +201,10 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
+    checkState(
+        !options.skipNonTranspilationPasses,
+        "options.skipNonTranspilationPasses cannot be mixed with PassConfig::getChecks. Call"
+            + " PassConfig::getTranspileOnlyPasses instead.");
 
     checks.add(syncCompilerFeatures);
 
@@ -511,6 +515,8 @@ public final class DefaultPassConfig extends PassConfig {
     List<PassFactory> passes = new ArrayList<>();
 
     if (options.skipNonTranspilationPasses) {
+      // Reaching this if-condition means the 'getChecks()' phase has been skipped in favor of
+      // 'getTranspileOnlyPasses'.
       return passes;
     }
 
