@@ -16,9 +16,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -35,6 +36,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   public void enableTypeCheckBeforePass() {
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -119,7 +121,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
             .getFirstChild() // CATCH
             .getFirstChild(); // NAME
 
-    assertType(binding.getJSType()).isUnknown();
+    assertNode(binding).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
