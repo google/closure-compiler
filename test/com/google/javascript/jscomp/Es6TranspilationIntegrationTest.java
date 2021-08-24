@@ -75,8 +75,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .setFeatureSet(ES2016_MODULES)
             .build());
 
-    TranspilationPasses.addPostCheckTranspilationPasses(passes, compiler.getOptions());
-
     passes.add(
         PassFactory.builder()
             .setName("convertTypesToColors")

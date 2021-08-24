@@ -1725,7 +1725,6 @@ public abstract class CompilerTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
-    TranspilationPasses.addPostCheckTranspilationPasses(factories, options);
     TranspilationPasses.addRewritePolyfillPass(factories);
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
     for (PassFactory factory : factories) {

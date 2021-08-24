@@ -150,8 +150,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(passes, options);
 
-    TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
-
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     if (options.needsTranspilationFrom(ES2015)) {
@@ -462,9 +460,6 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.exportTestFunctions) {
         checks.add(exportTestFunctions);
       }
-
-      // There's no need to complete transpilation if we're only running checks.
-      TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
     }
 
     // Create extern exports after the normalize because externExports depends on unique names.
