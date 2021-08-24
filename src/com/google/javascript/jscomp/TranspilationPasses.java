@@ -113,17 +113,18 @@ public class TranspilationPasses {
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(rewriteObjectSpread);
     }
-
-    if (options.needsTranspilationFrom(ES2017)) {
-      passes.add(removeTrailingCommaFromParamList);
-      passes.add(rewriteAsyncFunctions);
-    }
   }
 
   /** Adds transpilation passes that should run at the beginning of the optimization phase */
   public static void addEarlyOptimizationTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
+
+    if (options.needsTranspilationFrom(ES2017)) {
+      passes.add(removeTrailingCommaFromParamList);
+      passes.add(rewriteAsyncFunctions);
+    }
+
     if (options.needsTranspilationFrom(ES2016)) {
       passes.add(rewriteExponentialOperator);
     }

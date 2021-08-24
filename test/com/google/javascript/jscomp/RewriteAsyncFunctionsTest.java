@@ -21,13 +21,13 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +53,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
   }
 
   @Override
@@ -74,12 +75,16 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 
-  private final JSType getGlobalJSType(String globalTypeName) {
-    return getLastCompiler().getTypeRegistry().getGlobalType(globalTypeName);
+  private final Color getGlobalColor(ColorId colorId) {
+    return getLastCompiler().getColorRegistry().get(colorId);
   }
 
-  private final ObjectType getGlobalObjectType(String globalTypeName) {
-    return getGlobalJSType(globalTypeName).assertObjectType();
+  private final Color getGlobalInstanceColor(String globalClassName) {
+    return Color.createUnion(
+        findClassDefinition(getLastCompiler(), globalClassName)
+            .getRootNode()
+            .getColor()
+            .getInstanceColors());
   }
 
   @Test
@@ -103,16 +108,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"),
         lines(
             "class X {",
-            "  /**",
-            "   * @param {number} a",
-            "   */",
             "  constructor(a) {",
             "    /** @const */ this.a = a;",
             "  }",
-            "  /**",
-            "   * @param {number} b",
-            "   * @return {!Promise<number>}",
-            "   */",
             "  m(b = this.a) {", // this in parameter default value doesn't get changed
             "    const $jscomp$async$this = this;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
@@ -122,7 +120,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    ObjectType classXInstanceType = getGlobalObjectType("X");
+    Color classXInstanceType = getGlobalInstanceColor("X");
 
     ImmutableList<Node> thisAliasNameReferences =
         findClassDefinition(getLastCompiler(), "X")
@@ -133,12 +131,12 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // const $jscomp$async$this = this;
     // confirm that `this` and `$jscomp$async$this` nodes have the right types in declaration
     Node aliasDeclarationReference = thisAliasNameReferences.get(0);
-    assertNode(aliasDeclarationReference).hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(aliasDeclarationReference).hasColorThat().isEqualTo(classXInstanceType);
     Node thisNode = aliasDeclarationReference.getOnlyChild();
-    assertNode(thisNode).isThis().hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(thisNode).isThis().hasColorThat().isEqualTo(classXInstanceType);
 
     // make sure the single reference to $jscomp$async$this has the right type
-    assertNode(thisAliasNameReferences.get(1)).hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(thisAliasNameReferences.get(1)).hasColorThat().isEqualTo(classXInstanceType);
   }
 
   @Test
@@ -165,7 +163,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    ObjectType classXInstanceType = getGlobalObjectType("X");
+    Color classXInstanceType = getGlobalInstanceColor("X");
 
     ImmutableList<Node> thisAliasNameReferences =
         findClassDefinition(getLastCompiler(), "X")
@@ -176,12 +174,12 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // const $jscomp$async$this = this;
     // confirm that `this` and `$jscomp$async$this` nodes have the right types in declaration
     Node aliasDeclarationReference = thisAliasNameReferences.get(0);
-    assertNode(aliasDeclarationReference).hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(aliasDeclarationReference).hasColorThat().isEqualTo(classXInstanceType);
     Node thisNode = aliasDeclarationReference.getOnlyChild();
-    assertNode(thisNode).isThis().hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(thisNode).isThis().hasColorThat().isEqualTo(classXInstanceType);
 
     // make sure the single reference to $jscomp$async$this has the right type
-    assertNode(thisAliasNameReferences.get(1)).hasJSTypeThat().isEqualTo(classXInstanceType);
+    assertNode(thisAliasNameReferences.get(1)).hasColorThat().isEqualTo(classXInstanceType);
   }
 
   @Test
@@ -218,9 +216,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "  }",
                 "}")));
 
-    ObjectType classAInstanceType = getGlobalObjectType("A");
+    Color classAInstanceType = getGlobalInstanceColor("A");
     // type of A.prototype.m
-    FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
+    Color classAPropertyMType =
+        findClassDefinition(getLastCompiler(), "A")
+            .findMethodDefinition("m")
+            .getRootNode()
+            .getColor();
 
     CodeSubTree classXMethodMDefinition =
         findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
@@ -234,48 +236,38 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // first name node is declaration
     // const $jscomp$async$super$get$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    // arrow function has a JSType representing a function that returns type type of `super.m`
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
+    // optimization colors don't track function signatures
     assertNode(wrapperArrowFunction)
         .isArrowFunction()
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
+        .hasColorThat()
+        .isEqualTo(StandardColors.TOP_OBJECT);
     // wrapper function variable has type matching the function itself
-    JSType wrapperArrowFunctionType = wrapperArrowFunction.getJSType();
-    assertNode(wrapperDeclarationNameNode).hasJSTypeThat().isEqualTo(wrapperArrowFunctionType);
+    Color wrapperArrowColor = wrapperArrowFunction.getColor();
+    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `super.m` from `() => `super.m`
     Node superDotM = wrapperArrowFunction.getLastChild();
     assertNode(superDotM)
         .matchesQualifiedName("super.m")
-        .hasJSTypeThat()
+        .hasColorThat()
         .isEqualTo(classAPropertyMType);
     Node superNode = superDotM.getFirstChild();
-    assertNode(superNode).isSuper().hasJSTypeThat().isEqualTo(classAInstanceType);
+    assertNode(superNode).isSuper().hasColorThat().isEqualTo(classAInstanceType);
 
     // second name node is reference
     // return $jscomp$async$super$get$m().call($jscomp$async$this);
     Node wrapperReferenceNameNode = superMethodWrapperNameNodes.get(1);
-    // TODO(bradfordcsmith): The name type should be equal to the arrowFunctionType, but it
-    //     somehow isn't
-    assertNode(wrapperReferenceNameNode)
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
+    // optimization colors don't track function signatures
+    assertNode(wrapperArrowFunction).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
     // `$jscomp$async$super$get$m()`
     Node wrapperCallNode = wrapperReferenceNameNode.getParent();
-    assertNode(wrapperCallNode).isCall().hasJSTypeThat().isEqualTo(classAPropertyMType);
+    assertNode(wrapperCallNode).isCall().hasColorThat().isEqualTo(classAPropertyMType);
 
     // `$jscomp$async$super$get$m().call($jscomp$async$this)`
     Node methodCallNode = wrapperCallNode.getGrandparent();
-    // the .call() we created returns the same type as calling the original method directly
-    assertNode(methodCallNode)
-        .isCall()
-        .hasJSTypeThat()
-        .isEqualTo(classAPropertyMType.getReturnType());
+    // optimization colors don't track .call types
+    assertNode(methodCallNode).isCall().hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
@@ -314,9 +306,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
                 "  }",
                 "}")));
 
-    ObjectType classAInstanceType = getGlobalObjectType("A");
     // type of A.prototype.m
-    FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
+    Color classAPropertyMType =
+        findClassDefinition(getLastCompiler(), "A")
+            .findMethodDefinition("m")
+            .getRootNode()
+            .getColor();
+    Color classAInstanceType = getGlobalInstanceColor("A");
 
     CodeSubTree classXMethodMDefinition =
         findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
@@ -330,40 +326,33 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // first name node is declaration
     // const $jscomp$async$super$get$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    // arrow function has a JSType representing a function that returns type type of `super.m`
+    // arrow function has a Color representing a object
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
     assertNode(wrapperArrowFunction)
         .isArrowFunction()
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
+        .hasColorThat()
+        .isEqualTo(StandardColors.TOP_OBJECT);
     // wrapper function variable has type matching the function itself
-    JSType wrapperArrowFunctionType = wrapperArrowFunction.getJSType();
-    assertNode(wrapperDeclarationNameNode).hasJSTypeThat().isEqualTo(wrapperArrowFunctionType);
+    Color wrapperArrowColor = wrapperArrowFunction.getColor();
+    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `super.m` from `() => `super.m`
     Node superDotM = wrapperArrowFunction.getLastChild();
     assertNode(superDotM)
         .matchesQualifiedName("super.m")
-        .hasJSTypeThat()
+        .hasColorThat()
         .isEqualTo(classAPropertyMType);
     Node superNode = superDotM.getFirstChild();
-    assertNode(superNode).hasJSTypeThat().isEqualTo(classAInstanceType);
+    assertNode(superNode).hasColorThat().isEqualTo(classAInstanceType);
 
     // second name node is reference
     // const tmp = $jscomp$async$super$get$m();
     Node wrapperReferenceNameNode = superMethodWrapperNameNodes.get(1);
-    // TODO(bradfordcsmith): The name type should be equal to the arrowFunctionType, but it
-    //     somehow isn't
-    assertNode(wrapperReferenceNameNode)
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
+    // optimization colors don't track function signatures
+    assertNode(wrapperReferenceNameNode).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
     // `$jscomp$async$super$get$m()`
     Node wrapperCallNode = wrapperReferenceNameNode.getParent();
-    assertNode(wrapperCallNode).isCall().hasJSTypeThat().isEqualTo(classAPropertyMType);
+    assertNode(wrapperCallNode).isCall().hasColorThat().isEqualTo(classAPropertyMType);
   }
 
   @Test
@@ -399,9 +388,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    ObjectType classAInstanceType = getGlobalObjectType("A");
+    Color classAInstanceType = getGlobalInstanceColor("A");
     // type of A.prototype.m
-    FunctionType classAPropertyMType = classAInstanceType.getPropertyType("m").assertFunctionType();
+    Color classAPropertyMType =
+        findClassDefinition(getLastCompiler(), "A")
+            .findMethodDefinition("m")
+            .getRootNode()
+            .getColor();
 
     CodeSubTree classXMethodMDefinition =
         findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
@@ -415,23 +408,21 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // first name node is declaration
     // const $jscomp$async$super$get$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    // arrow function has a JSType representing a function that returns type type of `super.m`
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
+    // optimization colors don't track function signatures
     assertNode(wrapperArrowFunction)
         .isArrowFunction()
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
+        .hasColorThat()
+        .isEqualTo(StandardColors.TOP_OBJECT);
     // wrapper function variable has type matching the function itself
-    JSType wrapperArrowFunctionType = wrapperArrowFunction.getJSType();
-    assertNode(wrapperDeclarationNameNode).hasJSTypeThat().isEqualTo(wrapperArrowFunctionType);
+    Color wrapperArrowColor = wrapperArrowFunction.getColor();
+    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `Object.getPrototypeOf(...).m` from `() => `Object.getPrototypeOf(...).m`
     Node fakeSuperDotM = wrapperArrowFunction.getLastChild();
-    assertNode(fakeSuperDotM).hasJSTypeThat().isEqualTo(classAPropertyMType);
+    assertNode(fakeSuperDotM).hasColorThat().isEqualTo(classAPropertyMType);
     Node fakeSuperNode = fakeSuperDotM.getFirstChild();
-    assertNode(fakeSuperNode).isCall().hasJSTypeThat().isEqualTo(classAInstanceType);
+    assertNode(fakeSuperNode).isCall().hasColorThat().isEqualTo(classAInstanceType);
     assertNode(fakeSuperNode.getFirstChild()).matchesQualifiedName("Object.getPrototypeOf");
   }
 
@@ -495,20 +486,14 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"),
         lines(
             "class A {",
-            "  /**",
-            "   * @return {number}",
-            "   */",
             "  static m() {",
             "    return this.someNumber;",
             "  }",
             "}",
-            "/** @const {number} */",
+            "/** @const */",
             "A.someNumber = 3;",
             "",
             "class X extends A {",
-            "  /**",
-            "   * @return {!Promise<number>}",
-            "   */",
             "  static asyncM() {",
             "    const $jscomp$async$this = this;",
             "    const $jscomp$async$super$get$m = () => Object.getPrototypeOf(this).m;",
@@ -519,11 +504,14 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    ObjectType classAInstanceType = getGlobalObjectType("A");
+    Color classAConstructorType =
+        findClassDefinition(getLastCompiler(), "A").getRootNode().getColor();
     // type of A.prototype.m
-    FunctionType classAConstructorType = classAInstanceType.getConstructor();
-    FunctionType classAPropertyMType =
-        classAConstructorType.getPropertyType("m").assertFunctionType();
+    Color classAPropertyMType =
+        findClassDefinition(getLastCompiler(), "A")
+            .findMethodDefinition("m")
+            .getRootNode()
+            .getColor();
 
     CodeSubTree classXMethodDefinition =
         findClassDefinition(getLastCompiler(), "X").findMethodDefinition("asyncM");
@@ -537,23 +525,17 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     // first name node is declaration
     // const $jscomp$async$super$get$m = () => super.m;
     Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    // arrow function has a JSType representing a function that returns type type of `super.m`
+    // arrow function has a Color representing a function that returns type type of `super.m`
     Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
-    assertNode(wrapperArrowFunction)
-        .isArrowFunction()
-        .hasJSTypeThat()
-        .isFunctionTypeThat()
-        .hasReturnTypeThat()
-        .isEqualTo(classAPropertyMType);
     // wrapper function variable has type matching the function itself
-    JSType wrapperArrowFunctionType = wrapperArrowFunction.getJSType();
-    assertNode(wrapperDeclarationNameNode).hasJSTypeThat().isEqualTo(wrapperArrowFunctionType);
+    Color wrapperArrowColor = wrapperArrowFunction.getColor();
+    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
 
     // get `Object.getPrototypeOf(...).m` from `() => `Object.getPrototypeOf(...).m`
     Node fakeSuperDotM = wrapperArrowFunction.getLastChild();
-    assertNode(fakeSuperDotM).hasJSTypeThat().isEqualTo(classAPropertyMType);
+    assertNode(fakeSuperDotM).hasColorThat().isEqualTo(classAPropertyMType);
     Node fakeSuperNode = fakeSuperDotM.getFirstChild();
-    assertNode(fakeSuperNode).isCall().hasJSTypeThat().toStringIsEqualTo("(typeof A)");
+    assertNode(fakeSuperNode).isCall().hasColorThat().isEqualTo(classAConstructorType);
     assertNode(fakeSuperNode.getFirstChild()).matchesQualifiedName("Object.getPrototypeOf");
   }
 
@@ -613,7 +595,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             .findMatchingQNameReferences("$jscomp$async$arguments");
     assertThat(argumentsAliasRefs).hasSize(2); // one declaration and 1 use
 
-    JSType argumentsJsType = getGlobalJSType("Arguments");
+    Color argumentsColor = getGlobalColor(StandardColors.ARGUMENTS_ID);
 
     // declaration reference
     // const $jscomp$async$arguments = arguments;
@@ -621,20 +603,20 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     Node argumentsValue = argumentsAliasDeclaration.getOnlyChild();
     assertNode(argumentsValue)
         .matchesQualifiedName("arguments")
-        .hasJSTypeThat()
-        .isEqualTo(argumentsJsType);
+        .hasColorThat()
+        .isEqualTo(argumentsColor);
     assertNode(argumentsAliasDeclaration)
         .matchesQualifiedName("$jscomp$async$arguments")
-        .hasJSTypeThat()
-        .isEqualTo(argumentsJsType);
+        .hasColorThat()
+        .isEqualTo(argumentsColor);
 
     // usage reference
     // return $jscomp$async$arguments;
     Node argumentsAliasUsage = argumentsAliasRefs.get(1);
     assertNode(argumentsAliasUsage)
         .matchesQualifiedName("$jscomp$async$arguments")
-        .hasJSTypeThat()
-        .isEqualTo(argumentsJsType);
+        .hasColorThat()
+        .isEqualTo(argumentsColor);
   }
 
   @Test
@@ -688,10 +670,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"),
         lines(
             "function outer() {",
-            "  /**",
-            "   * @param {...?} var_args",
-            "   * @return {!Promise<number>}",
-            "   */",
             "  function f(var_args) {",
             "    const $jscomp$async$arguments = arguments;",
             "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
@@ -746,11 +724,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"),
         lines(
             "class A {",
-            "  /**",
-            "   * @param {number} x",
-            "   */",
             "  constructor(x) {",
-            "    /** @type {number} */ this.x = x;",
+            "    this.x = x;",
             "  }",
             "  f() {",
             "    const $jscomp$async$this = this;",

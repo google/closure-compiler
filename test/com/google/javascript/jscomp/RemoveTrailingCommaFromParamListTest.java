@@ -33,6 +33,7 @@ public class RemoveTrailingCommaFromParamListTest extends CompilerTestCase {
   public void enableTypeCheckBeforePass() {
     enableTypeCheck();
     enableTypeInfoValidation();
+    replaceTypesWithColors();
     // Trailing commas are not considered when comparing Nodes for equality, so we must do a text
     // comparison.
     disableCompareAsTree();
