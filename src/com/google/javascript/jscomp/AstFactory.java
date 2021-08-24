@@ -331,6 +331,26 @@ final class AstFactory {
   }
 
   /**
+   * Creates a THIS node with the correct type for the given ES6 class node.
+   *
+   * <p>With the optimization colors type system, we can support inferring the type of this for
+   * constructors but not generic functions annotated @this
+   */
+  Node createThisForEs6ClassMember(Node functionNode) {
+    checkState(
+        functionNode.isMemberFunctionDef() && functionNode.getParent().isClassMembers(),
+        functionNode);
+    Node classNode = functionNode.getGrandparent();
+    if (functionNode.isStaticMember()) {
+      final Node result = IR.thisNode();
+      setJSTypeOrColor(type(classNode), result);
+      return result;
+    } else {
+      return createThisForEs6Class(classNode);
+    }
+  }
+
+  /**
    * Creates a SUPER node with the correct type for the given function node.
    *
    * @deprecated TODO(b/193800507): delete this method.
@@ -1396,35 +1416,6 @@ final class AstFactory {
             .copyWithExtension(templatedType.getTemplateTypeMap().getTemplateKeys(), templateTypes);
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
     return templatedType.visit(replacer);
-  }
-
-  /**
-   * Creates a reference to $jscomp.AsyncGeneratorWrapper with the template filled in to match the
-   * original function.
-   *
-   * @param originalFunctionType the type of the async generator function that needs transpilation
-   */
-  Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, StaticScope scope) {
-    Node ctor = createQName(scope, "$jscomp.AsyncGeneratorWrapper");
-
-    if (isAddingTypes()) {
-      // e.g get `number` from `AsyncIterable<number>`
-      JSType yieldedType =
-          originalFunctionType
-              .toMaybeFunctionType()
-              .getReturnType()
-              .getTemplateTypeMap()
-              .getResolvedTemplateType(registry.getAsyncIterableTemplate());
-
-      // e.g. replace
-      //  AsyncGeneratorWrapper<T>
-      // with
-      //  AsyncGeneratorWrapper<number>
-      ctor.setJSType(replaceTemplate(ctor.getJSType(), ImmutableList.of(yieldedType)));
-    }
-    // no need to have a special case for colors as they don't include generics
-
-    return ctor;
   }
 
   /**

@@ -101,6 +101,7 @@ public class TestExternsBuilder {
           " * @template T",
           " */",
           "$jscomp.makeIterator = function(iterable) {};",
+          "$jscomp.makeAsyncIterator = function(asyncIterable) {};",
           "/**",
           " * @param {!Iterator<T>} iterator",
           " * @return {!Array<T>}",
@@ -115,7 +116,17 @@ public class TestExternsBuilder {
           "/** @type {!Global} */",
           "$jscomp.global = globalThis;",
           "/** @const {typeof Reflect.construct} */",
-          "$jscomp.construct = Reflect.construct;");
+          "$jscomp.construct = Reflect.construct;",
+          "/** @constructor */",
+          "$jscomp.AsyncGeneratorWrapper = function(generator) {};",
+          "/** @constructor */",
+          "$jscomp.AsyncGeneratorWrapper$ActionRecord = function(action, value) {};",
+          "/** @enum {number} */",
+          "$jscomp.AsyncGeneratorWrapper$ActionEnum = {",
+          "  YIELD_VALUE: 0,",
+          "  YIELD_STAR: 1,",
+          "  AWAIT_VALUE: 2,",
+          "};");
 
   private static final String BIGINT_EXTERNS =
       lines(

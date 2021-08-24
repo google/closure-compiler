@@ -15,10 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.testing.CodeSubTree.findFirstNode;
 import static com.google.javascript.jscomp.testing.CodeSubTree.findFunctionDefinition;
-import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -38,6 +42,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             .addMath()
             .addArguments()
             .addObject()
+            .addJSCompLibraries()
             .build());
   }
 
@@ -45,9 +50,8 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   public void enableTypeCheckBeforePass() {
     enableTypeCheck();
     enableTypeInfoValidation();
-    disableCompareSyntheticCode();
     allowExternsChanges();
-    ensureLibraryInjected("es6/async_generator_wrapper");
+    replaceTypesWithColors();
   }
 
   @Override
@@ -64,6 +68,22 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         .build();
   }
 
+  private final Color getGlobalColor(ColorId colorId) {
+    return getLastCompiler().getColorRegistry().get(colorId);
+  }
+
+  private Color getJSCompAsyncGeneratorWrapperClassColor() {
+    return findFirstNode(
+            getLastCompiler().getExternsRoot(),
+            (n) -> n.matchesQualifiedName("$jscomp.AsyncGeneratorWrapper"))
+        .getNext()
+        .getColor();
+  }
+
+  private Color getJSCompAsyncGeneratorWrapperInstanceColor() {
+    return Color.createUnion(getJSCompAsyncGeneratorWrapperClassColor().getInstanceColors());
+  }
+
   @Test
   public void testAsyncGenerator() {
     test(
@@ -76,16 +96,15 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
-    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<?,?,?>");
-    assertType(wrapper.getJSType()).toStringIsEqualTo("(typeof $jscomp.AsyncGeneratorWrapper)");
-    assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
-    assertType(innerGeneratorCall.getJSType())
-        .toStringIsEqualTo("Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<?>|null),?,?>");
+    assertNode(wrapper).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperClassColor());
+    assertNode(newExpr).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperInstanceColor());
+    assertNode(innerGeneratorCall)
+        .hasColorThat()
+        .isEqualTo(getGlobalColor(StandardColors.GENERATOR_ID));
   }
 
   @Test
@@ -96,8 +115,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "/** @return {!AsyncGenerator<undefined>} */",
             "async function* baz() { await foo() }"),
         lines(
-            "let /** function(): !Promise<number> */ foo;",
-            "/** @return {!AsyncGenerator<undefined>} */",
+            "let foo;",
             "function baz() {",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
@@ -106,24 +124,22 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
-    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<undefined,?,?>");
-    assertType(wrapper.getJSType()).toStringIsEqualTo("(typeof $jscomp.AsyncGeneratorWrapper)");
-    assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
-    assertType(innerGeneratorCall.getJSType())
-        .toStringIsEqualTo(
-            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<undefined>|null),?,?>");
+    assertNode(wrapper).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperClassColor());
+    assertNode(newExpr).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperInstanceColor());
+    assertNode(innerGeneratorCall)
+        .hasColorThat()
+        .isEqualTo(getGlobalColor(StandardColors.GENERATOR_ID));
 
     test(
         lines(
             "let /** function(): !Promise<number> */ foo;",
             "async function* baz() { bar = await foo() }"),
         lines(
-            "let /** function(): !Promise<number> */ foo;",
+            "let foo;",
             "function baz() {",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
@@ -134,7 +150,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     Node bar =
         findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
 
-    assertType(bar.getJSType()).toStringIsEqualTo("number");
+    assertNode(bar).hasColorThat().isEqualTo(StandardColors.NUMBER);
   }
 
   @Test
@@ -144,7 +160,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "/** @return {!AsyncGenerator<number>} */", //
             "async function* baz() { yield 2+2 }"),
         lines(
-            "/** @return {!AsyncGenerator<number>} */",
             "function baz() {",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
@@ -153,25 +168,22 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
 
     CodeSubTree bazSubTree = findFunctionDefinition(getLastCompiler(), "baz");
-    Node baz = bazSubTree.getRootNode();
     Node wrapper = bazSubTree.findMatchingQNameReferences("$jscomp.AsyncGeneratorWrapper").get(0);
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<number,?,?>");
-    assertType(wrapper.getJSType()).toStringIsEqualTo("(typeof $jscomp.AsyncGeneratorWrapper)");
-    assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
-    assertType(innerGeneratorCall.getJSType())
-        .toStringIsEqualTo(
-            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<number>|null),?,?>");
+    assertNode(wrapper).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperClassColor());
+    assertNode(newExpr).hasColorThat().isEqualTo(getJSCompAsyncGeneratorWrapperInstanceColor());
+    assertNode(innerGeneratorCall)
+        .hasColorThat()
+        .isEqualTo(getGlobalColor(StandardColors.GENERATOR_ID));
 
     test(
         lines(
             "/** @return {!AsyncGenerator<number>} */", //
             "async function* baz() { bar = yield 2+2 }"),
         lines(
-            "/** @return {!AsyncGenerator<number>} */", //
-            "function baz() {",
+            "function baz() {", //
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
             "    bar = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
             "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, 2+2);",
@@ -182,7 +194,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         findFunctionDefinition(getLastCompiler(), "baz").findMatchingQNameReferences("bar").get(0);
 
     // The generator yields numbers but yield expressions should always be "?" as next accepts "?"
-    assertType(bar.getJSType()).toStringIsEqualTo("?");
+    assertNode(bar).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
   @Test
@@ -426,10 +438,13 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   public void testForAwaitOfDeclarations() {
     test(
         lines(
+            "/** @type {number|undefined} */",
+            "let a;",
             "async function abc() { for await (a of foo()) { bar(); } }",
             "/** @return {!AsyncGenerator<number>} */",
             "function foo() {}"),
         lines(
+            "let a;",
             "async function abc() {",
             "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
             "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
@@ -442,7 +457,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "    }",
             "  }",
             "}",
-            "/** @return {!AsyncGenerator<number>} */",
             "function foo() {}"));
 
     Node forNode =
@@ -466,14 +480,17 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             .getFirstChild() // assign
             .getLastChild(); // getprop
 
-    assertType(tempIterator0.getJSType()).toStringIsEqualTo("AsyncIteratorIterable<number>");
-    assertType(makeAsyncIteratorCall.getJSType())
-        .toStringIsEqualTo("AsyncIteratorIterable<number>");
-    assertType(tempResult0.getJSType()).toStringIsEqualTo("IIterableResult<number>");
-    assertType(await.getJSType()).toStringIsEqualTo("IIterableResult<number>");
-    assertType(nextCall.getJSType()).toStringIsEqualTo("Promise<IIterableResult<number>>");
-    assertType(done.getJSType()).toStringIsEqualTo("boolean");
-    assertType(value.getJSType()).toStringIsEqualTo("number");
+    assertNode(tempIterator0)
+        .hasColorThat()
+        .isEqualTo(getGlobalColor(StandardColors.ASYNC_ITERATOR_ITERABLE_ID));
+    assertNode(makeAsyncIteratorCall)
+        .hasColorThat()
+        .isEqualTo(getGlobalColor(StandardColors.ASYNC_ITERATOR_ITERABLE_ID));
+    assertNode(tempResult0).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT); // IIterableResult
+    assertNode(await).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT); // IIterableResult
+    assertNode(nextCall).hasColorThat().isEqualTo(getGlobalColor(StandardColors.PROMISE_ID));
+    assertNode(done).hasColorThat().isEqualTo(StandardColors.BOOLEAN);
+    assertNode(value).hasColorThat().isEqualTo(StandardColors.NUMBER);
 
     test(
         lines("async function abc() { for await (var a of foo()) { bar(); } }"),

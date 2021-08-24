@@ -143,6 +143,7 @@ final class JSTypeColorIdHasher {
           .put(JSTypeNative.ARGUMENTS_TYPE, StandardColors.ARGUMENTS_ID)
           .put(JSTypeNative.ARRAY_TYPE, StandardColors.ARRAY_ID)
           .put(JSTypeNative.ASYNC_ITERATOR_ITERABLE_TYPE, StandardColors.ASYNC_ITERATOR_ITERABLE_ID)
+          .put(JSTypeNative.GENERATOR_TYPE, StandardColors.GENERATOR_ID)
           .put(JSTypeNative.I_TEMPLATE_ARRAY_TYPE, StandardColors.I_TEMPLATE_ARRAY_ID)
           .put(JSTypeNative.ITERATOR_TYPE, StandardColors.ITERATOR_ID)
           .put(JSTypeNative.PROMISE_TYPE, StandardColors.PROMISE_ID)

@@ -103,17 +103,17 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.add(rewriteCatchWithNoBinding);
     }
-
-    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
-        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
-      passes.add(rewriteAsyncIteration);
-    }
   }
 
   /** Adds transpilation passes that should run at the beginning of the optimization phase */
   public static void addEarlyOptimizationTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
     // TODO(b/191386936): move all transpilation passes here.
+
+    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
+        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
+      passes.add(rewriteAsyncIteration);
+    }
 
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {

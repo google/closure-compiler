@@ -484,6 +484,110 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void createThisForEs6ClassMember_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "class C {", //
+                "  method() {}",
+                "}",
+                ""));
+
+    Node classNode =
+        root.getFirstChild() // script
+            .getFirstChild(); // class node
+    Node memberDef =
+        classNode
+            .getLastChild() // class members
+            .getFirstChild(); // member function def
+
+    ObjectType instanceType = classNode.getJSTypeRequired().assertFunctionType().getInstanceType();
+
+    Node thisAlias = astFactory.createThisForEs6ClassMember(memberDef);
+    assertNode(thisAlias).hasType(Token.THIS);
+    assertNode(thisAlias).hasJSTypeThat().isEqualTo(instanceType);
+  }
+
+  @Test
+  public void createThisForEs6ClassMember_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node root =
+        parseAndAddColors(
+            lines(
+                "class C {", //
+                "  method() {}",
+                "}",
+                ""));
+
+    Node classNode =
+        root.getFirstChild() // script
+            .getFirstChild(); // class node
+    Node memberDef =
+        classNode
+            .getLastChild() // class members
+            .getFirstChild(); // member function def
+
+    Color instanceType = Color.createUnion(classNode.getColor().getInstanceColors());
+
+    Node thisAlias = astFactory.createThisForEs6ClassMember(memberDef);
+    assertNode(thisAlias).hasType(Token.THIS);
+    assertNode(thisAlias).hasColorThat().isEqualTo(instanceType);
+  }
+
+  @Test
+  public void createThisForEs6ClassStaticMember_jstypes() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "class C {", //
+                "  static method() {}",
+                "}",
+                ""));
+
+    Node classNode =
+        root.getFirstChild() // script
+            .getFirstChild(); // class node
+    Node memberDef =
+        classNode
+            .getLastChild() // class members
+            .getFirstChild(); // member function def
+
+    Node thisAlias = astFactory.createThisForEs6ClassMember(memberDef);
+    assertNode(thisAlias).hasType(Token.THIS);
+    assertNode(thisAlias).hasJSTypeThat().isEqualTo(classNode.getJSType());
+  }
+
+  @Test
+  public void createThisForEs6ClassStaticMember_colors() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+
+    Node root =
+        parseAndAddColors(
+            lines(
+                "class C {", //
+                "  static method() {}",
+                "}",
+                ""));
+
+    Node classNode =
+        root.getFirstChild() // script
+            .getFirstChild(); // class node
+    Node memberDef =
+        classNode
+            .getLastChild() // class members
+            .getFirstChild(); // member function def
+
+    Node thisAlias = astFactory.createThisForEs6ClassMember(memberDef);
+    assertNode(thisAlias).hasType(Token.THIS);
+    assertNode(thisAlias).hasColorThat().isEqualTo(classNode.getColor());
+  }
+
+  @Test
   public void createThisAliasReferenceForFunction() {
     AstFactory astFactory = createTestAstFactory();
 
