@@ -123,13 +123,12 @@ final class JSTypeReconserializer {
     JSTypeReconserializer serializer =
         new JSTypeReconserializer(
             registry, invalidatingTypes, stringPoolBuilder, serializationMode);
-    serializer.checkValid();
+    serializer.checkValidLinearTime();
     return serializer;
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
   TypePointer serializeType(JSType type) {
-    checkValid();
     SeenTypeRecord record = recordType(type);
     return record.pointer;
   }
@@ -238,7 +237,6 @@ final class JSTypeReconserializer {
   }
 
   private SeenTypeRecord getOrCreateRecord(ColorId id, JSType jstype) {
-    checkValid();
     checkNotNull(jstype);
     checkState(State.COLLECTING_TYPES == this.state || State.GENERATING_POOL == this.state);
 
@@ -381,7 +379,7 @@ final class JSTypeReconserializer {
   }
 
   /** Checks that this instance is in a valid state. */
-  private void checkValid() {
+  private void checkValidLinearTime() {
     if (!this.serializationMode.runValidation()) {
       return;
     }
@@ -408,7 +406,7 @@ final class JSTypeReconserializer {
    */
   TypePool generateTypePool() {
     checkState(this.state == State.COLLECTING_TYPES);
-    checkValid();
+    checkValidLinearTime();
 
     TypePool.Builder builder = TypePool.newBuilder();
 
@@ -454,7 +452,7 @@ final class JSTypeReconserializer {
     }
 
     this.state = State.FINISHED;
-    checkValid();
+    checkValidLinearTime();
     return builder.build();
   }
 
