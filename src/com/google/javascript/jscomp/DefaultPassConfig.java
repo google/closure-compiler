@@ -517,8 +517,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(typesToColors);
 
-    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
-
     if (options.closurePass) {
       passes.add(closureProvidesRequires);
     }
@@ -546,6 +544,8 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Defines in code always need to be processed.
     passes.add(processDefinesOptimize);
+
+    TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
 
     passes.add(normalize);
 
