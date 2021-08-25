@@ -280,54 +280,6 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMovementRestrictedByCrossChunkCycle() {
-    JSChunk[] modules =
-        JSChunkGraphBuilder.forStar() // IMPORTANT: prevents the declaration of `f` from moving
-            // m1
-            .addChunk(
-                lines(
-                    "function f(){ return 1;}", //
-                    "function x() { return f() }",
-                    ""))
-            // m2
-            .addChunk(lines("", "f[1] = function() { return x; };", "x();", ""))
-            // m3
-            .addChunk(lines("var a = f();"))
-            // m4
-            .addChunk("var b = f();")
-            // m5
-            .addChunk("var c = f();")
-            .build();
-
-    test(
-        srcs(modules),
-        expected(
-            // m1
-            lines(
-                "function f(){ return 1;}",
-                "function x() { return f() }", //
-                ""),
-            // m2
-            lines(
-                // The declaration of `x` should be able to move here, but this declaration
-                // statement for `f` forces `f` and `x` to be grouped as a cycle.
-                // Since `f` must remain in the common dependency chunk, `x` has to stay, too.
-                // TODO(bradfordcsmith): The grouping is happening at the wrong level.
-                //    We should group declaration statements within a chunk that refer
-                //    to each others' declared symbols instead of grouping together all
-                //    declaration statements for symbols that refer to each other.
-                "f[1] = function() { return x; };", "x();", ""),
-            // m3
-            lines(
-                "var a = f();", //
-                ""),
-            // m4
-            "var b = f();",
-            // m5
-            "var c = f();"));
-  }
-
-  @Test
   public void testFunctionMovement8() {
     // Check what happens with named functions
     JSChunk[] modules =
