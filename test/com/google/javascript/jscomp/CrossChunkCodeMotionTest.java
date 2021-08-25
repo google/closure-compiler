@@ -22,7 +22,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link CrossChunkCodeMotion}. */
+/**
+ * Tests for {@link CrossChunkCodeMotion}.
+ */
 @RunWith(JUnit4.class)
 public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
@@ -1988,97 +1990,5 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 "/** @nocollapse */ LowerCasePipe.ɵpipe = /** @pureOrBreakMyCode*/"
                     + " i0.ɵɵdefinePipe({ name: \"lowercase\", type: LowerCasePipe, pure: true });",
                 "new LowerCasePipe();")));
-  }
-
-  @Test
-  public void testIndexedWritesAreMovable() {
-    test(
-        srcs(
-            JSChunkGraphBuilder.forChain()
-                .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }",
-                        "let immovableObject = {}",
-                        "immovableObject[1] = wrapIt(123);",
-                        "let movableObject = {}",
-                        "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(123);"))
-                .addChunk("console.log(immovableObject, movableObject);")
-                .build()),
-        expected(
-            lines(
-                "function wrapIt(val) { return [val]; }",
-                "let immovableObject = {}",
-                "immovableObject[1] = wrapIt(123);"),
-            lines(
-                "let movableObject = {}",
-                "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(123);",
-                "console.log(immovableObject, movableObject);")));
-  }
-
-  @Test
-  public void testOrderIsPreservedForWritesToSameIndex() {
-    test(
-        srcs(
-            JSChunkGraphBuilder.forChain()
-                .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }",
-                        "let immovableObject = {}",
-                        "immovableObject[1] = wrapIt(123);",
-                        "let movableObject = {}",
-                        "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(123);",
-                        "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(234);"))
-                .addChunk("console.log(immovableObject, movableObject);")
-                .build()),
-        expected(
-            lines(
-                "function wrapIt(val) { return [val]; }",
-                "let immovableObject = {}",
-                "immovableObject[1] = wrapIt(123);"),
-            lines(
-                "let movableObject = {}",
-                "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(123);",
-                "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(234);",
-                "console.log(immovableObject, movableObject);")));
-  }
-
-  @Test
-  public void testIndexSideEffectPreventsMovement() {
-    testSame(
-        srcs(
-            JSChunkGraphBuilder.forChain()
-                .addChunk(
-                    lines(
-                        "function wrapIt(val) { return [val]; }",
-                        "let immovableObject = {}",
-                        "immovableObject[1] = wrapIt(123);",
-                        "let i = 0;",
-                        "let movableObject = {}",
-                        "movableObject[1] = /** @pureOrBreakMyCode */ wrapIt(123);",
-                        // not really movable due to the side-effect in the index expression
-                        "movableObject[i++] = /** @pureOrBreakMyCode */ wrapIt(234);"))
-                .addChunk("console.log(immovableObject, movableObject);")
-                .build()));
-  }
-
-  @Test
-  public void testMapSetsPreventMotion() {
-    testSame(
-        srcs(
-            JSChunkGraphBuilder.forChain()
-                .addChunk(
-                    lines(
-                        // TODO(bradfordcsmith): If we recognized these as Map objects, then we
-                        // could safely move both of them.
-                        // We don't consider constructor calls to be movable values,
-                        // but we could for Map()
-                        "let map1 = new Map();",
-                        "let map2 = new Map()",
-                        // If we recognized that this statement is analogous to
-                        // `obj['key'] = 'value';`, then we could move `map2`'s declaration and this
-                        // statement with it.
-                        "map2.set('key', 'value');"))
-                .addChunk("console.log(map1, map2);")
-                .build()));
   }
 }
