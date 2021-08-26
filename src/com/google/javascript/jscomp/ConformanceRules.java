@@ -33,6 +33,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
+import com.google.javascript.jscomp.CheckConformance.Precondition;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
@@ -559,7 +560,7 @@ public final class ConformanceRules {
   }
 
   /** Banned name rule */
-  static class BannedName extends AbstractRule {
+  static final class BannedName extends AbstractRule {
     private final Requirement.Type requirementType;
     private final ImmutableList<Node> names;
 
@@ -576,37 +577,44 @@ public final class ConformanceRules {
       names = builder.build();
     }
 
+    private static final Precondition IS_CANDIDATE_NODE =
+        new Precondition() {
+          @Override
+          public boolean shouldCheck(Node n) {
+            switch (n.getToken()) {
+              case GETPROP:
+                return n.getFirstChild().isQualifiedName();
+              case NAME:
+                return !n.getString().isEmpty();
+              default:
+                return false;
+            }
+          }
+        };
+
+    @Override
+    public final Precondition getPrecondition() {
+      return IS_CANDIDATE_NODE;
+    }
+
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (isCandidateNode(n)) {
-        if (requirementType == Type.BANNED_NAME_CALL) {
-          if (!ConformanceUtil.isCallTarget(n)) {
-            return ConformanceResult.CONFORMANCE;
-          }
+      if (requirementType == Type.BANNED_NAME_CALL) {
+        if (!ConformanceUtil.isCallTarget(n)) {
+          return ConformanceResult.CONFORMANCE;
         }
-        for (int i = 0; i < names.size(); i++) {
-          Node nameNode = names.get(i);
-          if (n.matchesQualifiedName(nameNode) && isRootOfQualifiedNameGlobal(t, n)) {
-            if (NodeUtil.isInSyntheticScript(n)) {
-              return ConformanceResult.CONFORMANCE;
-            } else {
-              return ConformanceResult.VIOLATION;
-            }
+      }
+      for (int i = 0; i < names.size(); i++) {
+        Node nameNode = names.get(i);
+        if (n.matchesQualifiedName(nameNode) && isRootOfQualifiedNameGlobal(t, n)) {
+          if (NodeUtil.isInSyntheticScript(n)) {
+            return ConformanceResult.CONFORMANCE;
+          } else {
+            return ConformanceResult.VIOLATION;
           }
         }
       }
       return ConformanceResult.CONFORMANCE;
-    }
-
-    private boolean isCandidateNode(Node n) {
-      switch (n.getToken()) {
-        case GETPROP:
-          return n.getFirstChild().isQualifiedName();
-        case NAME:
-          return !n.getString().isEmpty();
-        default:
-          return false;
-      }
     }
 
     private static boolean isRootOfQualifiedNameGlobal(NodeTraversal t, Node n) {
@@ -617,7 +625,7 @@ public final class ConformanceRules {
   }
 
   /** Banned property rule */
-  static class BannedProperty extends AbstractRule {
+  static final class BannedProperty extends AbstractRule {
     private static class Property {
       final JSType type;
       final String property;
@@ -628,9 +636,59 @@ public final class ConformanceRules {
       }
     }
 
+    private enum RequirementPrecondition implements Precondition {
+      BANNED_PROPERTY() {
+        @Override
+        public boolean shouldCheck(Node n) {
+          switch (n.getToken()) {
+            case STRING_KEY:
+            case GETPROP:
+            case GETELEM:
+            case COMPUTED_PROP:
+              return true;
+
+            default:
+              return false;
+          }
+        }
+      },
+      BANNED_PROPERTY_WRITE() {
+        @Override
+        public boolean shouldCheck(Node n) {
+          return NodeUtil.isLValue(n);
+        }
+      },
+      BANNED_PROPERTY_NON_CONSTANT_WRITE() {
+        @Override
+        public boolean shouldCheck(Node n) {
+          if (!NodeUtil.isLValue(n)) {
+            return false;
+          }
+          if (NodeUtil.isLhsOfAssign(n)
+              && (NodeUtil.isLiteralValue(n.getNext(), false /* includeFunctions */)
+                  || NodeUtil.isSomeCompileTimeConstStringValue(n.getNext()))) {
+            return false;
+          }
+          return true;
+        }
+      },
+      BANNED_PROPERTY_READ() {
+        @Override
+        public boolean shouldCheck(Node n) {
+          return !NodeUtil.isLValue(n) && NodeUtil.isExpressionResultUsed(n);
+        }
+      },
+      BANNED_PROPERTY_CALL() {
+        @Override
+        public boolean shouldCheck(Node n) {
+          return ConformanceUtil.isCallTarget(n);
+        }
+      },
+    }
+
     private final JSTypeRegistry registry;
     private final ImmutableList<Property> props;
-    private final Requirement.Type requirementType;
+    private final RequirementPrecondition requirementPrecondition;
 
     BannedProperty(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -642,16 +700,24 @@ public final class ConformanceRules {
 
       switch (requirement.getType()) {
         case BANNED_PROPERTY:
+          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY;
+          break;
         case BANNED_PROPERTY_READ:
+          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_READ;
+          break;
         case BANNED_PROPERTY_WRITE:
+          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_WRITE;
+          break;
         case BANNED_PROPERTY_NON_CONSTANT_WRITE:
+          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_NON_CONSTANT_WRITE;
+          break;
         case BANNED_PROPERTY_CALL:
+          this.requirementPrecondition = RequirementPrecondition.BANNED_PROPERTY_CALL;
           break;
         default:
           throw new AssertionError(requirement.getType());
       }
 
-      this.requirementType = requirement.getType();
       this.registry = compiler.getTypeRegistry();
 
       ImmutableList.Builder<Property> builder = ImmutableList.builder();
@@ -676,11 +742,12 @@ public final class ConformanceRules {
     }
 
     @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (!this.isCandidatePropAccess(n)) {
-        return ConformanceResult.CONFORMANCE;
-      }
+    public final Precondition getPrecondition() {
+      return this.requirementPrecondition;
+    }
 
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       Property srcProp = this.createSrcProperty(n);
       if (srcProp == null) {
         return ConformanceResult.CONFORMANCE;
@@ -744,39 +811,6 @@ public final class ConformanceRules {
         }
       }
       return false;
-    }
-
-    /**
-     * Determines if {@code n} is a potentially banned use of {@code prop}.
-     *
-     * <p>Specifically if the conformance requirement under consideration only bans assignment to
-     * the property, {@code n} is only a candidate if it is an l-value.
-     */
-    private boolean isCandidatePropAccess(Node propAccess) {
-      switch (this.requirementType) {
-        case BANNED_PROPERTY_WRITE:
-          return NodeUtil.isLValue(propAccess);
-
-        case BANNED_PROPERTY_NON_CONSTANT_WRITE:
-          if (!NodeUtil.isLValue(propAccess)) {
-            return false;
-          }
-          if (NodeUtil.isLhsOfAssign(propAccess)
-              && (NodeUtil.isLiteralValue(propAccess.getNext(), false /* includeFunctions */)
-                  || NodeUtil.isSomeCompileTimeConstStringValue(propAccess.getNext()))) {
-            return false;
-          }
-          return true;
-
-        case BANNED_PROPERTY_READ:
-          return !NodeUtil.isLValue(propAccess) && NodeUtil.isExpressionResultUsed(propAccess);
-
-        case BANNED_PROPERTY_CALL:
-          return ConformanceUtil.isCallTarget(propAccess);
-
-        default:
-          return true;
-      }
     }
 
     private Property createSrcProperty(Node n) {
