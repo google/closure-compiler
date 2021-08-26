@@ -56,6 +56,69 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testBug173319540() {
+    // Avoid including the transpilation library
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAsyncIterable()
+                .addConsole()
+                .addExtra(
+                    // fake async iterator to use in the test code
+                    "/** @type {!AsyncIterator<Array<String>>} */",
+                    "var asyncIterator;",
+                    "",
+                    // Externs to take the place of the injected library code
+                    "const $jscomp = {};",
+                    "",
+                    "/**",
+                    " * @param {",
+                    " *     string|!AsyncIterable<T>|!Iterable<T>|!Iterator<T>|!Arguments",
+                    " *   } iterable",
+                    " * @return {!AsyncIteratorIterable<T>}",
+                    " * @template T",
+                    " * @suppress {reportUnknownTypes}",
+                    " */",
+                    "$jscomp.makeAsyncIterator = function(iterable) {};",
+                    "")
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "", //
+            "async function foo() {",
+            "  for await (const [key, value] of asyncIterator) {",
+            "    console.log(key,value);",
+            "  }",
+            "}",
+            "foo();"),
+        lines(
+            "", //
+            "(async function() {",
+            "  for (const $$jscomp$forAwait$tempIterator0$$ =",
+            "           $jscomp.makeAsyncIterator(asyncIterator);;) {",
+            "    const $$jscomp$forAwait$tempResult0$$ =",
+            "        await $$jscomp$forAwait$tempIterator0$$.next();",
+            "    if ($$jscomp$forAwait$tempResult0$$.done) {",
+            "      break;",
+            "    }",
+            "    const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;",
+            "    console.log($key$$, $value$jscomp$2$$);",
+            "  }",
+            "})();",
+            ""));
+  }
+
+  @Test
   public void testBug196083761() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

@@ -85,6 +85,69 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBug173319540() {
+    test(
+        srcs(
+            lines(
+                "", //
+                "let key, value;",
+                "window.onload = async function() {",
+                "  for await ([key,value] of window[\"unknownAsyncIterable\"]) {",
+                "    alert(key,value);",
+                "  }",
+                "}",
+                "")),
+        expected(
+            lines(
+                "", //
+                "let key, value;",
+                "window.onload = async function() {",
+                "  for (const $jscomp$forAwait$tempIterator0 =",
+                "      $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
+                "        const $jscomp$forAwait$tempResult0 =",
+                "            await $jscomp$forAwait$tempIterator0.next();",
+                "    if ($jscomp$forAwait$tempResult0.done) {",
+                "      break;",
+                "    }",
+                "    [key, value] = $jscomp$forAwait$tempResult0.value;",
+                "    {",
+                "      alert(key, value);",
+                "    }",
+                "  }",
+                "};",
+                "")));
+
+    test(
+        srcs(
+            lines(
+                "", //
+                "window.onload = async function() {",
+                "  for await (const [key,value] of window[\"unknownAsyncIterable\"]) {",
+                "    alert(key,value);",
+                "  }",
+                "}",
+                "")),
+        expected(
+            lines(
+                "", //
+                "window.onload = async function() {",
+                "  for (const $jscomp$forAwait$tempIterator0 =",
+                "      $jscomp.makeAsyncIterator(window[\"unknownAsyncIterable\"]);;) {",
+                "        const $jscomp$forAwait$tempResult0 =",
+                "            await $jscomp$forAwait$tempIterator0.next();",
+                "    if ($jscomp$forAwait$tempResult0.done) {",
+                "      break;",
+                "    }",
+                "    const [key, value] = $jscomp$forAwait$tempResult0.value;",
+                "    {",
+                "      alert(key, value);",
+                "    }",
+                "  }",
+                "};",
+                "")));
+  }
+
+  @Test
   public void testAsyncGenerator() {
     test(
         "async function* baz() { foo() }",

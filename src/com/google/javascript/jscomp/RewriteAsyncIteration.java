@@ -99,9 +99,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
    */
   private final boolean rewriteSuperPropertyReferencesWithoutSuper;
 
-  /**
-   * Tracks a function and its context of this/arguments/super, if such a context exists.
-   */
+  /** Tracks a function and its context of this/arguments/super, if such a context exists. */
   private static final class LexicalContext {
 
     // Node that creates the context
@@ -506,12 +504,24 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
                       "value",
                       resultType)));
     } else if (NodeUtil.isNameDeclaration(lhs)) {
-      // In case of "for await (let x of _)" add a rhs to the let, becoming "let x = res.value"
-      resultType = type(lhs.getFirstChild());
-      lhs.getFirstChild()
-          .addChildToBack(
-              astFactory.createGetProp(
-                  astFactory.createName(resultTempName, iterableResultType), "value", resultType));
+      final Node declarationTarget = lhs.getFirstChild();
+      if (declarationTarget.isName()) {
+        // `for await (let x of _)`
+        // Add a child to the `NAME` node to create `let x = res.value`
+        resultType = type(declarationTarget);
+        declarationTarget.addChildToBack(
+            astFactory.createGetProp(
+                astFactory.createName(resultTempName, iterableResultType), "value", resultType));
+      } else {
+        // `for await (let [x, y] of _)`
+        // Add a child to the DESTRUCTURING_LHS node to create `[x, y] = res.value`
+        checkState(declarationTarget.isDestructuringLhs(), declarationTarget);
+        Node destructuringPattern = declarationTarget.getOnlyChild();
+        resultType = type(destructuringPattern);
+        declarationTarget.addChildToBack(
+            astFactory.createGetProp(
+                astFactory.createName(resultTempName, iterableResultType), "value", resultType));
+      }
       lhsAssignment = lhs;
     } else {
       throw new AssertionError("unexpected for-await-of lhs");
