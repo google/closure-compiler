@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -232,10 +231,31 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAst_cannotSerializeCast() {
+  public void testAst_numberInCast() {
     // CAST nodes in JSCompiler are a combination of a child node + JSDoc @type. Because we don't
     // serialize JSDoc @types it doesn't make sense to serialize the CAST node.
-    assertThrows(Exception.class, () -> compileToAstNode("/** @type {?} */ (1);"));
+    TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
+    assertThat(compileToAstNode("/** @type {?} */ (1);"))
+        .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+        .ignoringFieldDescriptors(
+            AstNode.getDescriptor().findFieldByName("relative_line"),
+            AstNode.getDescriptor().findFieldByName("relative_column"))
+        .isEqualTo(
+            AstNode.newBuilder()
+                .setKind(NodeKind.SOURCE_FILE)
+                .addChild(
+                    AstNode.newBuilder()
+                        .setKind(NodeKind.EXPRESSION_STATEMENT)
+                        .addChild(
+                            AstNode.newBuilder()
+                                .setKind(NodeKind.NUMBER_LITERAL)
+                                .addBooleanProperty(NodeProperty.IS_PARENTHESIZED)
+                                .addBooleanProperty(NodeProperty.COLOR_FROM_CAST)
+                                .setDoubleValue(1)
+                                .setType(unknownType)
+                                .build())
+                        .build())
+                .build());
   }
 
   @Test

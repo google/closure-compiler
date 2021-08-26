@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.serialization;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.RemoveCastNodes;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -66,6 +67,7 @@ public final class SerializeTypedAstPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    new RemoveCastNodes(compiler).process(externs, root);
     TypedAstSerializer serializer = new TypedAstSerializer(this.compiler);
     TypedAst ast = serializer.serializeRoots(externs, root);
     consumer.accept(ast);

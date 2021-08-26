@@ -487,12 +487,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureProvidesRequires);
     }
 
-    if (!options.checksOnly || options.getTypedAstOutputFile() != null) {
-      // Remove CAST nodes if we're serializing compiler state or proceeding to optimizations.
-      // Otherwise preserve CAST nodes for use by refactoring tooling.
-      checks.add(removeCastNodes);
-    }
-
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
@@ -515,7 +509,7 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    passes.add(typesToColors);
+    addNonTypedAstNormalizationPasses(passes);
 
     if (options.closurePass) {
       passes.add(closureProvidesRequires);
@@ -948,6 +942,15 @@ public final class DefaultPassConfig extends PassConfig {
 
     assertAllLoopablePasses(passes);
     return passes;
+  }
+
+  /**
+   * For use in builds that run getOptimizations() on the result of an AST directly from
+   * getChecks(), that has not gone through TypedAST serialization/deserialization.
+   */
+  private void addNonTypedAstNormalizationPasses(List<PassFactory> passes) {
+    passes.add(removeCastNodes);
+    passes.add(typesToColors);
   }
 
   private boolean shouldRunRemoveUnusedCode() {

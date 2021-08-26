@@ -19,10 +19,10 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
 /** Normalizes all CAST nodes out of the AST. */
-final class RemoveCastNodes implements CompilerPass {
+public final class RemoveCastNodes implements CompilerPass {
   private final AbstractCompiler compiler;
 
-  RemoveCastNodes(AbstractCompiler compiler) {
+  public RemoveCastNodes(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
