@@ -119,8 +119,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
     this.anchorUnusedVars = anchorUnusedVars;
     this.rootScopeUsesAreGlobal = rootScopeUsesAreGlobal;
 
-    if (moduleGraph.getModuleCount() > 1) {
-      firstModule = moduleGraph.getRootModule();
+    if (moduleGraph.getChunkCount() > 1) {
+      firstModule = moduleGraph.getRootChunk();
     } else {
       firstModule = null;
     }
@@ -135,7 +135,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       if (moduleGraph == null) {
         symbolGraph.connect(externNode, null, nameInfo);
       } else {
-        for (JSChunk module : moduleGraph.getAllModules()) {
+        for (JSChunk module : moduleGraph.getAllChunks()) {
           symbolGraph.connect(externNode, module, nameInfo);
         }
       }

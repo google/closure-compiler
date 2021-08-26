@@ -41,8 +41,8 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
-import com.google.javascript.jscomp.JSChunkGraph.MissingModuleException;
-import com.google.javascript.jscomp.JSChunkGraph.ModuleDependenceException;
+import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
+import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -645,7 +645,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Initializes the instance state needed for a compile job. */
   public final void init(
       List<SourceFile> externs, List<SourceFile> sources, CompilerOptions options) {
-    JSChunk module = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk module = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     for (SourceFile source : sources) {
       module.add(this.createInputConsideringTypedAstFilesystem(source, /* isExtern */ false));
     }
@@ -671,12 +671,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Generate the module graph, and report any errors in the module specification as errors.
     try {
       this.moduleGraph = new JSChunkGraph(modules);
-    } catch (ModuleDependenceException e) {
+    } catch (ChunkDependenceException e) {
       // problems with the module format.  Report as an error.  The
       // message gives all details.
       report(
           JSError.make(
-              MODULE_DEPENDENCY_ERROR, e.getModule().getName(), e.getDependentModule().getName()));
+              MODULE_DEPENDENCY_ERROR, e.getChunk().getName(), e.getDependentChunk().getName()));
       return;
     }
 
@@ -746,7 +746,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Fill any empty modules with a place holder file. It makes any cross module motion easier. */
   private void fillEmptyModules(Iterable<JSChunk> modules) {
     for (JSChunk module : modules) {
-      if (!module.getName().equals(JSChunk.WEAK_MODULE_NAME) && module.getInputs().isEmpty()) {
+      if (!module.getName().equals(JSChunk.WEAK_CHUNK_NAME) && module.getInputs().isEmpty()) {
         CompilerInput input =
             new CompilerInput(SourceFile.fromCode(createFillFileName(module.getName()), ""));
         input.setCompiler(this);
@@ -941,7 +941,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
-    JSChunk weakModule = moduleGraph.getModuleByName(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = moduleGraph.getChunkByName(JSChunk.WEAK_CHUNK_NAME);
     if (weakModule != null) {
       for (CompilerInput i : moduleGraph.getAllInputs()) {
         if (i.getSourceFile().isWeak()) {
@@ -1569,7 +1569,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Nullable
   public Iterable<JSChunk> getModules() {
-    return moduleGraph != null ? moduleGraph.getAllModules() : null;
+    return moduleGraph != null ? moduleGraph.getAllChunks() : null;
   }
 
   @Override
@@ -1988,7 +1988,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(MISSING_ENTRY_ERROR, e.getMessage()));
-      } catch (MissingModuleException e) {
+      } catch (MissingChunkException e) {
         report(JSError.make(MISSING_MODULE_ERROR, e.getMessage()));
       }
     }
@@ -3344,7 +3344,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     jsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
 
     JSChunk firstModule = Iterables.getFirst(getModules(), null);
-    if (firstModule.getName().equals(JSChunk.STRONG_MODULE_NAME)) {
+    if (firstModule.getName().equals(JSChunk.STRONG_CHUNK_NAME)) {
       firstModule.add(input);
     }
     input.setModule(firstModule);
@@ -3623,7 +3623,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.runJ2clPasses = compiler.runJ2clPasses;
       this.inputSourceMaps = compiler.inputSourceMaps;
       this.changeStamp = compiler.changeStamp;
-      this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllModules());
+      this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllChunks());
       this.injectedLibraries = compiler.injectedLibraries;
       this.lastInjectedLibraryIndexInFirstScript =
           compiler.lastInjectedLibrary != null

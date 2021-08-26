@@ -92,7 +92,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
   public void process(Node externRoot, Node root) {
     // If there are < 2 chunks, then we will never move anything,
     // so we're done.
-    if (moduleGraph.getModuleCount() > 1) {
+    if (moduleGraph.getChunkCount() > 1) {
       analyzer.process(externRoot, root);
       moveMethods(analyzer.getAllNameInfo());
     }

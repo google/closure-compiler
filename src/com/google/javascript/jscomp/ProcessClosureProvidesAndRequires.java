@@ -612,7 +612,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     private void updateMinimumChunk(JSChunk newChunk) {
       if (minimumChunk == null) {
         minimumChunk = newChunk;
-      } else if (chunkGraph.getModuleCount() > 1) {
+      } else if (chunkGraph.getChunkCount() > 1) {
         minimumChunk = chunkGraph.getDeepestCommonDependencyInclusive(minimumChunk, newChunk);
       } else {
         // If there is no module graph, then there must be exactly one

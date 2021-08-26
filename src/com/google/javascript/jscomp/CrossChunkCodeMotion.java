@@ -93,7 +93,7 @@ class CrossChunkCodeMotion implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // If there are <2 chunks, then we will never move anything, so we're done
-    if (graph.getModuleCount() > 1) {
+    if (graph.getChunkCount() > 1) {
       CrossChunkReferenceCollector referenceCollector =
           new CrossChunkReferenceCollector(compiler, new SyntacticScopeCreator(compiler));
       referenceCollector.process(root);
@@ -229,7 +229,7 @@ class CrossChunkCodeMotion implements CompilerPass {
      */
     final Deque<DeclarationStatementGroup> dsgStack = new ArrayDeque<>();
 
-    final BitSet modulesWithImmovableReferences = new BitSet(graph.getModuleCount());
+    final BitSet modulesWithImmovableReferences = new BitSet(graph.getChunkCount());
 
     /**
      * Symbols whose declaration statements refer to this symbol.
@@ -314,7 +314,7 @@ class CrossChunkCodeMotion implements CompilerPass {
       for (GlobalSymbol symbol : symbols) {
         checkState(!symbol.isMoveDeclarationStatementsDone, "duplicate attempt to move %s", symbol);
       }
-      BitSet modulesWithImmovableReferences = new BitSet(graph.getModuleCount());
+      BitSet modulesWithImmovableReferences = new BitSet(graph.getChunkCount());
       List<DeclarationStatementGroupCycle> cyclesLatestFirst = getDsgCyclesLatestFirst();
       for (DeclarationStatementGroupCycle dsgCycle : cyclesLatestFirst) {
         // Each move may change modulesWithImmovableReferences

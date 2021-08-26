@@ -38,24 +38,24 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A JavaScript module has a unique name, consists of a list of compiler inputs, and can depend on
- * other modules.
+ * A JavaScript chunk has a unique name, consists of a list of compiler inputs, and can depend on
+ * other chunks.
  */
 public final class JSChunk extends DependencyInfo.Base implements Serializable {
-  // The name of the artificial module containing all strong sources when there is no module spec.
-  // If there is a module spec, strong sources go in their respective modules, and this module does
+  // The name of the artificial chunk containing all strong sources when there is no chunk spec.
+  // If there is a chunk spec, strong sources go in their respective chunks, and this chunk does
   // not exist.
-  public static final String STRONG_MODULE_NAME = "$strong$";
+  public static final String STRONG_CHUNK_NAME = "$strong$";
 
-  // The name of the artificial module containing all weak sources. Regardless of the module spec,
-  // weak sources are moved into this module, which is made to depend on every other module. This is
+  // The name of the artificial chunk containing all weak sources. Regardless of the chunk spec,
+  // weak sources are moved into this chunk, which is made to depend on every other chunk. This is
   // necessary so that removing weak sources (as an optimization) does not accidentally remove
   // namespace declarations whose existence strong sources rely upon.
-  public static final String WEAK_MODULE_NAME = "$weak$";
+  public static final String WEAK_CHUNK_NAME = "$weak$";
 
   private static final long serialVersionUID = 1;
 
-  /** Module name */
+  /** Chunk name */
   private final String name;
 
   /** Source code inputs */
@@ -63,28 +63,28 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   // CompilerInputs must be explicitly added to the JSChunk again after deserialization
   private transient List<CompilerInput> inputs = new ArrayList<>();
 
-  /** Modules that this module depends on */
+  /** Chunks that this chunk depends on */
   private final List<JSChunk> deps = new ArrayList<>();
 
-  /** The length of the longest path starting from this module */
+  /** The length of the longest path starting from this chunk */
   private int depth;
-  /** The position of this module relative to all others in the AST. */
+  /** The position of this chunk relative to all others in the AST. */
   private int index;
 
   /**
    * Creates an instance.
    *
-   * @param name A unique name for the module
+   * @param name A unique name for the chunk
    */
   public JSChunk(String name) {
     this.name = name;
-    // Depth and index will be set to their correct values by the JSModuleGraph into which they
+    // Depth and index will be set to their correct values by the JSChunkGraph into which they
     // are placed.
     this.depth = -1;
     this.index = -1;
   }
 
-  /** Gets the module name. */
+  /** Gets the chunk name. */
   @Override
   public String getName() {
     return name;
@@ -116,7 +116,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
 
   @Override
   public ImmutableList<String> getTypeRequires() {
-    // TODO(blickly): Actually allow weak module deps
+    // TODO(blickly): Actually allow weak chunk deps
     return ImmutableList.of();
   }
 
@@ -132,55 +132,54 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
 
   @Override
   public boolean isModule() {
-    // NOTE: The meaning of "module" has changed over time.  A "JsModule" is
+    // NOTE: The meaning of "module" has changed over time.  A "JsChunk" is
     // a collection of inputs that are loaded together. A "module" file,
     // is a CommonJs module, ES6 module, goog.module or other file whose
     // top level symbols are not in global scope.
     throw new UnsupportedOperationException();
   }
 
-  /** Adds a source file input to this module. */
+  /** Adds a source file input to this chunk. */
   public void add(SourceFile file) {
     add(new CompilerInput(file));
   }
 
-  /** Adds a source code input to this module. */
+  /** Adds a source code input to this chunk. */
   public void add(CompilerInput input) {
     inputs.add(input);
     input.setModule(this);
   }
 
   /**
-   * Adds a source code input to this module. Call only if the input might
-   * already be associated with a module. Otherwise, use
-   * add(CompilerInput input).
+   * Adds a source code input to this chunk. Call only if the input might already be associated with
+   * a chunk. Otherwise, use add(CompilerInput input).
    */
-  void addAndOverrideModule(CompilerInput input) {
+  void addAndOverrideChunk(CompilerInput input) {
     inputs.add(input);
     input.overrideModule(this);
   }
 
-  /** Adds a source code input to this module directly after other. */
+  /** Adds a source code input to this chunk directly after other. */
   public void addAfter(CompilerInput input, CompilerInput other) {
     checkState(inputs.contains(other));
     inputs.add(inputs.indexOf(other), input);
     input.setModule(this);
   }
 
-  /** Adds a dependency on another module. */
+  /** Adds a dependency on another chunk. */
   public void addDependency(JSChunk dep) {
     checkNotNull(dep);
     Preconditions.checkState(dep != this, "Cannot add dependency on self", this);
     deps.add(dep);
   }
 
-  /** Removes an input from this module. */
+  /** Removes an input from this chunk. */
   public void remove(CompilerInput input) {
     input.setModule(null);
     inputs.remove(input);
   }
 
-  /** Removes all of the inputs from this module. */
+  /** Removes all of the inputs from this chunk. */
   public void removeAll() {
     for (CompilerInput input : inputs) {
       input.setModule(null);
@@ -189,7 +188,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   }
 
   /**
-   * Gets the list of modules that this module depends on.
+   * Gets the list of chunks that this chunk depends on.
    *
    * @return A list that may be empty but not null
    */
@@ -197,21 +196,18 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
     return ImmutableList.copyOf(deps);
   }
 
-  /**
-   * Gets the names of the modules that this module depends on,
-   * sorted alphabetically.
-   */
+  /** Gets the names of the chunks that this chunk depends on, sorted alphabetically. */
   List<String> getSortedDependencyNames() {
     List<String> names = new ArrayList<>();
-    for (JSChunk module : getDependencies()) {
-      names.add(module.getName());
+    for (JSChunk chunk : getDependencies()) {
+      names.add(chunk.getName());
     }
     Collections.sort(names);
     return names;
   }
 
   /**
-   * Returns the transitive closure of dependencies starting from the dependencies of this module.
+   * Returns the transitive closure of dependencies starting from the dependencies of this chunk.
    */
   public Set<JSChunk> getAllDependencies() {
     // JSChunk uses identity semantics
@@ -220,9 +216,9 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
     ArrayDeque<JSChunk> stack = new ArrayDeque<>(deps);
 
     while (!stack.isEmpty()) {
-      JSChunk module = stack.pop();
-      List<JSChunk> moduleDeps = module.deps;
-      for (JSChunk dep : moduleDeps) {
+      JSChunk chunk = stack.pop();
+      List<JSChunk> chunkDeps = chunk.deps;
+      for (JSChunk dep : chunkDeps) {
         if (allDeps.add(dep)) {
           stack.push(dep);
         }
@@ -231,7 +227,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
     return allDeps;
   }
 
-  /** Returns this module and all of its dependencies in one list. */
+  /** Returns this chunk and all of its dependencies in one list. */
   public Set<JSChunk> getThisAndAllDependencies() {
     Set<JSChunk> deps = getAllDependencies();
     deps.add(this);
@@ -249,7 +245,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   }
 
   /**
-   * Gets this module's list of source code inputs.
+   * Gets this chunk's list of source code inputs.
    *
    * @return A list that may be empty but not null
    */
@@ -285,18 +281,18 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   }
 
   /**
-   * Returns whether this module is synthetic (i.e. one of the special strong or weak modules
-   * created by the compiler.
+   * Returns whether this chunk is synthetic (i.e. one of the special strong or weak chunks created
+   * by the compiler.
    */
   public boolean isSynthetic() {
-    return name.equals(STRONG_MODULE_NAME) || name.equals(WEAK_MODULE_NAME);
+    return name.equals(STRONG_CHUNK_NAME) || name.equals(WEAK_CHUNK_NAME);
   }
 
   public boolean isWeak() {
-    return name.equals(WEAK_MODULE_NAME);
+    return name.equals(WEAK_CHUNK_NAME);
   }
 
-  /** Returns the module name (primarily for debugging). */
+  /** Returns the chunk name (primarily for debugging). */
   @Override
   public String toString() {
     return name;
@@ -334,7 +330,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
   }
 
   public void setIndex(int index) {
-    checkArgument(index >= 0, "Invalid module index: %s", index);
+    checkArgument(index >= 0, "Invalid chunk index: %s", index);
     this.index = index;
   }
 

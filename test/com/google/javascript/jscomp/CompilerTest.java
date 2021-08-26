@@ -2286,11 +2286,11 @@ public final class CompilerTest {
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
-        .isEqualTo(JSChunk.STRONG_MODULE_NAME);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
-        .isEqualTo(JSChunk.WEAK_MODULE_NAME);
+    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName())
+        .isEqualTo(JSChunk.STRONG_CHUNK_NAME);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+        .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
   }
@@ -2328,15 +2328,15 @@ public final class CompilerTest {
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
       // restoring state creates new JSModule objects. the old ones are stale.
-      m1 = compiler.getModuleGraph().getModuleByName("m1");
-      m2 = compiler.getModuleGraph().getModuleByName("m2");
+      m1 = compiler.getModuleGraph().getChunkByName("m1");
+      m2 = compiler.getModuleGraph().getChunkByName("m2");
     }
 
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(3);
+    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(3);
 
-    JSChunk weakModule = compiler.getModuleGraph().getModuleByName("$weak$");
+    JSChunk weakModule = compiler.getModuleGraph().getChunkByName("$weak$");
     assertThat(weakModule).isNotNull();
 
     assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
@@ -2398,7 +2398,7 @@ public final class CompilerTest {
   public void testPreexistingWeakModule() throws Exception {
     JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
-    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
     weak.addDependency(strong);
 
@@ -2414,11 +2414,10 @@ public final class CompilerTest {
     compiler.check();
     compiler.performTranspilationAndOptimizations();
 
-    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
-        .isEqualTo("m");
-    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
-        .isEqualTo(JSChunk.WEAK_MODULE_NAME);
+    assertThat(compiler.getModuleGraph().getChunkCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 0).getName()).isEqualTo("m");
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllChunks(), 1).getName())
+        .isEqualTo(JSChunk.WEAK_CHUNK_NAME);
 
     assertThat(compiler.toSource()).isEqualTo("var a={};");
   }
@@ -2427,7 +2426,7 @@ public final class CompilerTest {
   public void testPreexistingWeakModuleWithAdditionalStrongSources() throws Exception {
     JSChunk strong = new JSChunk("m");
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
-    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('b');", SourceKind.WEAK));
     weak.add(
         SourceFile.fromCode(
@@ -2443,8 +2442,7 @@ public final class CompilerTest {
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
-          .contains(
-              "Found these strong sources in the weak module:\n  weak_but_actually_strong.js");
+          .contains("Found these strong sources in the weak chunk:\n  weak_but_actually_strong.js");
     }
   }
 
@@ -2454,7 +2452,7 @@ public final class CompilerTest {
     strong.add(SourceFile.fromCode("strong.js", "goog.provide('a');", SourceKind.STRONG));
     strong.add(
         SourceFile.fromCode("strong_but_actually_weak.js", "goog.provide('b');", SourceKind.WEAK));
-    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     weak.add(SourceFile.fromCode("weak.js", "goog.provide('c');", SourceKind.WEAK));
     weak.addDependency(strong);
 
@@ -2468,8 +2466,8 @@ public final class CompilerTest {
       assertThat(e)
           .hasMessageThat()
           .contains(
-              "Found these weak sources in other modules:\n"
-                  + "  strong_but_actually_weak.js (in module m)");
+              "Found these weak sources in other chunks:\n"
+                  + "  strong_but_actually_weak.js (in chunk m)");
     }
   }
 
@@ -2477,7 +2475,7 @@ public final class CompilerTest {
   public void testPreexistingWeakModuleWithIncorrectDependencies() throws Exception {
     JSChunk m1 = new JSChunk("m1");
     JSChunk m2 = new JSChunk("m2");
-    JSChunk weak = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weak = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     weak.addDependency(m1);
 
     CompilerOptions options = new CompilerOptions();
@@ -2489,7 +2487,7 @@ public final class CompilerTest {
     } catch (RuntimeException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but it does not depend on every other module.");
+          .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
     }
   }
 

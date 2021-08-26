@@ -1289,7 +1289,7 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 5;"});
     assertThat(
             lastCommandLineRunner.expandSourceMapPath(
-                lastCompiler.getOptions(), lastCompiler.getModuleGraph().getRootModule()))
+                lastCompiler.getOptions(), lastCompiler.getModuleGraph().getRootChunk()))
         .isEqualTo("foo_m0.js.map");
   }
 
@@ -1600,7 +1600,7 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
     StringBuilder builder = new StringBuilder();
-    JSChunk module = lastCompiler.getModuleGraph().getRootModule();
+    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
     lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
@@ -1613,7 +1613,7 @@ public final class CommandLineRunnerTest {
     testSame(new String[] {"var x = 3;", "var y = 4;"});
 
     StringBuilder builder = new StringBuilder();
-    JSChunk module = lastCompiler.getModuleGraph().getRootModule();
+    JSChunk module = lastCompiler.getModuleGraph().getRootChunk();
     String filename = lastCommandLineRunner.getModuleOutputFileName(module);
     lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
@@ -2874,7 +2874,7 @@ public final class CommandLineRunnerTest {
 
     File outputFile1 = new File(outDir, "a.js");
     File outputFile2 = new File(outDir, "b.js");
-    File weakFile = new File(outDir, JSChunk.WEAK_MODULE_NAME + ".js");
+    File weakFile = new File(outDir, JSChunk.WEAK_CHUNK_NAME + ".js");
 
     args.add("--chunk_output_path_prefix");
     args.add(outDir + "/");

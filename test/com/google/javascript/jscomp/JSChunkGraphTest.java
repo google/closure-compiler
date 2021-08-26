@@ -41,7 +41,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link JSChunkGraph} */
 @RunWith(JUnit4.class)
-public final class JSModuleGraphTest {
+public final class JSChunkGraphTest {
 
   private JSChunk moduleA;
   private JSChunk moduleB;
@@ -81,15 +81,15 @@ public final class JSModuleGraphTest {
   }
 
   private JSChunk getWeakModule() {
-    return graph.getModuleByName(JSChunk.WEAK_MODULE_NAME);
+    return graph.getChunkByName(JSChunk.WEAK_CHUNK_NAME);
   }
 
   @Test
   public void testMakesWeakModuleIfNotPassed() {
     makeDeps();
     makeGraph();
-    assertThat(graph.getModuleCount()).isEqualTo(7);
-    assertThat(graph.getModulesByName()).containsKey(JSChunk.WEAK_MODULE_NAME);
+    assertThat(graph.getChunkCount()).isEqualTo(7);
+    assertThat(graph.getChunksByName()).containsKey(JSChunk.WEAK_CHUNK_NAME);
     assertThat(getWeakModule().getAllDependencies())
         .containsExactly(moduleA, moduleB, moduleC, moduleD, moduleE, moduleF);
   }
@@ -97,7 +97,7 @@ public final class JSModuleGraphTest {
   @Test
   public void testAcceptExistingWeakModule() {
     makeDeps();
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -112,14 +112,14 @@ public final class JSModuleGraphTest {
         new JSChunkGraph(
             new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
 
-    assertThat(graph.getModuleCount()).isEqualTo(7);
-    assertThat(graph.getModuleByName(JSChunk.WEAK_MODULE_NAME)).isSameInstanceAs(weakModule);
+    assertThat(graph.getChunkCount()).isEqualTo(7);
+    assertThat(graph.getChunkByName(JSChunk.WEAK_CHUNK_NAME)).isSameInstanceAs(weakModule);
   }
 
   @Test
   public void testExistingWeakModuleMustHaveDependenciesOnAllOtherModules() {
     makeDeps();
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -135,14 +135,14 @@ public final class JSModuleGraphTest {
     } catch (IllegalStateException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("A weak module already exists but it does not depend on every other module.");
+          .isEqualTo("A weak chunk already exists but it does not depend on every other chunk.");
     }
   }
 
   @Test
   public void testWeakFileCannotExistOutsideWeakModule() {
     makeDeps();
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -160,14 +160,14 @@ public final class JSModuleGraphTest {
     } catch (IllegalStateException e) {
       assertThat(e)
           .hasMessageThat()
-          .contains("Found these weak sources in other modules:\n  a (in module moduleA)");
+          .contains("Found these weak sources in other chunks:\n  a (in chunk moduleA)");
     }
   }
 
   @Test
   public void testStrongFileCannotExistInWeakModule() {
     makeDeps();
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
 
     weakModule.addDependency(moduleA);
     weakModule.addDependency(moduleB);
@@ -183,9 +183,7 @@ public final class JSModuleGraphTest {
           new JSChunk[] {moduleA, moduleB, moduleC, moduleD, moduleE, moduleF, weakModule});
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains("Found these strong sources in the weak module:\n  a");
+      assertThat(e).hasMessageThat().contains("Found these strong sources in the weak chunk:\n  a");
     }
   }
 

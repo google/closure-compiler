@@ -1028,8 +1028,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers =
           parseModuleWrappers(
-              config.moduleWrapper,
-              ImmutableList.copyOf(compiler.getModuleGraph().getAllModules()));
+              config.moduleWrapper, ImmutableList.copyOf(compiler.getModuleGraph().getAllChunks()));
     }
 
     if (!isOutputInJson()) {
@@ -1707,7 +1706,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     for (JSChunk m : modules) {
-      if (m.getName().equals(JSChunk.WEAK_MODULE_NAME)) {
+      if (m.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
         // Skip the weak module, which is always empty.
         continue;
       }
@@ -2176,7 +2175,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
       if (shouldGenerateOutputPerModule(output)) {
         // Generate per-module manifests or bundles.
-        Iterable<JSChunk> modules = compiler.getModuleGraph().getAllModules();
+        Iterable<JSChunk> modules = compiler.getModuleGraph().getAllChunks();
         for (JSChunk module : modules) {
           try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, module))) {
             if (isManifest) {
@@ -2192,7 +2191,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           if (config.module.isEmpty()) {
             // For a single-module compilation, generate a single headerless manifest or bundle
             // containing only the strong files.
-            JSChunk module = compiler.getModuleGraph().getModuleByName(JSChunk.STRONG_MODULE_NAME);
+            JSChunk module = compiler.getModuleGraph().getChunkByName(JSChunk.STRONG_CHUNK_NAME);
             if (isManifest) {
               printManifestTo(module, out);
             } else {
@@ -2231,7 +2230,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       throws IOException {
     Joiner commas = Joiner.on(",");
     boolean requiresNewline = false;
-    for (JSChunk module : graph.getAllModules()) {
+    for (JSChunk module : graph.getAllChunks()) {
       if (!isManifest && module.isWeak()) {
         // Skip the weak module on a multi-module bundle, but not a multi-module manifest.
         continue;

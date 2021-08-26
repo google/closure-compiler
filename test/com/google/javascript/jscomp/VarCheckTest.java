@@ -1080,8 +1080,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
@@ -1099,7 +1099,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakVar_fromWeakFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
     weakModule.add(
         SourceFile.fromCode(
             "weak.js",
@@ -1113,8 +1113,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakNamespaceRoot_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
@@ -1137,8 +1137,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakNamespaceRoot_fromStrongFile_synthesizesExtern() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
@@ -1163,8 +1163,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToWeakModuleNamespaceRoot_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
@@ -1182,8 +1182,8 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testReferenceToStrongNamespaceRoot_withAdditionalWeakProvide_fromStrongFile() {
-    JSChunk weakModule = new JSChunk(JSChunk.WEAK_MODULE_NAME);
-    JSChunk strongModule = new JSChunk(JSChunk.STRONG_MODULE_NAME);
+    JSChunk weakModule = new JSChunk(JSChunk.WEAK_CHUNK_NAME);
+    JSChunk strongModule = new JSChunk(JSChunk.STRONG_CHUNK_NAME);
     weakModule.addDependency(strongModule);
 
     weakModule.add(
