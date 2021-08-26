@@ -922,7 +922,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
         () -> {
-          performChecksAndTranspilation();
+          performChecks();
           return null;
         });
   }
@@ -930,7 +930,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Perform compiler passes for stage 2 of compilation.
    *
-   * <p>Stage 2 consists primarily of optimization passes.
+   * <p>Stage 2 consists primarily of transpilation and optimization passes.
    *
    * <p>{@code stage1Passes()} must be called before this method is called.
    *
@@ -953,7 +953,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           if (options.shouldOptimize()) {
-            performOptimizations();
+            performTranspilationAndOptimizations();
           }
           return null;
         });
@@ -1003,7 +1003,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         callable, options != null && options.getTracerMode().isOn());
   }
 
-  private void performChecksAndTranspilation() {
+  private void performChecks() {
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
@@ -1011,7 +1011,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         transpileAndDontCheck();
       }
     } else {
-      check(); // check() also includes transpilation
+      check();
     }
   }
 
@@ -2567,8 +2567,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Optimizations
   // ------------------------------------------------------------------------
 
-  void performOptimizations() {
+  void performTranspilationAndOptimizations() {
     checkState(options.shouldOptimize());
+    // getOptimizations() also includes transpilation passes
     List<PassFactory> optimizations = getPassConfig().getOptimizations();
     if (optimizations.isEmpty()) {
       return;

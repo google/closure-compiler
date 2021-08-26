@@ -1221,7 +1221,7 @@ public final class CompilerTest {
     compiler.initOptions(options);
     restoreCompilerState(compiler, stateAfterChecks);
 
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
     String source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(2);");
   }
@@ -1274,7 +1274,7 @@ public final class CompilerTest {
     compiler.initOptions(options);
     restoreCompilerState(compiler, stateAfterChecks);
 
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
     String source = compiler.toSource();
     assertThat(source)
         .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
@@ -1347,7 +1347,7 @@ public final class CompilerTest {
     compiler.initOptions(options);
     restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
     String source = compiler.toSource();
     assertThat(source).isEqualTo("'use strict';console.log(2);");
   }
@@ -1443,7 +1443,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     String source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(0);");
@@ -1465,7 +1465,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     String source = compiler.toSource();
     assertThat(source).isEqualTo("'use strict';console.log(0);");
@@ -2284,7 +2284,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
@@ -2332,7 +2332,7 @@ public final class CompilerTest {
       m2 = compiler.getModuleGraph().getModuleByName("m2");
     }
 
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(3);
 
@@ -2388,7 +2388,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.toSource())
         .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
@@ -2412,7 +2412,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
     assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
@@ -2524,7 +2524,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.toSource())
         .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
@@ -2558,7 +2558,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.toSource()).isEqualTo("function f(x){alert(x)};");
   }
@@ -2602,7 +2602,7 @@ public final class CompilerTest {
 
     compiler.parse();
     compiler.check();
-    compiler.performOptimizations();
+    compiler.performTranspilationAndOptimizations();
 
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(compiler.getErrors()).isEmpty();
