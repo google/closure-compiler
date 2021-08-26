@@ -228,13 +228,14 @@ public final class ScriptNodeDeserializer {
         case ASSIGN_COALESCE:
           this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
           return;
-        case FOR:
-          if (node.isForOf()) {
-            this.addScriptFeature(Feature.FOR_OF);
-          } else if (node.isForAwaitOf()) {
-            this.addScriptFeature(Feature.FOR_AWAIT_OF);
-          }
+
+        case FOR_OF:
+          this.addScriptFeature(Feature.FOR_OF);
           return;
+        case FOR_AWAIT_OF:
+          this.addScriptFeature(Feature.FOR_AWAIT_OF);
+          return;
+
         case IMPORT:
         case EXPORT:
           this.addScriptFeature(Feature.MODULES);

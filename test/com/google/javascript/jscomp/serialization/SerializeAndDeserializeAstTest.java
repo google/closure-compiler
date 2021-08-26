@@ -161,6 +161,16 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testForOfLoop() {
+    testSame("for (let elem of []);");
+  }
+
+  @Test
+  public void testForAwaitOfLoop() {
+    testSame("async function f() { for await (let elem of []); }");
+  }
+
+  @Test
   public void testConstructorJsdoc() {
     testSame("/** @constructor */ function Foo() {}");
   }
