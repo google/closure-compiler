@@ -275,6 +275,17 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testUnknownDiagnosticGroupOnCommandLine() {
+    args.add("--jscomp_error=unknownDiagnosticGroup");
+    exitCodes.clear();
+    compile(new String[] {"alert(1);"});
+
+    // An exit code of -1 indicates that the command line options were bad
+    assertThat(exitCodes).containsExactly(-1);
+    assertThat(errReader.toString()).contains("Unknown diagnostic group: 'unknownDiagnosticGroup'");
+  }
+
+  @Test
   public void testUnknownAnnotation() {
     args.add("--warning_level=VERBOSE");
     test("/** @unknownTag */ function f() {}", RhinoErrorReporter.BAD_JSDOC_ANNOTATION);

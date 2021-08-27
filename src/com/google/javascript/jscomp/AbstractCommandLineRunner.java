@@ -318,16 +318,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       ArrayList<FlagEntry<CheckLevel>> warningGuards,
       DiagnosticGroups diagnosticGroups) {
     if (warningGuards != null) {
+      final Set<String> groupNames = DiagnosticGroups.getRegisteredGroups().keySet();
       for (FlagEntry<CheckLevel> entry : warningGuards) {
         if ("*".equals(entry.value)) {
-          Set<String> groupNames = DiagnosticGroups.getRegisteredGroups().keySet();
           for (String groupName : groupNames) {
             if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
               diagnosticGroups.setWarningLevel(options, groupName, entry.flag);
             }
           }
-        } else {
+        } else if (groupNames.contains(entry.value)) {
           diagnosticGroups.setWarningLevel(options, entry.value, entry.flag);
+        } else {
+          throw new FlagUsageException("Unknown diagnostic group: '" + entry.value + "'");
         }
       }
     }
