@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
@@ -57,7 +58,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -562,19 +562,25 @@ public final class ConformanceRules {
   /** Banned name rule */
   static final class BannedName extends AbstractRule {
     private final Requirement.Type requirementType;
-    private final ImmutableList<Node> names;
+    private final ImmutableList<Node> qualifiedNames;
+    private final ImmutableSet<String> shortNames;
 
     BannedName(AbstractCompiler compiler, Requirement requirement) throws InvalidRequirementSpec {
       super(compiler, requirement);
       if (requirement.getValueCount() == 0) {
         throw new InvalidRequirementSpec("missing value");
       }
-      requirementType = requirement.getType();
-      ImmutableList.Builder<Node> builder = ImmutableList.builder();
+      this.requirementType = requirement.getType();
+
+      ImmutableList.Builder<Node> qualifiedBuilder = ImmutableList.builder();
+      ImmutableSet.Builder<String> shortBuilder = ImmutableSet.builder();
       for (String name : requirement.getValueList()) {
-        builder.add(NodeUtil.newQName(compiler, name));
+        Node qualifiedName = NodeUtil.newQName(compiler, name);
+        qualifiedBuilder.add(qualifiedName);
+        shortBuilder.add(qualifiedName.getString());
       }
-      names = builder.build();
+      this.qualifiedNames = qualifiedBuilder.build();
+      this.shortNames = shortBuilder.build();
     }
 
     private static final Precondition IS_CANDIDATE_NODE =
@@ -599,21 +605,36 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (requirementType == Type.BANNED_NAME_CALL) {
-        if (!ConformanceUtil.isCallTarget(n)) {
-          return ConformanceResult.CONFORMANCE;
+      if (requirementType == Type.BANNED_NAME_CALL && !ConformanceUtil.isCallTarget(n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      /**
+       * Efficiently filter out nearly all candidates.
+       *
+       * <p>Ideally we could use a hashset containing the qualified names, but it turns out that
+       * creating wrapper a object for every Node is more expensive than the loop below.
+       */
+      if (!this.shortNames.contains(n.getString())) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      /**
+       * Defer expensive infrequent checks.
+       *
+       * <p>These could be a precondition, but they don't usually need to be checked. Since they're
+       * kind of expensive, it's cheaper overall to defer them.
+       */
+      if (NodeUtil.isInSyntheticScript(n) || !isRootOfQualifiedNameGlobal(t, n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      for (int i = this.qualifiedNames.size() - 1; i >= 0; i--) {
+        if (n.matchesQualifiedName(this.qualifiedNames.get(i))) {
+          return ConformanceResult.VIOLATION;
         }
       }
-      for (int i = 0; i < names.size(); i++) {
-        Node nameNode = names.get(i);
-        if (n.matchesQualifiedName(nameNode) && isRootOfQualifiedNameGlobal(t, n)) {
-          if (NodeUtil.isInSyntheticScript(n)) {
-            return ConformanceResult.CONFORMANCE;
-          } else {
-            return ConformanceResult.VIOLATION;
-          }
-        }
-      }
+
       return ConformanceResult.CONFORMANCE;
     }
 
@@ -626,15 +647,6 @@ public final class ConformanceRules {
 
   /** Banned property rule */
   static final class BannedProperty extends AbstractRule {
-    private static class Property {
-      final JSType type;
-      final String property;
-
-      Property(JSType type, String property) {
-        this.type = checkNotNull(type);
-        this.property = checkNotNull(property);
-      }
-    }
 
     private enum RequirementPrecondition implements Precondition {
       BANNED_PROPERTY() {
@@ -687,7 +699,7 @@ public final class ConformanceRules {
     }
 
     private final JSTypeRegistry registry;
-    private final ImmutableList<Property> props;
+    private final ImmutableSetMultimap<String, JSType> props;
     private final RequirementPrecondition requirementPrecondition;
 
     BannedProperty(AbstractCompiler compiler, Requirement requirement)
@@ -720,9 +732,8 @@ public final class ConformanceRules {
 
       this.registry = compiler.getTypeRegistry();
 
-      ImmutableList.Builder<Property> builder = ImmutableList.builder();
-      List<String> values = requirement.getValueList();
-      for (String value : values) {
+      ImmutableSetMultimap.Builder<String, JSType> builder = ImmutableSetMultimap.builder();
+      for (String value : requirement.getValueList()) {
         String typename = ConformanceUtil.getClassFromDeclarationName(value);
         String property = ConformanceUtil.getPropertyFromDeclarationName(value);
         if (typename == null || property == null) {
@@ -735,9 +746,8 @@ public final class ConformanceRules {
           continue;
         }
 
-        builder.add(new Property(type, property));
+        builder.put(property, type);
       }
-
       this.props = builder.build();
     }
 
@@ -748,13 +758,24 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      Property srcProp = this.createSrcProperty(n);
-      if (srcProp == null) {
+      ImmutableSet<JSType> checkTypes = this.props.get(this.extractName(n));
+      if (checkTypes.isEmpty()) {
         return ConformanceResult.CONFORMANCE;
       }
 
-      for (Property checkProp : this.props) {
-        ConformanceResult result = this.matchProps(srcProp, checkProp);
+      /**
+       * Avoid type operations when possible.
+       *
+       * <p>checkTypes is almost always empty, and operations on unions can be expensive.
+       */
+      JSType foundType = this.extractType(n);
+      if (foundType == null) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      foundType = foundType.restrictByNotNullOrUndefined();
+
+      for (JSType checkType : checkTypes) {
+        ConformanceResult result = this.matchTypes(foundType, checkType);
         if (result.level != ConformanceLevel.CONFORMANCE) {
           return result;
         }
@@ -763,12 +784,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private ConformanceResult matchProps(Property srcProp, Property checkProp) {
-      if (!Objects.equals(srcProp.property, checkProp.property)) {
-        return ConformanceResult.CONFORMANCE;
-      }
-
-      JSType foundType = srcProp.type.restrictByNotNullOrUndefined();
+    private ConformanceResult matchTypes(JSType foundType, JSType checkType) {
       ObjectType foundObj = foundType.toMaybeObjectType();
       if (foundObj != null) {
         if (foundObj.isFunctionPrototypeType()) {
@@ -789,10 +805,10 @@ public final class ConformanceRules {
         if (reportLooseTypeViolations) {
           return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
         }
-      } else if (foundType.isSubtypeOf(checkProp.type)) {
+      } else if (foundType.isSubtypeOf(checkType)) {
         return ConformanceResult.VIOLATION;
-      } else if (checkProp.type.isSubtypeWithoutStructuralTyping(foundType)) {
-        if (matchesPrototype(checkProp.type, foundType)) {
+      } else if (checkType.isSubtypeWithoutStructuralTyping(foundType)) {
+        if (matchesPrototype(checkType, foundType)) {
           return ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
           // Access of a banned property through a super class may be a violation
@@ -813,13 +829,11 @@ public final class ConformanceRules {
       return false;
     }
 
-    private Property createSrcProperty(Node n) {
-      final JSType receiverType;
+    private JSType extractType(Node n) {
       switch (n.getToken()) {
         case GETELEM:
         case GETPROP:
-          receiverType = n.getFirstChild().getJSType();
-          break;
+          return n.getFirstChild().getJSType();
 
         case STRING_KEY:
         case COMPUTED_PROP:
@@ -827,55 +841,44 @@ public final class ConformanceRules {
             Node parent = n.getParent();
             switch (parent.getToken()) {
               case OBJECT_PATTERN:
-                receiverType = parent.getJSType();
-                break;
+                return parent.getJSType();
 
               case OBJECTLIT:
               case CLASS_MEMBERS:
-                receiverType = null;
-                break;
+                return null;
 
               default:
                 throw new AssertionError();
             }
           }
-          break;
 
         default:
-          receiverType = null;
-          break;
+          return null;
       }
+    }
 
-      final String name;
+    private String extractName(Node n) {
+
       switch (n.getToken()) {
-        case STRING_KEY:
-          name = n.getString();
-          break;
-
         case GETPROP:
-          name = n.getString();
-          break;
+        case STRING_KEY:
+          return n.getString();
 
         case GETELEM:
           {
             Node string = n.getSecondChild();
-            name = string.isStringLit() ? string.getString() : null;
+            return string.isStringLit() ? string.getString() : null;
           }
-          break;
 
         case COMPUTED_PROP:
           {
             Node string = n.getFirstChild();
-            name = string.isStringLit() ? string.getString() : null;
+            return string.isStringLit() ? string.getString() : null;
           }
-          break;
 
         default:
-          name = null;
-          break;
+          return null;
       }
-
-      return (receiverType == null || name == null) ? null : new Property(receiverType, name);
     }
   }
 
