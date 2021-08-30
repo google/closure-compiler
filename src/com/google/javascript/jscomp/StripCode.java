@@ -775,12 +775,12 @@ class StripCode implements CompilerPass {
      */
     boolean isStripName(String name) {
       if (stripNameSuffixes.contains(name)) {
-        logNotAStripName(name, "matches a suffix");
+        logStripName(name, "matches a suffix");
         return true;
       }
 
       if (stripNamePrefixes.contains(name)) {
-        logNotAStripName(name, "matches a prefix");
+        logStripName(name, "matches a prefix");
         return true;
       }
 
