@@ -58,6 +58,18 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
+  public void testObjectAssignInjectedForObjectPatternRest() {
+    Set<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
+    assertThat(injected).containsExactly("es6/object/assign");
+  }
+
+  @Test
+  public void testObjectAssignInjectedForObjectSpread() {
+    Set<String> injected = parseAndRunInjectionPass("const obj = {a, ...rest};");
+    assertThat(injected).containsExactly("es6/object/assign");
+  }
+
+  @Test
   public void testForOf_injectsMakeIterator() {
     Set<String> injected = parseAndRunInjectionPass("for (x of []) {}");
 

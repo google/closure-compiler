@@ -56,6 +56,42 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testBug123583793() {
+    // Avoid including the transpilation library
+    useNoninjectingCompiler = true;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setPrettyPrint(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "function foo() {",
+            "  const {a, ...rest} = {a: 1, b: 2, c: 3};",
+            "  return {a, rest};",
+            "};",
+            "console.log(foo());",
+            ""),
+        lines(
+            "var a = console,",
+            "    b = a.log,",
+            "    c = {a:1, b:2, c:3},",
+            "    d = Object.assign({}, c),",
+            "    e = c.a,",
+            "    f = (delete d.a, d);",
+            "b.call(a, {a:e, d:f});",
+            ""));
+    assertThat(((NoninjectingCompiler) lastCompiler).getInjected()).contains("es6/object/assign");
+  }
+
+  @Test
   public void testBug173319540() {
     // Avoid including the transpilation library
     useNoninjectingCompiler = true;
@@ -1834,6 +1870,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   @Test
   public void testRestDoesntBlockPropertyDisambiguation() {
+    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 

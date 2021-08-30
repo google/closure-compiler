@@ -90,6 +90,15 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterable");
     }
 
+    if ((mustBeCompiledAway.contains(Feature.OBJECT_LITERALS_WITH_SPREAD)
+            || mustBeCompiledAway.contains(Feature.OBJECT_PATTERN_REST))
+        && !outputFeatures.contains(FeatureSet.ES2015)) {
+      // We need `Object.assign` to transpile `obj = {a, ...rest};` or `const {a, ...rest} = obj;`,
+      // but the output language level doesn't indicate that it is guaranteed to be present, so
+      // we'll include our polyfill.
+      compiler.ensureLibraryInjected("es6/object/assign", /* force= */ false);
+    }
+
     if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "construct");
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
@@ -130,7 +139,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
         }
         break;
 
-      // TODO(johnlenz): this check doesn't belong here.
+        // TODO(johnlenz): this check doesn't belong here.
       case GETTER_DEF:
       case SETTER_DEF:
         if (!getterSetterSupported) {
