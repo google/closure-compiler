@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
@@ -547,10 +548,14 @@ final class AstFactory {
     Node result = IR.name(name);
     switch (this.typeMode) {
       case JSTYPE:
-        result.setJSType(getVarNameType(scope, name));
+        JSType definitionType = getVarDefinitionNode(scope, name).getJSType();
+        // TODO(b/149843534): crash instead of defaulting to unknown
+        result.setJSType(definitionType != null ? definitionType : unknownType);
         break;
       case COLOR:
-        result.setColor(getVarNameColor(scope, name));
+        Color definitionColor = getVarDefinitionNode(scope, name).getColor();
+        // TODO(b/149843534): crash instead of defaulting to unknown
+        result.setColor(definitionColor != null ? definitionColor : StandardColors.UNKNOWN);
         break;
       case NONE:
         break;
@@ -1483,49 +1488,13 @@ final class AstFactory {
         registry.getNativeType(nativeType), "native type not found: %s", nativeType);
   }
 
-  /**
-   * Look up the correct type for the given name in the given scope.
-   *
-   * <p>Returns the unknown type if no type can be found
-   */
-  private JSType getVarNameType(StaticScope scope, String name) {
-    StaticSlot var = scope.getSlot(name);
-    JSType type = null;
-    if (var != null) {
-      Node nameDefinitionNode =
-          checkNotNull(
-                  var.getDeclaration(), "Cannot find type for var with missing declaration %s", var)
-              .getNode();
-      if (nameDefinitionNode != null) {
-        type = nameDefinitionNode.getJSType();
-      }
-    }
-    if (type == null) {
-      // TODO(bradfordcsmith): Consider throwing an error if the type cannot be found.
-      type = unknownType;
-    }
-    return type;
-  }
+  private Node getVarDefinitionNode(StaticScope scope, String name) {
+    StaticSlot var = checkNotNull(scope.getSlot(name), "Missing var %s in scope %s", name, scope);
 
-  /**
-   * Look up the correct type for the given name in the given scope.
-   *
-   * <p>Returns the unknown type if no type can be found
-   */
-  private Color getVarNameColor(StaticScope scope, String name) {
-    StaticSlot var = scope.getSlot(name);
-    Color color = null;
-    if (var != null) {
-      Node nameDefinitionNode = var.getDeclaration().getNode();
-      if (nameDefinitionNode != null) {
-        color = nameDefinitionNode.getColor();
-      }
-    }
-    if (color == null) {
-      // TODO(bradfordcsmith): Consider throwing an error if the type cannot be found.
-      color = StandardColors.UNKNOWN;
-    }
-    return color;
+    StaticRef declaration =
+        checkNotNull(
+            var.getDeclaration(), "Cannot find type for var with missing declaration %s", var);
+    return checkNotNull(declaration.getNode(), "Missing node for declaration %s", declaration);
   }
 
   private JSType getJsTypeForProperty(Node receiver, String propertyName) {

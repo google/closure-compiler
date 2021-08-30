@@ -368,6 +368,16 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateNameFromScope_crashesIfMissingVariable() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root = parseAndAddTypes("/** @type {string} */ const X = 'hi';");
+    Scope scope = getScope(root);
+
+    assertThrows(Exception.class, () -> astFactory.createName(scope, "missing"));
+  }
+
+  @Test
   public void testCreateThisReference() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -1159,7 +1169,7 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactoryWithColors();
 
     Node root =
-        parseAndAddTypes(
+        parseAndAddColors(
             lines(
                 "/**",
                 " * @param {string} arg1",

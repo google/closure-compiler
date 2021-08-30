@@ -292,17 +292,17 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
         // Maintaining references to this/arguments/super
       case THIS:
         if (ctx.mustReplaceThisSuperArgs()) {
-          replaceThis(t, ctx, n);
+          replaceThis(ctx, n);
         }
         break;
       case NAME:
         if (ctx.mustReplaceThisSuperArgs() && n.matchesName("arguments")) {
-          replaceArguments(t, ctx, n);
+          replaceArguments(ctx, n);
         }
         break;
       case SUPER:
         if (ctx.mustReplaceThisSuperArgs()) {
-          replaceSuper(t, ctx, n, parent);
+          replaceSuper(ctx, n, parent);
         }
         break;
 
@@ -584,29 +584,29 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     return result;
   }
 
-  private void replaceThis(NodeTraversal t, LexicalContext ctx, Node n) {
+  private void replaceThis(LexicalContext ctx, Node n) {
     checkArgument(n.isThis());
     checkArgument(ctx != null && ctx.mustReplaceThisSuperArgs());
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(t.getScope(), thisVarName).srcref(n));
+    n.replaceWith(astFactory.createName(thisVarName, type(n)).srcref(n));
     ctx.thisSuperArgsContext.thisNodeToAdd = astFactory.createThis(type(n));
     compiler.reportChangeToChangeScope(ctx.function);
   }
 
-  private void replaceArguments(NodeTraversal t, LexicalContext ctx, Node n) {
+  private void replaceArguments(LexicalContext ctx, Node n) {
     checkArgument(n.isName() && "arguments".equals(n.getString()));
     checkArgument(ctx != null && ctx.mustReplaceThisSuperArgs());
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    n.replaceWith(astFactory.createName(t.getScope(), argumentsVarName).srcref(n));
+    n.replaceWith(astFactory.createName(argumentsVarName, type(n)).srcref(n));
     ctx.thisSuperArgsContext.usedArguments = true;
     compiler.reportChangeToChangeScope(ctx.function);
   }
 
-  private void replaceSuper(NodeTraversal t, LexicalContext ctx, Node n, Node parent) {
+  private void replaceSuper(LexicalContext ctx, Node n, Node parent) {
     if (!parent.isGetProp()) {
       compiler.report(
           JSError.make(
@@ -626,14 +626,18 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     // super.x   =>   $super$get$x()
     Node getPropReplacement =
         astFactory.createCall(
-            astFactory.createName(t.getScope(), propertyReplacementNameText), type(parent));
+            astFactory.createName(propertyReplacementNameText, type(StandardColors.TOP_OBJECT)),
+            type(parent));
     Node grandparent = parent.getParent();
     if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
       // super.x(...)   =>   super.x.call($this, ...)
       getPropReplacement = astFactory.createGetPropWithUnknownType(getPropReplacement, "call");
-      astFactory.createName(t.getScope(), thisVarName).srcref(parent).insertAfter(parent);
       ctx.thisSuperArgsContext.thisNodeToAdd =
           astFactory.createThisForEs6ClassMember(ctx.contextRoot.getParent());
+      astFactory
+          .createName(thisVarName, type(ctx.thisSuperArgsContext.thisNodeToAdd))
+          .srcref(parent)
+          .insertAfter(parent);
     }
     getPropReplacement.srcrefTree(parent);
     parent.replaceWith(getPropReplacement);
