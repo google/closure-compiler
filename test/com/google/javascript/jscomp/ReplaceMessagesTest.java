@@ -189,6 +189,10 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     super.setUp();
     messages = new HashMap<>();
     strictReplacement = false;
+    enableTypeCheck();
+    replaceTypesWithColors();
+    enableTypeInfoValidation();
+    ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Test

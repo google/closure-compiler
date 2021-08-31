@@ -1057,13 +1057,13 @@ final class AstFactory {
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(Node lhs, Node rhs) {
     Node result = IR.assign(lhs, rhs);
-    setJSTypeOrColor(type(rhs.getJSType(), rhs.getColor()), result);
+    setJSTypeOrColor(type(rhs), result);
     return result;
   }
 
   /** Creates an assignment expression `lhs = rhs` */
   Node createAssign(String lhsName, Node rhs) {
-    Node name = createName(lhsName, type(rhs.getJSType(), rhs.getColor()));
+    Node name = createName(lhsName, type(rhs));
     return createAssign(name, rhs);
   }
 

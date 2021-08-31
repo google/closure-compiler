@@ -572,7 +572,7 @@ public final class ReplaceMessages {
           return origValueNode;
         case ADD:
           // The message is a simple string. Create a string node.
-          return IR.string(message.toString());
+          return astFactory.createString(message.toString());
         case CALL:
           // The message is a function call. Replace it with a string expression.
           return replaceCallNode(message, origValueNode);
@@ -618,7 +618,7 @@ public final class ReplaceMessages {
       checkNode(oldBlockNode, Token.BLOCK);
 
       Node valueNode = constructAddOrStringNode(message.getParts(), argListNode);
-      Node newBlockNode = IR.block(IR.returnNode(valueNode));
+      Node newBlockNode = IR.block(astFactory.createReturn(valueNode));
 
       if (!newBlockNode.isEquivalentTo(
           oldBlockNode,
@@ -646,13 +646,13 @@ public final class ReplaceMessages {
     private Node constructAddOrStringNode(ImmutableList<CharSequence> parts, Node argListNode)
         throws MalformedException {
       if (parts.isEmpty()) {
-        return IR.string("");
+        return astFactory.createString("");
       }
 
       Node resultNode = null;
       for (CharSequence part : parts) {
         final Node partNode = constructLegacyFunctionMsgPart(argListNode, part);
-        resultNode = resultNode == null ? partNode : IR.add(resultNode, partNode);
+        resultNode = resultNode == null ? partNode : astFactory.createAdd(resultNode, partNode);
       }
       return resultNode;
     }
@@ -682,7 +682,7 @@ public final class ReplaceMessages {
         }
       } else {
         // The part is just a string literal.
-        partNode = IR.string(part.toString());
+        partNode = astFactory.createString(part.toString());
       }
       return partNode;
     }
@@ -765,22 +765,22 @@ public final class ReplaceMessages {
    * @param placeholderMap map from placeholder names to value Nodes
    * @return the root of the constructed parse tree
    */
-  private static Node constructStringExprNode(
+  private Node constructStringExprNode(
       List<CharSequence> msgParts, Map<String, Node> placeholderMap, MsgOptions options) {
 
     if (msgParts.isEmpty()) {
-      return IR.string("");
+      return astFactory.createString("");
     } else {
       Node resultNode = null;
       for (CharSequence msgPart : msgParts) {
         final Node partNode = createNodeForMsgPart(msgPart, options, placeholderMap);
-        resultNode = (resultNode == null) ? partNode : IR.add(resultNode, partNode);
+        resultNode = (resultNode == null) ? partNode : astFactory.createAdd(resultNode, partNode);
       }
       return resultNode;
     }
   }
 
-  private static Node createNodeForMsgPart(
+  private Node createNodeForMsgPart(
       CharSequence part, MsgOptions options, Map<String, Node> placeholderMap) {
     final Node partNode;
     if (part instanceof JsMessage.PlaceholderReference) {
@@ -807,7 +807,7 @@ public final class ReplaceMessages {
                 .replace("&quot;", "\"")
                 .replace("&amp;", "&");
       }
-      partNode = IR.string(s);
+      partNode = astFactory.createString(s);
     }
     return partNode;
   }

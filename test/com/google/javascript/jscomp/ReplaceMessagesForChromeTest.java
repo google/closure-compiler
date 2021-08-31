@@ -46,6 +46,10 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     style = RELAX;
+    enableTypeCheck();
+    replaceTypesWithColors();
+    enableTypeInfoValidation();
+    ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Test

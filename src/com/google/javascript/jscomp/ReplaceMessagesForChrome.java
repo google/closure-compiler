@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.AstFactory.type;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Ordering;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -33,16 +36,20 @@ import java.util.List;
 @GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
+  private final AstFactory astFactory;
+
   ReplaceMessagesForChrome(
       AbstractCompiler compiler, JsMessage.IdGenerator idGenerator, JsMessage.Style style) {
 
     super(compiler, style, idGenerator);
+
+    this.astFactory = compiler.createAstFactory();
   }
 
-  private static Node getChromeI18nGetMessageNode(String messageId) {
-    Node chromeI18n = IR.getprop(IR.name("chrome"), "i18n");
-    Node getMessage = IR.getprop(chromeI18n, "getMessage");
-    return IR.call(getMessage, IR.string(messageId));
+  private Node getChromeI18nGetMessageNode(String messageId) {
+    Node getMessage = astFactory.createQNameWithUnknownType("chrome.i18n.getMessage");
+    return astFactory.createCall(
+        getMessage, type(StandardColors.STRING), astFactory.createString(messageId));
   }
 
   @Override
@@ -74,7 +81,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       // regardless of what order they appear in the original message.
       List<String> placeholderNames = Ordering.natural().sortedCopy(message.placeholders());
 
-      Node placeholderValueArray = IR.arraylit();
+      Node placeholderValueArray = astFactory.createArraylit();
       for (String name : placeholderNames) {
         Node value = getPlaceholderValue(placeholderValues, name);
         if (value == null) {
@@ -85,18 +92,37 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
         placeholderValueArray.addChildToBack(value);
       }
       if (isHtml) {
-        Node args = IR.arraylit(IR.string(message.getId()), placeholderValueArray);
-        Node options = IR.arraylit(IR.objectlit(IR.stringKey("escapeLt", IR.trueNode())));
-        Node regexp = IR.regexp(IR.string("Chrome\\/(\\d+)"));
-        Node userAgent = NodeUtil.newQName(compiler, "navigator.userAgent");
+        Node args =
+            astFactory.createArraylit(
+                astFactory.createString(message.getId()), placeholderValueArray);
+        Node options =
+            astFactory.createArraylit(
+                astFactory.createObjectLit(
+                    astFactory.createStringKey("escapeLt", astFactory.createBoolean(true))));
+        Node regexp =
+            IR.regexp(astFactory.createString("Chrome\\/(\\d+)")).setColor(StandardColors.UNKNOWN);
+        Node userAgent = astFactory.createQNameWithUnknownType("navigator.userAgent");
         Node version =
-            IR.getelem(
-                IR.or(IR.call(IR.getprop(regexp, "exec"), userAgent), IR.arraylit()), IR.number(1));
-        Node condition = IR.ge(version, IR.number(79));
-        args = IR.call(IR.getprop(args, "concat"), IR.hook(condition, options, IR.arraylit()));
+            astFactory.createGetElem(
+                astFactory.createOr(
+                    astFactory.createCall(
+                        astFactory.createGetPropWithUnknownType(regexp, "exec"),
+                        type(StandardColors.ARRAY_ID),
+                        userAgent),
+                    astFactory.createArraylit()),
+                astFactory.createNumber(1));
+        Node condition =
+            IR.ge(version, astFactory.createNumber(79)).setColor(StandardColors.BOOLEAN);
+        args =
+            astFactory.createCall(
+                astFactory.createGetPropWithUnknownType(args, "concat"),
+                type(StandardColors.ARRAY_ID),
+                astFactory.createHook(condition, options, astFactory.createArraylit()));
         newValueNode =
-            IR.call(
-                NodeUtil.newQName(compiler, "chrome.i18n.getMessage.apply"), IR.nullNode(), args);
+            astFactory.createCallWithUnknownType(
+                astFactory.createQNameWithUnknownType("chrome.i18n.getMessage.apply"),
+                astFactory.createNull(),
+                args);
       } else {
         newValueNode.addChildToBack(placeholderValueArray);
       }
