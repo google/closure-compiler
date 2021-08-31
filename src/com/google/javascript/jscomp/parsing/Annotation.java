@@ -70,6 +70,7 @@ enum Annotation {
   PRESERVE, // same as license
   PRIVATE,
   PROTECTED,
+  PROVIDE_GOOG, // @provideGoog - appears only in base.js
   PUBLIC,
   PURE_OR_BREAK_MY_CODE,
   RETURN,
@@ -142,6 +143,7 @@ enum Annotation {
           .put("preserve", Annotation.PRESERVE)
           .put("private", Annotation.PRIVATE)
           .put("protected", Annotation.PROTECTED)
+          .put("provideGoog", Annotation.PROVIDE_GOOG)
           .put("public", Annotation.PUBLIC)
           .put("pureOrBreakMyCode", Annotation.PURE_OR_BREAK_MY_CODE)
           .put("return", Annotation.RETURN)

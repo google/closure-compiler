@@ -68,4 +68,7 @@ enum JsdocTag {
   JSDOC_LOCALE_OBJECT = 28;
   JSDOC_LOCALE_SELECT = 29;
   JSDOC_LOCALE_VALUE = 30;
+
+  // Used to specially mark the base.js file.
+  JSDOC_PROVIDE_GOOG = 31;
 }

@@ -714,6 +714,11 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case PROVIDE_GOOG:
+          if (!jsdocBuilder.recordProvideGoog()) {
+            addParserWarning(Msg.JSDOC_PROVIDE_GOOG);
+          }
+          return eatUntilEOLIfNotAnnotation();
         case PURE_OR_BREAK_MY_CODE:
           if (!jsdocBuilder.recordPureOrBreakMyCode()) {
             addParserWarning(Msg.JSDOC_PUREORBREAKMYCODE);

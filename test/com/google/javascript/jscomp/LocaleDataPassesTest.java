@@ -1332,4 +1332,21 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
         LocaleDataPasses.UNEXPECTED_GOOG_LOCALE,
         "`goog.LOCALE` appears in a file lacking `@localeFile`.");
   }
+
+  @Test
+  public void testBaseJsGoogLocaleRef() {
+    final String baseJsCode =
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @provideGoog", // no @localeFile, but base.js has this special annotation
+            " */",
+            "goog.provide('some.Obj');",
+            "",
+            "console.log(goog.LOCALE);",
+            "");
+    // Expect the code to be unchanged.
+    // We're confirming that there won't be any error reported for the use of `goog.LOCALE`.
+    multiTest(baseJsCode, baseJsCode);
+  }
 }

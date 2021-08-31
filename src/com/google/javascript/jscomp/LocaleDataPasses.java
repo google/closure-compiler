@@ -127,22 +127,16 @@ final class LocaleDataPasses {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      // Skip any scripts that have the `@localeFile` annotation.
+      // Skip any scripts that have the `@localeFile` annotation and the base.js file, which has
+      // the `@provideGoog` annotation.
       // They are expected to contain `goog.LOCALE`, so we don't need to check for it.
-      return !isScriptWithLocaleFileAnnotation(n);
+      return !isScriptWithLocaleFileOrProvideGoogAnnotation(n);
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isGoogDotLocaleReference(n)) {
-        if (n.isFirstChildOf(parent) && NodeUtil.isAssignmentOp(parent)) {
-          // We're checking to make sure that any *read* of `goog.LOCALE` appears in a location that
-          // is formatted properly for late localization.
-          // Assignment to `goog.LOCALE` probably happens only in `closure/base.js`, and if it does
-          // happen somewhere else we should probably allow that, too.
-        } else {
-          compiler.report(JSError.make(n, UNEXPECTED_GOOG_LOCALE));
-        }
+        compiler.report(JSError.make(n, UNEXPECTED_GOOG_LOCALE));
       }
     }
   }
@@ -743,12 +737,20 @@ final class LocaleDataPasses {
     }
   }
 
-  private static boolean isScriptWithLocaleFileAnnotation(Node n) {
+  /**
+   * Is this a `SCRIPT` node with either `@localeFile` or `@provideGoog` annotation.
+   *
+   * <p>NOTE: `@provideGoog` is only set on `base.js`, where `goog.LOCALE` is defined and also used
+   * in the definition of `goog.getLocale()`.
+   *
+   * <p>If either annotation exists, then use of `goog.LOCALE` is allowed.
+   */
+  private static boolean isScriptWithLocaleFileOrProvideGoogAnnotation(Node n) {
     if (!n.isScript()) {
       return false;
     } else {
       JSDocInfo jsDocInfo = n.getJSDocInfo();
-      return jsDocInfo != null && jsDocInfo.isLocaleFile();
+      return jsDocInfo != null && (jsDocInfo.isLocaleFile() || jsDocInfo.isProvideGoog());
     }
   }
 

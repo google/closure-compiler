@@ -339,7 +339,10 @@ public class JSDocInfo implements Serializable {
     LOCALE_FILE,
     LOCALE_SELECT,
     LOCALE_OBJECT,
-    LOCALE_VALUE;
+    LOCALE_VALUE,
+
+    // `@provideGoog` only appears in base.js
+    PROVIDE_GOOG;
 
     final String name;
     final long mask;
@@ -864,6 +867,11 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
   public boolean isLocaleValue() {
     return checkBit(Bit.LOCALE_VALUE);
+  }
+
+  /** Returns whether the {@code @provideGoog} annotation is present on this {@link JSDocInfo}. */
+  public boolean isProvideGoog() {
+    return checkBit(Bit.PROVIDE_GOOG);
   }
 
   /**
@@ -2263,6 +2271,10 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordLocaleSelect() {
       return populateBit(Bit.LOCALE_SELECT, true);
+    }
+
+    public boolean recordProvideGoog() {
+      return populateBit(Bit.PROVIDE_GOOG, true);
     }
 
     /**

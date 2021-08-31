@@ -79,6 +79,10 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_LOCALE_VALUE);
     }
 
+    if (jsdoc.isProvideGoog()) {
+      builder.addKind(JsdocTag.JSDOC_PROVIDE_GOOG);
+    }
+
     if (jsdoc.isPureOrBreakMyCode()) {
       builder.addKind(JsdocTag.JSDOC_PURE_OR_BREAK_MY_CODE);
     }
@@ -244,6 +248,10 @@ public final class JSDocSerializer {
           continue;
         case JSDOC_LOCALE_VALUE:
           builder.recordLocaleValue();
+          continue;
+
+        case JSDOC_PROVIDE_GOOG:
+          builder.recordProvideGoog();
           continue;
 
         case JSDOC_PURE_OR_BREAK_MY_CODE:
