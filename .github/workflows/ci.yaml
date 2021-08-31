@@ -44,19 +44,16 @@ jobs:
           java-package: jdk
           architecture: x64
 
-      - name: Setup Bazel
-        # https://github.com/marketplace/actions/actions-setup-bazel
-        uses: jwlawson/actions-setup-bazel@v1
-        with:
-          bazel-version: '2.2.0'
-
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
         uses: actions/checkout@v2
 
+      # https://github.com/bazelbuild/setup-bazelisk
+      - uses: bazelbuild/setup-bazelisk@v1
+
       - name: Build and Test
-        run: bazel test //:all
+        run: bazelisk test //:all
 
       - name: Unsymlink Bazel Artifacts
         # upload-artifact doesn't support paths with symlinks
