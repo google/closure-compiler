@@ -53,6 +53,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     "}";
 
   @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
+
+  @Override
   protected FunctionRewriter getProcessor(Compiler compiler) {
     return new FunctionRewriter(compiler);
   }
@@ -133,6 +139,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontReplaceGetterInArrow() {
+    checkCompilesToSame("class C { foo() { return (x) => { return this.x; }; } }", 10);
+    checkCompilesToSame("class C { foo() { return (x) => this.x; } }", 10);
+  }
+
+  @Test
   public void testReplaceSetter1() {
     String source = "a.prototype.foo = function(v) {this.foo_ = v}";
     checkCompilesToSame(source, 4);
@@ -176,6 +188,12 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontReplaceSetterInArrow() {
+    checkCompilesToSame("class C { foo() { return (x) => { this.x = x; }; } }", 10);
+    checkCompilesToSame("class C { foo() { return (x) => this.x = x; } }", 10);
+  }
+
+  @Test
   public void testReplaceEmptyFunction1() {
     String source = "a.prototype.foo = function() {}";
     checkCompilesToSame(source, 4);
@@ -213,6 +231,13 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceEmptyArrowFunction() {
+    String source = "var foo = () => {}";
+    checkCompilesToSame(source, 10);
+    checkCompilesTo(source, EMPTY_HELPER, "var foo = JSCompiler_emptyFn()", 30);
+  }
+
+  @Test
   public void testReplaceIdentityFunction1() {
     String source = "a.prototype.foo = function(a) {return a}";
     checkCompilesToSame(source, 2);
@@ -235,6 +260,22 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   @Test
   public void testReplaceIdentityFunction2() {
     checkCompilesToSame("a.prototype.foo = function(a) {return a + 1}", 10);
+  }
+
+  @Test
+  public void testReplaceIdentityFunctionAsArrow() {
+    checkCompilesTo(
+        "a.prototype.foo = (a) => { return a; }",
+        IDENTITY_HELPER,
+        "a.prototype.foo = JSCompiler_identityFn()",
+        20);
+  }
+
+  @Test
+  public void testReplaceIdentityFunctionAsBlocklessArrow() {
+    String source = "a.prototype.foo = (a) => a";
+    checkCompilesToSame(source, 2);
+    checkCompilesTo(source, IDENTITY_HELPER, "a.prototype.foo = JSCompiler_identityFn()", 50);
   }
 
   @Test

@@ -418,7 +418,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!isReduceableFunctionExpression(node)) {
+      if (!isReduceableFunctionExpression(node) || node.isArrowFunction()) {
         return node;
       }
 
@@ -479,7 +479,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (!isReduceableFunctionExpression(node)) {
+      if (!isReduceableFunctionExpression(node) || node.isArrowFunction()) {
         return node;
       }
 
