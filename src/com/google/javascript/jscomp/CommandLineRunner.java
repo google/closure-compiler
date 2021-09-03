@@ -1800,20 +1800,16 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       }
     }
 
-    if (flags.languageOut.isEmpty()) {
-      options.setLanguageOut(options.getLanguageIn());
+    CompilerOptions.LanguageMode languageMode =
+        CompilerOptions.LanguageMode.fromString(flags.languageOut);
+    if (languageMode == LanguageMode.UNSUPPORTED) {
+      throw new FlagUsageException(
+          "Cannot specify the unsupported set of features for language_out.");
+    }
+    if (languageMode != null) {
+      options.setLanguageOut(languageMode);
     } else {
-      CompilerOptions.LanguageMode languageMode =
-          CompilerOptions.LanguageMode.fromString(flags.languageOut);
-      if (languageMode == LanguageMode.UNSUPPORTED) {
-        throw new FlagUsageException(
-            "Cannot specify the unsupported set of features for language_out.");
-      }
-      if (languageMode != null) {
-        options.setLanguageOut(languageMode);
-      } else {
-        throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
-      }
+      throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
     }
 
     options.setCodingConvention(new ClosureCodingConvention());
