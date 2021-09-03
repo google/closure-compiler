@@ -627,6 +627,19 @@ public final class CommandLineRunnerTest {
         .doesNotContainKey("goog.FEATURESET_YEAR");
   }
 
+  /**
+   * Test that browser_featureset_year flag can not be used in conjunction with --language_out flag.
+   */
+  @Test
+  public void browserFeaturesetYearFlag_usedWithLanguageOutFlag() {
+    args.add("--browser_featureset_year=2019");
+    args.add("--language_out=ECMASCRIPT_2020");
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e)
+        .hasMessageThat()
+        .contains("ERROR - both flags `--browser_featureset_year` and `--language_out` specified.");
+  }
+
   /** Test that browser_featureset_year flag overrides the default goog.FEATURESET_YEAR define */
   @Test
   public void browserFeaturesetYearFlagDefinesGoogFeaturesetYear() {

@@ -1618,6 +1618,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       flags.processClosurePrimitives = true;
     }
 
+    if (flags.browserFeaturesetYear != 0 && flags.languageOut != "STABLE") {
+      throw new FlagUsageException(
+          "ERROR - both flags `--browser_featureset_year` and `--language_out` specified.");
+    }
+
     if (flags.outputWrapper == null) {
       flags.outputWrapper = "";
     }
