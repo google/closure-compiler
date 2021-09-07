@@ -49,8 +49,6 @@ import java.util.Set;
  * <ol>
  *   <li>Simplifies the AST by splitting var/let/const statements, moving initializers out of for
  *       loops, and converting whiles to fors.
- *   <li>Moves hoisted functions to the top of function scopes.
- *   <li>Rewrites unhoisted named function declarations to be var declarations.
  *   <li>Makes all variable names globally unique (extern or otherwise) so that no value is ever
  *       shadowed (note: "arguments" may require special handling).
  *   <li>Removes duplicate variable declarations.
@@ -382,13 +380,11 @@ class Normalize implements CompilerPass {
     }
 
     /**
-     * Rewrite named unhoisted functions declarations to a known consistent behavior so we don't to
-     * different logic paths for the same code.
+     * Rewrite blockless arrow functions to have a block with a single return statement
      *
-     * <p>From: function f() {} to: var f = function () {}; and move it to the top of the block.
-     * This actually breaks semantics, but the semantics are also not well-defined cross-browser.
+     * <p>For example: {@code (x) => x} becomes {@code (x) => { return x; }}.
      *
-     * <p>See <a href="https://github.com/google/closure-compiler/pull/429">#429</a>
+     * <p>This simplifies optimizations as they can now assume all functions have a BLOCK.
      */
     static boolean visitFunction(Node n, AbstractCompiler compiler) {
       checkState(n.isFunction(), n);
