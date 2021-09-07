@@ -5199,7 +5199,7 @@ public final class NodeUtil {
   }
 
   /** @return true iff the result of the expression is consumed. */
-  static boolean isExpressionResultUsed(Node expr) {
+  public static boolean isExpressionResultUsed(Node expr) {
     Node parent = expr.getParent();
     switch (parent.getToken()) {
       case BLOCK:

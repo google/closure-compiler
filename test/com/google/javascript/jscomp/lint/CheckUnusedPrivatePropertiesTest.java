@@ -14,30 +14,37 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author johnlenz@google.com (John Lenz) */
+/** Tests for {@link CheckUnusedPrivateProperties} */
 @RunWith(JUnit4.class)
 public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
-  private static final String EXTERNS = lines(
-      DEFAULT_EXTERNS,
-      "/** @const */ goog.reflect = {};",
-      "goog.reflect.object;",
-      "/** @constructor */",
-      "function Window() {}",
-      "Window.prototype.x;",
-      "Window.prototype.a;",
-      "Window.prototype.ext;",
-      "/** @type !Window */ var window;",
-      "function alert(a) {}",
-      "var EXT = {};",
-      "EXT.ext;");
+  private static final String EXTERNS =
+      lines(
+          DEFAULT_EXTERNS,
+          "/** @const */ goog.reflect = {};",
+          "goog.reflect.object;",
+          "/** @constructor */",
+          "function Window() {}",
+          "Window.prototype.x;",
+          "Window.prototype.a;",
+          "Window.prototype.ext;",
+          "/** @type {!Window} */ var window;",
+          "function alert(a) {}",
+          "var EXT = {};",
+          "EXT.ext;");
 
   public CheckUnusedPrivatePropertiesTest() {
     super(EXTERNS);
@@ -48,7 +55,6 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    enableTypeCheck();
   }
 
   @Override
@@ -59,8 +65,7 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   @Override
   public CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
   }
 
@@ -87,16 +92,12 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassConstructorPropertyUnused1() {
-    disableTypeCheck();
-
     // Don't ever warn about unused private constructors
     used("class C { /** @private */ constructor() {} }; ");
   }
 
   @Test
   public void testClassPropUnused1() {
-    disableTypeCheck();
-
     // A property defined on "this" can be removed
     unused("class C { constructor() { /** @private */ this.a = 2 } }");
   }
@@ -109,17 +110,13 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassMethodUnused1() {
-    disableTypeCheck();
-
     unused("class C { constructor() {}  /** @private */ method() {} }");
     used("class C { constructor() {}  /** @private */ method() {} }\n new C().method();");
   }
 
-  // The JSDoc seems to be missing here, reenable this test when it is fixed.
-  public void disable_testClassMethodUnused2() {
-    disableTypeCheck();
-
-    unused("class C { constructor() {}\n  /** @private */ ['method']() {} }");
+  @Test
+  public void testClassQuotedMethodUnused_noWarning() {
+    used("class C { constructor() {}\n  /** @private */ ['method']() {} }");
     used("class C { constructor() {}\n  /** @private */ ['method']() {} }\n new C()['method']();");
   }
 
@@ -319,5 +316,24 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
         + "/** @private */ C.prop = 1; "
         + "function use(a) { alert(a.prop) }; "
         + "use(C)");
+  }
+
+  @Test
+  public void testInterfaceProperty() {
+    unused("/** @interface */ function C() {} /** @private */ C.prop = 1;");
+  }
+
+  @Test
+  public void testConstructorProperty_nonQnameClass() {
+    testSame(
+        lines(
+            "const obj = {};",
+            "/** @constructor */ obj['ctor'] = function () {};",
+            "/** @private */ obj['ctor'].prop = 1;"));
+  }
+
+  @Test
+  public void testEs6ClassProperty() {
+    unused("class C {} /** @private */ C.prop = 1;");
   }
 }

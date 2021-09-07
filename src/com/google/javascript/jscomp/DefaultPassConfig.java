@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
+import com.google.javascript.jscomp.lint.CheckConstPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
 import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
@@ -60,6 +61,7 @@ import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
+import com.google.javascript.jscomp.lint.CheckUnusedPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -1801,6 +1803,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> {
                 ImmutableList.Builder<Callback> callbacks =
                     ImmutableList.<Callback>builder()
+                        .add(new CheckConstPrivateProperties(compiler))
                         .add(new CheckConstantCaseNames(compiler))
                         .add(new CheckDefaultExportOfGoogModule(compiler))
                         .add(new CheckEmptyStatements(compiler))
@@ -1815,6 +1818,7 @@ public final class DefaultPassConfig extends PassConfig {
                         .add(new CheckNullabilityModifiers(compiler))
                         .add(new CheckPrimitiveAsObject(compiler))
                         .add(new CheckPrototypeProperties(compiler))
+                        .add(new CheckUnusedPrivateProperties(compiler))
                         .add(new CheckUnusedLabels(compiler))
                         .add(new CheckUselessBlocks(compiler))
                         .add(new CheckVar(compiler));
@@ -1828,21 +1832,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.ANALYZER_CHECKS)
           .setInternalFactory(
               (compiler) -> {
-                ImmutableList.Builder<Callback> callbacks = ImmutableList.builder();
-                if (options.enables(DiagnosticGroups.ANALYZER_CHECKS_INTERNAL)) {
-                  callbacks
-                      .add(new CheckArrayWithGoogObject(compiler))
-                      .add(new ImplicitNullabilityCheck(compiler))
-                      .add(new CheckNestedNames(compiler));
-                }
-                // These are grouped together for better execution efficiency.
-                if (options.enables(DiagnosticGroups.UNUSED_PRIVATE_PROPERTY)) {
-                  callbacks.add(new CheckUnusedPrivateProperties(compiler));
-                }
-                if (options.enables(DiagnosticGroups.MISSING_CONST_PROPERTY)) {
-                  callbacks.add(new CheckConstPrivateProperties(compiler));
-                }
-                return combineChecks(compiler, callbacks.build());
+                ImmutableList<Callback> callbacks =
+                    ImmutableList.of(
+                        new CheckArrayWithGoogObject(compiler),
+                        new ImplicitNullabilityCheck(compiler),
+                        new CheckNestedNames(compiler));
+
+                return combineChecks(compiler, callbacks);
               })
           .setFeatureSetForChecks()
           .build();

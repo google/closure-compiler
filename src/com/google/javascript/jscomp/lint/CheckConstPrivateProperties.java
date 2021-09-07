@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,12 +32,10 @@ import java.util.Set;
 
 /**
  * This pass looks for properties that are not modified and ensures they use the @const annotation.
- * Can run with or without typechecking but will find more if typechecking is enabled.
  */
-class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallback
-    implements CompilerPass {
+public class CheckConstPrivateProperties extends AbstractPostOrderCallback implements CompilerPass {
 
-  static final DiagnosticType MISSING_CONST_PROPERTY =
+  public static final DiagnosticType MISSING_CONST_PROPERTY =
       DiagnosticType.disabled(
           "JSC_MISSING_CONST_PROPERTY",
           "Private property {0} is never modified, use the @const annotation");
@@ -40,8 +43,9 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   private final AbstractCompiler compiler;
   private final List<Node> candidates = new ArrayList<>();
   private final Set<String> modified = new HashSet<>();
+  private final HashSet<String> constructorsAndInterfaces = new HashSet<>();
 
-  CheckConstPrivateProperties(AbstractCompiler compiler) {
+  public CheckConstPrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -90,8 +94,28 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
         }
         break;
 
+      case FUNCTION:
+        JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+        if (info != null && (info.isConstructor() || info.isInterface())) {
+          recordConstructorOrInterface(n);
+        }
+        break;
+
+      case CLASS:
+        recordConstructorOrInterface(n);
+        break;
+
       default:
         break;
+    }
+  }
+
+  private void recordConstructorOrInterface(Node n) {
+    String className = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
+    if (className != null) {
+      // If className is null, then this pass won't report any diagnostics on static members of this
+      // class.
+      constructorsAndInterfaces.add(className);
     }
   }
 
@@ -105,7 +129,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
 
     Node target = n.getFirstChild();
     // Check whether the given property access is on 'this' or a static property on a class.
-    if (!(target.isThis() || isConstructor(target))) {
+    if (!(target.isThis() || constructorsAndInterfaces.contains(target.getQualifiedName()))) {
       return false;
     }
 
@@ -144,12 +168,5 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
         || parent.isInc()
         || parent.isDec()
         || parent.isDelProp();
-  }
-
-  private boolean isConstructor(Node n) {
-    // If type checking is enabled (not just a per-file lint check),
-    // we can check constructor properties too. But it isn't required.
-    JSType type = n.getJSType();
-    return type != null && (type.isConstructor() || type.isInterface());
   }
 }

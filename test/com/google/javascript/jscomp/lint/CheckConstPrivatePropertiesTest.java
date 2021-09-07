@@ -13,27 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.CheckConstPrivateProperties.MISSING_CONST_PROPERTY;
+import static com.google.javascript.jscomp.lint.CheckConstPrivateProperties.MISSING_CONST_PROPERTY;
 
-import org.junit.Before;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    // TODO(tbreisacher): After the typechecker is updated to understand ES6, add non-transpiling
-    // versions of these tests.
-    enableTypeCheck();
-    enableTranspile();
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -43,8 +38,7 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Override
   public CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_CONST_PROPERTY, CheckLevel.WARNING);
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
   }
 
@@ -53,6 +47,19 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testWarning(
         "/** @constructor */ function C() {} /** @private */ C.prop = 1;", MISSING_CONST_PROPERTY);
     testSame("/** @constructor */ function C() {} /** @private */ C.prop = 1; C.prop = 2;");
+  }
+
+  @Test
+  public void testConstructorPropModified_es6Class() {
+    testWarning("class C {} /** @private */ C.prop = 1;", MISSING_CONST_PROPERTY);
+    testSame("class C {} /** @private */ C.prop = 1; C.prop = 2;");
+  }
+
+  @Test
+  public void testConstructorPropModified_interface() {
+    testWarning(
+        "/** @interface */ function C() {} /** @private */ C.prop = 1;", MISSING_CONST_PROPERTY);
+    testSame("/** @interface */ function C() {} /** @private */ C.prop = 1; C.prop = 2;");
   }
 
   @Test
@@ -69,6 +76,15 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testConstructorPropModified_const() {
     testSame("/** @constructor */ function C() {} /** @private @const */ C.prop = 1;");
+  }
+
+  @Test
+  public void testConstructorPropUnmodified_nonQnameClass() {
+    testSame(
+        lines(
+            "const obj = {};",
+            "/** @constructor */ obj['ctor'] = function () {};",
+            "/** @private */ obj['ctor'].prop = 1;"));
   }
 
   @Test

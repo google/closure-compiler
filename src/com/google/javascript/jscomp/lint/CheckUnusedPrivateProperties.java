@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,21 +35,18 @@ import java.util.Set;
  * This pass looks for properties that are never read. These can be properties created using "this",
  * or static properties of constructors or interfaces. Explicitly ignored is the possibility that
  * these properties may be indirectly referenced using "for-in" or "Object.keys".
- *
- * <p>This class is based on RemoveUnusedCode, some effort should be made to extract the common
- * pieces.
  */
-class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callback {
+public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callback {
 
-  static final DiagnosticType UNUSED_PRIVATE_PROPERTY =
-      DiagnosticType.disabled(
-          "JSC_UNUSED_PRIVATE_PROPERTY", "Private property {0} is never read");
+  public static final DiagnosticType UNUSED_PRIVATE_PROPERTY =
+      DiagnosticType.disabled("JSC_UNUSED_PRIVATE_PROPERTY", "Private property {0} is never read");
 
   private final AbstractCompiler compiler;
   private final Set<String> used = new HashSet<>();
   private final List<Node> candidates = new ArrayList<>();
+  private final HashSet<String> constructorsAndInterfaces = new HashSet<>();
 
-  CheckUnusedPrivateProperties(AbstractCompiler compiler) {
+  public CheckUnusedPrivateProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -140,8 +141,27 @@ class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callba
            }
          }
          break;
+
+      case FUNCTION:
+        JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+        if (info != null && (info.isConstructor() || info.isInterface())) {
+          recordConstructorOrInterface(n);
+        }
+        break;
+      case CLASS:
+        recordConstructorOrInterface(n);
+        break;
       default:
         break;
+    }
+  }
+
+  private void recordConstructorOrInterface(Node n) {
+    String className = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
+    if (className != null) {
+      // If className is null, then this pass won't report any diagnostics on static members of this
+      // class.
+      constructorsAndInterfaces.add(className);
     }
   }
 
@@ -165,15 +185,8 @@ class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal.Callba
     checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
     return target.isThis()
-        || (isConstructor(target))
+        || constructorsAndInterfaces.contains(target.getQualifiedName())
         || (target.isGetProp() && target.getString().equals("prototype"));
-  }
-
-  private boolean isConstructor(Node n) {
-    // If type checking is enabled (not just a per-file lint check),
-    // we can check constructor properties too. But it isn't required.
-    JSType type = n.getJSType();
-    return type != null && (type.isConstructor() || type.isInterface());
   }
 
   /**
