@@ -84,4 +84,4 @@ $jscomp.polyfill('Promise.any', function(orig) {
             });
   };
   return polyfill;
-}, 'es_next', 'es3');
+}, 'es_2021', 'es3');

@@ -50,4 +50,4 @@ $jscomp.polyfill('AggregateError', function(orig) {
   // Error name, defaults to AggregateError.
   polyfill.prototype.name = 'AggregateError';
   return polyfill;
-}, 'es_next', 'es3');
+}, 'es_2021', 'es3');

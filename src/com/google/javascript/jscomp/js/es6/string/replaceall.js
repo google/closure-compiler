@@ -65,4 +65,4 @@ $jscomp.polyfill('String.prototype.replaceAll', function(orig) {
         new RegExp(regExpEscape(searchValue), 'g'), replacement);
   };
   return polyfill;
-}, 'es_next', 'es3');
+}, 'es_2021', 'es3');
