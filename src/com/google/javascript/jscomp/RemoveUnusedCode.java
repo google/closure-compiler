@@ -1401,8 +1401,7 @@ class RemoveUnusedCode implements CompilerPass {
           // remove any part of the field. The proper behavior of class C { x = alert(); }
           // would be to remove x, leaving class C { constructor() { alert(); } }
           // but currently we aren't removing anything.
-          if (member.getFirstChild() == null
-              || !astAnalyzer.mayHaveSideEffects(member.getFirstChild())) {
+          if (!member.hasChildren() || !astAnalyzer.mayHaveSideEffects(member.getFirstChild())) {
             considerForIndependentRemoval(
                 new RemovableBuilder()
                     .addContinuation(new Continuation(member, scope))
