@@ -930,6 +930,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "An alias of 'import' is allowed.")
     private String dynamicImportAlias = null;
 
+    @Option(
+            name = "--assume_static_inheritance_required",
+            handler = BooleanOptionHandler.class,
+            usage =
+                "Instructs the compiler not to perform potential breaking optimizations "
+                  + "when the code being compiled depends on static inheritance."  )
+    private boolean assumeStaticInheritanceRequired = false;
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1042,6 +1050,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "json_streams",
                     "third_party",
                     "use_types_for_optimization",
+                    "assume_static_inheritance_required",
                     "version"))
             .build();
 
@@ -1982,6 +1991,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
     options.setAllowDynamicImport(flags.allowDynamicImport);
     options.setDynamicImportAlias(flags.dynamicImportAlias);
+    options.setAssumeStaticInheritanceRequired(flags.assumeStaticInheritanceRequired);
 
     if (flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
       if (flags.renamePrefixNamespace != null) {
