@@ -39,7 +39,9 @@ class FindExportableNodes extends AbstractPostOrderCallback {
   static final DiagnosticType NON_GLOBAL_ERROR =
       DiagnosticType.error(
           "JSC_NON_GLOBAL_ERROR",
-          "@export only applies to symbols/properties defined in the " + "global scope.");
+          "@export only allowed on symbols/properties defined in the global scope.\n"
+              + "Convert to a global definition or enable --export_local_property_definitions/"
+              + " options.setExportLocalPropertyDefinitions(true)");
 
   static final DiagnosticType EXPORT_ANNOTATION_NOT_ALLOWED =
       DiagnosticType.error(
