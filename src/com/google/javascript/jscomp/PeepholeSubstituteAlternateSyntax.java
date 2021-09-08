@@ -83,9 +83,11 @@ class PeepholeSubstituteAlternateSyntax
       case RETURN:
         return tryReduceReturn(node);
 
-      case COMMA:
-        // TODO(b/63630312): should flatten an entire comma expression in a single pass.
-        return trySplitComma(node);
+      case EXPR_RESULT:
+        if (node.getFirstChild().isComma()) {
+          return trySplitComma(node);
+        }
+        return node;
 
       case NAME:
         return tryReplaceUndefined(node);
@@ -286,32 +288,55 @@ class PeepholeSubstituteAlternateSyntax
     }
   }
 
+  /**
+   * Converts expressions of a potentially nested comma expression into a sequence of expression
+   * result statements and inserts them into the AST.
+   *
+   * @param insert Whether or not the leftmost expression is inserted into the AST.
+   * @return The leftmost expression.
+   */
+  private Node splitComma(Node n, boolean insert, Node insertAfter) {
+    while (n.isComma()) {
+      Node left = n.getFirstChild();
+      Node right = n.getLastChild();
+      n.detachChildren();
+      if (right.isComma()) {
+        splitComma(right, true, insertAfter);
+      } else {
+        // Add the right expression after the optimized expression.
+        Node newStatement = IR.exprResult(right);
+        newStatement.srcrefIfMissing(right);
+        newStatement.insertAfter(insertAfter);
+      }
+      n = left;
+    }
+    if (insert) {
+      Node newStatement = IR.exprResult(n);
+      newStatement.srcrefIfMissing(n);
+      newStatement.insertAfter(insertAfter);
+      return newStatement;
+    }
+    return n;
+  }
+
   private Node trySplitComma(Node n) {
     if (late) {
       return n;
     }
-    Node parent = n.getParent();
-    Node left = n.getFirstChild();
-    Node right = n.getLastChild();
-
-    if (parent.isExprResult()
-        && !parent.getParent().isLabel()) {
-      // split comma
-      n.detachChildren();
-      // Replace the original expression with the left operand.
-      n.replaceWith(left);
-      // Add the right expression afterward.
-      Node newStatement = IR.exprResult(right);
-      newStatement.srcrefIfMissing(n);
-
-      // This modifies outside the subtree, which is not
-      // desirable in a peephole optimization.
-      newStatement.insertAfter(parent);
-      reportChangeToEnclosingScope(parent);
-      return left;
-    } else {
+    checkState(n.isExprResult());
+    if (n.getParent().isLabel()) {
+      // Do not split labeled comma expressions.
       return n;
     }
+    Node comma = n.getFirstChild();
+    checkState(comma.isComma());
+    Node leftmost = splitComma(comma, false, n);
+    // Replace original expression with leftmost comma expression.
+    n.removeChildren();
+    n.addChildToFront(leftmost);
+    n.srcref(leftmost);
+    reportChangeToEnclosingScope(leftmost);
+    return leftmost;
   }
 
   /**

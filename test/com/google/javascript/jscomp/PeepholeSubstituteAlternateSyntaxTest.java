@@ -336,10 +336,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     // Don't try to split COMMA under LABELs.
     testSame("a:a(),b()");
-
+    test("1, 2, 3, 4", "1; 2; 3; 4");
+    test("x = 1, 2, 3", "x = 1; 2; 3");
+    testSame("x = (1, 2, 3)");
+    test("1, (2, 3), 4", "1; 2; 3; 4");
     test("(x=2), foo()", "x=2; foo()");
     test("foo(), boo();", "foo(); boo()");
-    test("(a(), b()), (c(), d());", "a(), b(); c(), d()");
+    test("(a(), b()), (c(), d());", "a(); b(); c(); d()");
     test("a(); b(); (c(), d());", "a(); b(); c(); d();");
     test("foo(), true", "foo();true");
     testSame("foo();true");
@@ -369,8 +372,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testComma3() {
     late = false;
-    test("1, a(), b()", "1, a(); b()");
-    test("1, a?.(), b?.()", "1, a?.(); b?.()");
+    test("1, a(), b()", "1; a(); b()");
+    test("1, a?.(), b?.()", "1; a?.(); b?.()");
 
     late = true;
     testSame("1, a(), b()");
@@ -391,8 +394,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testComma5() {
     late = false;
-    test("a(), b(), 1", "a(), b(); 1");
-    test("a?.(), b?.(), 1", "a?.(), b?.(); 1");
+    test("a(), b(), 1", "a(); b(); 1");
+    test("a?.(), b?.(), 1", "a?.(); b?.(); 1");
 
     late = true;
     testSame("a(), b(), 1");
