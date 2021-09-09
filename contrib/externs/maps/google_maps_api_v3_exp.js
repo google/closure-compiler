@@ -6078,8 +6078,7 @@ google.maps.PolygonOptions.prototype.strokeColor;
 google.maps.PolygonOptions.prototype.strokeOpacity;
 
 /**
- * The stroke position. Defaults to CENTER. This property is not supported on
- * Internet Explorer 8 and earlier.
+ * The stroke position. Defaults to <code>CENTER</code>.
  * @type {?google.maps.StrokePosition|undefined}
  */
 google.maps.PolygonOptions.prototype.strokePosition;
