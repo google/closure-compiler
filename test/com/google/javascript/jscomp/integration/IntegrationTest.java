@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -2161,7 +2162,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "}";
     testSame(options, code);
 
-    options.setAliasAllStrings(true);
+    options.setAliasStringsMode(AliasStringsMode.ALL);
     test(options, code, expected);
   }
 
