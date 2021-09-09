@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
+import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -781,7 +782,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // This comes after converting quoted property accesses to dotted property
     // accesses in order to avoid aliasing property names.
-    if (options.aliasAllStrings) {
+    if (options.getAliasStringsMode() != AliasStringsMode.NONE) {
       passes.add(aliasStrings);
     }
 
@@ -2409,14 +2410,17 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Alias string literals with global variables, to avoid creating lots of transient objects. */
+  /** Alias string literals with global variables, to reduce code size. */
   private final PassFactory aliasStrings =
       PassFactory.builder()
           .setName("aliasStrings")
           .setInternalFactory(
               (compiler) ->
                   new AliasStrings(
-                      compiler, compiler.getModuleGraph(), options.outputJsStringUsage))
+                      compiler,
+                      compiler.getModuleGraph(),
+                      options.outputJsStringUsage,
+                      options.getAliasStringsMode()))
           .setFeatureSetForOptimizations()
           .build();
 

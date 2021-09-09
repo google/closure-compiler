@@ -487,10 +487,11 @@ public class CompilerOptions implements Serializable {
   /** Collapses anonymous function declarations into named function declarations */
   public boolean collapseAnonymousFunctions;
 
-  /**
-   * Aliases all string literals to global instances, to avoid creating more objects than necessary
-   */
-  public boolean aliasAllStrings;
+  /** @deprecated Please use aliasStringsMode instead. */
+  @Deprecated public boolean aliasAllStrings;
+
+  /** Aliases string literals to global instances, to reduce code size. */
+  private AliasStringsMode aliasStringsMode;
 
   /** Print string usage as part of the compilation log. */
   boolean outputJsStringUsage;
@@ -1320,6 +1321,7 @@ public class CompilerOptions implements Serializable {
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
     aliasAllStrings = false;
+    aliasStringsMode = AliasStringsMode.NONE;
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
@@ -2100,8 +2102,18 @@ public class CompilerOptions implements Serializable {
     this.collapseAnonymousFunctions = enabled;
   }
 
-  public void setAliasAllStrings(boolean aliasAllStrings) {
-    this.aliasAllStrings = aliasAllStrings;
+  /** @deprecated Please use setAliasStringsMode instead. */
+  @Deprecated
+  public final void setAliasAllStrings(boolean aliasAllStrings) {
+    setAliasStringsMode(aliasAllStrings ? AliasStringsMode.ALL : AliasStringsMode.NONE);
+  }
+
+  public void setAliasStringsMode(AliasStringsMode aliasStringsMode) {
+    this.aliasStringsMode = aliasStringsMode;
+  }
+
+  public AliasStringsMode getAliasStringsMode() {
+    return this.aliasStringsMode;
   }
 
   public void setOutputJsStringUsage(boolean outputJsStringUsage) {
@@ -2715,6 +2727,7 @@ public class CompilerOptions implements Serializable {
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
         .add("aliasAllStrings", aliasAllStrings)
+        .add("aliasStringsMode", getAliasStringsMode())
         .add("aliasHandler", getAliasTransformationHandler())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
@@ -3104,6 +3117,13 @@ public class CompilerOptions implements Serializable {
   public static enum IsolationMode {
     NONE, // output does not include additional isolation.
     IIFE; // The output should be wrapped in an IIFE to isolate global variables.
+  }
+
+  /** A mode enum used to indicate the alias strings policy for the AliasStrings pass */
+  public static enum AliasStringsMode {
+    NONE, // Do not alias string literals.
+    LARGE, // Alias all string literals with a length greater than 100 characters.
+    ALL // Alias all string literals.
   }
 
   /**

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.lang.Math.min;
 
+import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -62,6 +63,11 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   private final Set<String> usedHashedAliases = new LinkedHashSet<>();
 
+  private final AliasStringsMode aliasStringsMode;
+
+  /** Alias strings longer than 100 characters if aliasStringsMode=AliasStringsMode.LARGE */
+  private static final int ALIAS_LARGE_STRINGS_LENGTH = 100;
+
   /**
    * Map from module to the node in that module that should parent any string variable declarations
    * that have to be moved into that module
@@ -79,11 +85,17 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
    * @param moduleGraph The module graph, or null if there are no modules
    * @param outputStringUsage Outputs all strings and the number of times they were used in the
    *     application to the server log.
+   * @param aliasStringsMode The alias strings policy set to either ALL or LARGE
    */
-  AliasStrings(AbstractCompiler compiler, JSChunkGraph moduleGraph, boolean outputStringUsage) {
+  AliasStrings(
+      AbstractCompiler compiler,
+      JSChunkGraph moduleGraph,
+      boolean outputStringUsage,
+      AliasStringsMode aliasStringsMode) {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
     this.outputStringUsage = outputStringUsage;
+    this.aliasStringsMode = aliasStringsMode;
   }
 
   @Override
@@ -129,6 +141,11 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       // is unloading and therefore variable references aren't available.
       // This is because of a bug in Firefox.
       if ("undefined".equals(str)) {
+        return;
+      }
+
+      if (aliasStringsMode == AliasStringsMode.LARGE
+          && str.length() <= ALIAS_LARGE_STRINGS_LENGTH) {
         return;
       }
 

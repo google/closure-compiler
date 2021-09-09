@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,13 +30,16 @@ public final class AliasStringsTest extends CompilerTestCase {
 
   private boolean hashReduction = false;
 
+  private AliasStringsMode aliasStringsMode = AliasStringsMode.ALL;
+
   public AliasStringsTest() {
     super(EXTERNS);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    AliasStrings pass = new AliasStrings(compiler, compiler.getModuleGraph(), false);
+    AliasStrings pass =
+        new AliasStrings(compiler, compiler.getModuleGraph(), false, aliasStringsMode);
     if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
     }
@@ -304,5 +308,27 @@ public final class AliasStringsTest extends CompilerTestCase {
             "function foo() {f($$S_goodgoodgoodgoodgood)}",
             // m2
             "function foo() {f($$S_goodgoodgoodgoodgood)}"));
+  }
+
+  @Test
+  public void testOnlyAliasLargeStrings() {
+    aliasStringsMode = AliasStringsMode.LARGE;
+
+    test(
+        lines(
+            "const A = 'non aliasable string with length <= 100 characters';",
+            "const B = 'non aliasable string with length <= 100 characters';",
+            // C and D have lengths of 101 characters
+            "const C = 'aliasable large string"
+                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';",
+            "const D = 'aliasable large string"
+                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';"),
+        lines(
+            "var $$S_aliasable$20large$20stri_6c7cf169 = 'aliasable large string"
+                + " largestringlargestringlargestringlargestringlargestringlargestringlargestring!';",
+            "const A = 'non aliasable string with length <= 100 characters';",
+            "const B = 'non aliasable string with length <= 100 characters';",
+            "const C = $$S_aliasable$20large$20stri_6c7cf169;",
+            "const D = $$S_aliasable$20large$20stri_6c7cf169;"));
   }
 }
