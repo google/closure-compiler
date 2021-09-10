@@ -2971,6 +2971,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertNoPureCalls("function doImport() { import('./module.js'); } doImport();");
   }
 
+  @Test
+  public void testParenthesizedExpression() {
+    assertPureCallsMarked(
+        lines(
+            "const namespace = {};",
+            "namespace.noSideEffects = function(x) { return 1; };",
+            "(0, namespace.noSideEffects)(42);"),
+        ImmutableList.of("(0, namespace.noSideEffects)"));
+  }
+
   void assertCallableExpressionPure(boolean purity, String expression) {
     expression = "(" + expression + ")";
     String directInvocation = expression + "()";

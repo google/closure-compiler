@@ -203,9 +203,18 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testIssue80() {
+  public void testIndirectCallExpressions() {
+    // indirect call to remove context from eval.
     testSame("(0, eval)('alert');");
-    test("(0, foo)('alert');", "(JSCOMPILER_PRESERVE(0), foo)('alert');", warning(e));
+    // indirect call to remove this context from module nested functions.
+    testSame("(0, modPrefix.foo)('alert');");
+    testSame("(0, modPrefix['foo'])('alert');");
+    // comma not in a call expression.
+    test("x = (0, foo) + 1;", "x = (JSCOMPILER_PRESERVE(0), foo) + 1;", warning(e));
+    // Plain function, no indirection needed to remove this
+    test("(0, otherFn)(1);", "(JSCOMPILER_PRESERVE(0), otherFn)(1);", warning(e));
+    // Other expression.
+    test("(0, otherFn())(1);", "(JSCOMPILER_PRESERVE(0), otherFn())(1);", warning(e));
   }
 
   @Test

@@ -5214,19 +5214,26 @@ public final class NodeUtil {
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case COMMA:
         Node grandparent = parent.getParent();
-        if (grandparent.isCall() && parent == grandparent.getFirstChild()) {
-          // Semantically, a direct call to eval is different from an indirect
-          // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
-          // expression to a comma to be a no-op if it's used to indirect
-          // an eval. This we pretend that this is "used".
-          if (expr == parent.getFirstChild()
-              && parent.hasTwoChildren()
-              && expr.getNext().isName()
-              && "eval".equals(expr.getNext().getString())) {
+        if (grandparent.isCall()
+            && parent == grandparent.getFirstChild()
+            && expr == parent.getFirstChild()
+            && parent.hasTwoChildren()) {
+          // Special case the indirect function call pattern, e.g. (0, myFn)(arg1, arg2).
+          // The indirect call pattern has two use cases:
+          Node calledFn = parent.getLastChild();
+          if (calledFn.isName() && calledFn.getQualifiedName().equals("eval")) {
+            // 1) eval
+            //    Semantically, a direct call to eval is different from an indirect
+            //    call to an eval. See ECMA-262 S15.1.2.1.
+            return true;
+          }
+          if (NodeUtil.isNormalOrOptChainGet(calledFn)) {
+            // 2) Removing "this" context
+            //    When calling prefix.myFn(), myFn receives "prefix" as its this context.
+            //    Calling "(0, prefix.myFn)()" removes the this context, so this is useful code.
             return true;
           }
         }
-
         return expr != parent.getFirstChild() && isExpressionResultUsed(parent);
       case FOR:
         // Only an expression whose result is in the condition part of the
