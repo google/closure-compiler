@@ -5221,7 +5221,7 @@ public final class NodeUtil {
           // Special case the indirect function call pattern, e.g. (0, myFn)(arg1, arg2).
           // The indirect call pattern has two use cases:
           Node calledFn = parent.getLastChild();
-          if (calledFn.isName() && calledFn.getQualifiedName().equals("eval")) {
+          if (calledFn.isName() && calledFn.matchesName("eval")) {
             // 1) eval
             //    Semantically, a direct call to eval is different from an indirect
             //    call to an eval. See ECMA-262 S15.1.2.1.
