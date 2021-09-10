@@ -1357,8 +1357,19 @@ public class Node {
     return ((InputId) this.getProp(Prop.INPUT_ID));
   }
 
-  /** The original name of this node, if the node has been renamed. */
+  /**
+   * The original name of this node, if the node has been renamed.
+   *
+   * <p>Do not use original name to make optimization decisions. The original intent was to preserve
+   * some naming for lightly optimized code to put into source maps. It is not rigorously defined
+   * and is not a suitable replacement for a canonical identifier. "Original name" is not associated
+   * with any scope and easily transfers to unrelated values. Its existance and use beyond its
+   * original purpose has delayed creating useful more precise alternatives.
+   *
+   * @deprecated "original name" is poorly defined.
+   */
   @Nullable
+  @Deprecated
   public final String getOriginalName() {
     return this.originalName;
   }
@@ -1904,8 +1915,10 @@ public class Node {
    *
    * @return a null if this is not a qualified name, or a dot-separated string of the name and
    *     properties.
+   * @deprecated "original name" is poorly defined. See #getOriginalName
    */
   @Nullable
+  @Deprecated
   public final String getOriginalQualifiedName() {
     if (token == Token.NAME) {
       String name = getOriginalName();
