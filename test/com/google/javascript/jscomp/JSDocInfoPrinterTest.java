@@ -62,6 +62,65 @@ public final class JSDocInfoPrinterTest {
   }
 
   @Test
+  public void testSuppressions() {
+    builder.recordSuppressions(ImmutableSet.of("globalThis", "uselessCode"), "Common description.");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @suppress {globalThis,uselessCode} Common description.",
+                " */\n"));
+  }
+
+  @Test
+  public void testSuppressions_multipleLineDescription() {
+    builder.recordSuppressions(
+        ImmutableSet.of("globalThis", "uselessCode"),
+        "Common description.\n More on another line.");
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @suppress {globalThis,uselessCode} Common description.",
+                " * More on another line.",
+                " */\n"));
+  }
+
+  @Test
+  public void testSuppressions_multiple() {
+    builder.recordSuppressions(ImmutableSet.of("globalThis", "uselessCode"), "Common description.");
+    builder.recordSuppressions(ImmutableSet.of("const")); // has no description
+
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                " * @suppress {globalThis,uselessCode} Common description.",
+                " * @suppress {const}",
+                " */\n"));
+  }
+
+  @Test
+  public void testSuppressions_multiple_printOrder() {
+    builder.recordSuppressions(ImmutableSet.of("const")); // has no description
+    builder.recordSuppressions(ImmutableSet.of("uselessCode", "globalThis"), "Common description.");
+
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(
+            lines(
+                "/**", //
+                // @suppress printed in order in which it is recorded(parsed)
+                " * @suppress {const}",
+                // warnings inside a suppress printed in natural order for consistency
+                " * @suppress {globalThis,uselessCode} Common description.",
+                " */\n"));
+  }
+
+  @Test
   public void testDontCrashWhenNoThrowType() {
     // Happens for code like: @throws TypeNameWithoutBraces
     builder.recordThrowType(null);

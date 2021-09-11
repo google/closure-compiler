@@ -146,7 +146,6 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
             "    },",
             "  },",
             "};"),
-
         lines(
             "/** @polymerBehavior @nocollapse */",
             "var FunBehavior = {",

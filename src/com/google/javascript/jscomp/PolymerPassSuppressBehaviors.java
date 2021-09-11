@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.rhino.JSDocInfo;
@@ -110,9 +111,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
       Node defaultValueKey = defaultValue.getParent();
       JSDocInfo.Builder suppressDoc =
           JSDocInfo.Builder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
-      suppressDoc.addSuppression("checkTypes");
-      suppressDoc.addSuppression("globalThis");
-      suppressDoc.addSuppression("visibility");
+      suppressDoc.recordSuppressions(ImmutableSet.of("checkTypes", "globalThis", "visibility"));
       defaultValueKey.setJSDocInfo(suppressDoc.build());
     }
   }
@@ -124,9 +123,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
       if (keyNode.getFirstChild().isFunction()) {
         keyNode.setJSDocInfo(null);
         JSDocInfo.Builder suppressDoc = JSDocInfo.builder().parseDocumentation();
-        suppressDoc.addSuppression("checkTypes");
-        suppressDoc.addSuppression("globalThis");
-        suppressDoc.addSuppression("visibility");
+        suppressDoc.recordSuppressions(ImmutableSet.of("checkTypes", "globalThis", "visibility"));
         keyNode.setJSDocInfo(suppressDoc.build());
       }
     }

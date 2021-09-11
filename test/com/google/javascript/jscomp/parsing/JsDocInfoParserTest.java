@@ -2850,6 +2850,81 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testSuppressWithDescription() {
+    String jsDocComment =
+        lines(
+            "@suppress {x,y} Some description.",
+            " * @suppress {z}", // no description
+            "*/");
+    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x", "y"), "Some description.");
+    assertThat(info.getSuppressionsAndTheirDescription()).containsEntry(ImmutableSet.of("z"), "");
+  }
+
+  @Test
+  public void testSuppressWithDescription_multipleLines() {
+    String jsDocComment =
+        lines(
+            "@suppress {x,y} Some description.",
+            " * Spans across lines.",
+            " * @suppress {z}", // no description
+            "*/");
+    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x", "y"), "Some description. Spans across lines.");
+    assertThat(info.getSuppressionsAndTheirDescription()).containsEntry(ImmutableSet.of("z"), "");
+  }
+
+  @Test
+  public void testSuppressWithDescription_multipleLines_withOtherAnnotations() {
+    String jsDocComment =
+        lines(
+            "@author XYZ",
+            " * @suppress {x,y} Some description.",
+            " * Spans across lines.",
+            " * @override",
+            " * @suppress {z}", // no description
+            "*/");
+    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    assertThat(info.getAuthors()).contains("XYZ");
+    assertThat(info.isOverride()).isTrue();
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x", "y"), "Some description. Spans across lines.");
+    assertThat(info.getSuppressionsAndTheirDescription()).containsEntry(ImmutableSet.of("z"), "");
+  }
+
+  // When exact warning is repeated in another @suppress annotation, JSDocInfoParser does not save
+  // the second annotation.
+  @Test
+  public void testSuppressWithDescription_repeatedWarnings1() {
+    String jsDocComment =
+        lines("@suppress {x} Some description.", " * @suppress {x} Another description.", "*/");
+    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
+    assertThat(info.getSuppressionsAndTheirDescription()).hasSize(1);
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x"), "Some description.");
+  }
+
+  // A different @suppress annotation containing a non-repeated warning, we store both annotations.
+  @Test
+  public void testSuppressWithDescription_repeatedWarnings2() {
+    String jsDocComment =
+        lines("@suppress {x} Some description.", " * @suppress {x, y} Another description.", "*/");
+    JSDocInfo info = parse(jsDocComment, true /* parseDocumentation */);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
+    assertThat(info.getSuppressionsAndTheirDescription()).hasSize(2);
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x"), "Some description.");
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsEntry(ImmutableSet.of("x", "y"), "Another description.");
+  }
+
+  @Test
   public void testSuppress2() {
     JSDocInfo info = parse("@suppress {x|y|x|z} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));

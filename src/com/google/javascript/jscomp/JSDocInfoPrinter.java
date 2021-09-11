@@ -21,6 +21,7 @@ import static java.util.Comparator.naturalOrder;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -30,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Prints a JSDocInfo, used for preserving type annotations in ES6 transpilation.
@@ -291,12 +291,23 @@ public final class JSDocInfoPrinter {
       parts.add("@nocollapse");
     }
 
-    Set<String> suppressions = info.getSuppressions();
+    ImmutableMap<ImmutableSet<String>, String> suppressions =
+        info.getSuppressionsAndTheirDescription();
     if (!suppressions.isEmpty()) {
-      // Print suppressions in sorted order to avoid non-deterministic output.
-      String[] arr = suppressions.toArray(new String[0]);
-      Arrays.sort(arr, naturalOrder());
-      parts.add("@suppress {" + Joiner.on(',').join(arr) + "}");
+      // With ImmutableMap, the iteration order will be same as insertion order (i.e. parse order).
+      for (Map.Entry<ImmutableSet<String>, String> suppression : suppressions.entrySet()) {
+        String[] warnings = suppression.getKey().toArray(new String[0]);
+        // Even the warnings inside a suppress annotation are printed in natural order for
+        // consistency
+        Arrays.sort(warnings, naturalOrder());
+        String text = suppression.getValue();
+        StringBuilder sb = new StringBuilder();
+        sb.append("@suppress {").append(Joiner.on(',').join(warnings)).append("}");
+        if (!text.isEmpty()) {
+          sb.append(" ").append(text);
+        }
+        parts.add(sb.toString());
+      }
       multiline = true;
     }
 

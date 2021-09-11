@@ -1286,6 +1286,7 @@ public final class JsDocInfoParser {
   /**
    * Records a marker's description if there is one available and record it in the current marker.
    */
+  // TODO(rishipal): This function is a misnomer as it does not record anything.
   private JsDocToken recordDescription(JsDocToken token) {
     // Find marker's description (if applicable).
     if (jsdocBuilder.shouldParseDocumentation()) {
@@ -1348,9 +1349,18 @@ public final class JsDocInfoParser {
         addParserWarning(Msg.JSDOC_SUPPRESS);
       } else {
         token = next();
-        jsdocBuilder.recordSuppressions(suppressions);
+        // Find the suppressions' description (if applicable).
+        if (jsdocBuilder.shouldParseDocumentation() && token != JsDocToken.ANNOTATION) {
+          ExtractionInfo suppressDescriptionInfo = extractMultilineTextualBlock(token);
+          String suppressDescription = suppressDescriptionInfo.string;
+          jsdocBuilder.recordSuppressions(ImmutableSet.copyOf(suppressions), suppressDescription);
+          token = suppressDescriptionInfo.token;
+        } else if (token != JsDocToken.EOC && token != JsDocToken.EOF) {
+          token = eatUntilEOLIfNotAnnotation();
+          jsdocBuilder.recordSuppressions(suppressions);
+        }
       }
-      return eatUntilEOLIfNotAnnotation();
+      return token;
     }
   }
 

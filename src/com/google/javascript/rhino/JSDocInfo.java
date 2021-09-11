@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -452,7 +453,11 @@ public class JSDocInfo implements Serializable {
   private static final Property<String> DEPRECATION_REASON = new Property<>("deprecationReason");
   private static final Property<String> LICENSE = new Property<>("license");
 
-  private static final Property<ImmutableSet<String>> SUPPRESSIONS = new Property<>("suppressions");
+  // For example, `@suppress {first, second} Some description applying to the set (of both first and
+  // second).`
+  // For example, `@suppress {first} Some description applying to only to first.`
+  private static final Property<ImmutableMap<ImmutableSet<String>, String>> SUPPRESSIONS =
+      new Property<>("suppressions");
   private static final Property<ImmutableSet<String>> MODIFIES = new Property<>("modifies");
   private static final TypeProperty LENDS_NAME = new TypeProperty("lendsName");
   private static final Property<String> CLOSURE_PRIMITIVE_ID = new Property<>("closurePrimitiveId");
@@ -1278,8 +1283,25 @@ public class JSDocInfo implements Serializable {
 
   /** Returns the set of suppressed warnings. */
   public Set<String> getSuppressions() {
-    ImmutableSet<String> suppressions = SUPPRESSIONS.get(this);
-    return suppressions != null ? suppressions : ImmutableSet.of();
+    ImmutableMap<ImmutableSet<String>, String> suppressions = SUPPRESSIONS.get(this);
+    if (suppressions == null) {
+      return ImmutableSet.of();
+    }
+    Set<ImmutableSet<String>> nameSets = suppressions.keySet();
+    Set<String> names = new LinkedHashSet<>();
+    for (Set<String> nameSet : nameSets) {
+      names.addAll(nameSet);
+    }
+    return ImmutableSet.copyOf(names);
+  }
+
+  /**
+   * Returns a map containing key=set of suppressions, and value=the corresponding description for
+   * the set.
+   */
+  public ImmutableMap<ImmutableSet<String>, String> getSuppressionsAndTheirDescription() {
+    ImmutableMap<ImmutableSet<String>, String> suppressions = SUPPRESSIONS.get(this);
+    return suppressions != null ? suppressions : ImmutableMap.of();
   }
 
   /** Returns the set of sideeffect notations. */
@@ -1897,23 +1919,33 @@ public class JSDocInfo implements Serializable {
       return getProp(DEPRECATION_REASON) != null;
     }
 
+    public void recordSuppressions(ImmutableSet<String> suppressions, String description) {
+      populated = true;
+      ImmutableMap.Builder<ImmutableSet<String>, String> mapBuilder = ImmutableMap.builder();
+      ImmutableMap<ImmutableSet<String>, String> current = getProp(SUPPRESSIONS);
+      if (current != null) {
+        if (current.containsKey(suppressions)) {
+          // Exact @suppress warning exists already. Return without recording.
+          return;
+        }
+        mapBuilder.putAll(current);
+      }
+      mapBuilder.put(suppressions, description);
+      ImmutableMap<ImmutableSet<String>, String> suppressionsMap = mapBuilder.build();
+      setProp(SUPPRESSIONS, suppressionsMap);
+    }
+
     /**
      * Records the list of suppressed warnings, possibly adding to the set of already configured
      * warnings.
      */
     public void recordSuppressions(Set<String> suppressions) {
-      populated = true;
-      ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-      ImmutableSet<String> current = getProp(SUPPRESSIONS);
-      if (current != null) {
-        builder.addAll(current);
-      }
-      builder.addAll(suppressions);
-      setProp(SUPPRESSIONS, builder.build());
+      recordSuppressions(ImmutableSet.copyOf(suppressions), "");
     }
 
+    // TODO(rishipal): Delete this method and use record* everywhere.
     public void addSuppression(String suppression) {
-      recordSuppressions(ImmutableSet.of(suppression));
+      recordSuppressions(ImmutableSet.of(suppression), "");
     }
 
     /** Records the list of modifies warnings. */
