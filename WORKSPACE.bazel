@@ -52,8 +52,8 @@ maven_import(
     # https://ant.apache.org/
     group_id ="org.apache.ant",
     artifact_id = "ant",
-    version ="1.9.7",
-    sha256 = "9a5dbe3f5f2cb91854c8682cab80178afa412ab35a5ab718bf39ce01b3435d93",
+    version ="1.10.11",
+    sha256 = "88c0b89bbbaae01e0d9fcae93be792f5abbe3409106f8eee858fdf365dbc0754",
     licenses = ["notice"],
 )
 

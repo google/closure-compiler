@@ -617,7 +617,7 @@ an encoding of structured data.</td>
 
   <tr>
     <td>Version</td>
-    <td>1.9.7</td>
+    <td>1.10.11</td>
   </tr>
 
   <tr>
