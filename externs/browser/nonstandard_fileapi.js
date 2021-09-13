@@ -90,121 +90,41 @@ WebKitBlobBuilder.prototype.append = function(data, endings) {};
 WebKitBlobBuilder.prototype.getBlob = function(contentType) {};
 
 /**
- * @record
- * @see https://dev.w3.org/2009/dap/file-system/file-dir-sys.html#the-flags-dictionary
- */
-function FileSystemFlags() {};
-
-/** @type {(undefined|boolean)} */
-FileSystemFlags.prototype.create;
-
-/** @type {(undefined|boolean)} */
-FileSystemFlags.prototype.exclusive;
-
-/**
  * @see http://www.w3.org/TR/file-system-api/#the-entry-interface
- * @constructor
+ * @typedef {!FileSystemEntry}
  */
-function Entry() {};
+var Entry;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryentry-interface
- * @constructor
- * @extends {Entry}
+ * @typedef {!FileSystemDirectoryEntry}
  */
-function DirectoryEntry() {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-createReader
- * @return {!DirectoryReader}
- */
-DirectoryEntry.prototype.createReader = function() {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-getFile
- * @param {string} path
- * @param {!FileSystemFlags=} options
- * @param {function(!FileEntry)=} successCallback
- * @param {function(!FileError)=} errorCallback
- * @return {undefined}
- */
-DirectoryEntry.prototype.getFile = function(
-    path, options, successCallback, errorCallback) {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-getDirectory
- * @param {string} path
- * @param {!FileSystemFlags=} options
- * @param {function(!DirectoryEntry)=} successCallback
- * @param {function(!FileError)=} errorCallback
- * @return {undefined}
- */
-DirectoryEntry.prototype.getDirectory = function(
-    path, options, successCallback, errorCallback) {};
+var DirectoryEntry;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryEntry-removeRecursively
  * @param {function()} successCallback
- * @param {function(!FileError)=} errorCallback
+ * @param {function(!DOMException)=} errorCallback
  * @return {undefined}
  */
-DirectoryEntry.prototype.removeRecursively = function(
+FileSystemDirectoryEntry.prototype.removeRecursively = function(
     successCallback, errorCallback) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-directoryreader-interface
- * @constructor
+ * @typedef {!FileSystemDirectoryReader}
  */
-function DirectoryReader() {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryReader-readEntries
- * @param {function(!Array<!Entry>)} successCallback
- * @param {function(!FileError)=} errorCallback
- * @return {undefined}
- */
-DirectoryReader.prototype.readEntries = function(
-    successCallback, errorCallback) {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-isFile
- * @type {boolean}
- */
-Entry.prototype.isFile;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-isDirectory
- * @type {boolean}
- */
-Entry.prototype.isDirectory;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-name
- * @type {string}
- */
-Entry.prototype.name;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-fullPath
- * @type {string}
- */
-Entry.prototype.fullPath;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-filesystem
- * @type {!FileSystem}
- */
-Entry.prototype.filesystem;
+var DirectoryReader;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-moveTo
  * @param {!DirectoryEntry} parent
  * @param {string=} newName
  * @param {function(!Entry)=} successCallback
- * @param {function(!FileError)=} errorCallback
+ * @param {function(!DOMException)=} errorCallback
  * @return {undefined}
  */
-Entry.prototype.moveTo = function(
+FileSystemEntry.prototype.moveTo = function(
     parent, newName, successCallback, errorCallback) {};
 
 /**
@@ -212,10 +132,10 @@ Entry.prototype.moveTo = function(
  * @param {!DirectoryEntry} parent
  * @param {string=} newName
  * @param {function(!Entry)=} successCallback
- * @param {function(!FileError)=} errorCallback
+ * @param {function(!DOMException)=} errorCallback
  * @return {undefined}
  */
-Entry.prototype.copyTo = function(
+FileSystemEntry.prototype.copyTo = function(
     parent, newName, successCallback, errorCallback) {};
 
 /**
@@ -223,31 +143,23 @@ Entry.prototype.copyTo = function(
  * @param {string=} mimeType
  * @return {string}
  */
-Entry.prototype.toURL = function(mimeType) {};
+FileSystemEntry.prototype.toURL = function(mimeType) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-remove
  * @param {function()} successCallback
- * @param {function(!FileError)=} errorCallback
+ * @param {function(!DOMException)=} errorCallback
  * @return {undefined}
  */
-Entry.prototype.remove = function(successCallback, errorCallback) {};
+FileSystemEntry.prototype.remove = function(successCallback, errorCallback) {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-Entry-getMetadata
  * @param {function(!Metadata)} successCallback
- * @param {function(!FileError)=} errorCallback
+ * @param {function(!DOMException)=} errorCallback
  * @return {undefined}
  */
-Entry.prototype.getMetadata = function(successCallback, errorCallback) {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-Entry-getParent
- * @param {function(!Entry)} successCallback
- * @param {function(!FileError)=} errorCallback
- * @return {undefined}
- */
-Entry.prototype.getParent = function(successCallback, errorCallback) {};
+FileSystemEntry.prototype.getMetadata = function(successCallback, errorCallback) {};
 
 /**
  * @return {?Entry} The Entry corresponding to this item, or null. Note that
@@ -265,10 +177,9 @@ File.prototype.webkitRelativePath;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#the-fileentry-interface
- * @constructor
- * @extends {Entry}
+ * @typedef {!FileSystemFileEntry}
  */
-function FileEntry() {};
+var FileEntry;
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-FileEntry-createWriter
@@ -276,15 +187,7 @@ function FileEntry() {};
  * @param {function(!FileError)=} errorCallback
  * @return {undefined}
  */
-FileEntry.prototype.createWriter = function(successCallback, errorCallback) {};
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-FileEntry-file
- * @param {function(!File)} successCallback
- * @param {function(!FileError)=} errorCallback
- * @return {undefined}
- */
-FileEntry.prototype.file = function(successCallback, errorCallback) {};
+FileSystemFileEntry.prototype.createWriter = function(successCallback, errorCallback) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#FileErrorInterface
@@ -486,24 +389,6 @@ FileSaver.prototype.onerror;
  * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onwriteend;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#the-filesystem-interface
- * @constructor
- */
-function FileSystem() {}
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-FileSystem-name
- * @type {string}
- */
-FileSystem.prototype.name;
-
-/**
- * @see http://www.w3.org/TR/file-system-api/#widl-FileSystem-root
- * @type {!DirectoryEntry}
- */
-FileSystem.prototype.root;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#idl-def-FileWriter
@@ -1157,3 +1042,25 @@ FileException.PATH_EXISTS_ERR;
  * @type {number}
  */
 FileException.prototype.code;
+
+// The externs generated from typings/filesystem have incorrect callback types,
+// which clash with the callback param definitions here. We can fix them by
+// overriding them:
+/** @typedef {function(!FileSystem)} */
+var FileSystemCallback;
+/** @typedef {function(!Entry)} */
+var EntryCallback;
+/** @typedef {function(!FileEntry)} */
+var FileEntryCallback;
+/** @typedef {function(!DirectoryEntry)} */
+var DirectoryEntryCallback;
+/** @typedef {function(!Array<!Entry>)} */
+var EntriesCallback;
+/** @typedef {function(!Metadata)} */
+var MetadataCallback;
+/** @typedef {function(!FileWriter)} */
+var FileWriterCallback;
+/** @typedef {function()} */
+var VoidCallback;
+/** @typedef {function(!DOMException)} */
+var ErrorCallback;
