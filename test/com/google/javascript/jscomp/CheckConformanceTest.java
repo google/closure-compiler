@@ -629,6 +629,38 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedEnhance() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_ENHANCE\n"
+            + "  value: '{some.banned.namespace}'\n"
+            + "  value: '{another.banned.namespace}'\n"
+            + "  error_message: 'Enhanced namespace is not allowed.'\n"
+            + "}";
+    String violationMessage =
+        "Violation: Enhanced namespace is not allowed.\n" + "The enhanced namespace ";
+
+    String ban1 = lines("/**", " * @enhance {some.banned.namespace}", " */");
+    testWarning(
+        ban1,
+        CheckConformance.CONFORMANCE_VIOLATION,
+        violationMessage + "\"{some.banned.namespace}\"");
+
+    String ban2 = lines("/**", " * @enhance {another.banned.namespace}", " */");
+    testWarning(
+        ban2,
+        CheckConformance.CONFORMANCE_VIOLATION,
+        violationMessage + "\"{another.banned.namespace}\"");
+
+    String allow1 = lines("/**", " * @enhance {some.allowed.namespace}", " */");
+    testNoWarning(allow1);
+
+    String allow2 =
+        lines("/**", " * @fileoverview no enhance annotation should always pass.", " */");
+    testNoWarning(allow2);
+  }
+
+  @Test
   public void testBannedNameCall() {
     configuration =
         "requirement: {\n"

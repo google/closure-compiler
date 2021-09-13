@@ -314,6 +314,7 @@ public class JSDocInfo implements Serializable {
     DEPRECATED,
     INTERFACE,
     EXPORT,
+    ENHANCED_NAMESPACE,
     NOINLINE,
     FILEOVERVIEW,
     IMPLICITCAST,
@@ -475,6 +476,7 @@ public class JSDocInfo implements Serializable {
       new Property<>("fileoverviewDescription");
   private static final Property<String> RETURN_DESCRIPTION = new Property<>("returnDescription");
   private static final Property<String> VERSION = new Property<>("version");
+  private static final Property<String> ENHANCED_NAMESPACE = new Property<>("enhance");
 
   private static final Property<List<String>> AUTHORS = new Property<>("authors");
   private static final Property<List<String>> SEES = new Property<>("sees");
@@ -1357,6 +1359,16 @@ public class JSDocInfo implements Serializable {
     return FILEOVERVIEW_DESCRIPTION.get(this);
   }
 
+  /** Returns whether this has an enhanced namespace. */
+  public boolean hasEnhance() {
+    return checkBit(Bit.ENHANCED_NAMESPACE);
+  }
+
+  /** Returns the enhanced namespace or null if none is specified. */
+  public String getEnhance() {
+    return ENHANCED_NAMESPACE.get(this);
+  }
+
   /** Gets the list of all markers for the documentation in this JSDoc. */
   public Collection<Marker> getMarkers() {
     ArrayList<Marker> markers = MARKERS.get(this);
@@ -1587,7 +1599,8 @@ public class JSDocInfo implements Serializable {
                   & (Bit.FILEOVERVIEW.mask
                       | Bit.EXTERNS.mask
                       | Bit.NOCOMPILE.mask
-                      | Bit.TYPE_SUMMARY.mask))
+                      | Bit.TYPE_SUMMARY.mask
+                      | Bit.ENHANCED_NAMESPACE.mask))
               != 0;
     }
 
@@ -2151,6 +2164,17 @@ public class JSDocInfo implements Serializable {
         return true;
       }
       return populateProp(FILEOVERVIEW_DESCRIPTION, description);
+    }
+
+    /**
+     * Records enhanced namespace.
+     *
+     * @return {@code true} If the enhanced namespace was recorded.
+     */
+    public boolean recordEnhance(String namespace) {
+      setBit(Bit.ENHANCED_NAMESPACE, true);
+      populated = true;
+      return populateProp(ENHANCED_NAMESPACE, namespace);
     }
 
     public boolean recordLicense(String license) {

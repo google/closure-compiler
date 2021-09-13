@@ -1784,6 +1784,50 @@ public final class ConformanceRules {
     }
   }
 
+  /** Checks that file does not include an @enhance annotation for a banned namespace. */
+  public static final class BannedEnhance extends AbstractRule {
+    private final ImmutableSet<String> bannedEnhancedNamespaces;
+
+    public BannedEnhance(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      if (requirement.getValueCount() == 0) {
+        throw new InvalidRequirementSpec("missing value");
+      }
+      this.bannedEnhancedNamespaces = ImmutableSet.copyOf(requirement.getValueList());
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      JSDocInfo docInfo = n.getJSDocInfo();
+
+      if (docInfo == null || !docInfo.hasEnhance()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      for (String banned : this.bannedEnhancedNamespaces) {
+        if (docInfo.getEnhance().equals(banned)) {
+          return new ConformanceResult(
+              ConformanceLevel.VIOLATION, "The enhanced namespace \"" + banned + "\"");
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private static final Precondition IS_SCRIPT_NODE =
+        new Precondition() {
+          @Override
+          public boolean shouldCheck(Node n) {
+            return n.isScript();
+          }
+        };
+
+    @Override
+    public final Precondition getPrecondition() {
+      return IS_SCRIPT_NODE;
+    }
+  }
+
   /**
    * Bans {@code document.createElement} and similar methods with string literal parameter specified
    * in {@code value}, e.g. {@code value: 'script'}. The purpose of banning these is that they don't

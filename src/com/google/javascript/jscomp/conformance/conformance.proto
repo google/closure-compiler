@@ -106,6 +106,10 @@ message Requirement {
     // Forbidden dependency (source or generated files) expressed via regexp.
     BANNED_DEPENDENCY_REGEX = 14;
 
+    // Forbidden namespace used by an @enhance annotation. Ban specific
+    // namespaces from being enhanced in the top level comment of a file.
+    BANNED_ENHANCE = 16;
+
     // A forbidden fully distinguished name. For example:
     //  - A global name like "eval" or "goog"
     //  - A namespaced value or type:  namespace.Banned

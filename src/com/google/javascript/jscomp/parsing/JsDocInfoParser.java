@@ -531,6 +531,14 @@ public final class JsDocInfoParser {
           token = preserveInfo.token;
           return token;
 
+        case ENHANCE:
+          ExtractionInfo enhanceInfo = extractSingleLineBlock();
+          String enhance = enhanceInfo.string;
+          token = enhanceInfo.token;
+
+          jsdocBuilder.recordEnhance(enhance);
+          return token;
+
         case ENUM:
           token = next();
           lineno = stream.getLineno();
