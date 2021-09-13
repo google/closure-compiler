@@ -2745,6 +2745,7 @@ var FontFaceLoadStatus;
 
 /**
  * @typedef {{
+ *   display: (string|undefined),
  *   style: (string|undefined),
  *   weight: (string|undefined),
  *   stretch: (string|undefined),
@@ -2808,7 +2809,37 @@ FontFace.prototype.variant;
 FontFace.prototype.featureSettings;
 
 /**
- * @type {FontFaceLoadStatus}
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-variationsettings
+ */
+FontFace.prototype.variationSettings;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-display
+ */
+FontFace.prototype.display;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-ascentoverride
+ */
+FontFace.prototype.ascentOverride;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-descentoverride
+ */
+FontFace.prototype.descentOverride;
+
+/**
+ * @type {string}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-linegapoverride
+ */
+FontFace.prototype.lineGapOverride;
+
+/**
+ * @type {!FontFaceLoadStatus}
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-status
  */
 FontFace.prototype.status;
@@ -2818,6 +2849,35 @@ FontFace.prototype.status;
  * @see http://dev.w3.org/csswg/css-font-loading/#font-face-load
  */
 FontFace.prototype.load = function() {};
+
+/**
+ * @type {!Promise<!FontFace>}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-loaded
+ */
+FontFace.prototype.loaded;
+
+/**
+ * @typedef {{
+ *   fontfaces: (Array<!FontFace>|undefined)
+ * }}
+ * @see http://dev.w3.org/css-font-loading/#dictdef-fontfacesetloadeventinit
+ */
+var FontFaceSetLoadEventInit;
+
+/**
+ * @constructor
+ * @param {string} type
+ * @param {!FontFaceSetLoadEventInit=} eventInitDict
+ * @extends {Event}
+ * @see https://drafts.csswg.org/css-font-loading/#fontfacesetloadevent
+ */
+function FontFaceSetLoadEvent(type, eventInitDict) {}
+
+/**
+ * @type {!Array<!FontFace>}
+ * @see http://dev.w3.org/css-font-loading/#dom-fontfacesetloadevent-fontfaces
+ */
+FontFaceSetLoadEvent.prototype.fontfaces;
 
 /**
  * Set of possible string values: 'loaded', 'loading'.
