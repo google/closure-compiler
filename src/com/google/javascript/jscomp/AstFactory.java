@@ -131,7 +131,6 @@ final class AstFactory {
     return TypeMode.COLOR.equals(this.typeMode);
   }
 
-  // TODO(b/193800507): delete all calls to this method
   private void assertNotAddingColors() {
     checkState(!this.isAddingColors(), "method not supported for colors");
   }
@@ -304,21 +303,6 @@ final class AstFactory {
   }
 
   /**
-   * Creates a THIS node with the correct type for the given function node.
-   *
-   * @deprecated TODO(b/193800507): delete this method.
-   */
-  @Deprecated
-  Node createThisForFunction(Node functionNode) {
-    assertNotAddingColors();
-    final Node result = IR.thisNode();
-    if (isAddingTypes()) {
-      result.setJSType(getTypeOfThisForFunctionNode(functionNode));
-    }
-    return result;
-  }
-
-  /**
    * Creates a THIS node with the correct type for the given ES6 class node.
    *
    * <p>With the optimization colors type system, we can support inferring the type of this for
@@ -351,21 +335,6 @@ final class AstFactory {
     }
   }
 
-  /**
-   * Creates a SUPER node with the correct type for the given function node.
-   *
-   * @deprecated TODO(b/193800507): delete this method.
-   */
-  @Deprecated
-  Node createSuperForFunction(Node functionNode) {
-    assertNotAddingColors();
-    final Node result = IR.superNode();
-    if (isAddingTypes()) {
-      result.setJSType(getTypeOfSuperForFunctionNode(functionNode));
-    }
-    return result;
-  }
-
   @Nullable
   private JSType getTypeOfThisForFunctionNode(Node functionNode) {
     assertNotAddingColors();
@@ -389,17 +358,6 @@ final class AstFactory {
         return noTypeInformation();
     }
     throw new AssertionError();
-  }
-
-  @Nullable
-  private JSType getTypeOfSuperForFunctionNode(Node functionNode) {
-    assertNotAddingColors();
-    if (isAddingTypes()) {
-      ObjectType thisType = getTypeOfThisForFunctionNode(functionNode).assertObjectType();
-      return checkNotNull(thisType.getSuperClassConstructor().getInstanceType(), thisType);
-    } else {
-      return null; // not adding type information
-    }
   }
 
   private FunctionType getFunctionType(Node functionNode) {
@@ -430,20 +388,6 @@ final class AstFactory {
     final Node result = IR.name(aliasName);
     setJSTypeOrColor(getTypeOfThisForEs6Class(functionNode), result);
     return result;
-  }
-
-  /**
-   * Creates a statement declaring a const alias for "this" to be used in the given function node.
-   *
-   * <p>e.g. `const aliasName = this;`
-   *
-   * @deprecated TODO(b/193800507): delete this method.
-   */
-  @Deprecated
-  Node createThisAliasDeclarationForFunction(String aliasName, Node functionNode) {
-    assertNotAddingColors();
-    return createSingleConstNameDeclaration(
-        aliasName, createThis(type(getTypeOfThisForFunctionNode(functionNode))));
   }
 
   /**
@@ -528,16 +472,6 @@ final class AstFactory {
     return createSingleConstNameDeclaration(aliasName, createArgumentsReference());
   }
 
-  Node createName(String name, JSType type) {
-    return createName(name, type(type));
-  }
-
-  Node createName(String name, JSTypeNative nativeType) {
-    Node result = IR.name(name);
-    setJSTypeOrColor(type(nativeType, StandardColors.UNKNOWN), result);
-    return result;
-  }
-
   Node createName(String name, Type type) {
     Node result = IR.name(name);
     setJSTypeOrColor(type, result);
@@ -584,7 +518,7 @@ final class AstFactory {
    * @deprecated Prefer {@link #createQName(StaticScope, String)}
    */
   @Deprecated
-  Node createQName(TypedScope globalTypedScope, String qname) {
+  Node createQNameFromTypedScope(TypedScope globalTypedScope, String qname) {
     checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
     assertNotAddingColors();
     List<String> nameParts = DOT_SPLITTER.splitToList(qname);
@@ -598,7 +532,7 @@ final class AstFactory {
     }
 
     List<String> otherParts = nameParts.subList(1, nameParts.size());
-    return this.createGetProps(receiver, otherParts);
+    return this.createGetPropsWithoutColors(receiver, otherParts);
   }
 
   /**
@@ -707,12 +641,9 @@ final class AstFactory {
     return result;
   }
 
-  /**
-   * @deprecated TODO(b/193800507): delete this g4 fix method. Use {@link #createGetProp(Node,
-   *     String, Type)} instead.
-   */
+  /** @deprecated Use {@link #createGetProp(Node, String, Type)} instead. */
   @Deprecated
-  Node createGetProp(Node receiver, String propertyName) {
+  Node createGetPropWithoutColor(Node receiver, String propertyName) {
     assertNotAddingColors();
     Node result = IR.getprop(receiver, propertyName);
     if (isAddingTypes()) {
@@ -730,29 +661,15 @@ final class AstFactory {
   /**
    * Creates a tree of nodes representing `receiver.name1.name2.etc`.
    *
-   * @deprecated TODO(b/193800507): delete this method.
+   * @deprecated use individual {@link #createGetProp(Node, String, Type)} calls or {@link
+   *     #createQName(StaticScope, String)} instead.
    */
   @Deprecated
-  Node createGetProps(Node receiver, Iterable<String> propertyNames) {
+  Node createGetPropsWithoutColors(Node receiver, Iterable<String> propertyNames) {
     assertNotAddingColors();
     Node result = receiver;
     for (String propertyName : propertyNames) {
-      result = createGetProp(result, propertyName);
-    }
-    return result;
-  }
-
-  /**
-   * Creates a tree of nodes representing `receiver.name1.name2.etc`.
-   *
-   * @deprecated TODO(b/193800507): delete this method.
-   */
-  @Deprecated
-  Node createGetProps(Node receiver, String firstPropName, String... otherPropNames) {
-    assertNotAddingColors();
-    Node result = createGetProp(receiver, firstPropName);
-    for (String propertyName : otherPropNames) {
-      result = createGetProp(result, propertyName);
+      result = createGetPropWithoutColor(result, propertyName);
     }
     return result;
   }
@@ -906,25 +823,6 @@ final class AstFactory {
     return result;
   }
 
-  /**
-   * @deprecated TODO(b/193800507): delete this method. Use {@link #createCall(Node, Type, Node...)}
-   *     instead.
-   */
-  @Deprecated
-  Node createCall(Node callee, Node... args) {
-    assertNotAddingColors();
-    Node result = NodeUtil.newCallNode(callee, args);
-    if (isAddingTypes()) {
-      FunctionType calleeType = JSType.toMaybeFunctionType(callee.getJSType());
-      // TODO(sdh): this does not handle generic functions - we'd need to unify the argument types.
-      // checkState(calleeType == null || !calleeType.hasAnyTemplateTypes(), calleeType);
-      // TODO(bradfordcsmith): Consider throwing an exception if calleeType is null.
-      JSType returnType = calleeType != null ? calleeType.getReturnType() : unknownType;
-      result.setJSType(returnType);
-    }
-    return result;
-  }
-
   Node createCall(Node callee, Type resultType, Node... args) {
     Node result = NodeUtil.newCallNode(callee, args);
     setJSTypeOrColor(resultType, result);
@@ -991,38 +889,6 @@ final class AstFactory {
     return possibleInstanceColors.isEmpty()
         ? StandardColors.UNKNOWN
         : Color.createUnion(possibleInstanceColors);
-  }
-
-  /** @deprecated TODO(b/193800507): delete this method. */
-  @Deprecated
-  Node createObjectGetPrototypeOfCall(StaticScope scope, Node argObjectNode) {
-    assertNotAddingColors();
-    Node objectGetPrototypeOf = createQName(scope, "Object.getPrototypeOf");
-    Node result = createCall(objectGetPrototypeOf, argObjectNode);
-    if (isAddingTypes()) {
-      ObjectType typeOfArgObject = argObjectNode.getJSTypeRequired().assertObjectType();
-      JSType returnedType = getPrototypeObjectType(typeOfArgObject);
-      result.setJSType(returnedType);
-
-      // Return type of the function needs to match that of the entire expression. getPrototypeOf
-      // normally returns !Object.
-      objectGetPrototypeOf.setJSType(
-          registry.createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE)));
-    }
-    return result;
-  }
-
-  ObjectType getPrototypeObjectType(ObjectType objectType) {
-    assertNotAddingColors();
-    checkNotNull(objectType);
-    if (objectType.isUnknownType()) {
-      // Calling getImplicitPrototype() on the unknown type returns `null`, but we want
-      // the prototype of an unknown type to also be unknown.
-      // TODO(bradfordcsmith): Can we fix this behavior of the unknown type?
-      return objectType;
-    } else {
-      return checkNotNull(objectType.getImplicitPrototype(), "null prototype: %s", objectType);
-    }
   }
 
   /**
@@ -1115,22 +981,6 @@ final class AstFactory {
     Node result = createEmptyFunction(type);
     result.setIsGeneratorFunction(true);
     return result;
-  }
-
-  /**
-   * Creates a function `function name(paramList) { body }`
-   *
-   * @param name STRING node - empty string if no name
-   * @param paramList PARAM_LIST node
-   * @param body BLOCK node
-   * @param type type to apply to the function itself
-   * @deprecated TODO(b/193800507): delete this method. Use {@link #createFunction(String, Node,
-   *     Node, Type)} instead.
-   */
-  @Deprecated
-  Node createFunction(String name, Node paramList, Node body, JSType type) {
-    assertNotAddingColors();
-    return createFunction(name, paramList, body, type(type));
   }
 
   /**

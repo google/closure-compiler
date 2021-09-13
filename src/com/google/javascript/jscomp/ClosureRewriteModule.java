@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
@@ -35,7 +36,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -780,8 +780,7 @@ final class ClosureRewriteModule implements CompilerPass {
             .filter((lhs) -> !isNameInGlobalScope(lhs.getString()))
             .map(
                 (lhs) ->
-                    IR.var(astFactory.createName(lhs.getString(), JSTypeNative.UNKNOWN_TYPE))
-                        .srcrefTree(lhs))
+                    IR.var(astFactory.createNameWithUnknownType(lhs.getString())).srcrefTree(lhs))
             .collect(toImmutableList());
 
     if (vars.isEmpty()) {
@@ -822,7 +821,7 @@ final class ClosureRewriteModule implements CompilerPass {
         Node rhs = key.removeFirstChild();
         Node lhs =
             astFactory
-                .createGetProp(astFactory.createName("exports", n.getJSType()), exportName)
+                .createGetProp(astFactory.createName("exports", type(n)), exportName, type(rhs))
                 .srcrefTree(key);
         Node newExport =
             IR.exprResult(astFactory.createAssign(lhs, rhs).srcref(key).setJSDocInfo(jsdoc))
@@ -1145,7 +1144,7 @@ final class ClosureRewriteModule implements CompilerPass {
           Node binaryNamespaceName =
               astFactory.createName(
                   rewriteState.getBinaryNamespace(namespaceId),
-                  rewriteState.getGoogModuleNamespaceType(namespaceId));
+                  type(rewriteState.getGoogModuleNamespaceType(namespaceId)));
           binaryNamespaceName.setOriginalName(namespaceId);
           call.replaceWith(binaryNamespaceName);
           compiler.reportChangeToEnclosingScope(binaryNamespaceName);
@@ -1212,7 +1211,9 @@ final class ClosureRewriteModule implements CompilerPass {
     if (exportedNamespace != null) {
       compiler.reportChangeToEnclosingScope(call);
       Node exportedNamespaceName =
-          this.astFactory.createQName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
+          this.astFactory
+              .createQNameFromTypedScope(this.globalTypedScope, exportedNamespace)
+              .srcrefTree(call);
       exportedNamespaceName.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
       exportedNamespaceName.setOriginalName(namespaceId);
       call.replaceWith(exportedNamespaceName);
@@ -1417,8 +1418,7 @@ final class ClosureRewriteModule implements CompilerPass {
     if (!currentScript.declareLegacyNamespace && currentScript.defaultExportLocalName != null) {
       assignNode.getParent().detach();
 
-      Node binaryNamespaceName =
-          astFactory.createName(currentScript.getBinaryNamespace(), n.getJSType());
+      Node binaryNamespaceName = astFactory.createName(currentScript.getBinaryNamespace(), type(n));
       this.declareGlobalVariable(binaryNamespaceName, t);
       return;
     }
@@ -1436,8 +1436,7 @@ final class ClosureRewriteModule implements CompilerPass {
     } else {
       rhs.detach();
       Node exprResultNode = assignNode.getParent();
-      Node binaryNamespaceName =
-          astFactory.createName(currentScript.getBinaryNamespace(), n.getJSType());
+      Node binaryNamespaceName = astFactory.createName(currentScript.getBinaryNamespace(), type(n));
       binaryNamespaceName.setOriginalName("exports");
       this.declareGlobalVariable(binaryNamespaceName, t);
 
@@ -1530,7 +1529,7 @@ final class ClosureRewriteModule implements CompilerPass {
     }
 
     String binaryNamespaceString = currentScript.getBinaryNamespace();
-    JSType moduleType = currentScript.rootNode.getJSType();
+    AstFactory.Type moduleType = type(currentScript.rootNode);
     Node binaryNamespaceName = astFactory.createName(binaryNamespaceString, moduleType);
     binaryNamespaceName.setOriginalName(currentScript.namespaceId);
     this.declareGlobalVariable(binaryNamespaceName, t);
@@ -1691,7 +1690,9 @@ final class ClosureRewriteModule implements CompilerPass {
     // name.
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
-        this.astFactory.createQName(this.globalTypedScope, newString).srcrefTree(nameNode);
+        this.astFactory
+            .createQNameFromTypedScope(this.globalTypedScope, newString)
+            .srcrefTree(nameNode);
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
     if (replaced) {

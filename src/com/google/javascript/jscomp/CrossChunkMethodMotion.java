@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.ClassMemberFunction;
@@ -85,7 +86,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
         new AnalyzePrototypeProperties(
             compiler, moduleGraph, canModifyExterns, false /* anchorUnusedVars */, noStubFunctions);
     this.noStubFunctions = noStubFunctions;
-    this.astFactory = compiler.createAstFactoryWithoutTypes();
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -236,7 +237,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       // Prepend definition to new chunk
       // Foo.prototype.propName = function() {};
       Node ownerDotPrototypeDotPropName =
-          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName);
+          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName, type(functionNode));
       functionNode.detach();
       Node definitionStatement =
           astFactory
@@ -254,7 +255,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       // Prepend definition to new chunk
       // Foo.prototype.propName = function() {};
       Node ownerDotPrototypeDotPropName =
-          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName);
+          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName, type(functionNode));
       Node unstubCall = createUnstubCall(functionNode, stubId);
       Node definitionStatement =
           astFactory
@@ -348,7 +349,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       // Prepend definition to new chunk
       // Foo.prototype.propName = function() {};
       Node ownerDotPrototypeDotPropName =
-          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName);
+          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName, type(functionNode));
       Node definitionStatement =
           astFactory
               .createAssignStatement(ownerDotPrototypeDotPropName, functionNode.detach())
@@ -365,7 +366,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
       // Prepend definition to new chunk
       // Foo.prototype.propName = function() {};
       Node ownerDotPrototypeDotPropName =
-          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName);
+          astFactory.createGetProp(ownerDotPrototypeNode.cloneTree(), propName, type(functionNode));
       Node unstubCall = createUnstubCall(functionNode.detach(), stubId);
       Node definitionStatement =
           astFactory
@@ -388,7 +389,9 @@ public class CrossChunkMethodMotion implements CompilerPass {
         .createCall(
             // We can't look up the type of the stub creating method, because we add its
             // definition after type checking.
-            astFactory.createNameWithUnknownType(STUB_METHOD_NAME), astFactory.createNumber(stubId))
+            astFactory.createNameWithUnknownType(STUB_METHOD_NAME),
+            type(originalDefinition),
+            astFactory.createNumber(stubId))
         .srcrefTreeIfMissing(originalDefinition);
   }
 
@@ -405,6 +408,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
             // We can't look up the type of the stub creating method, because we add its
             // definition after type checking.
             astFactory.createNameWithUnknownType(UNSTUB_METHOD_NAME),
+            type(functionNode),
             astFactory.createNumber(stubId),
             functionNode)
         .srcrefTreeIfMissing(functionNode);
@@ -480,12 +484,12 @@ public class CrossChunkMethodMotion implements CompilerPass {
     compiler.reportChangeToEnclosingScope(classMembers);
 
     // ClassName.prototype.propertyName = function() {};
-    Node classNameDotPrototypeDotPropName =
-        astFactory.createGetProps(
-            astFactory.createName(className, classNode.getJSType()),
-            "prototype",
-            methodDefinition.getString());
     Node functionNode = checkNotNull(methodDefinition.getOnlyChild());
+    Node classNameDotPrototypeDotPropName =
+        astFactory.createGetProp(
+            astFactory.createPrototypeAccess(astFactory.createName(className, type(classNode))),
+            methodDefinition.getString(),
+            type(functionNode));
     functionNode.detach();
     Node definitionStatementNode =
         astFactory
@@ -508,10 +512,10 @@ public class CrossChunkMethodMotion implements CompilerPass {
     // Put a stub definition after the class
     // ClassName.prototype.propertyName = JSCompiler_stubMethod(id);
     Node classNameDotPrototypeDotPropName =
-        astFactory.createGetProps(
-            astFactory.createName(className, classNode.getJSType()),
-            "prototype",
-            methodDefinition.getString());
+        astFactory.createGetProp(
+            astFactory.createPrototypeAccess(astFactory.createName(className, type(classNode))),
+            methodDefinition.getString(),
+            type(methodDefinition));
     Node stubCall = createStubCall(methodDefinition, stubId);
     Node stubDefinitionStatement =
         astFactory

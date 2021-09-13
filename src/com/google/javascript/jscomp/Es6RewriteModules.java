@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
@@ -332,7 +333,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
             n.replaceWith(
                 astFactory
                     .createName(
-                        ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), n.getJSType())
+                        ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), type(n))
                     .srcrefTree(n));
             t.reportCodeChange();
           }
@@ -352,7 +353,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
             n.replaceWith(
                 astFactory
                     .createName(
-                        ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), n.getJSType())
+                        ModuleRenaming.getGlobalName(moduleMetadata, name).getRoot(), type(n))
                     .srcrefTree(n));
           }
         }
@@ -553,7 +554,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   private void visitScript(NodeTraversal t, Node script) {
     final Node moduleBody = script.getFirstChild();
     // TypedScopeCreator sets the module object type on the MODULE_BODY during type checking.
-    final AstFactory.Type moduleObjectType = AstFactory.type(moduleBody);
+    final AstFactory.Type moduleObjectType = type(moduleBody);
     inlineModuleToGlobalScope(moduleBody);
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
@@ -631,7 +632,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       String boundVariableName = boundVariableQualifiedName.getRoot();
 
       Node getProp =
-          astFactory.createGetProp(
+          astFactory.createGetPropWithoutColor(
               astFactory.createName(moduleName, moduleObjectType), exportedName);
       getProp.putBooleanProp(Node.MODULE_EXPORT, true);
 
@@ -649,7 +650,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         Node exprResult = astFactory.exprResult(getProp).srcrefTreeIfMissing(nodeForSourceInfo);
         script.addChildToBack(exprResult);
       } else if (mutated) {
-        final Node globalExportName = astFactory.createName(boundVariableName, getProp.getJSType());
+        final Node globalExportName = astFactory.createName(boundVariableName, type(getProp));
         addGetterExport(script, nodeForSourceInfo, moduleObject, exportedName, globalExportName);
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.GETTER, compiler);
       } else {
@@ -657,7 +658,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         // exports.foo = foo;
         Node assign =
             astFactory.createAssign(
-                getProp, astFactory.createName(boundVariableName, getProp.getJSType()));
+                getProp, astFactory.createName(boundVariableName, type(getProp)));
         // TODO(b/144593112): Stop adding JSDoc when this pass moves to always be after typechecking
         JSDocInfo.Builder builder = JSDocInfo.builder().parseDocumentation();
         builder.recordConstancy();
@@ -1005,7 +1006,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         // Because this pass does not update the global scope with injected names, t.getScope()
         // will not contain a declaration for this global name. Fortunately, we already have the
         // JSType on the existing node to pass to AstFactory.
-        newNode = astFactory.createName(globalName.getRoot(), n.getJSType());
+        newNode = astFactory.createName(globalName.getRoot(), type(n));
       }
 
       // For kythe: the new node only represents the last name it replaced, not all the names.

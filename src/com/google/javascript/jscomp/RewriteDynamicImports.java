@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.DYNAMIC_IMPORT_CALLBACK_FN;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
 
@@ -195,7 +196,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     final JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node promiseDotResolve =
         astFactory.createQName(compiler.getTranspilationNamespace(), "Promise.resolve");
-    final Node promiseResolveCall = astFactory.createCall(promiseDotResolve);
+    final Node promiseResolveCall = astFactory.createCall(promiseDotResolve, type(dynamicImport));
     final boolean isExpressionUsed = NodeUtil.isExpressionResultUsed(dynamicImport);
     if (isExpressionUsed) {
       JSType moduleNamespaceType;
@@ -306,12 +307,15 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       Node wrappingFunction =
           astFactory.createName(
               DYNAMIC_IMPORT_CALLBACK_FN,
-              registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType()));
-      thenArgument = astFactory.createCall(wrappingFunction, callbackFn);
+              type(registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType())));
+      thenArgument = astFactory.createCall(wrappingFunction, type(callbackFn), callbackFn);
       wrappedDynamicImportCallback = true;
     }
     final Node importThenCall =
-        astFactory.createCall(astFactory.createGetProp(dynamicImport, "then"), thenArgument);
+        astFactory.createCall(
+            astFactory.createGetPropWithUnknownType(dynamicImport, "then"),
+            type(dynamicImport),
+            thenArgument);
     importThenCall.srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
       importThenCall.copyTypeFrom(dynamicImport);
@@ -343,7 +347,9 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
     aliasNode.setOriginalName("import");
     final Node moduleSpecifier = dynamicImport.removeFirstChild();
     Node importAliasCall =
-        astFactory.createCall(aliasNode, moduleSpecifier).srcrefTreeIfMissing(dynamicImport);
+        astFactory
+            .createCall(aliasNode, type(dynamicImport), moduleSpecifier)
+            .srcrefTreeIfMissing(dynamicImport);
     if (dynamicImport.getJSType() != null) {
       importAliasCall.copyTypeFrom(dynamicImport);
     }
@@ -369,7 +375,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
             DYNAMIC_IMPORT_CALLBACK_FN,
             astFactory.createParamList("importCallback"),
             astFactory.createBlock(),
-            registry.createFunctionType(templateT, templateT));
+            type(registry.createFunctionType(templateT, templateT)));
 
     Node externsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     wrappingFunctionDefinition.srcrefTree(externsRoot);
@@ -411,7 +417,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                 alias,
                 astFactory.createParamList("specifier"),
                 astFactory.createBlock(),
-                registry.createFunctionType(promiseTemplatizedType, stringType));
+                type(registry.createFunctionType(promiseTemplatizedType, stringType)));
         aliasNode.srcrefTree(externsRoot);
         externsRoot.addChildToBack(aliasNode);
       } else {
@@ -434,7 +440,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
         Node qName = aliasRootNode.getFirstChild().cloneNode();
         aliasNameParts.next(); // skip over root name
         while (aliasNameParts.hasNext()) {
-          qName = astFactory.createGetProp(qName.cloneTree(), aliasNameParts.next());
+          qName = astFactory.createGetPropWithUnknownType(qName.cloneTree(), aliasNameParts.next());
           Node assignedValue;
           if (!aliasNameParts.hasNext()) {
             assignedValue =
@@ -442,7 +448,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                     "",
                     astFactory.createParamList("specifier"),
                     astFactory.createBlock(),
-                    registry.createFunctionType(promiseTemplatizedType, stringType));
+                    type(registry.createFunctionType(promiseTemplatizedType, stringType)));
           } else {
             assignedValue = astFactory.createObjectLit();
           }

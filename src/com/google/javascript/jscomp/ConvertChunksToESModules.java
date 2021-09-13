@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -310,14 +309,13 @@ final class ConvertChunksToESModules implements CompilerPass {
       }
       Node callbackFn = NodeUtil.getArgumentForCallOrNew(dynamicImportCallback, 0);
       Node callbackParamList = NodeUtil.getFunctionParameters(callbackFn);
-      Node importNamespaceParam =
-          astFactory.createName("$", JSTypeNative.UNKNOWN_TYPE).srcref(moduleNamespace);
+      Node importNamespaceParam = astFactory.createNameWithUnknownType("$").srcref(moduleNamespace);
       callbackParamList.addChildToFront(importNamespaceParam);
       compiler.reportChangeToEnclosingScope(importNamespaceParam);
 
       Node namespaceGetprop =
-          astFactory.createGetProp(
-              astFactory.createName("$", JSTypeNative.UNKNOWN_TYPE).srcref(moduleNamespace),
+          astFactory.createGetPropWithUnknownType(
+              astFactory.createNameWithUnknownType("$").srcref(moduleNamespace),
               moduleNamespace.getString());
 
       moduleNamespace.replaceWith(namespaceGetprop);

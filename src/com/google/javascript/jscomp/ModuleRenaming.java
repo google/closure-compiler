@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -171,11 +172,12 @@ final class ModuleRenaming {
 
     /** Creates a GETPROP chain with type information representing this name */
     Node toQname(AstFactory astFactory) {
-      Node rootName = astFactory.createName(this.aliasName().getRoot(), this.rootNameType());
+      Node rootName = astFactory.createName(this.aliasName().getRoot(), type(this.rootNameType()));
       if (this.aliasName().isSimple()) {
         return rootName;
       }
-      return astFactory.createGetProps(rootName, Iterables.skip(this.aliasName().components(), 1));
+      return astFactory.createGetPropsWithoutColors(
+          rootName, Iterables.skip(this.aliasName().components(), 1));
     }
 
     /**
