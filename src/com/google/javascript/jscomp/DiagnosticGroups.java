@@ -68,7 +68,6 @@ public class DiagnosticGroups {
       ImmutableSet.of(
           "reportUnknownTypes",
           "analyzerChecks",
-          "analyzerChecksInternal",
           "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
@@ -620,14 +619,6 @@ public class DiagnosticGroups {
           ImplicitNullabilityCheck.IMPLICITLY_NONNULL_JSDOC,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE);
-
-  // TODO(b/198447833): delete after cleaning up rules_closure usages
-  /** @deprecated use ANALYZER_CHECKS instead */
-  @Deprecated
-  static final DiagnosticGroup ANALYZER_CHECKS_INTERNAL =
-      DiagnosticGroups.registerGroup(
-          "analyzerChecksInternal", // undocumented
-          ANALYZER_CHECKS);
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
       DiagnosticGroups.registerGroup(
