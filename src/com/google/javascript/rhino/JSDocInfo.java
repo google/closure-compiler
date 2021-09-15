@@ -1840,7 +1840,7 @@ public class JSDocInfo implements Serializable {
     }
 
     /** Adds an author to the current information. */
-    public boolean addAuthor(String author) {
+    public boolean recordAuthor(String author) {
       populated = true;
       if (shouldParseDocumentation()) {
         getPropWithDefault(AUTHORS, ArrayList::new).add(author);
@@ -1850,7 +1850,7 @@ public class JSDocInfo implements Serializable {
     }
 
     /** Adds a reference ("@see") to the current information. */
-    public boolean addReference(String reference) {
+    public boolean recordReference(String reference) {
       populated = true;
       if (shouldParseDocumentation()) {
         getPropWithDefault(SEES, ArrayList::new).add(reference);
@@ -1956,8 +1956,7 @@ public class JSDocInfo implements Serializable {
       recordSuppressions(ImmutableSet.copyOf(suppressions), "");
     }
 
-    // TODO(rishipal): Delete this method and use record* everywhere.
-    public void addSuppression(String suppression) {
+    public void recordSuppression(String suppression) {
       recordSuppressions(ImmutableSet.of(suppression), "");
     }
 

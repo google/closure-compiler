@@ -409,7 +409,7 @@ public final class JsDocInfoParser {
             if (author.isEmpty()) {
               addParserWarning(Msg.JSDOC_AUTHORMISSING);
             } else {
-              jsdocBuilder.addAuthor(author);
+              jsdocBuilder.recordAuthor(author);
             }
             token = authorInfo.token;
           } else {
@@ -950,7 +950,7 @@ public final class JsDocInfoParser {
             if (reference.isEmpty()) {
               addParserWarning(Msg.JSDOC_SEEMISSING);
             } else {
-              jsdocBuilder.addReference(reference);
+              jsdocBuilder.recordReference(reference);
             }
 
             token = referenceInfo.token;

@@ -905,7 +905,7 @@ final class PolymerClassRewriter {
 
         // Uses of private members that come from behaviors are not recognized correctly,
         // so just suppress that warning.
-        info.addSuppression("unusedPrivateMembers");
+        info.recordSuppression("unusedPrivateMembers");
 
         // If the function in the behavior is @protected, switch it to @public so that
         // we don't get a visibility warning. This is a bit of a hack but easier than

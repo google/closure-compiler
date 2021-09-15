@@ -126,7 +126,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
 
     JSDocInfo.Builder jsdoc = JSDocInfo.builder();
     jsdoc.recordFileOverview("Suppresses undefined var goog error");
-    jsdoc.addSuppression("undefinedVars");
+    jsdoc.recordSuppression("undefinedVars");
     n.setJSDocInfo(jsdoc.build());
 
     Node jsonObject = n.getFirstFirstChild().detach();

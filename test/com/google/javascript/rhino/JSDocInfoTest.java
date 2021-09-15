@@ -652,7 +652,7 @@ public class JSDocInfoTest {
     JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.parseDocumentation();
     builder.recordSuppressions(ImmutableSet.of("sam", "bob"));
-    builder.addSuppression("fred");
+    builder.recordSuppression("fred");
     JSDocInfo info = builder.build();
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("bob", "sam", "fred"));
   }
