@@ -126,6 +126,11 @@ IDBFactory.prototype.deleteDatabase = function(name) {};
  */
 IDBFactory.prototype.cmp = function(first, second) {};
 
+/**
+ * @return {!Promise<!Array<!IDBDatabaseInfo>>}
+ */
+IDBFactory.prototype.databases = function() {};
+
 
 /**
  * @constructor
@@ -721,3 +726,20 @@ IDBVersionChangeEvent.prototype.oldVersion;
  * @const {?number}
  */
 IDBVersionChangeEvent.prototype.newVersion;
+
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/IndexedDB/#dictdef-idbdatabaseinfo
+ */
+function IDBDatabaseInfo() {}
+
+/**
+ * @type {string|undefined}
+ */
+IDBDatabaseInfo.prototype.name;
+
+/**
+ * @type {number|undefined}
+ */
+IDBDatabaseInfo.prototype.version;
