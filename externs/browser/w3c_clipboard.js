@@ -26,9 +26,20 @@
 function Clipboard() {}
 
 /**
+ * @return {!Promise<!Array<!ClipboardItem>>}
+ */
+Clipboard.prototype.read = function() {};
+
+/**
  * @return {!Promise<string>}
  */
 Clipboard.prototype.readText = function() {};
+
+/**
+ * @param {!Array<!ClipboardItem>} data
+ * @return {!Promise<void>}
+ */
+Clipboard.prototype.write = function(data) {};
 
 /**
  * @param {string} text
@@ -38,3 +49,26 @@ Clipboard.prototype.writeText = function(text) {};
 
 /** @const {!Clipboard} */
 Navigator.prototype.clipboard;
+
+/**
+ * @constructor
+ * @param {!Object<string, (!string|!Blob|!Promise<!string>|!Promise<!Blob>)>}
+ *     items
+ * @param {ClipboardItemOptions=} options
+ */
+function ClipboardItem(items, options) {}
+
+/** @type {!Array<!string>} */
+ClipboardItem.prototype.types;
+
+/**
+ * @param {string} type
+ * @return {!Promise<!Blob>}
+ */
+ClipboardItem.prototype.getType = function(type) {};
+
+/** @record */
+function ClipboardItemOptions() {}
+
+/** @type {string|undefined} */
+ClipboardItemOptions.prototype.presentationStyle;
