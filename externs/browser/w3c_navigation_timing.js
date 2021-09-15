@@ -22,6 +22,7 @@
  * @see http://w3c-test.org/webperf/specs/ResourceTiming
  * @see http://www.w3.org/TR/performance-timeline
  * @see http://www.w3.org/TR/user-timing/
+ * @see https://w3c.github.io/server-timing/
  *
  * @externs
  */
@@ -85,6 +86,16 @@ PerformanceResourceTiming.prototype.decodedBodySize;
 /** @type {number|undefined} */
 PerformanceResourceTiming.prototype.workerStart;
 /** @type {string} */ PerformanceResourceTiming.prototype.nextHopProtocol;
+/** @type {!Array<!PerformanceServerTiming>} */ PerformanceResourceTiming.prototype.serverTiming;
+
+/**
+ * https://w3c.github.io/server-timing/#dom-performanceservertiming
+ * @constructor
+ */
+function PerformanceServerTiming() {}
+/** @type {string} */ PerformanceServerTiming.prototype.name;
+/** @type {number} */ PerformanceServerTiming.prototype.duration;
+/** @type {string} */ PerformanceServerTiming.prototype.description;
 
 /**
  * Possible values are 'navigate', 'reload', 'back_forward', and 'prerender'.
