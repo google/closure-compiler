@@ -5821,3 +5821,35 @@ SecurityPolicyViolationEventInit.prototype.lineNumber;
 
 /** @type {undefined|number} */
 SecurityPolicyViolationEventInit.prototype.columnNumber;
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#formdataevent
+ *
+ * @constructor
+ * @extends {Event}
+ *
+ * @param {string} type
+ * @param {FormDataEventInit=} eventInitDict
+ */
+function FormDataEvent(type, eventInitDict) {}
+
+/** @const {!FormData} */
+FormDataEvent.prototype.formData;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#formdataeventinit
+ *
+ * @record
+ * @extends {EventInit}
+ */
+function FormDataEventInit() {}
+
+/** @type {!FormData} */
+FormDataEventInit.prototype.formData;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/indices.html#event-formdata
+ * @type {?function(FormDataEvent)}
+ */
+HTMLFormElement.prototype.onformdata;
