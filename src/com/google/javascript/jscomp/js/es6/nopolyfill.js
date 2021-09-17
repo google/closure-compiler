@@ -27,6 +27,11 @@
 // all of the hooks necessary to build it.
 $jscomp.polyfill('Proxy', null, 'es6', 'es6');
 
+// TODO(b/137574743): Since we added transpilation support for the `.raw`
+// property on the first argument to a tagged template literal call a few years
+// ago, we could write a polyfill for this now.
+$jscomp.polyfill('String.raw', null, 'es6', 'es6');
+
 // Polyfilling this in infeasible, since it would require including a large
 // table of unicode information in the polyfill.
 $jscomp.polyfill('String.prototype.normalize', null, 'es6', 'es6');
