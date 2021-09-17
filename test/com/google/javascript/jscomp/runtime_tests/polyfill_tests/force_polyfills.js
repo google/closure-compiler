@@ -82,6 +82,7 @@ delete String.prototype.repeat;
 delete String.prototype.startsWith;
 delete String.prototype.trimStart;
 delete String.prototype.trimEnd;
+delete String.raw;
 
 delete Symbol;
 
