@@ -487,9 +487,6 @@ public class CompilerOptions implements Serializable {
   /** Collapses anonymous function declarations into named function declarations */
   public boolean collapseAnonymousFunctions;
 
-  /** @deprecated Please use aliasStringsMode instead. */
-  @Deprecated public boolean aliasAllStrings;
-
   /** Aliases string literals to global instances, to reduce code size. */
   private AliasStringsMode aliasStringsMode;
 
@@ -1320,7 +1317,6 @@ public class CompilerOptions implements Serializable {
     removeUnusedLocalVars = false;
     collapseVariableDeclarations = false;
     collapseAnonymousFunctions = false;
-    aliasAllStrings = false;
     aliasStringsMode = AliasStringsMode.NONE;
     outputJsStringUsage = false;
     convertToDottedProperties = false;
@@ -2102,12 +2098,6 @@ public class CompilerOptions implements Serializable {
     this.collapseAnonymousFunctions = enabled;
   }
 
-  /** @deprecated Please use setAliasStringsMode instead. */
-  @Deprecated
-  public final void setAliasAllStrings(boolean aliasAllStrings) {
-    setAliasStringsMode(aliasAllStrings ? AliasStringsMode.ALL : AliasStringsMode.NONE);
-  }
-
   public void setAliasStringsMode(AliasStringsMode aliasStringsMode) {
     this.aliasStringsMode = aliasStringsMode;
   }
@@ -2726,7 +2716,6 @@ public class CompilerOptions implements Serializable {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
-        .add("aliasAllStrings", aliasAllStrings)
         .add("aliasStringsMode", getAliasStringsMode())
         .add("aliasHandler", getAliasTransformationHandler())
         .add("ambiguateProperties", ambiguateProperties)
