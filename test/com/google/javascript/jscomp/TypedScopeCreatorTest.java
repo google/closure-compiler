@@ -35,7 +35,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.JsFileLineParser;
@@ -2889,7 +2888,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
     ObjectType fooProto = fooClass.getPrototype();
-    List<FunctionType.Parameter> params = ImmutableList.copyOf(fooClass.getParameters());
+    List<FunctionType.Parameter> params = fooClass.getParameters();
 
     // Test class typing.
     assertThat(fooClass.isConstructor()).isTrue();

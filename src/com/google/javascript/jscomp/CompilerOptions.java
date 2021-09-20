@@ -2318,7 +2318,7 @@ public class CompilerOptions implements Serializable {
   /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
   @Deprecated
   public ImmutableSet<String> getStripTypes() {
-    return ImmutableSet.copyOf(this.stripTypes);
+    return this.stripTypes;
   }
 
   /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */

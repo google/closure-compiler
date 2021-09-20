@@ -710,8 +710,7 @@ public final class FunctionArgumentInjectorTest {
     Node call = findCall(n, fnName);
     assertThat(call).isNotNull();
     ImmutableMap<String, Node> args =
-        ImmutableMap.copyOf(
-            functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier()));
+        functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
 
     Set<String> actualTemps = new HashSet<>();
     functionArgumentInjector.maybeAddTempsForCallArguments(

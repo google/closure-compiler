@@ -41,11 +41,7 @@ public class TranspilationException extends RuntimeException {
       SourceExcerptProvider source,
       ImmutableList<JSError> errors,
       ImmutableList<JSError> warnings) {
-    this(
-        ImmutableList.copyOf(errors),
-        ImmutableList.copyOf(warnings),
-        format(source, errors, warnings),
-        null);
+    this(errors, warnings, format(source, errors, warnings), null);
   }
 
   private TranspilationException(TranspilationException root, Exception cause) {

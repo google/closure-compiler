@@ -633,8 +633,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           file.getName(),
           (f) -> {
             ScriptNodeDeserializer deserializer =
-                new ScriptNodeDeserializer(
-                    lazyAst, stringShard, colorShard, ImmutableList.copyOf(fileShard));
+                new ScriptNodeDeserializer(lazyAst, stringShard, colorShard, fileShard);
             return new JsAst(file, deserializer::deserializeNew);
           });
     }

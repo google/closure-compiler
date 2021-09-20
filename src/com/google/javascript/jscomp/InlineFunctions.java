@@ -137,7 +137,7 @@ class InlineFunctions implements CompilerPass {
     // using function inlining.
     //
     ImmutableSet<String> fnNames = ImmutableSet.copyOf(fns.keySet());
-    injector.setKnownConstantFunctions(ImmutableSet.copyOf(fnNames));
+    injector.setKnownConstantFunctions(fnNames);
 
     trimCandidatesUsingOnCost();
     if (fns.isEmpty()) {

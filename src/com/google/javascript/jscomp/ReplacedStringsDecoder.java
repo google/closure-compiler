@@ -41,7 +41,7 @@ public final class ReplacedStringsDecoder {
 
   public ReplacedStringsDecoder(VariableMap variableMap) {
     // VariableMap is not an immutable type, so we extract the map instead of directly using it.
-    this.originalToNewNameMap = ImmutableMap.copyOf(variableMap.getOriginalNameToNewNameMap());
+    this.originalToNewNameMap = variableMap.getOriginalNameToNewNameMap();
   }
 
   /**

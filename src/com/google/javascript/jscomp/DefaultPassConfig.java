@@ -2744,9 +2744,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.CHECK_CONFORMANCE)
           .setInternalFactory(
-              (compiler) ->
-                  new CheckConformance(
-                      compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
+              (compiler) -> new CheckConformance(compiler, options.getConformanceConfigs()))
           .setFeatureSetForChecks()
           .build();
 
