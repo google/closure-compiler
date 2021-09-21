@@ -3368,3 +3368,31 @@ ANGLE_instanced_arrays.prototype.drawElementsInstancedANGLE = function(
 ANGLE_instanced_arrays.prototype.vertexAttribDivisorANGLE = function(
     index, divisor) {};
 
+
+/**
+ * @see https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/
+ * @interface
+ */
+function EXT_color_buffer_half_float() {}
+
+/** @const {number} */
+EXT_color_buffer_half_float.prototype.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT;
+
+/** @const {number} */
+EXT_color_buffer_half_float.prototype.RGB16F_EXT;
+
+/** @const {number} */
+EXT_color_buffer_half_float.prototype.RGBA16F_EXT;
+
+/** @const {number} */
+EXT_color_buffer_half_float.prototype.UNSIGNED_NORMALIZED_EXT;
+
+
+/**
+ * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/
+ * @interface
+ */
+function WEBGL_compressed_texture_etc1() {}
+
+/** @const {number} */
+WEBGL_compressed_texture_etc1.prototype.COMPRESSED_RGB_ETC1_WEBGL;
