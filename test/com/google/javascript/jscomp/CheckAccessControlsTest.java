@@ -3377,6 +3377,15 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         srcs(
             lines(
+                "/** @final */", //
+                "class Foo {};",
+                "",
+                "class Bar extends Foo { constructor() {} };")),
+        error(EXTEND_FINAL_CLASS));
+
+    test(
+        srcs(
+            lines(
                 "/** @const */", //
                 "var Foo = class {};",
                 "",

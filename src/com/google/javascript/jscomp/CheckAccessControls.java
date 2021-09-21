@@ -567,7 +567,10 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
 
   /** Checks if a constructor is trying to override a final class. */
   private void checkFinalClassOverrides(Node ctor) {
-    if (!isFunctionOrClass(ctor)) {
+    if (!isFunctionOrClass(ctor)
+        // checking class constructors is redundant because we already check the same thing on
+        // the CLASS node
+        || NodeUtil.isEs6ConstructorMemberFunctionDef(ctor.getParent())) {
       return;
     }
 
