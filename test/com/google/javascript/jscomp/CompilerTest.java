@@ -39,7 +39,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.serialization.AstNode;
 import com.google.javascript.jscomp.serialization.LazyAst;
 import com.google.javascript.jscomp.serialization.NodeKind;
@@ -2982,19 +2981,4 @@ public final class CompilerTest {
     assertThat(lazyExterns.getSecondChild().isVar()).isTrue();
   }
 
-  @Test
-  public void testInvalidUnicodeLogging() {
-    CompilerOptions options = new CompilerOptions();
-    CompilerTestCaseUtils.setDebugLogDirectoryOn(options);
-    Compiler compiler = new Compiler();
-    compiler.initOptions(options);
-    String code = "let invalidUnicode = '\uD801';";
-    CompilerInput input = new CompilerInput(SourceFile.fromCode("temp", code));
-    Node root = input.getAstRoot(compiler);
-    assertThat(compiler.isDebugLoggingEnabled()).isTrue();
-    // Logging the string which contains invalid unicode should not throw.
-    try (LogFile log = compiler.createOrReopenLog(CompilerTest.class, "temp.log")) {
-      log.log(root.toStringTree());
-    }
-  }
 }
