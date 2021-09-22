@@ -16,11 +16,16 @@
 
 package com.google.javascript.jscomp.diagnostic;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.errorprone.annotations.MustBeClosed;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -39,12 +44,22 @@ final class WritingLogFile extends LogFile {
     try {
       Path dir = file.getParent();
       Files.createDirectories(dir);
+      CharsetEncoder encoder = UTF_8.newEncoder();
+      // Allow the logged string to contain invalid Unicode (replace invalid character sequences
+      // but don't throw). This is useful in cases where the source code contains invalid Unicode
+      // (e.g., inside strings).
+      encoder
+          .onMalformedInput(CodingErrorAction.REPLACE)
+          .onUnmappableCharacter(CodingErrorAction.REPLACE);
       return new WritingLogFile(
-          Files.newBufferedWriter(
-              file,
-              StandardOpenOption.CREATE,
-              StandardOpenOption.APPEND,
-              StandardOpenOption.WRITE));
+          new BufferedWriter(
+              new OutputStreamWriter(
+                  Files.newOutputStream(
+                      file,
+                      StandardOpenOption.CREATE,
+                      StandardOpenOption.APPEND,
+                      StandardOpenOption.WRITE),
+                  encoder)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
