@@ -74,6 +74,14 @@ public class TranspilationPasses {
 
     // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    // However, RegExp features are not transpiled, and this does not imply that we allow arbitrary
+    // selection of features to transpile.  They still must be done in chronological order based on.
+    // This greatly simplifies testing and the requirements for the transpilation passes.
+
+    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
+      passes.add(rewriteClassFields);
+    }
+
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
       // Numeric separators are flagged as present by the parser,
       // but never actually represented in the AST.
@@ -119,10 +127,6 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationFrom(ES2016)) {
       passes.add(rewriteExponentialOperator);
-    }
-
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
-      passes.add(rewriteClassFields);
     }
 
     if (options.needsTranspilationFrom(ES2015)) {
