@@ -29,6 +29,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME_R
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.EXTEND_FINAL_CLASS;
+import static com.google.javascript.jscomp.CheckAccessControls.FINAL_PROPERTY_OVERRIDDEN;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 
@@ -3390,6 +3391,108 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "var Foo = class {};",
                 "",
                 "var Bar = class extends Foo {};")));
+  }
+
+  @Test
+  public void testFinalAndConstTreatedAsFinal() {
+    test(
+        srcs(
+            lines(
+                "class Foo {}", //
+                "/** @final @const */",
+                "Foo.prop = 0;",
+                "Foo.prop = 1;")),
+        error(FINAL_PROPERTY_OVERRIDDEN));
+  }
+
+  @Test
+  public void testFinalMethodCanBeCalled() {
+    testNoWarning(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {}",
+                "new Foo().method();",
+                "new Bar().method();")));
+  }
+
+  @Test
+  public void testFinalMethodCannotBeOverridden() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {",
+                "  method() {}",
+                "}")),
+        error(FINAL_PROPERTY_OVERRIDDEN));
+
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {",
+                "  /** @override */",
+                "  method() {}",
+                "}")),
+        error(FINAL_PROPERTY_OVERRIDDEN));
+
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {}",
+                "class Baz extends Bar {",
+                "  /** @override */",
+                "  method() {}",
+                "}")),
+        error(FINAL_PROPERTY_OVERRIDDEN));
+
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "Foo.prototype.method = () => '';")),
+        error(FINAL_PROPERTY_OVERRIDDEN));
+  }
+
+  @Test
+  public void testFinalMethodCannotBeDeleted() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "delete Foo.prototype.method;")),
+        error(CONST_PROPERTY_DELETED));
+
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @final */",
+                "  method() {}",
+                "}",
+                "class Bar extends Foo {}",
+                "delete Bar.prototype.method;")),
+        error(CONST_PROPERTY_DELETED));
   }
 
   @Test

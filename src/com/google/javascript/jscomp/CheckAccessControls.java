@@ -119,6 +119,13 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
               "constant property {0} assigned a value more than once", //
               "Initialized at {1}"));
 
+  static final DiagnosticType FINAL_PROPERTY_OVERRIDDEN =
+      DiagnosticType.warning(
+          "JSC_FINAL_PROPERTY_OVERRIDDEN",
+          lines(
+              "@final method or property {0} overridden", //
+              "Initialized at {1}"));
+
   static final DiagnosticType CONST_PROPERTY_DELETED =
       DiagnosticType.warning(
         "JSC_CONSTANT_PROPERTY_DELETED",
@@ -133,7 +140,27 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
   // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
   private final Deque<ObjectType> currentClassStack = new LinkedList<>();
-  private final HashBasedTable<JSType, String, Node> constPropertyInits = HashBasedTable.create();
+  private final HashBasedTable<JSType, String, ConstantDeclaration> constPropertyInits =
+      HashBasedTable.create();
+
+  /**
+   * Distinguishes between different kinds of "constant" JSDoc to provide more useful error messages
+   */
+  private enum Constancy {
+    FINAL, // @final
+    OTHER_CONSTANT, // e.g. @const, @define, or @desc but not @final
+    MUTABLE
+  }
+
+  private static class ConstantDeclaration {
+    final Node node;
+    final Constancy annotation;
+
+    ConstantDeclaration(Node node, Constancy annotation) {
+      this.node = node;
+      this.annotation = annotation;
+    }
+  }
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
 
@@ -175,9 +202,9 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
    *
    * <p>We define access-control scopes differently from {@code Scope}s because of mismatches
    * between ECMAScript scoping and our AST structure (e.g. the `extends` clause of a CLASS). {@link
-   * NodeTraveral} is designed to walk the AST in ECMAScript scope order, which is not the pre-order
-   * traversal that we would prefer here. This requires us to treat access-control scopes as a
-   * forest with a primary root.
+   * NodeTraversal} is designed to walk the AST in ECMAScript scope order, which is not the
+   * pre-order traversal that we would prefer here. This requires us to treat access-control scopes
+   * as a forest with a primary root.
    *
    * <p>Each access-control scope corresponds to some "owner" JavaScript type which is used when
    * computing access-controls. At this time, each also corresponds to an AST subtree.
@@ -600,13 +627,14 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     String propertyName = propRef.getName();
     Node sourceNode = propRef.getSourceNode();
 
-    if (!isPropertyDeclaredConstant(objectType, propertyName)) {
+    Constancy constness = isPropertyDeclaredConstant(objectType, propertyName);
+    if (constness.equals(Constancy.MUTABLE)) {
       return;
     }
 
     if (sourceNode.isFromExterns() && propRef.isDeclaration()) {
       // Treat stub declarations in externs as inits, but never warn on them.
-      this.recordConstPropertyInit(propRef, objectType);
+      this.recordConstPropertyInit(propRef, objectType, constness);
       return;
     }
 
@@ -637,25 +665,28 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
-    Node init = this.getConstPropertyInit(propRef, objectType);
+    ConstantDeclaration init = this.getConstPropertyInit(propRef, objectType);
     if (init != null) {
-      compiler.report(
-          JSError.make(
-              sourceNode, CONST_PROPERTY_REASSIGNED_VALUE, propertyName, init.getLocation()));
+      DiagnosticType diagnostic =
+          init.annotation.equals(Constancy.FINAL)
+              ? FINAL_PROPERTY_OVERRIDDEN
+              : CONST_PROPERTY_REASSIGNED_VALUE;
+      compiler.report(JSError.make(sourceNode, diagnostic, propertyName, init.node.getLocation()));
     }
 
-    this.recordConstPropertyInit(propRef, objectType);
+    this.recordConstPropertyInit(propRef, objectType, constness);
   }
 
   @Nullable
-  private Node getConstPropertyInit(PropertyReference ref, ObjectType type) {
+  private ConstantDeclaration getConstPropertyInit(PropertyReference ref, ObjectType type) {
     String name = ref.getName();
     while (type != null) {
-      Node init = this.constPropertyInits.get(type, name);
+      ConstantDeclaration init = this.constPropertyInits.get(type, name);
       if (init != null) {
         return init;
       }
-      Node canonicalInit = this.constPropertyInits.get(getCanonicalInstance(type), name);
+      ConstantDeclaration canonicalInit =
+          this.constPropertyInits.get(getCanonicalInstance(type), name);
       if (canonicalInit != null) {
         return canonicalInit;
       }
@@ -666,14 +697,19 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     return null;
   }
 
-  private void recordConstPropertyInit(PropertyReference ref, ObjectType type) {
-    this.constPropertyInits.row(type).putIfAbsent(ref.getName(), ref.getSourceNode());
+  private void recordConstPropertyInit(
+      PropertyReference ref, ObjectType type, Constancy annotation) {
+    this.constPropertyInits
+        .row(type)
+        .putIfAbsent(ref.getName(), new ConstantDeclaration(ref.getSourceNode(), annotation));
 
     // Add the prototype when we're looking at an instance object
     if (type.isInstanceType()) {
       ObjectType prototype = type.getImplicitPrototype();
       if (prototype != null && prototype.hasProperty(ref.getName())) {
-        this.constPropertyInits.row(prototype).putIfAbsent(ref.getName(), ref.getSourceNode());
+        this.constPropertyInits
+            .row(prototype)
+            .putIfAbsent(ref.getName(), new ConstantDeclaration(ref.getSourceNode(), annotation));
       }
     }
   }
@@ -1073,14 +1109,18 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   }
 
   /** Returns if a property is declared constant. */
-  private boolean isPropertyDeclaredConstant(ObjectType objectType, String prop) {
+  private Constancy isPropertyDeclaredConstant(ObjectType objectType, String prop) {
     for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
-      if (docInfo != null && docInfo.isConstant()) {
-        return true;
+      if (docInfo == null) {
+        continue;
+      } else if (docInfo.isFinal()) {
+        return Constancy.FINAL;
+      } else if (docInfo.isConstant()) {
+        return Constancy.OTHER_CONSTANT;
       }
     }
-    return false;
+    return Constancy.MUTABLE;
   }
 
   /**
