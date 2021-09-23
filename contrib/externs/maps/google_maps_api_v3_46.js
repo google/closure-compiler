@@ -1513,7 +1513,8 @@ google.maps.DirectionsLeg.prototype.duration;
 google.maps.DirectionsLeg.prototype.duration_in_traffic;
 
 /**
- * The address of the destination of this leg.
+ * The address of the destination of this leg. This content is meant to be read
+ * as-is. Do not programmatically parse the formatted address.
  * @type {string}
  */
 google.maps.DirectionsLeg.prototype.end_address;
@@ -1529,7 +1530,8 @@ google.maps.DirectionsLeg.prototype.end_address;
 google.maps.DirectionsLeg.prototype.end_location;
 
 /**
- * The address of the origin of this leg.
+ * The address of the origin of this leg. This content is meant to be read
+ * as-is. Do not programmatically parse the formatted address.
  * @type {string}
  */
 google.maps.DirectionsLeg.prototype.start_address;
