@@ -15,9 +15,11 @@
  */
 
 /**
- * @fileoverview Definitions for W3C's IndexedDB API and IndexedDB API 2.0.
+ * @fileoverview Definitions for W3C's IndexedDB API and IndexedDB API 2.0 with
+ *     some opportunistic enhancements from IndexedDB API 3.0.
  * @see http://www.w3.org/TR/2015/REC-IndexedDB-20150108/
  * @see https://www.w3.org/TR/2017/WD-IndexedDB-2-20170313/
+ * @see https://www.w3.org/TR/2021/WD-IndexedDB-3-20210618/
  *
  * @externs
  * @author guido.tapia@picnet.com.au (Guido Tapia)
@@ -244,12 +246,33 @@ IDBDatabase.prototype.createObjectStore =
 IDBDatabase.prototype.deleteObjectStore = function(name) {};
 
 /**
+ * Possible values: 'default', 'strict', 'relaxed'
+ *
+ * @typedef {string}
+ * @see https://www.w3.org/TR/IndexedDB-3/#enumdef-idbtransactiondurability
+ */
+var IDBTransactionDurability;
+
+/**
+ * See https://www.w3.org/TR/IndexedDB-3/#ref-for-dictdef-idbtransactionoptions
+ * @record
+ */
+var IDBTransactionOptions = function() {};
+
+/**
+ * @type {!IDBTransactionDurability}
+ * @see https://www.w3.org/TR/IndexedDB-3/#ref-for-dictdef-idbtransactionoptions
+ */
+IDBTransactionOptions.prototype.durability;
+
+/**
  * @param {(string|!Array<string>|!DOMStringList)} storeNames The stores to open
  *     in this transaction.
  * @param {!IDBTransactionMode=} mode The mode for opening the object stores.
+ * @param {!IDBTransactionOptions=} options Extra options, like durability.
  * @return {!IDBTransaction} The IDBRequest object.
  */
-IDBDatabase.prototype.transaction = function(storeNames, mode) {};
+IDBDatabase.prototype.transaction = function(storeNames, mode, options) {};
 
 /**
  * Closes the database connection.
