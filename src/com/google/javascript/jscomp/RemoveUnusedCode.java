@@ -707,8 +707,13 @@ class RemoveUnusedCode implements CompilerPass {
   private void traverseCompoundAssign(Node compoundAssignNode, Scope scope) {
     // We'll allow removal of compound assignment to a `this` property as long as the result of the
     // assignment is unused.
-    // e.g. `this.x += 3;`
-    // TODO(nickreid): Why do we treat `this` properties specially? Is it because `this` is const?
+    // e.g. `this.prop += 3;`
+
+    // NOTE: Some history here, as there were questions about "why is 'this' special".  The "remove
+    // unused properties" is not a general property removal algorithm.  It only removes unreferenced
+    // properties that are part of class definitions.  "SomeClass.prop += 3" and
+    // "SomeClass.prototype.prop += 3" could so be candidates but they aren't considered here.
+
     Node targetNode = compoundAssignNode.getFirstChild();
     Node valueNode = compoundAssignNode.getLastChild();
     if (targetNode.isGetProp()) {
