@@ -1758,7 +1758,7 @@ HTMLElement.observedAttributes;
 HTMLElement.prototype.adoptedCallback = function(oldDocument, newDocument) {};
 
 /**
- * @param {!{mode: string}} options
+ * @param {!ShadowRootInit} options
  * @return {!ShadowRoot}
  */
 HTMLElement.prototype.attachShadow = function(options) {};
@@ -4647,7 +4647,7 @@ ShadowRoot.prototype.activeElement;
 
 
 /**
- * @type {string}
+ * @type {!ShadowRootMode}
  */
 ShadowRoot.prototype.mode;
 
@@ -4671,6 +4671,35 @@ ShadowRoot.prototype.innerHTML;
  */
 ShadowRoot.prototype.styleSheets;
 
+
+/**
+ * @typedef {string}
+ * @see https://dom.spec.whatwg.org/#enumdef-shadowrootmode
+ */
+var ShadowRootMode;
+
+
+/**
+ * @typedef {string}
+ * @see https://dom.spec.whatwg.org/#enumdef-slotassignmentmode
+ */
+var SlotAssignmentMode;
+
+
+/**
+ * @record
+ * @see https://dom.spec.whatwg.org/#dictdef-shadowrootinit
+ */
+function ShadowRootInit() {}
+
+/** @type {!ShadowRootMode} */
+ShadowRootInit.prototype.mode;
+
+/** @type {(undefined|boolean)} */
+ShadowRootInit.prototype.delegatesFocus;
+
+/** @type {(undefined|SlotAssignmentMode)} */
+ShadowRootInit.prototype.slotAssignment;
 
 
 /**
