@@ -1476,6 +1476,17 @@ MediaDeviceInfo.prototype.groupId;
 
 /**
  * @interface
+ * @extends {MediaDeviceInfo}
+ * @see https://www.w3.org/TR/mediacapture-streams/#input-specific-device-info
+ */
+function InputDeviceInfo() {
+}
+
+/** @return {!MediaTrackCapabilities} */
+InputDeviceInfo.prototype.getCapabilities = function() {};
+
+/**
+ * @interface
  * @extends {EventTarget}
  * @see https://www.w3.org/TR/mediacapture-streams/#mediadevices
  */
