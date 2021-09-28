@@ -843,10 +843,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(rescopeGlobalSymbols);
     }
 
-    // Safety checks
-    passes.add(checkAstValidity);
-    passes.add(varCheckValidity);
-
     // Raise to ES2015, if allowed
     if (options.getOutputFeatureSet().contains(ES2015)) {
       passes.add(optimizeToEs6);
@@ -856,6 +852,10 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
     }
+
+    // Safety checks.  These should always be the last passes.
+    passes.add(checkAstValidity);
+    passes.add(varCheckValidity);
 
     assertValidOrderForOptimizations(passes);
     return passes;
