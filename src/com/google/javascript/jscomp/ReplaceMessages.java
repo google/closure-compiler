@@ -157,6 +157,14 @@ public final class ReplaceMessages {
       // to preserve it.
       newCallNode.setSideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS);
       if (placeholdersNode != null) {
+        checkState(placeholdersNode.isObjectLit(), placeholdersNode);
+        // put quotes around the keys so they won't get renamed.
+        for (Node strKey = placeholdersNode.getFirstChild();
+            strKey != null;
+            strKey = strKey.getNext()) {
+          checkState(strKey.isStringKey(), strKey);
+          strKey.setQuotedString();
+        }
         newCallNode.addChildToBack(placeholdersNode.detach());
       }
       callNode.replaceWith(newCallNode);

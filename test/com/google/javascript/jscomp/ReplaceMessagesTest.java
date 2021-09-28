@@ -394,7 +394,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "          \"meaning\":\"B meaning\",",
             "          \"msg_text\":\"Hello, {$name}!\"",
             "        },",
-            "        {name:name});",
+            "        {'name': name});",
             ""),
         ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS);
   }
@@ -604,7 +604,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_B\",",
             "          \"msg_text\":\"asdf {$measly}\",",
-            "        }, {measly:x});"),
+            "        }, {'measly': x});"),
         lines(
             "/** @desc d */", //
             "var MSG_B = 'One ' + x + ' ph';"));
@@ -627,7 +627,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_C\",",
             "          \"msg_text\":\"${$amount}\",",
-            "        }, {amount:a.b.amount});",
+            "        }, {'amount': a.b.amount});",
             "     "),
         lines(
             "/** @desc d */", //
@@ -649,7 +649,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_D\",",
             "          \"msg_text\":\"${$amount}\",",
-            "        }, {amount:getAmt()});",
+            "        }, {'amount': getAmt()});",
             "     "),
         lines(
             "/** @desc d */", //
@@ -673,7 +673,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_E\",",
             "          \"msg_text\":\"${$amount}\",",
-            "        }, {amount:obj.getAmt()});"),
+            "        }, {'amount': obj.getAmt()});"),
         lines(
             "/** @desc d */", //
             "var MSG_E=obj.getAmt()"));
@@ -696,7 +696,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_M\",",
             "          \"msg_text\":\"${$amount}\",",
-            "        }, {amount:obj.getAmt()});\n"),
+            "        }, {'amount': obj.getAmt()});\n"),
         "/** @desc d */\n var MSG_M=''");
   }
 
@@ -720,7 +720,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_F\",",
             "          \"msg_text\":\"${$amount}\",",
-            "        }, {amount:a ? b : c});"),
+            "        }, {'amount': a ? b : c});"),
         lines(
             "/** @desc d */", //
             "var MSG_F = '#' + (a?b:c) + '.';",
@@ -743,7 +743,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "          'key':'MSG_G',",
             "          \"msg_text\":\"${$amount}\",",
             "        },",
-            "        {amount:x + ''});"),
+            "        {'amount': x + ''});"),
         lines(
             "/** @desc d */", //
             "var MSG_G=x+''"));
@@ -771,7 +771,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_H\",",
             "          \"msg_text\":\"{$dick}{$jane}\",",
-            "        }, {jane:x, dick:y});\n"),
+            "        }, {'jane': x, 'dick': y});",
+            ""),
         lines(
             "/** @desc d */", //
             "var MSG_H = y + ', ' + y + ' and ' + x;"));
@@ -798,7 +799,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_I\",",
             "          \"msg_text\":\"${$amtEarned}\",",
-            "        }, {amtEarned:x});",
+            "        }, {'amtEarned': x});",
             "     "),
         lines(
             "/** @desc d */", //
@@ -828,7 +829,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "          \"key\":   'MSG_J',",
             "          \"msg_text\":\"asdf {$measly}\",",
             "        },",
-            "        {measly:x});\n"),
+            "        {'measly': x});",
+            ""),
         lines(
             "/** @desc d */", //
             "a.b.c.MSG_J = 'One ' + x + ' ph';"));
@@ -856,7 +858,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "        {",
             "          \"key\":\"MSG_L\",",
             "          \"msg_text\":\"{$a} has {$b}\"",
-            "        }, {a:\"{$b}\"," + " b:1});\n"),
+            "        }, {'a': \"{$b}\", 'b': 1});",
+            ""),
         lines(
             "/** @desc d */", //
             "var MSG_L = '{$b}' + ' has ' + 1;"));
@@ -984,7 +987,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "var MSG_K =",
             "    __jscomp_define_msg__(",
             "        { \"key\":\"MSG_K\", \"msg_text\":\"Hi {$jane}\" },",
-            "        {jane: x});",
+            "        {'jane': x});",
             ""),
         MESSAGE_TREE_MALFORMED);
   }
@@ -1412,7 +1415,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "          \"key\":\"MSG_B\",",
             "          \"msg_text\":\"asdf {$measly}\",",
             "        },",
-            "        {measly:x});",
+            "        {'measly': x});",
             ""),
         lines(
             "/** @desc d */", //
