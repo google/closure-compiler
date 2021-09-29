@@ -1280,7 +1280,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (this.isDebugLoggingEnabled()) {
       try (LogFile log =
-          this.createOrReopenIndexedLog(this.getClass(), "src_after_pass", passName)) {
+          this.createOrReopenIndexedLog(this.getClass(), "source_after_pass", passName)) {
         log.log(currentJsSource);
       }
     } else {
