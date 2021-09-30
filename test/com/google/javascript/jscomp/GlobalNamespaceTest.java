@@ -649,7 +649,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testCollapsing_forEscapedConstructor_consideringStaticInheritance() {
-    this.assumeStaticInheritanceRequired = true;
+    this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(lines("/** @constructor */", "function Bar() {}", "use(Bar);"));
 
@@ -693,7 +693,7 @@ public final class GlobalNamespaceTest {
   @Test
   public void
       testInlinability_forAliasingPropertyOnEscapedConstructor_consideringStaticInheritance() {
-    this.assumeStaticInheritanceRequired = true;
+    this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
             lines(
@@ -1145,7 +1145,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testCannotCollapseAliasedConstructorProperty_consideringStaticInheritance() {
-    this.assumeStaticInheritanceRequired = true;
+    this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
             lines(
@@ -1180,7 +1180,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testCannotCollapseAliasedInterfaceProperty_consideringStaticInheritance() {
-    this.assumeStaticInheritanceRequired = true;
+    this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace =
         parse(
             lines(
@@ -1207,7 +1207,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testCanCollapseAliasedClassProperty_consideringStaticInheritance() {
-    this.assumeStaticInheritanceRequired = true;
+    this.assumeStaticInheritanceIsNotUsed = false;
     GlobalNamespace namespace = parse(lines("class Foo {} Foo.prop = prop; use(Foo);"));
 
     Name fooProp = namespace.getSlot("Foo.prop");
@@ -1447,7 +1447,7 @@ public final class GlobalNamespaceTest {
     assertThat(x.getDeclaration()).isNotNull();
   }
 
-  private boolean assumeStaticInheritanceRequired = false;
+  private boolean assumeStaticInheritanceIsNotUsed = true;
 
   // This method exists for testing module metadata lookups.
   private GlobalNamespace parseAndGatherModuleData(String js) {
@@ -1459,7 +1459,7 @@ public final class GlobalNamespaceTest {
     options.setWrapGoogModulesForWhitespaceOnly(false);
     // Test the latest features supported for input and don't transpile, because we want to test how
     // GlobalNamespace deals with the language features actually present in `js`.
-    options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
+    options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     // Disabling transpilation also disables these passes that we need to have run when
     // testing behavior related to module metadata.
@@ -1483,7 +1483,7 @@ public final class GlobalNamespaceTest {
     options.setSkipNonTranspilationPasses(true);
     // Test the latest features supported for input and don't transpile, because we want to test how
     // GlobalNamespace deals with the language features actually present in `js`.
-    options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
+    options.setAssumeStaticInheritanceIsNotUsed(assumeStaticInheritanceIsNotUsed);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     assertThat(compiler.getErrors()).isEmpty();
     this.lastCompiler = compiler;

@@ -1075,15 +1075,15 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Consider that static (class-side) inheritance may be being used and that static methods may be
-   * referenced via `this` or through subclasses.
+   * Assume that static (class-side) inheritance is not being used and that static methods will not
+   * be referenced via `this` or through subclasses.
    *
-   * <p>When {@code false}, the compiler is free to make unsafe (breaking) optimizations to code
-   * that depends on static inheritance. These optimizations represent a substantial code-size
-   * reduction for older projects and therefore cannot be unilaterally disabled. {@code false} was
-   * the long-standing implicit assumption before static inheritance came about in ES2015.
+   * <p>When {@code true}, the compiler is free to make unsafe (breaking) optimizations to code that
+   * depends on static inheritance. These optimizations represent a substantial code-size reduction
+   * for older projects and therefore cannot be unilaterally disabled. {@code true} was the
+   * long-standing implicit assumption before static inheritance came about in ES2015.
    *
-   * <p>Example of what may break if this flag is {@code false}:
+   * <p>Example of what may break if this flag is {@code true}:
    *
    * <pre>{@code
    * class Parent {
@@ -1095,14 +1095,14 @@ public class CompilerOptions implements Serializable {
    * Child.method(); // `method` will not be defined.
    * }</pre>
    */
-  private boolean assumeStaticInheritanceRequired = false;
+  private boolean assumeStaticInheritanceIsNotUsed = true;
 
-  public void setAssumeStaticInheritanceRequired(boolean x) {
-    this.assumeStaticInheritanceRequired = x;
+  public void setAssumeStaticInheritanceIsNotUsed(boolean x) {
+    this.assumeStaticInheritanceIsNotUsed = x;
   }
 
-  public boolean getAssumeStaticInheritanceRequired() {
-    return assumeStaticInheritanceRequired;
+  public boolean getAssumeStaticInheritanceIsNotUsed() {
+    return assumeStaticInheritanceIsNotUsed;
   }
 
   /** Data holder Alias Transformation information accumulated during a compile. */

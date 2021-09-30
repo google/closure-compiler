@@ -180,7 +180,8 @@ class GlobalNamespace
     this.compiler = compiler;
     this.externsRoot = externsRoot;
     this.root = root;
-    this.enableImplicityAliasedValues = compiler.getOptions().getAssumeStaticInheritanceRequired();
+    this.enableImplicityAliasedValues =
+        !compiler.getOptions().getAssumeStaticInheritanceIsNotUsed();
   }
 
   void setShouldTraverseScriptPredicate(Predicate<Node> shouldTraverseScript) {

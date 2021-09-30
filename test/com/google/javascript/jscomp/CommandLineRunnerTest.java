@@ -2926,6 +2926,15 @@ public final class CommandLineRunnerTest {
     assertThat(weakFile.exists()).isFalse();
   }
 
+  @Test
+  public void testAssumeStaticInheritanceIsNotUsed() {
+    testSame("");
+    assertThat(lastCompiler.getOptions().getAssumeStaticInheritanceIsNotUsed()).isTrue();
+    args.add("--assume_static_inheritance_is_not_used=false");
+    testSame("");
+    assertThat(lastCompiler.getOptions().getAssumeStaticInheritanceIsNotUsed()).isFalse();
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
