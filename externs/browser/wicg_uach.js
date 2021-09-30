@@ -72,6 +72,9 @@ NavigatorUAData.prototype.brands;
 /** @type {boolean} */
 NavigatorUAData.prototype.mobile;
 
+/** @type {string} */
+NavigatorUAData.prototype.platform;
+
 /**
  * @param {!Array<string>} hints
  * @return {!Promise<!UADataValues>}
