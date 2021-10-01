@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Ascii;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -44,7 +46,15 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
       "JSC_USELESS_CODE",
       "Suspicious code. {0}");
 
+  // Protect function is used to protect the underlying node from removal. At the very end, this
+  // protector function will be completely removed from production but the underlying node will be
+  // preserved.
   static final String PROTECTOR_FN = "JSCOMPILER_PRESERVE";
+
+  // J2CL protector function is used to protect the underlying node from removal until the very end
+  // so that referred prototype properties won't be removed by the compiler. At the very end, this
+  // protector function and its underyling node will be completely removed from production.
+  static final String J2CL_PROTECTOR_FN = "$J2CL_PRESERVE$";
 
   private final boolean report;
 
@@ -210,9 +220,20 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node target = n.getFirstChild();
+        if (!target.isName()) {
+          return;
+        }
+
+        if (target.getString().equals(J2CL_PROTECTOR_FN)) {
+          // Do not let non-J2CL code abuse it.
+          checkState(n.getSourceFileName().endsWith(".java.js"), "Only allowed for J2CL code");
+          NodeUtil.deleteFunctionCall(n, compiler);
+          return;
+        }
+
         // TODO(johnlenz): add this to the coding convention
         // so we can remove goog.reflect.sinkValue as well.
-        if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+        if (target.getString().equals(PROTECTOR_FN)) {
           Node expr = n.getLastChild();
           n.detachChildren();
           n.replaceWith(expr);
