@@ -123,7 +123,7 @@ public final class JSDocSerializer {
         }
       }
     }
-    if (!jsdoc.getThrownTypes().isEmpty()) {
+    if (!jsdoc.getThrowsAnnotations().isEmpty()) {
       builder.addKind(JsdocTag.JSDOC_THROWS);
     }
 
@@ -187,10 +187,12 @@ public final class JSDocSerializer {
   private static final SourceFile SYNTHETIC_SOURCE =
       SourceFile.fromCode("JSDocSerializer_placeholder_source", "");
 
+  private static final String PLACEHOLDER_TYPE_NAME = "JSDocSerializer_placeholder_type";
+
   private static JSTypeExpression createPlaceholderType() {
     // the BANG (!) token makes unit testing easier, as the JSDoc parser implicitly adds "!"
     // to some JSTypeExpressions
-    Node name = IR.string("JSDocSerializer_placeholder_type");
+    Node name = IR.string(PLACEHOLDER_TYPE_NAME);
     Node bang = new Node(Token.BANG, name);
     name.setStaticSourceFile(SYNTHETIC_SOURCE);
     bang.setStaticSourceFile(SYNTHETIC_SOURCE);
@@ -273,7 +275,7 @@ public final class JSDocSerializer {
           modifies.add("arguments");
           continue;
         case JSDOC_THROWS:
-          builder.recordThrowType(placeholderType);
+          builder.recordThrowsAnnotation("{!" + PLACEHOLDER_TYPE_NAME + "}");
           continue;
         case JSDOC_CONSTRUCTOR:
           builder.recordConstructor();

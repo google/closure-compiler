@@ -227,8 +227,9 @@ public final class JSDocInfoPrinter {
           buildAnnotationWithType("return", info.getReturnType(), info.getReturnDescription()));
     }
 
-    if (!info.getThrownTypes().isEmpty()) {
-      parts.add(buildAnnotationWithType("throws", info.getThrownTypes().get(0)));
+    if (!info.getThrowsAnnotations().isEmpty() && !info.getThrowsAnnotations().get(0).isEmpty()) {
+      multiline = true;
+      parts.add("@throws " + info.getThrowsAnnotations().get(0));
     }
 
     ImmutableMap<String, JSTypeExpression> templates = info.getTemplateTypes();

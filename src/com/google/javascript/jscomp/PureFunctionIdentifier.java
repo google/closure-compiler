@@ -574,7 +574,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       if (info.hasSideEffectsArgumentsAnnotation()) {
         summary.setMutatesArguments();
       }
-      if (!info.getThrownTypes().isEmpty()) {
+      if (!info.getThrowsAnnotations().isEmpty()) {
         summary.setThrows();
       }
 

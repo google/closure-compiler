@@ -1258,16 +1258,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseThrows1() {
-    JSDocInfo info = parse("@throws {number} Some number */");
-    assertThat(info.getThrownTypes()).hasSize(1);
-    assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
+    JSDocInfo info = parse("@throws {number} Some number */", true);
+    assertThat(info.getThrowsAnnotations()).containsExactly("{number} Some number");
   }
 
   @Test
   public void testParseThrows2() {
-    JSDocInfo info = parse("@throws {number} Some number\n " + "*@throws {String} A string */");
-    assertThat(info.getThrownTypes()).hasSize(2);
-    assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
+    JSDocInfo info =
+        parse("@throws {not a type}\n *     Bla\n " + "*@throws {String} A string */", true);
+    assertThat(info.getThrowsAnnotations())
+        .containsExactly("{not a type} Bla", "{String} A string")
+        .inOrder();
   }
 
   @Test
@@ -1935,8 +1936,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testStackedAnnotation8() {
     JSDocInfo info = parse("@throws {number} @constructor */", true);
-    assertThat(info.getThrownTypes()).isNotEmpty();
-    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.getThrowsAnnotations()).isNotEmpty();
+    // The @constructor annotation gets swallowed as part of the throws annotation.
+    assertThat(info.isConstructor()).isFalse();
 
     info = parse("@return {number} @constructor */", false);
     assertThat(info.hasReturnType()).isTrue();
@@ -5385,7 +5387,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     assertThat(jsdoc.getMarkers().iterator().next().getDescription().getItem())
         .isEqualTo(
-            "this is a nice comment\n that spans multiple lines\n"
+            "{string} this is a nice comment\n that spans multiple lines\n"
                 + "     with custom\n"
                 + "     formatting\n"
                 + " ");

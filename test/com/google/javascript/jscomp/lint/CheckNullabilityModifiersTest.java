@@ -227,20 +227,6 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testThrowsType() {
-    // TODO(tjgq): The style guide forbids throwing anything other than Error subclasses, so an
-    // @throws should never contain a primitive type. Should we suppress the warning in this case?
-    checkRedundantWarning("/** @throws {!string} */ function f(){}");
-
-    checkMissingWarning("/** @throws {Object} */ function f(){}");
-
-    checkNoWarning("/** @throws {string} */ function f(){}");
-    checkNoWarning("/** @throws {?string} */ function f(){}");
-    checkNoWarning("/** @throws {?Object} */ function f(){}");
-    checkNoWarning("/** @throws {!Object} */ function f(){}");
-  }
-
-  @Test
   public void testTypeOf() {
     checkNoWarning("/** @type {typeof Object} */ var x;");
   }

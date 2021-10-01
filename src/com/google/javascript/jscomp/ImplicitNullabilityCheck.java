@@ -17,19 +17,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Lists.transform;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import java.util.List;
 
 /** Warn about types in JSDoc that are implicitly nullable. */
 public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
@@ -121,7 +118,6 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     if (info == null) {
       return ImmutableList.of();
     }
-    final List<Node> thrownTypes = transform(info.getThrownTypes(), JSTypeExpression::getRoot);
 
     final ImmutableList.Builder<Result> builder = ImmutableList.builder();
     for (Node typeRoot : info.getTypeNodes()) {
@@ -131,9 +127,6 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
             @Override
             public void visit(Node node) {
               if (!node.isStringLit()) {
-                return;
-              }
-              if (thrownTypes.contains(node)) {
                 return;
               }
               Node parent = node.getParent();

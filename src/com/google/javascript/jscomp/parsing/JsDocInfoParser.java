@@ -785,43 +785,16 @@ public final class JsDocInfoParser {
 
         case THROWS:
           {
-            skipEOLs();
-            token = next();
             lineno = stream.getLineno();
             charno = stream.getCharno();
-            type = null;
-
-            if (token == JsDocToken.LEFT_CURLY) {
-              type = createJSTypeExpression(parseAndRecordTypeNode(token));
-
-              if (type == null) {
-                // parsing error reported during recursive descent
-                // recovering parsing
-                return eatUntilEOLIfNotAnnotation();
+            if (!lookAheadForAnnotation()) {
+              ExtractionInfo throwsInfo = extractMultilineTextualBlock(token);
+              String throwsAnnotation = throwsInfo.string;
+              throwsAnnotation = throwsAnnotation.trim();
+              if (throwsAnnotation.length() > 0) {
+                jsdocBuilder.recordThrowsAnnotation(throwsAnnotation);
               }
-            }
-
-            // *Update* the token to that after the type annotation.
-            token = current();
-
-            // Save the throw type.
-            jsdocBuilder.recordThrowType(type);
-
-            boolean isAnnotationNext = lookAheadForAnnotation();
-
-            // Find the throw's description (if applicable).
-            if (jsdocBuilder.shouldParseDocumentation() && !isAnnotationNext) {
-              ExtractionInfo descriptionInfo = extractMultilineTextualBlock(token);
-
-              String description = descriptionInfo.string;
-
-              if (description.length() > 0) {
-                jsdocBuilder.recordThrowDescription(type, description);
-              }
-
-              token = descriptionInfo.token;
-            } else {
-              token = eatUntilEOLIfNotAnnotation();
+              token = throwsInfo.token;
             }
             return token;
           }

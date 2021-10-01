@@ -114,9 +114,6 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
         // warning.
         visitTypeExpression(info.getThisType(), true);
       }
-      for (JSTypeExpression expr : info.getThrownTypes()) {
-        visitTypeExpression(expr, false);
-      }
       // JSDocInfoParser enforces the @extends and @implements types to be unqualified in the source
       // code, so we don't need to check them.
     }

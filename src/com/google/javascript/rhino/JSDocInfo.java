@@ -442,7 +442,7 @@ public class JSDocInfo implements Serializable {
   private static final TypeListProperty IMPLEMENTED_INTERFACES =
       new TypeListProperty("extendedInterfaces");
   private static final TypeMapProperty PARAMETERS = new TypeMapProperty("parameters");
-  private static final TypeListProperty THROWN_TYPES = new TypeListProperty("thrownTypes");
+  private static final Property<List<String>> THROWS_ANNOTATIONS = new Property<>("throws");
   private static final TypeMapProperty TEMPLATE_TYPE_NAMES =
       new TypeMapProperty("templateTypeNames");
   private static final NodeMapProperty TYPE_TRANSFORMATIONS =
@@ -469,8 +469,6 @@ public class JSDocInfo implements Serializable {
   private static final Property<ArrayList<Marker>> MARKERS = new MarkerListProperty("markers");
   private static final Property<LinkedHashMap<String, String>> PARAMETER_DESCRIPTIONS =
       new Property<>("parameterDescriptions");
-  private static final Property<LinkedHashMap<JSTypeExpression, String>> THROWS_DESCRIPTIONS =
-      new Property<>("throwsDescriptions");
   private static final Property<String> BLOCK_DESCRIPTION = new Property<>("blockDescription");
   private static final Property<String> FILEOVERVIEW_DESCRIPTION =
       new Property<>("fileoverviewDescription");
@@ -1033,15 +1031,10 @@ public class JSDocInfo implements Serializable {
     return params != null ? params.size() : 0;
   }
 
-  /** Returns the list of thrown types. */
-  public List<JSTypeExpression> getThrownTypes() {
-    return THROWN_TYPES.getUnmodifiable(this);
-  }
-
-  /** Get the message for a given thrown type. */
-  public String getThrowsDescriptionForType(JSTypeExpression type) {
-    LinkedHashMap<JSTypeExpression, String> descriptions = THROWS_DESCRIPTIONS.get(this);
-    return descriptions != null ? descriptions.get(type) : null;
+  /** Returns the list of thrown types and descriptions as text. */
+  public List<String> getThrowsAnnotations() {
+    List<String> annotations = THROWS_ANNOTATIONS.get(this);
+    return annotations != null ? annotations : ImmutableList.of();
   }
 
   /**
@@ -1816,27 +1809,30 @@ public class JSDocInfo implements Serializable {
       return populatePropEntry(TYPE_TRANSFORMATIONS, name, expr);
     }
 
-    /** Records a thrown type. */
-    public boolean recordThrowType(JSTypeExpression type) {
-      if (type != null && !hasAnySingletonTypeTags()) {
-        getPropWithDefault(THROWN_TYPES, ArrayList::new).add(type);
-        populated = true;
+    /**
+     * Records a throw annotation description.
+     *
+     * @return {@code true} if the type's description was recorded. The description
+     *     of a throw annotation is the text including the type.
+     */
+    public boolean recordThrowsAnnotation(String annotation) {
+      populated = true;
+      // TODO(user): Does it make sense to check for singleton tags here?
+      // Note that if the @throws annotation appears before a singleton tag like @type,
+      // the throws annotation is preserved, but if it appears after the singleton tag,
+      // it gets dropped.
+      if (!hasAnySingletonTypeTags()) {
+        List<String> throwsAnnotations = getPropWithDefault(THROWS_ANNOTATIONS, ArrayList::new);
+        if (shouldParseDocumentation()) {
+          throwsAnnotations.add(annotation);
+        } else if (throwsAnnotations.isEmpty()) {
+          // Add at least one annotation so that PureFunctionIdentifier knows about
+          // the side effect.
+          throwsAnnotations.add("");
+        }
         return true;
       }
       return false;
-    }
-
-    /**
-     * Records a throw type's description.
-     *
-     * @return {@code true} if the type's description was recorded and {@code false} if a
-     *     description with the same type was already defined
-     */
-    public boolean recordThrowDescription(JSTypeExpression type, String description) {
-      if (!shouldParseDocumentation()) {
-        return true;
-      }
-      return populatePropEntry(THROWS_DESCRIPTIONS, type, description);
     }
 
     /** Adds an author to the current information. */

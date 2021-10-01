@@ -709,15 +709,12 @@ public class JSDocInfoTest {
 
     // Set a description so that builder is initialized.
     builder.recordDescription("Lorem");
-
-    JSTypeExpression errorType = fromString("Error");
-    JSTypeExpression otherType = fromString("Other");
-    builder.recordThrowDescription(errorType, "Because it does.");
-    builder.recordThrowDescription(otherType, "");
+    builder.recordThrowsAnnotation("{Error} Because it does.");
+    builder.recordThrowsAnnotation("{not a type}");
     JSDocInfo info = builder.build();
-    assertThat(info.getThrowsDescriptionForType(errorType)).isEqualTo("Because it does.");
-    assertThat(info.getThrowsDescriptionForType(otherType)).isEmpty();
-    assertThat(info.getThrowsDescriptionForType(fromString("NeverSeen"))).isNull();
+    assertThat(info.getThrowsAnnotations())
+        .containsExactly("{Error} Because it does.", "{not a type}")
+        .inOrder();
   }
 
   // https://github.com/google/closure-compiler/issues/2328
