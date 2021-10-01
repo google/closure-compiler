@@ -45,6 +45,9 @@ final class LocaleDataPasses {
 
   private LocaleDataPasses() {}
 
+  // TODO(johnlenz): delete or enable locale data collection
+  static boolean enableLocaleDataHandling = false;
+
   // Replacements for values that needed to be protected from optimizations.
   static final String GOOG_LOCALE_REPLACEMENT = "__JSC_LOCALE__";
   static final String LOCALE_VALUE_REPLACEMENT = "__JSC_LOCALE_VALUE__";
@@ -100,16 +103,25 @@ final class LocaleDataPasses {
     @Override
     public void process(Node externs, Node root) {
       // Create the extern symbols
-      NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
-      NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
 
-      NodeTraversal.traverse(compiler, root, new CheckLocaleUsage(compiler));
-      ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
-      NodeTraversal.traverse(compiler, root, protectLocaleCallback);
-      ExtractAndProtectLocaleData localeDataCallback = new ExtractAndProtectLocaleData(compiler);
-      NodeTraversal.traverse(compiler, root, localeDataCallback);
+      if (enableLocaleDataHandling) {
+        NodeUtil.createSynthesizedExternsSymbol(compiler, LOCALE_VALUE_REPLACEMENT);
+        NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
 
-      localeData = localeDataCallback.getLocaleValuesDataMaps();
+        NodeTraversal.traverse(compiler, root, new CheckLocaleUsage(compiler));
+        ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
+        NodeTraversal.traverse(compiler, root, protectLocaleCallback);
+
+        ExtractAndProtectLocaleData localeDataCallback = new ExtractAndProtectLocaleData(compiler);
+        NodeTraversal.traverse(compiler, root, localeDataCallback);
+
+        localeData = localeDataCallback.getLocaleValuesDataMaps();
+      } else {
+        NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
+        ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
+        NodeTraversal.traverse(compiler, root, protectLocaleCallback);
+        localeData = new LocaleDataImpl(null);
+      }
     }
 
     public LocaleData getLocaleValuesDataMaps() {
@@ -763,6 +775,10 @@ final class LocaleDataPasses {
     return n.matchesQualifiedName(QNAME_FOR_GOOG_LOCALE);
   }
 
+  private static String normalizeLocale(String locale) {
+    return locale.replace('-', '_');
+  }
+
   /**
    * This class performs the actual locale specific substitutions for the stand-in values create by
    * `ExtractAndProtectLocaleData` It will replace both __JSC_LOCALE__ and __JSC_LOCALE_VALUE__
@@ -781,14 +797,10 @@ final class LocaleDataPasses {
     LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {
       this.compiler = compiler;
       // Use the "default" locale if not otherwise set.
-      this.locale = normalizeLocale(locale == null ? "en" : locale);
+      this.locale = locale; // normalizeLocale(locale == null ? "en" : locale);
       checkNotNull(localeData);
       checkState(localeData instanceof LocaleDataImpl);
-      this.localeValueMap = ((LocaleDataImpl) localeData).data;
-    }
-
-    private String normalizeLocale(String locale) {
-      return locale.replace('-', '_');
+      this.localeValueMap = enableLocaleDataHandling ? ((LocaleDataImpl) localeData).data : null;
     }
 
     @Override
@@ -799,7 +811,9 @@ final class LocaleDataPasses {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall() && n.getFirstChild().matchesName(qnameForLocaleValue)) {
+      if (enableLocaleDataHandling
+          && n.isCall()
+          && n.getFirstChild().matchesName(qnameForLocaleValue)) {
         Node value = n.getSecondChild();
         int valueIndex = (int) value.getDouble();
         Node replacement = lookupValueWithFallback(valueIndex).cloneTree();
@@ -813,7 +827,7 @@ final class LocaleDataPasses {
     }
 
     private Node lookupValueWithFallback(int valueIndex) {
-      Node value = lookupValue(locale, valueIndex);
+      Node value = lookupValue(normalizeLocale(locale), valueIndex);
       if (value == null) {
         value = lookupValue(DEFAULT_LOCALE, valueIndex);
       }
@@ -892,7 +906,7 @@ final class LocaleDataPasses {
         String locale = member.getString();
         Node value = member.removeFirstChild();
 
-        map.put(locale, value);
+        map.put(normalizeLocale(locale), value);
       }
     }
 
