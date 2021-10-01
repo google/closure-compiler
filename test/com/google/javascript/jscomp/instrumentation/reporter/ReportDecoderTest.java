@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.FileProfile;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPoint;
+import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.ReportProfile;
 import java.util.Arrays;
 import org.junit.Test;
@@ -62,13 +63,13 @@ public final class ReportDecoderTest {
                 .addFileProfile(
                     FileProfile.newBuilder()
                         .setFileName("file1")
-                        .addInstrumentationPoint(setTimesExecuted(point1, 1))
-                        .addInstrumentationPoint(setTimesExecuted(point2, 0)))
+                        .addInstrumentationPointsStats(setTimesExecuted(point1, 1))
+                        .addInstrumentationPointsStats(setTimesExecuted(point2, 0)))
                 .addFileProfile(
                     FileProfile.newBuilder()
                         .setFileName("file2")
-                        .addInstrumentationPoint(setTimesExecuted(point3, 1))
-                        .addInstrumentationPoint(setTimesExecuted(point4, 0)))
+                        .addInstrumentationPointsStats(setTimesExecuted(point3, 1))
+                        .addInstrumentationPointsStats(setTimesExecuted(point4, 0)))
                 .build());
   }
 
@@ -104,19 +105,19 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPoint(setTimesExecuted(point1, 5))
-                    .addInstrumentationPoint(setTimesExecuted(point2, 10)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point1, 5))
+                    .addInstrumentationPointsStats(setTimesExecuted(point2, 10)))
             .build();
     ReportProfile profile2 =
         ReportProfile.newBuilder()
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPoint(setTimesExecuted(point1, 15)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point1, 15)))
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPoint(setTimesExecuted(point3, 20)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point3, 20)))
             .build();
 
     ReportProfile profile3 =
@@ -124,8 +125,8 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPoint(setTimesExecuted(point3, 25))
-                    .addInstrumentationPoint(setTimesExecuted(point4, 30)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point3, 25))
+                    .addInstrumentationPointsStats(setTimesExecuted(point4, 30)))
             .build();
 
     ReportProfile mergedReport =
@@ -133,19 +134,19 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPoint(setTimesExecuted(point1, 20))
-                    .addInstrumentationPoint(setTimesExecuted(point2, 10)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point1, 20))
+                    .addInstrumentationPointsStats(setTimesExecuted(point2, 10)))
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPoint(setTimesExecuted(point3, 45))
-                    .addInstrumentationPoint(setTimesExecuted(point4, 30)))
+                    .addInstrumentationPointsStats(setTimesExecuted(point3, 45))
+                    .addInstrumentationPointsStats(setTimesExecuted(point4, 30)))
             .build();
     assertThat(ReportDecoder.mergeProfiles(Arrays.asList(profile1, profile2, profile3)))
         .isEqualTo(mergedReport);
   }
 
-  private InstrumentationPoint setTimesExecuted(InstrumentationPoint point, long value) {
-    return point.toBuilder().setTimesExecuted(value).build();
+  private InstrumentationPointStats setTimesExecuted(InstrumentationPoint point, long value) {
+    return InstrumentationPointStats.newBuilder().setPoint(point).setTimesExecuted(value).build();
   }
 }

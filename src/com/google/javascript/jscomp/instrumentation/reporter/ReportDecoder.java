@@ -28,6 +28,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.FileProfile;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPoint;
+import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.ReportProfile;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -129,11 +130,12 @@ public final class ReportDecoder {
   public static ReportProfile decodeReport(
       Map<String, InstrumentationPoint> mapping, Map<String, Long> frequencies) {
     // Decode each entry into InstrumentionPoint.
-    Stream<InstrumentationPoint> instrumentationPoints =
+    Stream<InstrumentationPointStats> instrumentationPoints =
         mapping.entrySet().stream()
             .map(
                 (entry) ->
-                    entry.getValue().toBuilder()
+                    InstrumentationPointStats.newBuilder()
+                        .setPoint(entry.getValue())
                         .setTimesExecuted(frequencies.getOrDefault(entry.getKey(), 0L))
                         .build());
 
@@ -166,11 +168,12 @@ public final class ReportDecoder {
     while (matcher.find()) {
       encodedPoints.add(matcher.group(1));
     }
-    Stream<InstrumentationPoint> instrumentationPoints =
+    Stream<InstrumentationPointStats> instrumentationPoints =
         mapping.entrySet().stream()
             .map(
                 (entry) ->
-                    entry.getValue().toBuilder()
+                    InstrumentationPointStats.newBuilder()
+                        .setPoint(entry.getValue())
                         .setTimesExecuted(encodedPoints.contains(entry.getKey()) ? 1L : 0L)
                         .build());
     return ReportDecoder.createReportProfile(instrumentationPoints);
@@ -186,18 +189,22 @@ public final class ReportDecoder {
     Map<InstrumentationPoint, Long> frequencies = new HashMap<>();
     for (ReportProfile profile : profiles) {
       for (FileProfile fileProfile : profile.getFileProfileList()) {
-        for (InstrumentationPoint point : fileProfile.getInstrumentationPointList()) {
+        for (InstrumentationPointStats pointStats :
+            fileProfile.getInstrumentationPointsStatsList()) {
           frequencies.compute(
-              point.toBuilder().setTimesExecuted(0).build(),
-              (p, executed) -> (executed == null ? 0 : executed) + point.getTimesExecuted());
+              pointStats.getPoint(),
+              (p, executed) -> (executed == null ? 0 : executed) + pointStats.getTimesExecuted());
         }
       }
     }
-    Stream<InstrumentationPoint> finalPoints =
+    Stream<InstrumentationPointStats> finalPoints =
         frequencies.entrySet().stream()
             .map(
                 (Map.Entry<InstrumentationPoint, Long> entry) ->
-                    entry.getKey().toBuilder().setTimesExecuted(entry.getValue()).build());
+                    InstrumentationPointStats.newBuilder()
+                        .setPoint(entry.getKey())
+                        .setTimesExecuted(entry.getValue())
+                        .build());
     return ReportDecoder.createReportProfile(finalPoints);
   }
 
@@ -206,20 +213,26 @@ public final class ReportDecoder {
    * return as ReportProfile.
    */
   private static ReportProfile createReportProfile(
-      Stream<InstrumentationPoint> instrumentationPoints) {
+      Stream<InstrumentationPointStats> instrumentationPoints) {
     List<FileProfile> fileProfiles =
         instrumentationPoints
             .sorted(
-                comparing(InstrumentationPoint::getFileName)
-                    .thenComparingInt(InstrumentationPoint::getLineNumber))
-            .collect(Collectors.groupingBy(InstrumentationPoint::getFileName))
+                comparing(
+                        (InstrumentationPointStats pointStats) ->
+                            pointStats.getPoint().getFileName())
+                    .thenComparingInt(
+                        (InstrumentationPointStats pointStats) ->
+                            pointStats.getPoint().getLineNumber()))
+            .collect(
+                Collectors.groupingBy(
+                    (InstrumentationPointStats pointStats) -> pointStats.getPoint().getFileName()))
             .entrySet()
             .stream()
             .map(
                 (entry) ->
                     FileProfile.newBuilder()
                         .setFileName(entry.getKey())
-                        .addAllInstrumentationPoint(entry.getValue())
+                        .addAllInstrumentationPointsStats(entry.getValue())
                         .build())
             .sorted(comparing(FileProfile::getFileName))
             .collect(Collectors.toList());

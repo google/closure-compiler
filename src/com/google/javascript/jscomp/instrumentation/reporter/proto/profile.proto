@@ -31,16 +31,26 @@ message InstrumentationPoint {
 
   optional int32 column_number = 5;
 
-  // TODO(b/174873233): move this field out of the proto so that
-  // InstrumentationPoint remains *only* location proto and can be used as key.
-  optional int64 times_executed = 6;
+  reserved 6;
+}
+
+// Stats for the given point.
+//
+// Next tag: 3
+message InstrumentationPointStats {
+  optional InstrumentationPoint point = 1;
+
+  // How many times given point was executed. Depending on context it might be
+  // how many times the point was executed during a single page session (single
+  // report) or across merged reports.
+  optional int64 times_executed = 2;
 }
 
 // Next tag: 3
 message FileProfile {
   optional string file_name = 1;
 
-  repeated InstrumentationPoint instrumentation_point = 2;
+  repeated InstrumentationPointStats instrumentation_points_stats = 2;
 }
 
 // Report showing usage information for a JS binary. For convenience all
