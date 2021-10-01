@@ -834,7 +834,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--rewrite_polyfills",
         handler = BooleanOptionHandler.class,
-        usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
+        usage =
+            "Injects polyfills for ES2015+ library classes and methods used in source. See also"
+                + "https://github.com/google/closure-compiler/wiki/Polyfills")
     private boolean rewritePolyfills = true;
 
     @Option(
