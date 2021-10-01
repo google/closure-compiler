@@ -36,7 +36,7 @@ message InstrumentationPoint {
 
 // Stats for the given point.
 //
-// Next tag: 3
+// Next tag: 4
 message InstrumentationPointStats {
   optional InstrumentationPoint point = 1;
 
@@ -44,6 +44,23 @@ message InstrumentationPointStats {
   // how many times the point was executed during a single page session (single
   // report) or across merged reports.
   optional int64 times_executed = 2;
+
+  // Enum that represents whether a certain instrumentation point is present in
+  // compiled and optimized JS file.
+  enum Presence {
+    PRESENCE_UNKNOWN = 0;
+
+    // Instrumentation point is present in the optimized JS file.
+    PRESENT = 1;
+
+    // Instrumentation point is missing from the optimized JS file. The compiler
+    // deemed that that corresponding code can never be executed.
+    STATICALLY_REMOVED = 2;
+  }
+
+  // Indicates whether given point is present in the optimized code or was
+  // statically removed by the compiler.
+  optional Presence point_presence = 3;
 }
 
 // Next tag: 3

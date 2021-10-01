@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.FileProfile;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPoint;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats;
+import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats.Presence;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.ReportProfile;
 import java.util.Arrays;
 import org.junit.Test;
@@ -63,18 +64,20 @@ public final class ReportDecoderTest {
                 .addFileProfile(
                     FileProfile.newBuilder()
                         .setFileName("file1")
-                        .addInstrumentationPointsStats(setTimesExecuted(point1, 1))
-                        .addInstrumentationPointsStats(setTimesExecuted(point2, 0)))
+                        .addInstrumentationPointsStats(statsWithPresence(point1, Presence.PRESENT))
+                        .addInstrumentationPointsStats(
+                            statsWithPresence(point2, Presence.STATICALLY_REMOVED)))
                 .addFileProfile(
                     FileProfile.newBuilder()
                         .setFileName("file2")
-                        .addInstrumentationPointsStats(setTimesExecuted(point3, 1))
-                        .addInstrumentationPointsStats(setTimesExecuted(point4, 0)))
+                        .addInstrumentationPointsStats(statsWithPresence(point3, Presence.PRESENT))
+                        .addInstrumentationPointsStats(
+                            statsWithPresence(point4, Presence.STATICALLY_REMOVED)))
                 .build());
   }
 
   @Test
-  public void testMergeProfiles() {
+  public void testMergeProfilesCheckTimesExecuted() {
     InstrumentationPoint point1 =
         InstrumentationPoint.newBuilder()
             .setFileName("file1")
@@ -105,19 +108,19 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPointsStats(setTimesExecuted(point1, 5))
-                    .addInstrumentationPointsStats(setTimesExecuted(point2, 10)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point1, 5))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point2, 10)))
             .build();
     ReportProfile profile2 =
         ReportProfile.newBuilder()
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPointsStats(setTimesExecuted(point1, 15)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point1, 15)))
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPointsStats(setTimesExecuted(point3, 20)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point3, 20)))
             .build();
 
     ReportProfile profile3 =
@@ -125,8 +128,8 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPointsStats(setTimesExecuted(point3, 25))
-                    .addInstrumentationPointsStats(setTimesExecuted(point4, 30)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point3, 25))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point4, 30)))
             .build();
 
     ReportProfile mergedReport =
@@ -134,19 +137,97 @@ public final class ReportDecoderTest {
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file1")
-                    .addInstrumentationPointsStats(setTimesExecuted(point1, 20))
-                    .addInstrumentationPointsStats(setTimesExecuted(point2, 10)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point1, 20))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point2, 10)))
             .addFileProfile(
                 FileProfile.newBuilder()
                     .setFileName("file2")
-                    .addInstrumentationPointsStats(setTimesExecuted(point3, 45))
-                    .addInstrumentationPointsStats(setTimesExecuted(point4, 30)))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point3, 45))
+                    .addInstrumentationPointsStats(statsWithTimeExecuted(point4, 30)))
             .build();
     assertThat(ReportDecoder.mergeProfiles(Arrays.asList(profile1, profile2, profile3)))
         .isEqualTo(mergedReport);
   }
 
-  private InstrumentationPointStats setTimesExecuted(InstrumentationPoint point, long value) {
-    return InstrumentationPointStats.newBuilder().setPoint(point).setTimesExecuted(value).build();
+  @Test
+  public void testMergeReportProfilesCheckPresence() {
+    InstrumentationPoint point1 =
+        InstrumentationPoint.newBuilder()
+            .setFileName("file1")
+            .setFunctionName("fun1")
+            .setLineNumber(1)
+            .build();
+    InstrumentationPoint point2 =
+        InstrumentationPoint.newBuilder()
+            .setFileName("file1")
+            .setFunctionName("fun2")
+            .setLineNumber(2)
+            .build();
+    InstrumentationPoint point3 =
+        InstrumentationPoint.newBuilder()
+            .setFileName("file1")
+            .setFunctionName("fun3")
+            .setLineNumber(3)
+            .build();
+
+    ReportProfile profile1 =
+        ReportProfile.newBuilder()
+            .addFileProfile(
+                FileProfile.newBuilder()
+                    .setFileName("file1")
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point1, Presence.PRESENCE_UNKNOWN))
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point2, Presence.PRESENCE_UNKNOWN))
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point3, Presence.PRESENCE_UNKNOWN)))
+            .build();
+    ReportProfile profile2 =
+        ReportProfile.newBuilder()
+            .addFileProfile(
+                FileProfile.newBuilder()
+                    .setFileName("file1")
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point1, Presence.STATICALLY_REMOVED))
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point2, Presence.STATICALLY_REMOVED)))
+            .build();
+    ReportProfile profile3 =
+        ReportProfile.newBuilder()
+            .addFileProfile(
+                FileProfile.newBuilder()
+                    .setFileName("file1")
+                    .addInstrumentationPointsStats(statsWithPresence(point1, Presence.PRESENT)))
+            .build();
+
+    ReportProfile mergedReport =
+        ReportProfile.newBuilder()
+            .addFileProfile(
+                FileProfile.newBuilder()
+                    .setFileName("file1")
+                    .addInstrumentationPointsStats(statsWithPresence(point1, Presence.PRESENT))
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point2, Presence.STATICALLY_REMOVED))
+                    .addInstrumentationPointsStats(
+                        statsWithPresence(point3, Presence.PRESENCE_UNKNOWN)))
+            .build();
+    assertThat(ReportDecoder.mergeProfiles(Arrays.asList(profile1, profile3, profile2)))
+        .isEqualTo(mergedReport);
+  }
+
+  private InstrumentationPointStats statsWithTimeExecuted(InstrumentationPoint point, long value) {
+    return InstrumentationPointStats.newBuilder()
+        .setPoint(point)
+        .setTimesExecuted(value)
+        .setPointPresence(Presence.PRESENCE_UNKNOWN)
+        .build();
+  }
+
+  private InstrumentationPointStats statsWithPresence(InstrumentationPoint point, Presence value) {
+    return InstrumentationPointStats.newBuilder()
+        .setPoint(point)
+        .setPointPresence(value)
+        .setTimesExecuted(0)
+        .build();
   }
 }

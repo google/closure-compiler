@@ -29,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.FileProfile;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPoint;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats;
+import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPointStats.Presence;
 import com.google.javascript.jscomp.instrumentation.reporter.proto.ReportProfile;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -174,7 +175,11 @@ public final class ReportDecoder {
                 (entry) ->
                     InstrumentationPointStats.newBuilder()
                         .setPoint(entry.getValue())
-                        .setTimesExecuted(encodedPoints.contains(entry.getKey()) ? 1L : 0L)
+                        .setTimesExecuted(0)
+                        .setPointPresence(
+                            encodedPoints.contains(entry.getKey())
+                                ? Presence.PRESENT
+                                : Presence.STATICALLY_REMOVED)
                         .build());
     return ReportDecoder.createReportProfile(instrumentationPoints);
   }
@@ -187,13 +192,25 @@ public final class ReportDecoder {
    */
   public static ReportProfile mergeProfiles(List<ReportProfile> profiles) {
     Map<InstrumentationPoint, Long> frequencies = new HashMap<>();
+    Map<InstrumentationPoint, Presence> presences = new HashMap<>();
     for (ReportProfile profile : profiles) {
       for (FileProfile fileProfile : profile.getFileProfileList()) {
         for (InstrumentationPointStats pointStats :
             fileProfile.getInstrumentationPointsStatsList()) {
           frequencies.compute(
               pointStats.getPoint(),
-              (p, executed) -> (executed == null ? 0 : executed) + pointStats.getTimesExecuted());
+              (p, existing) -> (existing == null ? 0 : existing) + pointStats.getTimesExecuted());
+          // Logic of merging presence field.
+          // 1. PRESENT overrides STATICALLY_REMOVED and UNKNOWN.
+          // 2. STATICALLY_REMOVED overrides UNKNOWN.
+          presences.compute(
+              pointStats.getPoint(),
+              (p, existing) ->
+                  (pointStats.getPointPresence() == Presence.PRESENT
+                          || existing == Presence.PRESENCE_UNKNOWN
+                          || existing == null)
+                      ? pointStats.getPointPresence()
+                      : existing);
         }
       }
     }
@@ -204,6 +221,7 @@ public final class ReportDecoder {
                     InstrumentationPointStats.newBuilder()
                         .setPoint(entry.getKey())
                         .setTimesExecuted(entry.getValue())
+                        .setPointPresence(presences.get(entry.getKey()))
                         .build());
     return ReportDecoder.createReportProfile(finalPoints);
   }
