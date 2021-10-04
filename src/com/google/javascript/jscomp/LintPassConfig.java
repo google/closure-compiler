@@ -65,6 +65,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     return ImmutableList.of();
   }
 
+  @Override
+  protected List<PassFactory> getFinalizations() {
+    return ImmutableList.of();
+  }
+
   private final PassFactory gatherModuleMetadataPass =
       PassFactory.builder()
           .setName(PassNames.GATHER_MODULE_METADATA)
