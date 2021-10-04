@@ -974,7 +974,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
         () -> {
-          performFinalizations();
+          if (options.shouldOptimize()) {
+            performFinalizations();
+          }
           return null;
         });
   }
