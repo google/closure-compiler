@@ -26,12 +26,12 @@ var Intl = {};
 
 /**
  * NOTE: this API is not from ecma402 and is subject to change.
- * @param {string|Array<string>=} opt_locales
+ * @param {string|Array<string>=} locales
  * @param {{type: (string|undefined)}=}
- *         opt_options
+ *         options
  * @constructor
  */
-Intl.v8BreakIterator = function(opt_locales, opt_options) {};
+Intl.v8BreakIterator = function(locales, options) {};
 
 /**
  * @param {string} text
@@ -61,20 +61,20 @@ Intl.v8BreakIterator.prototype.next = function() {};
 
 /**
  * @constructor
- * @param {string|Array<string>=} opt_locales
+ * @param {string|Array<string>=} locales
  * @param {{usage: (string|undefined), localeMatcher: (string|undefined),
  *     sensitivity: (string|undefined), ignorePunctuation: (boolean|undefined),
  *     numeric: (boolean|undefined), caseFirst: (string|undefined)}=}
- *         opt_options
+ *         options
  */
-Intl.Collator = function(opt_locales, opt_options) {};
+Intl.Collator = function(locales, options) {};
 
 /**
  * @param {Array<string>} locales
- * @param {{localeMatcher: (string|undefined)}=} opt_options
+ * @param {{localeMatcher: (string|undefined)}=} options
  * @return {Array<string>}
  */
-Intl.Collator.supportedLocalesOf = function(locales, opt_options) {};
+Intl.Collator.supportedLocalesOf = function(locales, options) {};
 
 /**
  * @param {string} arg1
@@ -92,25 +92,31 @@ Intl.Collator.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
- * @param {string|Array<string>=} opt_locales
- * @param {{localeMatcher: (string|undefined), useGrouping: (boolean|undefined),
+ * @param {string|Array<string>=} locales
+ * @param {{
+ *     notation: (string|undefined),
+ *     localeMatcher: (string|undefined), useGrouping: (boolean|undefined),
  *     numberingSystem: (string|undefined), style: (string|undefined),
  *     currency: (string|undefined), currencyDisplay: (string|undefined),
  *     minimumIntegerDigits: (number|undefined),
  *     minimumFractionDigits: (number|undefined),
  *     maximumFractionDigits: (number|undefined),
  *     minimumSignificantDigits: (number|undefined),
- *     maximumSignificantDigits: (number|undefined)}=}
- *         opt_options
+ *     maximumSignificantDigits: (number|undefined),
+ *     compactDisplay: (string|undefined), currencySign: (string|undefined),
+ *     signDisplay: (string|undefined), unit: (string|undefined),
+ *     unitDisplay: (string|undefined)
+ *     }=}
+ *         options
  */
-Intl.NumberFormat = function(opt_locales, opt_options) {};
+Intl.NumberFormat = function(locales, options) {};
 
 /**
  * @param {Array<string>} locales
- * @param {{localeMatcher: (string|undefined)}=} opt_options
+ * @param {{localeMatcher: (string|undefined)}=} options
  * @return {Array<string>}
  */
-Intl.NumberFormat.supportedLocalesOf = function(locales, opt_options) {};
+Intl.NumberFormat.supportedLocalesOf = function(locales, options) {};
 
 /**
  * @param {number} num
@@ -130,13 +136,16 @@ Intl.NumberFormat.prototype.formatToParts = function(num) {};
  *     currency: (string|undefined), currencyDisplay: (string|undefined),
  *     minimumIntegerDigits: number, minimumFractionDigits: number,
  *     maximumFractionDigits: number, minimumSignificantDigits: number,
- *     maximumSignificantDigits: number, useGrouping: boolean}}
+ *     maximumSignificantDigits: number, useGrouping: boolean,
+ *     compactDisplay: (string|undefined), currencySign: (string|undefined),
+ *     signDisplay: (string|undefined), unit: (string|undefined),
+ *     unitDisplay: (string|undefined)}}
  */
 Intl.NumberFormat.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
- * @param {string|Array<string>=} opt_locales
+ * @param {string|Array<string>=} locales
  * @param {{localeMatcher: (string|undefined),
  *    formatMatcher: (string|undefined), calendar: (string|undefined),
  *    numberingSystem: (string|undefined), tz: (string|undefined),
@@ -144,17 +153,21 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {};
  *    year: (string|undefined), month: (string|undefined),
  *    day: (string|undefined), hour: (string|undefined),
  *    minute: (string|undefined), second: (string|undefined),
- *    timeZoneName: (string|undefined), hour12: (boolean|undefined)}=}
- *        opt_options
+ *    timeZoneName: (string|undefined), hour12: (boolean|undefined),
+ *    dateStyle: (string|undefined), timeStyle: (string|undefined),
+ *    timeZone: (string|undefined), dayPeriod: (string|undefined),
+ *    hourCycle: (string|undefined),
+ *    fractionalSecondDigits: (number|undefined)}=}
+ *        options
  */
-Intl.DateTimeFormat = function(opt_locales, opt_options) {};
+Intl.DateTimeFormat = function(locales, options) {};
 
 /**
  * @param {Array<string>} locales
- * @param {{localeMatcher: string}=} opt_options
+ * @param {{localeMatcher: string}=} options
  * @return {Array<string>}
  */
-Intl.DateTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
+Intl.DateTimeFormat.supportedLocalesOf = function(locales, options) {};
 
 /**
  * @param {(!Date|number)=} date
@@ -175,30 +188,41 @@ Intl.DateTimeFormat.prototype.formatToParts = function(date) {};
  *    month: (string|undefined), day: (string|undefined),
  *    hour: (string|undefined), minute: (string|undefined),
  *    second: (string|undefined), timeZoneName: (string|undefined),
- *    hour12: (boolean|undefined)}}
+ *    hour12: (boolean|undefined),
+ *    dateStyle: (string|undefined), datimeStyle: (string|undefined),
+ *    dayPeriod: (string|undefined), hourCycle: (string|undefined),
+ *    fractionalSecondDigits: (number|undefined)}}
  */
 Intl.DateTimeFormat.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules#Syntax
- * @param {string|Array<string>=} opt_locales
- * @param {{localeMatcher: (string|undefined), type: (string|undefined)}=}
- *         opt_options
+ * @param {string|Array<string>=} locales
+ * @param {{localeMatcher: (string|undefined), type: (string|undefined),
+ *     minimumIntegerDigits: (number|undefined),
+ *     minimumFractionDigits: (number|undefined),
+ *     maximumFractionDigits: (number|undefined),
+ *     minimumSignificantDigits: (number|undefined),
+ *     maximumSignificantDigits: (number|undefined)}=}
+ *         options
  */
-Intl.PluralRules = function(opt_locales, opt_options) {};
+Intl.PluralRules = function(locales, options) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules/supportedLocalesOf#Syntax
  * @param {Array<string>} locales
- * @param {{localeMatcher: string}=} opt_options
+ * @param {{localeMatcher: string}=} options
  * @return {Array<string>}
  */
-Intl.PluralRules.supportedLocalesOf = function(locales, opt_options) {};
+Intl.PluralRules.supportedLocalesOf = function(locales, options) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/PluralRules/resolvedOptions#Syntax
- * @return {{locale: string, pluralCategories: Array<string>, type: string}}
+ * @return {{locale: string, pluralCategories: Array<string>, type: string,
+ *            minimumIntegerDigits: number, minimumFractionDigits: number,
+ *            maximumFractionDigits: number, minimumSignificantDigits: number,
+ *            maximumSignificantDigits: number }}
  */
 Intl.PluralRules.prototype.resolvedOptions = function() {};
 
@@ -212,21 +236,21 @@ Intl.PluralRules.prototype.select = function(number) {};
 /**
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat#Syntax
- * @param {string|Array<string>=} opt_locales
+ * @param {string|Array<string>=} locales
  * @param {{localeMatcher: (string|undefined),
  *    numeric: (string|undefined),
  *    style: (string|undefined)}=}
- *        opt_options
+ *        options
  */
-Intl.RelativeTimeFormat = function(opt_locales, opt_options) {};
+Intl.RelativeTimeFormat = function(locales, options) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/supportedLocalesOf#Syntax
  * @param {Array<string>} locales
- * @param {{localeMatcher: string}=} opt_options
+ * @param {{localeMatcher: string}=} options
  * @return {Array<string>}
  */
-Intl.RelativeTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
+Intl.RelativeTimeFormat.supportedLocalesOf = function(locales, options) {};
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RelativeTimeFormat/format#Syntax
