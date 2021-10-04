@@ -33,48 +33,47 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Collects information mapping the generated (compiled) source back to
- * its original source for debugging purposes.
+ * Collects information mapping the generated (compiled) source back to its original source for
+ * debugging purposes.
  *
  * @see CodeConsumer
  * @see CodeGenerator
  * @see CodePrinter
  */
 public final class SourceMap {
-  /**
-   * An enumeration of available source map formats
-   */
+  /** An enumeration of available source map formats */
   public static enum Format {
-     DEFAULT {
-       @Override SourceMap getInstance() {
-         return new SourceMap(
-           SourceMapGeneratorFactory.getInstance(SourceMapFormat.DEFAULT));
-       }
-     },
-     V3 {
-       @Override SourceMap getInstance() {
-         return new SourceMap(
-           SourceMapGeneratorFactory.getInstance(SourceMapFormat.V3));
-        }
-     };
-     abstract SourceMap getInstance();
+    DEFAULT {
+      @Override
+      SourceMap getInstance() {
+        return new SourceMap(SourceMapGeneratorFactory.getInstance(SourceMapFormat.DEFAULT));
+      }
+    },
+    V3 {
+      @Override
+      SourceMap getInstance() {
+        return new SourceMap(SourceMapGeneratorFactory.getInstance(SourceMapFormat.V3));
+      }
+    };
+
+    abstract SourceMap getInstance();
   }
 
-  /**
-   * Source maps can be very large different levels of detail can be specified.
-   */
+  /** Source maps can be very large different levels of detail can be specified. */
   public static enum DetailLevel implements Predicate<Node> {
     // ALL is best when the fullest details are needed for debugging or for
     // code-origin analysis.
     ALL {
-      @Override public boolean apply(Node node) {
+      @Override
+      public boolean apply(Node node) {
         return true;
       }
     },
     // SYMBOLS is intended to be used for stack trace deobfuscation when full
     // detail is not needed.
     SYMBOLS {
-      @Override public boolean apply(Node node) {
+      @Override
+      public boolean apply(Node node) {
         return node.isCall()
             || node.isNew()
             || node.isFunction()
@@ -87,8 +86,8 @@ public final class SourceMap {
   }
 
   /**
-   * Function that mape a "destination" location to use within the source map. Should return null
-   * if the value is not mapped.
+   * Function that mape a "destination" location to use within the source map. Should return null if
+   * the value is not mapped.
    */
   @FunctionalInterface
   public interface LocationMapping {
@@ -100,12 +99,11 @@ public final class SourceMap {
     String map(String location);
   }
 
-  /**
-   * Simple {@link LocationMapping} that strips a prefix from a location.
-   */
+  /** Simple {@link LocationMapping} that strips a prefix from a location. */
   public static final class PrefixLocationMapping implements LocationMapping {
     final String prefix;
     final String replacement;
+
     public PrefixLocationMapping(String prefix, String replacement) {
       this.prefix = prefix;
       this.replacement = replacement;
@@ -147,17 +145,14 @@ public final class SourceMap {
    * compilation job have been generated from, and used to create a source map that maps all the way
    * back to original inputs. {@code null} if no such mapping is wanted.
    */
-  @Nullable
-  private SourceFileMapping mapping;
+  @Nullable private SourceFileMapping mapping;
 
   private SourceMap(SourceMapGenerator generator) {
     this.generator = generator;
   }
 
   public void addMapping(
-      Node node,
-      FilePosition outputStartPosition,
-      FilePosition outputEndPosition) {
+      Node node, FilePosition outputStartPosition, FilePosition outputEndPosition) {
     // If the node does not have an associated source file or
     // its line number is -1, then the node does not have sufficient
     // information for a mapping to be useful.
@@ -264,11 +259,9 @@ public final class SourceMap {
     generator.validate(validate);
   }
 
-  /**
-   * @param sourceMapLocationMappings
-   */
+  /** @param sourceMapLocationMappings */
   public void setPrefixMappings(List<? extends LocationMapping> sourceMapLocationMappings) {
-     this.prefixMappings = sourceMapLocationMappings;
+    this.prefixMappings = sourceMapLocationMappings;
   }
 
   public void setSourceFileMapping(SourceFileMapping mapping) {
