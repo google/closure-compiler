@@ -1490,6 +1490,10 @@ public class Node {
    *
    * <pre>Node n = ...;
    * for (Node child : n.children()) { ...</pre>
+   *
+   * NOTE: Do not use 'children' for recursive descent of the AST. The overhead of using iterators
+   * rather then getFirstChild()/getNext() is very significant. We have deprecated it as it is easy
+   * to misuse.
    */
   @Deprecated
   public final Iterable<Node> children() {
