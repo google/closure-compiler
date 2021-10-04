@@ -471,6 +471,28 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_requireType() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines("goog.module('some.bar');", "const {one} = goog.requireType('some.foo');"),
+            lines("goog.module('some.foo');", "exports.one = 1;"));
+    Symbol symbol =
+        table.getAllSymbols().stream()
+            .filter((s) -> s.getSourceFileName().equals("file2.js") && s.getName().equals("one"))
+            .findFirst()
+            .get();
+    for (SymbolTable.Reference ref : table.getReferences(symbol)) {
+      if (ref.getNode().getSourceFileName().equals("file1.js")) {
+        assertThat(ref.getIsImport()).isTrue();
+        return;
+      }
+    }
+    Assert.fail("Did not find references in file2.js of symbol " + symbol);
+  }
+
+  @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExport() {
     verifySymbolreferencedInSecondFileAsImport(
         lines("goog.provide('some.Foo');", "some.Foo = class {}"),

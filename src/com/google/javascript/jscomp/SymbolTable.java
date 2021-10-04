@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -1287,25 +1288,33 @@ public final class SymbolTable {
     // Map containind goog.module names to Scope object representing them. For goog.provide
     // namespaces there is no scope as elements of goog.provide are global.
     Map<String, SymbolScope> moduleScopes = new HashMap<>();
-    NodeTraversal.Callback traverse =
+    Predicate<Node> looksLikeGoogCall =
+        (Node n) -> {
+          if (!n.isCall()) {
+            return false;
+          }
+          Node left = n.getFirstChild();
+          Node arg = n.getSecondChild();
+          // We want only nodes of type `goog.xyz('somestring')`.
+          if (!(left.isGetProp()
+                  && left.getFirstChild().isName()
+                  && left.getFirstChild().getString().equals("goog"))
+              || arg == null
+              || !arg.isStringLit()) {
+            return false;
+          }
+          return true;
+        };
+    NodeTraversal.Callback collectModuleScopes =
         new AbstractPostOrderCallback() {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
-            if (!n.isCall()) {
+            if (!looksLikeGoogCall.test(n)) {
               return;
             }
-            Node left = n.getFirstChild();
             Node arg = n.getSecondChild();
-            // We want only nodes of type `goog.xyz('somestring')`.
-            if (!(left.isGetProp()
-                    && left.getFirstChild().isName()
-                    && left.getFirstChild().getString().equals("goog"))
-                || arg == null
-                || !arg.isStringLit()) {
-              return;
-            }
             String namespaceName = "ns$" + arg.getString();
-            switch (left.getString()) {
+            switch (n.getFirstChild().getString()) {
               case "module":
               case "provide":
                 Symbol ns =
@@ -1321,6 +1330,21 @@ public final class SymbolTable {
                   moduleScopes.put(arg.getString(), scopes.get(n.getGrandparent()));
                 }
                 break;
+              default:
+                // do nothing. Some other goog.xyz call.
+            }
+          }
+        };
+    NodeTraversal.Callback processRequireStatements =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (!looksLikeGoogCall.test(n)) {
+              return;
+            }
+            Node arg = n.getSecondChild();
+            String namespaceName = "ns$" + arg.getString();
+            switch (n.getFirstChild().getString()) {
               case "require":
               case "requireType":
               case "forwardDeclare":
@@ -1337,7 +1361,8 @@ public final class SymbolTable {
             }
           }
         };
-    NodeTraversal.traverseRoots(compiler, traverse, externs, root);
+    NodeTraversal.traverseRoots(compiler, collectModuleScopes, externs, root);
+    NodeTraversal.traverseRoots(compiler, processRequireStatements, externs, root);
   }
 
   /*
