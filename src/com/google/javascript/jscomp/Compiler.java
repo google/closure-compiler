@@ -777,12 +777,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
+    boolean hasZone = false;
     for (CompilerInput input : moduleGraph.getAllInputs()) {
       InputId id = input.getInputId();
+      if (input.getName().endsWith("packages/zone.js/lib/zone.closure.js")) {
+        hasZone = true;
+      }
       CompilerInput previous = putCompilerInput(id, input);
       if (previous != null) {
         report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
+    }
+    if (hasZone
+        && !options.allowsZoneJsWithAsyncFunctionsInOutput()
+        && options.getOutputFeatureSet().contains(FeatureSet.Feature.ASYNC_FUNCTIONS)) {
+      throw new UnsupportedOperationException(
+          "ZoneJS is incompatible with language level ES2017 or higher (See go/ngissue/31730)\n"
+              + "Please set `--language_out=ECMASCRIPT_2016` (or older) in your flags.");
     }
   }
 

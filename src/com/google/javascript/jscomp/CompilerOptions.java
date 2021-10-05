@@ -1882,6 +1882,21 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setNewTypeInference(boolean enable) {}
 
+  /**
+   * Bypass check preventing output at a language mode that includes async functions when zone.js is
+   * detected as present. Since this check catches difficult-to-debug issues at build time (see
+   * https://github.com/angular/angular/issues/31730), setting this option is not recommended.
+   */
+  private boolean allowZoneJsWithAsyncFunctionsInOutput;
+
+  public void setAllowZoneJsWithAsyncFunctionsInOutput(boolean enable) {
+    this.allowZoneJsWithAsyncFunctionsInOutput = enable;
+  }
+
+  boolean allowsZoneJsWithAsyncFunctionsInOutput() {
+    return this.checksOnly || this.allowZoneJsWithAsyncFunctionsInOutput;
+  }
+
   /** @return true if either typechecker is ON. */
   public boolean isTypecheckingEnabled() {
     return this.checkTypes;
