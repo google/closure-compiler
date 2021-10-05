@@ -217,6 +217,31 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testIndirectCall() {
+    testWithPseudo(
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = (0, foo.getUniqueId)('foo_bar')"),
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = 'a'"),
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = 'foo_bar$0'"));
+    // JSCompiler inserts JSCOMPILER_PRESERVE(...) in the "UselessCode" analysis.
+    testWithPseudo(
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = (JSCOMPILER_PRESERVE(0), foo.getUniqueId)('foo_bar')"),
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = 'a'"),
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {};", //
+            "foo.bar = 'foo_bar$0'"));
+  }
+
+  @Test
   public void testObjectLit() {
     testWithPseudo(
         lines(
