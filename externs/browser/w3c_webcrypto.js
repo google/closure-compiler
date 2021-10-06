@@ -803,6 +803,12 @@ webCrypto.Crypto = function() {};
 webCrypto.Crypto.prototype.getRandomValues = function(typedArray) {};
 
 /**
+ * @see https://developer.mozilla.org/en/docs/Web/API/Crypto/randomUUID
+ * @return {string}
+ */
+webCrypto.Crypto.prototype.randomUUID = function() {};
+
+/**
  * @type {?webCrypto.SubtleCrypto}
  * @see http://www.w3.org/TR/WebCryptoAPI/#Crypto-attribute-subtle
  */
