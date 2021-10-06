@@ -358,17 +358,13 @@ public class DiagnosticGroups {
           "const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          // TODO(b/200818270): remove CHECK_FINAL_PROPERTY_OVERRIDDEN
-          CheckAccessControls.FINAL_PROPERTY_OVERRIDDEN,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
   public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup(
           "constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          // TODO(b/200818270): remove this diagnostic
-          CheckAccessControls.FINAL_PROPERTY_OVERRIDDEN);
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   static final DiagnosticGroup ACCESS_CONTROLS_CONST =
       DiagnosticGroups.registerGroup("accessControlsConst", CONSTANT_PROPERTY);
