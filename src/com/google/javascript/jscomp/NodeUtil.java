@@ -2778,6 +2778,19 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns the call target for a call expression, resolving an indirected call (`(0, foo)()`) if
+   * present.
+   */
+  public static Node getCallTargetResolvingIndirectCalls(Node call) {
+    checkArgument(call.isCall(), "must be call expression, got %s", call);
+    Node target = call.getFirstChild();
+    if (target.isComma() && target.hasTwoChildren() && target.getSecondChild().isQualifiedName()) {
+      return target.getSecondChild();
+    }
+    return target;
+  }
+
+  /**
    * Is the node a var, const, let, function, or class declaration? See {@link
    * #isFunctionDeclaration}, {@link #isClassDeclaration}, and {@link #isNameDeclaration}
    */
