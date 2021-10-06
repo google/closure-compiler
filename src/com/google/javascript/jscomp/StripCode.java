@@ -688,7 +688,7 @@ class StripCode implements CompilerPass {
       //     STRING (method name)
       //   ... (arguments)
 
-      Node function = n.getFirstChild();
+      Node function = NodeUtil.getCallTargetResolvingIndirectCalls(n);
       if (function == null || !function.isQualifiedName()) {
         return false;
       }

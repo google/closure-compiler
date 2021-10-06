@@ -587,6 +587,15 @@ public final class StripCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLoggerMethodCallByIndirection() {
+    test(
+        lines(
+            "const x = goog.debug.Logger.getLogger('a.b.c');", //
+            "(0, goog.log.error)(x, 'oh noes');"),
+        "");
+  }
+
+  @Test
   public void testSubPropertyAccessByVariableName_var() {
     test(
         lines(
