@@ -264,7 +264,7 @@ class StripCode implements CompilerPass {
     }
 
     /**
-     * Removes declarations of any variables whose names are strip names or whose whose r-values are
+     * Removes declarations of any variables whose names are strip names or whose r-values are
      * static method calls on strip types. Builds a set of removed variables so that all references
      * to them can be removed.
      *
@@ -609,11 +609,12 @@ class StripCode implements CompilerPass {
      * @return Whether the call's return value should be stripped
      */
     boolean isCallWhoseReturnValueShouldBeStripped(@Nullable Node n) {
-      return n != null
-          && (n.isCall() || n.isNew())
-          && n.hasChildren()
-          && (qualifiedNameBeginsWithStripType(n.getFirstChild())
-              || nameIncludesFieldNameToStrip(n.getFirstChild()));
+      if (n == null || (!n.isCall() && !n.isNew()) || !n.hasChildren()) {
+        return false;
+      }
+
+      Node function = NodeUtil.getCallTargetResolvingIndirectCalls(n);
+      return qualifiedNameBeginsWithStripType(function) || nameIncludesFieldNameToStrip(function);
     }
 
     /**
