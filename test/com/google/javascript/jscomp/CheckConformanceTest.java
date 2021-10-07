@@ -3206,6 +3206,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBanExecCommand() {
+    configuration =
+        lines(
+            "requirement: {\n",
+            "  type: CUSTOM\n",
+            "  value: 'insertHTML'\n",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExecCommand'\n",
+            "  error_message: 'BanExecCommand message'\n",
+            "}");
+
+    String externs = lines(DEFAULT_EXTERNS, "/** @constructor */ function Document() {}");
+
+    testWarning(
+        externs(externs),
+        srcs("(new Document).execCommand('insertHtml', false, 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanExecCommand message");
+
+    testNoWarning(externs(externs), srcs("(new Document).execCommand('bold')"));
+  }
+
+  @Test
   public void testBanStaticThis() {
     configuration =
         lines(

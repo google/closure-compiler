@@ -2218,6 +2218,77 @@ public final class ConformanceRules {
     }
   }
 
+  /**
+   * Ban {@code Document#execCommand} with command names specified in {@code value} or any dynamic
+   * string.
+   */
+  public static final class BanExecCommand extends AbstractRule {
+    private final ImmutableList<String> bannedAttrs;
+
+    /**
+     * Creates a custom checker to ban {@code Document#execCommand} based on a conformance
+     * requirement spec. Names in {@code value} fields indicate the attribute names that should be
+     * blocked.
+     *
+     * @throws InvalidRequirementSpec if the requirement is malformed
+     */
+    public BanExecCommand(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      bannedAttrs =
+          requirement.getValueList().stream()
+              .map(v -> v.toLowerCase(Locale.ROOT))
+              .collect(toImmutableList());
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      if (!isBannedProperty(node)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      // If the function is called without arguments then it's either a false positive or
+      // uncompilable code.
+      if (node.getChildCount() < 2) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      Node attr = node.getSecondChild();
+      if (!attr.isStringLit()) {
+        return ConformanceResult.VIOLATION;
+      }
+
+      String attrName = attr.getString();
+      if (bannedAttrs.contains(attrName.toLowerCase(Locale.ROOT))) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isBannedProperty(Node node) {
+      if (!node.isCall()) {
+        return false;
+      }
+      Node target = node.getFirstChild();
+      if (!target.isGetProp()) {
+        return false;
+      }
+      String propertyName = target.getString();
+      if (!propertyName.equals("execCommand")) {
+        return false;
+      }
+      JSType type = target.getFirstChild().getJSType();
+      if (type == null) {
+        return false;
+      }
+      JSType documentType = compiler.getTypeRegistry().getGlobalType("Document");
+      if (documentType == null || !type.isSubtypeOf(documentType)) {
+        return false;
+      }
+      return true;
+    }
+  }
+
   /** Checks that {@code this} is not being referenced directly within a static member function. */
   public static final class BanStaticThis extends AbstractTypeRestrictionRule {
     public BanStaticThis(AbstractCompiler compiler, Requirement requirement)
