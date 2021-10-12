@@ -415,4 +415,17 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
             + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); "
             + "goog.testing.testSuite(new MyTest());");
   }
+
+  @Test
+  public void testCommaOperatorRecognized() {
+    test(
+        srcs("(0, goog.testing.testSuite)({setUp(){console.error('hello');}});"),
+        expected("(0, goog.testing.testSuite)({'setUp': function (){console.error('hello');}});"));
+
+    test(
+        srcs("(0, goog.testing.testSuite)({testFunction(){console.error('hello');}});"),
+        expected(
+            "(0, goog.testing.testSuite)({'testFunction': function"
+                + " (){console.error('hello');}});"));
+  }
 }

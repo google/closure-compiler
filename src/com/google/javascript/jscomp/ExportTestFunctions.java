@@ -80,7 +80,7 @@ public class ExportTestFunctions implements CompilerPass {
           String className = NodeUtil.getName(classNode);
           exportClass(classNode, className, n);
         } else if (n.isClass()) {
-          exportClass(parent, n);
+          exportClass(n);
         }
       } else if (NodeUtil.isExprAssign(parent)) {
         // Check for a test method assignment.
@@ -119,7 +119,7 @@ public class ExportTestFunctions implements CompilerPass {
       }
     }
 
-    private void exportClass(Node scriptNode, Node classNode) {
+    private void exportClass(Node classNode) {
       String className = NodeUtil.getName(classNode);
       exportClass(classNode, className, classNode);
     }
@@ -282,6 +282,7 @@ public class ExportTestFunctions implements CompilerPass {
    * robust to handle forwardDeclares, destructuring requires, etc.
    */
   private static boolean isGoogTestingTestSuite(NodeTraversal t, Node qname) {
+    qname = NodeUtil.getCallTargetResolvingIndirectCalls(qname.getParent());
     if (!qname.isQualifiedName()) {
       return false;
     }
