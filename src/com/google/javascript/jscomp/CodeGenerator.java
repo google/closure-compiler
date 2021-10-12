@@ -1085,6 +1085,7 @@ public class CodeGenerator {
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
         // first viable parentheses (don't traverse into functions).
         // Also, NEW requires parentheses around an optional chain callee.
+        // If the first child is an arrow function, then parentheses is needed
         if (NodeUtil.has(first, Node::isCall, NodeUtil.MATCH_NOT_FUNCTION)
             || NodeUtil.isOptChainNode(first)) {
           precedence = NodeUtil.precedence(first.getToken()) + 1;
@@ -1495,13 +1496,19 @@ public class CodeGenerator {
         || NodeUtil.isUnaryOperator(parent)
         || NodeUtil.isUpdateOperator(parent)
         || parent.isTaggedTemplateLit()
-        || parent.isGetProp()) {
+        || parent.isGetProp()
+        || parent.isOptChainGetProp()) {
       // LeftHandSideExpression OP LeftHandSideExpression
       // OP LeftHandSideExpression | LeftHandSideExpression OP
       // MemberExpression TemplateLiteral
       // MemberExpression '.' IdentifierName
       return true;
-    } else if (parent.isGetElem() || parent.isCall() || parent.isHook()) {
+    } else if (parent.isGetElem()
+        || parent.isCall()
+        || parent.isHook()
+        || parent.isOptChainGetElem()
+        || parent.isOptChainCall()
+        || parent.isNew()) {
       // MemberExpression '[' Expression ']'
       // MemberFunction '(' AssignmentExpressionList ')'
       // LeftHandSideExpression ? AssignmentExpression : AssignmentExpression
@@ -1801,7 +1808,7 @@ public class CodeGenerator {
     Node parent = n.getParent();
     return parent != null && parent.getToken() == Token.EXPONENT && parent.getFirstChild() == n;
   }
-
+  
   void addList(Node firstInList) {
     addList(firstInList, true, Context.OTHER, ",");
   }

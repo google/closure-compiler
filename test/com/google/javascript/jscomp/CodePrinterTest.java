@@ -3154,6 +3154,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("(...a)=>b");
     assertPrintSame("(a=0)=>b");
     assertPrintSame("(a=>b)(1)");
+    assertPrintSame("fn?.(a=>a)");
+    assertPrint("(a=>a)?.['length']", "(a=>a)?.[\"length\"]");
+    assertPrintSame("(a=>a)?.(1)");
+    assertPrintSame("(a=>a)?.length");
+    assertPrintSame("a=>a?.length");
     assertPrintSame("var z={x:a=>1}");
     assertPrintSame("[1,2].forEach(x=>y)");
   }
@@ -3268,6 +3273,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Parens required for first operand to a conditional, but not the rest.
     assertPrint("((x)=>1)?a:b", "(x=>1)?a:b");
     assertPrint("x?((x)=>0):((x)=>1)", "x?x=>0:x=>1");
+    assertPrint("new ((x)=>x)", "new (x=>x)");
+    assertPrintSame("new C(x=>x)");
   }
 
   @Test
