@@ -53,7 +53,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
           }
         }
         break;
-
+      case OPTCHAIN_GETELEM:
       case GETELEM:
         Node left = n.getFirstChild();
         Node right = left.getNext();
@@ -61,7 +61,10 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
             && NodeUtil.isValidPropertyName(FeatureSet.ES3, right.getString())) {
           left.detach();
           right.detach();
-          Node newGetProp = IR.getprop(left, right.getString());
+          Node newGetProp =
+              n.isGetElem()
+                  ? IR.getprop(left, right.getString())
+                  : IR.startOptChainGetprop(left, right.getString());
           n.replaceWith(newGetProp);
           compiler.reportChangeToEnclosingScope(newGetProp);
         }

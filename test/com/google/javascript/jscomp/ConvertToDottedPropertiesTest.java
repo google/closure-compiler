@@ -98,4 +98,26 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("var a = { '$\\\\' : 5 };");
     testSame("var a = { 'x\\\\u0041$\\\\' : 5 };");
   }
+
+  @Test
+  public void testOptionalChaining() {
+    test("data?.['name']", "data?.name");
+    test("data?.['name']?.['first']", "data?.name?.first");
+    test("data['name']?.['first']", "data.name?.first");
+    testSame("a?.[0]");
+    testSame("a?.['']");
+    testSame("a?.[' ']");
+    testSame("a?.[',']");
+    testSame("a?.[';']");
+    testSame("a?.[':']");
+    testSame("a?.['.']");
+    testSame("a?.['0']");
+    testSame("a?.['p ']");
+    testSame("a?.['p' + '']");
+    testSame("a?.[p]");
+    testSame("a?.[P]");
+    testSame("a?.[$]");
+    testSame("a?.[p()]");
+    testSame("a?.['default']");
+  }
 }
