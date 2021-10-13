@@ -38,7 +38,7 @@ public final class StripCodeTest extends CompilerTestCase {
    * @param compiler The Compiler
    * @return A new {@link StripCode} instance
    */
-  private static StripCode createLoggerInstance(Compiler compiler) {
+  private static StripCode getStripCodeInstance(Compiler compiler) {
     ImmutableSet<String> stripTypes =
         ImmutableSet.of(
             "goog.debug.DebugWindow",
@@ -53,18 +53,18 @@ public final class StripCodeTest extends CompilerTestCase {
             "goog.log",
             "GA_GoogleDebugger");
 
-    ImmutableSet<String> stripNames =
+    ImmutableSet<String> stripNameSuffixes =
         ImmutableSet.of(
             "logger", "logger_", "debugWindow", "debugWindow_", "logFormatter_", "logBuffer_");
 
     ImmutableSet<String> stripNamePrefixes = ImmutableSet.of("trace");
 
-    return new StripCode(compiler, stripTypes, stripNames, stripNamePrefixes, false);
+    return new StripCode(compiler, stripTypes, stripNameSuffixes, stripNamePrefixes, false);
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return createLoggerInstance(compiler);
+    return getStripCodeInstance(compiler);
   }
 
   @Test
@@ -598,6 +598,52 @@ public final class StripCodeTest extends CompilerTestCase {
   @Test
   public void testLoggerMethodCallByIndirection_inVarAssignment() {
     test(lines("const x = (0, goog.log.getLogger)('a.b.c');"), "");
+  }
+
+  @Test
+  public void testLoggerMethodCallByIndirection_functionRemovedBeforeCalled() {
+    test(
+        srcs(
+            lines(
+                "var goog$log$getLogger = function() {};",
+                "var module$x = (0, goog$log$getLogger)('a.b.c');")),
+        expected(
+            lines(
+                "var goog$log$getLogger = null;", //
+                "var module$x = null;")));
+  }
+
+  @Test
+  public void testLoggerMethodCallByIndirection_removedFunctionIsNotLastChild() {
+    test(
+        srcs(
+            lines(
+                "var goog$log$getLogger = function() {};",
+                "var module$x = (goog$log$getLogger, function() {})('a.b.c');")),
+        expected(
+            lines(
+                "var goog$log$getLogger = null;",
+                "var module$x = (null, function() {})('a.b.c');")));
+  }
+
+  @Test
+  public void testLoggerMethodCallByIndirection_removedFunctionNotInCall() {
+    test(
+        srcs(
+            lines(
+                "var goog$log$getLogger = function() {};",
+                "var module$x = (0, goog$log$getLogger);")),
+        expected(
+            lines(
+                "var goog$log$getLogger = null;", //
+                "var module$x = (0, null);")));
+  }
+
+  @Test
+  public void testLoggerMethodCallByIndirection_otherCommaExpressionsStayAsTheyAre() {
+    test(
+        srcs(lines("var anotherFunc = function() {};", "var x = (0, anotherFunc);")),
+        expected(lines("var anotherFunc = function() {};", "var x = (0, anotherFunc);")));
   }
 
   @Test

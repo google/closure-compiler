@@ -409,6 +409,25 @@ class StripCode implements CompilerPass {
           }
           break;
 
+        case COMMA:
+          Node grandparent = parent.getParent();
+          // The last child in a comma expression is its result, so we need to be careful replacing
+          // it with null. We don't want to replace the entire comma expression with null because
+          // there could be other elements in it with side-effects.
+          boolean isLastChild = parent.getLastChild() == n;
+          // The only parent where replacing with null is an issue is likely where the comma
+          // expression is the first child (callee) of a CALL or NEW node.
+          boolean parentIsCallee =
+              (grandparent.isCall() || grandparent.isNew()) && parent.isFirstChildOf(grandparent);
+          boolean isSafeToRemove = !isLastChild || !parentIsCallee;
+          if (isSafeToRemove && isReferenceToRemovedVar(t, n)) {
+            decisionsLog.log(
+                () -> n.getQualifiedName() + ": replacing reference in comma expr with null");
+            replaceWithNull(n);
+            t.reportCodeChange();
+          }
+          break;
+
         default:
           if (isReferenceToRemovedVar(t, n)) {
             decisionsLog.log(() -> n.getQualifiedName() + ": replacing reference with null");
