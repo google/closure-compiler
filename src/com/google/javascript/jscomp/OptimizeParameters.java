@@ -23,6 +23,7 @@ import static java.lang.Math.min;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -86,7 +87,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       for (Map.Entry<String, ArrayList<Node>> entry : refMap.getNameReferences()) {
         String key = entry.getKey();
         ArrayList<Node> refs = entry.getValue();
-        if (isCandidateName(key, refs)) {
+        final CandidateAnalysis candidateAnalysis = analyzeCandidateName(key, refs);
+        if (candidateAnalysis.shouldConvertTaggedTemplateLiterals()) {
+          candidateAnalysis.convertTaggedTemplateLiterals();
+        }
+        if (candidateAnalysis.isSafeToOptimize()) {
           toOptimize.add(refs);
         }
       }
@@ -94,7 +99,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       for (Map.Entry<String, ArrayList<Node>> entry : refMap.getPropReferences()) {
         String key = entry.getKey();
         ArrayList<Node> refs = entry.getValue();
-        if (isCandidateProperty(key, refs)) {
+        final CandidateAnalysis candidateAnalysis = analyzeCandidateProperty(key, refs);
+        if (candidateAnalysis.shouldConvertTaggedTemplateLiterals()) {
+          candidateAnalysis.convertTaggedTemplateLiterals();
+        }
+        if (candidateAnalysis.isSafeToOptimize()) {
           toOptimize.add(refs);
         }
       }
@@ -150,7 +159,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
      * <p>An unused first parameter: function foo(a, b) {use(b);} foo(1,2); foo(1,3) becomes
      * function foo(b) {use(b);} foo(2); foo(3);
      *
-     * @param refs A list of references to the symbol (name or property) as vetted by #isCandidate.
+     * @param refs A list of references to the symbol (name or property) as vetted by
+     *     #analyzeCandidate.
      */
     void tryEliminateUnusedArgs(ArrayList<Node> refs) {
       // An argument is unused if its position is greater than the number of declared parameters
@@ -375,26 +385,31 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     return !n.isRoot();
   }
 
-  private boolean isCandidateName(String name, ArrayList<Node> refs) {
-    return isCandidate("name", name, refs);
+  private CandidateAnalysis analyzeCandidateName(String key, ArrayList<Node> refs) {
+    return analyzeCandidate("name", key, refs);
   }
 
-  private boolean isCandidateProperty(String name, ArrayList<Node> refs) {
-    return isCandidate("property", name, refs);
+  private CandidateAnalysis analyzeCandidateProperty(String key, ArrayList<Node> refs) {
+    return analyzeCandidate("property", key, refs);
   }
 
   /**
-   * This reference set is a candidate for parameter-moving if: - if all call sites are known (no
-   * aliasing) - if all definition sites are known (the possible values are known functions) - there
-   * is at least one definition
+   * A function is a candidate for parameter optimization if:
+   *
+   * <ul>
+   *   <li>if all call sites are known (no aliasing)
+   *   <li>if all definition sites are known (the possible values are known functions)
+   *   <li>there is at least one definition
+   *   <li>none of the calls are tagged template literals, OR the special first argument is unused
+   * </ul>
    */
-  private boolean isCandidate(String refKind, String name, ArrayList<Node> refs) {
-    if (!OptimizeCalls.mayBeOptimizableName(compiler, name)) {
-      decisionsLog.log("%s\t%s\tnot an optimizable name", refKind, name);
-      return false;
+  private CandidateAnalysis analyzeCandidate(String refKind, String key, ArrayList<Node> refs) {
+    CandidateAnalysisBuilder analysisBuilder = new CandidateAnalysisBuilder();
+    if (!OptimizeCalls.mayBeOptimizableName(compiler, key)) {
+      decisionsLog.log("%s\t%s\tnot an optimizable name", refKind, key);
+      return analysisBuilder.setIsSafeToOptimize(false).build();
     }
-
-    boolean seenCandidateDefinition = false;
+    final ArrayList<Node> definitions = new ArrayList<>();
     boolean seenCandidateUse = false;
     for (Node n : refs) {
       // TODO(johnlenz): Determine what to do about ".constructor" references.
@@ -407,29 +422,111 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
         // TODO(johnlenz): filter .apply when we support it
         seenCandidateUse = true;
+      } else if (n.getParent().isTaggedTemplateLit()) {
+        analysisBuilder.addTaggedTemplateLiteral(n.getParent());
       } else if (isCandidateDefinition(n)) {
-        seenCandidateDefinition = true;
-      } else {
-        // If this isn't an non-aliasing reference (typeof, instanceof, etc)
-        // then there is nothing that can be done.
-        if (!OptimizeCalls.isAllowedReference(n)) {
-          decisionsLog.log("%s\t%s\tnot an allowed reference: %s", refKind, name, n.getLocation());
-          // TODO(johnlenz): allow extends clauses.
-          return false;
-        }
+        definitions.add(n);
+      } else if (!OptimizeCalls.isAllowedReference(n)) {
+        decisionsLog.log("%s\t%s\tnot an allowed reference: %s", refKind, key, n.getLocation());
+        // TODO(johnlenz): allow extends clauses.
+        return analysisBuilder.setIsSafeToOptimize(false).build();
       }
     }
+    if (definitions.isEmpty()) {
+      decisionsLog.log("%s\t%s\tno definition found", refKind, key);
+      return analysisBuilder.setIsSafeToOptimize(false).build();
+    }
+    if (!analysisBuilder.taggedTemplateLiterals.isEmpty()) {
+      final ImmutableCollection<Node> functionNodes =
+          ReferenceMap.getFunctionNodes(definitions).values();
 
-    if (!seenCandidateDefinition) {
-      decisionsLog.log("%s\t%s\tno definition found", refKind, name);
-      return false;
+      for (Node functionNode : functionNodes) {
+        final Node firstParam = NodeUtil.getFunctionParameters(functionNode).getFirstChild();
+        if (firstParam != null && !firstParam.isUnusedParameter()) {
+          decisionsLog.log(
+              "%s\t%s\twill not optimize parameters for tagged template literals", refKind, key);
+          return analysisBuilder.setIsSafeToOptimize(false).build();
+        }
+      }
+      decisionsLog.log(
+          "%s\t%s\t%s",
+          refKind,
+          key,
+          "first param is unused, so we will convert tagged template literals to normal calls");
+      seenCandidateUse = true;
     }
+
     if (!seenCandidateUse) {
-      decisionsLog.log("%s\t%s\tno usage found", refKind, name);
-      return false;
+      decisionsLog.log("%s\t%s\tno usage found", refKind, key);
+      return analysisBuilder.setIsSafeToOptimize(false).build();
     }
-    // No decision log here, because the final decision isn't made yet.
-    return true;
+    return analysisBuilder.setIsSafeToOptimize(true).build();
+  }
+
+  /** Results of analyzing a candidate function's definition and references. */
+  class CandidateAnalysis {
+    private final ArrayList<Node> taggedTemplateLiterals;
+    private final boolean isSafeToOptimize;
+
+    CandidateAnalysis(CandidateAnalysisBuilder builder) {
+      this.taggedTemplateLiterals = builder.taggedTemplateLiterals;
+      this.isSafeToOptimize = builder.isSafeToOptimize;
+    }
+
+    boolean shouldConvertTaggedTemplateLiterals() {
+      return !taggedTemplateLiterals.isEmpty() && isSafeToOptimize;
+    }
+
+    void convertTaggedTemplateLiterals() {
+      for (Node taggedTemplateLiteral : taggedTemplateLiterals) {
+        convertTaggedTemplateLiteralToNormalCall(taggedTemplateLiteral);
+      }
+      taggedTemplateLiterals.clear();
+    }
+
+    boolean isSafeToOptimize() {
+      return isSafeToOptimize && taggedTemplateLiterals.isEmpty();
+    }
+  }
+
+  /** Builder class for CandidateAnalysis. */
+  class CandidateAnalysisBuilder {
+    final ArrayList<Node> taggedTemplateLiterals = new ArrayList<>();
+    boolean isSafeToOptimize = false;
+
+    CandidateAnalysisBuilder setIsSafeToOptimize(boolean isSafeToOptimize) {
+      this.isSafeToOptimize = isSafeToOptimize;
+      return this;
+    }
+
+    CandidateAnalysisBuilder addTaggedTemplateLiteral(Node ttlNode) {
+      taggedTemplateLiterals.add(ttlNode);
+      return this;
+    }
+
+    CandidateAnalysis build() {
+      return new CandidateAnalysis(this);
+    }
+  }
+
+  /** Converts "tagFunction`template ${1} literal ${2}`" to `tagFunction([], 1, 2)`. */
+  private void convertTaggedTemplateLiteralToNormalCall(Node ttlNode) {
+    final Node callee = checkNotNull(ttlNode.getFirstChild());
+    final Node templateLiteral = callee.getNext();
+    final Node firstArg = IR.arraylit().srcref(templateLiteral);
+    callee.detach();
+    final Node callNode = NodeUtil.newCallNode(callee, firstArg).srcref(ttlNode);
+    for (Node tlChild = templateLiteral.getFirstChild();
+        tlChild != null;
+        tlChild = tlChild.getNext()) {
+      if (tlChild.isTemplateLitSub()) {
+        final Node arg = tlChild.getOnlyChild();
+        arg.detach();
+        callNode.addChildToBack(arg);
+      }
+    }
+    ttlNode.replaceWith(callNode);
+    compiler.reportChangeToEnclosingScope(callNode);
   }
 
   private boolean isCandidateDefinition(Node n) {
@@ -610,7 +707,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * <p>function foo(a, b) {...} foo(1,2); foo(1,3) becomes function foo(b) { var a = 1 ... }
    * foo(2); foo(3);
    *
-   * @param refs A list of references to the symbol (name or property) as vetted by #isCandidate.
+   * @param refs A list of references to the symbol (name or property) as vetted by
+   *     #analyzeCandidate.
    */
   private void tryEliminateConstantArgs(ArrayList<Node> refs) {
     List<Parameter> parameters = findFixedArguments(refs);
@@ -645,7 +743,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   }
 
   /**
-   * @param refs A list of references to the symbol (name or property) as vetted by #isCandidate.
+   * @param refs A list of references to the symbol (name or property) as vetted by
+   *     #analyzeCandidate.
    * @return A list of Parameter objects, in the declaration order, which represent potentially
    *     movable values fixed values from all call sites or null if there are no candidate values.
    */

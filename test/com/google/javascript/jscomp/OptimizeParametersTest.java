@@ -23,7 +23,7 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link OptimizeParameters}. Note: interaction with {@link RemoveUnusedCode} is tested
- * in {@link OptimizeCallsTest}.
+ * in {@link OptimizeCallsIntegrationTest}.
  */
 @RunWith(JUnit4.class)
 public final class OptimizeParametersTest extends CompilerTestCase {

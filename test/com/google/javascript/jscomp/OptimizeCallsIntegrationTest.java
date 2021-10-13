@@ -73,6 +73,95 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnusedTaggedTemplateLiteralSubstitutionsAreNotRemoved() {
+    test(
+        lines(
+            "var f = function(strings, x, y) {",
+            // x and y are unused
+            "  return strings;",
+            "};",
+            "f`tagged${1} ${2}`;",
+            "f();"),
+        lines(
+            "var f = function(strings) {",
+            // x and y are unused
+            "  return strings;",
+            "};",
+            "f`tagged${1} ${2}`;",
+            "f();"));
+
+    test(
+        lines(
+            "var f = function(strings, ...rest) {",
+            // `rest` is unused
+            "  return strings;",
+            "};",
+            "f`tagged ${1} ${2}`;",
+            "f();",
+            ""),
+        lines(
+            "var f = function(strings) {",
+            // `rest` is unused
+            "  return strings;",
+            "};",
+            "f`tagged ${1} ${2}`;",
+            "f();",
+            ""));
+
+    testSame(
+        lines(
+            "var f = function(strings, ...rest) {",
+            // all arguments are used
+            "  return [strings, rest];",
+            "};",
+            "f`tagged ${1} ${2}`;",
+            "f();",
+            ""));
+  }
+
+  @Test
+  public void testConvertTaggedTemplateLiteralToANormalCall() {
+    test(
+        lines(
+            "var f = function(strings, x, y) {",
+            //  `strings` parameter is unused
+            "  return [x, y];",
+            "};",
+            "f`tagged${1} ${2}`;",
+            "f();",
+            ""),
+        lines(
+            "var f = function(x$jscomp$1, y) {",
+            "  return [x$jscomp$1, y];",
+            "};",
+            // Tagged template literal gets converted to a normal call
+            "f(1, 2);",
+            "f();",
+            ""));
+  }
+
+  @Test
+  public void testConvertTaggedTemplateLiteralToANormalCallThenOptimized() {
+    test(
+        lines(
+            "var f = function(strings, x, y) {",
+            //  all parameters are unused
+            "  return '';",
+            "};",
+            "f`tagged${1} ${2}`;",
+            "f();",
+            ""),
+        lines(
+            "var f = function() {",
+            "  return '';",
+            "};",
+            // Tagged template literal gets converted to a normal call
+            "f();",
+            "f();",
+            ""));
+  }
+
+  @Test
   public void testInlineWindow() {
     test(
         lines(
