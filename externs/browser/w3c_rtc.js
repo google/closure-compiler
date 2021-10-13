@@ -1319,6 +1319,40 @@ MediaRecorder.prototype.requestData = function() {};
 MediaRecorder.isTypeSupported = function(type) {};
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorderErrorEvent
+ * @interface
+ */
+function MediaRecorderErrorEvent() {}
+
+/**
+ * @type {DOMException} type
+ */
+MediaRecorderErrorEvent.prototype.error;
+
+/**
+ * @interface
+ */
+function MediaRecorderEventMap() {}
+
+/** @type {BlobEvent} */
+MediaRecorderEventMap.prototype.dataavailable;
+
+/** @type {Event} */
+MediaRecorderEventMap.prototype.error;
+
+/** @type {Event} */
+MediaRecorderEventMap.prototype.pause;
+
+/** @type {Event} */
+MediaRecorderEventMap.prototype.resume;
+
+/** @type {Event} */
+MediaRecorderEventMap.prototype.start;
+
+/** @type {Event} */
+MediaRecorderEventMap.prototype.stop;
+
+/**
  * @constructor
  * @extends {Event}
  * @param {string} type
