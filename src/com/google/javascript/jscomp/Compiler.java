@@ -1332,7 +1332,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
-      if (builder.toString().isEmpty()) {
+      if (builder.length() == 0) {
         builder.append("// No files matched any of: ").append(fileNameRegexList);
       }
     }
@@ -1346,7 +1346,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
-      if (builder.toString().isEmpty()) {
+      if (builder.length() == 0) {
         throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
       }
     }
