@@ -526,8 +526,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private ImmutableMap<SourceFile, JsAst> typedAstFilesystem;
 
-  private CompilerInput createInputConsideringTypedAstFilesystem(
-      SourceFile file, boolean isExtern) {
+  CompilerInput createInputConsideringTypedAstFilesystem(SourceFile file, boolean isExtern) {
     if (this.typedAstFilesystem == null) {
       return new CompilerInput(file, isExtern);
     }

@@ -824,7 +824,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * @param inputs A list of JS file paths, not null
    * @return An array of module objects
    */
-  public static List<JSChunk> createJsModules(List<JsChunkSpec> specs, List<SourceFile> inputs)
+  public static List<JSChunk> createJsModules(List<JsChunkSpec> specs, List<CompilerInput> inputs)
       throws IOException {
     checkState(specs != null);
     checkState(!specs.isEmpty());
@@ -907,8 +907,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         numJsFiles = numJsFilesLeft;
       }
 
-      List<SourceFile> moduleFiles = inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
-      for (SourceFile input : moduleFiles) {
+      List<CompilerInput> moduleFiles = inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
+      for (CompilerInput input : moduleFiles) {
         module.add(input);
       }
       numJsFilesLeft -= numJsFiles;
@@ -1239,7 +1239,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     compiler.initOptions(options);
 
-    List<SourceFile> inputs =
+    List<SourceFile> sources =
         createSourceInputs(jsChunkSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
 
     if (!jsChunkSpecs.isEmpty()) {
@@ -1252,7 +1252,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             checkModuleName(m.getName());
           }
         }
-        modules = createJsModules(jsChunkSpecs, inputs);
+        ImmutableList.Builder<CompilerInput> inputs = ImmutableList.builder();
+        for (SourceFile source : sources) {
+          inputs.add(
+              compiler.createInputConsideringTypedAstFilesystem(source, /* isExtern */ false));
+        }
+        modules = createJsModules(jsChunkSpecs, inputs.build());
       }
       for (JSChunk m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
@@ -1260,7 +1265,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
       compiler.initModules(externs, modules, options);
     } else {
-      compiler.init(externs, inputs, options);
+      compiler.init(externs, sources, options);
     }
 
     if (options.printConfig) {
