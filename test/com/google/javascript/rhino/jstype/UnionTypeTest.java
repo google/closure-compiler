@@ -59,12 +59,19 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   private ObjectType sub1;
   private ObjectType sub2;
   private ObjectType sub3;
+  private ObjectType baseNameConflict;
 
   @Before
   public void setUp() throws Exception {
 
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       this.base =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Base")
+              .build()
+              .getInstanceType();
+      this.baseNameConflict =
           FunctionType.builder(registry)
               .forConstructor()
               .withName("Base")
@@ -484,5 +491,10 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     // Then
     assertThat(result.getUnionMembers()).hasSize(1);
     assertType(result).isEqualTo(NUMBER_TYPE);
+  }
+
+  @Test
+  public void testToStringNameConflict() {
+    assertThat(createUnionType(base, baseNameConflict).toString()).isEqualTo("(Base|Base)");
   }
 }
