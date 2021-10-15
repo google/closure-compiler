@@ -332,6 +332,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           BIT_OPERATION,
           UNARY_OPERATION,
           BINARY_OPERATION,
+          CONFLICTING_GETTER_SETTER_TYPE,
           NOT_CALLABLE,
           CONSTRUCTOR_NOT_CALLABLE,
           FUNCTION_MASKS_VARIABLE,

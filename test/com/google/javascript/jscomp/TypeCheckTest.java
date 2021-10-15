@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.TypeCheck.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
@@ -29247,6 +29248,36 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .setWarningLevel(DiagnosticGroup.forType(ModuleLoader.INVALID_MODULE_PATH), CheckLevel.OFF);
     newTest()
         .addSource("/** @type {Promise<{default: number}>} */ var foo = import('foo.js');")
+        .run();
+  }
+
+  @Test
+  public void testConflictingGetterSetterType() {
+    newTest()
+        .addSource(
+            "class C {",
+            "  /** @return {string} */",
+            "  get value() { }",
+            "",
+            "  /** @param {number} v */",
+            "  set value(v) { }",
+            "}")
+        .addDiagnostic(CONFLICTING_GETTER_SETTER_TYPE)
+        .run();
+  }
+
+  @Test
+  public void testConflictingGetterSetterTypeSuppressed() {
+    newTest()
+        .addSource(
+            "/** @suppress {checkTypes} */",
+            "class C {",
+            "  /** @return {string} */",
+            "  get value() { }",
+            "",
+            "  /** @param {number} v */",
+            "  set value(v) { }",
+            "}")
         .run();
   }
 
