@@ -47,7 +47,14 @@ $jscomp.polyfill('AggregateError', function(orig) {
     this.message = $jscomp$tmp$error.message;
   };
   $jscomp.inherits(polyfill, Error);
-  // Error name, defaults to AggregateError.
+
+  /**
+   * Error name, defaults to AggregateError.
+   * @type {string}
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name
+   * @override
+   */
   polyfill.prototype.name = 'AggregateError';
+
   return polyfill;
 }, 'es_2021', 'es3');
