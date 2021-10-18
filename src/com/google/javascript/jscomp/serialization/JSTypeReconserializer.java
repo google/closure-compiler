@@ -48,6 +48,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 final class JSTypeReconserializer {
@@ -57,6 +58,7 @@ final class JSTypeReconserializer {
   private final InvalidatingTypes invalidatingTypes;
   private final StringPool.Builder stringPoolBuilder;
   private final JSTypeColorIdHasher hasher;
+  private final Predicate<String> shouldPropagatePropertyName;
 
   // Cache some commonly used types.
   private final SeenTypeRecord unknownRecord;
@@ -103,11 +105,13 @@ final class JSTypeReconserializer {
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
       StringPool.Builder stringPoolBuilder,
+      Predicate<String> shouldPropagatePropertyName,
       SerializationOptions serializationMode) {
     this.registry = registry;
     this.hasher = new JSTypeColorIdHasher(registry);
     this.invalidatingTypes = invalidatingTypes;
     this.stringPoolBuilder = stringPoolBuilder;
+    this.shouldPropagatePropertyName = shouldPropagatePropertyName;
     this.serializationMode = serializationMode;
 
     this.seedCachesWithAxiomaticTypes();
@@ -115,14 +119,26 @@ final class JSTypeReconserializer {
     this.unknownRecord = this.seenTypeRecords.get(StandardColors.UNKNOWN.getId());
   }
 
+  /**
+   * Initializes a JSTypeReconserializer
+   *
+   * @param shouldPropagatePropertyName decide whether a property present on some ObjectType should
+   *     actually be serialized. Used to avoid serializing properties that won't impact
+   *     optimizations (because they aren't present in the AST)
+   */
   public static JSTypeReconserializer create(
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
       StringPool.Builder stringPoolBuilder,
+      Predicate<String> shouldPropagatePropertyName,
       SerializationOptions serializationMode) {
     JSTypeReconserializer serializer =
         new JSTypeReconserializer(
-            registry, invalidatingTypes, stringPoolBuilder, serializationMode);
+            registry,
+            invalidatingTypes,
+            stringPoolBuilder,
+            shouldPropagatePropertyName,
+            serializationMode);
     serializer.checkValidLinearTime();
     return serializer;
   }
@@ -301,9 +317,9 @@ final class JSTypeReconserializer {
       for (String ownProperty : objType.getOwnPropertyNames()) {
         // TODO(b/169899789): consider omitting common, well-known properties like "prototype" to
         // save space.
-        // TODO(b/197522964): Only include property names referenced in some other part of the
-        // TypedAST so we can avoid serializing them.
+        if (shouldPropagatePropertyName.test(ownProperty)) {
         ownProperties.add(this.stringPoolBuilder.put(ownProperty));
+        }
       }
 
       isInvalidating |= this.invalidatingTypes.isInvalidating(objType);

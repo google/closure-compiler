@@ -37,20 +37,25 @@ import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 
 /** Grab a TypePointer for each JSType on the AST and log information about the pointers. */
 final class SerializeTypesToPointers {
 
   private final AbstractCompiler compiler;
   private final JSTypeReconserializer jstypeReconserializer;
+  private final LinkedHashSet<String> propertiesReferencedInAst;
   private final IdentityHashMap<JSType, TypePointer> typePointersByJstype = new IdentityHashMap<>();
   private static final Gson GSON = new Gson();
   private TypePool typePool = null;
 
   private SerializeTypesToPointers(
-      AbstractCompiler compiler, JSTypeReconserializer jstypeReconserializer) {
+      AbstractCompiler compiler,
+      JSTypeReconserializer jstypeReconserializer,
+      LinkedHashSet<String> propertiesReferencedInAst) {
     this.compiler = compiler;
     this.jstypeReconserializer = jstypeReconserializer;
+    this.propertiesReferencedInAst = propertiesReferencedInAst;
   }
 
   static SerializeTypesToPointers create(
@@ -61,14 +66,22 @@ final class SerializeTypesToPointers {
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .build();
+
+    // this set requires access to the externs and src ASTs, so can't be populated yet.
+    LinkedHashSet<String> propertiesReferencedInAst = new LinkedHashSet<>();
     JSTypeReconserializer jsTypeReconserializer =
         JSTypeReconserializer.create(
-            compiler.getTypeRegistry(), invalidatingTypes, stringPoolBuilder, serializationOptions);
-    return new SerializeTypesToPointers(compiler, jsTypeReconserializer);
+            compiler.getTypeRegistry(),
+            invalidatingTypes,
+            stringPoolBuilder,
+            propertiesReferencedInAst::contains,
+            serializationOptions);
+    return new SerializeTypesToPointers(compiler, jsTypeReconserializer, propertiesReferencedInAst);
   }
 
   void gatherTypesOnAst(Node root) {
     checkState(this.typePool == null, "Cannot call process() twice");
+    NodeTraversal.traverse(this.compiler, root, new PropertySearchCallback());
     NodeTraversal.traverse(this.compiler, root, new TypeSearchCallback());
 
     // these types are only used when debug logging is enabled, but we always serialize them as not
@@ -81,6 +94,40 @@ final class SerializeTypesToPointers {
     this.typePool = jstypeReconserializer.generateTypePool();
 
     logSerializationDebugInfo(this.jstypeReconserializer, this.typePool);
+  }
+
+  /**
+   * Finds all unquoted property names referenced outside @typeSummary files
+   *
+   * <p>Only property names found in this traversal will be serialized onto a color's list of "own
+   * properties". Properties referenced only inside `@typeSummary` files may be excluded because
+   * they don't matter for optimization of this library's srcs.
+   */
+  private final class PropertySearchCallback implements NodeTraversal.Callback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isScript() || !NodeUtil.isFromTypeSummary(n);
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case GETPROP: // "name" from (someObject.name)
+        case OPTCHAIN_GETPROP: // "name" from (someObject?.name)
+          propertiesReferencedInAst.add(n.getString());
+          break;
+        case STRING_KEY: // "name" from obj = {name: 0}
+        case MEMBER_FUNCTION_DEF: // "name" from class C { name() {} }
+        case MEMBER_FIELD_DEF: // "name" from class C { name = 0; }
+        case GETTER_DEF: // "name" from class C { get name() {} }
+        case SETTER_DEF: // "name" from class C { set name(n) {} }
+          if (!n.isQuotedString()) {
+            propertiesReferencedInAst.add(n.getString());
+          }
+          break;
+        default:
+      }
+    }
   }
 
   private final class TypeSearchCallback implements NodeTraversal.Callback {

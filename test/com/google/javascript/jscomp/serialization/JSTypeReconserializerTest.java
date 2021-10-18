@@ -37,6 +37,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +48,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   // individual test cases may override this
   private ImmutableSet<String> typesToForwardDeclare = null;
+  private Predicate<String> shouldSerializeProperty;
 
   private TypePool typePool;
   private StringPool.Builder stringPoolBuilder;
@@ -71,6 +73,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     this.typesToForwardDeclare = ImmutableSet.of();
+    this.shouldSerializeProperty = (propertyName) -> true;
     enableSourceInformationAnnotator();
   }
 
@@ -86,6 +89,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                   .addAllTypeMismatches(compiler.getTypeMismatches())
                   .build(),
               this.stringPoolBuilder,
+              this.shouldSerializeProperty,
               SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
 
       NodeTraversal.traverseRoots(
@@ -169,6 +173,33 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                 .build(),
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("Foo.prototype.m").setIsInvalidating(true))
+                .build());
+  }
+
+  @Test
+  public void testObjectTypeSerializationFormat_canAvoidSerializingProperty() {
+    ImmutableSet<String> propertiesToSerialize = ImmutableSet.of("constructor", "serializeMe");
+    this.shouldSerializeProperty = propertiesToSerialize::contains;
+
+    List<TypeProto> typePool =
+        compileToTypes(
+            lines(
+                "class Foo {",
+                "  serializeMe() {}",
+                "  doNotSerializeMe() {}",
+                "}",
+                "new Foo().serializeMe();",
+                "new Foo().doNotSerializeMe();"));
+
+    assertThat(typePool)
+        .ignoringFieldDescriptors(OBJECT_UUID)
+        .contains(
+            TypeProto.newBuilder()
+                .setObject(
+                    namedObjectBuilder("Foo.prototype")
+                        .addOwnProperty(findInStringPool("constructor"))
+                        .addOwnProperty(findInStringPool("serializeMe")))
+                // the "doNotSerializeMe" property is not present
                 .build());
   }
 
