@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
@@ -35,69 +34,22 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     implements CompilerPass {
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
+  private final SynthesizeExplicitConstructors constructorSynthesizer;
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.constructorSynthesizer = new SynthesizeExplicitConstructors(compiler);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isClass()) {
-      if (NodeUtil.getEs6ClassConstructorMemberFunctionDef(n) == null) {
-        addSyntheticConstructor(t, n);
-      }
+      constructorSynthesizer.synthesizeClassConstructorIfMissing(t, n);
     } else if (n.isSuper()) {
       visitSuper(n, parent);
     }
-  }
-
-  private void addSyntheticConstructor(NodeTraversal t, Node classNode) {
-    Node superClass = classNode.getSecondChild();
-    Node classMembers = classNode.getLastChild();
-    Node memberDef;
-    if (superClass.isEmpty()) {
-      // use the pre-cast type because createEmptyFunction expects a FunctionType
-      Node function = astFactory.createEmptyFunction(type(classNode));
-      compiler.reportChangeToChangeScope(function);
-      memberDef = astFactory.createMemberFunctionDef("constructor", function);
-    } else {
-      if (!superClass.isQualifiedName()) {
-        // This will be reported as an error in Es6ToEs3Converter.
-        return;
-      }
-      Node body = IR.block();
-
-      // If a class is defined in an externs file or as an interface, it's only a stub, not an
-      // implementation that should be instantiated.
-      // A call to super() shouldn't actually exist for these cases and is problematic to
-      // transpile, so don't generate it.
-      if (!classNode.isFromExterns() && !isInterface(classNode)) {
-        // Generate required call to super()
-        // `super(...arguments);`
-        // Note that transpilation of spread args must occur after this pass for this to work.
-        Node exprResult =
-            IR.exprResult(
-                astFactory.createConstructorCall(
-                    type(classNode), // returned type is the subclass
-                    astFactory.createSuper(type(superClass)),
-                    IR.iterSpread(astFactory.createArgumentsReference())));
-        body.addChildToFront(exprResult);
-        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SUPER, compiler);
-        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.SPREAD_EXPRESSIONS, compiler);
-      }
-      Node constructor = astFactory.createFunction("", IR.paramList(), body, type(classNode));
-      memberDef = astFactory.createMemberFunctionDef("constructor", constructor);
-    }
-    memberDef.srcrefTreeIfMissing(classNode);
-    memberDef.makeNonIndexableRecursive();
-    classMembers.addChildToFront(memberDef);
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
-    // report newly created constructor
-    compiler.reportChangeToChangeScope(memberDef.getOnlyChild());
-    // report change to scope containing the class
-    compiler.reportChangeToEnclosingScope(memberDef);
   }
 
   private boolean isInterface(Node classNode) {
