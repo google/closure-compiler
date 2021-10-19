@@ -5227,7 +5227,7 @@ public final class NodeUtil {
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case COMMA:
         Node grandparent = parent.getParent();
-        if (grandparent.isCall()
+        if ((grandparent.isCall() || grandparent.isTaggedTemplateLit())
             && parent == grandparent.getFirstChild()
             && expr == parent.getFirstChild()
             && parent.hasTwoChildren()) {

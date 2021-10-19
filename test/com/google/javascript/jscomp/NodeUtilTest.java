@@ -3966,6 +3966,10 @@ public final class NodeUtilTest {
 
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y"))).isTrue();
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y"))).isTrue();
+
+      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,eval)()", 0))).isTrue();
+      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,x.y)()", 0))).isTrue();
+      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,x.y)``", 0))).isTrue();
     }
 
     @Test
@@ -4738,6 +4742,11 @@ public final class NodeUtilTest {
     return getStringNode(ast, name, Token.STRING_KEY);
   }
 
+  private static Node getNumberNodeFrom(String code, double number) {
+    Node ast = parse(code);
+    return getNumberNode(ast, number);
+  }
+
   private static boolean executedOnceTestCase(String code) {
     Node nameNode = getNameNodeFrom(code, "x");
     return NodeUtil.isExecutedExactlyOnce(nameNode);
@@ -4787,6 +4796,20 @@ public final class NodeUtilTest {
     }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = getStringNode(c, name, nodeType);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  private static Node getNumberNode(Node n, double number) {
+    if (n.isNumber()
+        && new Double(n.getDouble()).equals(number)) { // equals allow checks for -0 and NaN
+      return n;
+    }
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      Node result = getNumberNode(c, number);
       if (result != null) {
         return result;
       }
