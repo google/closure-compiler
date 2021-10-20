@@ -16,8 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015_MODULES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -77,6 +77,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "es6RewriteClassExtendsExpressions", Es6RewriteClassExtendsExpressions::new));
     optimizer.addOneTimePass(makePassFactory("es6ConvertSuper", Es6ConvertSuper::new));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", Es6ExtractClasses::new));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", Es6RewriteClass::new));
@@ -829,18 +832,52 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidExtends_call() {
-    testError("class C extends foo() {}", DYNAMIC_EXTENDS_TYPE);
+  public void testDynamicExtends_callWithoutJSDoc() {
+    testWarning("class C extends foo() {}", DYNAMIC_EXTENDS_WITHOUT_JSDOC);
   }
 
   @Test
-  public void testInvalidExtends_functionExpression() {
-    testError("class C extends function(){} {}", DYNAMIC_EXTENDS_TYPE);
+  public void testDynamicExtends_callWithJSDoc() {
+    test(
+        "/** @extends {Object} */ class C extends foo() {}",
+        lines(
+            "const testcode$classextends$var0 = foo();",
+            "/** @constructor */",
+            "let C = function() {",
+            "  return testcode$classextends$var0.apply(this, arguments) || this;",
+            "};",
+            "$jscomp.inherits(C, testcode$classextends$var0);"));
   }
 
   @Test
-  public void testInvalidExtends_logicalExpression() {
-    testError("class A {}; class B {}; class C extends (foo ? A : B) {}", DYNAMIC_EXTENDS_TYPE);
+  public void testDynamicExtends_functionExpression_suppressCheckTypes() {
+    test(
+        "/** @suppress {checkTypes} */ class C extends function(){} {}",
+        lines(
+            "const testcode$classextends$var0 = function() {};",
+            "/** @constructor */",
+            "let C = function() {",
+            "  testcode$classextends$var0.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(C, testcode$classextends$var0);"));
+  }
+
+  @Test
+  public void testDynamicExtends_logicalExpressionWithJSDoc() {
+    test(
+        "class A {} class B {} /** @extends {Object} */ class C extends (foo ? A : B) {}",
+        lines(
+            "/** @constructor */",
+            "let A = function() {};",
+            "/** @constructor */",
+            "let B = function() {};",
+            "const testcode$classextends$var0 = foo ? A : B;",
+            "",
+            "/** @constructor */",
+            "let C = function() {",
+            "  testcode$classextends$var0.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(C, testcode$classextends$var0);"));
   }
 
   @Test

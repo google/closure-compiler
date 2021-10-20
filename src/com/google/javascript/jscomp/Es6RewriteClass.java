@@ -46,10 +46,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           Feature.NEW_TARGET,
           Feature.SUPER);
 
-  static final DiagnosticType DYNAMIC_EXTENDS_TYPE =
-      DiagnosticType.error(
-          "JSC_DYNAMIC_EXTENDS_TYPE", "The class in an extends clause must be a qualified name.");
-
   // This function is defined in js/es6/util/inherits.js
   static final String INHERITS = "$jscomp.inherits";
 
@@ -123,9 +119,12 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
               + " side of a simple assignment: "
               + classNode);
     }
-    if (metadata.hasSuperClass() && !metadata.getSuperClassNameNode().isQualifiedName()) {
-      compiler.report(JSError.make(metadata.getSuperClassNameNode(), DYNAMIC_EXTENDS_TYPE));
-      return;
+    if (metadata.hasSuperClass()) {
+      checkState(
+          metadata.getSuperClassNameNode().isQualifiedName(),
+          "Expected Es6RewriteClassExtendsExpressions to make all extends clauses into qualified"
+              + " names, found %s",
+          metadata.getSuperClassNameNode());
     }
 
     Preconditions.checkState(

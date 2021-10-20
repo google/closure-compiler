@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -52,10 +53,11 @@ final class SynthesizeExplicitConstructors {
       compiler.reportChangeToChangeScope(function);
       memberDef = astFactory.createMemberFunctionDef("constructor", function);
     } else {
-      if (!superClass.isQualifiedName()) {
-        // This will be reported as an error in Es6ToEs3Converter.
-        return;
-      }
+      checkState(
+          superClass.isQualifiedName(),
+          "Expected Es6RewriteClassExtendsExpressions to make all extends clauses into qualified"
+              + " names, found %s",
+          superClass);
       Node body = IR.block();
 
       // If a class is defined in an externs file or as an interface, it's only a stub, not an
