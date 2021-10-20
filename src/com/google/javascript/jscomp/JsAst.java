@@ -39,7 +39,8 @@ public class JsAst implements SourceAst {
 
   private final InputId inputId;
   private final SourceFile sourceFile;
-  private final Supplier<Node> immutableRootSource;
+
+  private Supplier<Node> astRootSource;
 
   private Node root;
   private FeatureSet features;
@@ -48,10 +49,14 @@ public class JsAst implements SourceAst {
     this(sourceFile, null);
   }
 
-  public JsAst(SourceFile sourceFile, Supplier<Node> immutableRootSource) {
+  /**
+   * @param astRootSource an AST root for this file, as an alternative to parsing the actual source
+   *     file. should be idempotent-ish: all results of .get() must be Node::isEquivalentTo.
+   */
+  public JsAst(SourceFile sourceFile, Supplier<Node> astRootSource) {
     this.inputId = new InputId(sourceFile.getName());
     this.sourceFile = sourceFile;
-    this.immutableRootSource = immutableRootSource;
+    this.astRootSource = astRootSource;
   }
 
   @Override
@@ -60,9 +65,13 @@ public class JsAst implements SourceAst {
       return this.root;
     }
 
-    if (this.immutableRootSource != null) {
-      this.root = this.immutableRootSource.get();
+    if (this.astRootSource != null) {
+      this.root = this.astRootSource.get();
       this.features = (FeatureSet) this.root.getProp(Node.FEATURE_SET);
+      // allow garbage collecting the supplier. This means nothing can re-use this JsAst after
+      // calling clearAst().
+      // TODO(lharker): add a way to re-initialize a JsAst with a new Supplier<Node> after clearAst
+      this.astRootSource = JsAst::reinitializeAstRoot;
     } else {
       this.parse(compiler);
     }
@@ -79,6 +88,11 @@ public class JsAst implements SourceAst {
     // the assumption that if we're dumping the parse tree, then we probably
     // assume regenerating everything else is a smart idea also.
     sourceFile.clearCachedSource();
+  }
+
+  private static Node reinitializeAstRoot() {
+    throw new UnsupportedOperationException(
+        "Attempted to call getAstRoot() after clearAstRoot() on a JsAst with a Supplier<Node>");
   }
 
   @Override
@@ -153,7 +167,7 @@ public class JsAst implements SourceAst {
   }
 
   private void parse(AbstractCompiler compiler) {
-    checkState(this.immutableRootSource == null);
+    checkState(this.astRootSource == null);
 
     RecordingReporterProxy reporter = new RecordingReporterProxy(
         compiler.getDefaultErrorReporter());

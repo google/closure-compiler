@@ -666,6 +666,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs.add(this.createInputConsideringTypedAstFilesystem(file, /* isExtern */ true));
     }
 
+    // Save on memory. Any future calls to "createInputConsideringTypedAstFilesystem" will throw.
+    // TODO(lharker): do we actually need the synthetic externs file in stage 2?
+    if (this.typedAstFilesystem != null) {
+      this.typedAstFilesystem =
+          ImmutableMap.of(
+              SYNTHETIC_EXTERNS_FILE, this.typedAstFilesystem.get(SYNTHETIC_EXTERNS_FILE));
+    }
+
     // Generate the module graph, and report any errors in the module specification as errors.
     try {
       this.moduleGraph = new JSChunkGraph(modules);
