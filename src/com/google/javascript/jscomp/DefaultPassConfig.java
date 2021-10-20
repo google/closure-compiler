@@ -2338,7 +2338,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
+  /** Collapses assignment expressions (e.g., {@code x = 3; y = x;} becomes {@code y = x = 3;}. */
   private final PassFactory exploitAssign =
       PassFactory.builder()
           .setName(PassNames.EXPLOIT_ASSIGN)
@@ -2349,7 +2349,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
+  /** Collapses variable declarations (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
   private final PassFactory collapseVariableDeclarations =
       PassFactory.builder()
           .setName(PassNames.COLLAPSE_VARIABLE_DECLARATIONS)

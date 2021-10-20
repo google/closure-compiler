@@ -203,7 +203,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         Node inheritsCall =
             IR.exprResult(
                     astFactory.createCall(
-                        astFactory.createQName(this.transpilationNamespace, "$jscomp.inherits"),
+                        astFactory.createQName(this.transpilationNamespace, INHERITS),
                         type(StandardColors.NULL_OR_VOID),
                         metadata.getFullClassNameNode().cloneTree(),
                         metadata.getSuperClassNameNode().cloneTree()))
