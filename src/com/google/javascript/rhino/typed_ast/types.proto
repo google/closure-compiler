@@ -8,6 +8,8 @@ option java_multiple_files = true;
 // All of these proto definitions are in flux.  Please don't depend on them.
 
 message TypePool {
+  // All user-defined types. Reference a TypeProto in this list with a
+  // TypePointer.
   repeated TypeProto type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
@@ -28,14 +30,19 @@ message TypePool {
   }
 }
 
-// References a serialized type. Typically, any reference to a type that needs
-// to be serialized should use a TypePointer instead of a Type directly to avoid
-// the overhead of serializing a type.
+/**
+ * References a serialized TypeProto in a TypePool.
+ *
+ * Message fields should generally be TypePointers instead of TypeProtos. This
+ * avoid the overhead of serializing the same TypeProto multiple times.
+ */
 message TypePointer {
   // required
-  // Points to either a user-defined type in a known type pool or a NativeType.
-  // If the offset is < # NativeTypes, points to the corresponding NativeType,
-  // otherwise to the type pool subtract # Native Types
+  // Points to either a TypeProto in a TypePool or a PrimitiveType.
+  // If the offset is < # of PrimitiveTypes, points to the corresponding
+  // PrimitiveType. Otherwise if
+  //   actual_offset = pool_offset - # of PrimitiveTypes
+  // reference the actual_offset'th element in the TypePool
   int32 pool_offset = 1;
 }
 
@@ -84,6 +91,11 @@ message ObjectTypeProto {
   }
 }
 
+/**
+ * A single user-defined type.
+ *
+ * Equivalent to a com.google.javascript.jscomp.colors.Color.
+ */
 message TypeProto {
   oneof kind {
     ObjectTypeProto object = 2;
@@ -98,12 +110,13 @@ message TypeProto {
  * This set includes the JS primitives (string, number) and the type-system
  * primitives UNKNOWN_TYPE and TOP_OBJECT_TYPE.
  *
- * To reference a NativeType in a TypePointer, create a TypePointer whose pool
- * offset equals the numeric value of the NativeType.
+ * To reference a PrimitiveType in a TypePointer, create a TypePointer whose
+ * pool offset equals the numeric value of the NativeType.
  *
- * IMPORTANT: to simplify the NativeType => TypePointer mapping, the compiler
+ * IMPORTANT: to simplify the PrimitiveType => TypePointer mapping, the compiler
  * requires that the numeric values of this enum are sequential. Do not skip
- * numbers. This is also checked inside jscomp.serialization.JSTypeSerializer.
+ * numbers. This is also checked inside
+ * jscomp.serialization.JSTypeReconserializer.
  */
 enum PrimitiveType {
   // Type-system only type: The Closure '*' and '?', or TS 'any' and 'unknown'
@@ -121,9 +134,7 @@ enum PrimitiveType {
   BIGINT_TYPE = 6;
 
   // Top object type (supertype of all objects and invalidating). Corresponds to
-  // the TS "{}" type. This is omitted from the NativeObjectType proto since
-  // while it is technically an "object type", it is also a type-system
-  // primitive and does not appear in the list of type protos.
+  // the TS "{}" type.
   TOP_OBJECT = 7;
 }
 
