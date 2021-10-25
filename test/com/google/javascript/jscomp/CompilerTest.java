@@ -2981,4 +2981,15 @@ public final class CompilerTest {
     assertThat(lazyExterns.getSecondChild().isVar()).isTrue();
   }
 
+  @Test
+  public void testCreateSyntheticExternsInput_setsCorrectInputId() {
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.of(), ImmutableList.of(), options);
+
+    CompilerInput syntheticExterns = compiler.getSynthesizedExternsInput();
+
+    assertThat(compiler.getInputsById().get(syntheticExterns.getInputId()))
+        .isSameInstanceAs(syntheticExterns);
+  }
 }

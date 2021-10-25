@@ -778,19 +778,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void initInputsByIdMap() {
     inputsById.clear();
     for (CompilerInput input : externs) {
-      InputId id = input.getInputId();
-      CompilerInput previous = putCompilerInput(id, input);
+      CompilerInput previous = putCompilerInput(input);
       if (previous != null) {
         report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
     boolean hasZone = false;
     for (CompilerInput input : moduleGraph.getAllInputs()) {
-      InputId id = input.getInputId();
       if (input.getName().endsWith("packages/zone.js/lib/zone.closure.js")) {
         hasZone = true;
       }
-      CompilerInput previous = putCompilerInput(id, input);
+      CompilerInput previous = putCompilerInput(input);
       if (previous != null) {
         report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
@@ -1563,9 +1561,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return inputsById.get(id);
   }
 
-  private CompilerInput putCompilerInput(InputId id, CompilerInput input) {
+  private CompilerInput putCompilerInput(CompilerInput input) {
     input.setCompiler(this);
-    return inputsById.put(id, input);
+    return inputsById.put(input.getInputId(), input);
   }
 
   /**
@@ -2307,7 +2305,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private Node parseCodeHelper(SourceFile src) {
     CompilerInput input = new CompilerInput(src);
-    putCompilerInput(input.getInputId(), input);
+    putCompilerInput(input);
     Node root = input.getAstRoot(this);
     scriptNodeByFilename.put(input.getSourceFile().getName(), root);
     return checkNotNull(root);
@@ -2638,7 +2636,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     pass.process(null, root);
   }
 
-  private static final InputId SYNTHETIC_EXTERNS_INPUT_ID = new InputId(" [synthetic:externs] ");
   private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
 
   /**
@@ -2646,7 +2643,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * complains if one instance is shared by all threads).
    */
   private final SourceFile SYNTHETIC_EXTERNS_FILE =
-      SourceFile.fromCode(SYNTHETIC_EXTERNS_INPUT_ID.getIdName(), "");
+      SourceFile.fromCode(" [synthetic:externs] ", "");
+
+  @Nullable private CompilerInput syntheticExternsInput; // matches SYNTHETIC_EXTERNS_FILE
 
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
@@ -3326,18 +3325,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   CompilerInput getSynthesizedExternsInput() {
-    CompilerInput input = this.inputsById.get(SYNTHETIC_EXTERNS_INPUT_ID);
-    if (input != null) {
-      return input;
+    if (syntheticExternsInput != null) {
+      return syntheticExternsInput;
     }
 
     JsAst ast =
         (this.typedAstFilesystem == null)
             ? new JsAst(SYNTHETIC_EXTERNS_FILE)
             : this.typedAstFilesystem.get(SYNTHETIC_EXTERNS_FILE);
-    input = new CompilerInput(ast, true);
+    CompilerInput input = new CompilerInput(ast, true);
     Node root = checkNotNull(ast.getAstRoot(this));
-    putCompilerInput(SYNTHETIC_EXTERNS_INPUT_ID, input);
+    putCompilerInput(input);
+    this.syntheticExternsInput = input;
     externsRoot.addChildToFront(root);
     externs.add(0, input);
     scriptNodeByFilename.put(input.getSourceFile().getName(), root);
@@ -3367,7 +3366,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       firstModule.add(input);
     }
     input.setModule(firstModule);
-    putCompilerInput(input.getInputId(), input);
+    putCompilerInput(input);
 
     commentsPerFile.put(SYNTHETIC_CODE_INPUT_ID.getIdName(), ImmutableList.of());
     reportChangeToChangeScope(ast.getAstRoot(this));
