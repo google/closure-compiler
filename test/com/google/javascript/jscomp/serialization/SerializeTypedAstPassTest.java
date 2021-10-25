@@ -206,6 +206,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.TAGGED_TEMPLATELIT)
+                                .addBooleanProperty(NodeProperty.FREE_CALL)
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.IDENTIFIER)

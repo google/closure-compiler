@@ -118,6 +118,7 @@ class PrepareAst implements CompilerPass {
       switch (n.getToken()) {
         case CALL:
         case OPTCHAIN_CALL:
+        case TAGGED_TEMPLATELIT:
           annotateCalls(n);
           break;
         default:
@@ -130,7 +131,7 @@ class PrepareAst implements CompilerPass {
      * "this" values (what we are call "free" calls) and direct call to eval.
      */
     private static void annotateCalls(Node n) {
-      checkState(n.isCall() || n.isOptChainCall(), n);
+      checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.

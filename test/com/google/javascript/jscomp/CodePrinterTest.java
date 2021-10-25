@@ -2312,6 +2312,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void freeCallTaggedTemplate() {
+    Node n = parse("a.b`xyz`");
+    Node call = n.getFirstFirstChild();
+    assertThat(call.isTaggedTemplateLit()).isTrue();
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,a.b)`xyz`", n);
+  }
+
+  @Test
   public void freeCallOptChain() {
     Node n = parse("(a?.b)()");
     Node call = n.getFirstFirstChild();

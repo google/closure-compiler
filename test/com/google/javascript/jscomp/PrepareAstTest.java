@@ -60,6 +60,30 @@ public final class PrepareAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTaggedTemplateFreeCall1() {
+    Node root = parseExpectedJs("foo``;");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    checkState(call.isTaggedTemplateLit());
+
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isTrue();
+  }
+
+  @Test
+  public void testTaggedTemplateFreeCall2() {
+    Node root = parseExpectedJs("x.foo``;");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    checkState(call.isTaggedTemplateLit());
+
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isFalse();
+  }
+
+  @Test
   public void optionalFreeCall1() {
     Node root = parseExpectedJs("foo?.();");
     Node script = root.getFirstChild();
