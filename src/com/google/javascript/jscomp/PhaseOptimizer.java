@@ -426,6 +426,10 @@ class PhaseOptimizer implements CompilerPass {
       Set<NamedPass> madeChanges = new HashSet<>();
       // Contains a pass iff it was run during the last inner loop.
       Set<NamedPass> runInPrevIter = new HashSet<>();
+      // Contains a pass iff it did not make changes. This set is cleared each time any pass makes
+      // changes. The purpose of this is to ensure we do not rerun any passes that did not make
+      // changes unless a later run pass did make changes.
+      Set<NamedPass> didNotMakeChanges = new HashSet<>();
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 1;
@@ -454,9 +458,10 @@ class PhaseOptimizer implements CompilerPass {
           lastIterMadeChanges = false;
           for (NamedPass pass : myPasses) {
             if ((state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER
-                    && !runInPrevIter.contains(pass))
+                    && !runInPrevIter.contains(pass)
+                    && !didNotMakeChanges.contains(pass))
                 || (state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
-                        && madeChanges.contains(pass))) {
+                    && madeChanges.contains(pass))) {
               compiler.incrementChangeStamp();
               currentPass = pass;
               pass.process(externs, root);
@@ -466,9 +471,11 @@ class PhaseOptimizer implements CompilerPass {
                 return;
               } else if (scopeHandler.hasCodeChangedSinceLastCall()) {
                 madeChanges.add(pass);
+                didNotMakeChanges.clear();
                 lastIterMadeChanges = true;
               } else {
                 madeChanges.remove(pass);
+                didNotMakeChanges.add(pass);
               }
             } else {
               runInPrevIter.remove(pass);
