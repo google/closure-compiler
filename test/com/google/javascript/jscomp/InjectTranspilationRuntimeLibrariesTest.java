@@ -107,6 +107,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
   @Test
   public void testTaggedTemplateFirstArgCreaterInjected() {
     Set<String> injected = parseAndRunInjectionPass("function tag(...a) {}; tag`hello`;");
-    assertThat(injected).containsExactly("es6/util/createtemplatetagfirstarg");
+    assertThat(injected)
+        .containsExactly("es6/util/createtemplatetagfirstarg", "es6/util/restarguments");
   }
 }

@@ -1673,6 +1673,25 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    useNoninjectingCompiler = true;
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .addFunction()
+                .addExtra(
+                    // Externs to take the place of the injected library code
+                    "const $jscomp = {};",
+                    "",
+                    "/**",
+                    " * @this {number}",
+                    " * @noinline",
+                    " */",
+                    "$jscomp.getRestArguments = function() {};",
+                    "")
+                .buildExternsFile("externs.js"));
+
     test(
         options,
         lines(
@@ -1681,8 +1700,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  return f(8);",
             "}",
             "alert(foo());"),
-        "alert(function(c){for(var b=[],a=0;a<arguments.length;++a)"
-            + "b[a-0]=arguments[a];return b[0]}(8))");
+        lines(
+            "alert(function() {",
+            "  return $jscomp.getRestArguments.apply(0, arguments)[0];",
+            "}(8))"));
   }
 
   @Test
@@ -1738,7 +1759,25 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    externs = DEFAULT_EXTERNS;
+
+    useNoninjectingCompiler = true;
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .addArray()
+                .addFunction()
+                .addExtra(
+                    // Externs to take the place of the injected library code
+                    "const $jscomp = {};",
+                    "",
+                    "/**",
+                    " * @this {number}",
+                    " * @noinline",
+                    " */",
+                    "$jscomp.getRestArguments = function() {};",
+                    "")
+                .buildExternsFile("externs.js"));
 
     test(
         options,
@@ -1748,10 +1787,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
         lines(
-            "alert(function (c,d) {",
-            "  for(var b=[], a=1; a < arguments.length; ++a)",
-            "    b[a-1] = arguments[a];",
-            "    return b.length ",
+            "alert(function (a) {",
+            "  return $jscomp.getRestArguments.apply(1, arguments).length;",
             "}(1,1,1,1,1))"));
   }
 

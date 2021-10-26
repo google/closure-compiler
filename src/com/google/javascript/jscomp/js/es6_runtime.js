@@ -39,5 +39,6 @@
 'require es6/util/inherits';
 'require es6/util/iteratorfromarray';
 'require es6/util/makeiterator';
+'require es6/util/restarguments';
 'require es6/weakmap';
 'require es6/weakset';

@@ -123,6 +123,10 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     if (mustBeCompiledAway.contains(Feature.FOR_AWAIT_OF)) {
       compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
     }
+
+    if (mustBeCompiledAway.contains(Feature.REST_PARAMETERS)) {
+      compiler.ensureLibraryInjected("es6/util/restarguments", /* force= */ false);
+    }
   }
 
   private static FeatureSet getScriptFeatures(Node script) {
