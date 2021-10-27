@@ -188,30 +188,14 @@ public class TranspilationPasses {
   private static final PassFactory rewriteAsyncFunctions =
       PassFactory.builder()
           .setName("rewriteAsyncFunctions")
-          .setInternalFactory(
-              (compiler) ->
-                  new RewriteAsyncFunctions.Builder(compiler)
-                      // If ES2015 classes will not be transpiled away later,
-                      // transpile away property references that use `super` in async functions.
-                      // See explanation in RewriteAsyncFunctions.
-                      .rewriteSuperPropertyReferencesWithoutSuper(
-                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
-                      .build())
+          .setInternalFactory((compiler) -> new RewriteAsyncFunctions.Builder(compiler).build())
           .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteAsyncIteration =
       PassFactory.builder()
           .setName("rewriteAsyncIteration")
-          .setInternalFactory(
-              (compiler) ->
-                  new RewriteAsyncIteration.Builder(compiler)
-                      // If ES2015 classes will not be transpiled away later,
-                      // transpile away property references that use `super` in async iteration.
-                      // See explanation in RewriteAsyncIteration.
-                      .rewriteSuperPropertyReferencesWithoutSuper(
-                          !compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2015))
-                      .build())
+          .setInternalFactory((compiler) -> new RewriteAsyncIteration.Builder(compiler).build())
           .setFeatureSetForChecks()
           .build();
 
