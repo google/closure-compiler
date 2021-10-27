@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowJoiner;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.InputId;
@@ -747,9 +748,14 @@ public final class DataFlowAnalysisTest {
     cfa.process(null, script);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
+    // All variables declared in function
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, scope);
+
     // Compute liveness of variables
     LiveVariablesAnalysis analysis =
-        new LiveVariablesAnalysis(cfg, scope, childScope, compiler, scopeCreator);
+        new LiveVariablesAnalysis(
+            cfg, scope, childScope, compiler, scopeCreator, allVarsDeclaredInFunction);
     analysis.analyze();
     return analysis.getEscapedLocals();
   }

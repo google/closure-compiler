@@ -26,17 +26,17 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.MustBeReachingVariableDef.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.CheckPathsBetweenNodes;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -184,11 +184,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     cfg = cfa.getCfg();
 
     HashSet<Var> escaped = new HashSet<>();
-    HashMap<String, Var> allVarsInFn = new HashMap<>();
-    ArrayList<Var> orderedVars = new ArrayList<>();
     Scope scope = t.getScope();
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, compiler, scopeCreator, scope.getParent());
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, scope.getParent());
+    Map<String, Var> allVarsInFn = allVarsDeclaredInFunction.getAllVariables();
     DataFlowAnalysis.computeEscaped(
         scope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
 

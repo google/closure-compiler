@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -68,7 +69,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -3876,10 +3876,9 @@ public final class NodeUtilTest {
       Scope globalScope = Scope.createGlobalScope(ast);
       Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
 
-      Map<String, Var> allVariables = new HashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      NodeUtil.getAllVarsDeclaredInFunction(
-          allVariables, orderedVars, compiler, scopeCreator, functionScope);
+      AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+          NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, functionScope);
+      Map<String, Var> allVariables = allVarsDeclaredInFunction.getAllVariables();
 
       assertThat(allVariables.keySet()).containsExactly("a", "b", "c", "z", "x", "y");
     }
@@ -3904,10 +3903,9 @@ public final class NodeUtilTest {
       Scope globalScope = Scope.createGlobalScope(ast);
       Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
 
-      Map<String, Var> allVariables = new HashMap<>();
-      List<Var> orderedVars = new ArrayList<>();
-      NodeUtil.getAllVarsDeclaredInFunction(
-          allVariables, orderedVars, compiler, scopeCreator, functionScope);
+      AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+          NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, functionScope);
+      Map<String, Var> allVariables = allVarsDeclaredInFunction.getAllVariables();
 
       assertThat(allVariables.keySet()).containsExactly("x", "y", "z", "a", "b", "c");
     }

@@ -60,6 +60,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -5753,24 +5754,15 @@ public final class NodeUtil {
   }
 
   /**
-   * Records a mapping of names to vars of everything reachable in a function. Should only be called
+   * Returns a mapping of names to vars of everything reachable in a function. Should only be called
    * with a function scope. Does not enter new control flow areas aka embedded functions.
-   *
-   * @param nameVarMap an empty map that gets populated with the keys being variable names and
-   *     values being variable objects
-   * @param orderedVars an empty list that gets populated with variable objects in the order that
-   *     they appear in the fn
    */
-  static void getAllVarsDeclaredInFunction(
-      final Map<String, Var> nameVarMap,
-      final List<Var> orderedVars,
-      AbstractCompiler compiler,
-      ScopeCreator scopeCreator,
-      final Scope scope) {
-
-    checkState(nameVarMap.isEmpty());
-    checkState(orderedVars.isEmpty());
+  static AllVarsDeclaredInFunction getAllVarsDeclaredInFunction(
+      AbstractCompiler compiler, ScopeCreator scopeCreator, final Scope scope) {
     checkState(scope.isFunctionScope(), scope);
+
+    final Map<String, Var> nameVarMap = new HashMap<>();
+    final List<Var> orderedVars = new ArrayList<>();
 
     ScopedCallback finder =
         new ScopedCallback() {
@@ -5801,6 +5793,28 @@ public final class NodeUtil {
         .setCallback(finder)
         .setScopeCreator(scopeCreator)
         .traverseAtScope(scope);
+
+    return new AllVarsDeclaredInFunction(nameVarMap, orderedVars);
+  }
+
+  /** Represents a mapping of names to vars of everything reachable in a function. */
+  static final class AllVarsDeclaredInFunction {
+    private final Map<String, Var> allVarsInFn;
+    private final List<Var> orderedVars;
+
+    private AllVarsDeclaredInFunction(Map<String, Var> allVarsInFn, List<Var> orderedVars) {
+      checkState(allVarsInFn.isEmpty() == orderedVars.isEmpty());
+      this.allVarsInFn = allVarsInFn;
+      this.orderedVars = orderedVars;
+    }
+
+    public Map<String, Var> getAllVariables() {
+      return allVarsInFn;
+    }
+
+    public List<Var> getAllVariablesInOrder() {
+      return orderedVars;
+    }
   }
 
   /** Returns true if the node is a property of an object literal. */

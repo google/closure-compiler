@@ -19,10 +19,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,13 +143,15 @@ class LiveVariablesAnalysis
    * @param jsScopeChild null or function block scope
    * @param compiler
    * @param scopeCreator Es6 Scope creator
+   * @param allVarsDeclaredInFunction mapping of names to vars of everything reachable in a function
    */
   LiveVariablesAnalysis(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
-      SyntacticScopeCreator scopeCreator) {
+      ScopeCreator scopeCreator,
+      AllVarsDeclaredInFunction allVarsDeclaredInFunction) {
     super(cfg);
     checkState(jsScope.isFunctionScope(), jsScope);
 
@@ -157,11 +159,8 @@ class LiveVariablesAnalysis
     this.jsScopeChild = jsScopeChild;
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
-    this.allVarsInFn = new HashMap<>();
-    this.orderedVars = new ArrayList<>();
-
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
+    this.orderedVars = allVarsDeclaredInFunction.getAllVariablesInOrder();
+    this.allVarsInFn = allVarsDeclaredInFunction.getAllVariables();
 
     computeEscaped(jsScope, escaped, compiler, scopeCreator, allVarsInFn);
 

@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -120,9 +121,12 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     // Computes liveness information first.
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, functionScope);
     liveness =
         new LiveVariablesAnalysis(
-            cfg, functionScope, blockScope, compiler, new SyntacticScopeCreator(compiler));
+            cfg, functionScope, blockScope, compiler, scopeCreator, allVarsDeclaredInFunction);
     liveness.analyze();
     Map<String, Var> allVarsInFn = liveness.getAllVariables();
     tryRemoveDeadAssignments(t, cfg, allVarsInFn);

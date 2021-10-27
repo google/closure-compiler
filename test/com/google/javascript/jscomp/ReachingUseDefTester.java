@@ -22,12 +22,13 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /** Utility for testing {@link MaybeReachingVariableUse} and {@link MustBeReachingVariableDef} */
 final class ReachingUseDefTester {
@@ -71,10 +72,10 @@ final class ReachingUseDefTester {
     Scope funcBlockScope = computeFunctionBlockScope(script, root);
     ControlFlowGraph<Node> cfg = computeCfg(root);
     HashSet<Var> escaped = new HashSet<>();
-    HashMap<String, Var> allVarsInFn = new HashMap<>();
 
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, new ArrayList<>(), compiler, scopeCreator, funcBlockScope.getParent());
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, funcBlockScope.getParent());
+    Map<String, Var> allVarsInFn = allVarsDeclaredInFunction.getAllVariables();
     DataFlowAnalysis.computeEscaped(
         funcBlockScope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
     reachingUse = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);
@@ -91,10 +92,10 @@ final class ReachingUseDefTester {
     Scope funcBlockScope = computeFunctionBlockScope(script, root);
     ControlFlowGraph<Node> cfg = computeCfg(root);
     HashSet<Var> escaped = new HashSet<>();
-    HashMap<String, Var> allVarsInFn = new HashMap<>();
 
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, new ArrayList<>(), compiler, scopeCreator, funcBlockScope.getParent());
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, funcBlockScope.getParent());
+    Map<String, Var> allVarsInFn = allVarsDeclaredInFunction.getAllVariables();
     DataFlowAnalysis.computeEscaped(
         funcBlockScope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
     reachingDef = new MustBeReachingVariableDef(cfg, compiler, escaped, allVarsInFn);

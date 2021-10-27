@@ -418,7 +418,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       final Scope jsScope,
       final Set<Var> escaped,
       AbstractCompiler compiler,
-      SyntacticScopeCreator scopeCreator,
+      ScopeCreator scopeCreator,
       Map<String, Var> allVarsInFn) {
 
     checkArgument(jsScope.isFunctionScope());

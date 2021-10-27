@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
+import com.google.javascript.jscomp.NodeUtil.AllVarsDeclaredInFunction;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -33,7 +34,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a function and assertions are
  * made at the instruction labeled with {@code X}.
- *
  */
 @RunWith(JUnit4.class)
 public final class LiveVariablesAnalysisTest {
@@ -676,10 +676,14 @@ public final class LiveVariablesAnalysisTest {
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
+    // All variables declared in function
+    AllVarsDeclaredInFunction allVarsDeclaredInFunction =
+        NodeUtil.getAllVarsDeclaredInFunction(compiler, scopeCreator, scope);
+
     // Compute liveness of variables
     LiveVariablesAnalysis analysis =
         new LiveVariablesAnalysis(
-            cfg, scope, childScope, compiler, new SyntacticScopeCreator(compiler));
+            cfg, scope, childScope, compiler, scopeCreator, allVarsDeclaredInFunction);
     analysis.analyze();
     return analysis;
   }
