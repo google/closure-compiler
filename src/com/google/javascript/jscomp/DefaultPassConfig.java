@@ -848,7 +848,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(optimizeToEs6);
     }
 
-    // must run after ast validity check as modules may not be allowed in the output feature set
+    // Must run after all non-safety-check passes as the optimizations do not support modules.
     if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
       passes.add(convertChunksToESModules);
     }
