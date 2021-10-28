@@ -180,28 +180,18 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     }
   }
 
-  private RewriteAsyncIteration(Builder builder) {
-    this.compiler = builder.compiler;
+  private RewriteAsyncIteration(
+      AbstractCompiler compiler, AstFactory astFactory, StaticScope namespace) {
+    this.compiler = checkNotNull(compiler);
+    this.astFactory = checkNotNull(astFactory);
+    this.namespace = checkNotNull(namespace);
     this.contextStack = new ArrayDeque<>();
-    this.astFactory = builder.astFactory;
-    this.namespace = builder.namespace;
   }
 
-  static class Builder {
-    private final AbstractCompiler compiler;
-    private AstFactory astFactory;
-    private StaticScope namespace;
-
-    Builder(AbstractCompiler compiler) {
-      checkNotNull(compiler);
-      this.compiler = compiler;
-    }
-
-    RewriteAsyncIteration build() {
-      astFactory = compiler.createAstFactory();
-      namespace = compiler.getTranspilationNamespace();
-      return new RewriteAsyncIteration(this);
-    }
+  static RewriteAsyncIteration create(AbstractCompiler compiler) {
+    AstFactory astFactory = compiler.createAstFactory();
+    StaticScope namespace = compiler.getTranspilationNamespace();
+    return new RewriteAsyncIteration(compiler, astFactory, namespace);
   }
 
   @Override

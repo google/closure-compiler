@@ -63,7 +63,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncIteration.Builder(compiler).build();
+    return RewriteAsyncIteration.create(compiler);
   }
 
   private final Color getGlobalColor(ColorId colorId) {

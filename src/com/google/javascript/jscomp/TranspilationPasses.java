@@ -188,14 +188,14 @@ public class TranspilationPasses {
   private static final PassFactory rewriteAsyncFunctions =
       PassFactory.builder()
           .setName("rewriteAsyncFunctions")
-          .setInternalFactory((compiler) -> new RewriteAsyncFunctions.Builder(compiler).build())
+          .setInternalFactory(RewriteAsyncFunctions::create)
           .setFeatureSetForChecks()
           .build();
 
   private static final PassFactory rewriteAsyncIteration =
       PassFactory.builder()
           .setName("rewriteAsyncIteration")
-          .setInternalFactory((compiler) -> new RewriteAsyncIteration.Builder(compiler).build())
+          .setInternalFactory(RewriteAsyncIteration::create)
           .setFeatureSetForChecks()
           .build();
 

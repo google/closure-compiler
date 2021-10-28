@@ -55,7 +55,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncFunctions.Builder(compiler).build();
+    return RewriteAsyncFunctions.create(compiler);
   }
 
   // Don't let the compiler actually inject any code.

@@ -419,29 +419,18 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
 
   private final AstFactory astFactory;
 
-  private RewriteAsyncFunctions(Builder builder) {
-    checkNotNull(builder);
-    this.compiler = builder.compiler;
+  private RewriteAsyncFunctions(
+      AbstractCompiler compiler, AstFactory astFactory, StaticScope namespace) {
+    this.compiler = checkNotNull(compiler);
+    this.astFactory = checkNotNull(astFactory);
+    this.namespace = checkNotNull(namespace);
     this.contextStack = new ArrayDeque<>();
-    this.astFactory = checkNotNull(builder.astFactory);
-    this.namespace = checkNotNull(builder.namespace);
   }
 
-  static class Builder {
-    private final AbstractCompiler compiler;
-    private AstFactory astFactory;
-    private StaticScope namespace;
-
-    Builder(AbstractCompiler compiler) {
-      checkNotNull(compiler);
-      this.compiler = compiler;
-    }
-
-    RewriteAsyncFunctions build() {
-      astFactory = compiler.createAstFactory();
-      namespace = compiler.getTranspilationNamespace();
-      return new RewriteAsyncFunctions(this);
-    }
+  static RewriteAsyncFunctions create(AbstractCompiler compiler) {
+    AstFactory astFactory = compiler.createAstFactory();
+    StaticScope namespace = compiler.getTranspilationNamespace();
+    return new RewriteAsyncFunctions(compiler, astFactory, namespace);
   }
 
   @Override
