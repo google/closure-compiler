@@ -63,9 +63,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncIteration.Builder(compiler)
-        .rewriteSuperPropertyReferencesWithoutSuper(true)
-        .build();
+    return new RewriteAsyncIteration.Builder(compiler).build();
   }
 
   private final Color getGlobalColor(ColorId colorId) {
@@ -405,7 +403,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "class X extends A {",
             "  m() {",
             "    const $jscomp$asyncIter$super$get$m =",
-            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
+            "        () => super.m;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
             "          const tmp = $jscomp$asyncIter$super$get$m();",
@@ -439,7 +437,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "  m() {",
             "    const $jscomp$asyncIter$this = this;",
             "    const $jscomp$asyncIter$super$get$m =",
-            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
+            "        () => super.m;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
             "          return $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this);",

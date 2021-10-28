@@ -36,8 +36,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
-  boolean rewriteSuperPropertyReferencesWithoutSuper;
-
   private static final String EXTERNS_BASE =
       new TestExternsBuilder().addArguments().addJSCompLibraries().build();
 
@@ -49,7 +47,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    rewriteSuperPropertyReferencesWithoutSuper = false;
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
     enableTypeInfoValidation();
@@ -58,9 +55,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteAsyncFunctions.Builder(compiler)
-        .rewriteSuperPropertyReferencesWithoutSuper(rewriteSuperPropertyReferencesWithoutSuper)
-        .build();
+    return new RewriteAsyncFunctions.Builder(compiler).build();
   }
 
   // Don't let the compiler actually inject any code.
@@ -356,77 +351,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInnerSuperCallEs2015Out() {
-    rewriteSuperPropertyReferencesWithoutSuper = true;
-    test(
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  async m() {",
-            "    return super.m();",
-            "  }",
-            "}"),
-        lines(
-            "class A {",
-            "  m() {",
-            "    return this;",
-            "  }",
-            "}",
-            "class X extends A {",
-            "  m() {",
-            "    const $jscomp$async$this = this;",
-            "    const $jscomp$async$super$get$m =",
-            "        () => Object.getPrototypeOf(Object.getPrototypeOf(this)).m;",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
-            "        function* () {",
-            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
-            "        });",
-            "  }",
-            "}"));
-
-    Color classAInstanceType = getGlobalInstanceColor("A");
-    // type of A.prototype.m
-    Color classAPropertyMType =
-        findClassDefinition(getLastCompiler(), "A")
-            .findMethodDefinition("m")
-            .getRootNode()
-            .getColor();
-
-    CodeSubTree classXMethodMDefinition =
-        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("m");
-
-    // Check type information on wrapper function for `super.m`
-    ImmutableList<Node> superMethodWrapperNameNodes =
-        classXMethodMDefinition.findMatchingQNameReferences("$jscomp$async$super$get$m");
-    // one declaration and one reference
-    assertThat(superMethodWrapperNameNodes).hasSize(2);
-
-    // first name node is declaration
-    // const $jscomp$async$super$get$m = () => super.m;
-    Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
-    // optimization colors don't track function signatures
-    assertNode(wrapperArrowFunction)
-        .isArrowFunction()
-        .hasColorThat()
-        .isEqualTo(StandardColors.TOP_OBJECT);
-    // wrapper function variable has type matching the function itself
-    Color wrapperArrowColor = wrapperArrowFunction.getColor();
-    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
-
-    // get `Object.getPrototypeOf(...).m` from `() => `Object.getPrototypeOf(...).m`
-    Node fakeSuperDotM = wrapperArrowFunction.getLastChild();
-    assertNode(fakeSuperDotM).hasColorThat().isEqualTo(classAPropertyMType);
-    Node fakeSuperNode = fakeSuperDotM.getFirstChild();
-    assertNode(fakeSuperNode).isCall().hasColorThat().isEqualTo(classAInstanceType);
-    assertNode(fakeSuperNode.getFirstChild()).matchesQualifiedName("Object.getPrototypeOf");
-  }
-
-  @Test
   public void testMultipleSuperAccessesInAsyncFunction_havingNonIdenticalUnknownTypes() {
     test(
         lines(
@@ -458,85 +382,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "    });",
             "  }",
             "}"));
-  }
-
-  @Test
-  public void testInnerSuperCallStaticEs2015Out() {
-    rewriteSuperPropertyReferencesWithoutSuper = true;
-    test(
-        lines(
-            "class A {",
-            "  /**",
-            "   * @return {number}",
-            "   */",
-            "  static m() {",
-            "    return this.someNumber;",
-            "  }",
-            "}",
-            "/** @const {number} */",
-            "A.someNumber = 3;",
-            "",
-            "class X extends A {",
-            "  /**",
-            "   * @return {!Promise<number>}",
-            "   */",
-            "  static async asyncM() {",
-            "    return super.m();",
-            "  }",
-            "}"),
-        lines(
-            "class A {",
-            "  static m() {",
-            "    return this.someNumber;",
-            "  }",
-            "}",
-            "/** @const */",
-            "A.someNumber = 3;",
-            "",
-            "class X extends A {",
-            "  static asyncM() {",
-            "    const $jscomp$async$this = this;",
-            "    const $jscomp$async$super$get$m = () => Object.getPrototypeOf(this).m;",
-            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
-            "        function* () {",
-            "          return $jscomp$async$super$get$m().call($jscomp$async$this);",
-            "        });",
-            "  }",
-            "}"));
-
-    Color classAConstructorType =
-        findClassDefinition(getLastCompiler(), "A").getRootNode().getColor();
-    // type of A.prototype.m
-    Color classAPropertyMType =
-        findClassDefinition(getLastCompiler(), "A")
-            .findMethodDefinition("m")
-            .getRootNode()
-            .getColor();
-
-    CodeSubTree classXMethodDefinition =
-        findClassDefinition(getLastCompiler(), "X").findMethodDefinition("asyncM");
-
-    // Check type information on wrapper function for `super.m`
-    ImmutableList<Node> superMethodWrapperNameNodes =
-        classXMethodDefinition.findMatchingQNameReferences("$jscomp$async$super$get$m");
-    // one declaration and one reference
-    assertThat(superMethodWrapperNameNodes).hasSize(2);
-
-    // first name node is declaration
-    // const $jscomp$async$super$get$m = () => super.m;
-    Node wrapperDeclarationNameNode = superMethodWrapperNameNodes.get(0);
-    // arrow function has a Color representing a function that returns type type of `super.m`
-    Node wrapperArrowFunction = wrapperDeclarationNameNode.getOnlyChild();
-    // wrapper function variable has type matching the function itself
-    Color wrapperArrowColor = wrapperArrowFunction.getColor();
-    assertNode(wrapperDeclarationNameNode).hasColorThat().isEqualTo(wrapperArrowColor);
-
-    // get `Object.getPrototypeOf(...).m` from `() => `Object.getPrototypeOf(...).m`
-    Node fakeSuperDotM = wrapperArrowFunction.getLastChild();
-    assertNode(fakeSuperDotM).hasColorThat().isEqualTo(classAPropertyMType);
-    Node fakeSuperNode = fakeSuperDotM.getFirstChild();
-    assertNode(fakeSuperNode).isCall().hasColorThat().isEqualTo(classAConstructorType);
-    assertNode(fakeSuperNode.getFirstChild()).matchesQualifiedName("Object.getPrototypeOf");
   }
 
   @Test

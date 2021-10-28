@@ -83,22 +83,6 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   private final AstFactory astFactory;
   private final StaticScope namespace;
 
-  /**
-   * If this option is set to true, then this pass will rewrite references to properties using super
-   * (e.g. `super.method()`) to avoid using `super` within an arrow function.
-   *
-   * <p>This option exists due to a bug in MS Edge 17 which causes it to fail to access super
-   * properties correctly from within arrow functions.
-   *
-   * <p>See https://github.com/Microsoft/ChakraCore/issues/5784
-   *
-   * <p>If the final compiler output will not include ES6 classes, this option should not be set. It
-   * isn't needed since the `super` references will be transpiled away anyway. Also, when this
-   * option is set it uses `Object.getPrototypeOf()` to rewrite `super`, which may not exist in
-   * pre-ES6 JS environments.
-   */
-  private final boolean rewriteSuperPropertyReferencesWithoutSuper;
-
   /** Tracks a function and its context of this/arguments/super, if such a context exists. */
   private static final class LexicalContext {
 
@@ -199,26 +183,18 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
   private RewriteAsyncIteration(Builder builder) {
     this.compiler = builder.compiler;
     this.contextStack = new ArrayDeque<>();
-    this.rewriteSuperPropertyReferencesWithoutSuper =
-        builder.rewriteSuperPropertyReferencesWithoutSuper;
     this.astFactory = builder.astFactory;
     this.namespace = builder.namespace;
   }
 
   static class Builder {
     private final AbstractCompiler compiler;
-    private boolean rewriteSuperPropertyReferencesWithoutSuper = false;
     private AstFactory astFactory;
     private StaticScope namespace;
 
     Builder(AbstractCompiler compiler) {
       checkNotNull(compiler);
       this.compiler = compiler;
-    }
-
-    Builder rewriteSuperPropertyReferencesWithoutSuper(boolean value) {
-      rewriteSuperPropertyReferencesWithoutSuper = value;
-      return this;
     }
 
     RewriteAsyncIteration build() {
@@ -700,7 +676,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
               .srcrefTree(block));
     }
     for (Node replacedMethodReference : thisSuperArgsCtx.usedSuperProperties) {
-      prefixBlock.addChildToBack(createSuperMethodReferenceGetter(ctx, replacedMethodReference, t));
+      prefixBlock.addChildToBack(createSuperMethodReferenceGetter(replacedMethodReference, t));
     }
     prefixBlock.srcrefTreeIfMissing(block);
     // Pulls all declarations out of prefixBlock and prepends in block
@@ -718,48 +694,11 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     }
   }
 
-  private Node createSuperMethodReferenceGetter(
-      LexicalContext ctx, Node replacedMethodReference, NodeTraversal t) {
-    ThisSuperArgsContext thisSuperArgsCtx = ctx.thisSuperArgsContext;
+  private Node createSuperMethodReferenceGetter(Node replacedMethodReference, NodeTraversal t) {
 
     // const super$get$x = () => super.x;
-    // OR avoid super for static method (class object -> superclass object)
-    // const super$get$x = () => Object.getPrototypeOf(this).x
-    // OR avoid super for instance method (instance -> prototype -> super prototype)
-    // const super$get$x = () => Object.getPrototypeOf(Object.getPrototypeOf(this)).x
-    final Node superReference;
     AstFactory.Type typeOfSuper = type(replacedMethodReference.getFirstChild());
-    if (rewriteSuperPropertyReferencesWithoutSuper) {
-      // Rewrite to avoid using `super` within an arrow function.
-      // See more information on definition of this option.
-      // TODO(bradfordcsmith): RewriteAsyncIteration and RewriteAsyncFunctions have the
-      // same logic for dealing with super references. Consider having them share
-      // it from a common place instead of duplicating.
-
-      Node thisNode =
-          astFactory.createThisForEs6ClassMember(thisSuperArgsCtx.ctx.contextRoot.getParent());
-      if (ctx.function.getParent().isStaticMember()) {
-        // static super: Object.getPrototypeOf(this);
-        superReference =
-            astFactory.createCall(
-                astFactory.createQName(namespace, "Object.getPrototypeOf"), typeOfSuper, thisNode);
-      } else {
-        // instance super: Object.getPrototypeOf(Object.getPrototypeOf(this))
-        Node innerPrototype =
-            astFactory.createCall(
-                astFactory.createQName(namespace, "Object.getPrototypeOf"),
-                type(StandardColors.UNKNOWN), // finding a tighter type doesn't help optimizer
-                thisNode);
-        superReference =
-            astFactory.createCall(
-                astFactory.createQName(namespace, "Object.getPrototypeOf"),
-                typeOfSuper,
-                innerPrototype);
-      }
-    } else {
-      superReference = astFactory.createSuper(typeOfSuper);
-    }
-
+    Node superReference = astFactory.createSuper(typeOfSuper);
     String replacedMethodName = replacedMethodReference.getString();
     Node arrowFunction =
         astFactory.createZeroArgArrowFunctionForExpression(
