@@ -164,24 +164,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   private void checkStyleForPrivateProperties(NodeTraversal t, Node n) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-
     checkForAtSignCodePresence(t, n, jsDoc);
-
-    if (NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
-      return;
-    }
-
-    final String name;
-    if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
-      name = n.getString();
-    } else {
-      checkState(n.isAssign());
-      Node lhs = n.getFirstChild();
-      if (!lhs.isGetProp()) {
-        return;
-      }
-      name = lhs.getString();
-    }
   }
 
   private static void checkNoTypeOnGettersAndSetters(
@@ -311,11 +294,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       }
 
       Node param = paramList.getFirstChild();
-      for (int i = 0; i < paramsFromJsDoc.size(); i++) {
+      for (String s : paramsFromJsDoc) {
         if (param.getJSDocInfo() != null) {
           t.report(param, MIXED_PARAM_JSDOC_STYLES);
         }
-        String name = paramsFromJsDoc.get(i);
+        String name = s;
         JSTypeExpression paramType = jsDoc.getParameterType(name);
         if (checkParam(t, param, name, paramType)) {
           return;
