@@ -297,7 +297,7 @@ public final class SymbolTable {
 
   /** Gets the symbol for the given enum. */
   public Symbol getSymbolDeclaredBy(EnumType enumType) {
-    return getSymbolForName(null, enumType.getElementsType().getReferenceName());
+    return getSymbolForName(enumType.getSource(), enumType.getElementsType().getReferenceName());
   }
 
   /** Gets the symbol for the prototype if this is the symbol for a constructor or interface. */
