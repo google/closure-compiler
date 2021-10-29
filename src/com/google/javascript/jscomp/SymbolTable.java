@@ -884,8 +884,10 @@ public final class SymbolTable {
       // Symbols are sorted in reverse order so that those with more outer scope will come later in
       // the list, and therefore override those set by aliases in more inner scope. The sorting
       // happens few lines above.
-      Symbol symbolForType = getSymbolForTypeHelper(s.getType(), /* linkToCtor= */ false);
-      if (s.getType().isNominalConstructorOrInterface() && !s.equals(symbolForType)) {
+      JSType type = s.getType();
+      Symbol symbolForType = getSymbolForTypeHelper(type, /* linkToCtor= */ false);
+      if ((type.isNominalConstructorOrInterface() || type.isFunctionPrototypeType())
+          && !s.equals(symbolForType)) {
         // Some cases can't be handled by sorting. For example
         //
         // goog.module('some.Foo');

@@ -509,6 +509,34 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testClassPropertiesDisableModuleRewriting() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines(
+                "goog.module('foo');",
+                "class Person {",
+                "  constructor() {",
+                "    /** @type {string} */",
+                "    this.lastName;",
+                "  }",
+                "}",
+                "exports = {Person};"),
+            lines(
+                "goog.module('bar');",
+                "const {Person} = goog.require('foo');",
+                "let /** !Person */ p;",
+                "p.lastName;"));
+    Symbol lastName =
+        table.getAllSymbols().stream()
+            .filter((s) -> s.getName().equals("lastName"))
+            .findFirst()
+            .get();
+    assertThat(table.getReferences(lastName)).hasSize(2);
+  }
+
+  @Test
   public void testGlobalVarInExterns() {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");
