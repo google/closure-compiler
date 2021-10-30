@@ -612,12 +612,12 @@ class GlobalNamespace
         // name set in a module scope is a 'global' set.
         if (hoistScope.isGlobal()
             || (root != globalRoot && hoistScope.getRootNode() == curModuleRoot)) {
-          handleSetFromGlobal(module, scope, n, parent, name, type, nameMetadata);
+          handleSetFromGlobal(module, scope, n, name, type, nameMetadata);
         } else {
-          handleSetFromLocal(module, scope, n, parent, name, nameMetadata);
+          handleSetFromLocal(module, scope, n, name, nameMetadata);
         }
       } else {
-        handleGet(module, scope, n, parent, name, nameMetadata);
+        handleGet(module, scope, n, name, nameMetadata);
       }
     }
 
@@ -761,14 +761,8 @@ class GlobalNamespace
      * @param type The type of the value that the name is being assigned
      */
     void handleSetFromGlobal(
-        JSChunk module,
-        Scope scope,
-        Node n,
-        Node parent,
-        String name,
-        NameType type,
-        ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
+        JSChunk module, Scope scope, Node n, String name, NameType type, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, name, metadata)) {
         return;
       }
 
@@ -786,7 +780,7 @@ class GlobalNamespace
         nameObj.isModuleProp = true;
       }
 
-      if (isNestedAssign(parent)) {
+      if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
         Ref.Type refType = Ref.Type.SET_FROM_GLOBAL;
         addOrConfirmTwinRefs(nameObj, n, refType, module, scope);
@@ -862,12 +856,11 @@ class GlobalNamespace
      * @param module The current module
      * @param scope The current scope
      * @param n The node currently being visited
-     * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
     void handleSetFromLocal(
-        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
+        JSChunk module, Scope scope, Node n, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, name, metadata)) {
         return;
       }
 
@@ -876,7 +869,7 @@ class GlobalNamespace
         nameObj.isModuleProp = true;
       }
 
-      if (isNestedAssign(parent)) {
+      if (isNestedAssign(n.getParent())) {
         // This assignment is both a set and a get that creates an alias.
         addOrConfirmTwinRefs(nameObj, n, Ref.Type.SET_FROM_LOCAL, module, scope);
       } else {
@@ -890,16 +883,15 @@ class GlobalNamespace
      * @param module The current module
      * @param scope The current scope
      * @param n The node currently being visited
-     * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
-    void handleGet(
-        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
-      if (maybeHandlePrototypePrefix(module, scope, n, parent, name, metadata)) {
+    void handleGet(JSChunk module, Scope scope, Node n, String name, ModuleMetadata metadata) {
+      if (maybeHandlePrototypePrefix(module, scope, n, name, metadata)) {
         return;
       }
 
       Ref.Type type;
+      Node parent = n.getParent();
       switch (parent.getToken()) {
         case EXPR_RESULT:
         case IF:
@@ -1007,31 +999,8 @@ class GlobalNamespace
           break;
       }
 
-      handleGet(module, scope, n, parent, name, type, metadata);
-    }
-
-    /**
-     * Updates our representation of the global namespace to reflect a read of a global name.
-     *
-     * @param module The current module
-     * @param scope The current scope
-     * @param n The node currently being visited
-     * @param parent {@code n}'s parent
-     * @param name The global name (e.g. "a" or "a.b.c.d")
-     * @param type The reference type
-     */
-    void handleGet(
-        JSChunk module,
-        Scope scope,
-        Node n,
-        Node parent,
-        String name,
-        Ref.Type type,
-        ModuleMetadata metadata) {
-      Name nameObj = getOrCreateName(name, metadata);
-
       // No need to look up additional ancestors, since they won't be used.
-      addOrConfirmRef(nameObj, n, type, module, scope);
+      addOrConfirmRef(getOrCreateName(name, metadata), n, type, module, scope);
     }
 
     /**
@@ -1162,12 +1131,11 @@ class GlobalNamespace
      * @param module The current module
      * @param scope The current scope
      * @param n The node currently being visited
-     * @param parent {@code n}'s parent
      * @param name The global name (e.g. "a" or "a.b.c.d")
      * @return Whether the name was handled
      */
     boolean maybeHandlePrototypePrefix(
-        JSChunk module, Scope scope, Node n, Node parent, String name, ModuleMetadata metadata) {
+        JSChunk module, Scope scope, Node n, String name, ModuleMetadata metadata) {
       // We use a string-based approach instead of inspecting the parse tree
       // to avoid complexities with object literals, possibly nested, beneath
       // assignments.
@@ -1191,18 +1159,17 @@ class GlobalNamespace
         }
       }
 
-      if (parent != null && NodeUtil.mayBeObjectLitKey(n)) {
+      if (NodeUtil.mayBeObjectLitKey(n)) {
         // Object literal keys have no prefix that's referenced directly per
         // key, so we're done.
         return true;
       }
 
       for (int i = 0; i < numLevelsToRemove; i++) {
-        parent = n;
         n = n.getFirstChild();
       }
 
-      handleGet(module, scope, n, parent, prefix, Ref.Type.PROTOTYPE_GET, metadata);
+      addOrConfirmRef(getOrCreateName(prefix, metadata), n, Ref.Type.PROTOTYPE_GET, module, scope);
       return true;
     }
 
