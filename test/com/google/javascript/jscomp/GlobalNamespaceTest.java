@@ -77,8 +77,8 @@ public final class GlobalNamespaceTest {
   public void firstGlobalAssignmentIsConsideredDeclaration() {
     GlobalNamespace namespace = parse("");
     Name n = namespace.createNameForTesting("a");
-    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
-    Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 1);
+    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
+    Ref set2 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
 
     assertThat(n.getRefs()).containsExactly(set1, set2).inOrder();
 
@@ -216,8 +216,8 @@ public final class GlobalNamespaceTest {
   public void localAssignmentWillNotBeConsideredADeclaration() {
     GlobalNamespace namespace = parse("");
     Name n = namespace.createNameForTesting("a");
-    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL, 0);
-    Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL, 1);
+    Ref set1 = n.addSingleRefForTesting(Ref.Type.SET_FROM_GLOBAL);
+    Ref localSet = n.addSingleRefForTesting(Ref.Type.SET_FROM_LOCAL);
 
     assertThat(n.getRefs()).containsExactly(set1, localSet).inOrder();
 
@@ -632,7 +632,7 @@ public final class GlobalNamespaceTest {
     // This only creates a global scope, so don't use this with local nodes
     Scope globalScope = new SyntacticScopeCreator(lastCompiler).createScope(jsRoot, null);
     // I don't know if lastCompiler.getModules() is correct but it works
-    return new AstChange(Iterables.getFirst(lastCompiler.getModules(), null), globalScope, n);
+    return new AstChange(globalScope, n);
   }
 
   @Test

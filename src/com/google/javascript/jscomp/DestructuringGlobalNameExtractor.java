@@ -76,7 +76,7 @@ class DestructuringGlobalNameExtractor {
             ? stringKey.getOnlyChild().getFirstChild()
             : stringKey.getOnlyChild();
     if (newNodes != null) {
-      newNodes.add(new AstChange(ref.module, ref.scope, newName));
+      newNodes.add(new AstChange(ref.scope, newName));
     }
     Node rvalue = makeNewRvalueForDestructuringKey(stringKey, newName, newNodes, ref);
 
@@ -102,7 +102,7 @@ class DestructuringGlobalNameExtractor {
       } else {
         newRvalue = originalRvalue.cloneTree();
         if (newNodes != null) {
-          newNodes.add(new AstChange(ref.module, ref.scope, newRvalue));
+          newNodes.add(new AstChange(ref.scope, newRvalue));
         }
       }
       addAfter(lvalueToReassign, newPattern, newRvalue);
@@ -182,7 +182,7 @@ class DestructuringGlobalNameExtractor {
       // references to it. This ignores getters/setters.
       Node rvalueForSheq = rvalue.cloneTree();
       if (newNodes != null) {
-        newNodes.add(new AstChange(ref.module, ref.scope, rvalueForSheq));
+        newNodes.add(new AstChange(ref.scope, rvalueForSheq));
       }
       // `void 0 === rvalue ? defaultValue : rvalue`
       rvalue =

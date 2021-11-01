@@ -278,11 +278,6 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
     }
 
-    private JSChunk getRefModule(Reference ref) {
-      CompilerInput input = compiler.getInput(ref.getInputId());
-      return input == null ? null : input.getChunk();
-    }
-
     /**
      * For each qualified name N in the global scope, we check if: (a) No ancestor of N is ever
      * aliased or assigned an unknown value type. (If N = "a.b.c", "a" and "a.b" are never aliased).
@@ -692,7 +687,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       newNode.srcrefTree(nodeToReplace);
       nodeToReplace.replaceWith(newNode);
       compiler.reportChangeToEnclosingScope(newNode);
-      return new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode);
+      return new AstChange(aliasRef.getScope(), newNode);
     }
 
     /**
@@ -762,7 +757,7 @@ class InlineAndCollapseProperties implements CompilerPass {
             aliasParent.replaceWith(alias.getNode().detach());
             // remove both of the refs
             aliasingName.removeTwinRefs(aliasDeclaration);
-            newNodes.add(new AstChange(alias.module, alias.scope, alias.getNode()));
+            newNodes.add(new AstChange(alias.scope, alias.getNode()));
             compiler.reportChangeToEnclosingScope(aliasGrandparent);
           } else {
             // just set the original alias to null.
@@ -813,7 +808,7 @@ class InlineAndCollapseProperties implements CompilerPass {
               Node node = ref.getNode();
               node.replaceWith(newNode);
               compiler.reportChangeToEnclosingScope(newNode);
-              newNodes.add(new AstChange(ref.module, ref.scope, newNode));
+              newNodes.add(new AstChange(ref.scope, newNode));
             }
             aliasingName.removeRef(ref);
             break;
@@ -919,7 +914,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         compiler.reportChangeToEnclosingScope(newValue);
         prop.removeRef(ref);
         // Rescan the expression root.
-        newNodes.add(new AstChange(ref.module, ref.scope, ref.getNode()));
+        newNodes.add(new AstChange(ref.scope, ref.getNode()));
         codeChanged = true;
       }
     }
