@@ -1,11 +1,14 @@
 workspace(name = "com_google_javascript_jscomp")
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-git_repository(
+http_archive(
     name = "google_bazel_common",
-    commit = "9d1beb9294151cb1b28cd4b4dc842fd7559f9147",
-    remote = "git://github.com/google/bazel-common.git",
+    sha256 = "e872b6f5de8e02cf1f3989210d485cee88f799a823dfe14b1df7a2130e218bc8",
+    strip_prefix = "bazel-common-9d1beb9294151cb1b28cd4b4dc842fd7559f9147",
+    urls = [
+      "https://github.com/google/bazel-common/archive/9d1beb9294151cb1b28cd4b4dc842fd7559f9147.zip",
+    ],
 )
 
 load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules", "maven_import")
@@ -84,20 +87,26 @@ maven_import(
     licenses = ["notice"],
 )
 
-git_repository(
+http_archive(
     name = "protobuf_proto_rules",
-    commit = "218ffa7dfa5408492dc86c01ee637614f8695c45",
-    remote = "git://github.com/bazelbuild/rules_proto.git",
+    sha256 = "26252c7c072c92e309ea48ed81d2e56fba82403da00d09c7ef64e0256580f142",
+    strip_prefix = "rules_proto-218ffa7dfa5408492dc86c01ee637614f8695c45",
+    urls = [
+      "https://github.com/bazelbuild/rules_proto/archive/218ffa7dfa5408492dc86c01ee637614f8695c45.zip",
+    ],
 )
 
 load("@protobuf_proto_rules//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 rules_proto_dependencies()
 rules_proto_toolchains()
 
-git_repository(
+http_archive(
     name = "protobuf_java_rules",
-    commit = "d7bf804c8731edd232cb061cb2a9fe003a85d8ee",
-    remote = "git://github.com/bazelbuild/rules_java.git",
+    sha256 = "dc6b247b0bc61120e6c2bfe314c7ed5b19a3a5d5d3a3f8e9acf3ea8b4fb05c7b",
+    strip_prefix = "rules_java-d7bf804c8731edd232cb061cb2a9fe003a85d8ee",
+    urls = [
+      "https://github.com/bazelbuild/rules_java/archive/d7bf804c8731edd232cb061cb2a9fe003a85d8ee.zip",
+    ],
 )
 
 load("@protobuf_java_rules//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
@@ -107,10 +116,13 @@ rules_java_toolchains()
 # Jarjar is a Google tool (https://github.com/google/jarjar) for generating
 # shaded JARs (https://stackoverflow.com/questions/49810578). This repo contains
 # Bazel bindings for Jarjar, under the Apache license.
-git_repository(
+http_archive(
     name = "com_github_johnynek_bazel_jar_jar",
-    commit = "171f268569384c57c19474b04aebe574d85fde0d",
-    remote = "git://github.com/johnynek/bazel_jar_jar.git",
+    sha256 = "fdf2c5276e5c6f27efa1e0b64a301f5a122d84a4c1c0dd80006dbbc530a16773",
+    strip_prefix = "bazel_jar_jar-171f268569384c57c19474b04aebe574d85fde0d",
+    urls = [
+      "https://github.com/johnynek/bazel_jar_jar/archive/171f268569384c57c19474b04aebe574d85fde0d.zip",
+    ],
 )
 
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
