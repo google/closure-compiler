@@ -2565,4 +2565,80 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var Baz$quadruple = function(n) { return 2 * Bar$double(n); }",
             "class Baz extends Bar {}"));
   }
+
+  @Test
+  public void testCommaCallAliasing1() {
+    test(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            "(0,xid)('abc');"),
+        lines(
+            "var xid = function(a) {};", //
+            // The indirect call below does not prevent this property collapse
+            "var xid$internal_ = function() {};",
+            "(0,xid)('abc');"));
+  }
+
+  @Test
+  public void testCommaCallAliasing2() {
+    test(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            "fn((0,xid)('abc'));"),
+        lines(
+            "var xid = function(a) {};", //
+            // The indirect call below does not prevent this property collapse
+            "var xid$internal_ = function() {};",
+            "fn((0,xid)('abc'));"));
+  }
+
+  @Test
+  public void testCommaCallAliasing3() {
+    test(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            "throw ((0, xid), 0);"),
+        lines(
+            "var xid = function(a) {};", //
+            // The indirect call below does not prevent this property collapse
+            "var xid$internal_ = function() {};",
+            "throw ((0, xid), 0);"));
+  }
+
+  @Test
+  public void testHookNewAliasing1() {
+    testSame(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            // The indirect call prevents this property collapse
+            "var xx = new Thing(x ? xid : abc).method();"));
+  }
+
+  @Test
+  public void testHookGetProp1() {
+    testSame(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            // The indirect call prevents this property collapse
+            "var xx = (x ? xid : abc).method();"));
+  }
+
+  @Test
+  public void testHookGetProp2() {
+    test(
+        lines(
+            "var xid = function(a) {};", //
+            "xid.internal_ = function() {};",
+            "var xx = ((x ? xid : abc) - def).toExponential(5);"),
+        lines(
+            "var xid = function(a) {};", //
+            // The indirect call below does not prevent this property collapse
+            "var xid$internal_ = function() {};",
+            "var xx = ((x ? xid : abc) - def).toExponential(5);"));
+  }
 }

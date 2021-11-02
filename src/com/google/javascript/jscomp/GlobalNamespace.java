@@ -872,12 +872,27 @@ class GlobalNamespace
       if (maybeHandlePrototypePrefix(scope, n, name, metadata)) {
         return;
       }
+      Ref.Type type = determineRefTypeForGet(n, n, name);
 
+      addOrConfirmRef(getOrCreateName(name, metadata), n, type, scope);
+    }
+
+    /**
+     * Determine the Ref.Type for referenceNode by inspecting parents and recusively ascending as
+     * necessary, where n represents.
+     *
+     * @param n The node currently being visited
+     * @parem referenceNode The node hosting the name.
+     * @param name The global name (e.g. "a" or "a.b.c.d")
+     */
+    private Ref.Type determineRefTypeForGet(Node n, Node referenceNode, String name) {
       Ref.Type type;
       Node parent = n.getParent();
       switch (parent.getToken()) {
         case EXPR_RESULT:
         case IF:
+        case WHILE:
+        case FOR:
         case INSTANCEOF:
         case TYPEOF:
         case VOID:
@@ -921,6 +936,7 @@ class GlobalNamespace
         case NEW:
           type = n == parent.getFirstChild() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
           break;
+        case CAST:
         case OR:
         case AND:
         case COALESCE:
@@ -928,14 +944,25 @@ class GlobalNamespace
           // alias is not getting created for this name if the result is used
           // in a boolean context or assigned to the same name
           // (e.g. var a = a || {}).
-          type = determineGetTypeForHookOrBooleanExpr(parent, name);
+          type = determineRefTypeForGet(parent, referenceNode, name);
           break;
+        case NAME:
+          // Only LET, CONST, VAR declarations have NAME nodes
+          // with children.
+          // Of particular interest is "var n = n || {}"
+          if (n != referenceNode && name.equals(parent.getString())) {
+            type = Ref.Type.DIRECT_GET;
+          } else {
+            type = Ref.Type.ALIASING_GET;
+          }
+          break;
+        case COMMA:
         case HOOK:
           if (n != parent.getFirstChild()) {
-            // This node is y or z in (x?y:z). We only know that an alias is
+            // This node is y or z in (x?y:z) or (x,y). We only know that an alias is
             // not getting created for this name if the result is assigned to
             // the same name (e.g. var a = a ? a : {}).
-            type = determineGetTypeForHookOrBooleanExpr(parent, name);
+            type = determineRefTypeForGet(parent, referenceNode, name);
           } else {
             type = Ref.Type.DIRECT_GET;
           }
@@ -950,9 +977,23 @@ class GlobalNamespace
         case DESTRUCTURING_LHS:
         case ASSIGN:
           Node lhs = n.getPrevious();
+          if (lhs == null) {
+            // TODO(b/127505242): CAST confused the "is this a get or set?"
+            // logic and "handleGet" should not have been called.
+            type = Ref.Type.ALIASING_GET;
+            break;
+          }
           while (lhs.isCast()) {
             // Case: `/** @type {!Foo} */ (x) = ...`; or multiple casts like `(cast(cast(x)) =`
             lhs = lhs.getOnlyChild();
+          }
+
+          // This is a recursive ascent check if this an assignment
+          // to itself.  This handles cases like: "a.b = a.b || {}"
+          if (n != referenceNode) {
+            if (lhs.matchesQualifiedName(name)) {
+              return Ref.Type.DIRECT_GET;
+            }
           }
 
           switch (lhs.getToken()) {
@@ -970,19 +1011,19 @@ class GlobalNamespace
               throw new IllegalStateException(
                   "Unexpected previous sibling of " + n.getToken() + ": " + n.getPrevious());
           }
-
           break;
         case OBJECT_PATTERN: // Handle STRING_KEYS in object patterns.
         case ITER_SPREAD:
         case OBJECT_SPREAD:
+        case RETURN:
+        case THROW:
         default:
-          // TODO(b/148237949): There are likely more cases where we should be returning
+          // NOTE: There are likely more cases where we should be returning
           // DIRECT_GET.
           type = Ref.Type.ALIASING_GET;
           break;
       }
-
-      addOrConfirmRef(getOrCreateName(name, metadata), n, type, scope);
+      return type;
     }
 
     /**
@@ -1030,75 +1071,6 @@ class GlobalNamespace
       }
       Node receiver = callee.getFirstChild();
       return "hasOwnProperty".equals(callee.getString()) && receiver.isQualifiedName();
-    }
-
-    /**
-     * Determines whether the result of a hook (x?y:z) or boolean expression (x||y) or (x&&y) is
-     * assigned to a specific global name.
-     *
-     * @param parent The parent of the current node in the traversal. This node should already be
-     *     known to be a HOOK, AND, or OR node.
-     * @param name A name that is already known to be global in the current scope (e.g. "a" or
-     *     "a.b.c.d")
-     * @return The expression's get type, either {@link Ref.Type#DIRECT_GET} or {@link
-     *     Ref.Type#ALIASING_GET}
-     */
-    Ref.Type determineGetTypeForHookOrBooleanExpr(Node parent, String name) {
-      Node prev = parent;
-      for (Node anc : parent.getAncestors()) {
-        switch (anc.getToken()) {
-          case INSTANCEOF:
-          case EXPR_RESULT:
-          case VAR:
-          case LET:
-          case CONST:
-          case IF:
-          case WHILE:
-          case FOR:
-          case FOR_IN:
-          case TYPEOF:
-          case VOID:
-          case NOT:
-          case BITNOT:
-          case POS:
-          case NEG:
-            return Ref.Type.DIRECT_GET;
-          case HOOK:
-            if (anc.getFirstChild() == prev) {
-              return Ref.Type.DIRECT_GET;
-            }
-            break;
-          case DESTRUCTURING_LHS:
-          case RETURN:
-          case THROW:
-            // e.g.
-            // `const {a, b} = condition ? qname1 : qname2;`
-            // `return condition ? qname1 : qname2;`
-            // `throw condition ? qname1 : qname2;
-            return Ref.Type.ALIASING_GET;
-          case ASSIGN:
-            if (!anc.getFirstChild().matchesQualifiedName(name)) {
-              return Ref.Type.ALIASING_GET;
-            }
-            break;
-          case NAME: // a variable declaration
-            if (!name.equals(anc.getString())) {
-              return Ref.Type.ALIASING_GET;
-            }
-            break;
-          case CALL:
-            if (anc.getFirstChild() != prev) {
-              return Ref.Type.ALIASING_GET;
-            }
-            break;
-          case DELPROP:
-            return Ref.Type.DELETE_PROP;
-          default:
-            break;
-        }
-        prev = anc;
-      }
-      return Ref.Type.ALIASING_GET;
     }
 
     /**
