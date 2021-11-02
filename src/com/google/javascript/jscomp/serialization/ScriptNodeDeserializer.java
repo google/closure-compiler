@@ -225,7 +225,10 @@ public final class ScriptNodeDeserializer {
           return;
         case ASSIGN_OR:
         case ASSIGN_AND:
+          this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
+          return;
         case ASSIGN_COALESCE:
+          this.addScriptFeature(Feature.NULL_COALESCE_OP);
           this.addScriptFeature(Feature.LOGICAL_ASSIGNMENT);
           return;
 

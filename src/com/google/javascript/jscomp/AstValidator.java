@@ -314,9 +314,11 @@ public final class AstValidator implements CompilerPass {
       case ASSIGN_MOD:
         validateCompoundAssignmentExpression(n);
         return;
+      case ASSIGN_COALESCE:
+        validateFeature(Feature.NULL_COALESCE_OP, n);
+        // fall-through
       case ASSIGN_OR:
       case ASSIGN_AND:
-      case ASSIGN_COALESCE:
         validateFeature(Feature.LOGICAL_ASSIGNMENT, n);
         validateCompoundAssignmentExpression(n);
         return;
