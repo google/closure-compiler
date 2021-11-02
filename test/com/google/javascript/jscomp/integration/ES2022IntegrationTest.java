@@ -263,10 +263,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "console.log(new MyClass()['m1']());"),
         lines(
             "class a {", //
-            "  ['f1'] = 2;",
-            "  'f2' = 'hi';",
+            "  f1 = 2;",
+            "  f2= 'hi';",
             "  2 = 4;",
-            "  ['m1']() { return this.f1; }",
+            "  m1() { return this.f1; }",
             "}",
             "console.log((new a).f1);",
             "console.log((new a)[2]);",
@@ -293,8 +293,8 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         lines(
             "class a {", //
             "  b = 1;",
-            "  ['a'] = 'hi';",
-            "  ['f3'] = function() { return this.b; };",
+            "  a = 'hi';",
+            "  f3 = function() { return this.b; };",
             "}",
             "console.log(1);",
             "console.log(new a().a);",
@@ -321,10 +321,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "/** @unrestricted */",
             "class a {", //
             "  static a = alert(2);",
-            "  ['f2'] = 'hi';",
-            "  'f3' = 5;",
+            "  f2 = 'hi';",
+            "  f3 = 5;",
             "  4 = 4;",
-            "  ['f6'] = alert(1);",
+            "  f6 = alert(1);",
             "}"));
   }
 }

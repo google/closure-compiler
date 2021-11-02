@@ -21,10 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link ConvertToDottedProperties}.
- *
- */
+/** Tests for {@link ConvertToDottedProperties}. */
 @RunWith(JUnit4.class)
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
@@ -34,7 +31,8 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     super.setUp();
   }
 
-  @Override protected CompilerPass getProcessor(Compiler compiler) {
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new ConvertToDottedProperties(compiler);
   }
 
@@ -119,5 +117,41 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("a?.[$]");
     testSame("a?.[p()]");
     testSame("a?.['default']");
+  }
+
+  @Test
+  public void testComputedPropertyOrField() {
+    test("const test1 = {['prop1']:87};", "const test1 = {prop1:87};");
+    test(
+        "const test1 = {['prop1']:87,['prop2']:bg,['prop3']:'hfd'};",
+        "const test1 = {prop1:87,prop2:bg,prop3:'hfd'};");
+    test(
+        "o = {['x']: async function(x) { return await x + 1; }};",
+        "o = {x:async function (x) { return await x + 1; }};");
+    test("o = {['x']: function*(x) {}};", "o = {x: function*(x) {}};");
+    test(
+        "o = {['x']: async function*(x) { return await x + 1; }};",
+        "o = {x:async function*(x) { return await x + 1; }};");
+    test("class C {'x' = 0;  ['y'] = 1;}", "class C { x= 0;y= 1;}");
+    test("class C {'m'() {} }", "class C {m() {}}");
+
+    test("const o = {'b'() {}, ['c']() {}};", "const o = {b: function() {}, c:function(){}};");
+    test("o = {['x']: () => this};", "o = {x: () => this};");
+
+    test("const o = {get ['d']() {}};", "const o = {get d() {}};");
+    test("const o = { set ['e'](x) {}};", "const o = { set e(x) {}};");
+    test(
+        "class C {'m'() {}  ['n']() {}  'x' = 0;  ['y'] = 1;}",
+        "class C {m() {}  n() {}  x= 0;y= 1;}");
+    test("const o = { get ['d']() {},  set ['e'](x) {}};", "const o = {get d() {},  set e(x){}};");
+    test(
+        "const o = {['a']: 1,'b'() {}, ['c']() {},  get ['d']() {},  set ['e'](x) {}};",
+        "const o = {a: 1,b: function() {}, c: function() {},  get d() {},  set e(x) {}};");
+
+    testSame("const o = {[fn()]: 0}");
+    testSame("const test1 = {[0]:87};");
+    testSame("const test1 = {['default']:87};");
+    testSame("class C { ['constructor']() {} }");
+    testSame("class C { ['constructor'] = 0 }");
   }
 }

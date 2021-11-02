@@ -18,16 +18,15 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
- * Converts property accesses from quoted string syntax to dot syntax, where
- * possible. Dot syntax is more compact and avoids an object allocation in
- * IE 6.
+ * Converts property accesses from quoted string or bracket access syntax to dot or unquoted string
+ * syntax, where possible. Dot syntax is more compact.
  */
-class ConvertToDottedProperties extends AbstractPostOrderCallback
-    implements CompilerPass {
+class ConvertToDottedProperties extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -38,11 +37,55 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+    GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case COMPUTED_PROP:
+      case COMPUTED_FIELD_DEF:
+        Node leftElem = n.getFirstChild();
+        Node rightElem = leftElem.getNext();
+
+        // not convert property named constructor.
+        // ['constructor']() and constructor() are different.
+        if (leftElem.isStringLit()
+            && NodeUtil.isValidPropertyName(FeatureSet.ES3, leftElem.getString())
+            && !leftElem.getString().equals("constructor")) {
+          leftElem.detach();
+          rightElem.detach();
+          Node temp;
+          if (n.isComputedProp()) {
+            if (rightElem.isFunction()) {
+              if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
+
+                temp = IR.getterDef(leftElem.getString(), rightElem);
+
+              } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+                temp = IR.setterDef(leftElem.getString(), rightElem);
+              } else {
+                if (n.getParent().isClassMembers()) {
+
+                  temp = IR.memberFunctionDef(leftElem.getString(), rightElem);
+                  NodeUtil.addFeatureToScript(
+                      t.getCurrentScript(), Feature.MEMBER_DECLARATIONS, compiler);
+                } else {
+                  // TODO - further optimize this code to a member function
+                  temp = IR.stringKey(leftElem.getString(), rightElem);
+                }
+              }
+
+            } else {
+              temp = IR.stringKey(leftElem.getString(), rightElem);
+            }
+          } else {
+            temp = IR.memberFieldDef(leftElem.getString(), rightElem);
+          }
+          n.replaceWith(temp);
+          compiler.reportChangeToEnclosingScope(temp);
+        }
+        break;
       case GETTER_DEF:
       case SETTER_DEF:
       case STRING_KEY:

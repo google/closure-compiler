@@ -715,6 +715,27 @@ public class IR {
     return new Node(Token.SUPER);
   }
 
+  public static Node getterDef(String name, Node value) {
+    checkState(value.isFunction());
+    Node member = Node.newString(Token.GETTER_DEF, name);
+    member.addChildToFront(value);
+    return member;
+  }
+
+  public static Node setterDef(String name, Node value) {
+    checkState(value.isFunction());
+    Node member = Node.newString(Token.SETTER_DEF, name);
+    member.addChildToFront(value);
+    return member;
+  }
+
+  public static Node memberFieldDef(String name, Node value) {
+    checkState(mayBeExpression(value));
+    Node member = Node.newString(Token.MEMBER_FIELD_DEF, name);
+    member.addChildToFront(value);
+    return member;
+  }
+
   public static Node memberFunctionDef(String name, Node function) {
     checkState(function.isFunction());
     Node member = Node.newString(Token.MEMBER_FUNCTION_DEF, name);
