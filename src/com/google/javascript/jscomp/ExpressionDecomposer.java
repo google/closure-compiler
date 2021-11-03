@@ -233,7 +233,9 @@ class ExpressionDecomposer {
       } else if (expressionParent.isCall()
           && NodeUtil.isNormalGet(expressionParent.getFirstChild())) {
         Node callee = expressionParent.getFirstChild();
-        decomposeSubExpressions(callee.getNext(), expressionToExpose, state);
+        if (callee != expressionToExpose) {
+          decomposeSubExpressions(callee.getNext(), expressionToExpose, state);
+        }
 
         // Now handle the call expression. We only have to do this if we arrived at decomposing this
         // call through one of the arguments, rather than the callee; otherwise the callee would
@@ -995,11 +997,12 @@ class ExpressionDecomposer {
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
       if (NodeUtil.isNameDeclaration(parent) && !child.isFirstChildOf(parent)) {
-        // Case: `let x = 5, y = 2 * x;` where `child = y`.
-        // Compound declarations cannot generally be decomposed. Later declarations might reference
-        // earlier ones and if it were possible to separate them, `Normalize` would already have
-        // done so. Therefore, we only support decomposing the first declaration.
-        // TODO(b/121157467): FOR initializers are probably the only source of these cases.
+        // Most declarations are split by `Normalize` but to do so in loops would change the
+        // behavior of the code.  We don't current handle this case but it is possible:
+        // For this case: `for (let x = 5, y = 2 * x; ...` where `child = y`.
+        // As later expressions may reference the earlier expression, it would be necessary to
+        // rewrite references when extracting the expressions:
+        // `var temp1 = 5; var temp2 = 2 * temp1; for (let x = temp1, y = temp2; ...`
         return DecompositionType.UNDECOMPOSABLE;
       }
 

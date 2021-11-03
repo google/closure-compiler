@@ -1056,6 +1056,74 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testBug117935266_expose_call_target() {
+    helperExposeExpression(
+        lines(
+            "function first() {",
+            "  alert('first');",
+            "  return '';",
+            "}",
+            // alert must be preserved before the first side-effect
+            "alert(first().method(alert('second')).method(alert('third')));"),
+        exprMatchesStr("first()"),
+        lines(
+            "function first() {",
+            "  alert('first');",
+            "      return '';",
+            "}",
+            "var temp_const$jscomp$0 = alert;",
+            "temp_const$jscomp$0(first().method(",
+            "    alert('second')).method(alert('third')));"));
+  }
+
+  @Test
+  public void testBug117935266_move_call_target() {
+    helperMoveExpression(
+        lines(
+            "function first() {",
+            "  alert('first');",
+            "      return '';",
+            "}",
+            "var temp_const$jscomp$0 = alert;",
+            "temp_const$jscomp$0(first().toString(",
+            "    alert('second')).toString(alert('third')));"),
+        exprMatchesStr("first()"),
+        lines(
+            "function first() {",
+            "  alert('first');",
+            "      return '';",
+            "}",
+            "var temp_const$jscomp$0 = alert;",
+            "var result$jscomp$0 = first();",
+            "temp_const$jscomp$0(result$jscomp$0.toString(",
+            "    alert('second')).toString(alert('third')));"));
+  }
+
+  @Test
+  public void testBug117935266_expose_call_parameters() {
+    helperExposeExpression(
+        lines(
+            // alert must be preserved before the first side-effect
+            "alert(fn(first(), second(), third()));"),
+        exprMatchesStr("first()"),
+        lines(
+            "var temp_const$jscomp$1 = alert;",
+            "var temp_const$jscomp$0 = fn;",
+            "temp_const$jscomp$1(temp_const$jscomp$0(first(), second(), third()));"));
+
+    helperExposeExpression(
+        lines(
+            // alert must be preserved before the first side-effect
+            "alert(fn(first(), second(), third()));"),
+        exprMatchesStr("second()"),
+        lines(
+            "var temp_const$jscomp$2 = alert;",
+            "var temp_const$jscomp$1 = fn;",
+            "var temp_const$jscomp$0 = first();",
+            "temp_const$jscomp$2(temp_const$jscomp$1(temp_const$jscomp$0, second(), third()));"));
+  }
+
+  @Test
   public void exposeExpressionAfterTwoOptionalChains() {
     helperExposeExpression(
         "a = x?.y.z?.q(foo());",
