@@ -170,10 +170,11 @@ public class JsFileFullParser {
               protected void printSummary() {}
             });
     SourceFile source = SourceFile.fromCode(filename, code);
-    compiler.init(
-        ImmutableList.<SourceFile>of(),
-        ImmutableList.<SourceFile>of(source),
-        new CompilerOptions());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setChecksOnly(true);
+
+    compiler.init(ImmutableList.of(), ImmutableList.of(source), options);
 
     Config config =
         ParserRunner.createConfig(
