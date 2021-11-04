@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
  * to only a single SCRIPT. The other deserialized content must be provided beforehand.
  */
 @GwtIncompatible("protobuf.lite")
-public final class ScriptNodeDeserializer {
+final class ScriptNodeDeserializer {
 
   private final SourceFile sourceFile;
   private final ByteString scriptBytes;
@@ -46,7 +46,7 @@ public final class ScriptNodeDeserializer {
   private final StringPool stringPool;
   private final ImmutableList<SourceFile> filePool;
 
-  public ScriptNodeDeserializer(
+  ScriptNodeDeserializer(
       LazyAst ast,
       StringPool stringPool,
       ColorPool.ShardView colorPoolShard,

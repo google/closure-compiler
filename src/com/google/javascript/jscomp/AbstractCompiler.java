@@ -78,6 +78,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   // Many of them are just accessors that should be passed to the
   // CompilerPass's constructor.
 
+  abstract java.util.function.Supplier<Node> getTypedAstDeserializer(SourceFile file);
+
   /** Looks up an input (possibly an externs input) by input id. May return null. */
   @Override
   public abstract CompilerInput getInput(InputId inputId);

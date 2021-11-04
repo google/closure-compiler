@@ -193,9 +193,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   private Map<String, String> parsedModuleOutputFiles = null;
 
   @GwtIncompatible("Unnecessary")
-  private ImmutableMap<String, SourceFile> typedAstFilesystem = null;
-
-  @GwtIncompatible("Unnecessary")
   private final Gson gson;
 
   static final String OUTPUT_MARKER = "%output%";
@@ -626,7 +623,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       FlagEntry<JsSourceType> file = files.get(i);
       String filename = file.value;
       if (file.flag == JsSourceType.JS_ZIP) {
-        if (this.typedAstFilesystem != null) {
+        if (this.config.typedAstListInputFilename != null) {
           throw new FlagUsageException("Can't use TypedASTs with --zip.");
         }
 
@@ -649,24 +646,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           }
         }
       } else if (!"-".equals(filename)) {
-        final SourceFile newFile;
-        if (this.typedAstFilesystem != null) {
-          newFile = this.typedAstFilesystem.get(filename);
-          if (newFile == null) {
-            throw new FlagUsageException("TypedASTs did not contain " + filename);
-          }
-        } else {
-          SourceKind kind = file.flag == JsSourceType.WEAKDEP ? SourceKind.WEAK : SourceKind.STRONG;
-          newFile =
-              SourceFile.builder()
-                  .withPath(filename)
-                  .withCharset(inputCharset)
-                  .withKind(kind)
-                  .build();
-        }
+        SourceKind kind = file.flag == JsSourceType.WEAKDEP ? SourceKind.WEAK : SourceKind.STRONG;
+        SourceFile newFile =
+            SourceFile.builder()
+                .withPath(filename)
+                .withCharset(inputCharset)
+                .withKind(kind)
+                .build();
         inputs.add(newFile);
       } else {
-        if (this.typedAstFilesystem != null) {
+        if (this.config.typedAstListInputFilename != null) {
           throw new FlagUsageException("Can't use TypedASTs with stdin.");
         }
         if (!config.defaultToStdin) {
@@ -1175,9 +1164,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     setRunOptions(options);
 
     @Nullable String typedAstListInputFilename = config.typedAstListInputFilename;
-    if (typedAstListInputFilename != null) {
-      initTypedAstFilesystem(typedAstListInputFilename);
-    }
 
     List<SourceFile> externs = createExterns(options);
     List<JSChunk> modules = null;
@@ -1254,8 +1240,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         }
         ImmutableList.Builder<CompilerInput> inputs = ImmutableList.builder();
         for (SourceFile source : sources) {
-          inputs.add(
-              compiler.createInputConsideringTypedAstFilesystem(source, /* isExtern */ false));
+          inputs.add(new CompilerInput(source, /* isExtern= */ false));
         }
         modules = createJsModules(jsChunkSpecs, inputs.build());
       }
@@ -1263,9 +1248,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         outputFileNames.add(getModuleOutputFileName(m));
       }
 
-      compiler.initModules(externs, modules, options);
+      if (typedAstListInputFilename != null) {
+        this.initModulesWithTypedAstFilesystem(
+            externs, modules, options, typedAstListInputFilename);
+      } else {
+        compiler.initModules(externs, modules, options);
+      }
     } else {
-      compiler.init(externs, sources, options);
+      if (typedAstListInputFilename != null) {
+        this.initWithTypedAstFilesystem(externs, sources, options, typedAstListInputFilename);
+      } else {
+        compiler.init(externs, sources, options);
+      }
     }
 
     if (options.printConfig) {
@@ -1366,10 +1360,25 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private void initTypedAstFilesystem(String filename) {
+  private void initWithTypedAstFilesystem(
+      List<SourceFile> externs,
+      List<SourceFile> sources,
+      CompilerOptions options,
+      String filename) {
     try (BufferedInputStream typedAstListStream =
         new BufferedInputStream(new FileInputStream(filename))) {
-      this.typedAstFilesystem = compiler.initTypedAstFilesystem(typedAstListStream);
+      compiler.initWithTypedAstFilesystem(externs, sources, options, typedAstListStream);
+    } catch (IOException e) {
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
+    }
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private void initModulesWithTypedAstFilesystem(
+      List<SourceFile> externs, List<JSChunk> chunks, CompilerOptions options, String filename) {
+    try (BufferedInputStream typedAstListStream =
+        new BufferedInputStream(new FileInputStream(filename))) {
+      compiler.initModulesWithTypedAstFilesystem(externs, chunks, options, typedAstListStream);
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
     }

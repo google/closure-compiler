@@ -28,13 +28,18 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer.DeserializedAst;
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -318,8 +323,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testConvertsNumberTypeToColor() {
     enableTypeCheck();
 
-    TypedAstDeserializer.DeserializedAst result = testAndReturnResult(srcs("3"), expected("3"));
-    Node newScript = result.getRoot().getSecondChild().getFirstChild();
+    Result result = testAndReturnResult(srcs("3"), expected("3"));
+    Node newScript = result.sourceRoot.getFirstChild();
     assertNode(newScript).hasToken(Token.SCRIPT);
     Node three = newScript.getFirstFirstChild();
 
@@ -331,22 +336,20 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testConvertsArrayTypeToColor_andStoresInRegistry() {
     enableTypeCheck();
 
-    TypedAstDeserializer.DeserializedAst result = testAndReturnResult(srcs("[]"), expected("[]"));
-    Node newScript = result.getRoot().getSecondChild().getFirstChild();
+    Result result = testAndReturnResult(srcs("[]"), expected("[]"));
+    Node newScript = result.sourceRoot.getFirstChild();
     assertNode(newScript).hasToken(Token.SCRIPT);
     Node three = newScript.getFirstFirstChild();
 
     assertNode(three).hasToken(Token.ARRAYLIT);
-    assertThat(three.getColor())
-        .isSameInstanceAs(result.getColorRegistry().get(StandardColors.ARRAY_ID));
+    assertThat(three.getColor()).isSameInstanceAs(result.registry.get(StandardColors.ARRAY_ID));
   }
 
   @Test
   public void testOriginalNamePreserved() {
     Node newRoot =
         testAndReturnResult(srcs("const x = 0;"), expected("const x = 0;"))
-            .getRoot()
-            .getSecondChild()
+            .sourceRoot
             .getFirstChild();
 
     Node constDeclaration = newRoot.getFirstChild();
@@ -368,8 +371,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
                     lines(
                         "/** @const */ var module$exports$a$b$c = {};",
                         "const module$contents$a$b$c_x = 0;")))
-            .getRoot()
-            .getSecondChild()
+            .sourceRoot
             .getFirstChild();
 
     Node constDeclaration = newRoot.getSecondChild();
@@ -385,10 +387,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     SourceFile a = SourceFile.fromCode("a.js", "const a = 0;");
     SourceFile b = SourceFile.fromCode("b.js", "const b = a;");
 
-    DeserializedAst result =
+    Result result =
         this.testAndReturnResult(srcs(ImmutableList.of(a, b)), expected(ImmutableList.of(a, b)));
-    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
-    Node scriptB = result.getRoot().getSecondChild().getSecondChild();
+    Node scriptA = result.sourceRoot.getFirstChild();
+    Node scriptB = result.sourceRoot.getSecondChild();
 
     assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
     assertThat(scriptB.getStaticSourceFile()).isInstanceOf(SourceFile.class);
@@ -404,9 +406,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     SourceFile a = SourceFile.fromFile(pathA.toString(), UTF_16);
 
-    DeserializedAst result =
+    Result result =
         this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
-    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+    Node scriptA = result.sourceRoot.getFirstChild();
 
     assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
     assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode())
@@ -421,9 +423,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     SourceFile a =
         SourceFile.builder().withOriginalPath("original_a.js").buildFromFile(pathA.toString());
 
-    DeserializedAst result =
+    Result result =
         this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
-    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+    Node scriptA = result.sourceRoot.getFirstChild();
 
     assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
     assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;\n");
@@ -441,9 +443,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     SourceFile a = SourceFile.fromFile(jsZipPath + "!/a.js", UTF_8);
 
-    DeserializedAst result =
+    Result result =
         this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));
-    Node scriptA = result.getRoot().getSecondChild().getFirstChild();
+    Node scriptA = result.sourceRoot.getFirstChild();
 
     assertThat(scriptA.getStaticSourceFile()).isInstanceOf(SourceFile.class);
     assertThat(((SourceFile) scriptA.getStaticSourceFile()).getCode()).isEqualTo("const a = 0;");
@@ -455,7 +457,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     ensureLibraryInjected("base");
     disableCompareSyntheticCode();
 
-    DeserializedAst ast =
+    Result result =
         this.testAndReturnResult(
             srcs("0;"),
             // the injected "base" library is merged into the first file's script. ensure that
@@ -467,7 +469,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
                     "$jscomp.scope = {};",
                     "0;")));
 
-    Node script = ast.getRoot().getSecondChild().getFirstChild();
+    Node script = result.sourceRoot.getFirstChild();
     assertNode(script).hasToken(Token.SCRIPT);
     assertThat(script.getSourceFileName()).isEqualTo("testcode");
 
@@ -484,7 +486,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void includesExternsSummary() throws IOException {
     enableGatherExternProperties();
 
-    DeserializedAst ast =
+    Result result =
         this.testAndReturnResult(
             externs(
                 lines(
@@ -496,7 +498,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             srcs(""),
             expected(""));
 
-    assertThat(ast.getExternProperties()).containsAtLeast("method", "arg");
+    assertThat(result.ast.getExternProperties()).containsAtLeast("method", "arg");
   }
 
   @Override
@@ -513,32 +515,84 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     this.testAndReturnResult(srcs(code), expected(expected));
   }
 
-  private DeserializedAst testAndReturnResult(Sources code, Expected expected) {
+  private Result testAndReturnResult(Sources code, Expected expected) {
     return this.testAndReturnResult(externs(ImmutableList.of()), code, expected);
   }
 
-  private DeserializedAst testAndReturnResult(Externs externs, Sources code, Expected expected) {
-    TypedAst ast = compile(externs, code);
+  private Result testAndReturnResult(Externs externs, Sources code, Expected expected) {
+    InputStream serializedStream = toInputStream(externs, code);
     Node expectedRoot = this.parseExpectedJs(expected);
-    DeserializedAst result = TypedAstDeserializer.deserialize(this.getLastCompiler(), ast);
-    Node newRoot = result.getRoot().getLastChild();
-    assertNode(newRoot).isEqualIncludingJsDocTo(expectedRoot);
+    ImmutableList<SourceFile> externFiles =
+        collectSourceFilesFromScripts(getLastCompiler().getRoot().getFirstChild());
+    ImmutableList<SourceFile> codeFiles =
+        collectSourceFilesFromScripts(getLastCompiler().getRoot().getSecondChild());
+    DeserializedAst ast =
+        TypedAstDeserializer.deserializeFullAst(
+            getLastCompiler(),
+            SourceFile.fromCode("syntheticExterns", "", StaticSourceFile.SourceKind.EXTERN),
+            ImmutableList.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
+            serializedStream);
+
+    ColorRegistry registry = ast.getColorRegistry();
+    Node newExternsRoot = IR.root();
+    Node newSourceRoot = IR.root();
+
+    // this code is a little clunky, but basically the TypedAstDeserializer API assumes you already
+    // know what order the sources/externs are expected to be in. The easiest way for us to get that
+    // ordering is by looking at the pre-serialized AST, since the Sources/Expected APIs hide the
+    // actual file names.
+    for (Node oldExtern = getLastCompiler().getRoot().getFirstFirstChild();
+        oldExtern != null;
+        oldExtern = oldExtern.getNext()) {
+      SourceFile extern = (SourceFile) oldExtern.getStaticSourceFile();
+      Node script = ast.getFilesystem().get(extern).get();
+      script.setInputId(new InputId(extern.getName()));
+      newExternsRoot.addChildToBack(script);
+    }
+    for (Node oldSource = getLastCompiler().getRoot().getSecondChild().getFirstChild();
+        oldSource != null;
+        oldSource = oldSource.getNext()) {
+      SourceFile source = (SourceFile) oldSource.getStaticSourceFile();
+      Node script = ast.getFilesystem().get(source).get();
+      script.setInputId(new InputId(source.getName()));
+      newSourceRoot.addChildToBack(script);
+    }
+
+    assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
     new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true)
-        .validateRoot(result.getRoot());
+        .validateRoot(IR.root(newExternsRoot, newSourceRoot));
     consumer = null;
-    return result;
+    return new Result(ast, registry, newExternsRoot, newSourceRoot);
   }
 
-  TypedAst compile(Externs externs, Sources code) {
+  private ImmutableList<SourceFile> collectSourceFilesFromScripts(Node root) {
+    ImmutableList.Builder<SourceFile> files = ImmutableList.builder();
+    for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
+      files.add((SourceFile) n.getStaticSourceFile());
+    }
+    return files.build();
+  }
+
+  private static class Result {
+    final DeserializedAst ast;
+    final ColorRegistry registry;
+    final Node sourceRoot;
+    final Node externRoot;
+
+    Result(DeserializedAst ast, ColorRegistry registry, Node externRoot, Node sourceRoot) {
+      this.ast = ast;
+      this.registry = registry;
+      this.externRoot = externRoot;
+      this.sourceRoot = sourceRoot;
+    }
+  }
+
+  InputStream toInputStream(Externs externs, Sources code) {
     TypedAst[] result = new TypedAst[1];
     consumer = ast -> result[0] = ast;
     super.testSame(externs, code);
-    byte[] serialized = result[0].toByteArray();
-    try {
-      return TypedAst.parseFrom(serialized);
-    } catch (InvalidProtocolBufferException e) {
-      throw new AssertionError(e);
-    }
+    TypedAst.List ast = TypedAst.List.newBuilder().addTypedAsts(result[0]).build();
+    return new ByteArrayInputStream(ast.toByteArray());
   }
 
   private static void createZipWithContent(Path zipFile, String content) throws IOException {

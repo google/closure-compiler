@@ -1195,22 +1195,23 @@ public final class CompilerTest {
     options.setPreserveDetailedSourceInfo(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    compiler.init(
+    List<SourceFile> externs =
         Collections.singletonList(
             SourceFile.fromCode(
                 "externs.js",
                 lines(
                     "var console = {};", //
                     " console.log = function() {};",
-                    ""))),
+                    "")));
+    List<SourceFile> code =
         Collections.singletonList(
             SourceFile.fromCode(
                 "input.js",
                 lines(
                     "function f() { return 2; }", //
                     "console.log(f());",
-                    ""))),
-        options);
+                    "")));
+    compiler.init(externs, code, options);
 
     compiler.parse();
     compiler.check();
@@ -1218,7 +1219,7 @@ public final class CompilerTest {
     final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.initOptions(options);
+    compiler.init(externs, code, options);
     restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performTranspilationAndOptimizations();
@@ -2841,15 +2842,13 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    ImmutableMap<String, SourceFile> filesystem =
-        compiler.initTypedAstFilesystem(typedAstListStream);
-    SourceFile newFile1 = filesystem.get(file1.getName());
-    compiler.init(ImmutableList.of(), ImmutableList.of(newFile1), new CompilerOptions());
+    compiler.initWithTypedAstFilesystem(
+        ImmutableList.of(), ImmutableList.of(file1), new CompilerOptions(), typedAstListStream);
     compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
-    assertThat(script.getStaticSourceFile()).isSameInstanceAs(newFile1);
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file1);
   }
 
   @Test
@@ -2860,13 +2859,11 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    compiler.initTypedAstFilesystem(typedAstListStream);
+    compiler.initWithTypedAstFilesystem(
+        ImmutableList.of(), ImmutableList.of(file), new CompilerOptions(), typedAstListStream);
 
     // Then
-    Exception e =
-        assertThrows(
-            Exception.class,
-            () -> compiler.init(ImmutableList.of(), ImmutableList.of(file), new CompilerOptions()));
+    Exception e = assertThrows(Exception.class, compiler::parse);
     assertThat(e).hasMessageThat().containsMatch("missing .* test.js");
   }
 
@@ -2910,22 +2907,21 @@ public final class CompilerTest {
     Compiler compiler = new Compiler();
 
     // When
-    ImmutableMap<String, SourceFile> filesystem =
-        compiler.initTypedAstFilesystem(typedAstListStream);
-    SourceFile newFile = filesystem.get(file.getName());
-    compiler.init(ImmutableList.of(), ImmutableList.of(newFile), new CompilerOptions());
+    compiler.initWithTypedAstFilesystem(
+        ImmutableList.of(), ImmutableList.of(file), new CompilerOptions(), typedAstListStream);
     compiler.parse();
 
     // Then
     Node script = compiler.getRoot().getSecondChild().getFirstChild();
-    assertThat(script.getStaticSourceFile()).isSameInstanceAs(newFile);
+    assertThat(script.getStaticSourceFile()).isSameInstanceAs(file);
     assertThat(script.hasChildren()).isFalse();
   }
 
   @Test
   public void testTypedAstFilesystem_syntheticExternsFile_isCattedAcrossTypedAsts() {
     // Given
-    SourceFile syntheticFile = SourceFile.fromCode(" [synthetic:externs] ", "");
+    Compiler compiler = new Compiler();
+    SourceFile syntheticFile = compiler.SYNTHETIC_EXTERNS_FILE;
 
     TypedAst typedAst0 =
         TypedAst.newBuilder()
@@ -2963,20 +2959,16 @@ public final class CompilerTest {
                 .build()
                 .toByteArray());
 
-    Compiler compiler = new Compiler();
-
     // When
-    ImmutableMap<String, SourceFile> filesystem =
-        compiler.initTypedAstFilesystem(typedAstListStream);
-    compiler.init(ImmutableList.of(), ImmutableList.of(), new CompilerOptions());
+    compiler.initWithTypedAstFilesystem(
+        ImmutableList.of(), ImmutableList.of(), new CompilerOptions(), typedAstListStream);
 
     // Then
-    SourceFile newSyntheticFile = filesystem.get(syntheticFile.getName());
     Node insertedExterns = compiler.getExternsRoot().getOnlyChild();
     Node lazyExterns = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
 
     assertThat(insertedExterns).isEqualTo(lazyExterns);
-    assertThat(lazyExterns.getStaticSourceFile()).isSameInstanceAs(newSyntheticFile);
+    assertThat(lazyExterns.getStaticSourceFile()).isSameInstanceAs(compiler.SYNTHETIC_EXTERNS_FILE);
     assertThat(lazyExterns.getFirstChild().isConst()).isTrue();
     assertThat(lazyExterns.getSecondChild().isVar()).isTrue();
   }
