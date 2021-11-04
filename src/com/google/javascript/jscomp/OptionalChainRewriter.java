@@ -218,7 +218,7 @@ class OptionalChainRewriter {
    * * // becomes
    * * let tmp0;
    * * (tmp0 = a()) == null
-   * *     ? void 0
+   * *     ? true
    * *     : delete tmp0.b.c?d;
    * *
    * }</pre>
