@@ -181,26 +181,12 @@ public class Parser {
   private SourcePosition lastSourcePosition;
   @Nullable private String sourceMapURL;
 
-  public Parser(
-      Config config,
-      ErrorReporter errorReporter,
-      SourceFile source,
-      int offset,
-      boolean initialGeneratorContext) {
+  public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
     this.config = config;
     this.errorReporter = errorReporter;
-    this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
-    this.functionContextStack.addLast(
-        initialGeneratorContext ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
+    this.scanner = new Scanner(errorReporter, commentRecorder, source, 0);
+    this.functionContextStack.addLast(FunctionFlavor.NORMAL);
     lastSourcePosition = scanner.getPosition();
-  }
-
-  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset) {
-    this(config, errorReporter, source, offset, false);
-  }
-
-  public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
-    this(config, errorReporter, source, 0);
   }
 
   public static class Config {

@@ -46,13 +46,6 @@ public class Scanner {
   public Scanner(
       ErrorReporter errorReporter,
       CommentRecorder commentRecorder,
-      SourceFile source) {
-    this(errorReporter, commentRecorder, source, 0);
-  }
-
-  public Scanner(
-      ErrorReporter errorReporter,
-      CommentRecorder commentRecorder,
       SourceFile file,
       int offset) {
     this.errorReporter = errorReporter;
