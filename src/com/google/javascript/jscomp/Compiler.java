@@ -1853,7 +1853,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
         for (CompilerInput input : moduleGraph.getAllInputs()) {
           if (input.getKnownProvides().isEmpty()) {
-            ModulePath modPath = moduleLoader.resolve(input.getSourceFile().getOriginalPath());
+            ModulePath modPath = moduleLoader.resolve(input.getSourceFile().getName());
             inputModuleIdentifiers.put(modPath.toModuleName(), input);
           }
         }
@@ -2189,7 +2189,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   Map<String, String> processJsonInputs(Iterable<CompilerInput> inputsToProcess) {
     RewriteJsonToModule rewriteJson = new RewriteJsonToModule(this);
     for (CompilerInput input : inputsToProcess) {
-      if (!input.getSourceFile().getOriginalPath().endsWith(".json")) {
+      if (!input.getSourceFile().getName().endsWith(".json")) {
         continue;
       }
 
@@ -2977,7 +2977,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       SourceFile source =
           SourceMapResolver.getRelativePath(inputSourceMap.getOriginalPath(), sources.next());
       if (source != null) {
-        sourceMap.addSourceFile(source.getOriginalPath(), code);
+        sourceMap.addSourceFile(source.getName(), code);
       }
     }
     if (sources.hasNext() || content.hasNext()) {

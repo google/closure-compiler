@@ -51,7 +51,7 @@ public final class SourceMapInput implements Serializable {
     if (!cached) {
       // Avoid re-reading or reparsing files.
       cached = true;
-      String sourceMapPath = sourceFile.getOriginalPath();
+      String sourceMapPath = sourceFile.getName();
       try {
         String sourceMapContents = sourceFile.getCode();
         SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
@@ -74,6 +74,6 @@ public final class SourceMapInput implements Serializable {
    * Gets the original location of this sourcemap file on disk.
    */
   public String getOriginalPath() {
-    return sourceFile.getOriginalPath();
+    return sourceFile.getName();
   }
 }

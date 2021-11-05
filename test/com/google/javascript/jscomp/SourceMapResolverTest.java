@@ -87,12 +87,11 @@ public final class SourceMapResolverTest {
 
   @Test
   public void testRelativePaths() {
-    assertThat(
-            SourceMapResolver.getRelativePath("basefile.js", "basefile.js.map").getOriginalPath())
+    assertThat(SourceMapResolver.getRelativePath("basefile.js", "basefile.js.map").getName())
         .isEqualTo("basefile.js.map");
     assertThat(
             SourceMapResolver.getRelativePath("path/basefile.js", "relative/path/basefile.js.map")
-                .getOriginalPath())
+                .getName())
         .isEqualTo("path/relative/path/basefile.js.map");
     assertThat(
             SourceMapResolver.getRelativePath("some/longer/path/basefile.js", "../sourcemap.js.map")
@@ -101,14 +100,11 @@ public final class SourceMapResolverTest {
     assertThat(
             SourceMapResolver.getRelativePath(
                     "some/longer/path/basefile.js", ".././../sourcemap.js.map")
-                .getOriginalPath())
+                .getName())
         .isEqualTo("some/sourcemap.js.map");
-    assertThat(
-            SourceMapResolver.getRelativePath("basefile.js", "../basefile.js.map")
-                .getOriginalPath())
+    assertThat(SourceMapResolver.getRelativePath("basefile.js", "../basefile.js.map").getName())
         .isEqualTo("../basefile.js.map");
-    assertThat(
-            SourceMapResolver.getRelativePath("baz/bam/qux.js", "../foo/bar.js").getOriginalPath())
+    assertThat(SourceMapResolver.getRelativePath("baz/bam/qux.js", "../foo/bar.js").getName())
         .isEqualTo("baz/foo/bar.js");
   }
 

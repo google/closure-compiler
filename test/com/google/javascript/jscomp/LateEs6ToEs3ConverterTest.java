@@ -464,7 +464,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
       SourceFile inputScript = ((FlatSources) inputs).sources.get(i);
       SourceFile outputScript = outputs.expected.get(i);
 
-      int fileHashCode = inputScript.getOriginalPath().hashCode();
+      int fileHashCode = inputScript.getName().hashCode();
       String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
       String expectedCode = "";
       String expectedCodeFileName = outputScript.getName();

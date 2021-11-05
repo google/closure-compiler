@@ -342,8 +342,7 @@ public final class JSChunkGraph implements Serializable {
         JsonArray inputs = new JsonArray();
         node.add("inputs", inputs);
       for (CompilerInput input : chunk.getInputs()) {
-          inputs.add(new JsonPrimitive(
-              input.getSourceFile().getOriginalPath()));
+        inputs.add(new JsonPrimitive(input.getSourceFile().getName()));
         }
       chunks.add(node);
     }

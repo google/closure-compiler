@@ -34,7 +34,7 @@ public final class UniqueIdSupplierTest {
   @Test
   public void testSingleCompilerInputGeneratesUniqueIds() {
     CompilerInput input = new CompilerInput(SourceFile.fromCode("tmp", "function foo() {}"));
-    int fileHashCode = input.getSourceFile().getOriginalPath().hashCode();
+    int fileHashCode = input.getSourceFile().getName().hashCode();
     String inputHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
 
     String uniqueId1 = uniqueIdSupplier.getUniqueId(input);
@@ -58,8 +58,8 @@ public final class UniqueIdSupplierTest {
     assertThat(uniqueId2).isNotEmpty();
     assertThat(uniqueId1).isNotEqualTo(uniqueId2);
 
-    int fileHashCode1 = input1.getSourceFile().getOriginalPath().hashCode();
-    int fileHashCode2 = input2.getSourceFile().getOriginalPath().hashCode();
+    int fileHashCode1 = input1.getSourceFile().getName().hashCode();
+    int fileHashCode2 = input2.getSourceFile().getName().hashCode();
     String inputHashString1 = (fileHashCode1 < 0) ? ("m" + -fileHashCode1) : ("" + fileHashCode1);
     String inputHashString2 = (fileHashCode2 < 0) ? ("m" + -fileHashCode2) : ("" + fileHashCode2);
     // The hash strings for the two files are the same, still the supplier generates unique IDs for
@@ -72,12 +72,12 @@ public final class UniqueIdSupplierTest {
   @Test
   public void testMultipleCompilerInputsGenerateUniqueIds() {
     CompilerInput input1 = new CompilerInput(SourceFile.fromCode("tmp1", "function foo() {}"));
-    int inputHashCode1 = input1.getSourceFile().getOriginalPath().hashCode();
+    int inputHashCode1 = input1.getSourceFile().getName().hashCode();
     String inputHashString1 =
         (inputHashCode1 < 0) ? ("m" + -inputHashCode1) : ("" + inputHashCode1);
 
     CompilerInput input2 = new CompilerInput(SourceFile.fromCode("tmp2", "function foo() {}"));
-    int inputHashCode2 = input2.getSourceFile().getOriginalPath().hashCode();
+    int inputHashCode2 = input2.getSourceFile().getName().hashCode();
     String inputHashString2 =
         (inputHashCode2 < 0) ? ("m" + -inputHashCode2) : ("" + inputHashCode2);
 
