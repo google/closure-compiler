@@ -389,6 +389,8 @@ public final class SymbolTable {
           : globalScope.getQualifiedSlot("Function.prototype");
     } else if (type.autoboxesTo() != null) {
       return getSymbolForTypeHelper(type.autoboxesTo(), linkToCtor);
+    } else if (type.isEnumType()) {
+      return getSymbolDeclaredBy((EnumType) type);
     } else {
       return null;
     }
@@ -886,7 +888,9 @@ public final class SymbolTable {
       // happens few lines above.
       JSType type = s.getType();
       Symbol symbolForType = getSymbolForTypeHelper(type, /* linkToCtor= */ false);
-      if ((type.isNominalConstructorOrInterface() || type.isFunctionPrototypeType())
+      if ((type.isNominalConstructorOrInterface()
+              || type.isFunctionPrototypeType()
+              || type.isEnumType())
           && !s.equals(symbolForType)) {
         // Some cases can't be handled by sorting. For example
         //
