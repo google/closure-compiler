@@ -980,6 +980,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testHoistedFunction2() {
+    args.add("--language_out=STABLE");
     test("if (window) { f(); function f() {} }", "if (window) { var f = function() {}; f(); }");
   }
 
@@ -1888,7 +1889,9 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testES6TranspiledByDefault() {
+  public void testES6NotTranspiledByDefault() {
+    testSame("var x = class {};");
+    args.add("--language_out=STABLE");
     test("var x = class {};", "var x = function() {};");
   }
 
@@ -1915,7 +1918,8 @@ public final class CommandLineRunnerTest {
   @Test
   public void testES5Strict() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
-    args.add("--language_out=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5");
+    args.add("--emit_use_strict=true");
     test("var x = f.function", "'use strict';var x = f.function");
     test("var let", RhinoErrorReporter.PARSE_ERROR);
     test("function f(x) { delete x; }", StrictModeCheck.DELETE_VARIABLE);
@@ -1924,7 +1928,8 @@ public final class CommandLineRunnerTest {
   @Test
   public void testES5StrictUseStrict() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
-    args.add("--language_out=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5");
+    args.add("--emit_use_strict=true");
     Compiler compiler = compile(new String[] {"var x = f.function"});
     String outputSource = compiler.toSource();
     assertThat(outputSource).startsWith("'use strict'");
@@ -1933,7 +1938,8 @@ public final class CommandLineRunnerTest {
   @Test
   public void testES5StrictUseStrictMultipleInputs() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
-    args.add("--language_out=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5");
+    args.add("--emit_use_strict=true");
     Compiler compiler =
         compile(new String[] {"var x = f.function", "var y = f.function", "var z = f.function"});
     String outputSource = compiler.toSource();
@@ -2138,6 +2144,7 @@ public final class CommandLineRunnerTest {
     args.add("--entry_point=app");
     args.add("--dependency_mode=PRUNE");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
     args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
@@ -2880,6 +2887,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void testOptionalCatch() {
     args.add("--language_in=ECMASCRIPT_2019");
+    args.add("--language_out=ECMASCRIPT_2018");
     test("try { x(); } catch {}", "try{x()}catch(a){}");
   }
 

@@ -191,7 +191,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         name = "--emit_use_strict",
         handler = BooleanOptionHandler.class,
         usage = "Start output with \"'use strict';\".")
-    private boolean emitUseStrict = true;
+    private boolean emitUseStrict = false;
 
     @Option(
         name = "--strict_mode_input",
@@ -690,10 +690,11 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         name = "--language_out",
         usage =
             "Sets the language spec to which output should conform. "
-                + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+                + "Options: ECMASCRIPT3, ECMASCRIPT5, "
                 + "ECMASCRIPT_2015, ECMASCRIPT_2016, ECMASCRIPT_2017, "
-                + "ECMASCRIPT_2018, ECMASCRIPT_2019, ECMASCRIPT_2020, ECMASCRIPT_2021, STABLE")
-    private String languageOut = "STABLE";
+                + "ECMASCRIPT_2018, ECMASCRIPT_2019, ECMASCRIPT_2020, "
+                + "ECMASCRIPT_2021, STABLE, ECMASCRIPT_NEXT (latest features supported)")
+    private String languageOut = "ECMASCRIPT_NEXT";
 
     @Option(
         name = "--version",
@@ -1630,7 +1631,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       flags.processClosurePrimitives = true;
     }
 
-    if (flags.browserFeaturesetYear != 0 && flags.languageOut != "STABLE") {
+    if (flags.browserFeaturesetYear != 0 && flags.languageOut != "ECMASCRIPT_NEXT") {
       throw new FlagUsageException(
           "ERROR - both flags `--browser_featureset_year` and `--language_out` specified.");
     }
@@ -1948,9 +1949,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
     options.setTracerMode(flags.tracerMode);
     options.setStrictModeInput(flags.strictModeInput);
-    if (!flags.emitUseStrict) {
-      options.setEmitUseStrict(false);
-    }
+    options.setEmitUseStrict(flags.emitUseStrict);
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
     options.setModuleResolutionMode(flags.moduleResolutionMode);
     options.setBrowserResolverPrefixReplacements(
