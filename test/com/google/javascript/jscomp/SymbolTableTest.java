@@ -559,6 +559,26 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testEnumsWithDirectExportWithDisableRewriting() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines(
+                "goog.module('foo');",
+                "/** @enum {number} */",
+                "exports.Color = {RED: 1}; // exports.Color = Color;"),
+            lines("goog.module('bar');", "const foo = goog.require('foo');", "foo.Color.RED;"),
+            lines("goog.module('baz');", "const {Color} = goog.require('foo');", "Color.RED;"));
+    Symbol red =
+        table.getAllSymbols().stream().filter((s) -> s.getName().equals("RED")).findFirst().get();
+    // Make sure that RED belongs to the scope of Color that is defined in the first file and not
+    // third. Because the third file also has "Color" enum that has the same type.
+    assertThat(table.getScope(red).getSymbolForScope().getSourceFileName()).isEqualTo("file1.js");
+    assertThat(table.getReferences(red)).hasSize(3);
+  }
+
+  @Test
   public void testGlobalVarInExterns() {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");

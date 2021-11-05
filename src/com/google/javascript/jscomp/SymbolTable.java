@@ -322,10 +322,32 @@ public final class SymbolTable {
     }
 
     SymbolScope scope = source == null ? globalScope : getEnclosingScope(source);
+    if (scope == null) {
+      return null;
+    }
+    if (scope.isModuleScope()) {
+      // In the case of elements like
+      //
+      // goog.module('foo.bar');
+      // exports.Pinky = {};
+      //
+      // we might get fully-qualified name `foo.bar.Pinky` but when looking it up within the module
+      // - the symbol is `exports.Pinky`. So we replace module name in the symbol with `exports` so
+      // that it can be found in the module scope.
+      String moduleName =
+          Iterables.getFirst(
+              compiler
+                  .getModuleMetadataMap()
+                  .getModulesByPath()
+                  .get(scope.getRootNode().getSourceFileName())
+                  .googNamespaces(),
+              null);
+      if (name.startsWith(moduleName)) {
+        name = name.replaceFirst(moduleName, "exports");
+      }
+    }
 
-    // scope will sometimes be null if one of the type-stripping passes
-    // was run, and the symbol isn't in the AST anymore.
-    return scope == null ? null : scope.getQualifiedSlot(name);
+    return scope.getQualifiedSlot(name);
   }
 
   /**
@@ -945,10 +967,10 @@ public final class SymbolTable {
     if (sym.getName().equals(type.getReferenceName())) {
       return true;
     }
-
-    // Enums
-    return type.isEnumType()
-        && sym.getName().equals(type.toMaybeEnumType().getElementsType().getReferenceName());
+    if (type.isEnumType()) {
+      return true;
+    }
+    return false;
   }
 
   /**
