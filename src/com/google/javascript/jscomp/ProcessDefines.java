@@ -236,7 +236,7 @@ class ProcessDefines implements CompilerPass {
       }
     }
 
-    if (this.mode.check) {
+    if (this.mode.optimize) {
       Set<String> unusedReplacements =
           Sets.difference(
               Sets.union(
