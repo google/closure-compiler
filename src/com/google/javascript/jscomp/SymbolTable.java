@@ -332,18 +332,19 @@ public final class SymbolTable {
       // exports.Pinky = {};
       //
       // we might get fully-qualified name `foo.bar.Pinky` but when looking it up within the module
-      // - the symbol is `exports.Pinky`. So we replace module name in the symbol with `exports` so
-      // that it can be found in the module scope.
-      String moduleName =
+      // - the symbol is just `Pinky`. So we need to remove module name to be able to find the
+      // symbol in module scope.
+      String moduleNameWithDot =
           Iterables.getFirst(
-              compiler
-                  .getModuleMetadataMap()
-                  .getModulesByPath()
-                  .get(scope.getRootNode().getSourceFileName())
-                  .googNamespaces(),
-              null);
-      if (name.startsWith(moduleName)) {
-        name = name.replaceFirst(moduleName, "exports");
+                  compiler
+                      .getModuleMetadataMap()
+                      .getModulesByPath()
+                      .get(scope.getRootNode().getSourceFileName())
+                      .googNamespaces(),
+                  null)
+              + ".";
+      if (name.startsWith(moduleNameWithDot)) {
+        name = name.substring(moduleNameWithDot.length());
       }
     }
 
@@ -768,6 +769,24 @@ public final class SymbolTable {
       }
       scopes.remove(s.getDeclarationNode());
     }
+  }
+
+  private void renameSymbol(SymbolScope scope, Symbol sym, String newName) {
+    Preconditions.checkState(
+        sym.propertyScope == null,
+        "Renaming supported for simple symbols that don't have property scopes.");
+    Symbol existingSym = scope.getSlot(newName);
+    if (existingSym == null) {
+      existingSym =
+          declareSymbol(
+              newName,
+              getType(sym),
+              isTypeInferred(sym),
+              scope,
+              sym.getDeclarationNode(),
+              sym.getJSDocInfo());
+    }
+    mergeSymbol(sym, existingSym);
   }
 
   /**
@@ -1288,8 +1307,7 @@ public final class SymbolTable {
         switch (type) {
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
-            Symbol exports = moduleScope.getOwnSlot("exports");
-            varDeclaration = exports.getPropertyScope().getOwnSlot(varName);
+            varDeclaration = moduleScope.getOwnSlot(varName);
             break;
           case GOOG_PROVIDE:
             varDeclaration = getSymbolForName(null, moduleName + "." + varName);
@@ -1391,6 +1409,37 @@ public final class SymbolTable {
         };
     NodeTraversal.traverseRoots(compiler, collectModuleScopes, externs, root);
     NodeTraversal.traverseRoots(compiler, processRequireStatements, externs, root);
+  }
+
+  /**
+   * Flattens symbols within a module scope (goog.module). In goog.module we often have different
+   * variations of declaring Foo, exports.Foo, exports = {Foo}. In some cases there are both Foo and
+   * exports.Foo = Foo while in others there is only exports.Foo. Semantically they are the same to
+   * the user so we flatten them into Foo. All 'exports.Foo' symbols renamed or merged into 'Foo'
+   * (depending on whether it already exists). That way we get more predictable table which is
+   * required for better index data and integration with other languages, e.g. JS <=> TS indexing.
+   *
+   * <p>This is not a correct operation in 100% of times. For example it will produce very incorrect
+   * result for:
+   *
+   * <pre>
+   *   class Foo {}
+   *   exports.Foo = NotFoo;
+   * </pre>
+   *
+   * But that should be very rare case and the code is misleading and should be avoided.
+   */
+  void flattenGoogModuleExports() {
+    for (SymbolScope moduleScope : getAllScopes()) {
+      if (!moduleScope.isModuleScope()) {
+        continue;
+      }
+      for (Symbol sym : ImmutableList.copyOf(moduleScope.ownSymbols.values())) {
+        if (sym.getName().startsWith("exports.")) {
+          renameSymbol(moduleScope, sym, sym.getName().substring("exports.".length()));
+        }
+      }
+    }
   }
 
   /*

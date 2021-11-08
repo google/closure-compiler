@@ -1666,6 +1666,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       symbolTable.addSymbolsFrom(preprocessorSymbolTable);
     }
 
+    symbolTable.flattenGoogModuleExports();
     symbolTable.fillNamespaceReferences();
     symbolTable.fillPropertyScopes();
     symbolTable.fillThisReferences(externsRoot, jsRoot);
