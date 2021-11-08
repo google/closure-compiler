@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.diagnostic.LogFile;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -141,7 +140,6 @@ class RemoveUnusedCode implements CompilerPass {
 
   // Allocated & cleaned up by process()
   private LogFile removalLog;
-  private LogFile keepLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -227,50 +225,6 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  /** Supplies the string needed for an entry in the keeper log. */
-  private static class KeepLogRecord implements Supplier<String> {
-    final String varName;
-    final String reason;
-    // Non-null if there's a node that should be considered a reference to the variable.
-    @Nullable final Node referenceNode;
-
-    KeepLogRecord(String varName, String reason, @Nullable Node referenceNode) {
-      this.varName = varName;
-      this.reason = reason;
-      this.referenceNode = referenceNode;
-    }
-
-    @Override
-    public String get() {
-      final String location = referenceNode == null ? "" : referenceNode.getLocation();
-      return SimpleFormat.format("%s\t%s\t%s", varName, location, reason);
-    }
-
-    static KeepLogRecord forVarInfo(VarInfo varInfo, String reason) {
-      return new KeepLogRecord(varInfo.getVarName(), reason, /* referenceNode= */ null);
-    }
-
-    static KeepLogRecord forVar(Var var, String reason) {
-      String varName = var.getName();
-      Node nameNode = var.getNameNode();
-      return new KeepLogRecord(varName, reason, nameNode);
-    }
-
-    static KeepLogRecord forPolyfillReference(PolyfillInfo polyfillInfo, Node referenceNode) {
-      return new KeepLogRecord(
-          polyfillInfo.getName(), "unguarded polyfill reference", referenceNode);
-    }
-
-    static KeepLogRecord forReferenceNode(Node referenceNode) {
-      checkArgument(referenceNode.isName(), referenceNode);
-      return new KeepLogRecord(referenceNode.getString(), "referenced", referenceNode);
-    }
-
-    static KeepLogRecord forReferenceNode(Node referenceNode, String reason) {
-      checkArgument(referenceNode.isName(), referenceNode);
-      return new KeepLogRecord(referenceNode.getString(), reason, referenceNode);
-    }
-  }
 
   /** Supplies the string needed for an entry in the removal log. */
   private static class RemovalLogRecord implements Supplier<String> {
@@ -379,14 +333,11 @@ class RemoveUnusedCode implements CompilerPass {
     pinnedPropertyNames.addAll(compiler.getExternProperties());
 
     try (LogFile removalLogFile =
-            compiler.createOrReopenIndexedLog(this.getClass(), "removals.log");
-        LogFile keepLogFile = compiler.createOrReopenIndexedLog(this.getClass(), "keepers.log")) {
+        compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
       removalLog = removalLogFile; // avoid passing the log file through a bunch of methods
-      keepLog = keepLogFile; // avoid passing the log file through a bunch of methods
       traverseAndRemoveUnusedReferences(root);
     } finally {
       removalLog = null;
-      keepLog = null;
     }
   }
 
@@ -460,7 +411,6 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildFunctionDeclaration(n);
             varInfo.addRemovable(functionDeclaration);
             if (parent.isExport()) {
-              keepLog.log(KeepLogRecord.forVarInfo(varInfo, "exported function"));
               varInfo.setIsExplicitlyNotRemovable();
             }
           } else {
@@ -567,7 +517,6 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
-          keepLog.log(KeepLogRecord.forReferenceNode(n));
           traverseNameNode(n, scope).setIsExplicitlyNotRemovable();
         }
         break;
@@ -615,9 +564,6 @@ class RemoveUnusedCode implements CompilerPass {
       for (PolyfillInfo info : polyfills.get(propertyName)) {
         if (info.isRemovable) {
           info.considerPossibleReference(getProp);
-          if (!info.isRemovable) {
-            keepLog.log(KeepLogRecord.forPolyfillReference(info, getProp));
-          }
         }
       }
     }
@@ -741,9 +687,6 @@ class RemoveUnusedCode implements CompilerPass {
       for (PolyfillInfo info : polyfills.get(n.getString())) {
         if (info.isRemovable) {
           info.considerPossibleReference(n);
-          if (!info.isRemovable) {
-            keepLog.log(KeepLogRecord.forPolyfillReference(info, n));
-          }
         }
       }
     }
@@ -970,7 +913,6 @@ class RemoveUnusedCode implements CompilerPass {
     if (exceptionNameNode.isName()) {
       // exceptionNameNode can be an empty node if not using a binding in 2019.
       VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
-      keepLog.log(KeepLogRecord.forReferenceNode(exceptionNameNode, "catch exception variable"));
       exceptionVarInfo.setIsExplicitlyNotRemovable();
     }
     traverseNode(block, scope);
@@ -986,7 +928,6 @@ class RemoveUnusedCode implements CompilerPass {
       // using previously-declared loop variable. e.g.
       // `for (varName of collection) {}`
       VarInfo varInfo = traverseNameNode(iterationTarget, forScope);
-      keepLog.log(KeepLogRecord.forReferenceNode(iterationTarget, "enhanced for-loop variable"));
       varInfo.setIsExplicitlyNotRemovable();
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
       // loop has const/var/let declaration
@@ -1009,7 +950,6 @@ class RemoveUnusedCode implements CompilerPass {
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
         VarInfo varInfo = traverseNameNode(declNode, forScope);
-        keepLog.log(KeepLogRecord.forReferenceNode(declNode, "enhanced for-loop variable"));
         varInfo.setIsExplicitlyNotRemovable();
       }
     } else {
@@ -1053,9 +993,6 @@ class RemoveUnusedCode implements CompilerPass {
         } else if (astAnalyzer.mayHaveSideEffects(valueNode)) {
           // TODO(bradfordcsmith): Actually allow for removing the variable while keeping the
           // valueNode for its side-effects.
-          keepLog.log(
-              KeepLogRecord.forReferenceNode(
-                  nameNode, "for-loop variable with side effect assignment"));
           varInfo.setIsExplicitlyNotRemovable();
           traverseNode(valueNode, scope);
         } else {
@@ -1332,7 +1269,6 @@ class RemoveUnusedCode implements CompilerPass {
     VarInfo varInfo = traverseNameNode(classNameNode, scope);
     if (classNode.getParent().isExport()) {
       // Cannot remove an exported class.
-      keepLog.log(KeepLogRecord.forReferenceNode(classNameNode, "exported class"));
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       // Use traverseChildren() here, because we should not consider any properties on the exported
@@ -1340,14 +1276,10 @@ class RemoveUnusedCode implements CompilerPass {
       traverseChildren(classBodyNode, classScope);
     } else if (astAnalyzer.mayHaveSideEffects(baseClassExpression)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
-      keepLog.log(
-          KeepLogRecord.forReferenceNode(
-              classNameNode, "class extends expression with side effects"));
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
     } else if (astAnalyzer.mayHaveSideEffects(classBodyNode)) {
-      keepLog.log(KeepLogRecord.forReferenceNode(classNameNode, "class body with side effects"));
       varInfo.setIsExplicitlyNotRemovable();
       traverseNode(baseClassExpression, scope);
       traverseClassMembers(classBodyNode, classScope);
@@ -1679,8 +1611,6 @@ class RemoveUnusedCode implements CompilerPass {
           continue;
         }
 
-        keepLog.log(
-            KeepLogRecord.forReferenceNode(lValue, "parameter of function using `arguments`"));
         getVarInfo(getVarForNameNode(lValue, functionScope)).setIsExplicitlyNotRemovable();
       }
       // `arguments` is never removable.
@@ -1723,10 +1653,8 @@ class RemoveUnusedCode implements CompilerPass {
     checkNotNull(var);
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
-      keepLog.log(KeepLogRecord.forVar(var, "extern definition"));
       return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
-      keepLog.log(KeepLogRecord.forVar(var, "exported by coding convention"));
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       return canonicalUnremovableVarInfo;
@@ -1741,10 +1669,8 @@ class RemoveUnusedCode implements CompilerPass {
         // varInfo needs to track what value is assigned to it for the purpose of correctly allowing
         // or preventing removal of properties set on it.
         if (!removeGlobals && isGlobal) {
-          keepLog.log(KeepLogRecord.forVar(var, "not removing globals"));
           varInfo.setIsExplicitlyNotRemovable();
         } else if (!removeLocalVars && !isGlobal) {
-          keepLog.log(KeepLogRecord.forVar(var, "not removing locals"));
           varInfo.setIsExplicitlyNotRemovable();
         }
         varInfoMap.put(var, varInfo);
@@ -3036,7 +2962,6 @@ class RemoveUnusedCode implements CompilerPass {
         requiresLocalLiteralValueForRemoval = true;
       }
       if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
-        keepLog.log(KeepLogRecord.forVarInfo(this, "has non-local or non-literal value"));
         setIsExplicitlyNotRemovable();
       }
 
