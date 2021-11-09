@@ -111,7 +111,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testUnknownDefineWarning() {
-
+    mode = ProcessDefines.Mode.OPTIMIZE;
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
