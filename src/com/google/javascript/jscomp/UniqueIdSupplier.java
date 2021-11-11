@@ -40,9 +40,8 @@ public final class UniqueIdSupplier implements Serializable {
    * @return unique ID as String
    */
   public String getUniqueId(CompilerInput input) {
-    int fileHashCode;
     String filePath = input.getSourceFile().getName();
-    fileHashCode = filePath.hashCode();
+    int fileHashCode = filePath.hashCode();
     int id = counter.add(fileHashCode, 1);
     String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
     return fileHashString + "$" + id;

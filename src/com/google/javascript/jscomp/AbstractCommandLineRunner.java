@@ -1336,7 +1336,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   private Result performStage1andSave(
       String filename, CompileMetricsRecorderInterface metricsRecorder) {
     metricsRecorder.recordActionName("stage 1");
-    Result result;
     try (BufferedOutputStream serializedOutputStream =
         new BufferedOutputStream(new FileOutputStream(filename))) {
       compiler.parseForCompilation();
@@ -1355,7 +1354,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // exception somewhere.
       compiler.generateReport();
     }
-    result = compiler.getResult();
+    Result result = compiler.getResult();
     return result;
   }
 
@@ -1491,7 +1490,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     // and generating an .ijs file and also when doing a full compilation.
     metricsRecorder.recordActionName(
         compiler.getOptions().checksOnly ? "checks-only" : "full compile");
-    Result result;
     try {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
@@ -1510,14 +1508,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // exception somewhere.
       compiler.generateReport();
     }
-    result = compiler.getResult();
+    Result result = compiler.getResult();
     return result;
   }
 
   @GwtIncompatible("Unnecessary")
   private Result instrumentForCoverage(CompileMetricsRecorderInterface metricsRecorder) {
     metricsRecorder.recordActionName("instrument for coverage");
-    Result result;
     try {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
@@ -1527,7 +1524,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     } finally {
       compiler.generateReport();
     }
-    result = compiler.getResult();
+    Result result = compiler.getResult();
     return result;
   }
 

@@ -1591,13 +1591,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       boolean removedNodes = false;
       while (key != null) {
-        Node lhs;
         if ((!key.isStringKey() || key.isQuotedString()) && !key.isMemberFunctionDef()) {
           key = key.getNext();
           continue;
         }
 
-        lhs = IR.getprop(export.cloneTree(), key.getString());
+        Node lhs = IR.getprop(export.cloneTree(), key.getString());
         Node value = null;
         if (key.isStringKey()) {
           value = key.removeFirstChild();

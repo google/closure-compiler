@@ -372,8 +372,7 @@ public class Parser {
 
   //  ImportSpecifierSet ::= '{' (ImportSpecifier (',' ImportSpecifier)* (,)? )?  '}'
   private ImmutableList<ParseTree> parseImportSpecifierSet() {
-    ImmutableList.Builder<ParseTree> elements;
-    elements = ImmutableList.builder();
+    ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
     while (peekIdOrKeyword()) {
       elements.add(parseImportSpecifier());
