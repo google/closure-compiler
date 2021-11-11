@@ -664,11 +664,11 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Illegal browser_featureset_year=2011. We support values 2012, 2019, 2020, and 2021"
-                + " only");
+            "Illegal browser_featureset_year=2011. We support values 2012, 2018, 2019, 2020 and"
+                + " 2021 only");
   }
 
-  /** Giving a browser featureset year between 2012 and 2019 reports error */
+  /** Giving a browser featureset year between 2012 and 2018 reports error */
   @Test
   public void invalidBrowserFeaturesetYearFlagGeneratesError2() {
     args.add("--browser_featureset_year=2015");
@@ -676,8 +676,8 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Illegal browser_featureset_year=2015. We support values 2012, 2019, 2020, and 2021"
-                + " only");
+            "Illegal browser_featureset_year=2015. We support values 2012, 2018, 2019, 2020 and"
+                + " 2021 only");
   }
 
   /** Giving a future year as the browser featureset year reports error */
@@ -692,7 +692,7 @@ public final class CommandLineRunnerTest {
         .isEqualTo(
             "Illegal browser_featureset_year="
                 + higherThanCurrentYear
-                + ". We support values 2012, 2019, 2020, and 2021 only");
+                + ". We support values 2012, 2018, 2019, 2020 and 2021 only");
   }
 
   /** Check that --browser_featureset_year = 2012 correctly sets the language out */
@@ -725,6 +725,22 @@ public final class CommandLineRunnerTest {
     Flag value --browser_featureset_year=2019 corresponds to output ECMASCRIPT_2017 */
     assertThat(lastCompiler.getOptions().getOutputFeatureSet())
         .isEqualTo(LanguageMode.ECMASCRIPT_2017.toFeatureSet());
+  }
+
+  /** Check that --browser_featureset_year = 2018 correctly sets the language out */
+  @Test
+  public void browserFeatureSetYearSetsLanguageOut3() {
+    args.add("--browser_featureset_year=2018");
+    String original =
+        lines(
+            "/** @define {number} */", //
+            "goog.FEATURESET_YEAR = goog.define('goog.FEATURESET_YEAR', 2012);");
+    String expected = "goog.FEATURESET_YEAR=2018";
+    test(original, expected);
+    /* Browser's year is not expected to match output language's year
+    Flag value --browser_featureset_year=2018 corresponds to output ECMASCRIPT_2016 */
+    assertThat(lastCompiler.getOptions().getOutputFeatureSet())
+        .isEqualTo(LanguageMode.ECMASCRIPT_2016.toFeatureSet());
   }
 
   @Test
