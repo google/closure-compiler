@@ -20,13 +20,12 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Miscellaneous checks for style in ES6 modules. */
-public final class CheckEs6Modules implements Callback, CompilerPass {
+public final class CheckEs6Modules implements NodeTraversal.Callback, CompilerPass {
 
   public static final DiagnosticType DUPLICATE_IMPORT =
       DiagnosticType.warning(

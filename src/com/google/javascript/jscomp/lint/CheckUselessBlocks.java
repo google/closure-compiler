@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -39,7 +38,7 @@ import java.util.Deque;
  *
  * <p>Inspired by ESLint (https://github.com/eslint/eslint/blob/master/lib/rules/no-lone-blocks.js)
  */
-public final class CheckUselessBlocks implements Callback, CompilerPass {
+public final class CheckUselessBlocks implements NodeTraversal.Callback, CompilerPass {
   public static final DiagnosticType USELESS_BLOCK = DiagnosticType.disabled(
       "JSC_USELESS_BLOCK", "Useless block.");
 

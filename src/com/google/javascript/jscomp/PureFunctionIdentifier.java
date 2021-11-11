@@ -29,7 +29,6 @@ import com.google.common.collect.Multimaps;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.Cache;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -538,7 +537,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>This callback is only meant for use on externs.
    */
-  private final class ExternFunctionAnnotationAnalyzer implements Callback {
+  private final class ExternFunctionAnnotationAnalyzer implements NodeTraversal.Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       return true;

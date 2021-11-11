@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Precision;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -441,7 +440,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
       return null;
     } else {
       // Adjust the line/column here to be start at 1.
-      Builder x =
+      OriginalMapping.Builder x =
           OriginalMapping.newBuilder()
               .setOriginalFile(sources[entry.getSourceFileId()])
               .setLineNumber(entry.getSourceLine() + 1)
@@ -489,8 +488,10 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
             Collection<OriginalMapping> mappings =
                 lineToCollectionMap.get(sourceLine);
 
-            Builder builder = OriginalMapping.newBuilder().setLineNumber(
-                targetLine).setColumnPosition(entry.getGeneratedColumn());
+            OriginalMapping.Builder builder =
+                OriginalMapping.newBuilder()
+                    .setLineNumber(targetLine)
+                    .setColumnPosition(entry.getGeneratedColumn());
 
             mappings.add(builder.build());
           }

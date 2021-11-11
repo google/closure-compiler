@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -319,7 +318,7 @@ public final class FunctionToBlockMutatorTest {
     boolean call(NodeTraversal t, Node n, Node parent);
   }
 
-  static class TestCallback implements Callback {
+  static class TestCallback implements NodeTraversal.Callback {
 
     private final String callname;
     private final Method method;

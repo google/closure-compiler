@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -157,11 +156,10 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Gathers a list of reductions to apply later by doing an in-order
-   * AST traversal.  If a suitable reduction is found, stop traversal
-   * in that branch.
+   * Gathers a list of reductions to apply later by doing an in-order AST traversal. If a suitable
+   * reduction is found, stop traversal in that branch.
    */
-  private class ReductionGatherer implements Callback {
+  private class ReductionGatherer implements NodeTraversal.Callback {
     private final Reducer[] reducers;
     private final Multimap<Reducer, Reduction> reductions;
 

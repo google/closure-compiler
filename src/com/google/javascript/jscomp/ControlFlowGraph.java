@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.Node;
 import java.util.Comparator;
@@ -119,16 +118,13 @@ public class ControlFlowGraph<N> extends
   }
 
   /**
-   * Abstract callback to visit a control flow graph node without going into
-   * subtrees of the node that are also represented by other
-   * control flow graph nodes.
+   * Abstract callback to visit a control flow graph node without going into subtrees of the node
+   * that are also represented by other control flow graph nodes.
    *
-   * <p>For example, traversing an IF node as root will visit the two subtrees
-   * pointed by the {@link ControlFlowGraph.Branch#ON_TRUE} and
-   * {@link ControlFlowGraph.Branch#ON_FALSE} edges.
+   * <p>For example, traversing an IF node as root will visit the two subtrees pointed by the {@link
+   * ControlFlowGraph.Branch#ON_TRUE} and {@link ControlFlowGraph.Branch#ON_FALSE} edges.
    */
-  public abstract static class AbstractCfgNodeTraversalCallback implements
-      Callback {
+  public abstract static class AbstractCfgNodeTraversalCallback implements NodeTraversal.Callback {
     @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
         Node parent) {

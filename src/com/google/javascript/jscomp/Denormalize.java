@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.alwaysTrue;
 
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -45,7 +44,7 @@ import com.google.javascript.rhino.Token;
  * </code> becomes <code>if (y) { var x = 0; }</code>, effectively undoing what {@link
  * HoistVarsOutOfBlocks} does.
  */
-class Denormalize implements CompilerPass, Callback, Behavior {
+class Denormalize implements CompilerPass, NodeTraversal.Callback, Behavior {
 
   private final AbstractCompiler compiler;
   private final FeatureSet outputFeatureSet;

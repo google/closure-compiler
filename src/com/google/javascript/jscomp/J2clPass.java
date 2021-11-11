@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -122,7 +121,7 @@ public class J2clPass implements CompilerPass {
       NodeTraversal.traverse(compiler, root, new StaticCallInliner());
     }
 
-    private class FunctionDefsCollector implements Callback {
+    private class FunctionDefsCollector implements NodeTraversal.Callback {
       @Override
       public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
         // Only look inside the referenced class file.

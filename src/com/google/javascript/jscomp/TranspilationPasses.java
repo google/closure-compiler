@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -435,7 +434,10 @@ public class TranspilationPasses {
    */
   @Deprecated
   static void processTranspile(
-      AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
+      AbstractCompiler compiler,
+      Node combinedRoot,
+      FeatureSet featureSet,
+      NodeTraversal.Callback... callbacks) {
     FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
     for (Node singleRoot = combinedRoot.getFirstChild();
         singleRoot != null;
@@ -449,7 +451,7 @@ public class TranspilationPasses {
       // Right now we know what features were in a file at parse time, but not what features were
       // added to that file by other transpilation passes.
       if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
-        for (Callback callback : callbacks) {
+        for (NodeTraversal.Callback callback : callbacks) {
           singleRoot.putBooleanProp(Node.TRANSPILED, true);
           NodeTraversal.traverse(compiler, singleRoot, callback);
         }

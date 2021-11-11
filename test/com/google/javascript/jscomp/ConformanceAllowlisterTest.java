@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +42,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement requirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.title")
             .build();
@@ -63,7 +62,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement whitelistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.innerHTML")
             .addWhitelist("/entry.js")
@@ -73,7 +72,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement allowlistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.innerHTML")
             .addAllowlist("/entry.js")
@@ -93,7 +92,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement whitelistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.title")
             .addWhitelist("/entry.js")
@@ -104,7 +103,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement allowlistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.title")
             .addAllowlist("/entry.js")
@@ -128,7 +127,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement whitelistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.innerHTML")
             .addWhitelist("/test/")
@@ -139,7 +138,7 @@ public class ConformanceAllowlisterTest {
 
     Requirement allowlistRequirement =
         Requirement.newBuilder()
-            .setType(Type.BANNED_PROPERTY)
+            .setType(Requirement.Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
             .addValue("Object.prototype.innerHTML")
             .addAllowlist("/test/")

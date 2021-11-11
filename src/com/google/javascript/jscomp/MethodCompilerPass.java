@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -77,10 +76,10 @@ abstract class MethodCompilerPass implements CompilerPass {
   }
 
   /**
-   * Subclasses should return a callback that does the actual work they
-   * want to perform given the computed list of method signatures
+   * Subclasses should return a callback that does the actual work they want to perform given the
+   * computed list of method signatures
    */
-  abstract Callback getActingCallback();
+  abstract NodeTraversal.Callback getActingCallback();
 
   /**
    * Subclasses should return a SignatureStore for storing discovered

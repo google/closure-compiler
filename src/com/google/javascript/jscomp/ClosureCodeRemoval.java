@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -209,7 +208,7 @@ final class ClosureCodeRemoval implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    List<Callback> passes = new ArrayList<>();
+    List<NodeTraversal.Callback> passes = new ArrayList<>();
     if (removeAbstractMethods) {
       passes.add(new FindAbstractMethods());
     }

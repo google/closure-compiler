@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.javascript.jscomp.JsMessage.Builder;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -449,7 +448,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *     node
    */
   private void extractMessageFromVariable(
-      Builder builder, Node nameNode, Node parentNode, @Nullable Node grandParentNode)
+      JsMessage.Builder builder, Node nameNode, Node parentNode, @Nullable Node grandParentNode)
       throws MalformedException {
 
     // Determine the message's value
@@ -484,7 +483,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @throws MalformedException if {@code getPropNode} does not correspond to a valid JS message
    *     node
    */
-  private void extractMessageFrom(Builder builder, Node valueNode, Node docNode)
+  private void extractMessageFrom(JsMessage.Builder builder, Node valueNode, Node docNode)
       throws MalformedException {
     maybeInitMetaDataFromJsDoc(builder, docNode);
     extractFromCallNode(builder, valueNode);
@@ -499,7 +498,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param parentOfVarNode {@code varNode}'s parent node
    */
   private void maybeInitMetaDataFromJsDocOrHelpVar(
-      Builder builder, Node varNode, @Nullable Node parentOfVarNode) throws MalformedException {
+      JsMessage.Builder builder, Node varNode, @Nullable Node parentOfVarNode)
+      throws MalformedException {
 
     // First check description in @desc
     if (maybeInitMetaDataFromJsDoc(builder, varNode)) {
@@ -523,8 +523,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param sibling a node adjacent to the message VAR node
    * @return true iff message has corresponding description variable
    */
-  private static boolean maybeInitMetaDataFromHelpVar(Builder builder, @Nullable Node sibling)
-      throws MalformedException {
+  private static boolean maybeInitMetaDataFromHelpVar(
+      JsMessage.Builder builder, @Nullable Node sibling) throws MalformedException {
     if ((sibling != null) && (sibling.isVar())) {
       Node nameNode = sibling.getFirstChild();
       String name = nameNode.getString();
@@ -550,7 +550,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param node the node with the message's JSDoc properties
    * @return true if message has JsDoc with valid description in @desc annotation
    */
-  private static boolean maybeInitMetaDataFromJsDoc(Builder builder, Node node) {
+  private static boolean maybeInitMetaDataFromJsDoc(JsMessage.Builder builder, Node node) {
     boolean messageHasDesc = false;
     JSDocInfo info = node.getJSDocInfo();
     if (info != null) {
@@ -632,7 +632,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param node the function node that contains a message
    * @throws MalformedException if the parsed message is invalid
    */
-  private void extractFromFunctionNode(Builder builder, Node node) throws MalformedException {
+  private void extractFromFunctionNode(JsMessage.Builder builder, Node node)
+      throws MalformedException {
     Set<String> phNames = new HashSet<>();
 
     for (Node fnChild = node.getFirstChild(); fnChild != null; fnChild = fnChild.getNext()) {
@@ -690,7 +691,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param node the node from where we extract a message
    * @throws MalformedException if the parsed message is invalid
    */
-  private static void extractFromReturnDescendant(Builder builder, Node node)
+  private static void extractFromReturnDescendant(JsMessage.Builder builder, Node node)
       throws MalformedException {
 
     switch (node.getToken()) {
@@ -735,7 +736,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param node the call node from where we extract the message
    * @throws MalformedException if the parsed message is invalid
    */
-  private void extractFromCallNode(Builder builder, Node node) throws MalformedException {
+  private void extractFromCallNode(JsMessage.Builder builder, Node node) throws MalformedException {
     // Check the function being called
     if (!node.isCall()) {
       throw new MalformedException(
@@ -810,7 +811,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * @param node the node with string literal that contains the message text
    * @throws MalformedException if {@code value} contains a reference to an unregistered placeholder
    */
-  private static void parseMessageTextNode(Builder builder, Node node) throws MalformedException {
+  private static void parseMessageTextNode(JsMessage.Builder builder, Node node)
+      throws MalformedException {
     String value = extractStringFromStringExprNode(node);
 
     try {

@@ -25,7 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -41,7 +40,7 @@ import java.util.PriorityQueue;
  * This is a compiler pass that computes a control flow graph. Note that this is only a CompilerPass
  * because the Compiler invokes it via Compiler#process. It is never included in a PassConfig.
  */
-public final class ControlFlowAnalysis implements Callback, CompilerPass {
+public final class ControlFlowAnalysis implements NodeTraversal.Callback, CompilerPass {
 
   /**
    * Based roughly on the first few pages of

@@ -16,44 +16,46 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Checks for certain uses of the {@code this} keyword that are considered
- * unsafe because they are likely to reference the global {@code this} object
- * unintentionally.
+ * Checks for certain uses of the {@code this} keyword that are considered unsafe because they are
+ * likely to reference the global {@code this} object unintentionally.
  *
- * <p>A use of {@code this} is considered unsafe if it's on the left side of an
- * assignment or a property access, and not inside one of the following:
+ * <p>A use of {@code this} is considered unsafe if it's on the left side of an assignment or a
+ * property access, and not inside one of the following:
+ *
  * <ol>
- * <li>a prototype method
- * <li>a function annotated with {@code @constructor}
- * <li>a function annotated with {@code @this}.
- * <li>a function where there's no logical place to put a
- *     {@code this} annotation.
+ *   <li>a prototype method
+ *   <li>a function annotated with {@code @constructor}
+ *   <li>a function annotated with {@code @this}.
+ *   <li>a function where there's no logical place to put a {@code this} annotation.
  * </ol>
  *
- * <p>Note that this check does not track assignments of {@code this} to
- * variables or objects. The code
+ * <p>Note that this check does not track assignments of {@code this} to variables or objects. The
+ * code
+ *
  * <pre>
  * function evil() {
  *   var a = this;
  *   a.useful = undefined;
  * }
  * </pre>
+ *
  * will not get flagged, even though it is semantically equivalent to
+ *
  * <pre>
  * function evil() {
  *   this.useful = undefined;
  * }
  * </pre>
+ *
  * which would get flagged.
  */
-final class CheckGlobalThis implements Callback {
+final class CheckGlobalThis implements NodeTraversal.Callback {
 
   static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(
       "JSC_USED_GLOBAL_THIS",

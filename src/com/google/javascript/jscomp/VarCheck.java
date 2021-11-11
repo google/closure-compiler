@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
@@ -379,10 +378,10 @@ class VarCheck implements ScopedCallback, CompilerPass {
   }
 
   /**
-   * A check for name references in the externs inputs. These used to prevent
-   * a variable from getting renamed, but no longer have any effect.
+   * A check for name references in the externs inputs. These used to prevent a variable from
+   * getting renamed, but no longer have any effect.
    */
-  private class NameRefInExternsCheck implements Callback {
+  private class NameRefInExternsCheck implements NodeTraversal.Callback {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {

@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIR
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.LinkedHashMultiset;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
@@ -201,7 +200,7 @@ public final class GatherModuleMetadata implements CompilerPass {
   }
 
   /** Traverses the AST and build a sets of {@link ModuleMetadata}s. */
-  private final class Finder implements Callback {
+  private final class Finder implements NodeTraversal.Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {

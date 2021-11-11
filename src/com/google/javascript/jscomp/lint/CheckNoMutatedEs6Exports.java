@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Set;
 
 /** Checks that exports of ES6 modules are not mutated outside of module initialization. */
-public final class CheckNoMutatedEs6Exports implements Callback, CompilerPass {
+public final class CheckNoMutatedEs6Exports implements NodeTraversal.Callback, CompilerPass {
 
   public static final DiagnosticType MUTATED_EXPORT =
       DiagnosticType.warning(

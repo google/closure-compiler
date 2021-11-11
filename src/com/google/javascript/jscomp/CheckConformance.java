@@ -22,7 +22,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
@@ -43,7 +42,7 @@ import javax.annotation.Nullable;
  * to the {cI gue@link ErrorManager}
  */
 @GwtIncompatible("com.google.protobuf")
-public final class CheckConformance implements Callback, CompilerPass {
+public final class CheckConformance implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType CONFORMANCE_ERROR =
       DiagnosticType.error("JSC_CONFORMANCE_ERROR", "Violation: {0}{1}{2}");
 

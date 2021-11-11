@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -145,7 +144,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     // Find global names that are used in more than one module. Those that
     // are have to be rewritten.
-    List<Callback> nonMutatingPasses = new ArrayList<>();
+    List<NodeTraversal.Callback> nonMutatingPasses = new ArrayList<>();
     nonMutatingPasses.add(new FindCrossModuleNamesCallback());
 
     // And find names that may refer to functions that reference this.
@@ -331,7 +330,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    *
    * (This is invalid syntax, but the VAR token is removed later).
    */
-  private class RewriteScopeCallback implements Callback {
+  private class RewriteScopeCallback implements NodeTraversal.Callback {
     List<ModuleGlobal> preDeclarations = new ArrayList<>();
 
     @Override

@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import org.junit.Before;
@@ -2019,7 +2018,7 @@ public final class FunctionInjectorTest {
     boolean call(NodeTraversal t, Node n, Node parent);
   }
 
-  static class TestCallback implements Callback {
+  static class TestCallback implements NodeTraversal.Callback {
 
     private final String callname;
     private final Method method;

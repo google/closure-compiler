@@ -23,7 +23,6 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
@@ -99,7 +98,7 @@ import java.util.Deque;
  * current node's context is guarded, either intrinsically or conditionally. If it is intrinsically
  * guarded, then it may be recorded as a condition for the purpose of guarding future contexts.
  */
-abstract class GuardedCallback<T> implements Callback {
+abstract class GuardedCallback<T> implements NodeTraversal.Callback {
   // Compiler is needed for coding convention (isPropertyTestFunction).
   private final AbstractCompiler compiler;
   // Map from short-circuiting conditional nodes (AND, OR, COALESCE, IF, and HOOK) to

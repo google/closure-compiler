@@ -24,7 +24,6 @@ import static com.google.common.base.Predicates.alwaysTrue;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
@@ -219,7 +218,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
    * A NodeTraversal that operates within a function block and collects candidate properties
    * assignments.
    */
-  private static class FindCandidateAssignmentTraversal implements Callback {
+  private static class FindCandidateAssignmentTraversal implements NodeTraversal.Callback {
 
     /**
      * A map of property names to their nodes.

@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -32,7 +31,7 @@ import com.google.javascript.rhino.Node;
  * <p>Inspired by ESLint
  * (https://github.com/eslint/eslint/blob/master/lib/rules/no-unused-labels.js)
  */
-public final class CheckUnusedLabels implements Callback, CompilerPass {
+public final class CheckUnusedLabels implements NodeTraversal.Callback, CompilerPass {
   public static final DiagnosticType UNUSED_LABEL = DiagnosticType.disabled(
       "JSC_UNUSED_LABEL", "Unused label {0}.");
 

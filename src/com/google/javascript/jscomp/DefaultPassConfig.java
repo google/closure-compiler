@@ -33,7 +33,6 @@ import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.LocaleDataPasses.ExtractAndProtect;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
@@ -1000,7 +999,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("suspiciousCode")
           .setInternalFactory(
               (compiler) -> {
-                List<Callback> sharedCallbacks = new ArrayList<>();
+                List<NodeTraversal.Callback> sharedCallbacks = new ArrayList<>();
                 if (options.checkSuspiciousCode) {
                   sharedCallbacks.add(new CheckSuspiciousCode());
                   sharedCallbacks.add(new CheckDuplicateCase(compiler));
@@ -1771,7 +1770,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkControlFlow")
           .setInternalFactory(
               (compiler) -> {
-                List<Callback> callbacks = new ArrayList<>();
+                List<NodeTraversal.Callback> callbacks = new ArrayList<>();
                 if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
                   callbacks.add(new CheckUnreachableCode(compiler));
                 }
@@ -1802,8 +1801,8 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.LINT_CHECKS)
           .setInternalFactory(
               (compiler) -> {
-                ImmutableList.Builder<Callback> callbacks =
-                    ImmutableList.<Callback>builder()
+                ImmutableList.Builder<NodeTraversal.Callback> callbacks =
+                    ImmutableList.<NodeTraversal.Callback>builder()
                         .add(new CheckConstPrivateProperties(compiler))
                         .add(new CheckConstantCaseNames(compiler))
                         .add(new CheckDefaultExportOfGoogModule(compiler))
@@ -1833,7 +1832,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.ANALYZER_CHECKS)
           .setInternalFactory(
               (compiler) -> {
-                ImmutableList<Callback> callbacks =
+                ImmutableList<NodeTraversal.Callback> callbacks =
                     ImmutableList.of(
                         new CheckArrayWithGoogObject(compiler),
                         new ImplicitNullabilityCheck(compiler),
@@ -1858,7 +1857,8 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
-  private static CompilerPass combineChecks(AbstractCompiler compiler, List<Callback> callbacks) {
+  private static CompilerPass combineChecks(
+      AbstractCompiler compiler, List<NodeTraversal.Callback> callbacks) {
     checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
   }

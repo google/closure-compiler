@@ -20,7 +20,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -57,7 +56,7 @@ import java.util.Map.Entry;
  * <p>NOTE: now that this pass also moves class declarations it should be renamed along with the
  * associated options.
  */
-class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, CompilerPass {
+class RewriteGlobalDeclarationsForTryCatchWrapping implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
   private final ListMultimap<JSChunk, Node> functions = ArrayListMultimap.create();
   private final ArrayList<Node> classes = new ArrayList<>();

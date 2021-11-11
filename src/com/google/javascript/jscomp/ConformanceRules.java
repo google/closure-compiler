@@ -38,7 +38,6 @@ import com.google.javascript.jscomp.CheckConformance.Precondition;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.Requirement.Severity;
-import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -605,7 +604,8 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (requirementType == Type.BANNED_NAME_CALL && !ConformanceUtil.isCallTarget(n)) {
+      if (requirementType == Requirement.Type.BANNED_NAME_CALL
+          && !ConformanceUtil.isCallTarget(n)) {
         return ConformanceResult.CONFORMANCE;
       }
 
