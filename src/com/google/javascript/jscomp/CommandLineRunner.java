@@ -837,7 +837,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         handler = BooleanOptionHandler.class,
         usage =
             "Injects polyfills for ES2015+ library classes and methods used in source. See also"
-                + "https://github.com/google/closure-compiler/wiki/Polyfills")
+                + " the \"Polyfills\" GitHub Wiki page.")
     private boolean rewritePolyfills = true;
 
     @Option(
@@ -998,6 +998,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 ImmutableList.of(
                     "assume_function_wrapper",
                     "debug",
+                    "emit_use_strict",
                     "export_local_property_definitions",
                     "formatting",
                     "generate_exports",
