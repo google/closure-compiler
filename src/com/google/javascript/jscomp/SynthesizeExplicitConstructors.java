@@ -19,11 +19,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import javax.annotation.CheckReturnValue;
 
 /** Adds explicit constructors to classes that lack them. */
 @CheckReturnValue

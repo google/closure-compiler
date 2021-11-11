@@ -28,12 +28,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.AbstractScope;
 import com.google.javascript.jscomp.AbstractVar;
 import com.google.javascript.jscomp.TypedVar;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.TypeSubject;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**

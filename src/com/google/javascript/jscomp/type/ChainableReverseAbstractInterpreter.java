@@ -33,6 +33,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EnumElementType;
@@ -49,7 +50,6 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
-import javax.annotation.CheckReturnValue;
 
 /**
  * Chainable reverse abstract interpreter providing basic functionality.

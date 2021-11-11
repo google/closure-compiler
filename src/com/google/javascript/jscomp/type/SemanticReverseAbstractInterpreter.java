@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
@@ -35,7 +36,6 @@ import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A reverse abstract interpreter using the semantics of the JavaScript

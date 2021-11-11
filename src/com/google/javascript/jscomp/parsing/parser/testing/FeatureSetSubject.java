@@ -21,9 +21,9 @@ import static com.google.common.truth.Truth.assertAbout;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for FeatureSet. Usage:

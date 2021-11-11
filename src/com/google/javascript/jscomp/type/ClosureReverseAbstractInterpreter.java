@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -29,7 +30,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.util.Map;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A reverse abstract interpreter (RAI) for specific closure patterns such as {@code goog.isObject}.

@@ -44,10 +44,10 @@ import static com.google.common.truth.Truth.assertAbout;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import javax.annotation.CheckReturnValue;
 
 /** A Truth Subject for {@link TemplateTypeMap}s. */
 public final class TemplateTypeMapSubject extends Subject {

@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp.transpile;
 
 import com.google.common.cache.CacheBuilder;
-import javax.annotation.CheckReturnValue;
+import com.google.errorprone.annotations.CheckReturnValue;
 
 /**
  * Basic Transpiler implementation for outputting ES5 code.

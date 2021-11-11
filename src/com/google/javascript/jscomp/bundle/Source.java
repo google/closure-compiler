@@ -24,13 +24,13 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /** An abstract representation of a source file. */

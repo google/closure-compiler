@@ -19,9 +19,9 @@ import static com.google.common.truth.Truth.assertAbout;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for the JSError class. Usage:

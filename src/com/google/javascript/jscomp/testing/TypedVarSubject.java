@@ -19,9 +19,9 @@ import static com.google.common.truth.Truth.assertAbout;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.TypedVar;
 import com.google.javascript.rhino.testing.TypeSubject;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for the {@link TypedVar} class. Usage:

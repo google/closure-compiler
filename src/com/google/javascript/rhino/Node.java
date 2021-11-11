@@ -49,6 +49,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.serialization.NodeProperty;
@@ -64,7 +65,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**

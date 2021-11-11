@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp.type;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-import javax.annotation.CheckReturnValue;
 
 /**
  * A symbol table for inferring types during data flow analysis.
