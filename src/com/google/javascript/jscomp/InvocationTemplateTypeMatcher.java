@@ -34,8 +34,8 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,7 +51,7 @@ import java.util.Set;
  */
 final class InvocationTemplateTypeMatcher {
 
-  private final Map<TemplateType, JSType> matchedTypes = Maps.newIdentityHashMap();
+  private final IdentityHashMap<TemplateType, JSType> matchedTypes = Maps.newIdentityHashMap();
   private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
 
   private final JSTypeRegistry registry;

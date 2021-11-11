@@ -2900,16 +2900,20 @@ class IRFactory {
         case OBJECT_SPREAD:
           return processObjectSpread(node.asObjectSpread());
 
-          // TODO(johnlenz): handle these or remove parser support
-        case ARGUMENT_LIST:
-        default:
-          break;
+
 
           // ES2022
         case FIELD_DECLARATION:
           return processField(node.asFieldDeclaration());
         case COMPUTED_PROPERTY_FIELD:
           return processComputedPropertyField(node.asComputedPropertyField());
+
+        case ARGUMENT_LIST:
+          // TODO(johnlenz): handle these or remove parser support
+          break;
+
+        default:
+          break;
       }
       return processIllegalToken(node);
     }

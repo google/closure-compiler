@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,27 +37,20 @@ public final class JSModuleTest {
 
   @Before
   public void setUp() throws Exception {
-    List<JSChunk> modulesInDepOrder = new ArrayList<>();
-
     mod1 = new JSChunk("mod1");
-    modulesInDepOrder.add(mod1);
 
     mod2 = new JSChunk("mod2");
     mod2.addDependency(mod1);
-    modulesInDepOrder.add(mod2);
 
     mod3 = new JSChunk("mod3");
     mod3.addDependency(mod1);
-    modulesInDepOrder.add(mod3);
 
     mod4 = new JSChunk("mod4");
     mod4.addDependency(mod2);
     mod4.addDependency(mod3);
-    modulesInDepOrder.add(mod4);
 
     mod5 = new JSChunk("mod5");
     mod5.addDependency(mod1);
-    modulesInDepOrder.add(mod5);
   }
 
   @Test
@@ -76,56 +68,30 @@ public final class JSModuleTest {
 
   @Test
   public void testSortInputs() throws Exception {
-    CompilerInput a = new CompilerInput(
-        SourceFile.fromCode("a.js",
-            "goog.require('b');goog.require('c')"));
-    CompilerInput b = new CompilerInput(
-        SourceFile.fromCode("b.js",
-            "goog.provide('b');goog.require('d')"));
-    CompilerInput c = new CompilerInput(
-        SourceFile.fromCode("c.js",
-            "goog.provide('c');goog.require('d')"));
-    CompilerInput d = new CompilerInput(
-        SourceFile.fromCode("d.js",
-            "goog.provide('d')"));
+    CompilerInput a =
+        new CompilerInput(SourceFile.fromCode("a.js", "goog.require('b');goog.require('c')"));
+    CompilerInput b =
+        new CompilerInput(SourceFile.fromCode("b.js", "goog.provide('b');goog.require('d')"));
+    CompilerInput c =
+        new CompilerInput(SourceFile.fromCode("c.js", "goog.provide('c');goog.require('d')"));
+    CompilerInput d = new CompilerInput(SourceFile.fromCode("d.js", "goog.provide('d')"));
 
     // Independent modules.
-    CompilerInput e = new CompilerInput(
-        SourceFile.fromCode("e.js",
-            "goog.provide('e')"));
-    CompilerInput f = new CompilerInput(
-        SourceFile.fromCode("f.js",
-            "goog.provide('f')"));
+    CompilerInput e = new CompilerInput(SourceFile.fromCode("e.js", "goog.provide('e')"));
+    CompilerInput f = new CompilerInput(SourceFile.fromCode("f.js", "goog.provide('f')"));
 
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(a, b, c, d));
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(d, b, c, a));
-    assertSortedInputs(
-        ImmutableList.of(d, c, b, a),
-        ImmutableList.of(d, c, b, a));
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(d, a, b, c));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(a, b, c, d));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, b, c, a));
+    assertSortedInputs(ImmutableList.of(d, c, b, a), ImmutableList.of(d, c, b, a));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, a, b, c));
 
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a, e, f),
-        ImmutableList.of(a, b, c, d, e, f));
-    assertSortedInputs(
-        ImmutableList.of(e, f, d, b, c, a),
-        ImmutableList.of(e, f, a, b, c, d));
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a, e, f),
-        ImmutableList.of(a, b, c, e, d, f));
-    assertSortedInputs(
-        ImmutableList.of(e, d, b, c, a, f),
-        ImmutableList.of(e, a, f, b, c, d));
+    assertSortedInputs(ImmutableList.of(d, b, c, a, e, f), ImmutableList.of(a, b, c, d, e, f));
+    assertSortedInputs(ImmutableList.of(e, f, d, b, c, a), ImmutableList.of(e, f, a, b, c, d));
+    assertSortedInputs(ImmutableList.of(d, b, c, a, e, f), ImmutableList.of(a, b, c, e, d, f));
+    assertSortedInputs(ImmutableList.of(e, d, b, c, a, f), ImmutableList.of(e, a, f, b, c, d));
   }
 
-  private void assertSortedInputs(
-      List<CompilerInput> expected, List<CompilerInput> shuffled)
+  private void assertSortedInputs(List<CompilerInput> expected, List<CompilerInput> shuffled)
       throws Exception {
     JSChunk mod = new JSChunk("mod");
     for (CompilerInput input : shuffled) {

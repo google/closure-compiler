@@ -82,7 +82,7 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
   private boolean needsExtendsDecomposing(Node classNode) {
     checkArgument(classNode.isClass());
     Node superClassNode = classNode.getSecondChild();
-    return !superClassNode.isEmpty() & !superClassNode.isQualifiedName();
+    return !superClassNode.isEmpty() && !superClassNode.isQualifiedName();
   }
 
   /**

@@ -882,7 +882,7 @@ class GlobalNamespace
      * necessary, where n represents.
      *
      * @param n The node currently being visited
-     * @parem referenceNode The node hosting the name.
+     * @param referenceNode The node hosting the name.
      * @param name The global name (e.g. "a" or "a.b.c.d")
      */
     private Ref.Type determineRefTypeForGet(Node n, Node referenceNode, String name) {

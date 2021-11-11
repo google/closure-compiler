@@ -726,8 +726,6 @@ class ExpressionDecomposer {
    * var temp1 = a; var temp0 = temp1.b;
    * temp0.call(temp1,c);
    * </pre>
-   *
-   * @return The replacement node.
    */
   private void rewriteCallExpression(Node call, DecompositionState state) {
     checkArgument(call.isCall(), call);

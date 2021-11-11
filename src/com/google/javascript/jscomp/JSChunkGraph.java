@@ -102,7 +102,7 @@ public final class JSChunkGraph implements Serializable {
    *
    * <p>NOTE: JSChunk has identity semantics so this map implementation is safe
    */
-  private final Map<JSChunk, Set<JSChunk>> dependencyMap = new IdentityHashMap<>();
+  private final IdentityHashMap<JSChunk, Set<JSChunk>> dependencyMap = new IdentityHashMap<>();
 
   /** Creates a chunk graph from a list of chunks in dependency order. */
   public JSChunkGraph(JSChunk[] chunksInDepOrder) {

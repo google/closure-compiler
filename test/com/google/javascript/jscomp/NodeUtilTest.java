@@ -4803,7 +4803,7 @@ public final class NodeUtilTest {
 
   private static Node getNumberNode(Node n, double number) {
     if (n.isNumber()
-        && new Double(n.getDouble()).equals(number)) { // equals allow checks for -0 and NaN
+        && Double.valueOf(n.getDouble()).equals(number)) { // equals allow checks for -0 and NaN
       return n;
     }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
