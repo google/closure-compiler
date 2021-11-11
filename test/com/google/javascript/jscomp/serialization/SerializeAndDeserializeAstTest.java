@@ -57,7 +57,7 @@ import org.junit.runners.JUnit4;
 /**
  * Tests that both serialize and then deserialize a compiler AST.
  *
- * <p>Do to the difference from a normal compiler pass, this is not actually able to reuse much of
+ * <p>Due to the difference from a normal compiler pass, this is not actually able to reuse much of
  * the infrastructure inherited from CompilerTestCase, and thus it may make sense to separate these
  * tests more fully.
  */
@@ -75,6 +75,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableCreateModuleMap();
     enableSourceInformationAnnotator();
   }
@@ -203,11 +204,16 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testEmptyClassDeclarationWithExtends() {
-    testSame("class Foo {} class Foo extends Bar {}");
+    testSame("class Foo {} class Bar extends Foo {}");
   }
 
   @Test
   public void testClassDeclarationWithMethods() {
+    testSame(lines("class Foo {", "  a() {}", "  get c() {}", "  set d(x) {}", "}"));
+
+    // Type checking will report computed property accesses as errors for a class,
+    // so disable it for this case which contains several.
+    disableTypeCheck();
     testSame(
         lines(
             "class Foo {",
@@ -221,6 +227,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testClassDeclarationWithFields() {
+    testSame(lines("class Foo {", "  a = 1;", "  d;", "}"));
+
+    // Type checking will report computed property accesses as errors for a class,
+    // so disable it for this case which contains several.
+    disableTypeCheck();
     testSame(
         lines(
             "class Foo {",
@@ -280,7 +291,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   @Test
   public void testFunctionDefaultAndDestructuringParameters() {
-    testSame("function f(x = 0, {y, ...z} = {}, [a, b]) {}");
+    testSame("function f([a, b], x = 0, {y, ...z} = {y: 1}) {}");
   }
 
   @Test
