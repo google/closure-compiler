@@ -432,7 +432,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Files.write(pathA, ImmutableList.of("const a = 0;"));
 
     SourceFile a =
-        SourceFile.builder().withOriginalPath("original_a.js").buildFromFile(pathA.toString());
+        SourceFile.builder().withOriginalPath("original_a.js").withPath(pathA.toString()).build();
 
     Result result =
         this.testAndReturnResult(srcs(ImmutableList.of(a)), expected(ImmutableList.of(a)));

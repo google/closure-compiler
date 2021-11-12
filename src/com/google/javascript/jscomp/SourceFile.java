@@ -645,12 +645,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
       return this;
     }
-
-    @Deprecated
-    @GwtIncompatible("java.io.File")
-    public SourceFile buildFromFile(String fileName) {
-      return this.withPath(fileName).build();
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

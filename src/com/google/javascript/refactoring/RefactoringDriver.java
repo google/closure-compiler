@@ -109,7 +109,7 @@ public final class RefactoringDriver {
 
   public static class Builder {
     private static final Function<String, SourceFile> TO_SOURCE_FILE_FN =
-        file -> SourceFile.builder().buildFromFile(file);
+        file -> SourceFile.builder().withPath(file).build();
 
     private final ImmutableList.Builder<SourceFile> inputs = ImmutableList.builder();
     private final ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();

@@ -412,7 +412,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps = new ImmutableMap.Builder<>();
     for (Map.Entry<String, String> files : config.sourceMapInputFiles.entrySet()) {
       SourceFile sourceMap =
-          SourceFile.builder().withKind(SourceKind.NON_CODE).buildFromFile(files.getValue());
+          SourceFile.builder().withKind(SourceKind.NON_CODE).withPath(files.getValue()).build();
       inputSourceMaps.put(files.getKey(), new SourceMapInput(sourceMap));
     }
     options.inputSourceMaps = inputSourceMaps.build();

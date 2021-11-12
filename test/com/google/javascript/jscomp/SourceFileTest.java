@@ -304,7 +304,8 @@ public final class SourceFileTest {
     SourceFile newFile =
         SourceFile.builder()
             .withOriginalPath("original_test.js")
-            .buildFromFile(tempFile.toString());
+            .withPath(tempFile.toString())
+            .build();
     String actualContent;
 
     actualContent = newFile.getLine(1);
