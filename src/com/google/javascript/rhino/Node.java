@@ -3067,6 +3067,18 @@ public class Node {
     return this.token == Token.NE;
   }
 
+  public final boolean isSHNE() {
+    return this.token == Token.SHNE;
+  }
+
+  public final boolean isEQ() {
+    return this.token == Token.EQ;
+  }
+
+  public final boolean isSHEQ() {
+    return this.token == Token.SHEQ;
+  }
+
   public final boolean isNeg() {
     return this.token == Token.NEG;
   }
