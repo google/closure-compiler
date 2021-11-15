@@ -372,7 +372,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("var a = new f();")
                 .build()),
         expected(
-            "'undefined' != typeof f && 1 instanceof f;", "class f { bar(){} } var a = new f();"));
+            "'function' == typeof f && 1 instanceof f;", "class f { bar(){} } var a = new f();"));
   }
 
   @Test
@@ -385,7 +385,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("var a = new f();")
                 .build()),
         expected(
-            "'undefined' != typeof f && 1 instanceof f;",
+            "'function' == typeof f && 1 instanceof f;",
             "function f(){} f.prototype.bar=function (){}; var a = new f();"));
   }
 
@@ -421,7 +421,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("var a = new f();")
                 .build()),
         expected(
-            "(true && ('undefined' != typeof f && 1 instanceof f));",
+            "(true && ('function' == typeof f && 1 instanceof f));",
             "class f { bar(){} } var a = new f();"));
   }
 
@@ -435,7 +435,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("var a = new f();")
                 .build()),
         expected(
-            "(true && ('undefined' != typeof f && 1 instanceof f));",
+            "(true && ('function' == typeof f && 1 instanceof f));",
             "function f(){} f.prototype.bar=function (){}; var a = new f();"));
   }
 
@@ -453,6 +453,23 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .build()),
         expected(
             "(true && ('undefined' != typeof f && 1 instanceof f));",
+            "function f(){} f.prototype.bar=function (){}; var a = new f();"));
+  }
+
+  @Test
+  public void testClassMovement_alreadyGuardedInstanceof_functionGuard() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    lines(
+                        "function f(){} f.prototype.bar=function (){};",
+                        "(true && ('function' == typeof f && 1 instanceof f));"))
+                .addChunk("var a = new f();")
+                .build()),
+        expected(
+            "(true && ('function' == typeof f && 1 instanceof f));",
             "function f(){} f.prototype.bar=function (){}; var a = new f();"));
   }
 
@@ -1740,7 +1757,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             lines(
                 "function X() {}",
-                "X.prototype.a = function(x) { return 'undefined' != typeof C && x instanceof C; }",
+                "X.prototype.a = function(x) { return 'function' == typeof C && x instanceof C; }",
                 "new X();",
                 ""),
             // m2
