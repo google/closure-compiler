@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.FULL;
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.LINE;
 import static java.lang.Math.max;
@@ -162,7 +163,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     if (sourceExcerpt != null) {
       if (format.equals(FULL)) {
         if (0 <= charno) {
-          padMultipleLines(charno, sourceExcerpt, b, error.getNode());
+          padMultipleLines(error, charno, sourceExcerpt, b, error.getNode());
         } else {
           b.append(sourceExcerpt);
           b.append('\n');
@@ -225,11 +226,15 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
    * @param sourceExcerpt the original source, possibly multiple lines separated by '\n'.
    */
   private void padMultipleLines(
-      int startCharno, String sourceExcerpt, StringBuilder b, Node errorNode) {
+      JSError error, int startCharno, String sourceExcerpt, StringBuilder b, Node errorNode) {
     if (errorNode == null) {
       b.append(sourceExcerpt);
       b.append("\n");
       int charWithLineNumberOffset = startCharno + sourceExcerpt.indexOf('|') + 2;
+      checkState(
+          charWithLineNumberOffset <= sourceExcerpt.length(),
+          "Cannot format source excerpt; unexpected start character for error:\n %s",
+          error);
       padLine(charWithLineNumberOffset, sourceExcerpt, b, -1, errorNode);
       return;
     }
@@ -253,6 +258,10 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       if (shouldPrintLine) {
         b.append(line);
         b.append("\n");
+        checkState(
+            charWithLineNumberOffset <= sourceExcerpt.length(),
+            "Cannot format source excerpt; unexpected start character for error\n%s",
+            error);
         padLine(charWithLineNumberOffset, line, b, remainingLength, errorNode);
       }
 

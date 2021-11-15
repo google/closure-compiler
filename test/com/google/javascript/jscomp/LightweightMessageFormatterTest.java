@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
@@ -184,6 +185,17 @@ public final class LightweightMessageFormatterTest {
                 + "         ^^^^^^\n"
                 + "  6|       || baz) {\n"
                 + "     ^^^^^^^^^^^^\n");
+  }
+
+  @Test
+  public void testMultiline_charNoOutOfBoundsCrashes() {
+    Node n = Node.newString("foobar").setLinenoCharno(5, 800);
+    n.setLength("foobar".length());
+    n.setSourceFileForTesting("javascript/complex.js");
+    JSError error = JSError.make(n, FOO_TYPE);
+    LightweightMessageFormatter formatter = formatter("    if (foobar) {", SourceExcerpt.FULL, 5);
+
+    assertThrows(Exception.class, () -> formatter.formatError(error));
   }
 
   @Test
