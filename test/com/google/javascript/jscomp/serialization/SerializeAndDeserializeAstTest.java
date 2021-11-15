@@ -485,9 +485,8 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     assertThat(script.getSourceFileName()).isEqualTo("testcode");
 
     Node jscompDeclaration = script.getFirstChild();
-    assertThat(jscompDeclaration.getSourceFileName()).isEqualTo(" [synthetic:base] ");
-    assertThat(jscompDeclaration.getFirstChild().getSourceFileName())
-        .isEqualTo(" [synthetic:base] ");
+    assertThat(jscompDeclaration.getSourceFileName()).endsWith("js/base.js");
+    assertThat(jscompDeclaration.getFirstChild().getSourceFileName()).endsWith("js/base.js");
 
     Node number = script.getLastChild();
     assertThat(number.getSourceFileName()).isEqualTo("testcode");

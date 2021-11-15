@@ -394,7 +394,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                 .getSourceFileList()
                 .get(baseLibraryStart.getSourceFile() - 1)
                 .getFilename())
-        .isEqualTo(" [synthetic:base] ");
+        .endsWith("js/base.js");
     // children of the synthetic subtree default to the root's file [synthetic:base]
     assertThat(baseLibraryStart.getChild(0).getSourceFile()).isEqualTo(0);
     // "let s = 'hello'" defaults to the parent's file 'testcode'

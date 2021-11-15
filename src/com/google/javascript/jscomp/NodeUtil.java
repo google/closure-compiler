@@ -2540,7 +2540,10 @@ public final class NodeUtil {
 
   // TODO(tbreisacher): Add a method for detecting nodes injected as runtime libraries.
   static boolean isInSyntheticScript(Node n) {
-    return n.getSourceFileName() != null && n.getSourceFileName().startsWith(" [synthetic:");
+    String sourceFileName = n.getSourceFileName();
+    return sourceFileName != null
+        && (sourceFileName.startsWith(" [synthetic:")
+            || sourceFileName.startsWith(AbstractCompiler.RUNTIME_LIB_DIR));
   }
 
   /**

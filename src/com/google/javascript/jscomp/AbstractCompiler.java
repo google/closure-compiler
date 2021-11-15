@@ -509,6 +509,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract void setProgress(double progress, @Nullable String lastPassName);
 
+  static final String RUNTIME_LIB_DIR =
+  "src/com/google/javascript/jscomp/js/";
+
   /**
    * The subdir js/ contains libraries of code that we inject at compile-time only if requested by
    * this function.

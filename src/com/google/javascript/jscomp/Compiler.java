@@ -3446,20 +3446,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
 
     // Load/parse the code.
+    String path = String.join("", AbstractCompiler.RUNTIME_LIB_DIR, resourceName, ".js");
     final Node ast;
     if (this.hasOptimizationColors()) {
-      String path =
-          String.join(
-              "",
-              "src/com/google/javascript/jscomp/js/",
-              resourceName,
-              ".js");
       ast = this.runtimeLibraryTypedAsts.get(path).get();
     } else {
-      checkState(!this.hasTypeCheckingRun(), "runtime library injected after type checking");
+      checkState(
+          !this.hasTypeCheckingRun(),
+          "runtime library injected after type checking but before optimization colors");
       String originalCode =
           ResourceLoader.loadTextResource(Compiler.class, "js/" + resourceName + ".js");
-      ast = this.parseSyntheticCode(resourceName, originalCode);
+
+      SourceFile source = SourceFile.fromCode(path, originalCode);
+      addFilesToSourceMap(ImmutableList.of(source));
+      ast = parseCodeHelper(source);
     }
 
     // Look for string literals of the form 'require foo bar' or 'declare baz''.

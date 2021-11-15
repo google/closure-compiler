@@ -191,8 +191,7 @@ class IsolatePolyfills implements CompilerPass {
     final Node polyfillAccess = polyfillUsage.node();
     final Node parent = polyfillUsage.node().getParent();
 
-    if (polyfillAccess.getSourceFileName().equals(" [synthetic:util/global] ")
-        || polyfillAccess.getSourceFileName().equals(" [synthetic:util/shouldpolyfill] ")) {
+    if (FILES_ALLOWED_UNQUALIFIED_POLYFILL_ACCESSES.contains(polyfillAccess.getSourceFileName())) {
       // Special-case code in the compiler runtime libraries that executes before any polyfills are
       // injected.
       //   - the definition of $jscomp.global needs to look for a global variable globalThis
@@ -237,6 +236,11 @@ class IsolatePolyfills implements CompilerPass {
 
     compiler.reportChangeToEnclosingScope(parent);
   }
+
+  private static final ImmutableSet<String> FILES_ALLOWED_UNQUALIFIED_POLYFILL_ACCESSES =
+      ImmutableSet.of(
+          AbstractCompiler.RUNTIME_LIB_DIR + "util/global.js",
+          AbstractCompiler.RUNTIME_LIB_DIR + "util/shouldpolyfill.js");
 
   /**
    * Rewrites a call where the receiver is a potential polyfilled method
