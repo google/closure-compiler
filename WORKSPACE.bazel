@@ -2,13 +2,20 @@ workspace(name = "com_google_javascript_jscomp")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+#
+# To update google_bazel_common, locate the git commit to depend on and
+# use something like the following to determine the sha256
+#  curl -L https://github.com/google/bazel-common/archive/<git-commit-id>.zip |
+#  sha256
+#
+#
 http_archive(
     name = "google_bazel_common",
     # output from `sha256sum` on the downloaded zip file
-    sha256 = "e872b6f5de8e02cf1f3989210d485cee88f799a823dfe14b1df7a2130e218bc8",
-    strip_prefix = "bazel-common-9d1beb9294151cb1b28cd4b4dc842fd7559f9147",
+    sha256 = "deb649996607a40deca0d7a57e89790d41fde1a20a560752cb77f5aefb9d8218",
+    strip_prefix = "bazel-common-c4e23c9375b02fb44c5236f300743a85796fd461",
     urls = [
-      "https://github.com/google/bazel-common/archive/9d1beb9294151cb1b28cd4b4dc842fd7559f9147.zip",
+      "https://github.com/google/bazel-common/archive/c4e23c9375b02fb44c5236f300743a85796fd461.zip",
     ],
 )
 

@@ -442,7 +442,7 @@ options/arguments in your CUI application.</td>
 
   <tr>
     <td>Version</td>
-    <td>20.0</td>
+    <td>31.0.1</td>
   </tr>
 
   <tr>
