@@ -1099,7 +1099,7 @@ public class CodeGenerator {
           addList(next);
           add(")");
         } else {
-          if (cc.shouldPreserveExtras()) {
+          if (cc.shouldPreserveExtras(node)) {
             add("(");
             add(")");
           }
@@ -1693,7 +1693,7 @@ public class CodeGenerator {
     if (n.isBlock()) {
       int count = getNonEmptyChildCount(n, 2);
       if (count == 0) {
-        if (cc.shouldPreserveExtras()) {
+        if (cc.shouldPreserveExtras(n)) {
           cc.beginBlock();
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         } else {
@@ -1707,7 +1707,7 @@ public class CodeGenerator {
         // 'let', 'const', etc are not allowed by themselves in "if" and other
         // structures. Also, hack around a IE6/7 browser bug that needs a block around DOs.
         Node firstAndOnlyChild = getFirstNonEmptyChild(n);
-        boolean alwaysWrapInBlock = cc.shouldPreserveExtras();
+        boolean alwaysWrapInBlock = cc.shouldPreserveExtras(n);
         if (alwaysWrapInBlock || isBlockDeclOrDo(firstAndOnlyChild)) {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);

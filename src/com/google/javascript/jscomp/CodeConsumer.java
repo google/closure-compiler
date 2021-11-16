@@ -375,9 +375,10 @@ public abstract class CodeConsumer {
    * it be wrapped in a block? Doing so can help when pretty-printing the code, and permits putting
    * a debugging breakpoint on the statement inside the condition.
    *
+   * @param n node to process
    * @return {@boolean true} if such expressions should be wrapped
    */
-  boolean shouldPreserveExtras() {
+  boolean shouldPreserveExtras(Node n) {
     return false;
   }
 

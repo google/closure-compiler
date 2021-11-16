@@ -3840,6 +3840,36 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     checkWithOriginalName("var x = '$qux';", "var x = '$qux';\n", compilerOptions);
   }
 
+  @Test
+  public void testPrettyPrinterIfElseIfAddedBlock() {
+    assertPrettyPrintSame(
+        lines(
+            "if (0) {",
+            "  0;",
+            "} else if (1) {",
+            "  if (2) {",
+            "    2;",
+            "  }",
+            "} else if (3) {",
+            "  3;",
+            "}",
+            ""));
+
+    assertPrettyPrint(
+        "if(0)if(1)1;else 2;else 3;",
+        lines(
+            "if (0) {",
+            "  if (1) {",
+            "    1;",
+            "  } else {",
+            "    2;",
+            "  }",
+            "} else {",
+            "  3;",
+            "}",
+            ""));
+  }
+
   private void checkWithOriginalName(
       String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);
