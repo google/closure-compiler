@@ -128,9 +128,9 @@ public final class SourceMapJsLangTest extends SourceMapTestCase {
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();
     options.setPrettyPrint(this.prettyPrinted);
-    if (!this.inputMaps.build().isEmpty()) {
+    if (!this.inputMaps.buildOrThrow().isEmpty()) {
       options.setApplyInputSourceMaps(true);
-      options.setInputSourceMaps(this.inputMaps.build());
+      options.setInputSourceMaps(this.inputMaps.buildOrThrow());
     }
     return options;
   }

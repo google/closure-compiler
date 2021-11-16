@@ -1940,7 +1940,7 @@ public class JSDocInfo implements Serializable {
         mapBuilder.putAll(current);
       }
       mapBuilder.put(suppressions, description);
-      ImmutableMap<ImmutableSet<String>, String> suppressionsMap = mapBuilder.build();
+      ImmutableMap<ImmutableSet<String>, String> suppressionsMap = mapBuilder.buildOrThrow();
       setProp(SUPPRESSIONS, suppressionsMap);
     }
 

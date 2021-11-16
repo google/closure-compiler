@@ -155,7 +155,7 @@ public final class VariableMap {
           unescape(line.substring(0, pos)),
           pos == line.length() - 1 ? "" : unescape(line.substring(pos + 1)));
     }
-    return new VariableMap(map.build());
+    return new VariableMap(map.buildOrThrow());
   }
 
   private static String escape(String value) {

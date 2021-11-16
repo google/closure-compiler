@@ -206,7 +206,7 @@ final class ModuleImportResolver {
         }
       }
     }
-    return missingNames.build();
+    return missingNames.buildOrThrow();
   }
 
   /**

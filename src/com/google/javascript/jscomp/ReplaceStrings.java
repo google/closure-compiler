@@ -140,7 +140,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       map.put(result.replacement, result.original);
     }
 
-    return new VariableMap(map.build());
+    return new VariableMap(map.buildOrThrow());
   }
 
   @Override

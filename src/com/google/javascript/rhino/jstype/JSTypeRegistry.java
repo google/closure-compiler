@@ -1765,7 +1765,7 @@ public final class JSTypeRegistry {
     for (String propName : propNames) {
       props.put(propName, objType.getPropertyType(propName));
     }
-    return createRecordType(props.build());
+    return createRecordType(props.buildOrThrow());
   }
 
   public JSType createRecordType(Map<String, ? extends JSType> props) {

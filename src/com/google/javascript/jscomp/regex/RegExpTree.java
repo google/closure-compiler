@@ -1768,15 +1768,15 @@ public abstract class RegExpTree {
   private static final CharRanges IE_SPEC_ERRORS = SPACE_CHARS.difference(
       IE_SPACE_CHARS);
 
-  private static final ImmutableMap<Character, CharRanges> NAMED_CHAR_GROUPS
-       = ImmutableMap.<Character, CharRanges>builder()
+  private static final ImmutableMap<Character, CharRanges> NAMED_CHAR_GROUPS =
+      ImmutableMap.<Character, CharRanges>builder()
           .put('d', DIGITS)
           .put('D', CharRanges.ALL_CODE_UNITS.difference(DIGITS))
           .put('s', SPACE_CHARS)
           .put('S', CharRanges.ALL_CODE_UNITS.difference(SPACE_CHARS))
           .put('w', WORD_CHARS)
           .put('W', INVERSE_WORD_CHARS)
-          .build();
+          .buildOrThrow();
 
   private static final Charset DOT_CHARSET = new Charset(
       CharRanges.ALL_CODE_UNITS.difference(

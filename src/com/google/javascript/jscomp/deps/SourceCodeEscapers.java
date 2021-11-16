@@ -79,7 +79,7 @@ public final class SourceCodeEscapers {
             .put('\f', "\\f")
             .put('\r', "\\r")
             .put('\\', "\\\\")
-            .build();
+            .buildOrThrow();
 
     JavaScriptEscaper() {
       super(JS_MAP, PRINTABLE_ASCII_MIN, PRINTABLE_ASCII_MAX);

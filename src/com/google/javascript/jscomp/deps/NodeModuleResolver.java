@@ -179,7 +179,7 @@ public class NodeModuleResolver extends ModuleResolver {
       builder.put(entryKey, packageJsonMainEntry.getValue());
     }
 
-    return builder.build();
+    return builder.buildOrThrow();
   }
 
   @Override

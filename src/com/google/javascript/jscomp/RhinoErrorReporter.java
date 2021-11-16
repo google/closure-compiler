@@ -166,7 +166,7 @@ class RhinoErrorReporter {
               Pattern.compile("Bounded generic semantics are currently still in development"),
               UNSUPPORTED_BOUNDED_GENERIC_TYPES)
           .put(Pattern.compile("^Bounded generic type error.*"), BOUNDED_GENERIC_TYPE_ERROR)
-          .build();
+          .buildOrThrow();
 
   private final ErrorHandler internalReporter;
 

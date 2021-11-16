@@ -93,7 +93,7 @@ final class JSTypeReconserializer {
           .put(JSTypeNative.OBJECT_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_PROTOTYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_TYPE, StandardColors.TOP_OBJECT)
-          .build();
+          .buildOrThrow();
 
   private enum State {
     COLLECTING_TYPES,

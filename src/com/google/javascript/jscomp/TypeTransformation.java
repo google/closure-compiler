@@ -185,10 +185,7 @@ class TypeTransformation {
 
   private <T> ImmutableMap<String, T> addNewEntry(
       ImmutableMap<String, T> map, String name, T type) {
-    return new ImmutableMap.Builder<String, T>()
-        .putAll(map)
-        .put(name, type)
-        .build();
+    return new ImmutableMap.Builder<String, T>().putAll(map).put(name, type).buildOrThrow();
   }
 
   private String getFunctionParameter(Node n, int i) {

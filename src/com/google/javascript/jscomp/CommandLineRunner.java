@@ -1286,7 +1286,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         result.put(parts.get(0), parts.get(1));
       }
 
-      return result.build();
+      return result.buildOrThrow();
     }
 
     List<String> getPackageJsonEntryNames() throws CmdLineException {

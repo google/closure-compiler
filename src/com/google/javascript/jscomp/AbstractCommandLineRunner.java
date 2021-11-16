@@ -415,7 +415,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           SourceFile.builder().withKind(SourceKind.NON_CODE).withPath(files.getValue()).build();
       inputSourceMaps.put(files.getKey(), new SourceMapInput(sourceMap));
     }
-    options.inputSourceMaps = inputSourceMaps.build();
+    options.inputSourceMaps = inputSourceMaps.buildOrThrow();
 
     if (!config.variableMapInputFile.isEmpty()) {
       options.inputVariableMap = VariableMap.load(config.variableMapInputFile);
@@ -989,7 +989,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       String filename = spec.substring(pos + 1);
       outputFilesBuilder.put(name, filename);
     }
-    return outputFilesBuilder.build();
+    return outputFilesBuilder.buildOrThrow();
   }
 
   /**
@@ -1212,10 +1212,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
       if (foundJsonInputSourceMap) {
         inputSourceMaps.putAll(options.inputSourceMaps);
-        options.inputSourceMaps = inputSourceMaps.build();
+        options.inputSourceMaps = inputSourceMaps.buildOrThrow();
       }
 
-      compiler.initWebpackMap(inputPathByWebpackId.build());
+      compiler.initWebpackMap(inputPathByWebpackId.buildOrThrow());
     } else {
       ImmutableMap<String, String> emptyMap = ImmutableMap.of();
       compiler.initWebpackMap(emptyMap);

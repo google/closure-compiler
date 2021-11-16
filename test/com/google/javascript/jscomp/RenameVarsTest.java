@@ -1027,7 +1027,7 @@ public final class RenameVarsTest extends CompilerTestCase {
       renameMap.put(keyValPairs[i], keyValPairs[i + 1]);
     }
 
-    return new VariableMap(renameMap.build());
+    return new VariableMap(renameMap.buildOrThrow());
   }
 
   private static void assertVariableMapsEqual(VariableMap a, VariableMap b) {

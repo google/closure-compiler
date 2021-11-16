@@ -131,7 +131,7 @@ public final class ApplySuggestedFixes {
       String newCode = applyCodeReplacements(replacements, filenameToCodeMap.get(filename));
       newCodeMap.put(filename, newCode);
     }
-    return newCodeMap.build();
+    return newCodeMap.buildOrThrow();
   }
 
   /**

@@ -89,7 +89,7 @@ public enum Keywords {
       keywordsByName.put(kw.value, kw);
       keywordsByType.put(kw.type, kw);
     }
-    KEYWORDS_BY_NAME = keywordsByName.build();
+    KEYWORDS_BY_NAME = keywordsByName.buildOrThrow();
     KEYWORDS_BY_TYPE = Maps.immutableEnumMap(keywordsByType);
   }
 

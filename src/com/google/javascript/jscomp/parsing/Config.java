@@ -195,6 +195,6 @@ public abstract class Config {
         annotationsBuilder.put(unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
       }
     }
-    return annotationsBuilder.build();
+    return annotationsBuilder.buildOrThrow();
   }
 }

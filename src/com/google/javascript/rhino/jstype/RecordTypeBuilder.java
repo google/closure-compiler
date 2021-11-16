@@ -89,7 +89,7 @@ public final class RecordTypeBuilder {
     }
     ImmutableSortedMap.Builder<String, RecordProperty> m = ImmutableSortedMap.naturalOrder();
     m.putAll(this.properties);
-    return new RecordType(registry, m.build(), isDeclared);
+    return new RecordType(registry, m.buildOrThrow(), isDeclared);
   }
 
   static class RecordProperty {

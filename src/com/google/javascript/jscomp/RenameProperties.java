@@ -309,7 +309,7 @@ class RenameProperties implements CompilerPass {
         map.put(p.oldName, p.newName);
       }
     }
-    return new VariableMap(map.build());
+    return new VariableMap(map.buildOrThrow());
   }
 
 

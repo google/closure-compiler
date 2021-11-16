@@ -63,7 +63,7 @@ final class PropertiesParser {
       builder.put(key, data);
     }
 
-    return builder.build();
+    return builder.buildOrThrow();
   }
 
   private static String trimLeft(String str) {

@@ -152,5 +152,5 @@ final class JSTypeColorIdHasher {
           .put(JSTypeNative.NUMBER_OBJECT_TYPE, StandardColors.NUMBER_OBJECT_ID)
           .put(JSTypeNative.STRING_OBJECT_TYPE, StandardColors.STRING_OBJECT_ID)
           .put(JSTypeNative.SYMBOL_OBJECT_TYPE, StandardColors.SYMBOL_OBJECT_ID)
-          .build();
+          .buildOrThrow();
 }

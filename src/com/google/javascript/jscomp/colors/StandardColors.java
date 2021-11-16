@@ -138,7 +138,7 @@ public final class StandardColors {
           .put(SYMBOL.getId(), SYMBOL)
           .put(TOP_OBJECT.getId(), TOP_OBJECT)
           .put(UNKNOWN.getId(), UNKNOWN)
-          .build();
+          .buildOrThrow();
 
   /**
    * The set of Colors that have associated runtime values but are not objects.
@@ -153,7 +153,7 @@ public final class StandardColors {
           .put(NUMBER.getId(), NUMBER)
           .put(STRING.getId(), STRING)
           .put(SYMBOL.getId(), SYMBOL)
-          .build();
+          .buildOrThrow();
 
   /**
    * The set of ColorIds for object Colors that "box" primitive Colors.

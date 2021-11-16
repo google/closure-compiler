@@ -143,7 +143,7 @@ class FunctionArgumentInjector {
             cArg = cArg.getNext();
           }
           argMap.put(fnParam.getOnlyChild().getString(), array);
-          return argMap.build();
+          return argMap.buildOrThrow();
         } else {
           checkState(fnParam.isName(), fnParam);
           argMap.put(fnParam.getString(), cArg);
@@ -171,7 +171,7 @@ class FunctionArgumentInjector {
       cArg = cArg.getNext();
     }
 
-    return argMap.build();
+    return argMap.buildOrThrow();
   }
 
   /**

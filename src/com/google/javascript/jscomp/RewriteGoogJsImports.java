@@ -124,7 +124,8 @@ public class RewriteGoogJsImports implements CompilerPass {
       closureModules.put(m.getKey(), newModule);
     }
 
-    compiler.setModuleMap(new ModuleMap(resolvedModules.build(), closureModules.build()));
+    compiler.setModuleMap(
+        new ModuleMap(resolvedModules.buildOrThrow(), closureModules.buildOrThrow()));
     moduleReplacements.clear();
   }
 

@@ -1428,7 +1428,7 @@ public class CompilerOptions implements Serializable {
         throw new IllegalStateException(String.valueOf(value));
       }
     }
-    return map.build();
+    return map.buildOrThrow();
   }
 
   /** Sets the value of the {@code @define} variable in JS to a boolean literal. */
@@ -1507,7 +1507,7 @@ public class CompilerOptions implements Serializable {
     for (String name : idGenerators) {
       builder.put(name, gen);
     }
-    this.idGenerators = builder.build();
+    this.idGenerators = builder.buildOrThrow();
   }
 
   /** Sets the id generators to replace. */

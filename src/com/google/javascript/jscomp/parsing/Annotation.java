@@ -164,5 +164,5 @@ enum Annotation {
           .put("unrestricted", Annotation.UNRESTRICTED)
           .put("version", Annotation.VERSION)
           .put("wizaction", Annotation.WIZACTION)
-          .build();
+          .buildOrThrow();
 }

@@ -4446,6 +4446,8 @@ public final class NodeUtilTest {
   public static final class ReferencesReceiverTest {
     @Parameters(name = "\"{0}\"")
     public static Iterable<Object[]> cases() {
+      //
+      //
       ImmutableMap<String, Boolean> templateToDefinesOwnReceiver =
           ImmutableMap.<String, Boolean>builder()
               //
@@ -4477,9 +4479,10 @@ public final class NodeUtilTest {
               .put("({              *f(x = (%s)) {       } })", true)
               .put("({        async  f(x = (%s)) {       } })", true)
               .put("({        async *f(x = (%s)) {       } })", true)
-              //
-              .build();
+              .buildOrThrow();
 
+      //
+      //
       ImmutableMap<String, Boolean> exprToUsesReceiver =
           ImmutableMap.<String, Boolean>builder()
               //
@@ -4487,8 +4490,7 @@ public final class NodeUtilTest {
               .put("1 || this", true)
               .put("{ x: this, }", true)
               .put("1", false)
-              //
-              .build();
+              .buildOrThrow();
 
       ImmutableList.Builder<Object[]> cases = ImmutableList.builder();
       templateToDefinesOwnReceiver.forEach(

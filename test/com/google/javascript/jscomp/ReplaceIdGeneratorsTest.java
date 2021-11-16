@@ -49,17 +49,18 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
       }
     };
     RenamingMap gen = new UniqueRenamingToken();
-    lastPass = new ReplaceIdGenerators(
-        compiler,
-        new ImmutableMap.Builder<String, RenamingMap>()
-            .put("goog.events.getUniqueId", gen)
-            .put("goog.place.getUniqueId", gen)
-            .put("id", idTestMap)
-            .put("get.id", idTestMap)
-            .build(),
-        generatePseudoNames,
-        previousMappings,
-        null /* xidHashFunction */);
+    lastPass =
+        new ReplaceIdGenerators(
+            compiler,
+            new ImmutableMap.Builder<String, RenamingMap>()
+                .put("goog.events.getUniqueId", gen)
+                .put("goog.place.getUniqueId", gen)
+                .put("id", idTestMap)
+                .put("get.id", idTestMap)
+                .buildOrThrow(),
+            generatePseudoNames,
+            previousMappings,
+            null /* xidHashFunction */);
     return lastPass;
   }
 

@@ -77,12 +77,13 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
             .put("REC", recordTypeTest)
             .put("NESTEDREC", nestedRecordTypeTest)
             .put("ASYNCH", asynchRecord)
-            .build();
-    nameVars = new ImmutableMap.Builder<String, String>()
-        .put("s", "string")
-        .put("n", "number")
-        .put("b", "boolean")
-        .build();
+            .buildOrThrow();
+    nameVars =
+        new ImmutableMap.Builder<String, String>()
+            .put("s", "string")
+            .put("n", "number")
+            .put("b", "boolean")
+            .buildOrThrow();
   }
 
   @Test

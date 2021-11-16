@@ -61,7 +61,7 @@ class CollectFileOverviewVisibility implements CompilerPass {
   }
 
   ImmutableMap<StaticSourceFile, Visibility> getFileOverviewVisibilityMap() {
-    return builder.build();
+    return builder.buildOrThrow();
   }
 
 }

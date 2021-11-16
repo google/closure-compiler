@@ -143,7 +143,7 @@ final class PolyfillUsageFinder {
           statics.put(symbol, polyfill);
         }
       }
-      return new Polyfills(methods.build(), statics.build());
+      return new Polyfills(methods.build(), statics.buildOrThrow());
     }
 
   }

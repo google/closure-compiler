@@ -182,9 +182,9 @@ public final class SourceMapTest extends SourceMapTestCase {
       options.sourceMapLocationMappings = mappings;
     }
 
-    if (!this.inputMaps.build().isEmpty()) {
+    if (!this.inputMaps.buildOrThrow().isEmpty()) {
       options.setApplyInputSourceMaps(true);
-      options.setInputSourceMaps(this.inputMaps.build());
+      options.setInputSourceMaps(this.inputMaps.buildOrThrow());
     }
     return options;
   }

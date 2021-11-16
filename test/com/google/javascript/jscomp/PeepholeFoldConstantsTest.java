@@ -2081,16 +2081,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testInvertibleOperators() {
-    Map<String, String> inverses = ImmutableMap.<String, String>builder()
-        .put("==", "!=")
-        .put("===", "!==")
-        .put("<=", ">")
-        .put("<", ">=")
-        .put(">=", "<")
-        .put(">", "<=")
-        .put("!=", "==")
-        .put("!==", "===")
-        .build();
+    Map<String, String> inverses =
+        ImmutableMap.<String, String>builder()
+            .put("==", "!=")
+            .put("===", "!==")
+            .put("<=", ">")
+            .put("<", ">=")
+            .put(">=", "<")
+            .put(">", "<=")
+            .put("!=", "==")
+            .put("!==", "===")
+            .buildOrThrow();
     Set<String> comparators = ImmutableSet.of("<=", "<", ">=", ">");
     Set<String> equalitors = ImmutableSet.of("==", "===");
     Set<String> uncomparables = ImmutableSet.of("undefined", "void 0");

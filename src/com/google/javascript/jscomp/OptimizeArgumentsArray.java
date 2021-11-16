@@ -287,7 +287,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
           break;
 
         case ITER_REST:
-          return builder.build();
+          return builder.buildOrThrow();
 
         case DEFAULT_VALUE:
           // `arguments` doesn't consider default values. It holds exactly the provided args.
@@ -307,6 +307,6 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       builder.put(index, paramPrefix + uniqueId++);
     }
 
-    return builder.build();
+    return builder.buildOrThrow();
   }
 }

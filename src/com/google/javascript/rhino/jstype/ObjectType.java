@@ -751,7 +751,7 @@ public abstract class ObjectType extends JSType {
     for (String name : this.getPropertyNames()) {
       propTypeMap.put(name, this.getPropertyType(name));
     }
-    return propTypeMap.build();
+    return propTypeMap.buildOrThrow();
   }
 
   public JSType getEnumeratedTypeOfEnumObject() {

@@ -510,7 +510,7 @@ public final class ModuleLoaderTest {
                         .put("@project0/", "/path/to/project0/")
                         .put("+project1/", "/path/to/project1/")
                         .put("@root/", "/")
-                        .build()))
+                        .buildOrThrow()))
             .build();
 
     assertUri(
@@ -534,7 +534,7 @@ public final class ModuleLoaderTest {
                         .put("@project0/", "/path/to/project0/")
                         .put("+project1/", "/path/to/project1/")
                         .put("@root/", "/")
-                        .build()))
+                        .buildOrThrow()))
             .build();
 
     assertUri(
@@ -560,7 +560,7 @@ public final class ModuleLoaderTest {
                         .put("0/1/2/", "/p0/p1/p2/")
                         .put("0/", "/p0/")
                         .put("0/1/", "/p0/p1/")
-                        .build()))
+                        .buildOrThrow()))
             .build();
 
     assertUri("/p0/p1/p2/file.js", resolveJsModule(loader.resolve("fake.js"), "0/p1/p2/file.js"));
