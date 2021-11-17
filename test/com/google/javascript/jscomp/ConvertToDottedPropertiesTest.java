@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,12 +23,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link ConvertToDottedProperties}. */
 @RunWith(JUnit4.class)
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

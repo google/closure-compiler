@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,12 +35,6 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   @Test

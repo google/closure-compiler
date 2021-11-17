@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.SourceFile;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,12 +35,6 @@ import org.junit.runners.JUnit4;
 public final class CheckExtraRequiresTest extends CompilerTestCase {
   public CheckExtraRequiresTest() {
     super();
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   @Override
@@ -210,15 +203,13 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   public void testWarning_require() {
     testError("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
 
-    testError(lines(
-        "goog.require('Bar');",
-        "function func( {a} ){}",
-        "func( {a: 1} );"), EXTRA_REQUIRE_WARNING);
+    testError(
+        lines("goog.require('Bar');", "function func( {a} ){}", "func( {a: 1} );"),
+        EXTRA_REQUIRE_WARNING);
 
-    testError(lines(
-        "goog.require('Bar');",
-        "function func( a = 1 ){}",
-        "func(42);"), EXTRA_REQUIRE_WARNING);
+    testError(
+        lines("goog.require('Bar');", "function func( a = 1 ){}", "func(42);"),
+        EXTRA_REQUIRE_WARNING);
   }
 
   @Test

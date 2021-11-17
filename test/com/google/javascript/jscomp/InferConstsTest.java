@@ -23,26 +23,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link InferConsts}.
- *
- */
+/** Tests for {@link InferConsts}. */
 @RunWith(JUnit4.class)
 public final class InferConstsTest extends CompilerTestCase {
   private FindConstants constFinder;
 
   private ImmutableList<String> names;
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {

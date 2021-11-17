@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,12 +41,6 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   @Test
@@ -78,24 +71,9 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testWarning("{}", USELESS_BLOCK);
     testWarning("{ var f = function() {}; }", USELESS_BLOCK);
     testWarning("{ var x = 1; }", USELESS_BLOCK);
-    testWarning(lines(
-        "function f() {",
-        "  return",
-        "    {foo: 'bar'};",
-        "}"), USELESS_BLOCK);
-    testWarning(lines(
-        "if (foo) {",
-        "  bar();",
-        "  {",
-        "    baz();",
-        "  }",
-        "}"), USELESS_BLOCK);
-    testWarning(lines(
-        "if (foo) {",
-        "  bar();",
-        "} {",
-        "  baz();",
-        "}"), USELESS_BLOCK);
+    testWarning(lines("function f() {", "  return", "    {foo: 'bar'};", "}"), USELESS_BLOCK);
+    testWarning(lines("if (foo) {", "  bar();", "  {", "    baz();", "  }", "}"), USELESS_BLOCK);
+    testWarning(lines("if (foo) {", "  bar();", "} {", "  baz();", "}"), USELESS_BLOCK);
     testWarning("function bar() { { baz(); } }", USELESS_BLOCK);
     testWarning("{ let x = function() {}; {} }", USELESS_BLOCK);
     testWarning("{ let x = function() { {} }; }", USELESS_BLOCK);

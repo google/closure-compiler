@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -26,12 +25,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link GuardedCallback} */
 @RunWith(JUnit4.class)
 public final class GuardedCallbackTest extends CompilerTestCase {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -151,8 +144,7 @@ public final class GuardedCallbackTest extends CompilerTestCase {
         // The values of `Promise` and `Promise.allSettled` are only checked for truthiness,
         // so they can be considered guarded. However, the value of `Promise.finally` may end up
         // getting passed to `console.log()`, so it is not guarded.
-        expected(
-            "console.log(GUARDED_NAME && GUARDED_NAME.GUARDED_PROP && GUARDED_NAME.finally)"));
+        expected("console.log(GUARDED_NAME && GUARDED_NAME.GUARDED_PROP && GUARDED_NAME.finally)"));
   }
 
   @Test

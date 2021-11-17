@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,20 +47,12 @@ public final class CheckEnumsTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
-
   @Test
   public void testCheckEnums() {
     testSame("/** @enum {number} */ ns.Enum = {A: 1, B: 2};");
     testSame("/** @enum {string} */ ns.Enum = {A: 'foo', B: 'bar'};");
-    testWarning("/** @enum {number} */ ns.Enum = {A: 1, B: 1};",
-        DUPLICATE_ENUM_VALUE);
-    testWarning("/** @enum {string} */ ns.Enum = {A: 'foo', B: 'foo'};",
-        DUPLICATE_ENUM_VALUE);
+    testWarning("/** @enum {number} */ ns.Enum = {A: 1, B: 1};", DUPLICATE_ENUM_VALUE);
+    testWarning("/** @enum {string} */ ns.Enum = {A: 'foo', B: 'foo'};", DUPLICATE_ENUM_VALUE);
 
     testSame("/** @enum {number} */ let Enum = {A: 1, B: 2};");
     testSame("/** @enum {string} */ let Enum = {A: 'foo', B: 'bar'};");

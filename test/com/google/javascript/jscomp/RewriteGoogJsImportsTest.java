@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.RewriteGoogJsImports.Mode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.rhino.Node;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,12 +47,6 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
               "export function foo() {}",
               "export class MyClass {}",
               "export const constant = 0;"));
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

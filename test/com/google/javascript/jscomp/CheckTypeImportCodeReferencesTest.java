@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,12 +27,6 @@ import org.junit.runners.JUnit4;
 public final class CheckTypeImportCodeReferencesTest extends CompilerTestCase {
   public CheckTypeImportCodeReferencesTest() {
     super();
-  }
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   @Override

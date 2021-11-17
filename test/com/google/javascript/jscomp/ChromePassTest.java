@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -23,11 +22,6 @@ import org.junit.runners.JUnit4;
 /** Tests {@link ChromePass}. */
 @RunWith(JUnit4.class)
 public class ChromePassTest extends CompilerTestCase {
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -415,8 +409,7 @@ public class ChromePassTest extends CompilerTestCase {
     test(
         lines(
             // @type starts here.
-            "/** @type {!Object} */",
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);"),
+            "/** @type {!Object} */", "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);"),
         lines(
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);",
             // But gets moved here.
@@ -445,8 +438,7 @@ public class ChromePassTest extends CompilerTestCase {
     test(
         lines(
             // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
-            "/** @type {!Array} */",
-            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);"),
+            "/** @type {!Array} */", "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);"),
         lines(
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);",
             // @type is now {string}. Earlier, manually-specified @type is ignored.

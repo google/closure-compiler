@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubj
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,12 +27,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link SyncCompilerFeatures} */
 @RunWith(JUnit4.class)
 public final class SyncCompilerFeaturesTest extends CompilerTestCase {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
