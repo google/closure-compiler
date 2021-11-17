@@ -39,8 +39,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
- * Parsed Polymer class (element) definition. Includes convenient fields for rewriting the
- * class.
+ * Parsed Polymer class (element) definition. Includes convenient fields for rewriting the class.
  */
 final class PolymerClassDefinition {
   static enum DefinitionType {
@@ -275,7 +274,6 @@ final class PolymerClassDefinition {
   private static Node createDummyGoogModuleExportsTarget(AbstractCompiler compiler, Node callNode) {
     String madeUpName = "exportsForPolymer$jscomp" + compiler.getUniqueNameIdSupplier().get();
     Node assignExpr = callNode.getGrandparent();
-    Node moduleBody = assignExpr.getParent();
 
     Node exportName = callNode.getParent().getFirstChild();
     Node target = IR.name(madeUpName).clonePropsFrom(exportName).srcref(exportName);
@@ -357,8 +355,9 @@ final class PolymerClassDefinition {
       if (!keyNode.isMemberFunctionDef()) {
         continue;
       }
-      methods.add(new MemberDefinition(
-                      NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+      methods.add(
+          new MemberDefinition(
+              NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
     }
 
     return new PolymerClassDefinition(

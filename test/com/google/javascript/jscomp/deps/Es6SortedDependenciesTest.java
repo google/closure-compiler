@@ -25,10 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link Es6SortedDependencies}
- *
- */
+/** Tests for {@link Es6SortedDependencies} */
 @RunWith(JUnit4.class)
 public class Es6SortedDependenciesTest {
   private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
@@ -52,38 +49,17 @@ public class Es6SortedDependenciesTest {
             .setProvides("c")
             .setRequires(Require.googRequireSymbol("d"))
             .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d")
-        .setProvides("d")
-        .build();
-    SimpleDependencyInfo e = SimpleDependencyInfo.builder("e", "e")
-        .setProvides("e")
-        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d").setProvides("d").build();
 
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(a, b, c, d));
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(d, b, c, a));
-    assertSortedInputs(
-        ImmutableList.of(d, c, b, a),
-        ImmutableList.of(d, c, b, a));
-    assertSortedInputs(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(d, a, b, c));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(a, b, c, d));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, b, c, a));
+    assertSortedInputs(ImmutableList.of(d, c, b, a), ImmutableList.of(d, c, b, a));
+    assertSortedInputs(ImmutableList.of(d, b, c, a), ImmutableList.of(d, a, b, c));
 
     assertSortedDeps(
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(d, b, c, a),
-        ImmutableList.of(a));
-    assertSortedDeps(
-        ImmutableList.of(d, c),
-        ImmutableList.of(d, c, b, a),
-        ImmutableList.of(c));
-    assertSortedDeps(
-        ImmutableList.of(d),
-        ImmutableList.of(d, c, b, a),
-        ImmutableList.of(d));
+        ImmutableList.of(d, b, c, a), ImmutableList.of(d, b, c, a), ImmutableList.of(a));
+    assertSortedDeps(ImmutableList.of(d, c), ImmutableList.of(d, c, b, a), ImmutableList.of(c));
+    assertSortedDeps(ImmutableList.of(d), ImmutableList.of(d, c, b, a), ImmutableList.of(d));
   }
 
   @Test
@@ -108,21 +84,15 @@ public class Es6SortedDependenciesTest {
             .setProvides("e", "f")
             .setRequires(Require.googRequireSymbol("g"), Require.googRequireSymbol("c"))
             .build();
-    SimpleDependencyInfo g = SimpleDependencyInfo.builder("g", "g")
-        .setProvides("g")
-        .build();
-    SimpleDependencyInfo hi = SimpleDependencyInfo.builder("hi", "hi")
-        .setProvides("h", "i")
-        .build();
+    SimpleDependencyInfo g = SimpleDependencyInfo.builder("g", "g").setProvides("g").build();
+    SimpleDependencyInfo hi =
+        SimpleDependencyInfo.builder("hi", "hi").setProvides("h", "i").build();
 
     assertSortedInputs(
-        ImmutableList.of(g, hi, c, ef, d, ab),
-        ImmutableList.of(ab, c, d, ef, g, hi));
+        ImmutableList.of(g, hi, c, ef, d, ab), ImmutableList.of(ab, c, d, ef, g, hi));
 
     assertSortedDeps(
-        ImmutableList.of(g),
-        ImmutableList.of(ab, c, d, ef, g, hi),
-        ImmutableList.of(g));
+        ImmutableList.of(g), ImmutableList.of(ab, c, d, ef, g, hi), ImmutableList.of(g));
     assertSortedDeps(
         ImmutableList.of(g, hi, c, ef, d),
         ImmutableList.of(ab, c, d, ef, g, hi),
@@ -147,8 +117,7 @@ public class Es6SortedDependenciesTest {
             .setRequires(Require.googRequireSymbol("b"))
             .build();
 
-    assertOrder(
-        ImmutableList.of(a, b, c), ImmutableList.of(b, c, a));
+    assertOrder(ImmutableList.of(a, b, c), ImmutableList.of(b, c, a));
   }
 
   @Test
@@ -159,30 +128,17 @@ public class Es6SortedDependenciesTest {
             .setProvides("a")
             .setRequires(Require.googRequireSymbol("a"))
             .build();
-    assertSortedDeps(
-        ImmutableList.of(a),
-        ImmutableList.of(a),
-        ImmutableList.of(a));
+    assertSortedDeps(ImmutableList.of(a), ImmutableList.of(a), ImmutableList.of(a));
   }
 
   @Test
   public void testSort5() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
-        .setProvides("a")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
-        .setProvides("b")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
-        .setProvides("c")
-        .build();
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a").setProvides("a").build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b").setProvides("b").build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c").setProvides("c").build();
 
-    assertSortedInputs(
-        ImmutableList.of(a, b, c),
-        ImmutableList.of(a, b, c));
-    assertSortedInputs(
-        ImmutableList.of(c, b, a),
-        ImmutableList.of(c, b, a));
+    assertSortedInputs(ImmutableList.of(a, b, c), ImmutableList.of(a, b, c));
+    assertSortedInputs(ImmutableList.of(c, b, a), ImmutableList.of(c, b, a));
   }
 
   @Test
@@ -234,8 +190,7 @@ public class Es6SortedDependenciesTest {
             .setRequires(Require.googRequireSymbol("gin"))
             .build();
 
-    assertOrder(
-        ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d));
+    assertOrder(ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d));
   }
 
   @Test
@@ -261,8 +216,7 @@ public class Es6SortedDependenciesTest {
             .setRequires(Require.googRequireSymbol("A"))
             .build();
 
-    assertOrder(
-        ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a));
+    assertOrder(ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a));
   }
 
   @Test
@@ -308,8 +262,8 @@ public class Es6SortedDependenciesTest {
             .setRequires(Require.googRequireSymbol("A"))
             .build();
 
-    assertOrder(ImmutableList.of(a, a2, b, c, d, e, f, g),
-        ImmutableList.of(c, b, a, g, f, e, a2, d));
+    assertOrder(
+        ImmutableList.of(a, a2, b, c, d, e, f, g), ImmutableList.of(c, b, a, g, f, e, a2, d));
   }
 
   @Test
@@ -319,12 +273,8 @@ public class Es6SortedDependenciesTest {
             .setProvides("A")
             .setRequires(Require.googRequireSymbol("C"))
             .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
-        .setProvides("B")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
-        .setProvides("C")
-        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B").setProvides("B").build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C").setProvides("C").build();
 
     SortedDependencies<SimpleDependencyInfo> sorted =
         createSortedDependencies(ImmutableList.of(a, b, c));
@@ -410,10 +360,7 @@ public class Es6SortedDependenciesTest {
   @Test
   public void testSortCircularWeakReference() {
     SimpleDependencyInfo a =
-        SimpleDependencyInfo.builder("a", "a")
-            .setProvides("a")
-            .setTypeRequires("b")
-            .build();
+        SimpleDependencyInfo.builder("a", "a").setProvides("a").setTypeRequires("b").build();
     SimpleDependencyInfo b =
         SimpleDependencyInfo.builder("b", "b").setProvides("b").setTypeRequires("c").build();
     SimpleDependencyInfo c =

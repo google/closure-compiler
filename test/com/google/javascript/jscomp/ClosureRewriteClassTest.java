@@ -27,24 +27,21 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for ClosureRewriteGoogClass
- *
- */
+/** Unit tests for ClosureRewriteGoogClass */
 @RunWith(JUnit4.class)
 public final class ClosureRewriteClassTest extends CompilerTestCase {
-  private static final String EXTERNS = lines(
-      MINIMAL_EXTERNS,
-      "/** @const */ var goog = {};",
-      "goog.inherits = function(a,b) {};",
-      "goog.defineClass = function(a,b) {};",
-      "var use;");
+  private static final String EXTERNS =
+      lines(
+          MINIMAL_EXTERNS,
+          "/** @const */ var goog = {};",
+          "goog.inherits = function(a,b) {};",
+          "goog.defineClass = function(a,b) {};",
+          "var use;");
 
   private static final Diagnostic INSTANTIATE_ABSTRACT_CLASS =
       warning(TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
@@ -70,84 +67,56 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
   }
 
-  private void testRewrite(String code, String expected, LanguageMode lang) {
+  private void testRewrite(String code, String expected) {
     test(code, expected);
   }
 
-  private void testRewrite(String code, String expected){
-    testRewrite(code, expected, LanguageMode.ECMASCRIPT3);
-    testRewrite(code, expected, LanguageMode.ECMASCRIPT_2015);
-  }
-
-  private void testRewriteError(String js, DiagnosticType error, LanguageMode lang) {
+  private void testRewriteError(String js, DiagnosticType error) {
     testError(js, error);
   }
 
-  private void testRewriteError(String js, DiagnosticType error){
-    testRewriteError(js, error, LanguageMode.ECMASCRIPT3);
-    testRewriteError(js, error, LanguageMode.ECMASCRIPT_2015);
-  }
-
-  private void testRewriteWarning(String code, String expected,
-                                  Diagnostic warning, LanguageMode lang) {
+  private void testRewriteWarning(String code, String expected, Diagnostic warning) {
     test(code, expected, warning);
   }
 
-  private void testRewriteWarning(String code, String expected, Diagnostic warning) {
-    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT3);
-    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT_2015);
-  }
 
   @Test
   public void testBasic1() {
     testRewrite(
-        "var x = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});",
-
-        "/** @constructor @struct */"
-        + "var x = function() {};");
+        "var x = goog.defineClass(null, {\n" + "  constructor: function(){}\n" + "});",
+        "/** @constructor @struct */" + "var x = function() {};");
   }
 
   @Test
   public void testBasic2() {
     testRewrite(
         "var x = {};\n"
-        + "x.y = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});",
-
-        "var x = {};"
-        + "/** @constructor @struct */"
-        + "x.y = function() {};");
+            + "x.y = goog.defineClass(null, {\n"
+            + "  constructor: function(){}\n"
+            + "});",
+        "var x = {};" + "/** @constructor @struct */" + "x.y = function() {};");
   }
 
   @Test
   public void testBasic3() {
     // verify we don't add a goog.inherits for Object
     testRewrite(
-        "var x = goog.defineClass(Object, {\n"
-        + "  constructor: function(){}\n"
-        + "});",
-
-        "/** @constructor @struct */"
-        + "var x = function() {};");
+        "var x = goog.defineClass(Object, {\n" + "  constructor: function(){}\n" + "});",
+        "/** @constructor @struct */" + "var x = function() {};");
   }
 
   @Test
   public void testLet() {
     testRewrite(
         "let x = goog.defineClass(null, {\n" + "  constructor: function(){}\n" + "});",
-        "/** @constructor @struct */" + "let x = function() {};",
-        LanguageMode.ECMASCRIPT_2015);
+        "/** @constructor @struct */" + "let x = function() {};");
   }
 
   @Test
   public void testConst() {
     testRewrite(
         "const x = goog.defineClass(null, {\n" + "  constructor: function(){}\n" + "});",
-        "/** @constructor @struct */" + "const x = function() {};",
-        LanguageMode.ECMASCRIPT_2015);
+        "/** @constructor @struct */" + "const x = function() {};");
   }
 
   @Test
@@ -156,13 +125,10 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     enableTypeCheck();
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
-        + "  constructor: function(){}\n"
-        + "});"
-        + "new x();",
-
-        "/** @constructor @struct */"
-        + "var x = function() {};"
-        + "new x();");
+            + "  constructor: function(){}\n"
+            + "});"
+            + "new x();",
+        "/** @constructor @struct */" + "var x = function() {};" + "new x();");
   }
 
   @Test
@@ -176,10 +142,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function(){}",
             "});",
             "new x();"),
-        lines(
-            "/** @struct @interface */",
-            "var x = function() {};",
-            "new x();"),
+        lines("/** @struct @interface */", "var x = function() {};", "new x();"),
         NOT_A_CONSTRUCTOR);
   }
 
@@ -188,14 +151,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     // @interface is preserved, at the class level too
     enableTypeCheck();
     testRewriteWarning(
-        lines(
-            "/** @interface */",
-            "var x = goog.defineClass(null, {});",
-            "new x();"),
-        lines(
-            "/** @struct @interface */",
-            "var x = function() {};",
-            "new x();"),
+        lines("/** @interface */", "var x = goog.defineClass(null, {});", "new x();"),
+        lines("/** @struct @interface */", "var x = function() {};", "new x();"),
         NOT_A_CONSTRUCTOR);
   }
 
@@ -249,12 +206,10 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testRecordAnnotations() {
     // @record is preserved
     testRewrite(
-        "/** @record */\n"
-        + "var Rec = goog.defineClass(null, {f : function() {}});",
-
+        "/** @record */\n" + "var Rec = goog.defineClass(null, {f : function() {}});",
         "/** @struct @record */\n"
-        + "var Rec = function() {};\n"
-        + "Rec.prototype.f = function() {};");
+            + "var Rec = function() {};\n"
+            + "Rec.prototype.f = function() {};");
   }
 
   @Test
@@ -262,13 +217,12 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     enableTypeCheck();
     testRewrite(
         "/** @record */\n"
-        + "var Rec = goog.defineClass(null, {f : function() {}});\n"
-        + "var /** !Rec */ r = { f : function() {} };",
-
+            + "var Rec = goog.defineClass(null, {f : function() {}});\n"
+            + "var /** !Rec */ r = { f : function() {} };",
         "/** @struct @record */\n"
-        + "var Rec = function() {};\n"
-        + "Rec.prototype.f = function() {};\n"
-        + "var /** !Rec */ r = { f : function() {} };");
+            + "var Rec = function() {};\n"
+            + "Rec.prototype.f = function() {};\n"
+            + "var /** !Rec */ r = { f : function() {} };");
   }
 
   @Test
@@ -282,10 +236,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function() {}",
             "});",
             "new x();"),
-        lines(
-            "/** @abstract @struct @constructor */",
-            "var x = function() {};",
-            "new x();"),
+        lines("/** @abstract @struct @constructor */", "var x = function() {};", "new x();"),
         INSTANTIATE_ABSTRACT_CLASS);
   }
 
@@ -300,10 +251,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function() {}",
             "});",
             "new x();"),
-        lines(
-            "/** @abstract @struct @constructor */",
-            "var x = function() {};",
-            "new x();"),
+        lines("/** @abstract @struct @constructor */", "var x = function() {};", "new x();"),
         INSTANTIATE_ABSTRACT_CLASS);
   }
 
@@ -311,76 +259,73 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testInnerClass1() {
     testRewrite(
         "var x = goog.defineClass(some.Super, {\n"
-        + "  constructor: function(){\n"
-        + "    this.foo = 1;\n"
-        + "  },\n"
-        + "  statics: {\n"
-        + "    inner: goog.defineClass(x,{\n"
-        + "      constructor: function(){\n"
-        + "        this.bar = 1;\n"
-        + "      }\n"
-        + "    })\n"
-        + "  }\n"
-        + "});",
-
+            + "  constructor: function(){\n"
+            + "    this.foo = 1;\n"
+            + "  },\n"
+            + "  statics: {\n"
+            + "    inner: goog.defineClass(x,{\n"
+            + "      constructor: function(){\n"
+            + "        this.bar = 1;\n"
+            + "      }\n"
+            + "    })\n"
+            + "  }\n"
+            + "});",
         "/** @constructor @struct @extends {some.Super} */\n"
-        + "var x = function() { this.foo = 1; };\n"
-        + "goog.inherits(x, some.Super);\n"
-        + "/** @constructor @struct @extends {x} */\n"
-        + "x.inner = function() { this.bar = 1; };\n"
-        + "goog.inherits(x.inner, x);");
+            + "var x = function() { this.foo = 1; };\n"
+            + "goog.inherits(x, some.Super);\n"
+            + "/** @constructor @struct @extends {x} */\n"
+            + "x.inner = function() { this.bar = 1; };\n"
+            + "goog.inherits(x.inner, x);");
   }
 
   @Test
   public void testComplete1() {
     testRewrite(
         "var x = goog.defineClass(some.Super, {\n"
-        + "  constructor: function(){\n"
-        + "    this.foo = 1;\n"
-        + "  },\n"
-        + "  statics: {\n"
-        + "    prop1: 1,\n"
-        + "    /** @const */\n"
-        + "    PROP2: 2\n"
-        + "  },\n"
-        + "  anotherProp: 1,\n"
-        + "  aMethod: function() {}\n"
-        + "});",
-
+            + "  constructor: function(){\n"
+            + "    this.foo = 1;\n"
+            + "  },\n"
+            + "  statics: {\n"
+            + "    prop1: 1,\n"
+            + "    /** @const */\n"
+            + "    PROP2: 2\n"
+            + "  },\n"
+            + "  anotherProp: 1,\n"
+            + "  aMethod: function() {}\n"
+            + "});",
         "/** @constructor @struct @extends {some.Super} */\n"
-        + "var x=function(){this.foo=1};\n"
-        + "goog.inherits(x, some.Super);\n"
-        + "x.prop1=1;\n"
-        + "/** @const */\n"
-        + "x.PROP2=2;\n"
-        + "x.prototype.anotherProp = 1;\n"
-        + "x.prototype.aMethod = function(){};");
+            + "var x=function(){this.foo=1};\n"
+            + "goog.inherits(x, some.Super);\n"
+            + "x.prop1=1;\n"
+            + "/** @const */\n"
+            + "x.PROP2=2;\n"
+            + "x.prototype.anotherProp = 1;\n"
+            + "x.prototype.aMethod = function(){};");
   }
 
   @Test
   public void testComplete2() {
     testRewrite(
         "x.y = goog.defineClass(some.Super, {\n"
-        + "  constructor: function(){\n"
-        + "    this.foo = 1;\n"
-        + "  },\n"
-        + "  statics: {\n"
-        + "    prop1: 1,\n"
-        + "    /** @const */\n"
-        + "    PROP2: 2\n"
-        + "  },\n"
-        + "  anotherProp: 1,\n"
-        + "  aMethod: function() {}\n"
-        + "});",
-
+            + "  constructor: function(){\n"
+            + "    this.foo = 1;\n"
+            + "  },\n"
+            + "  statics: {\n"
+            + "    prop1: 1,\n"
+            + "    /** @const */\n"
+            + "    PROP2: 2\n"
+            + "  },\n"
+            + "  anotherProp: 1,\n"
+            + "  aMethod: function() {}\n"
+            + "});",
         "/** @constructor @struct @extends {some.Super} */\n"
-        + "x.y=function(){this.foo=1};\n"
-        + "goog.inherits(x.y,some.Super);\n"
-        + "x.y.prop1 = 1;\n"
-        + "/** @const */\n"
-        + "x.y.PROP2 = 2;\n"
-        + "x.y.prototype.anotherProp = 1;\n"
-        + "x.y.prototype.aMethod=function(){};");
+            + "x.y=function(){this.foo=1};\n"
+            + "goog.inherits(x.y,some.Super);\n"
+            + "x.y.prop1 = 1;\n"
+            + "/** @const */\n"
+            + "x.y.PROP2 = 2;\n"
+            + "x.y.prototype.anotherProp = 1;\n"
+            + "x.y.prototype.aMethod=function(){};");
   }
 
   @Test
@@ -398,7 +343,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             + "  anotherProp: 1,\n"
             + "  aMethod: function() {}\n"
             + "});",
-
         lines(
             "/** @constructor @struct @extends {some.Super} */",
             "x.y = function() { this.foo = 1; };",
@@ -451,11 +395,9 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     testRewriteError("var x = goog.defineClass({1:1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
 
     testRewriteError(
-        "var x = goog.defineClass({get foo() {return 1}});",
-        GOOG_CLASS_SUPER_CLASS_NOT_VALID, LanguageMode.ECMASCRIPT5);
+        "var x = goog.defineClass({get foo() {return 1}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
     testRewriteError(
-        "var x = goog.defineClass({set foo(a) {}});",
-        GOOG_CLASS_SUPER_CLASS_NOT_VALID, LanguageMode.ECMASCRIPT5);
+        "var x = goog.defineClass({set foo(a) {}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
   }
 
   @Test
@@ -523,10 +465,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   @Test
   public void testInvalid7() {
-    testRewriteError(lines(
-        "var x = goog.defineClass(null, {",
-        "  constructor: foo",
-        "});"),
+    testRewriteError(
+        lines("var x = goog.defineClass(null, {", "  constructor: foo", "});"),
         GOOG_CLASS_CONSTRUCTOR_NOT_VALID);
   }
 
@@ -554,21 +494,19 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testNgInject() {
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
-        + "  /** @ngInject */ constructor: function(x, y) {}\n"
-        + "});",
-        "/** @ngInject @constructor @struct */\n"
-        + "var x = function(x, y) {};");
+            + "  /** @ngInject */ constructor: function(x, y) {}\n"
+            + "});",
+        "/** @ngInject @constructor @struct */\n" + "var x = function(x, y) {};");
   }
 
   @Test
   public void testNgInject_onClass() {
     testRewriteWarning(
         "/** @ngInject */\n"
-        + "var x = goog.defineClass(Object, {\n"
-        + "  constructor: function(x, y) {}\n"
-        + "});",
-        "/** @ngInject @constructor @struct */\n"
-        + "var x = function(x, y) {};",
+            + "var x = goog.defineClass(Object, {\n"
+            + "  constructor: function(x, y) {}\n"
+            + "});",
+        "/** @ngInject @constructor @struct */\n" + "var x = function(x, y) {};",
         warning(GOOG_CLASS_NG_INJECT_ON_CLASS));
   }
 
@@ -598,10 +536,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = goog.defineClass(null, {",
             "  constructor: function({a, b, c}) {}",
             "});"),
-        lines(
-            "/** @constructor @struct */",
-            "var FancyClass = function({a, b, c}) {};"),
-        LanguageMode.ECMASCRIPT_2015);
+        lines("/** @constructor @struct */", "var FancyClass = function({a, b, c}) {};"));
   }
 
   @Test
@@ -611,16 +546,14 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = goog.defineClass(null, {",
             "  constructor: function(a = 1) {}",
             "});"),
-        lines("/** @constructor @struct */", "var FancyClass = function(a = 1) {};"),
-        LanguageMode.ECMASCRIPT_2015);
+        lines("/** @constructor @struct */", "var FancyClass = function(a = 1) {};"));
   }
 
   @Test
   public void testExtendedObjLitMethodDefinition1() {
     testRewrite(
         lines("var FancyClass = goog.defineClass(null, {", "  constructor() {}", "});"),
-        lines("/** @constructor @struct */", "var FancyClass = function() {};"),
-        LanguageMode.ECMASCRIPT_2015);
+        lines("/** @constructor @struct */", "var FancyClass = function() {};"));
   }
 
   @Test
@@ -636,8 +569,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var FancyClass = function() {};",
             "FancyClass.prototype.someMethod1 = function() {};",
-            "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT_2015);
+            "FancyClass.prototype.someMethod2 = function() {};"));
   }
 
   @Test
@@ -653,8 +585,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var FancyClass = function() {};",
             "FancyClass.prototype.someMethod1 = function() {};",
-            "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT_2015);
+            "FancyClass.prototype.someMethod2 = function() {};"));
   }
 
   @Test
@@ -672,8 +603,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var FancyClass = function() {};",
             "FancyClass.someMethod1 = function() {};",
-            "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT_2015);
+            "FancyClass.prototype.someMethod2 = function() {};"));
   }
 
   @Test
@@ -684,8 +614,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function() {},",
             "  someArrowFunc: value => value",
             "});"),
-        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED);
   }
 
   @Test
@@ -698,8 +627,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "    someArrowFunc: value => value",
             "  }",
             "});"),
-        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED);
   }
 
   @Test
@@ -719,8 +647,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  var FancyClass = function() {};",
             "  FancyClass.someFunction = function() {",
             "    return () => 42",
-            "  };"),
-        LanguageMode.ECMASCRIPT_2015);
+            "  };"));
   }
 
   @Test
@@ -738,8 +665,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  var FancyClass = function() {};",
             "  FancyClass.prototype.someFunction = function(){",
             "    return () => 42",
-            "  };"),
-        LanguageMode.ECMASCRIPT_2015);
+            "  };"));
   }
 
   @Test
@@ -751,8 +677,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  someMember: 49,",
             "  constructor: function() {},",
             "});"),
-        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED);
   }
 
   @Test
@@ -765,8 +690,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "    ['someCompProp_' + 1999]: 47",
             "  }",
             "});"),
-        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED);
   }
 
   @Test
