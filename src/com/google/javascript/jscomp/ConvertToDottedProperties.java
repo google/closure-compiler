@@ -82,6 +82,8 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
           } else {
             temp = IR.memberFieldDef(leftElem.getString(), rightElem);
           }
+
+          temp.setStaticMember(n.isStaticMember());
           n.replaceWith(temp);
           compiler.reportChangeToEnclosingScope(temp);
         }

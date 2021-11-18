@@ -134,12 +134,53 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     test("const o = {get ['d']() {}};", "const o = {get d() {}};");
     test("const o = { set ['e'](x) {}};", "const o = { set e(x) {}};");
     test(
-        "class C {'m'() {}  ['n']() {}  'x' = 0;  ['y'] = 1;}",
-        "class C {m() {}  n() {}  x= 0;y= 1;}");
+        "class C {'m'() {}  ['n']() {} 'x' = 0;  ['y'] = 1;}",
+        "class C {m() {}  n() {} x= 0;y= 1;}");
     test("const o = { get ['d']() {},  set ['e'](x) {}};", "const o = {get d() {},  set e(x){}};");
     test(
         "const o = {['a']: 1,'b'() {}, ['c']() {},  get ['d']() {},  set ['e'](x) {}};",
         "const o = {a: 1,b: function() {}, c: function() {},  get d() {},  set e(x) {}};");
+
+    // test static keyword
+    test(
+        lines(
+            "class C {", //
+            "'m'(){}",
+            "['n'](){}",
+            "static 'x' = 0;",
+            "static ['y'] = 1;}"),
+        lines(
+            "class C {", //
+            "m(){}",
+            "n(){}",
+            "static x = 0;",
+            "static y= 1;}"));
+    test(
+        lines(
+            "window[\"MyClass\"] = class {", //
+            "static [\"Register\"](){}",
+            "};"),
+        lines(
+            "window.MyClass = class {", //
+            "static Register(){}",
+            "};"));
+    test(
+        lines(
+            "class C { ",
+            "'method'(){} ",
+            "async ['method1'](){}",
+            "*['method2'](){}",
+            "static ['smethod'](){}",
+            "static async ['smethod1'](){}",
+            "static *['smethod2'](){}}"),
+        lines(
+            "class C {",
+            "method(){}",
+            "async method1(){}",
+            "*method2(){}",
+            "static smethod(){}",
+            "static async smethod1(){}",
+            "static *smethod2(){}}"));
 
     testSame("const o = {[fn()]: 0}");
     testSame("const test1 = {[0]:87};");
