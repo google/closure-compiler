@@ -3203,6 +3203,34 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning(
         externs(externs), srcs("(new HTMLScriptElement).setAttribute('data-random', 'xxx')"));
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement)['SRc'] = 'xxx';"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement)['href'] = 'xxx';"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("var attr = 'unknown'; (new HTMLScriptElement)[attr] =  'xxx';"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs(
+            "/** @param {string|null} attr */\n"
+                + "function foo(attr) { (new HTMLScriptElement)[attr] =  'xxx'; }"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testNoWarning(externs(externs), srcs("(new HTMLScriptElement)['data-random'] = 'xxx';"));
   }
 
   @Test

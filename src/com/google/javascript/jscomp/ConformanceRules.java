@@ -2140,6 +2140,11 @@ public final class ConformanceRules {
   /**
    * Ban {@code Element#setAttribute} with attribute names specified in {@code value} or any dynamic
    * string.
+   *
+   * <p>Using the element access syntax to set properties of {@code Element} is considered to be
+   * equivalent to calling {@code Element#setAttribute}. E.g., {@code element[prop] = value} is
+   * treated as {@code element.setAttribute(prop, value)} when {@code element} has the type {@code
+   * Element}.
    */
   public static final class BanSetAttribute extends AbstractRule {
     private final ImmutableList<String> bannedAttrs;
@@ -2167,6 +2172,15 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      if (node.isCall()) {
+        return checkConformanceOnPropertyCall(node);
+      } else if (node.isGetElem() && NodeUtil.isLValue(node)) {
+        return checkConformanceOnGetElement(node);
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private ConformanceResult checkConformanceOnPropertyCall(Node node) {
       Optional<String> calledProperty = getBannedPropertyName(node);
       if (!calledProperty.isPresent()) {
         return ConformanceResult.CONFORMANCE;
@@ -2195,9 +2209,6 @@ public final class ConformanceRules {
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
-      if (!node.isCall()) {
-        return Optional.absent();
-      }
       Node target = node.getFirstChild();
       if (!target.isGetProp()) {
         return Optional.absent();
@@ -2215,6 +2226,56 @@ public final class ConformanceRules {
         return Optional.of(propertyName);
       }
       return Optional.absent();
+    }
+
+    private ConformanceResult checkConformanceOnGetElement(Node node) {
+      Node key = node.getSecondChild();
+      if (key.isStringLit()) {
+        String keyName = key.getString();
+        if (!bannedAttrs.contains(keyName.toLowerCase(Locale.ROOT))) {
+          return ConformanceResult.CONFORMANCE;
+        } else if (hasElementType(node)) {
+          return ConformanceResult.VIOLATION;
+        }
+      } else if (hasElementType(node)) { // key is not a string literal.
+        JSType keyType = key.getJSType();
+        if (keyType == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+
+        // We have seen code using other types of keys (e.g., numbers) for element access. Only
+        // report
+        // violations if the key is explicitly typed as string or the union of string and other
+        // types.
+        if (keyType.isString()) {
+          return ConformanceResult.VIOLATION;
+        }
+        if (keyType.isUnionType()) {
+          if (keyType.toMaybeUnionType().getAlternates().stream().anyMatch(JSType::isString)) {
+            return ConformanceResult.VIOLATION;
+          }
+        }
+      }
+
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean hasElementType(Node node) {
+      JSType objType = node.getFirstChild().getJSType();
+      JSType elementType = compiler.getTypeRegistry().getGlobalType("Element");
+
+      // Do not further check the node if there's no type information available.
+      if (objType == null || elementType == null) {
+        return false;
+      }
+      // If the type of the object is not known to be a subtype of Element, the code is not
+      // evquivlanet to setAttribute. Without this check, we will get overwhelmed by false
+      // positives.
+      if (objType.isUnknownType() || !objType.isSubtypeOf(elementType)) {
+        return false;
+      }
+
+      return true;
     }
   }
 
