@@ -1513,7 +1513,8 @@ google.maps.DirectionsLeg.prototype.duration;
 google.maps.DirectionsLeg.prototype.duration_in_traffic;
 
 /**
- * The address of the destination of this leg.
+ * The address of the destination of this leg. This content is meant to be read
+ * as-is. Do not programmatically parse the formatted address.
  * @type {string}
  */
 google.maps.DirectionsLeg.prototype.end_address;
@@ -1529,7 +1530,8 @@ google.maps.DirectionsLeg.prototype.end_address;
 google.maps.DirectionsLeg.prototype.end_location;
 
 /**
- * The address of the origin of this leg.
+ * The address of the origin of this leg. This content is meant to be read
+ * as-is. Do not programmatically parse the formatted address.
  * @type {string}
  */
 google.maps.DirectionsLeg.prototype.start_address;
@@ -4112,7 +4114,7 @@ google.maps.Map = function(mapDiv, opts) {};
  * the control&#39;s <code>&lt;div&gt;</code> to the <code>MVCArray</code>
  * corresponding to the <code>ControlPosition</code> where it should be
  * rendered.
- * @type {!Array<!google.maps.MVCArray<!Node>>}
+ * @type {!Array<!google.maps.MVCArray<!Element>>}
  */
 google.maps.Map.prototype.controls;
 
@@ -4215,7 +4217,6 @@ google.maps.Map.prototype.getMapTypeId = function() {};
 google.maps.Map.prototype.getProjection = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns the current RenderingType of the map.
  * @return {!google.maps.RenderingType}
  */
@@ -4989,20 +4990,20 @@ google.maps.MapTypeId = {
    * This map type displays a transparent layer of major streets on satellite
    * images.
    */
-  HYBRID: 'HYBRID',
+  HYBRID: 'hybrid',
   /**
    * This map type displays a normal street map.
    */
-  ROADMAP: 'ROADMAP',
+  ROADMAP: 'roadmap',
   /**
    * This map type displays satellite images.
    */
-  SATELLITE: 'SATELLITE',
+  SATELLITE: 'satellite',
   /**
    * This map type displays maps with physical features such as terrain and
    * vegetation.
    */
-  TERRAIN: 'TERRAIN',
+  TERRAIN: 'terrain',
 };
 
 /**
@@ -5284,7 +5285,7 @@ google.maps.Marker.prototype.setZIndex = function(zIndex) {};
  * The maximum default z-index that the API will assign to a marker. You may set
  * a higher z-index to bring a marker to the front.
  * @const
- * @type {number|string}
+ * @type {number}
  */
 google.maps.Marker.MAX_ZINDEX;
 
@@ -6079,8 +6080,7 @@ google.maps.PolygonOptions.prototype.strokeColor;
 google.maps.PolygonOptions.prototype.strokeOpacity;
 
 /**
- * The stroke position. Defaults to CENTER. This property is not supported on
- * Internet Explorer 8 and earlier.
+ * The stroke position. Defaults to <code>CENTER</code>.
  * @type {?google.maps.StrokePosition|undefined}
  */
 google.maps.PolygonOptions.prototype.strokePosition;
@@ -6487,7 +6487,6 @@ google.maps.RectangleOptions.prototype.visible;
 google.maps.RectangleOptions.prototype.zIndex;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @enum {string}
  */
 google.maps.RenderingType = {
@@ -7143,13 +7142,13 @@ google.maps.StreetViewPreference = {
    * user research and parameters such as recognised points of interest, image
    * quality, and distance from the given location.
    */
-  BEST: 'BEST',
+  BEST: 'best',
   /**
    * Return the Street View panorama that is the shortest distance from the
    * provided location. This works well only within a limited radius. The
    * recommended radius is 1km or less.
    */
-  NEAREST: 'NEAREST',
+  NEAREST: 'nearest',
 };
 
 /**
@@ -7195,7 +7194,7 @@ google.maps.StreetViewSource = {
    * Uses the default sources of Street View, searches will not be limited to
    * specific sources.
    */
-  DEFAULT: 'DEFAULT',
+  DEFAULT: 'default',
   /**
    * Limits Street View searches to outdoor collections. Indoor collections are
    * not included in search results. Note also that the search only returns
@@ -7203,7 +7202,7 @@ google.maps.StreetViewSource = {
    * or outdoors. For example, PhotoSpheres are not returned because it&#39;s
    * unknown whether they are indoors or outdoors.
    */
-  OUTDOOR: 'OUTDOOR',
+  OUTDOOR: 'outdoor',
 };
 
 /**
@@ -7591,17 +7590,17 @@ google.maps.TrafficModel = {
   /**
    * Use historical traffic data to best estimate the time spent in traffic.
    */
-  BEST_GUESS: 'BEST_GUESS',
+  BEST_GUESS: 'bestguess',
   /**
    * Use historical traffic data to make an optimistic estimate of what the
    * duration in traffic will be.
    */
-  OPTIMISTIC: 'OPTIMISTIC',
+  OPTIMISTIC: 'optimistic',
   /**
    * Use historical traffic data to make a pessimistic estimate of what the
    * duration in traffic will be.
    */
-  PESSIMISTIC: 'PESSIMISTIC',
+  PESSIMISTIC: 'pessimistic',
 };
 
 /**
@@ -8426,27 +8425,27 @@ google.maps.drawing.OverlayType = {
    * Specifies that the <code>DrawingManager</code> creates circles, and that
    * the overlay given in the <code>overlaycomplete</code> event is a circle.
    */
-  CIRCLE: 'CIRCLE',
+  CIRCLE: 'circle',
   /**
    * Specifies that the <code>DrawingManager</code> creates markers, and that
    * the overlay given in the <code>overlaycomplete</code> event is a marker.
    */
-  MARKER: 'MARKER',
+  MARKER: 'marker',
   /**
    * Specifies that the <code>DrawingManager</code> creates polygons, and that
    * the overlay given in the <code>overlaycomplete</code> event is a polygon.
    */
-  POLYGON: 'POLYGON',
+  POLYGON: 'polygon',
   /**
    * Specifies that the <code>DrawingManager</code> creates polylines, and that
    * the overlay given in the <code>overlaycomplete</code> event is a polyline.
    */
-  POLYLINE: 'POLYLINE',
+  POLYLINE: 'polyline',
   /**
    * Specifies that the <code>DrawingManager</code> creates rectangles, and that
    * the overlay given in the <code>overlaycomplete</code> event is a rectangle.
    */
-  RECTANGLE: 'RECTANGLE',
+  RECTANGLE: 'rectangle',
 };
 
 /**
@@ -8513,6 +8512,15 @@ google.maps.event.clearInstanceListeners = function(instance) {};
  * @return {undefined}
  */
 google.maps.event.clearListeners = function(instance, eventName) {};
+
+/**
+ * Returns if there are listeners for the given event on the given instance. Can
+ * be used to to save the computation of expensive event details.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @return {boolean}
+ */
+google.maps.event.hasListeners = function(instance, eventName) {};
 
 /**
  * Removes the given listener, which should have been returned by addListener
