@@ -36,6 +36,17 @@ Element.prototype.animate = function(frames, options) {};
  */
 Element.prototype.getAnimations = function() {};
 
+/**
+ * @return {!Array<!Animation>}
+ * @see https://www.w3.org/TR/web-animations/#dom-documentorshadowroot-getanimations
+ */
+Document.prototype.getAnimations = function() {};
+
+/**
+ * @return {!Array<!Animation>}
+ * @see https://www.w3.org/TR/web-animations/#dom-documentorshadowroot-getanimations
+ */
+ShadowRoot.prototype.getAnimations = function() {};
 
 /**
  * @constructor

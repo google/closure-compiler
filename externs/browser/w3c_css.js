@@ -145,11 +145,25 @@ function DocumentStyle() {}
 DocumentStyle.prototype.styleSheets;
 
 /**
+ * Type of the `options` parameter for the `CSSStyleSheet` constructor.
+ *
+ * The actual property definitions are in wicg_constructable_stylesheets.js,
+ * which must be explicitly passed to the compiler in order to use them. This
+ * record is defined here since CSSStyleSheet cannot be redefined with its optional
+ * init parameter.
+ * @record
+ * @see https://wicg.github.io/construct-stylesheets/#dictdef-cssstylesheetinit
+ */
+function CSSStyleSheetInit() {}
+
+/**
  * @constructor
  * @extends {StyleSheet}
+ * @param {CSSStyleSheetInit=} options
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleSheet
+ * @see https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-cssstylesheet
  */
-function CSSStyleSheet() {}
+function CSSStyleSheet(options) {}
 
 /**
  * @type {CSSRule}
