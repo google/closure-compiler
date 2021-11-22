@@ -53,11 +53,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class SymbolTableTest {
 
-  private static final String EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS
-          + "var Number;"
-          + "\nfunction customExternFn(customExternArg) {}";
-
   private CompilerOptions options;
 
   @Before
@@ -106,8 +101,7 @@ public final class SymbolTableTest {
   @Test
   public void testGlobalThisReferences() {
     SymbolTable table =
-        createSymbolTable(
-            "var x = this; function f() { return this + this + this; }", /* externsCode= */ "");
+        createSymbolTable("var x = this; function f() { return this + this + this; }");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
@@ -119,7 +113,7 @@ public final class SymbolTableTest {
   @Test
   public void testGlobalThisReferences2() {
     // Make sure the global this is declared, even if it isn't referenced.
-    SymbolTable table = createSymbolTable("", /* externsCode= */ "");
+    SymbolTable table = createSymbolTable("");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
@@ -130,8 +124,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testGlobalThisReferences3() {
-    SymbolTable table =
-        createSymbolTable("this.foo = {}; this.foo.bar = {};", /* externsCode= */ "");
+    SymbolTable table = createSymbolTable("this.foo = {}; this.foo.bar = {};");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertThat(global).isNotNull();
@@ -360,7 +353,7 @@ public final class SymbolTableTest {
   @Test
   public void testGoogScopeReferences() {
     SymbolTable table =
-        createSymbolTable(
+        createSymbolTableWithDefaultExterns(
             // goog.scope is defined in the default externs, among other Closure methods
             lines("goog.scope(function() {});"));
 
@@ -372,7 +365,7 @@ public final class SymbolTableTest {
   @Test
   public void testGoogRequireReferences() {
     SymbolTable table =
-        createSymbolTable(
+        createSymbolTableWithDefaultExterns(
             lines(
                 // goog.require is defined in the default externs, among other Closure methods
                 "goog.provide('goog.dom');", "goog.require('goog.dom');"));
@@ -580,7 +573,8 @@ public final class SymbolTableTest {
 
   @Test
   public void testGlobalVarInExterns() {
-    SymbolTable table = createSymbolTable("customExternFn(1);");
+    SymbolTable table =
+        createSymbolTable("customExternFn(1);", "function customExternFn(customExternArg) {}");
     Symbol fn = getGlobalVar(table, "customExternFn");
     List<Reference> refs = table.getReferenceList(fn);
     assertThat(refs).hasSize(3);
@@ -592,7 +586,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testLocalVarInExterns() {
-    SymbolTable table = createSymbolTable("");
+    SymbolTable table = createSymbolTable("", "function customExternFn(customExternArg) {}");
     Symbol arg = getLocalVar(table, "customExternArg");
     List<Reference> refs = table.getReferenceList(arg);
     assertThat(refs).hasSize(1);
@@ -606,7 +600,7 @@ public final class SymbolTableTest {
   @Test
   public void testSymbolsForType() {
     SymbolTable table =
-        createSymbolTable(
+        createSymbolTableWithDefaultExterns(
             lines(
                 "function random() { return 1; }",
                 "/** @constructor */ function Foo() {}",
@@ -871,7 +865,8 @@ public final class SymbolTableTest {
 
   @Test
   public void testReferencesInJSDocType2() {
-    SymbolTable table = createSymbolTable("/** @param {string} x */ function f(x) {}");
+    SymbolTable table =
+        createSymbolTableWithDefaultExterns("/** @param {string} x */ function f(x) {}");
     Symbol str = getGlobalVar(table, "String");
     assertThat(str).isNotNull();
 
@@ -1211,18 +1206,19 @@ public final class SymbolTableTest {
         createSymbolTable(
             lines(
                 "/** @constructor */ goog.dom.Foo = function() {};",
-                "/** @const */ goog.dom = {};"));
+                "/** @const */ goog.dom = {};",
+                "/** @const */ var goog = {};"));
 
     Symbol goog = getGlobalVar(table, "goog");
     Symbol dom = getGlobalVar(table, "goog.dom");
-    Symbol Foo = getGlobalVar(table, "goog.dom.Foo");
+    Symbol foo = getGlobalVar(table, "goog.dom.Foo");
 
     assertThat(goog).isNotNull();
     assertThat(dom).isNotNull();
-    assertThat(Foo).isNotNull();
+    assertThat(foo).isNotNull();
 
     assertThat(goog.getPropertyScope().getSlot("dom")).isEqualTo(dom);
-    assertThat(dom.getPropertyScope().getSlot("Foo")).isEqualTo(Foo);
+    assertThat(dom.getPropertyScope().getSlot("Foo")).isEqualTo(foo);
   }
 
   @Test
@@ -1262,7 +1258,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testSymbolForScopeOfNatives() {
-    SymbolTable table = createSymbolTable("");
+    SymbolTable table = createSymbolTableWithDefaultExterns("");
 
     // From the externs.
     Symbol sliceArg = getLocalVar(table, "sliceArg");
@@ -1452,7 +1448,7 @@ public final class SymbolTableTest {
   public void testGetEnclosingScope_Global() {
     SymbolTable table = createSymbolTable("const baz = 1;");
 
-    Symbol baz = getLocalVar(table, "baz");
+    Symbol baz = getGlobalVar(table, "baz");
     SymbolScope bazScope = table.getEnclosingScope(baz.getDeclarationNode());
 
     assertThat(bazScope).isNotNull();
@@ -1489,7 +1485,7 @@ public final class SymbolTableTest {
   public void testGetEnclosingFunctionScope_GlobalScopeNoNesting() {
     SymbolTable table = createSymbolTable("const baz = 1;");
 
-    Symbol baz = getLocalVar(table, "baz");
+    Symbol baz = getGlobalVar(table, "baz");
     SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
 
     assertThat(bazFunctionScope).isNotNull();
@@ -1698,8 +1694,12 @@ public final class SymbolTableTest {
     return result;
   }
 
+  private SymbolTable createSymbolTableWithDefaultExterns(String input) {
+    return createSymbolTable(input, CompilerTypeTestCase.DEFAULT_EXTERNS);
+  }
+
   private SymbolTable createSymbolTable(String input) {
-    return createSymbolTable(input, EXTERNS);
+    return createSymbolTable(input, "");
   }
 
   private SymbolTable createSymbolTable(String input, String externsCode) {
