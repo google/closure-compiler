@@ -496,7 +496,7 @@ public final class SymbolTableTest {
     verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.foo');", "some.foo.one = 1;"),
         lines("goog.module('some.bar');", "const {one} = goog.require('some.foo');"),
-        "some.foo.one");
+        "one");
   }
 
   @Test

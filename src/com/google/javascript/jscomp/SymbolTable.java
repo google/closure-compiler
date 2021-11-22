@@ -819,26 +819,31 @@ public final class SymbolTable {
           currentNode = currentNode.getFirstChild();
 
           String name = currentNode.getQualifiedName();
-          if (name != null) {
-            Symbol namespace = isAnySymbolDeclared(name, currentNode, root.scope);
-            if (namespace == null) {
-              namespace = root.scope.getQualifiedSlot(name);
-            }
+          if (name == null) {
+            continue;
+          }
+          Symbol namespace = isAnySymbolDeclared(name, currentNode, root.scope);
+          if (namespace == null) {
+            namespace = root.scope.getQualifiedSlot(name);
+          }
 
-            if (namespace == null && root.scope.isGlobalScope()) {
-              namespace =
-                  declareSymbol(
-                      name,
-                      registry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
-                      true,
-                      root.scope,
-                      currentNode,
-                      null /* JsDoc info */);
-            }
+          if (namespace == null && root.scope.isGlobalScope()) {
+            // Originally UNKNOWN_TYPE has been always used for namespace symbols even though
+            // compiler does have type information attached to a node. Unclear why. Changing code to
+            // propery type mostly works. It only fails on Foo.prototype cases for some reason.
+            // It's pretty rare case when Foo.prototype defined in global scope though so for now
+            // just carve it out.
+            JSType symbolType =
+                currentNode.getJSType().isFunctionPrototypeType()
+                    ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
+                    : currentNode.getJSType();
+            namespace =
+                declareSymbol(
+                    name, symbolType, true, root.scope, currentNode, null /* JsDoc info */);
+          }
 
-            if (namespace != null) {
-              namespace.defineReferenceAt(currentNode);
-            }
+          if (namespace != null) {
+            namespace.defineReferenceAt(currentNode);
           }
         }
       }
