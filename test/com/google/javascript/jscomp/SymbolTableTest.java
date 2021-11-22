@@ -427,7 +427,7 @@ public final class SymbolTableTest {
         lines("goog.module('module.one');", "goog.module.declareLegacyNamespace();"));
   }
 
-  private void verifySymbolreferencedInSecondFileAsImport(
+  private void verifySymbolReferencedInSecondFile(
       String firstFile, String secondFile, String symbolName) {
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
     options.setEnableModuleRewriting(false);
@@ -440,7 +440,6 @@ public final class SymbolTableTest {
             .get();
     for (SymbolTable.Reference ref : table.getReferences(symbol)) {
       if (ref.getNode().getSourceFileName().equals("file2.js")) {
-        assertThat(ref.getIsImport()).isTrue();
         return;
       }
     }
@@ -449,7 +448,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_moduleDefaultExport() {
-    verifySymbolreferencedInSecondFileAsImport(
+    verifySymbolReferencedInSecondFile(
         lines("goog.module('some.Foo');", "class Foo {}", "exports = Foo;"),
         lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
         "Foo");
@@ -457,7 +456,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_moduleIndividualExports() {
-    verifySymbolreferencedInSecondFileAsImport(
+    verifySymbolReferencedInSecondFile(
         lines("goog.module('some.foo');", "exports.one = 1;"),
         lines("goog.module('some.bar');", "const {one} = goog.require('some.foo');"),
         "one");
@@ -478,7 +477,6 @@ public final class SymbolTableTest {
             .get();
     for (SymbolTable.Reference ref : table.getReferences(symbol)) {
       if (ref.getNode().getSourceFileName().equals("file1.js")) {
-        assertThat(ref.getIsImport()).isTrue();
         return;
       }
     }
@@ -487,7 +485,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_provideDefaultExport() {
-    verifySymbolreferencedInSecondFileAsImport(
+    verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.Foo');", "some.Foo = class {}"),
         lines("goog.module('some.bar');", "const Foo = goog.require('some.Foo');"),
         "some.Foo");
@@ -495,7 +493,7 @@ public final class SymbolTableTest {
 
   @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_provideIndividualExports() {
-    verifySymbolreferencedInSecondFileAsImport(
+    verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.foo');", "some.foo.one = 1;"),
         lines("goog.module('some.bar');", "const {one} = goog.require('some.foo');"),
         "some.foo.one");

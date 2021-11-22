@@ -1285,7 +1285,7 @@ public final class SymbolTable {
       // skip it.
       Symbol declaration = getSymbolForTypeHelper(n.getJSType(), false);
       if (declaration != null) {
-        declaration.defineReferenceAt(n, /* isImport= */ true);
+        declaration.defineReferenceAt(n);
       }
     } else if (n.isDestructuringLhs()) {
       // This is `const {one} = goog.require('some.foo')` case.
@@ -1316,7 +1316,7 @@ public final class SymbolTable {
             // skip
         }
         if (varDeclaration != null) {
-          varDeclaration.defineReferenceAt(stringKey, /* isImport= */ true);
+          varDeclaration.defineReferenceAt(stringKey);
         }
       }
     }
@@ -1626,12 +1626,8 @@ public final class SymbolTable {
       return JSType.toMaybeFunctionType(getType());
     }
 
-    public Reference defineReferenceAt(Node n, boolean isImport) {
-      return references.computeIfAbsent(n, (Node k) -> new Reference(this, k, isImport));
-    }
-
     public Reference defineReferenceAt(Node n) {
-      return defineReferenceAt(n, /* isImport= */ false);
+      return references.computeIfAbsent(n, (Node k) -> new Reference(this, k));
     }
 
     /** Sets the declaration node. May only be called once. */
@@ -1703,20 +1699,9 @@ public final class SymbolTable {
 
   /** Reference */
   public static final class Reference extends SimpleReference<Symbol> {
-    /**
-     * Indicates whether reference is in a `goog.require` import. For example: `const Foo =
-     * goog.require('some.Foo');` `Foo` above will be import reference of the Foo class declared in
-     * some.Foo module.
-     */
-    private final boolean isImport;
 
-    Reference(Symbol symbol, Node node, boolean isImport) {
+    Reference(Symbol symbol, Node node) {
       super(symbol, node);
-      this.isImport = isImport;
-    }
-
-    public boolean getIsImport() {
-      return this.isImport;
     }
   }
 
@@ -2012,7 +1997,7 @@ public final class SymbolTable {
                   false /* declared */,
                   globalScope,
                   firstInputRoot);
-          symbol.setDeclaration(new Reference(symbol, firstInputRoot, /* isImport= */ false));
+          symbol.setDeclaration(new Reference(symbol, firstInputRoot));
         }
         thisStack.add(symbol);
       } else if (t.getScopeRoot().isFunction()) {
