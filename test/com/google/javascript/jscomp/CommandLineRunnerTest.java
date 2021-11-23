@@ -3049,11 +3049,15 @@ public final class CommandLineRunnerTest {
     if (!compiler.getErrors().isEmpty()) {
       assertThat(compiler.getErrors()).hasSize(1);
       assertThat(compiler.getErrors().get(0).getType()).isEqualTo(warning);
-      assertThat(lastExitCode).isEqualTo(1);
+      assertWithMessage("Expected exit code of 1.  " + "Contents of err printstream:\n" + errReader)
+          .that(lastExitCode)
+          .isEqualTo(1);
     } else {
       assertThat(compiler.getWarnings()).hasSize(1);
       assertThat(compiler.getWarnings().get(0).getType()).isEqualTo(warning);
-      assertThat(lastExitCode).isEqualTo(0);
+      assertWithMessage("Expected exit code of 0.  " + "Contents of err printstream:\n" + errReader)
+          .that(lastExitCode)
+          .isEqualTo(0);
     }
   }
 

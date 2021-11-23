@@ -16,7 +16,7 @@
 /**
  * @fileoverview Support code for testing
  *     $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION.
- * @suppress {undefinedVars} Suppress warnings on $jscomp.
+ * @suppress {undefinedVars,missingProperties} Suppress warnings on $jscomp.
  */
 goog.module('jscomp.runtime_tests.polyfill_tests.force_polyfill_promise_when_no_unhandled_rejection_test');
 goog.setTestOnly();

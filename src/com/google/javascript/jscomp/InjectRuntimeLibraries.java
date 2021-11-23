@@ -26,20 +26,58 @@ import com.google.javascript.rhino.Node;
  */
 class InjectRuntimeLibraries implements CompilerPass {
   private final AbstractCompiler compiler;
+  private final Stage stage;
+  // The runtime type check library code is special in that it is the only library that should be
+  // injected before typechecking. All other library code is expected to be injected during the
+  // optimization phase. This is because runtime typechecking is incompatible with a binary reading
+  // from precompiled TypedASTs.
+  private static final String RUNTIME_TYPE_CHECK_LIB = "runtime_type_check";
 
-  public InjectRuntimeLibraries(AbstractCompiler compiler) {
+  private enum Stage {
+    CHECKS,
+    OPTIMIZATIONS
+  }
+
+  private InjectRuntimeLibraries(AbstractCompiler compiler, Stage stage) {
     this.compiler = compiler;
+    this.stage = stage;
   }
 
   @Override
   public void process(Node externs, Node root) {
+    // TODO(bradfordcsmith): Passes should not read the compiler options object.
     CompilerOptions options = compiler.getOptions();
-    if (options.runtimeTypeCheck) {
-      compiler.ensureLibraryInjected("runtime_type_check", true);
+    switch (this.stage) {
+      case CHECKS:
+        injectCheckLibraries(options);
+        return;
+      case OPTIMIZATIONS:
+        injectOptimizationsLibraries(options);
+        return;
     }
+    throw new AssertionError();
+  }
 
-    for (String forced : options.forceLibraryInjection) {
-      compiler.ensureLibraryInjected(forced, true);
+  private void injectCheckLibraries(CompilerOptions options) {
+    if (options.runtimeTypeCheck
+        || options.forceLibraryInjection.contains(RUNTIME_TYPE_CHECK_LIB)) {
+      compiler.ensureLibraryInjected(RUNTIME_TYPE_CHECK_LIB, true);
     }
+  }
+
+  private void injectOptimizationsLibraries(CompilerOptions options) {
+    for (String forced : options.forceLibraryInjection) {
+      if (!forced.equals(RUNTIME_TYPE_CHECK_LIB)) {
+        compiler.ensureLibraryInjected(forced, true);
+      }
+    }
+  }
+
+  public static InjectRuntimeLibraries forChecks(AbstractCompiler compiler) {
+    return new InjectRuntimeLibraries(compiler, Stage.CHECKS);
+  }
+
+  public static InjectRuntimeLibraries forOptimizations(AbstractCompiler compiler) {
+    return new InjectRuntimeLibraries(compiler, Stage.OPTIMIZATIONS);
   }
 }
