@@ -2708,6 +2708,32 @@ public final class CompilerTest {
   }
 
   @Test
+  public void restoreState_doesNotCreateColorRegistryIfTypecheckingSkipped() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(false);
+    Compiler compiler = new Compiler();
+
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", ""));
+    compiler.init(ImmutableList.of(), inputs, options);
+
+    compiler.parse();
+    compiler.check();
+
+    assertThat(compiler.hasTypeCheckingRun()).isFalse();
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    compiler.saveState(byteArrayOutputStream);
+    byteArrayOutputStream.close();
+
+    compiler = new Compiler();
+    compiler.init(ImmutableList.of(), inputs, options);
+    restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
+
+    assertThat(compiler.hasTypeCheckingRun()).isFalse();
+    assertThat(compiler.hasOptimizationColors()).isFalse();
+  }
+
+  @Test
   public void librariesInjectedInStage1_notReinjectedInStage2() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setEmitUseStrict(false);

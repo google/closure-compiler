@@ -65,6 +65,7 @@ import org.junit.runners.JUnit4;
 public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
   private Consumer<TypedAst> consumer = null;
+  private boolean includeTypes;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -78,6 +79,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     enableTypeCheck();
     enableCreateModuleMap();
     enableSourceInformationAnnotator();
+    this.includeTypes = true;
   }
 
   @Test
@@ -357,6 +359,22 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSkipAddingColors() {
+    enableTypeCheck();
+    // the pre-serialization AST includes JSTypes, but the deserialized AST has no Colors
+    this.includeTypes = false;
+
+    Result result = testAndReturnResult(srcs("3"), expected("3"));
+    Node newScript = result.sourceRoot.getFirstChild();
+    assertNode(newScript).hasToken(Token.SCRIPT);
+    Node three = newScript.getFirstFirstChild();
+
+    assertNode(three).hasToken(Token.NUMBER);
+    assertThat(three.getColor()).isNull();
+    assertThat(result.registry).isNull();
+  }
+
+  @Test
   public void testOriginalNamePreserved() {
     Node newRoot =
         testAndReturnResult(srcs("const x = 0;"), expected("const x = 0;"))
@@ -541,9 +559,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
             getLastCompiler(),
             SourceFile.fromCode("syntheticExterns", "", StaticSourceFile.SourceKind.EXTERN),
             ImmutableList.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
-            serializedStream);
+            serializedStream,
+            includeTypes);
 
-    ColorRegistry registry = ast.getColorRegistry();
+    ColorRegistry registry = ast.getColorRegistry().orNull();
     Node newExternsRoot = IR.root();
     Node newSourceRoot = IR.root();
 

@@ -25,6 +25,7 @@ import static java.lang.Math.min;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -580,18 +581,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       ImmutableList<SourceFile> existingSourceFiles, InputStream typedAstListStream) {
     checkState(this.typedAstFilesystem == null);
 
+    this.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
     TypedAstDeserializer.DeserializedAst astData =
         TypedAstDeserializer.deserializeFullAst(
-            this, SYNTHETIC_EXTERNS_FILE, existingSourceFiles, typedAstListStream);
+            this,
+            SYNTHETIC_EXTERNS_FILE,
+            existingSourceFiles,
+            typedAstListStream,
+            // TODO(b/183734515): consider setting 'includeTypeInformation' to false when no type-
+            // based optimziation flags are enabled, as a performance optimization.
+            /* includeTypeInformation= */ true);
 
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
-    this.colorRegistry = astData.getColorRegistry();
+    this.colorRegistry = astData.getColorRegistry().get();
   }
 
   @Override
   @GwtIncompatible
-  public void initRuntimeLibraryTypedAsts(ColorPool.Builder colorPoolBuilder) {
+  public void initRuntimeLibraryTypedAsts(Optional<ColorPool.Builder> colorPoolBuilder) {
     checkState(this.runtimeLibraryTypedAsts == null);
 
     String path =
@@ -3448,7 +3456,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Load/parse the code.
     String path = String.join("", AbstractCompiler.RUNTIME_LIB_DIR, resourceName, ".js");
     final Node ast;
-    if (this.hasOptimizationColors()) {
+    if (this.getLifeCycleStage().hasColorAndSimplifiedJSDoc()) {
+      checkNotNull(
+          this.runtimeLibraryTypedAsts,
+          "Must call initRuntimeLibraryTypedAsts before calling ensureLibraryInjected during"
+              + " optimizations");
       ast = this.runtimeLibraryTypedAsts.get(path).get();
     } else {
       checkState(
@@ -3667,7 +3679,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     // .restoreState. that would remove the need for
                     // TypedAstDeserializer.DeserializedAst::getAllFiles
                     ImmutableList.of(),
-                    inputStream);
+                    inputStream,
+                    compilerState.typeCheckingHasRun);
               } finally {
                 stopTracer(tracer, "deserializeTypedAst");
               }
@@ -3679,7 +3692,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.clear();
     injectedLibraries.addAll(compilerState.injectedLibraries);
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
-    setLifeCycleStage(compilerState.lifeCycleStage);
+    // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
+    // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
+    LifeCycleStage stage =
+        compilerState.lifeCycleStage == LifeCycleStage.RAW
+            ? LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC
+            : compilerState.lifeCycleStage;
+    setLifeCycleStage(stage);
     moduleGraph = compilerState.moduleGraph;
     uniqueNameId = compilerState.uniqueNameId;
     uniqueIdSupplier = compilerState.uniqueIdSupplier;
@@ -3703,7 +3722,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     inputsById.clear();
     externs.clear();
 
-    colorRegistry = deserializedAst.getColorRegistry();
+    colorRegistry = deserializedAst.getColorRegistry().orNull();
 
     // Tells CompilerInput::getRoot to deserialize an AST rather than re-parsing the file
     this.typedAstFilesystem = deserializedAst.getFilesystem();

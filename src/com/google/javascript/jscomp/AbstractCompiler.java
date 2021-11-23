@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -290,8 +291,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * <p>This method must be called anywhere that Colors are reconciled for application to the AST.
    * Otherwise Color information won't be consistent. `colorPoolBuilder` must be the same builder as
    * used for the other inputs, and the caller retains ownership.
+   *
+   * @param colorPoolBuilder if present, includes inferred optimization colors on the deserialized
+   *     ASTs. If absent, does not include colors.
    */
-  public void initRuntimeLibraryTypedAsts(ColorPool.Builder colorPoolBuilder) {
+  public void initRuntimeLibraryTypedAsts(Optional<ColorPool.Builder> colorPoolBuilder) {
     throw new UnsupportedOperationException(
         "Implementation in Compiler.java is not J2CL compatible.");
   }
@@ -409,6 +413,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public static enum LifeCycleStage implements Serializable {
     RAW,
 
+    // See constraints put on the AST by either running the ConvertTypesToColors.java pass /or/ by
+    // having created the AST via serialization/TypedAstDeserializer.java
+    // NORMALIZED implies this constraint
+    COLORS_AND_SIMPLIFIED_JSDOC,
+
     // See constraints put on the tree by Normalize.java
     NORMALIZED,
 
@@ -427,6 +436,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
     public boolean isNormalizedObfuscated() {
       return this == NORMALIZED_OBFUSCATED;
+    }
+
+    public boolean hasColorAndSimplifiedJSDoc() {
+      return this != RAW;
     }
   }
 

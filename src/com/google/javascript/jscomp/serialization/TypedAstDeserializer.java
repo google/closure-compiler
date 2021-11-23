@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +50,7 @@ public final class TypedAstDeserializer {
 
   private final Mode mode;
   private final SourceFile syntheticExterns;
-  private final ColorPool.Builder colorPoolBuilder;
+  private final Optional<ColorPool.Builder> colorPoolBuilder;
 
   private final LinkedHashMap<String, SourceFile> filePoolBuilder = new LinkedHashMap<>();
   private final LinkedHashMap<SourceFile, Supplier<Node>> typedAstFilesystem =
@@ -57,11 +58,18 @@ public final class TypedAstDeserializer {
   private final ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
   private final ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers = new ArrayList<>();
 
-  TypedAstDeserializer(
-      SourceFile syntheticExterns, @Nullable ColorPool.Builder existingColorPool, Mode mode) {
+  private TypedAstDeserializer(
+      SourceFile syntheticExterns,
+      Optional<ColorPool.Builder> existingColorPool,
+      Mode mode,
+      boolean includeTypeInformation) {
     this.syntheticExterns = syntheticExterns;
     this.mode = mode;
-    this.colorPoolBuilder = existingColorPool != null ? existingColorPool : ColorPool.builder();
+    if (includeTypeInformation) {
+      this.colorPoolBuilder = Optional.of(existingColorPool.or(ColorPool.builder()));
+    } else {
+      this.colorPoolBuilder = Optional.absent();
+    }
   }
 
   private enum Mode {
@@ -75,17 +83,26 @@ public final class TypedAstDeserializer {
    * @param existingSourceFiles TypedAst nodes referencing a named SourceFile in this list will use
    *     the SourceFile object rather than creating a new SourceFile instance. AST references to
    *     SourceFiles not in this list will always create new SourceFile instances.
+   * @param includeTypeInformation whether to deserialize the "Typed" half of a "TypedAst". If false
+   *     ignores the TypePool, any TypePointers on AstNodes, and does not create a ColorRegistry
    */
   public static DeserializedAst deserializeFullAst(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
       ImmutableList<SourceFile> existingSourceFiles,
-      InputStream typedAstsStream) {
+      InputStream typedAstsStream,
+      boolean includeTypeInformation) {
     ImmutableMap<String, SourceFile> sourceFilesByName =
         existingSourceFiles.stream()
             .collect(toImmutableMap(SourceFile::getName, Function.identity()));
     return deserialize(
-        compiler, syntheticExterns, sourceFilesByName, null, typedAstsStream, Mode.FULL_AST);
+        compiler,
+        syntheticExterns,
+        sourceFilesByName,
+        Optional.absent(),
+        typedAstsStream,
+        Mode.FULL_AST,
+        includeTypeInformation);
   }
 
   /**
@@ -98,7 +115,7 @@ public final class TypedAstDeserializer {
   public static DeserializedAst deserializeRuntimeLibraries(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
-      ColorPool.Builder colorPool,
+      Optional<ColorPool.Builder> colorPool,
       InputStream typedAstsStream) {
     return deserialize(
         compiler,
@@ -106,22 +123,25 @@ public final class TypedAstDeserializer {
         ImmutableMap.of(),
         colorPool,
         typedAstsStream,
-        Mode.RUNTIME_LIBRARY_ONLY);
+        Mode.RUNTIME_LIBRARY_ONLY,
+        colorPool.isPresent());
   }
 
   private static DeserializedAst deserialize(
       AbstractCompiler compiler,
       SourceFile syntheticExterns,
       ImmutableMap<String, SourceFile> scriptSourceFiles,
-      @Nullable ColorPool.Builder colorPool,
+      Optional<ColorPool.Builder> colorPool,
       InputStream typedAstStream,
-      Mode mode) {
+      Mode mode,
+      boolean includeTypeInformation) {
     checkArgument(
-        (colorPool != null) == mode.equals(Mode.RUNTIME_LIBRARY_ONLY),
-        "ColorPool.Builder required iff deserializing runtime libraries");
+        colorPool.isPresent() == (mode.equals(Mode.RUNTIME_LIBRARY_ONLY) && includeTypeInformation),
+        "ColorPool.Builder required iff deserializing runtime libraries & including types");
     List<TypedAst> typedAstProtos = deserializeTypedAsts(typedAstStream);
 
-    TypedAstDeserializer deserializer = new TypedAstDeserializer(syntheticExterns, colorPool, mode);
+    TypedAstDeserializer deserializer =
+        new TypedAstDeserializer(syntheticExterns, colorPool, mode, includeTypeInformation);
     deserializer.filePoolBuilder.put(syntheticExterns.getName(), syntheticExterns);
     deserializer.filePoolBuilder.putAll(scriptSourceFiles);
 
@@ -150,18 +170,23 @@ public final class TypedAstDeserializer {
   }
 
   private DeserializedAst toDeserializedAst() {
+    Optional<ColorRegistry> registry =
+        this.mode.equals(Mode.RUNTIME_LIBRARY_ONLY) || !this.colorPoolBuilder.isPresent()
+            ? Optional.absent()
+            : Optional.of(colorPoolBuilder.get().build().getRegistry());
     return DeserializedAst.create(
         ImmutableMap.copyOf(filePoolBuilder),
         ImmutableMap.copyOf(typedAstFilesystem),
-        this.mode.equals(Mode.RUNTIME_LIBRARY_ONLY) ? null : colorPoolBuilder.build().getRegistry(),
+        registry,
         externProperties.build());
   }
 
   private void deserializeSingleTypedAst(TypedAst typedAstProto) {
     ImmutableList.Builder<SourceFile> fileShardBuilder = ImmutableList.builder();
     StringPool stringShard = StringPool.fromProto(typedAstProto.getStringPool());
-    ColorPool.ShardView colorShard =
-        colorPoolBuilder.addShard(typedAstProto.getTypePool(), stringShard);
+    Optional<ColorPool.ShardView> colorShard =
+        colorPoolBuilder.transform(
+            (builder) -> builder.addShard(typedAstProto.getTypePool(), stringShard));
 
     for (SourceFileProto p : typedAstProto.getSourceFilePool().getSourceFileList()) {
       fileShardBuilder.add(
@@ -182,7 +207,7 @@ public final class TypedAstDeserializer {
   private void initLazyAstDeserializer(
       LazyAst lazyAst,
       ImmutableList<SourceFile> fileShard,
-      ColorPool.ShardView colorShard,
+      Optional<ColorPool.ShardView> colorShard,
       StringPool stringShard) {
     SourceFile file = fileShard.get(lazyAst.getSourceFile() - 1);
     ScriptNodeDeserializer deserializer =
@@ -231,13 +256,12 @@ public final class TypedAstDeserializer {
     /**
      * The built ColorRegistry.
      *
-     * <p>Note that this is null if {@link
+     * <p>Note that this is absent if either a) {@link
      * TypedAstDeserializer#deserializeRuntimeLibraries(AbstractCompiler, SourceFile,
      * ColorPool.Builder, InputStream)} was called, as this sort of deserialization does not build a
-     * complete AST + colors, just a shard of it.
+     * complete AST + colors, just a shard of it, or b) type information was not requested.
      */
-    @Nullable
-    public abstract ColorRegistry getColorRegistry();
+    public abstract Optional<ColorRegistry> getColorRegistry();
 
     /**
      * Returns a list of all known extern properties, including properties that were present in type
@@ -249,7 +273,7 @@ public final class TypedAstDeserializer {
     private static DeserializedAst create(
         ImmutableMap<String, SourceFile> allFiles,
         ImmutableMap<SourceFile, Supplier<Node>> filesystem,
-        ColorRegistry colorRegistry,
+        Optional<ColorRegistry> colorRegistry,
         ImmutableSet<String> externProperties) {
       checkState(
           allFiles.values().containsAll(filesystem.keySet()),

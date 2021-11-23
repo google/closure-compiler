@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.serialization;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -29,6 +30,7 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -42,14 +44,14 @@ final class ScriptNodeDeserializer {
 
   private final SourceFile sourceFile;
   private final ByteString scriptBytes;
-  private final ColorPool.ShardView colorPoolShard;
+  private final Optional<ColorPool.ShardView> colorPoolShard;
   private final StringPool stringPool;
   private final ImmutableList<SourceFile> filePool;
 
   ScriptNodeDeserializer(
       LazyAst ast,
       StringPool stringPool,
-      ColorPool.ShardView colorPoolShard,
+      Optional<ColorPool.ShardView> colorPoolShard,
       ImmutableList<SourceFile> filePool) {
     this.scriptBytes = ast.getScript();
     this.sourceFile = filePool.get(ast.getSourceFile() - 1);
@@ -101,11 +103,11 @@ final class ScriptNodeDeserializer {
 
       Node n = this.owner().deserializeSingleNode(astNode);
       n.setStaticSourceFileFrom(sourceFileTemplate);
-      if (astNode.hasType()) {
-        n.setColor(this.owner().colorPoolShard.getColor(astNode.getType()));
+      if (astNode.hasType() && this.owner().colorPoolShard.isPresent()) {
+        n.setColor(this.owner().colorPoolShard.get().getColor(astNode.getType()));
       }
       if (astNode.getBooleanPropertyCount() > 0) {
-        n.deserializeProperties(astNode.getBooleanPropertyList());
+        n.deserializeProperties(filterOutCastProp(astNode.getBooleanPropertyList()));
       }
       n.setJSDocInfo(JSDocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
@@ -620,5 +622,26 @@ final class ScriptNodeDeserializer {
         break;
     }
     throw new IllegalStateException("Unexpected serialized kind for AstNode: " + n);
+  }
+
+  /**
+   * If no colors are being deserialized, filters out any NodeProperty.COLOR_BEFORE_CASTs
+   *
+   * <p>This is because it doesn't make sense to have that property present on nodes that don't have
+   * colors.
+   */
+  private List<NodeProperty> filterOutCastProp(List<NodeProperty> nodeProperties) {
+    if (colorPoolShard.isPresent()) {
+      return nodeProperties; // we are deserializing colors, so this is fine.
+    }
+    for (int i = 0; i < nodeProperties.size(); i++) {
+      if (nodeProperties.get(i).equals(NodeProperty.COLOR_FROM_CAST)) {
+        return ImmutableList.<NodeProperty>builder()
+            .addAll(nodeProperties.subList(0, i))
+            .addAll(nodeProperties.subList(i + 1, nodeProperties.size()))
+            .build();
+      }
+    }
+    return nodeProperties;
   }
 }

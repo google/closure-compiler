@@ -1460,6 +1460,8 @@ public abstract class CompilerTestCase {
             new RemoveCastNodes(compiler).process(externsRoot, mainRoot);
             new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
                 .process(externsRoot, mainRoot);
+
+            compiler.setLifeCycleStage(AbstractCompiler.LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
             hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
           }
 

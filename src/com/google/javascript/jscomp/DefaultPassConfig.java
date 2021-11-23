@@ -2761,11 +2761,17 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("typesToColors")
           .setInternalFactory(
               (compiler) ->
-                  new ConvertTypesToColors(
-                      compiler,
-                      compiler.isDebugLoggingEnabled()
-                          ? SerializationOptions.INCLUDE_DEBUG_INFO
-                          : SerializationOptions.SKIP_DEBUG_INFO))
+                  (externs, js) -> {
+                    new ConvertTypesToColors(
+                            compiler,
+                            compiler.isDebugLoggingEnabled()
+                                ? SerializationOptions.INCLUDE_DEBUG_INFO
+                                : SerializationOptions.SKIP_DEBUG_INFO)
+                        .process(externs, js);
+
+                    compiler.setLifeCycleStage(
+                        AbstractCompiler.LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
+                  })
           .setFeatureSetForOptimizations()
           .build();
 
