@@ -206,7 +206,7 @@ public class CompilerOptions implements Serializable {
   @Nullable private Path typedAstOutputFile = null;
 
   /** Sets file to output in-progress TypedAST format to. DO NOT USE! */
-  void setTypedAstOutputFile(@Nullable Path file) {
+  public void setTypedAstOutputFile(@Nullable Path file) {
     this.typedAstOutputFile = file;
   }
 
