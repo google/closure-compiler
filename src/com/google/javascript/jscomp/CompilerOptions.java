@@ -366,9 +366,6 @@ public class CompilerOptions implements Serializable {
   /** Checks types on expressions */
   public boolean checkTypes;
 
-  // whether to skip the RemoveTypes pass
-  private boolean shouldUnsafelyPreserveTypesForDebugging;
-
   /** Deprecated. Please use setWarningLevel(DiagnosticGroups.GLOBAL_THIS, level) instead. */
   @Deprecated
   public void setCheckGlobalThisLevel(CheckLevel level) {}
@@ -1295,7 +1292,6 @@ public class CompilerOptions implements Serializable {
     checkSymbols = false;
     checkSuspiciousCode = false;
     checkTypes = false;
-    shouldUnsafelyPreserveTypesForDebugging = false;
     computeFunctionSideEffects = false;
     extraAnnotationNames = null;
 
@@ -2018,22 +2014,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCheckTypes(boolean checkTypes) {
     this.checkTypes = checkTypes;
-  }
-
-  /**
-   * Skips the RemoveTypes pass so that JSTypes may be viewed on the AST post-compilation.
-   *
-   * <p>Not safe to use in general! optimization behavior is not guaranteed to be correct or even
-   * not crash, and this option should eventually be deleted if typechecking is moved to the library
-   * level.
-   */
-  public void setShouldUnsafelyPreserveTypesForDebugging(boolean preserveTypes) {
-    this.shouldUnsafelyPreserveTypesForDebugging = preserveTypes;
-  }
-
-  @Deprecated
-  public boolean shouldUnsafelyPreserveTypesForDebugging() {
-    return this.shouldUnsafelyPreserveTypesForDebugging;
   }
 
   public void setFoldConstants(boolean foldConstants) {

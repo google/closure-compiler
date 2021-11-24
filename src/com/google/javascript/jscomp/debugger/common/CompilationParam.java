@@ -126,19 +126,6 @@ public enum CompilationParam {
     }
   },
 
-  /** Skip the RemoveTypes pass. May cause unexpected changes in optimization output */
-  PRESERVE_TYPES_FOR_DEBUGGING(ParamGroup.ERROR_CHECKING) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setShouldUnsafelyPreserveTypesForDebugging(value);
-    }
-
-    @Override
-    public String getJavaInfo() {
-      return "options.setShouldUnsafelyPreserveTypesForDebugging(true);";
-    }
-  },
-
   /** Run the module rewriting pass before the typechecking pass. */
   REWRITE_MODULES_BEFORE_TYPECHECKING(true, ParamGroup.ERROR_CHECKING) {
     @Override
