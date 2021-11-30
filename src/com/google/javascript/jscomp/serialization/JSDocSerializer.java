@@ -83,6 +83,10 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_PROVIDE_GOOG);
     }
 
+    if (jsdoc.isTypeSummary()) {
+      builder.addKind(JsdocTag.JSDOC_TYPE_SUMMARY_FILE);
+    }
+
     if (jsdoc.isPureOrBreakMyCode()) {
       builder.addKind(JsdocTag.JSDOC_PURE_OR_BREAK_MY_CODE);
     }
@@ -254,6 +258,10 @@ public final class JSDocSerializer {
 
         case JSDOC_PROVIDE_GOOG:
           builder.recordProvideGoog();
+          continue;
+
+        case JSDOC_TYPE_SUMMARY_FILE:
+          builder.recordTypeSummary();
           continue;
 
         case JSDOC_PURE_OR_BREAK_MY_CODE:
