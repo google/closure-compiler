@@ -287,6 +287,27 @@ public final class RewriteOptionalChainingOperatorTest {
                   "                : tmp0.getNum()",
                   "            ]")
             },
+            {
+              "() => {return foo(a?.b)}",
+              lines("() => {let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}")
+            },
+            {
+              "() => foo(a?.b)", //
+              lines("() => { let tmp0; return foo((tmp0 = a) == null ? void 0 : tmp0.b);}")
+            },
+            {
+              "(p = a?.b) => p", //
+              lines("let tmp0; (p = (tmp0 = a) == null ? void 0 : tmp0.b) => { return p;}")
+            },
+            {
+              "(p = a?.b?.c) => p", //
+              lines(
+                  "let tmp0;", //
+                  "let tmp1;",
+                  "(p = (tmp0 = a) == null ? void 0 : (tmp1 = tmp0.b) == null ? void 0 : tmp1.c)"
+                      + " =>",
+                  "{ return p;}")
+            },
           });
     }
 

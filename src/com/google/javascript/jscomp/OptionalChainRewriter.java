@@ -162,6 +162,12 @@ class OptionalChainRewriter {
     }
 
     // Report changes here; chainParent can get deleted below this.
+    // E.g. code `(p = a?.b)=>{ return p}` changes to `let tmp0; (p = (tmp0=a)==null?void
+    // 0:tmp0.b)=>{return p}`
+    // This requires recording scope changes at two places:
+    // 1. the function scope changed from rewriting to HOOK (recorded here),
+    // 2. SCRIPT scope changed due to the `let tmp0` inserted (recorded in `declareTempVarName`
+    // where declarations are created).
     compiler.reportChangeToEnclosingScope(chainParent);
 
     if (chainParent.isDelProp()) {
@@ -321,6 +327,7 @@ class OptionalChainRewriter {
         astFactory.createSingleLetNameDeclaration(tempVarName).srcrefTree(valueNode);
     declarationStatement.getFirstChild().setInferredConstantVar(true);
     declarationStatement.insertBefore(enclosingStatement);
+    compiler.reportChangeToEnclosingScope(declarationStatement);
     if (scope != null) {
       scope.declare(tempVarName, declarationStatement.getFirstChild(), /* input= */ null);
     }
