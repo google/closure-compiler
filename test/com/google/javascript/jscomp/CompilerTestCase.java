@@ -1227,23 +1227,35 @@ public abstract class CompilerTestCase {
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
 
-    Compiler compiler = createCompiler();
+    Compiler compiler = createAndInitializeCompiler(externs, inputs);
     lastCompiler = compiler;
-
-    CompilerOptions options = getOptions();
-
-    if (inputs instanceof FlatSources) {
-      options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
-      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
-    } else {
-      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
-    }
 
     if (this.typeCheckEnabled) {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
     }
 
     testInternal(compiler, inputs, expected, diagnostics, postconditions);
+  }
+
+  /**
+   * Create a fresh Compiler object initialized with the given externs and inputs.
+   *
+   * <p>Important: This method does not affect the return value of `getLastCompiler()`.
+   */
+  protected Compiler createAndInitializeCompiler(Externs externs, Sources inputs) {
+    Compiler compiler = createCompiler();
+
+    CompilerOptions options = getOptions();
+
+    if (inputs instanceof FlatSources) {
+      // TODO(bradfordcsmith): Why do we set this only for the non-module case?
+      //     I extracted this method from testInternal().
+      options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
+      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+    } else {
+      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+    }
+    return compiler;
   }
 
   private static ImmutableList<SourceFile> maybeCreateSources(String name, String srcText) {

@@ -126,6 +126,9 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   @Test
   public void testAst_typeSummaryFiles_areNotSerialized_orSearchedForTypes() {
     enableCreateModuleMap();
+    // SerializeTypedAstPass will drop the type summary files, which live on the externs root, to
+    // avoid serializing them.
+    allowExternsChanges();
 
     Externs closureExterns = externs(new TestExternsBuilder().addClosureExterns().build());
     SourceFile mandatorySource = SourceFile.fromCode("mandatory.js", "/* mandatory source */");

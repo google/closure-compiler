@@ -194,6 +194,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   public void testCollapsePropertiesJsdoc() {
     testSame("const ns = {}; /** @const */ ns.f = (x) => x;");
     testSame("const ns = {}; /** @nocollapse */ ns.f = (x) => x;");
+    // Replace types with colors before serializing for this case.
+    // 1. It's good to have a test case that covers serializing an AST that already has Colors
+    // 2. The test plumbing in this class expects that the AST that was serialized will match the
+    //    AST that was deserialized and both will match the expected code.
+    replaceTypesWithColors();
     test(
         "/** @enum {string} */ const Enum = { A: 'string' };",
         "/** @enum {!JSDocSerializer_placeholder_type} */ const Enum = { A: 'string' };");
@@ -484,7 +489,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   @Test
   public void setsSourceFileOfSyntheticCode() throws IOException {
     ensureLibraryInjected("base");
-    disableCompareSyntheticCode();
 
     Result result =
         this.testAndReturnResult(
@@ -548,15 +552,23 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   private Result testAndReturnResult(Externs externs, Sources code, Expected expected) {
-    InputStream serializedStream = toInputStream(externs, code);
-    Node expectedRoot = this.parseExpectedJs(expected);
+    InputStream serializedStream = toInputStream(externs, code, expected);
+    Compiler serializingCompiler = getLastCompiler();
+
     ImmutableList<SourceFile> externFiles =
-        collectSourceFilesFromScripts(getLastCompiler().getRoot().getFirstChild());
+        collectSourceFilesFromScripts(serializingCompiler.getRoot().getFirstChild());
     ImmutableList<SourceFile> codeFiles =
-        collectSourceFilesFromScripts(getLastCompiler().getRoot().getSecondChild());
+        collectSourceFilesFromScripts(serializingCompiler.getRoot().getSecondChild());
+
+    // NOTE: We need a fresh compiler instance in which to deserialize, because:
+    // 1. This is a better representation of what will happen in production use.
+    // 2. Deserializing expects to start with a compiler which has no Color-related state.
+    //    For example, both serializing and deserializing currently need to call
+    //    `compiler.initRuntimeLibraryTypedAsts()`, which may only be called once.
+    Compiler deserializingCompiler = createAndInitializeCompiler(externs, code);
     DeserializedAst ast =
         TypedAstDeserializer.deserializeFullAst(
-            getLastCompiler(),
+            deserializingCompiler,
             SourceFile.fromCode("syntheticExterns", "", StaticSourceFile.SourceKind.EXTERN),
             ImmutableList.<SourceFile>builder().addAll(externFiles).addAll(codeFiles).build(),
             serializedStream,
@@ -570,7 +582,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     // know what order the sources/externs are expected to be in. The easiest way for us to get that
     // ordering is by looking at the pre-serialized AST, since the Sources/Expected APIs hide the
     // actual file names.
-    for (Node oldExtern = getLastCompiler().getRoot().getFirstFirstChild();
+    for (Node oldExtern = serializingCompiler.getRoot().getFirstFirstChild();
         oldExtern != null;
         oldExtern = oldExtern.getNext()) {
       SourceFile extern = (SourceFile) oldExtern.getStaticSourceFile();
@@ -578,7 +590,7 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
       script.setInputId(new InputId(extern.getName()));
       newExternsRoot.addChildToBack(script);
     }
-    for (Node oldSource = getLastCompiler().getRoot().getSecondChild().getFirstChild();
+    for (Node oldSource = serializingCompiler.getRoot().getSecondChild().getFirstChild();
         oldSource != null;
         oldSource = oldSource.getNext()) {
       SourceFile source = (SourceFile) oldSource.getStaticSourceFile();
@@ -587,8 +599,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
       newSourceRoot.addChildToBack(script);
     }
 
+    Node expectedRoot = this.parseExpectedJs(expected);
     assertNode(newSourceRoot).isEqualIncludingJsDocTo(expectedRoot);
-    new AstValidator(getLastCompiler(), /* validateScriptFeatures= */ true)
+    new AstValidator(deserializingCompiler, /* validateScriptFeatures= */ true)
         .validateRoot(IR.root(newExternsRoot, newSourceRoot));
     consumer = null;
     return new Result(ast, registry, newExternsRoot, newSourceRoot);
@@ -616,10 +629,12 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     }
   }
 
-  InputStream toInputStream(Externs externs, Sources code) {
+  InputStream toInputStream(Externs externs, Sources code, Expected expected) {
     TypedAst[] result = new TypedAst[1];
     consumer = ast -> result[0] = ast;
-    super.testSame(externs, code);
+    // The process of serializing modifies the input code (e.g. removing casts and changing JSDoc)
+    // to the expected result.
+    super.test(externs, code, expected);
     TypedAst.List ast = TypedAst.List.newBuilder().addTypedAsts(result[0]).build();
     return new ByteArrayInputStream(ast.toByteArray());
   }
