@@ -164,8 +164,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    passes.add(injectRuntimeLibrariesForChecks);
-    passes.add(injectRuntimeLibrariesForOptimizations);
+    passes.add(injectRuntimeLibraries);
 
     assertAllOneTimePasses(passes);
     assertValidOrderForChecks(passes);
@@ -348,7 +347,13 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes running before this point should expect to see language features up to ES_2017.
     checks.add(createEmptyPass(PassNames.BEFORE_PRE_TYPECHECK_TRANSPILATION));
 
-    checks.add(injectRuntimeLibrariesForChecks);
+    TranspilationPasses.addTranspilationRuntimeLibraries(checks, options);
+
+    if ((options.rewritePolyfills || options.getIsolatePolyfills()) && !options.checksOnly) {
+      TranspilationPasses.addRewritePolyfillPass(checks);
+    }
+
+    checks.add(injectRuntimeLibraries);
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     if (options.checkTypes || options.inferTypes) {
@@ -507,14 +512,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     addNonTypedAstNormalizationPasses(passes);
-
-    TranspilationPasses.addTranspilationRuntimeLibraries(passes, options);
-
-    if (options.rewritePolyfills || options.getIsolatePolyfills()) {
-      TranspilationPasses.addRewritePolyfillPass(passes);
-    }
-
-    passes.add(injectRuntimeLibrariesForOptimizations);
 
     if (options.closurePass) {
       passes.add(closureProvidesRequires);
@@ -1151,19 +1148,6 @@ public final class DefaultPassConfig extends PassConfig {
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
     assertPassOrder(
         optimizations,
-        TranspilationPasses.rewritePolyfills,
-        processDefinesOptimize,
-        "Polyfill injection must be done before processDefines as some polyfills reference "
-            + "goog.defines.");
-    assertPassOrder(
-        optimizations,
-        TranspilationPasses.injectTranspilationRuntimeLibraries,
-        processDefinesOptimize,
-        "Runtime library injection must be done before processDefines some runtime libraries "
-            + "reference goog.defines.");
-
-    assertPassOrder(
-        optimizations,
         processDefinesOptimize,
         j2clUtilGetDefineRewriterPass,
         "J2CL define re-writing should be done after processDefines since it relies on "
@@ -1414,17 +1398,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
-  private final PassFactory injectRuntimeLibrariesForChecks =
+  private final PassFactory injectRuntimeLibraries =
       PassFactory.builder()
           .setName("InjectRuntimeLibraries")
-          .setInternalFactory((compiler) -> InjectRuntimeLibraries.forChecks(compiler))
-          .setFeatureSetForChecks()
-          .build();
-
-  private final PassFactory injectRuntimeLibrariesForOptimizations =
-      PassFactory.builder()
-          .setName("InjectRuntimeLibraries")
-          .setInternalFactory((compiler) -> InjectRuntimeLibraries.forOptimizations(compiler))
+          .setInternalFactory(InjectRuntimeLibraries::new)
           .setFeatureSetForChecks()
           .build();
 
