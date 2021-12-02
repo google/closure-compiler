@@ -5882,3 +5882,10 @@ FormDataEventInit.prototype.formData;
  * @type {?function(FormDataEvent)}
  */
 HTMLFormElement.prototype.onformdata;
+
+/**
+ * @const {boolean}
+ * Whether the document has opted in to cross-origin isolation.
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-crossoriginisolated
+ */
+Window.prototype.crossOriginIsolated;
