@@ -2327,6 +2327,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return getNativeType(JSTypeNative.NO_TYPE);
       }
 
+      if (rValue != null && rValue.isAssign()) {
+        // Handle nested assignments. For example, tsickle generates code like this:
+        //   let Foo = Foo_1 = tslib_1.decorate(...)
+        return getDeclaredType(info, lValue, rValue.getSecondChild(), null);
+      }
+
       return null;
     }
 

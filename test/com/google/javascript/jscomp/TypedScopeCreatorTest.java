@@ -3336,6 +3336,41 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassExpression_nestedAssignmentToName() {
+    testSame(
+        externs("function somethingElse() {}"),
+        // test a pattern that tsickle generates for decorated classes
+        srcs(
+            lines(
+                "var Foo_1;",
+                "var Foo_2;",
+                "var Foo = Foo_1 = Foo_2 = class Bar {};",
+                "Foo = /** @type {typeof Foo} */ (somethingElse());",
+                "/** @type {!Foo} */ var f;")));
+
+    JSType foo = findNameType("Foo", globalScope);
+    FunctionType bar = (FunctionType) findNameType("Bar", globalScope);
+    assertThat(globalScope.getVar("Foo")).hasJSTypeThat().isEqualTo(bar);
+    assertType(foo).isEqualTo(bar);
+    assertThat(findNameType("f", globalScope)).isEqualTo(bar.getInstanceType());
+  }
+
+  @Test
+  public void testClassExpression_nestedAssignmentToQName() {
+    testSame(
+        srcs(
+            lines(
+                "var Foo_1;",
+                "const ns = {};",
+                "/** @const */",
+                "ns.Foo = Foo_1 = class Bar {};",
+                "/** @type {!ns.Foo} */ var f;")));
+
+    FunctionType bar = (FunctionType) findNameType("Bar", globalScope);
+    assertThat(findNameType("f", globalScope)).isEqualTo(bar.getInstanceType());
+  }
+
+  @Test
   public void testClassExpressionWithMethod() {
     testSame(
         lines(
