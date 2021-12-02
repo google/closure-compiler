@@ -51,13 +51,9 @@ final class TypedAstSerializer {
 
   private TypeSerializer typeSerializer = null;
 
-  TypedAstSerializer(AbstractCompiler compiler) {
+  TypedAstSerializer(AbstractCompiler compiler, SerializationOptions serializationMode) {
     this.compiler = compiler;
-    this.serializationMode =
-        this.compiler.isDebugLoggingEnabled()
-            ? SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS
-            : SerializationOptions.SKIP_DEBUG_INFO;
-    ;
+    this.serializationMode = serializationMode;
   }
 
   /** Transforms the given compiler AST root nodes into into a serialized TypedAst object */

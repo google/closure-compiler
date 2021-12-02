@@ -102,7 +102,9 @@ public class TypedAstSerializerTest extends CompilerTestCase {
         compiler.reportChangeToChangeScope(externsScript);
       }
 
-      final TypedAstSerializer typedAstSerializer = new TypedAstSerializer(compiler);
+      final TypedAstSerializer typedAstSerializer =
+          new TypedAstSerializer(
+              compiler, SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS);
       testResult = typedAstSerializer.serializeRoots(externs, root);
     };
   }

@@ -68,7 +68,11 @@ public final class SerializeTypedAstPass implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     new RemoveCastNodes(compiler).process(externs, root);
-    TypedAstSerializer serializer = new TypedAstSerializer(this.compiler);
+    SerializationOptions serializationMode =
+        this.compiler.isDebugLoggingEnabled()
+            ? SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS
+            : SerializationOptions.SKIP_DEBUG_INFO;
+    TypedAstSerializer serializer = new TypedAstSerializer(this.compiler, serializationMode);
     TypedAst ast = serializer.serializeRoots(externs, root);
     consumer.accept(ast);
   }
