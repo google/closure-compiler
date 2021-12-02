@@ -3646,45 +3646,48 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         });
   }
 
-  @GwtIncompatible("ObjectInputStream")
+  @GwtIncompatible("ClassNotFoundException")
   public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
 
-    CompilerState compilerState =
-        runInCompilerThread(
-            () -> {
-              Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
-              logger.fine("Deserializing the CompilerState");
-              try {
-                // Do not close the input stream, caller is responsible for closing it.
-                return (CompilerState) new ObjectInputStream(inputStream).readObject();
-              } finally {
-                logger.fine("Finished deserializing CompilerState");
-                stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
-              }
-            });
+    runInCompilerThread(
+        () -> {
+          Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
+          logger.fine("Deserializing the CompilerState");
+          try {
+            deserializeCompilerState(inputStream);
+            return null;
+          } finally {
+            logger.fine("Finished deserializing CompilerState");
+            stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
+          }
+        });
+
+    if (tracker != null) {
+      tracker.updateAfterDeserialize(jsRoot);
+    }
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  // this method must be called from within a "compiler thread" with a larger stack
+  private void deserializeCompilerState(InputStream inputStream)
+      throws IOException, ClassNotFoundException {
+    // Do not close the input stream, caller is responsible for closing it.
+    CompilerState compilerState = (CompilerState) new ObjectInputStream(inputStream).readObject();
 
     TypedAstDeserializer.DeserializedAst deserializedAst =
-        runInCompilerThread(
-            () -> {
-              Tracer tracer = newTracer("deserializeTypedAst");
-              try {
-                return TypedAstDeserializer.deserializeFullAst(
-                    this,
-                    SYNTHETIC_EXTERNS_FILE,
-                    // pass an empty list instead of any existing SourceFile objects.
-                    // TODO(lharker): we could passing existing SourceFile objects to
-                    // reuse if we could guarantee that .init/.initModules was always called before
-                    // .restoreState. that would remove the need for
-                    // TypedAstDeserializer.DeserializedAst::getAllFiles
-                    ImmutableList.of(),
-                    inputStream,
-                    compilerState.typeCheckingHasRun);
-              } finally {
-                stopTracer(tracer, "deserializeTypedAst");
-              }
-            });
+        TypedAstDeserializer.deserializeFullAst(
+            this,
+            SYNTHETIC_EXTERNS_FILE,
+            // pass an empty list instead of any existing SourceFile objects.
+            // TODO(lharker): we could passing existing SourceFile objects to
+            // reuse if we could guarantee that .init/.initModules was always called before
+            // .restoreState. that would remove the need for
+            // TypedAstDeserializer.DeserializedAst::getAllFiles
+            ImmutableList.of(),
+            inputStream,
+            compilerState.typeCheckingHasRun);
 
     featureSet = compilerState.featureSet;
     scriptNodeByFilename.clear();
@@ -3767,10 +3770,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 .getFirstChild()
                 .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript)
             : null;
-
-    if (tracker != null) {
-      tracker.updateAfterDeserialize(jsRoot);
-    }
   }
 
   /** Returns the module type for the provided namespace. */
