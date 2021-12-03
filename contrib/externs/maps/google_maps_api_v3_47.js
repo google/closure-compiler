@@ -113,7 +113,7 @@ google.maps.CameraOptions.prototype.zoom;
 /**
  * A circle on the Earth&#39;s surface; also known as a &quot;spherical
  * cap&quot;.
- * @param {google.maps.CircleOptions=} opts
+ * @param {(?google.maps.CircleLiteral|?google.maps.CircleOptions)=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -4362,7 +4362,8 @@ google.maps.Map.prototype.setStreetView = function(panorama) {};
 google.maps.Map.prototype.setTilt = function(tilt) {};
 
 /**
- * @param {number} zoom
+ * Sets the zoom of the map.
+ * @param {number} zoom Larger zoom values correspond to a higher resolution.
  * @return {undefined}
  */
 google.maps.Map.prototype.setZoom = function(zoom) {};
@@ -4397,7 +4398,7 @@ google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(
 /**
  * Computes the pixel coordinates of the given geographical location in the
  * map&#39;s container element.
- * @param {?google.maps.LatLng} latLng
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @return {?google.maps.Point}
  */
 google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(
@@ -4406,7 +4407,7 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(
 /**
  * Computes the pixel coordinates of the given geographical location in the DOM
  * element that holds the draggable map.
- * @param {?google.maps.LatLng} latLng
+ * @param {?google.maps.LatLng|?google.maps.LatLngLiteral} latLng
  * @return {?google.maps.Point}
  */
 google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
@@ -4634,7 +4635,7 @@ google.maps.MapOptions.prototype.mapTypeId;
 /**
  * The maximum zoom level which will be displayed on the map. If omitted, or set
  * to <code>null</code>, the maximum zoom from the current map type is used
- * instead. Valid values: Integers between zero, and up to the supported <a
+ * instead. Valid zoom values are numbers from zero up to the supported <a
  * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
  * zoom level</a>.
  * @type {?number|undefined}
@@ -4644,7 +4645,7 @@ google.maps.MapOptions.prototype.maxZoom;
 /**
  * The minimum zoom level which will be displayed on the map. If omitted, or set
  * to <code>null</code>, the minimum zoom from the current map type is used
- * instead. Valid values: Integers between zero, and up to the supported <a
+ * instead. Valid zoom values are numbers from zero up to the supported <a
  * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
  * zoom level</a>.
  * @type {?number|undefined}
@@ -4776,10 +4777,10 @@ google.maps.MapOptions.prototype.styles;
 google.maps.MapOptions.prototype.tilt;
 
 /**
- * The initial Map zoom level. Valid values: Integers between zero, and up to
- * the supported <a
+ * The initial Map zoom level. Valid zoom values are numbers from zero up to the
+ * supported <a
  * href="https://developers.google.com/maps/documentation/javascript/maxzoom">maximum
- * zoom level</a>.
+ * zoom level</a>. Larger zoom values correspond to a higher resolution.
  * @type {?number|undefined}
  */
 google.maps.MapOptions.prototype.zoom;
@@ -5089,7 +5090,7 @@ google.maps.Marker = function(opts) {};
 
 /**
  * Get the currently running animation.
- * @return {?google.maps.Animation}
+ * @return {?google.maps.Animation|undefined}
  */
 google.maps.Marker.prototype.getAnimation = function() {};
 
@@ -5101,7 +5102,7 @@ google.maps.Marker.prototype.getClickable = function() {};
 
 /**
  * Get the mouse cursor type shown on hover.
- * @return {string}
+ * @return {?string|undefined}
  */
 google.maps.Marker.prototype.getCursor = function() {};
 
@@ -5114,14 +5115,14 @@ google.maps.Marker.prototype.getDraggable = function() {};
 /**
  * Get the icon of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.icon}.
- * @return {string|google.maps.Icon|google.maps.Symbol}
+ * @return {string|?google.maps.Icon|?google.maps.Symbol|undefined}
  */
 google.maps.Marker.prototype.getIcon = function() {};
 
 /**
  * Get the label of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.label}.
- * @return {google.maps.MarkerLabel}
+ * @return {?google.maps.MarkerLabel|undefined}
  */
 google.maps.Marker.prototype.getLabel = function() {};
 
@@ -5133,7 +5134,7 @@ google.maps.Marker.prototype.getMap = function() {};
 
 /**
  * Get the opacity of the {@link google.maps.Marker}.
- * @return {number} A number between 0.0 and 1.0.
+ * @return {?number|undefined} A number between 0.0 and 1.0.
  */
 google.maps.Marker.prototype.getOpacity = function() {};
 
@@ -5147,14 +5148,14 @@ google.maps.Marker.prototype.getPosition = function() {};
  * Get the shape of the {@link google.maps.Marker} used for interaction.
  * See {@link google.maps.MarkerOptions.shape} and {@link
  * google.maps.MarkerShape}.
- * @return {google.maps.MarkerShape}
+ * @return {?google.maps.MarkerShape|undefined}
  */
 google.maps.Marker.prototype.getShape = function() {};
 
 /**
  * Get the title of the {@link google.maps.Marker} tooltip. See {@link
  * google.maps.MarkerOptions.title}.
- * @return {string}
+ * @return {?string|undefined}
  */
 google.maps.Marker.prototype.getTitle = function() {};
 
@@ -5167,7 +5168,7 @@ google.maps.Marker.prototype.getVisible = function() {};
 /**
  * Get the zIndex of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.zIndex}.
- * @return {number} zIndex of the Marker.
+ * @return {?number|undefined} zIndex of the Marker.
  */
 google.maps.Marker.prototype.getZIndex = function() {};
 
@@ -5176,7 +5177,7 @@ google.maps.Marker.prototype.getZIndex = function() {};
  * supported animations are: {@link google.maps.Animation.BOUNCE}, {@link
  * google.maps.Animation.DROP}. Passing in <code>null</code> will cause any
  * animation to stop.
- * @param {?google.maps.Animation} animation The animation to play.
+ * @param {?google.maps.Animation=} animation The animation to play.
  * @return {undefined}
  */
 google.maps.Marker.prototype.setAnimation = function(animation) {};
@@ -5190,7 +5191,7 @@ google.maps.Marker.prototype.setClickable = function(flag) {};
 
 /**
  * Set the mouse cursor type shown on hover.
- * @param {string} cursor Mouse cursor type.
+ * @param {?string=} cursor Mouse cursor type.
  * @return {undefined}
  */
 google.maps.Marker.prototype.setCursor = function(cursor) {};
@@ -5205,7 +5206,7 @@ google.maps.Marker.prototype.setDraggable = function(flag) {};
 /**
  * Set the icon for the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.icon}.
- * @param {string|google.maps.Icon|google.maps.Symbol} icon
+ * @param {(string|?google.maps.Icon|?google.maps.Symbol)=} icon
  * @return {undefined}
  */
 google.maps.Marker.prototype.setIcon = function(icon) {};
@@ -5213,7 +5214,7 @@ google.maps.Marker.prototype.setIcon = function(icon) {};
 /**
  * Set the label for the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.label}.
- * @param {string|google.maps.MarkerLabel} label The label can either be a
+ * @param {(string|?google.maps.MarkerLabel)=} label The label can either be a
  *     character string or a {@link google.maps.MarkerLabel} object.
  * @return {undefined}
  */
@@ -5229,7 +5230,7 @@ google.maps.Marker.prototype.setMap = function(map) {};
 
 /**
  * Set the opacity of the {@link google.maps.Marker}.
- * @param {number} opacity A number between 0.0, transparent, and 1.0, opaque.
+ * @param {?number=} opacity A number between 0.0, transparent, and 1.0, opaque.
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOpacity = function(opacity) {};
@@ -5243,8 +5244,8 @@ google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
  * Set the postition for the {@link google.maps.Marker}.
- * @param {?google.maps.LatLng|?google.maps.LatLngLiteral|undefined} latlng The
- *     new position.
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} latlng The new
+ *     position.
  * @return {undefined}
  */
 google.maps.Marker.prototype.setPosition = function(latlng) {};
@@ -5253,7 +5254,7 @@ google.maps.Marker.prototype.setPosition = function(latlng) {};
  * Set the shape of the {@link google.maps.Marker} used for interaction.
  * See {@link google.maps.MarkerOptions.shape} and {@link
  * google.maps.MarkerShape}.
- * @param {google.maps.MarkerShape} shape
+ * @param {?google.maps.MarkerShape=} shape
  * @return {undefined}
  */
 google.maps.Marker.prototype.setShape = function(shape) {};
@@ -5261,7 +5262,7 @@ google.maps.Marker.prototype.setShape = function(shape) {};
 /**
  * Set the title of the {@link google.maps.Marker} tooltip. See {@link
  * google.maps.MarkerOptions.title}.
- * @param {string} title
+ * @param {?string=} title
  * @return {undefined}
  */
 google.maps.Marker.prototype.setTitle = function(title) {};
@@ -5276,7 +5277,7 @@ google.maps.Marker.prototype.setVisible = function(visible) {};
 /**
  * Set the zIndex of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.zIndex}.
- * @param {number} zIndex
+ * @param {?number=} zIndex
  * @return {undefined}
  */
 google.maps.Marker.prototype.setZIndex = function(zIndex) {};
@@ -6294,7 +6295,7 @@ google.maps.Projection = function() {};
  * Maps API calls this method when it needs to plot locations on screen.
  * <code>Projection</code> objects must implement this method, but may return
  * <code>null</code> if the projection cannot calculate the <code>Point</code>.
- * @param {!google.maps.LatLng} latLng
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @param {!google.maps.Point=} point
  * @return {?google.maps.Point}
  */
