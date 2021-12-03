@@ -500,6 +500,30 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_property_moduleImportsModule() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.module('some.foo');", "exports.one = 1;"),
+        lines("goog.module('some.bar');", "const foo = goog.require('some.foo');", "foo.one;"),
+        "one");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_property_moduleImportsProvide() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.provide('some.foo');", "some.foo.one = 1;"),
+        lines("goog.module('some.bar');", "const foo = goog.require('some.foo');", "foo.one;"),
+        "one");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_property_provideImportsProvide() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.provide('some.foo');", "some.foo.one = 1;"),
+        lines("goog.provide('some.bar');", "goog.require('some.foo');", "some.foo.one;"),
+        "one");
+  }
+
+  @Test
   public void testClassPropertiesDisableModuleRewriting() {
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
     options.setEnableModuleRewriting(false);
@@ -1602,6 +1626,9 @@ public final class SymbolTableTest {
 
     Map<String, Integer> refsPerFile = new HashMap<>();
     for (Reference reference : table.getReferenceList(getGlobalVar(table, "foo"))) {
+      if (!reference.getNode().isIndexable()) {
+        continue;
+      }
       String file = reference.getSourceFile().getName();
       refsPerFile.put(file, refsPerFile.getOrDefault(file, 0) + 1);
     }

@@ -1048,7 +1048,7 @@ public final class SymbolTable {
    * represented by the same symbol.
    */
   void fillPropertySymbols(Node externs, Node root) {
-    (new PropertyRefCollector()).process(externs, root);
+    new PropertyRefCollector().process(externs, root);
   }
 
   /** Index JSDocInfo. */
@@ -1240,7 +1240,7 @@ public final class SymbolTable {
 
   /** Fill in references to "this" variables. */
   void fillThisReferences(Node externs, Node root) {
-    (new ThisRefCollector()).process(externs, root);
+    new ThisRefCollector().process(externs, root);
   }
 
   /** Fill in references to "super" variables. */
@@ -1924,7 +1924,34 @@ public final class SymbolTable {
             defined = true;
           }
         }
-        return defined;
+        if (defined) {
+          return true;
+        }
+      }
+      // Handle cases like accessing properties on a imported module.
+      // const foo = goog.require('some.module.foo');
+      // foo.doSomething();
+      // here n is foo, propName is doSomething and owner is module type.
+      if (owner.isObjectType() && owner.toMaybeObjectType() != null) {
+        Node propNodeDecl = owner.assertObjectType().getPropertyNode(propName);
+        // There is no handy way to find symbol object the given property node. So we do
+        // property node => namespace node => namespace symbol => property symbol.
+        if (propNodeDecl != null && propNodeDecl.isGetProp()) {
+          Node namespace = propNodeDecl.getFirstChild();
+          Symbol namespaceSym = getSymbolForName(namespace, namespace.getQualifiedName());
+          if (namespaceSym != null && namespaceSym.getPropertyScope() != null) {
+            Symbol propSym = namespaceSym.getPropertyScope().getSlot(propName);
+            if (propSym != null && propSym.getDeclarationNode() != n) {
+              propSym.defineReferenceAt(n);
+              return true;
+            }
+          }
+        }
+        Symbol symbol = getSymbolForName(propNodeDecl, propName);
+        if (symbol != null) {
+          symbol.defineReferenceAt(n);
+          return true;
+        }
       }
       return false;
     }
