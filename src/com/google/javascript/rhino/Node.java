@@ -545,7 +545,12 @@ public class Node {
   }
 
   public final void setToken(Token token) {
+    Token oldToken = this.token;
     this.token = token;
+    checkState(
+        !getIsParenthesized() || IR.mayBeExpression(this),
+        "parenthesized node is no longer an expression: %s was %s",
+        this, oldToken);
   }
 
   public final boolean hasChildren() {
@@ -1038,7 +1043,7 @@ public class Node {
       checkState(isFunction());
     }
     if (propSet.contains(NodeProperty.IS_PARENTHESIZED)) {
-      checkState(IR.mayBeExpression(this));
+      checkState(IR.mayBeExpression(this), "not an expression: %s", this);
     }
     if (propSet.contains(NodeProperty.SYNTHETIC)) {
       checkState(token == Token.BLOCK);
