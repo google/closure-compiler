@@ -237,7 +237,10 @@ public final class JSTypeRegistry {
     this.resolver = JSTypeResolver.create(this);
     this.nativeTypes = new JSType[JSTypeNative.values().length];
 
-    resetForTypeCheck();
+    try (JSTypeResolver.Closer closer = this.resolver.openForDefinition()) {
+      initializeBuiltInTypes();
+      initializeRegistry();
+    }
   }
 
   private JSType getSentinelObjectLiteral() {
@@ -308,19 +311,6 @@ public final class JSTypeRegistry {
 
   public ErrorReporter getErrorReporter() {
     return reporter;
-  }
-
-  /**
-   * Reset to run the TypeCheck pass.
-   */
-  public void resetForTypeCheck() {
-    try (JSTypeResolver.Closer closer = this.resolver.openForDefinition()) {
-      typesIndexedByProperty.clear();
-      eachRefTypeIndexedByProperty.clear();
-      initializeBuiltInTypes();
-      scopedNameTable.clear();
-      initializeRegistry();
-    }
   }
 
   private void initializeBuiltInTypes() {
@@ -1054,15 +1044,6 @@ public final class JSTypeRegistry {
     scopedNameTable.put(getRootNodeForScope(scope), name, type);
   }
 
-  /**
-   * Removes a type by name.
-   *
-   * @param name The name string.
-   */
-  public void removeType(StaticScope scope, String name) {
-    scopedNameTable.remove(getRootNodeForScope(getLookupScope(scope, name)), name);
-  }
-
   private void registerNativeType(JSTypeNative typeId, JSType type) {
     nativeTypes[typeId.ordinal()] = type;
   }
@@ -1128,23 +1109,6 @@ public final class JSTypeRegistry {
       for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
         addReferenceTypeIndexedByProperty(propertyName, alternate);
       }
-    }
-  }
-
-  /**
-   * Removes the index's reference to a property on the given type (if it is
-   * currently registered). If the property is not registered on the type yet,
-   * this method will not change internal state.
-   *
-   * @param propertyName the name of the property to unregister
-   * @param type the type to unregister the property on.
-   */
-  public void unregisterPropertyOnType(String propertyName, JSType type) {
-    // TODO(bashir): typesIndexedByProperty should also be updated!
-    Map<String, ObjectType> typeSet =
-        eachRefTypeIndexedByProperty.get(propertyName);
-    if (typeSet != null) {
-      typeSet.remove(type.toObjectType().getReferenceName());
     }
   }
 
@@ -1305,14 +1269,6 @@ public final class JSTypeRegistry {
 
     registerForScope(scope, type, name);
     return true;
-  }
-
-  /**
-   * Overrides a declared global type name. Throws an exception if this type name hasn't been
-   * declared yet.
-   */
-  public void overwriteDeclaredType(String name, JSType type) {
-    overwriteDeclaredType(null, name, type);
   }
 
   /**
@@ -1600,11 +1556,6 @@ public final class JSTypeRegistry {
       builder.addAlternate(getNativeType(type));
     }
     return builder.build();
-  }
-
-  /** Creates an empty parameter list node. */
-  Node createEmptyParams() {
-    return new Node(Token.PARAM_LIST);
   }
 
   /**
