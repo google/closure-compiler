@@ -241,7 +241,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    * Defer attachment of types to nodes until all type names have been resolved. Then, we can
    * resolve the type and attach it.
    */
-  private class DeferredSetType {
+  private static class DeferredSetType {
     final Node node;
     final JSType type;
 
@@ -252,8 +252,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       this.type = type;
     }
 
-    void resolve() {
-      node.setJSType(type.resolve(typeParsingErrorReporter));
+    void resolve(ErrorReporter errorReporter) {
+      node.setJSType(type.resolve(errorReporter));
     }
   }
 
@@ -608,7 +608,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   void undoTypeAliasChains() {
     // Resolve types and attach them to nodes.
     for (DeferredSetType deferred : deferredSetTypes) {
-      deferred.resolve();
+      deferred.resolve(typeParsingErrorReporter);
     }
 
     // Resolve types and attach them to scope slots.
