@@ -138,19 +138,6 @@ class VariableReferenceCheck implements CompilerPass {
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-      // TODO(johnlenz): do this only for ides
-      if (t.inGlobalScope()) {
-        // Update global scope reference lists when we are done with it.
-        compiler.updateGlobalVarReferences(
-            ((ReferenceCollector.ReferenceMapWrapper) referenceMap).getRawReferenceMap(),
-            t.getScopeRoot());
-        referenceMap = compiler.getGlobalVarReferences();
-      }
-
-      // TODO(bashir) In hot-swap version this means that for global scope we
-      // only go through all global variables accessed in the modified file not
-      // all global variables. This should be fixed.
-
       // Check all vars after finishing a scope
       Scope scope = t.getScope();
       if (scope.isFunctionBlockScope()) {

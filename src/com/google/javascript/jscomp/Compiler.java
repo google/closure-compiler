@@ -277,8 +277,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final PrintStream outStream;
 
-  private GlobalVarReferenceMap globalRefMap = null;
-
   private volatile double progress = 0.0;
   private String lastPassName;
 
@@ -3292,20 +3290,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   boolean runJ2clPasses() {
     return runJ2clPasses;
-  }
-
-  @Override
-  void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch, Node collectionRoot) {
-    checkState(collectionRoot.isScript() || collectionRoot.isRoot());
-    if (globalRefMap == null) {
-      globalRefMap = new GlobalVarReferenceMap(getInputsInOrder(), getExternsInOrder());
-    }
-    globalRefMap.updateGlobalVarReferences(refMapPatch, collectionRoot);
-  }
-
-  @Override
-  GlobalVarReferenceMap getGlobalVarReferences() {
-    return globalRefMap;
   }
 
   @Override

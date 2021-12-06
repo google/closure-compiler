@@ -474,30 +474,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   abstract void setFeatureSet(FeatureSet fs);
 
-  // TODO(bashir) It would be good to extract a single dumb data object with
-  // only getters and setters that keeps all global information we keep for a
-  // compiler instance. Then move some of the functions of this class there.
-
-  /**
-   * Updates the list of references for variables in global scope.
-   *
-   * @param refMapPatch Maps each variable to all of its references; may contain references
-   *     collected from the whole AST or only a SCRIPT sub-tree.
-   * @param collectionRoot The root of sub-tree in which reference collection has been done. This
-   *     should either be a SCRIPT node (if collection is done on a single file) or it is assumed
-   *     that collection is on full AST.
-   */
-  abstract void updateGlobalVarReferences(
-      Map<Var, ReferenceCollection> refMapPatch, Node collectionRoot);
-
-  /**
-   * This can be used to get the list of all references to all global variables based on all
-   * previous calls to {@code updateGlobalVarReferences}.
-   *
-   * @return The reference collection map associated to global scope variable.
-   */
-  abstract GlobalVarReferenceMap getGlobalVarReferences();
-
   /**
    * @return a CompilerInput that can be modified to add additional extern definitions to the
    *     beginning of the externs AST
