@@ -985,10 +985,7 @@ public final class SymbolTable {
     }
 
     // Constructors/prototypes
-    // Should this check for
-    // (type.isNominalConstructor() || type.isFunctionPrototypeType())
-    // ?
-    if (sym.getName().equals(type.getReferenceName())) {
+    if (type.isNominalConstructorOrInterface() || type.isFunctionPrototypeType()) {
       return true;
     }
     if (type.isEnumType()) {

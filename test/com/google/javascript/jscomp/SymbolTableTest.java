@@ -201,24 +201,6 @@ public final class SymbolTableTest {
     assertThat(refs).hasSize(2);
   }
 
-  @Test
-  public void testLocalThisReferences2() {
-    SymbolTable table =
-        createSymbolTable(
-            lines(
-                "/** @constructor */ function F() {}",
-                "F.prototype.baz = function() { this.foo = 3; this.bar = 5; };"));
-
-    Symbol baz = getGlobalVar(table, "F.prototype.baz");
-    assertThat(baz).isNotNull();
-
-    Symbol t = table.getParameterInFunction(baz, "this");
-    assertThat(t).isNotNull();
-
-    List<Reference> refs = table.getReferenceList(t);
-    assertThat(refs).hasSize(2);
-  }
-
   // No 'this' reference is created for empty functions.
   @Test
   public void testLocalThisReferences3() {
@@ -521,6 +503,17 @@ public final class SymbolTableTest {
         lines("goog.provide('some.foo');", "some.foo.one = 1;"),
         lines("goog.provide('some.bar');", "goog.require('some.foo');", "some.foo.one;"),
         "one");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_class() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.module('some.foo');", "exports.Foo = class { doFoo() {} };"),
+        lines(
+            "goog.module('some.bar');",
+            "const {Foo} = goog.require('some.foo');",
+            "new Foo().doFoo();"),
+        "doFoo");
   }
 
   @Test
@@ -1263,7 +1256,7 @@ public final class SymbolTableTest {
     assertThat(fooAlias).isNotNull();
     assertThat(bar).isNotNull();
     assertThat(baz).isNotNull();
-    assertThat(bazAlias).isNull();
+    assertThat(baz).isEqualTo(bazAlias);
 
     Symbol barScope = table.getSymbolForScope(table.getScope(bar));
     assertThat(barScope).isNotNull();
