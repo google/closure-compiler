@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.HamtPMap;
@@ -77,7 +78,6 @@ import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -213,11 +213,9 @@ public final class JSTypeRegistry {
   private final Set<String> propertiesOfSupertypesInUnions = new HashSet<>();
   private final Set<String> droppedPropertiesOfUnions = new HashSet<>();
 
-  // A map of properties to each reference type on which those
-  // properties have been declared. Each type has a unique name used
-  // for de-duping.
-  private transient Map<String, Map<String, ObjectType>> eachRefTypeIndexedByProperty =
-      new LinkedHashMap<>();
+  // A map of properties to each reference type on which those properties have been declared.
+  private final SetMultimap<String, ObjectType> eachRefTypeIndexedByProperty =
+      MultimapBuilder.SetMultimapBuilder.hashKeys().linkedHashSetValues().build();
 
   // A single empty TemplateTypeMap, which can be safely reused in cases where
   // there are no template types.
@@ -1098,10 +1096,8 @@ public final class JSTypeRegistry {
   private void addReferenceTypeIndexedByProperty(
       String propertyName, JSType type) {
     if (type instanceof ObjectType && ((ObjectType) type).hasReferenceName()) {
-      Map<String, ObjectType> typeSet =
-          eachRefTypeIndexedByProperty.computeIfAbsent(propertyName, k -> new LinkedHashMap<>());
       ObjectType objType = (ObjectType) type;
-      typeSet.put(objType.getReferenceName(), objType);
+      eachRefTypeIndexedByProperty.put(propertyName, objType);
     } else if (type instanceof NamedType) {
       addReferenceTypeIndexedByProperty(
           propertyName, ((NamedType) type).getReferencedType());
@@ -1199,7 +1195,7 @@ public final class JSTypeRegistry {
   public Iterable<ObjectType> getEachReferenceTypeWithProperty(
       String propertyName) {
     if (eachRefTypeIndexedByProperty.containsKey(propertyName)) {
-      return eachRefTypeIndexedByProperty.get(propertyName).values();
+      return eachRefTypeIndexedByProperty.get(propertyName);
     } else {
       return ImmutableList.of();
     }
