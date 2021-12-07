@@ -40,9 +40,11 @@ public final class ValidityCheckTest extends CompilerTestCase {
     otherPass = null;
   }
 
-  @Override protected CompilerPass getProcessor(final Compiler compiler) {
+  @Override
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
+      @Override
+      public void process(Node externs, Node root) {
         otherPass.process(externs, root);
         (new ValidityCheck(compiler)).process(externs, root);
       }
@@ -51,15 +53,18 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
   @Test
   public void testUnnormalizeNodeTypes() {
-    otherPass = new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
-        AbstractCompiler compiler = getLastCompiler();
-        Node script = root.getFirstChild();
-        root.getFirstChild().addChildToBack(
-              new Node(Token.IF, new Node(Token.TRUE), new Node(Token.EMPTY)));
-        compiler.reportChangeToEnclosingScope(script);
-      }
-    };
+    otherPass =
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            AbstractCompiler compiler = getLastCompiler();
+            Node script = root.getFirstChild();
+            final Node ifNode = new Node(Token.IF, new Node(Token.TRUE), new Node(Token.EMPTY));
+            ifNode.srcrefTree(script);
+            root.getFirstChild().addChildToBack(ifNode);
+            compiler.reportChangeToEnclosingScope(script);
+          }
+        };
 
     try {
       test("var x = 3;", "var x=3;0;0");
@@ -71,11 +76,13 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
   @Test
   public void testUnnormalized() {
-    otherPass = new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
-        getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
-      }
-    };
+    otherPass =
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
+          }
+        };
 
     try {
       testSame("while(1){}");
@@ -87,17 +94,20 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
   @Test
   public void testConstantAnnotationMismatch() {
-    otherPass = new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
-        AbstractCompiler compiler = getLastCompiler();
-        Node script = root.getFirstChild();
-        Node name = Node.newString(Token.NAME, "x");
-        name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        script.addChildToBack(new Node(Token.EXPR_RESULT, name));
-        compiler.reportChangeToEnclosingScope(script);
-        compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-      }
-    };
+    otherPass =
+        new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            AbstractCompiler compiler = getLastCompiler();
+            Node script = root.getFirstChild();
+            Node name = Node.newString(Token.NAME, "x");
+            name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+            final Node exprResult = new Node(Token.EXPR_RESULT, name).srcrefTree(script);
+            script.addChildToBack(exprResult);
+            compiler.reportChangeToEnclosingScope(script);
+            compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+          }
+        };
 
     try {
       test("var x;", "var x; x;");

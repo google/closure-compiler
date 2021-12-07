@@ -86,10 +86,10 @@ public class RewritePolyfills implements CompilerPass {
       // into a library method injected in this pass. Adding an externs declaration of that library
       // method prevents it from being dead-code-elimiated before polyfill isolation runs.
       Node jscompLookupMethodDecl = IR.var(IR.name("$jscomp$lookupPolyfilledValue"));
-      compiler
-          .getSynthesizedExternsInput()
-          .getAstRoot(compiler)
-          .addChildToBack(jscompLookupMethodDecl);
+      final Node synthesizedExternsAstRoot =
+          compiler.getSynthesizedExternsInput().getAstRoot(compiler);
+      jscompLookupMethodDecl.srcrefTree(synthesizedExternsAstRoot);
+      synthesizedExternsAstRoot.addChildToBack(jscompLookupMethodDecl);
       compiler.reportChangeToEnclosingScope(jscompLookupMethodDecl);
     }
 

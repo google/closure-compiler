@@ -64,6 +64,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -545,12 +546,7 @@ public class Node {
   }
 
   public final void setToken(Token token) {
-    Token oldToken = this.token;
     this.token = token;
-    checkState(
-        !getIsParenthesized() || IR.mayBeExpression(this),
-        "parenthesized node is no longer an expression: %s was %s",
-        this, oldToken);
   }
 
   public final boolean hasChildren() {
@@ -935,12 +931,105 @@ public class Node {
   }
 
   /**
+   * Checks for invalid or missing properties and feeds error messages for any violations to the
+   * given `Consumer`.
+   *
+   * <p>We use a `Consumer` to avoid the cost of building a usually-empty list every time this
+   * method is called.
+   */
+  public void validateProperties(Consumer<String> violationMessageConsumer) {
+    if (propListHead == null) {
+      // TODO(bradfordcsmith): Fix the bugs that prevent enabling this validation.
+      //
+      // In particular:
+      //
+      // 1. CoverageInstrumentationPass and BranchCoverageInstrumentationCallback
+      // create a bunch of nodes without valid source reference info, and it isn't obvious what
+      // source reference info they should be using.
+      //
+      // 2. b/186056977 covers an issue blocking correcting a violation in `VarCheck`
+      //
+      // 3. Fixing a violation in DeclaredGlobalExternsOnWindow makes an unexpected change to
+      //    the pre-computed TypedAst for the runtime libraries.
+      //
+      // if (token != Token.ROOT) {
+      //   violationMessageConsumer.accept("non-ROOT has no properties");
+      // }
+      return;
+    }
+
+    if (token == Token.ROOT) {
+      // ROOT tokens should never have properties
+      violationMessageConsumer.accept("ROOT has properties");
+    }
+
+    // Used to look up the Prop based on the ordinal stored in the PropListItem.
+    final Prop[] propValues = Prop.values();
+    for (PropListItem propListItem = propListHead;
+        propListItem != null;
+        propListItem = propListItem.next) {
+      final Prop prop = propValues[propListItem.propType];
+      // Catch it if the definition of Prop ever changes so that the ordinals don't line up.
+      checkState(prop.ordinal() == propListItem.propType, "ordinal doesn't match: %s", prop);
+
+      // TODO(bradfordcsmith): This is not yet an exhaustive list of validations.
+      // Other validations should be added as it is found useful to have them.
+      // Some property validation is done independently in `AstValidator` and could possibly be
+      // moved here.
+      //
+      // This method was added in response to a bug that created an invalid IS_PARENTHESIZED
+      // property that was discovered by a check in `deserializeProperties()`, so initially
+      // this method was created to cover the checks previously done there.
+      switch (prop) {
+        case IS_PARENTHESIZED:
+          if (!IR.mayBeExpression(this)) {
+            violationMessageConsumer.accept("non-expression is parenthesized");
+          }
+          break;
+        case ARROW_FN:
+          if (!isFunction()) {
+            violationMessageConsumer.accept("invalid ARROW_FN prop");
+          }
+          break;
+        case ASYNC_FN:
+          if (!isFunction()) {
+            violationMessageConsumer.accept("invalid ASYNC_FN prop");
+          }
+          break;
+        case SYNTHETIC:
+          if (!isBlock()) {
+            violationMessageConsumer.accept("invalid SYNTHETIC prop");
+          }
+          break;
+        case COLOR_FROM_CAST:
+          if (getColor() == null) {
+            violationMessageConsumer.accept("COLOR_FROM_CAST with no Color");
+          }
+          break;
+        case START_OF_OPT_CHAIN:
+          if (!(isOptChainCall() || isOptChainGetElem() || isOptChainGetProp())) {
+            violationMessageConsumer.accept("START_OF_OPT_CHAIN on non-optional Node");
+          }
+          break;
+        case CONSTANT_VAR_FLAGS:
+          if (!(isName() || isImportStar())) {
+            violationMessageConsumer.accept("invalid CONST_VAR_FLAGS");
+          }
+          break;
+        default:
+          // No validation is currently done for other properties
+          break;
+      }
+    }
+  }
+
+  /**
    * @param item The item to inspect
-   * @param propType The property to look for
+   * @param prop The property to look for
    * @return The replacement list if the property was removed, or 'item' otherwise.
    */
   @Nullable
-  private static final PropListItem rebuildListWithoutProp(@Nullable PropListItem item, Prop prop) {
+  private static PropListItem rebuildListWithoutProp(@Nullable PropListItem item, Prop prop) {
     if (item == null) {
       return null;
     } else if (item.propType == prop.ordinal()) {
@@ -965,7 +1054,7 @@ public class Node {
   }
 
   /** Returns the integer value for the property, or 0 if the property is not defined. */
-  private final int getIntProp(Prop propType) {
+  private int getIntProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return 0;
@@ -1039,29 +1128,8 @@ public class Node {
       checkState(propSet.add(nodeProperty), "Found multiple node property: %s", nodeProperty);
     }
 
-    if (propSet.contains(NodeProperty.ARROW_FN) || propSet.contains(NodeProperty.ASYNC_FN)) {
-      checkState(isFunction());
-    }
-    if (propSet.contains(NodeProperty.IS_PARENTHESIZED)) {
-      checkState(IR.mayBeExpression(this), "not an expression: %s", this);
-    }
-    if (propSet.contains(NodeProperty.SYNTHETIC)) {
-      checkState(token == Token.BLOCK);
-    }
-    if (propSet.contains(NodeProperty.COLOR_FROM_CAST)) {
-      checkState(getColor() != null, "Only use on nodes with colors present");
-    }
-    if (propSet.contains(NodeProperty.START_OF_OPT_CHAIN)) {
-      checkState(
-          isOptChainGetElem() || isOptChainGetProp() || isOptChainCall(),
-          "cannot make a non-optional node the start of an optional chain.");
-    }
     if (propSet.contains(NodeProperty.IS_DECLARED_CONSTANT)
         || propSet.contains(NodeProperty.IS_INFERRED_CONSTANT)) {
-      checkState(
-          isName() || isImportStar(),
-          "Should only be called on name or import * nodes. Found %s",
-          this);
       int newConstantVarFlags =
           (propSet.remove(NodeProperty.IS_DECLARED_CONSTANT) ? ConstantVarFlags.DECLARED : 0)
               | (propSet.remove(NodeProperty.IS_INFERRED_CONSTANT) ? ConstantVarFlags.INFERRED : 0);
@@ -1074,6 +1142,13 @@ public class Node {
       Prop prop = PropTranslator.deserialize(nodeProperty);
       this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
     }
+
+    // Make sure the deserialized properties are valid.
+    validateProperties(
+        // NOTE: errorMessage will never be null, but just passing `false` to `checkState()`
+        // triggers warning messages from some code analysis tools.
+        errorMessage ->
+            checkState(errorMessage != null, "deserialize error: %s: %s", errorMessage, this));
   }
 
   /** Sets the syntactical type specified on this node. */
@@ -1509,7 +1584,7 @@ public class Node {
     }
   }
 
-  /** @see Node#siblings() */
+  /** @see Node#children() */
   private static final class SiblingNodeIterable implements Iterable<Node> {
     private final Node start;
 
@@ -1523,7 +1598,7 @@ public class Node {
     }
   }
 
-  /** @see Node#siblings() */
+  /** @see Node#children() */
   private static final class SiblingNodeIterator implements Iterator<Node> {
     @Nullable private Node current;
 

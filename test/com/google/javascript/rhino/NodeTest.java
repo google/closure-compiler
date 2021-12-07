@@ -42,6 +42,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -49,12 +50,115 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.math.BigInteger;
 import java.util.EnumSet;
+import java.util.function.Consumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class NodeTest {
+  @Test
+  public void testValidatePropertiesForRoot() {
+    final Node n = IR.root();
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+
+    // ROOT nodes shouldn't have properties, not even a source file
+    n.setSourceFileForTesting("file.js");
+    assertThat(getMessagesFromValidateProperties(n)).containsExactly("ROOT has properties");
+  }
+
+  private ImmutableList<String> getMessagesFromValidateProperties(Node n) {
+    final ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
+    Consumer<String> violationMessageConsumer = listBuilder::add;
+    n.validateProperties(violationMessageConsumer);
+
+    return listBuilder.build();
+  }
+
+  @Test
+  public void testValidatePropertiesForIsParenthesized() {
+    Node n = IR.string("");
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+
+    n.setIsParenthesized(true);
+    n.setToken(Token.STRING_KEY);
+    assertThat(getMessagesFromValidateProperties(n))
+        .containsExactly("non-expression is parenthesized");
+  }
+
+  @Test
+  public void testValidatePropertiesForFunctionProperties() {
+    Node n = IR.empty();
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+
+    // Change the Node type so we won't get thrown errors when we try to set the function-only
+    // properties.
+    n.setToken(Token.FUNCTION);
+    n.setIsArrowFunction(true);
+    n.setIsAsyncFunction(true);
+
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.EMPTY);
+    assertThat(getMessagesFromValidateProperties(n))
+        .containsExactly("invalid ARROW_FN prop", "invalid ASYNC_FN prop");
+  }
+
+  @Test
+  public void testValidatePropertiesForSyntheticProperty() {
+    Node n = IR.block();
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+    n.setIsSyntheticBlock(true);
+
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.EMPTY);
+    assertThat(getMessagesFromValidateProperties(n)).containsExactly("invalid SYNTHETIC prop");
+  }
+
+  @Test
+  public void testValidatePropertiesForColorFromCast() {
+    Node n = IR.name("a");
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+    n.setColor(StandardColors.NUMBER);
+    n.setColorFromTypeCast();
+
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setColor(null);
+    assertThat(getMessagesFromValidateProperties(n))
+        .containsExactly("COLOR_FROM_CAST with no Color");
+  }
+
+  @Test
+  public void testValidatePropertiesForOptChain() {
+    Node n = IR.empty();
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+
+    n.setToken(Token.OPTCHAIN_CALL);
+    n.setIsOptionalChainStart(true);
+
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.OPTCHAIN_GETELEM);
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.OPTCHAIN_GETELEM);
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.EMPTY);
+    assertThat(getMessagesFromValidateProperties(n))
+        .containsExactly("START_OF_OPT_CHAIN on non-optional Node");
+  }
+
+  @Test
+  public void testValidatePropertiesForConstVarFlags() {
+    Node n = IR.name("a");
+    n.setSourceFileForTesting("file.js"); // avoid error about missing source file
+    n.setDeclaredConstantVar(true);
+    n.setInferredConstantVar(true);
+
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.IMPORT_STAR);
+    assertThat(getMessagesFromValidateProperties(n)).isEmpty();
+    n.setToken(Token.STRINGLIT);
+    assertThat(getMessagesFromValidateProperties(n)).containsExactly("invalid CONST_VAR_FLAGS");
+  }
+
   @Test
   public void testLinenoCharnoNormal() {
     assertLinenoCharno(5, 6, 5, 6);
