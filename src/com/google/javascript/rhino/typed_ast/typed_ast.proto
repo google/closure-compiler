@@ -36,6 +36,33 @@ message LazyAst {
   uint32 source_file = 2;
 }
 
+// Keep this in sync with the TypedAst proto.
+// This is only used for debugging as proto printing
+// tools produce unreadable bytecode for a LazyAst.
+message NonLazyTypedAst {
+  // required
+  TypePool type_pool = 1;
+  // required
+  StringPoolProto string_pool = 2;
+
+  repeated NonLazyAst extern_ast = 3;
+  repeated NonLazyAst code_ast = 4;
+
+  SourceFilePool source_file_pool = 5;
+  ExternsSummary externs_summary = 6;
+
+  message List {
+    repeated NonLazyTypedAst typed_asts = 1;
+  }
+}
+
+// Keep this in sync with the LazyAst proto
+message NonLazyAst {
+  AstNode script = 1;
+  // 1-based index into TypedAst::source_file_pool
+  uint32 source_file = 2;
+}
+
 message StringPoolProto {
   // the "0th" index must always be the empty string so "0" may be used as a
   // default for "no string"
