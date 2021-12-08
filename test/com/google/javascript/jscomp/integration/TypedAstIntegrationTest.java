@@ -17,18 +17,19 @@
 package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -71,7 +72,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode(new String[] {"alert(10);"}, options);
+    Node expectedRoot = parseExpectedCode("alert(10);");
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
@@ -91,7 +92,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode(new String[] {"", "alert(10);"}, options);
+    Node expectedRoot = parseExpectedCode("", "alert(10);");
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
@@ -115,8 +116,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot =
-        parseExpectedCode(new String[] {"", "", "alert('lib1'); alert('lib2')"}, options);
+    Node expectedRoot = parseExpectedCode("", "", "alert('lib1'); alert('lib2')");
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
@@ -152,13 +152,57 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
           // TODO(b/191387823): "lib2Var" should be pseudo-renamed to "$lib2Var$$"
           "var lib2Var = 10; $lib1$$();"
         };
-    Node expectedRoot = parseExpectedCode(expected, options);
+    Node expectedRoot = parseExpectedCode(expected);
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
   }
 
-  private Compiler compileTypedAstShards(CompilerOptions options) throws IOException {
+  @Test
+  public void externJSDocPropertiesNotRenamed() throws IOException {
+    precompileLibrary(
+        extern(
+            new TestExternsBuilder()
+                .addExtra(
+                    lines(
+                        "/** @typedef {{x: number, y: number}} */",
+                        "let Coord;",
+                        "/** @param {!Coord} coord */",
+                        "function takeCoord(coord) {}"))
+                .build()),
+        code("const coord = {x: 1, y: 2}; takeCoord(coord);"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    // TODO(b/207693227): stop renaming x and y to a and b
+    Node expectedRoot = parseExpectedCode("takeCoord({a: 1, b: 2});");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void testDefineCheck() throws IOException {
+    precompileLibrary(code(""));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setDefineReplacements(ImmutableMap.of("FOOBAR", 1));
+
+    Compiler compiler = compileTypedAstShardsWithoutErrorChecks(options);
+
+    assertThat(compiler.getWarnings())
+        .comparingElementsUsing(JSCompCorrespondences.OWNING_DIAGNOSTIC_GROUP)
+        .containsExactly(DiagnosticGroups.UNKNOWN_DEFINES);
+    assertThat(compiler.getErrors()).isEmpty();
+  }
+
+  // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
+  // @Test case.
+  private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
+      throws IOException {
     Compiler compiler = new Compiler();
     try (InputStream inputStream = toInputStream(this.shards)) {
       compiler.initWithTypedAstFilesystem(
@@ -171,16 +215,13 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     compiler.stage2Passes();
     compiler.stage3Passes();
 
-    // Verify that there are no unexpected errors
-    assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getErrors().size() + compiler.getWarnings().size())
-        .isEqualTo(0);
+    return compiler;
+  }
+
+  private Compiler compileTypedAstShards(CompilerOptions options) throws IOException {
+    Compiler compiler = compileTypedAstShardsWithoutErrorChecks(options);
+
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
     return compiler;
   }
 
@@ -206,8 +247,10 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     compiler.init(ImmutableList.of(), ImmutableList.of(original), options);
     compiler.parse();
-    assertThat(compiler.getErrors()).isEmpty(); // check for parser errors
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
+
     compiler.stage1Passes();
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
 
     return SourceFile.fromCode(original.getName(), compiler.toSource());
   }
@@ -234,18 +277,10 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     Compiler compiler = new Compiler();
     compiler.init(externs.build(), sources.build(), options);
     compiler.parse();
-    assertThat(compiler.getErrors()).isEmpty(); // check for parser errors
-    compiler.stage1Passes(); // serializes a TypedAST into typedAstPath
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
 
-    assertWithMessage(
-            "Expected no warnings or errors\n"
-                + "Errors: \n"
-                + Joiner.on("\n").join(compiler.getErrors())
-                + "\n"
-                + "Warnings: \n"
-                + Joiner.on("\n").join(compiler.getWarnings()))
-        .that(compiler.getErrors().size() + compiler.getWarnings().size())
-        .isEqualTo(0);
+    compiler.stage1Passes(); // serializes a TypedAST into typedAstPath
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
 
     this.shards.add(typedAstPath);
   }
@@ -267,5 +302,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
       }
     }
     return inputStream;
+  }
+
+  private Node parseExpectedCode(String... files) {
+    // pass empty CompilerOptions; CompilerOptions only matters for CommonJS module parsing
+    CompilerOptions options = new CompilerOptions();
+    return super.parseExpectedCode(files, options);
   }
 }
