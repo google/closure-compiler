@@ -575,7 +575,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     isolatePolyfills = true;
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
-    testExternChanges("", "var $jscomp$lookupPolyfilledValue");
+    testExternChanges(srcs(""), expected("var $jscomp$lookupPolyfilledValue"));
   }
 
   @Test
@@ -584,7 +584,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     injectPolyfills = false;
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
-    testExternChanges("", "var $jscomp$lookupPolyfilledValue");
+    testExternChanges(srcs(""), expected("var $jscomp$lookupPolyfilledValue"));
 
     allowExternsChanges();
     testSame("'x'.endsWith('y');");

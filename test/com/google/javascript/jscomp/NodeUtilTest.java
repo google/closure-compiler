@@ -4272,7 +4272,7 @@ public final class NodeUtilTest {
     @Test
     public void test() {
       // setup a simple compilation job
-      testExternChanges("", "", "var TEST_NAME");
+      testExternChanges(externs(""), srcs(""), expected("var TEST_NAME"));
     }
   }
 

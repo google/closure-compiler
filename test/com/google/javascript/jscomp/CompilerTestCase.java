@@ -1844,55 +1844,24 @@ public abstract class CompilerTestCase {
     return mainRoot;
   }
 
-  protected void testExternChanges(String input, String expectedExtern) {
-    testExternChanges("", input, expectedExtern);
-  }
-
-  protected void testExternChanges(String extern, String input, String expectedExtern) {
-    testExternChanges(extern, input, expected(expectedExtern), (DiagnosticType[]) null);
-  }
-
-  protected void testExternChanges(String extern, String input, Expected expectedExtern) {
-    testExternChanges(extern, input, expectedExtern, (DiagnosticType[]) null);
+  protected void testExternChanges(Sources input, Expected expectedExtern, Diagnostic... warnings) {
+    testExternChanges(externs(""), input, expectedExtern, warnings);
   }
 
   protected void testExternChanges(
-      String input, String expectedExtern, DiagnosticType... warnings) {
-    testExternChanges("", input, expected(expectedExtern), warnings);
-  }
-
-  protected void testExternChanges(
-      String extern, String input, String expectedExtern, DiagnosticType... warnings) {
-    testExternChanges(extern, input, expected(expectedExtern), warnings);
-  }
-
-  protected void testExternChanges(
-      String extern, String input, Expected expectedExtern, DiagnosticType... warnings) {
+      Externs externs, Sources inputs, Expected expectedExtern, Diagnostic... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
-    compiler.init(
-        maybeCreateSources(GENERATED_EXTERNS_NAME, extern),
-        maybeCreateSources(GENERATED_SRC_NAME, input),
-        options);
-    testExternChangesInternal(compiler, expectedExtern, warnings);
-  }
-
-  protected void testExternChanges(
-      String extern, JSChunk[] modules, String expectedExtern, DiagnosticType... warnings) {
-    Compiler compiler = createCompiler();
-    CompilerOptions options = getOptions();
-    compiler.initModules(
-        maybeCreateSources(GENERATED_EXTERNS_NAME, extern), ImmutableList.copyOf(modules), options);
+    if (inputs instanceof FlatSources) {
+      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+    } else {
+      compiler.initModules(externs.externs, ((ModuleSources) inputs).modules, getOptions());
+    }
     testExternChangesInternal(compiler, expectedExtern, warnings);
   }
 
   private void testExternChangesInternal(
-      Compiler compiler, String expectedExtern, DiagnosticType... warnings) {
-    testExternChangesInternal(compiler, expected(expectedExtern), warnings);
-  }
-
-  private void testExternChangesInternal(
-      Compiler compiler, Expected expectedExterns, DiagnosticType... warnings) {
+      Compiler compiler, Expected expectedExterns, Diagnostic... warnings) {
     compiler.parseInputs();
 
     if (createModuleMap) {
@@ -1956,7 +1925,7 @@ public abstract class CompilerTestCase {
           .that(compiler.getWarningCount())
           .isEqualTo(warnings.length);
       for (int i = 0; i < warnings.length; i++) {
-        DiagnosticType warning = warnings[i];
+        DiagnosticType warning = warnings[i].diagnostic;
         assertWithMessage(warningMessage)
             .that(compiler.getWarnings().get(i).getType())
             .isEqualTo(warning);

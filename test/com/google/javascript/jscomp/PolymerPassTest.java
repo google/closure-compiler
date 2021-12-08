@@ -1044,8 +1044,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     testExternChanges(
-        EXTERNS,
-        js,
+        externs(EXTERNS),
+        srcs(js),
         expected(
             lines("/** @interface */", "var PolymerXInputElementInterface0 = function() {};"),
             INPUT_EXTERNS));
@@ -1081,7 +1081,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "var PolymerYInputElementInterface1 = function() {};"),
             INPUT_EXTERNS);
 
-    testExternChanges(EXTERNS, js, newExterns);
+    testExternChanges(externs(EXTERNS), srcs(js), newExterns);
   }
 
   @Test
@@ -1566,8 +1566,8 @@ public class PolymerPassTest extends CompilerTestCase {
 
     polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     testExternChanges(
-        INPUT_EXTERNS,
-        js,
+        externs(INPUT_EXTERNS),
+        srcs(js),
         expected(
             lines(
                 "/** @interface */ var PolymerFooElementInterface0=function(){};",
@@ -5233,19 +5233,18 @@ public class PolymerPassTest extends CompilerTestCase {
     super.test(js, expected);
   }
 
-  @Override
   protected void testExternChanges(String extern, String input, Expected expectedExtern) {
     polymerVersion = 1;
-    super.testExternChanges(extern, input, expectedExtern);
+    testExternChanges(externs(extern), srcs(input), expectedExtern);
 
     polymerVersion = 2;
-    super.testExternChanges(extern, input, expectedExtern);
+    testExternChanges(externs(extern), srcs(input), expectedExtern);
   }
 
   protected void testExternChanges(
       int polymerVersion, String extern, String input, Expected expectedExtern) {
     this.polymerVersion = polymerVersion;
-    super.testExternChanges(extern, input, expectedExtern);
+    testExternChanges(externs(extern), srcs(input), expectedExtern);
   }
 
   @Override

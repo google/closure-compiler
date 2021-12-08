@@ -1250,51 +1250,63 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequire_missing_createSyntheticExterns() {
-    testExternChanges(
-        lines(
-            "goog.module('mod');", //
-            "const c = goog.require('a.b.c');",
-            "c;"),
-        "var c;");
+    // typechecking reports errors due to us not including the Closure externs
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
 
     testExternChanges(
-        lines(
-            "goog.module('mod');", //
-            "const {D: LocalD, E} = goog.require('a.b.c');",
-            "LocalD;",
-            "E"),
-        "var LocalD;var E;");
+        srcs(
+            lines(
+                "goog.module('mod');", //
+                "const c = goog.require('a.b.c');",
+                "c;")),
+        expected("var c;"));
+
+    //
+    testExternChanges(
+        srcs(
+            lines(
+                "goog.module('mod');", //
+                "const {D: LocalD, E} = goog.require('a.b.c');",
+                "LocalD;",
+                "E")),
+        expected("var LocalD;var E;"));
   }
 
   @Test
   public void testGoogModuleGet_missing_createSyntheticExterns() {
+    // typechecking reports errors due to us not including the Closure externs
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
+
     testExternChanges(
-        lines(
-            "(function() {",
-            "  const c = goog.module.get('a.b.c');",
-            "  const f = goog.module.get('d.e.f');",
-            "})"),
-        "var c;var f;");
+        srcs(
+            lines(
+                "(function() {",
+                "  const c = goog.module.get('a.b.c');",
+                "  const f = goog.module.get('d.e.f');",
+                "})")),
+        expected("var c;var f;"));
 
     // Declare the 'lhs' even when goog.module.get is nested within the right-hand side.
     testExternChanges(
-        lines(
-            "(function() {", //
-            "  const result = process(goog.module.get('a.b.c').d) * 2;",
-            "})"),
-        "var result;");
+        srcs(
+            lines(
+                "(function() {", //
+                "  const result = process(goog.module.get('a.b.c').d) * 2;",
+                "})")),
+        expected("var result;"));
 
     // Don't declare any names multiple times.
     testExternChanges(
-        lines(
-            "(function() {",
-            "  const c = goog.module.get('a.b.c');",
-            "  c;",
-            "  {",
-            "    const c = goog.module.get('other.a.b.c');",
-            "  }",
-            "})"),
-        "var c;");
+        srcs(
+            lines(
+                "(function() {",
+                "  const c = goog.module.get('a.b.c');",
+                "  c;",
+                "  {",
+                "    const c = goog.module.get('other.a.b.c');",
+                "  }",
+                "})")),
+        expected("var c;"));
   }
 
   @Test

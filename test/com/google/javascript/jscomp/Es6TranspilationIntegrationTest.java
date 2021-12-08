@@ -1825,8 +1825,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "}"));
     // No $jscomp.initSymbol in externs
     testExternChanges(
-        "alert(Symbol.thimble);", "",
-        "alert(Symbol.thimble)");
+        externs("alert(Symbol.thimble);"), srcs(""), expected("alert(Symbol.thimble)"));
   }
 
   @Test

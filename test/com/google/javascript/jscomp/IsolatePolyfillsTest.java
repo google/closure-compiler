@@ -413,10 +413,8 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   @Test
   public void testExternForJSCompLookupPolyfillDeleted() {
     disableCompareAsTree();
-    testExternChanges(
-        // The getProcessor() method injects $jscomp$lookupPolyfilledValue so just add an empty
-        // extern here.
-        /* extern= */ "", /* input= */ "x.includes(y);", /* expectedExtern= */ "");
+    // The getProcessor() method injects $jscomp$lookupPolyfilledValue into the input externs.
+    testExternChanges(externs(""), srcs("x.includes(y);"), expected(""));
   }
 
   @Test

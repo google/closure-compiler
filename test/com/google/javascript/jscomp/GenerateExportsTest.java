@@ -430,7 +430,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = {/** @export */ A:1, B:2};";
     testSame(code);
-    testExternChanges(code, "Object.prototype.A;");
+    testExternChanges(srcs(code), expected("Object.prototype.A;"));
   }
 
   @Test
@@ -438,7 +438,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = {/** @export */ get A() { return 1 }, B:2};";
     testSame(code);
-    testExternChanges(code, "Object.prototype.A;");
+    testExternChanges(srcs(code), expected("Object.prototype.A;"));
   }
 
   @Test
@@ -446,7 +446,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = {/** @export */ set A(v) {}, B:2};";
     testSame(code);
-    testExternChanges(code, "Object.prototype.A;");
+    testExternChanges(srcs(code), expected("Object.prototype.A;"));
   }
 
   @Test
@@ -454,7 +454,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = {/** @export */ A:function() {}, B:2};";
     testSame(code);
-    testExternChanges(code, "Object.prototype.A;");
+    testExternChanges(srcs(code), expected("Object.prototype.A;"));
   }
 
   @Test
@@ -462,7 +462,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = {/** @export */ A() {}, B:2};";
     testSame(code);
-    testExternChanges(code, "Object.prototype.A;");
+    testExternChanges(srcs(code), expected("Object.prototype.A;"));
   }
 
   @Test
@@ -470,7 +470,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = function() { /** @export */ this.foo = 1; };";
     testSame(code);
-    testExternChanges(code, "Object.prototype.foo;");
+    testExternChanges(srcs(code), expected("Object.prototype.foo;"));
   }
 
   @Test
@@ -485,7 +485,8 @@ public final class GenerateExportsTest extends CompilerTestCase {
         "google_exportSymbol('foo.method', foo.method);");
     test(code, result);
     disableCompareAsTree();
-    testExternChanges(code, "Object.prototype.foo;var goog;var google_exportSymbol");
+    testExternChanges(
+        srcs(code), expected("Object.prototype.foo;var goog;var google_exportSymbol"));
   }
 
   @Test
@@ -493,7 +494,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
     allowExternsChanges();
     String code = "var E = function() { /** @export */ this.foo; };";
     testSame(code);
-    testExternChanges(code, "Object.prototype.foo;");
+    testExternChanges(srcs(code), expected("Object.prototype.foo;"));
   }
 
   @Test
