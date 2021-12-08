@@ -1,0 +1,271 @@
+/*
+ * Copyright 2021 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp.integration;
+
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+/** Tests that run the optimizer over individual library TypedAST shards */
+@RunWith(JUnit4.class)
+public final class TypedAstIntegrationTest extends IntegrationTestCase {
+
+  private ArrayList<Path> shards;
+  private ArrayList<SourceFile> externFiles;
+  private ArrayList<SourceFile> sourceFiles;
+
+  @Override
+  @Before
+  public void setUp() {
+    super.setUp();
+    this.shards = new ArrayList<>();
+    this.externFiles = new ArrayList<>();
+    this.sourceFiles = new ArrayList<>();
+  }
+
+  @Test
+  public void simpleAlertCall() throws IOException {
+    precompileLibrary(extern(new TestExternsBuilder().addAlert().build()), code("alert(10);"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode(new String[] {"alert(10);"}, options);
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void alertCallWithCrossLibraryVarReference() throws IOException {
+    SourceFile lib1 = code("const lib1Global = 10;");
+    precompileLibrary(lib1);
+    precompileLibrary(
+        extern(new TestExternsBuilder().addAlert().build()),
+        typeSummary(lib1),
+        code("alert(lib1Global);"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode(new String[] {"", "alert(10);"}, options);
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void disambiguatesAndDeletesMethodsAcrossLibraries() throws IOException {
+    SourceFile lib1 = code("class Lib1 { m() { return 'lib1'; } n() { return 'delete me'; } }");
+    SourceFile lib2 = code("class Lib2 { m() { return 'delete me'; } n() { return 'lib2'; } }");
+    precompileLibrary(lib1);
+    precompileLibrary(lib2);
+    precompileLibrary(
+        extern(new TestExternsBuilder().addAlert().build()),
+        typeSummary(lib1),
+        typeSummary(lib2),
+        code("alert(new Lib1().m()); alert(new Lib2().n());"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDisambiguateProperties(true);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot =
+        parseExpectedCode(new String[] {"", "", "alert('lib1'); alert('lib2')"}, options);
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void lateFulfilledGlobalVariableIsRenamed() throws IOException {
+    SourceFile lib1 =
+        code(
+            lines(
+                "function lib1() {",
+                "  if (typeof lib2Var !== 'undefined') {",
+                "    alert(lib2Var);",
+                "  }",
+                "}"));
+    precompileLibrary(extern(new TestExternsBuilder().addAlert().build()), lib1);
+    precompileLibrary(typeSummary(lib1), code("var lib2Var = 10; lib1();"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    options.setGeneratePseudoNames(true);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    String[] expected =
+        new String[] {
+          lines(
+              "function $lib1$$() {",
+              "  if (typeof lib2Var !== 'undefined') {",
+              "    alert(lib2Var);",
+              "  }",
+              "}"),
+          // TODO(b/191387823): "lib2Var" should be pseudo-renamed to "$lib2Var$$"
+          "var lib2Var = 10; $lib1$$();"
+        };
+    Node expectedRoot = parseExpectedCode(expected, options);
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  private Compiler compileTypedAstShards(CompilerOptions options) throws IOException {
+    Compiler compiler = new Compiler();
+    try (InputStream inputStream = toInputStream(this.shards)) {
+      compiler.initWithTypedAstFilesystem(
+          ImmutableList.copyOf(this.externFiles),
+          ImmutableList.copyOf(this.sourceFiles),
+          options,
+          inputStream);
+    }
+    compiler.parse();
+    compiler.stage2Passes();
+    compiler.stage3Passes();
+
+    // Verify that there are no unexpected errors
+    assertWithMessage(
+            "Expected no warnings or errors\n"
+                + "Errors: \n"
+                + Joiner.on("\n").join(compiler.getErrors())
+                + "\n"
+                + "Warnings: \n"
+                + Joiner.on("\n").join(compiler.getWarnings()))
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
+        .isEqualTo(0);
+    return compiler;
+  }
+
+  private SourceFile code(String code) {
+    SourceFile sourceFile =
+        SourceFile.fromCode("input_" + (sourceFiles.size() + 1), code, SourceKind.STRONG);
+    this.sourceFiles.add(sourceFile);
+    return sourceFile;
+  }
+
+  private SourceFile extern(String code) {
+    SourceFile sourceFile =
+        SourceFile.fromCode("extern_" + (externFiles.size() + 1), code, SourceKind.EXTERN);
+    this.externFiles.add(sourceFile);
+    return sourceFile;
+  }
+
+  /** Runs the type summary generator on the given source code, and returns a summary file */
+  private SourceFile typeSummary(SourceFile original) {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setIncrementalChecks(IncrementalCheckMode.GENERATE_IJS);
+
+    compiler.init(ImmutableList.of(), ImmutableList.of(original), options);
+    compiler.parse();
+    assertThat(compiler.getErrors()).isEmpty(); // check for parser errors
+    compiler.stage1Passes();
+
+    return SourceFile.fromCode(original.getName(), compiler.toSource());
+  }
+
+  private void precompileLibrary(SourceFile... files) throws IOException {
+    Path typedAstPath = Files.createTempFile("", ".typedast");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setChecksOnly(true);
+    options.setCheckTypes(true);
+    options.setCheckSymbols(true);
+    options.setTypedAstOutputFile(typedAstPath);
+
+    ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
+    ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
+    for (SourceFile file : files) {
+      if (file.isExtern()) {
+        externs.add(file);
+      } else {
+        sources.add(file);
+      }
+    }
+
+    Compiler compiler = new Compiler();
+    compiler.init(externs.build(), sources.build(), options);
+    compiler.parse();
+    assertThat(compiler.getErrors()).isEmpty(); // check for parser errors
+    compiler.stage1Passes(); // serializes a TypedAST into typedAstPath
+
+    assertWithMessage(
+            "Expected no warnings or errors\n"
+                + "Errors: \n"
+                + Joiner.on("\n").join(compiler.getErrors())
+                + "\n"
+                + "Warnings: \n"
+                + Joiner.on("\n").join(compiler.getWarnings()))
+        .that(compiler.getErrors().size() + compiler.getWarnings().size())
+        .isEqualTo(0);
+
+    this.shards.add(typedAstPath);
+  }
+
+  /** Converts the list of paths into an input stream sequentially reading all the given files */
+  private static InputStream toInputStream(ArrayList<Path> typedAsts) {
+    InputStream inputStream = null;
+    for (Path typedAst : typedAsts) {
+      FileInputStream inputShard;
+      try {
+        inputShard = new FileInputStream(typedAst.toFile());
+      } catch (FileNotFoundException ex) {
+        throw new AssertionError(ex);
+      }
+      if (inputStream == null) {
+        inputStream = inputShard;
+      } else {
+        inputStream = new SequenceInputStream(inputStream, inputShard);
+      }
+    }
+    return inputStream;
+  }
+}
