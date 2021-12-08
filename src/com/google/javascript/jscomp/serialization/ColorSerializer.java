@@ -21,9 +21,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -50,7 +51,8 @@ class ColorSerializer {
    * Stores the `TypePointer` values assigned to `Color`s as they are added for serialization, so
    * they can be looked up and used for references between the output `TypeProto`s.
    */
-  private final IdentityHashMap<Color, TypePointer> colorToTypePointer = new IdentityHashMap<>();
+  private final HashMap<ColorId, TypePointer> colorIdToTypePointer = new HashMap<>();
+
   /**
    * Stores the `Color`s to be serialized in the order they will be serialized.
    *
@@ -104,9 +106,9 @@ class ColorSerializer {
    * create.
    */
   TypePointer addColor(Color color) {
-    return colorToTypePointer.computeIfAbsent(
-        color,
-        (key) -> {
+    return colorIdToTypePointer.computeIfAbsent(
+        color.getId(),
+        (unusedKey) -> {
           final int index = colorsInSerializedOrder.size();
           colorsInSerializedOrder.add(color);
           return TypePointer.newBuilder().setPoolOffset(index).build();
@@ -134,7 +136,7 @@ class ColorSerializer {
     //    what effect changing an iterable will have on an iteration that is in progress.
     for (int i = TypePointers.untrimOffset(0); i < colorsInSerializedOrder.size(); i++) {
       final Color color = colorsInSerializedOrder.get(i);
-      final TypePointer typePointer = colorToTypePointer.get(color);
+      final TypePointer typePointer = colorIdToTypePointer.get(color.getId());
       typePoolBuilder.addType(generateTypeProto(color));
       for (Color supertype : getDisambiguationSupertypesFn.apply(color)) {
         typePoolBuilder
@@ -155,7 +157,7 @@ class ColorSerializer {
       final LinkedHashMap<String, ArrayList<TypePointer>> srcRefToTypePointerList =
           new LinkedHashMap<>();
       for (Color color : colorsInSerializedOrder) {
-        final TypePointer typePointer = colorToTypePointer.get(color);
+        final TypePointer typePointer = colorIdToTypePointer.get(color.getId());
         for (String srcRef : getMismatchSourceRefsFn.apply(color)) {
           final ArrayList<TypePointer> typePointerList =
               srcRefToTypePointerList.computeIfAbsent(srcRef, (key) -> new ArrayList<>());

@@ -466,6 +466,56 @@ public class ColorSerializerTest {
         .isEqualTo(expectedTypePool);
   }
 
+  @Test
+  public void avoidAddingDuplicateUnions() {
+    final TestColor testColor1 =
+        new TestObjectColorBuilder()
+            .setColorId("color001")
+            // We will explicitly add this color first
+            .setTrimmedPoolOffset(1)
+            .setTypeName("testColor1")
+            .build();
+    final TestColor testColor2 =
+        new TestObjectColorBuilder()
+            .setColorId("color002")
+            .setTrimmedPoolOffset(2)
+            .setTypeName("testColor2")
+            .build();
+    final TestColor unionTestColor =
+        new TestUnionColorBuilder()
+            .setTrimmedPoolOffset(0)
+            .addTestColor(testColor1)
+            .addTestColor(testColor2)
+            .build();
+    // Creating a second union containing the same types will create a distinct
+    // Java object, but it will have the same ColorId.
+    final TestColor duplicateUnionTestColor =
+        new TestUnionColorBuilder()
+            .setTrimmedPoolOffset(0) // should end up getting the same offset
+            .addTestColor(testColor1)
+            .addTestColor(testColor2)
+            .build();
+
+    TypePool expectedTypePool =
+        TypePool.newBuilder()
+            .addType(unionTestColor.getExpectedTypeProto())
+            // duplicate Union color should not be serialized
+            .addType(testColor1.getExpectedTypeProto())
+            .addType(testColor2.getExpectedTypeProto())
+            // empty DebugInfo
+            .setDebugInfo(TypePool.DebugInfo.getDefaultInstance())
+            .build();
+
+    new Tester()
+        .init()
+        .addColor(unionTestColor)
+        // Try to add the duplicate union color. It should be ignored.
+        .addColor(duplicateUnionTestColor)
+        .generateTypePool()
+        .assertThatTypePool()
+        .isEqualTo(expectedTypePool);
+  }
+
   /**
    * Represents a string that is stored in a StringPool, recording both its value and its offset.
    */
