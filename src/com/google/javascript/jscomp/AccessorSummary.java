@@ -18,11 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.Immutable;
+import java.io.Serializable;
 import java.util.Map;
 
 /** A strongly typed view of information about getters and setters collected from the AST. */
 @Immutable
-final class AccessorSummary {
+final class AccessorSummary implements Serializable {
 
   /** Indicates whether a property has a getter or a setter, or both. */
   public enum PropertyAccessKind {

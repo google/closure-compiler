@@ -713,6 +713,24 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
 
+    assertValidOrderForOptimizations(passes);
+    return passes;
+  }
+
+  @Override
+  protected List<PassFactory> getFinalizations() {
+    List<PassFactory> passes = new ArrayList<>();
+
+    if (options.doLateLocalization()) {
+      if (options.shouldRunReplaceMessagesPass()) {
+        passes.add(getReplaceProtectedMessagesPass());
+      }
+      passes.add(substituteLocaleData);
+      // Now that we've replaced `goog.LOCALE` with a constant value, we need to re-run simple code
+      // removal passes, so they can throw away code for locales that aren't relevant.
+      addSimpleCodeRemovingPasses(passes);
+    }
+
     if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(flowSensitiveInlineVariables);
 
@@ -859,20 +877,6 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(checkAstValidity);
     passes.add(varCheckValidity);
 
-    assertValidOrderForOptimizations(passes);
-    return passes;
-  }
-
-  @Override
-  protected List<PassFactory> getFinalizations() {
-    List<PassFactory> passes = new ArrayList<>();
-
-    if (options.doLateLocalization()) {
-      if (options.shouldRunReplaceMessagesPass()) {
-        passes.add(getReplaceProtectedMessagesPass());
-      }
-      passes.add(substituteLocaleData);
-    }
     return passes;
   }
 
@@ -927,6 +931,13 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(collapseObjectLiterals);
     }
 
+    addSimpleCodeRemovingPasses(passes);
+
+    assertAllLoopablePasses(passes);
+    return passes;
+  }
+
+  private void addSimpleCodeRemovingPasses(List<PassFactory> passes) {
     if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(inlineVariables);
     } else if (options.inlineConstantVars) {
@@ -945,8 +956,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedCode);
     }
 
-    assertAllLoopablePasses(passes);
-    return passes;
   }
 
   /**
@@ -1303,8 +1312,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new ProcessClosureProvidesAndRequires(
-                      compiler,
-                      options.shouldPreservesGoogProvidesAndRequires()))
+                      compiler, options.shouldPreservesGoogProvidesAndRequires()))
           .setFeatureSetForChecks()
           .build();
 

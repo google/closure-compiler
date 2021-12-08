@@ -236,7 +236,11 @@ public final class CommandLineRunnerTest {
     // optimizations.
     assertThat(runner.getCompiler().toSource())
         .isEqualTo(
-            "var __JSC_LOCALE_DATA__=[];console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+            concatStrings(
+                "var __JSC_LOCALE_DATA__=[];",
+                "console.log(",
+                "__jscomp_define_msg__({\"key\":\"MSG_HELLO\",\"msg_text\":\"hello\"})",
+                ");"));
 
     // Create a path for the final output
     File compiledFile = new File(testDir, "compiled.js");
@@ -3257,5 +3261,9 @@ public final class CommandLineRunnerTest {
     String name = filenames.get(i);
     checkState(name != null && !name.isEmpty());
     return name;
+  }
+
+  private String concatStrings(String... strings) {
+    return String.join("", strings);
   }
 }

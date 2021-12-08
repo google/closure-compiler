@@ -64,6 +64,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1278,7 +1280,11 @@ public final class CompilerTest {
     compiler.performTranspilationAndOptimizations();
     String source = compiler.toSource();
     assertThat(source)
-        .isEqualTo("console.log(__jscomp_define_msg__({key:\"MSG_HELLO\",msg_text:\"hello\"}));");
+        .isEqualTo(
+            concatStrings(
+                "console.log(__jscomp_define_msg__(",
+                "{\"key\":\"MSG_HELLO\",\"msg_text\":\"hello\"}",
+                "));"));
 
     final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
 
@@ -1289,6 +1295,10 @@ public final class CompilerTest {
     compiler.performFinalizations();
     source = compiler.toSource();
     assertThat(source).isEqualTo("console.log(\"hello\");");
+  }
+
+  private String concatStrings(String... strings) {
+    return Stream.of(strings).collect(Collectors.joining());
   }
 
   private void restoreCompilerState(Compiler compiler, byte[] stateAfterChecks)
@@ -2390,6 +2400,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
+    compiler.performFinalizations();
 
     assertThat(compiler.toSource())
         .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
@@ -2524,6 +2535,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
+    compiler.performFinalizations();
 
     assertThat(compiler.toSource())
         .isEqualTo("var module$exports$strong={};function module$contents$strong_f(x){alert(x)};");
@@ -2558,6 +2570,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
+    compiler.performFinalizations();
 
     assertThat(compiler.toSource()).isEqualTo("function f(x){alert(x)};");
   }
@@ -2602,6 +2615,7 @@ public final class CompilerTest {
     compiler.parse();
     compiler.check();
     compiler.performTranspilationAndOptimizations();
+    compiler.performFinalizations();
 
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(compiler.getErrors()).isEmpty();

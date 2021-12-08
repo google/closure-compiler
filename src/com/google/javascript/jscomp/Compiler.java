@@ -3574,6 +3574,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
     private final LinkedHashSet<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
+    private final AccessorSummary accessorSummary;
 
     CompilerState(Compiler compiler) {
       this.featureSet = checkNotNull(compiler.featureSet);
@@ -3598,6 +3599,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           compiler.lastInjectedLibrary != null
               ? compiler.jsRoot.getFirstChild().getIndexOfChild(compiler.lastInjectedLibrary)
               : -1;
+      this.accessorSummary = compiler.accessorSummary;
     }
   }
 
@@ -3700,6 +3702,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runJ2clPasses = compilerState.runJ2clPasses;
     inputSourceMaps = compilerState.inputSourceMaps;
     changeStamp = compilerState.changeStamp;
+    accessorSummary = compilerState.accessorSummary;
 
     // Restore TypedAST and related fields
     externProperties = deserializedAst.getExternProperties();
