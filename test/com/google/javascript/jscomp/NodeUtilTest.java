@@ -41,6 +41,7 @@ import static com.google.javascript.rhino.Token.OPTCHAIN_GETELEM;
 import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
+import static com.google.javascript.rhino.Token.STRINGLIT;
 import static com.google.javascript.rhino.Token.SUPER;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
@@ -3965,9 +3966,12 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y"))).isTrue();
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y"))).isTrue();
 
-      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,eval)()", 0))).isTrue();
-      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,x.y)()", 0))).isTrue();
-      assertThat(NodeUtil.isExpressionResultUsed(getNumberNodeFrom("(0,x.y)``", 0))).isTrue();
+      // We're using string literals instead of numbers here, because PrepareAst will automatically
+      // remove a number in an indirect call like `(0, some.callee)()` after applying FREE_CALL
+      // to the `CALL` node.
+      assertThat(NodeUtil.isExpressionResultUsed(getStringLitNodeFrom("('',eval)()", ""))).isTrue();
+      assertThat(NodeUtil.isExpressionResultUsed(getStringLitNodeFrom("('',x.y)()", ""))).isTrue();
+      assertThat(NodeUtil.isExpressionResultUsed(getStringLitNodeFrom("('',x.y)``", ""))).isTrue();
     }
 
     @Test
@@ -4742,11 +4746,6 @@ public final class NodeUtilTest {
     return getStringNode(ast, name, Token.STRING_KEY);
   }
 
-  private static Node getNumberNodeFrom(String code, double number) {
-    Node ast = parse(code);
-    return getNumberNode(ast, number);
-  }
-
   private static boolean executedOnceTestCase(String code) {
     Node nameNode = getNameNodeFrom(code, "x");
     return NodeUtil.isExecutedExactlyOnce(nameNode);
@@ -4801,6 +4800,15 @@ public final class NodeUtilTest {
       }
     }
     return null;
+  }
+
+  private static Node getStringLitNode(Node n, String str) {
+    return getStringNode(n, str, STRINGLIT);
+  }
+
+  private static Node getStringLitNodeFrom(String code, String str) {
+    Node ast = parse(code);
+    return getStringLitNode(ast, str);
   }
 
   private static Node getNumberNode(Node n, double number) {

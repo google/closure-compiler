@@ -294,6 +294,12 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject isFreeCall() {
+    check("isCall()").that(actual.isCall()).isTrue();
+    check("getBooleanProp(Node.FREE_CALL)").that(actual.getBooleanProp(Node.FREE_CALL)).isTrue();
+    return this;
+  }
+
   public NodeSubject isConst() {
     check("isConst()").that(actual.isConst()).isTrue();
     return this;

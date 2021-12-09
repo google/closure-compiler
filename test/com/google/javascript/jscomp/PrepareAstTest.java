@@ -18,21 +18,48 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for PrepareAst.
- *
- */
+/** Tests for PrepareAst. */
 @RunWith(JUnit4.class)
 public final class PrepareAstTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return null; // unused
+  }
+
+  @Test
+  public void testIndirectCallName() {
+    Node root = parseExpectedJs("(0, foo)();");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node exprResult = script.getFirstChild();
+    assertNode(exprResult).hasToken(Token.EXPR_RESULT);
+
+    // the `(0, foo)()` should have been converted to `foo()` with the
+    // `FREE_CALL` property.
+    Node call = exprResult.getFirstChild();
+    assertNode(call).isFreeCall().hasFirstChildThat().isName("foo");
+  }
+
+  @Test
+  public void testIndirectCallGetProp() {
+    Node root = parseExpectedJs("(0, foo.bar)();");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node exprResult = script.getFirstChild();
+    assertNode(exprResult).hasToken(Token.EXPR_RESULT);
+
+    // the `(0, foo)()` should have been converted to `foo.bar()` with the
+    // `FREE_CALL` property, so it will actually get printed as `(0, foo.bar)()`.
+    Node call = exprResult.getFirstChild();
+    assertNode(call).isFreeCall().hasFirstChildThat().matchesQualifiedName("foo.bar");
   }
 
   @Test
@@ -107,4 +134,3 @@ public final class PrepareAstTest extends CompilerTestCase {
     assertThat(call.getBooleanProp(Node.FREE_CALL)).isFalse();
   }
 }
-

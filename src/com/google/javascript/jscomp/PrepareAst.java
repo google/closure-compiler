@@ -24,10 +24,9 @@ import com.google.javascript.rhino.Node;
 /**
  * Prepare the AST before we do any checks or optimizations on it.
  *
- * This pass must run. It should bring the AST into a consistent state,
- * and add annotations where necessary. It should not make any transformations
- * on the tree that would lose source information, since we need that source
- * information for checks.
+ * <p>This pass must run. It should bring the AST into a consistent state, and add annotations where
+ * necessary. It should not make any transformations on the tree that would lose source information,
+ * since we need that source information for checks.
  */
 class PrepareAst implements CompilerPass {
 
@@ -58,24 +57,19 @@ class PrepareAst implements CompilerPass {
       // they currently aren't valid during validity checks.  In particular,
       // they DIRECT_EVAL shouldn't be applied after inlining has been performed.
       if (externs != null) {
-        NodeTraversal.traverse(
-            compiler, externs, new PrepareAnnotations());
+        NodeTraversal.traverse(compiler, externs, new PrepareAnnotations());
       }
       if (root != null) {
-        NodeTraversal.traverse(
-            compiler, root, new PrepareAnnotations());
+        NodeTraversal.traverse(compiler, root, new PrepareAnnotations());
       }
     }
   }
 
-  /**
-   * Covert EXPR_VOID to EXPR_RESULT to simplify the rest of the code.
-   */
+  /** Covert EXPR_VOID to EXPR_RESULT to simplify the rest of the code. */
   private void normalizeNodeTypes(Node n) {
     normalizeBlocks(n);
 
-    for (Node child = n.getFirstChild();
-         child != null; child = child.getNext()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       // This pass is run during the CompilerTestCase validation, so this
       // parent pointer check serves as a more general check.
       checkState(child.getParent() == n);
@@ -84,13 +78,9 @@ class PrepareAst implements CompilerPass {
     }
   }
 
-  /**
-   * Add blocks to IF, WHILE, DO, etc.
-   */
+  /** Add blocks to IF, WHILE, DO, etc. */
   private void normalizeBlocks(Node n) {
-    if (NodeUtil.isControlStructure(n)
-        && !n.isLabel()
-        && !n.isSwitch()) {
+    if (NodeUtil.isControlStructure(n) && !n.isLabel() && !n.isSwitch()) {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (NodeUtil.isControlStructureCodeBlock(n, c) && !c.isBlock()) {
           Node newBlock = IR.block().srcref(n);
@@ -107,11 +97,10 @@ class PrepareAst implements CompilerPass {
   }
 
   /**
-   * Normalize where annotations appear on the AST. Copies
-   * around existing JSDoc annotations as well as internal annotations.
+   * Normalize where annotations appear on the AST. Copies around existing JSDoc annotations as well
+   * as internal annotations.
    */
-  static class PrepareAnnotations
-      extends NodeTraversal.AbstractPostOrderCallback {
+  static class PrepareAnnotations extends NodeTraversal.AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -127,29 +116,43 @@ class PrepareAst implements CompilerPass {
     }
 
     /**
-     * There are two types of calls we are interested in calls without explicit
-     * "this" values (what we are call "free" calls) and direct call to eval.
+     * There are two types of calls we are interested in calls without explicit "this" values (what
+     * we are call "free" calls) and direct call to eval.
      */
-    private static void annotateCalls(Node n) {
+    private void annotateCalls(Node n) {
       checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.
-      Node first = n.getFirstChild();
+      Node callee = n.getFirstChild();
 
       // ignore cast nodes.
-      while (first.isCast()) {
-        first = first.getFirstChild();
+      while (callee.isCast()) {
+        callee = callee.getFirstChild();
       }
 
-      if (!NodeUtil.isNormalOrOptChainGet(first)) {
+      if (!NodeUtil.isNormalOrOptChainGet(callee)) {
+        // This call originally was not passed a `this` value.
+        // Inlining could change the callee into a property reference of some kind.
+        // The code printer will recognize the `FREE_CALL` property and wrap the real callee with
+        // `(0, real.callee)(args)` when necessary to avoid changing the calling behavior.
         n.putBooleanProp(Node.FREE_CALL, true);
-      }
 
-      // Keep track of the context in which eval is called. It is important
-      // to distinguish between "(0, eval)()" and "eval()".
-      if (first.isName() && "eval".equals(first.getString())) {
-        first.putBooleanProp(Node.DIRECT_EVAL, true);
+        if (callee.isName() && "eval".equals(callee.getString())) {
+          // Keep track of the context in which eval is called. It is important
+          // to distinguish between "(0, eval)()" and "eval()".
+          callee.putBooleanProp(Node.DIRECT_EVAL, true);
+        } else if (callee.isComma() && callee.getFirstChild().isNumber()) {
+          // The input code may actually already contain calls of the form
+          // `(0, real.callee)(arg1, arg2)`. For example, the TypeScript compiler outputs code like
+          // this in some cases.
+          // This makes it hard for us to connect calls with the called functions, though, so we
+          // will simplify these cases. The `FREE_CALL` property we've just applied will tell the
+          // code printer to put this wrapping back later.
+          final Node realCallee = callee.getSecondChild();
+          callee.replaceWith(realCallee.detach());
+          // TODO(bradfordcsmith): Why do I get an NPE if I try to report this code change?
+        }
       }
     }
   }

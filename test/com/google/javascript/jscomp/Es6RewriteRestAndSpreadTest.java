@@ -291,8 +291,8 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         expected(
             lines(
                 "var obj = new TestClass();",
-                "(0, obj.testMethod).apply(null, $jscomp.arrayFromIterable(arr));",
-                "(0, obj[\"testMethod\"]).apply(null, $jscomp.arrayFromIterable(arr));")));
+                "obj.testMethod.apply(null, $jscomp.arrayFromIterable(arr));",
+                "obj[\"testMethod\"].apply(null, $jscomp.arrayFromIterable(arr));")));
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
   }
 
@@ -379,9 +379,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
                 "(0, testClassFactory()['testMethod'])(...stringIterable);")),
         expected(
             lines(
-                "(0, testClassFactory().testMethod).apply(",
+                "testClassFactory().testMethod.apply(",
                 "    null, $jscomp.arrayFromIterable(stringIterable));",
-                "(0, testClassFactory()[\"testMethod\"]).apply(",
+                "testClassFactory()[\"testMethod\"].apply(",
                 "    null, $jscomp.arrayFromIterable(stringIterable));")));
     assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
   }

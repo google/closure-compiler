@@ -238,13 +238,13 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     // comma not in a call expression.
     test("x = (0, foo) + 1;", "x = (JSCOMPILER_PRESERVE(0), foo) + 1;", warning(e));
     // Plain function, no indirection needed to remove this
-    test("(0, otherFn)(1);", "(JSCOMPILER_PRESERVE(0), otherFn)(1);", warning(e));
+    testSame("(0, otherFn)(1);");
     // Other expression.
-    test("(0, otherFn())(1);", "(JSCOMPILER_PRESERVE(0), otherFn())(1);", warning(e));
+    test("(0, otherFn())(1);", "otherFn()(1);");
   }
 
   @Test
-  public void testIsue504() {
+  public void testIssue504() {
     test(
         "void f();",
         "JSCOMPILER_PRESERVE(void f());",
