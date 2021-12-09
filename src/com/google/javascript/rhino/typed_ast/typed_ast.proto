@@ -384,4 +384,7 @@ enum NodeProperty {
   // TODO(b/183734515): it probably doesn't make sense to serialize this at the
   // library level. delete it.
   IS_DECLARED_CONSTANT = 44;
+  // Indicates that an externs name declaration was synthesized by the compiler
+  // because the name was referenced without being declared
+  SYNTHESIZED_UNFULFILLED_NAME_DECLARATION = 45;
 }

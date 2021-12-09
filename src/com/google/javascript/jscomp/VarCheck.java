@@ -364,6 +364,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
     }
 
     Node syntheticExternVar = IR.var(nameNode);
+    syntheticExternVar.setIsSynthesizedUnfulfilledNameDeclaration(true);
     getSynthesizedExternsRoot(compiler).addChildToBack(syntheticExternVar);
     compiler.reportChangeToEnclosingScope(syntheticExternVar);
   }

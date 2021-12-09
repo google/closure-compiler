@@ -202,6 +202,12 @@ public class Node {
     // Indicates a trailing comma in an array literal, object literal, parameter list, or argument
     // list
     TRAILING_COMMA,
+    // Indicates that a variable declaration was synthesized to provide a declaration of some
+    // name referenced but never defined, as most compiler passes expect that to be an invariant.
+    // Only present in the "synthetic externs file". Builds initialized using a
+    // "TypedAST filesystem" will delete any such declarations present in a different compilation
+    // shard
+    SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
   }
 
   /**
@@ -1014,6 +1020,14 @@ public class Node {
         case CONSTANT_VAR_FLAGS:
           if (!(isName() || isImportStar())) {
             violationMessageConsumer.accept("invalid CONST_VAR_FLAGS");
+          }
+          break;
+        case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
+          // note: we could relax this restriction if VarCheck needed to generate other forms of
+          // synthetic terns
+          if (!isVar() || !hasOneChild() || !getFirstChild().isName()) {
+            violationMessageConsumer.accept(
+                "Expected all synthetic unfulfilled declarations to be `var <name>`");
           }
           break;
         default:
@@ -2412,6 +2426,20 @@ public class Node {
    */
   public final boolean isSyntheticBlock() {
     return getBooleanProp(Prop.SYNTHETIC);
+  }
+
+  public final void setIsSynthesizedUnfulfilledNameDeclaration(boolean val) {
+    checkState(
+        token == Token.VAR && hasOneChild() && getFirstChild().isName(),
+        // we could relax this restriction if VarCheck wanted to generate other forms of synthetic
+        // externs
+        "Expected all synthetic unfulfilled declarations to be `var <name>`, found %s",
+        this);
+    putBooleanProp(Prop.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION, val);
+  }
+
+  public final boolean isSynthesizedUnfulfilledNameDeclaration() {
+    return getBooleanProp(Prop.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION);
   }
 
   /** Sets whether this node contained the "use strict" directive. */

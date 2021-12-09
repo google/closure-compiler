@@ -145,12 +145,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         new String[] {
           lines(
               "function $lib1$$() {",
-              "  if (typeof lib2Var !== 'undefined') {",
-              "    alert(lib2Var);",
+              "  if (typeof $lib2Var$$ !== 'undefined') {",
+              "    alert($lib2Var$$);",
               "  }",
               "}"),
-          // TODO(b/191387823): "lib2Var" should be pseudo-renamed to "$lib2Var$$"
-          "var lib2Var = 10; $lib1$$();"
+          "var $lib2Var$$ = 10; $lib1$$();"
         };
     Node expectedRoot = parseExpectedCode(expected);
     assertNode(compiler.getRoot().getSecondChild())

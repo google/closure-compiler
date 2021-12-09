@@ -508,6 +508,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     addNonTypedAstNormalizationPasses(passes);
 
+    // Remove synthetic extern declarations of names that are now defined in source
+    // This is expected to do nothing when in a monolithic build
+    passes.add(removeUnnecessarySyntheticExterns);
+
     TranspilationPasses.addTranspilationRuntimeLibraries(passes, options);
 
     if (options.rewritePolyfills || options.getIsolatePolyfills()) {
@@ -2813,6 +2817,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   SerializeTypedAstPass.createFromPath(compiler, options.getTypedAstOutputFile()))
+          .setFeatureSetForChecks()
+          .build();
+
+  private final PassFactory removeUnnecessarySyntheticExterns =
+      PassFactory.builder()
+          .setName("removeUnnecessarySyntheticExterns")
+          .setInternalFactory(RemoveUnnecessarySyntheticExterns::new)
           .setFeatureSetForChecks()
           .build();
 

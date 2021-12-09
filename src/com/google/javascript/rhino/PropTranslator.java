@@ -149,6 +149,8 @@ final class PropTranslator {
         return NodeProperty.ES6_MODULE;
       case CONSTANT_VAR_FLAGS:
         return NodeProperty.CONSTANT_VAR_FLAGS;
+      case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
+        return NodeProperty.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION;
       case SIDE_EFFECT_FLAGS:
       case DECLARED_TYPE_EXPR:
       case FEATURE_SET:
