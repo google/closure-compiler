@@ -113,11 +113,12 @@ google.maps.CameraOptions.prototype.zoom;
 /**
  * A circle on the Earth&#39;s surface; also known as a &quot;spherical
  * cap&quot;.
- * @param {(?google.maps.CircleLiteral|?google.maps.CircleOptions)=} opts
+ * @param {(?google.maps.Circle|?google.maps.CircleLiteral|?google.maps.CircleOptions)=}
+ *     circleOrCircleOptions
  * @extends {google.maps.MVCObject}
  * @constructor
  */
-google.maps.Circle = function(opts) {};
+google.maps.Circle = function(circleOrCircleOptions) {};
 
 /**
  * Gets the <code>LatLngBounds</code> of this Circle.
@@ -1505,9 +1506,7 @@ google.maps.DirectionsLeg.prototype.duration;
 /**
  * The total duration of this leg, taking into account the traffic conditions
  * indicated by the <code>trafficModel</code> property. This property may be
- * <code>undefined</code> as the duration may be unknown. Only available to
- * Premium Plan customers when <code>drivingOptions</code> is defined when
- * making the request.
+ * <code>undefined</code> as the duration may be unknown.
  * @type {!google.maps.Duration|undefined}
  */
 google.maps.DirectionsLeg.prototype.duration_in_traffic;
@@ -1554,6 +1553,13 @@ google.maps.DirectionsLeg.prototype.start_location;
 google.maps.DirectionsLeg.prototype.steps;
 
 /**
+ * Information about traffic speed along the leg.
+ * @type {!Array<?>}
+ * @deprecated This array will always be empty.
+ */
+google.maps.DirectionsLeg.prototype.traffic_speed_entry;
+
+/**
  * An array of non-stopover waypoints along this leg, which were specified in
  * the original request. <p> <strong>Deprecated in alternative routes</strong>.
  * Version 3.27 will be the last version of the API that adds extra
@@ -1565,6 +1571,21 @@ google.maps.DirectionsLeg.prototype.steps;
  * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsLeg.prototype.via_waypoints;
+
+/**
+ * An object containing a <code>points</code> property to describe the polyline
+ * of a {@link google.maps.DirectionsStep}.
+ * @record
+ */
+google.maps.DirectionsPolyline = function() {};
+
+/**
+ * An <a
+ * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
+ * polyline</a>.
+ * @type {string}
+ */
+google.maps.DirectionsPolyline.prototype.points;
 
 /**
  * Renders directions obtained from the <code><a
@@ -1866,6 +1887,16 @@ google.maps.DirectionsRequest.prototype.waypoints;
 google.maps.DirectionsResult = function() {};
 
 /**
+ * Contains an array of available travel modes. This field is returned when a
+ * request specifies a travel mode and gets no results. The array contains the
+ * available travel modes in the countries of the given set of waypoints. This
+ * field is not returned if one or more of the waypoints are &#39;via
+ * waypoints&#39;.
+ * @type {!Array<!google.maps.TravelMode>|undefined}
+ */
+google.maps.DirectionsResult.prototype.available_travel_modes;
+
+/**
  * An array of <code>DirectionsGeocodedWaypoint</code>s, each of which contains
  * information about the geocoding of origin, destination and waypoints.
  * @type {!Array<!google.maps.DirectionsGeocodedWaypoint>|undefined}
@@ -1935,6 +1966,13 @@ google.maps.DirectionsRoute.prototype.overview_path;
  * @type {string}
  */
 google.maps.DirectionsRoute.prototype.overview_polyline;
+
+/**
+ * Contains a short textual description for the route, suitable for naming and
+ * disambiguating the route from alternatives.
+ * @type {string}
+ */
+google.maps.DirectionsRoute.prototype.summary;
 
 /**
  * Warnings to be displayed when showing these directions.
@@ -2044,10 +2082,26 @@ google.maps.DirectionsStep.prototype.distance;
 google.maps.DirectionsStep.prototype.duration;
 
 /**
+ * An <a
+ * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
+ * polyline representation</a> of the step. This is an approximate (smoothed)
+ * path of the step.
+ * @type {string}
+ */
+google.maps.DirectionsStep.prototype.encoded_lat_lngs;
+
+/**
  * The ending location of this step.
  * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.end_location;
+
+/**
+ * The ending location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.end_location}.
+ */
+google.maps.DirectionsStep.prototype.end_point;
 
 /**
  * Instructions for this step.
@@ -2056,16 +2110,50 @@ google.maps.DirectionsStep.prototype.end_location;
 google.maps.DirectionsStep.prototype.instructions;
 
 /**
- * A sequence of <code>LatLng</code>s describing the course of this step.
+ * A sequence of <code>LatLng</code>s describing the course of this step. This
+ * is an approximate (smoothed) path of the step.
+ * @type {!Array<!google.maps.LatLng>}
+ * @deprecated Please use {@link google.maps.DirectionsStep.path}.
+ */
+google.maps.DirectionsStep.prototype.lat_lngs;
+
+/**
+ * Contains the action to take for the current step (<code>turn-left</code>,
+ * <code>merge</code>, <code>straight</code>, etc.). Values are subject to
+ * change, and new values may be introduced without prior notice.
+ * @type {string}
+ */
+google.maps.DirectionsStep.prototype.maneuver;
+
+/**
+ * A sequence of <code>LatLng</code>s describing the course of this step. This
+ * is an approximate (smoothed) path of the step.
  * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsStep.prototype.path;
+
+/**
+ * Contains an object with a single property, &#39;points&#39;, that holds an <a
+ * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
+ * polyline</a> representation of the step. This polyline is an approximate
+ * (smoothed) path of the step.
+ * @type {!Array<!google.maps.DirectionsStep>|undefined}
+ * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
+ */
+google.maps.DirectionsStep.prototype.polyline;
 
 /**
  * The starting location of this step.
  * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.start_location;
+
+/**
+ * The starting location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.start_location}.
+ */
+google.maps.DirectionsStep.prototype.start_point;
 
 /**
  * Sub-steps of this step. Specified for non-transit sections of transit routes.
@@ -2079,6 +2167,12 @@ google.maps.DirectionsStep.prototype.steps;
  * @type {!google.maps.TransitDetails|undefined}
  */
 google.maps.DirectionsStep.prototype.transit;
+
+/**
+ * Details pertaining to this step if the travel mode is <code>TRANSIT</code>.
+ * @type {!google.maps.TransitDetails|undefined}
+ */
+google.maps.DirectionsStep.prototype.transit_details;
 
 /**
  * The mode of travel used in this step.
@@ -3683,21 +3777,28 @@ google.maps.KmlMouseEvent.prototype.pixelOffset;
  * followed by the longitude.<br> Notice that you cannot modify the coordinates
  * of a <code>LatLng</code>. If you want to compute another point, you have to
  * create a new one.<br> <p> Most methods that accept <code>LatLng</code>
- * objects also accept a <code><a href="#LatLngLiteral">LatLngLiteral</a></code>
- * object, so that the following are equivalent: <pre> map.setCenter(new
+ * objects also accept a <code>{@link google.maps.LatLngLiteral}</code> object,
+ * so that the following are equivalent: <pre> map.setCenter(new
  * google.maps.LatLng(-34, 151));<br> map.setCenter({lat: -34, lng: 151});
- * </pre> <p> The constructor also accepts literal objects, and converts them to
- * instances of <code>LatLng</code>. The possible calls to the constructor are
- * below: <pre> new google.maps.LatLng(-34, 151);<br> new
- * google.maps.LatLng(-34, 151, true);<br> new google.maps.LatLng({lat: -34,
- * lng: 151});<br> new google.maps.LatLng({lat: -34, lng: 151}, true);<br> new
- * google.maps.LatLng({lat: -34, lng: 151}, null, true); </pre>
- * @param {number|!google.maps.LatLngLiteral} latOrLatLngLiteral
+ * </pre> <p> The constructor also accepts <code>{@link
+ * google.maps.LatLngLiteral}</code> and <code>LatLng</code> objects. If a
+ * <code>LatLng</code> instance is passed to the constructor, a copy is created.
+ * <p> The possible calls to the constructor are below: <pre> new
+ * google.maps.LatLng(-34, 151);<br> new google.maps.LatLng(-34, 151, true);<br>
+ * new google.maps.LatLng({lat: -34, lng: 151});<br> new
+ * google.maps.LatLng({lat: -34, lng: 151}, true);<br> new
+ * google.maps.LatLng({lat: -34, lng: 151}, null, true);<br> new
+ * google.maps.LatLng(new google.maps.LatLng(-34, 151));<br> new
+ * google.maps.LatLng(new google.maps.LatLng(-34, 151), true);<br> new
+ * google.maps.LatLng(new google.maps.LatLng(-34, 151), null, true); </pre>
+ * @param {number|!google.maps.LatLngLiteral|!google.maps.LatLng}
+ *     latOrLatLngOrLatLngLiteral
  * @param {?(number|boolean)=} lngOrNoWrap
  * @param {boolean=} noWrap
  * @constructor
  */
-google.maps.LatLng = function(latOrLatLngLiteral, lngOrNoWrap, noWrap) {};
+google.maps.LatLng = function(
+    latOrLatLngOrLatLngLiteral, lngOrNoWrap, noWrap) {};
 
 /**
  * Comparison function.
@@ -3745,11 +3846,12 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * A <code><a href="#LatLngBounds">LatLngBounds</a></code> instance represents a
  * rectangle in geographical coordinates, including one that crosses the 180
  * degrees longitudinal meridian.
- * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} sw
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral|?google.maps.LatLngBounds)=}
+ *     swOrLatLngBounds
  * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} ne
  * @constructor
  */
-google.maps.LatLngBounds = function(sw, ne) {};
+google.maps.LatLngBounds = function(swOrLatLngBounds, ne) {};
 
 /**
  * Returns <code>true</code> if the given lat/lng is in this bounds.
