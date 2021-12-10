@@ -158,6 +158,32 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void lateFulfilledNameReferencedInExternsAndCode_notRenamed() throws IOException {
+    // tests an edge case with the "RemoveUnnecessarySyntheticExterns" pass
+    // it can't remove the synthetic externs definition of "lateDefinedVar" or the compiler will
+    // crash after variable renaming.
+
+    // both externs and code have bad references to the same lateDefinedVar
+    precompileLibrary(
+        extern("/** @fileoverview @suppress {externsValidation,checkVars} */ lateDefinedVar;"),
+        code("/** @fileoverview @suppress {checkVars} */ lateDefinedVar;"));
+    // and another, entirely separate library defines it.
+    precompileLibrary(code("var lateDefinedVar; var normalVar;"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    options.setGeneratePseudoNames(true);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot =
+        parseExpectedCode("lateDefinedVar;", "var lateDefinedVar; var $normalVar$$;");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
   public void externJSDocPropertiesNotRenamed() throws IOException {
     precompileLibrary(
         extern(

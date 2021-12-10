@@ -2446,4 +2446,48 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             // Compiler calls SpeakerImpl.prototype.speak even though it's called off SpeakerChild.
             "alert('Speaker'); alert('other');"));
   }
+
+  @Test
+  public void testNameReferencedInExternsDefinedInCodeNotRenamedButIsInlined() {
+    // NOTE(lharker): I added this test as a regression test for existing compiler behavior. I'm
+    // not sure it makes sense conceptually to have 'foobar' be unrenamable but still optimized away
+    // below.
+    CompilerOptions options = createCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .addExtra("/** @fileoverview @suppress {externsValidation} */ foobar")
+                .buildExternsFile("externs.js"));
+
+    // with just variable renaming on, the code is unchanged becasue of the 'foobar' externs ref.
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    test(options, "var foobar = {x: 1}; alert(foobar.x);", "var foobar = {x:1}; alert(foobar.x);");
+
+    // with inlining + other advanced optimizations, foobar is still deleted
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options, "var foobar = {x: 1}; alert(foobar.x);", "alert(1);");
+  }
+
+  @Test
+  public void testUndefinedNameReferencedInCodeAndExterns() {
+    // NOTE(lharker): I added this test as a regression test for existing compiler behavior.
+    CompilerOptions options = createCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addAlert()
+                .addExtra("/** @fileoverview @suppress {externsValidation} */ foobar")
+                .buildExternsFile("externs.js"));
+
+    // with just variable renaming on, the code is unchanged becasue of the 'foobar' externs ref.
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+    test(options, "foobar = {x: 1}; alert(foobar.x);", "foobar = {x:1}; alert(foobar.x);");
+
+    // with inlining + other advanced optimizations, foobar.x is renamed
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(options, "foobar = {x: 1}; alert(foobar.x);", "foobar = {a: 1}; alert(foobar.a);");
+  }
 }

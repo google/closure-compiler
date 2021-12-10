@@ -92,10 +92,9 @@ class VarCheck implements ScopedCallback, CompilerPass {
 
   private static final Node googForwardDeclare = IR.getprop(IR.name("goog"), "forwardDeclare");
 
-  // Vars that still need to be declared in externs. These will be declared
-  // at the end of the pass, or when we see the equivalent var declared
-  // in the normal code.
-  private final Set<String> varsToDeclareInExterns = new LinkedHashSet<>();
+  // Vars that were referenced in the externs without being declared in externs, even if they were
+  // defined in code. These will be declared at the end of this pass.
+  private final Set<String> undefinedNamesFromExterns = new LinkedHashSet<>();
 
   private final AbstractCompiler compiler;
 
@@ -152,8 +151,8 @@ class VarCheck implements ScopedCallback, CompilerPass {
         .setScopeCreator(scopeCreator)
         .traverseRoots(externs, root);
 
-    for (String varName : varsToDeclareInExterns) {
-      createSynthesizedExternVar(compiler, varName);
+    for (String varName : undefinedNamesFromExterns) {
+      createSynthesizedExternVar(varName, /* isFromUndefinedCodeRef= */ false);
     }
 
     if (dupHandler != null) {
@@ -288,8 +287,11 @@ class VarCheck implements ScopedCallback, CompilerPass {
       // declared or marked as an extern. A failure at this point means that we have created
       // some variable/generated some code with an undefined reference.
       throw new IllegalStateException("Unexpected variable " + varName);
-    } else {
-      createSynthesizedExternVar(varName);
+    } else if (!undefinedNamesFromExterns.contains(varName)) {
+      // Skip this case if the name is already going to be added as an "undefined name from extern"
+      // That declaration must take priority, to avoid the RemoveUnnecessarySyntheticExterns pass
+      // accidentally treating the synthetic extern as unnecessary.
+      createSynthesizedExternVar(varName, /* isFromUndefinedCodeRef= */ true);
     }
   }
 
@@ -304,7 +306,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
       for (String requiredSymbol : REQUIRED_SYMBOLS) {
         Var var = scope.getVar(requiredSymbol);
         if (var == null) {
-          varsToDeclareInExterns.add(requiredSymbol);
+          undefinedNamesFromExterns.add(requiredSymbol);
         }
       }
     }
@@ -347,10 +349,10 @@ class VarCheck implements ScopedCallback, CompilerPass {
           "window");
 
   /**
-   * Create a new variable in a synthetic script. This will prevent
-   * subsequent compiler passes from crashing.
+   * Create a new variable in a synthetic script. This will prevent subsequent compiler passes from
+   * crashing.
    */
-  static void createSynthesizedExternVar(AbstractCompiler compiler, String varName) {
+  private void createSynthesizedExternVar(String varName, boolean isFromUndefinedCodeRef) {
     Node nameNode = IR.name(varName);
 
     // Mark the variable as constant if it matches the coding convention
@@ -364,18 +366,9 @@ class VarCheck implements ScopedCallback, CompilerPass {
     }
 
     Node syntheticExternVar = IR.var(nameNode);
-    syntheticExternVar.setIsSynthesizedUnfulfilledNameDeclaration(true);
+    syntheticExternVar.setIsSynthesizedUnfulfilledNameDeclaration(isFromUndefinedCodeRef);
     getSynthesizedExternsRoot(compiler).addChildToBack(syntheticExternVar);
     compiler.reportChangeToEnclosingScope(syntheticExternVar);
-  }
-
-  /**
-   * Create a new variable in a synthetic script. This will prevent
-   * subsequent compiler passes from crashing.
-   */
-  private void createSynthesizedExternVar(String varName) {
-    createSynthesizedExternVar(compiler, varName);
-    varsToDeclareInExterns.remove(varName);
   }
 
   /**
@@ -425,7 +418,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
                 return;
               }
               t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
-              varsToDeclareInExterns.add(n.getString());
+              undefinedNamesFromExterns.add(n.getString());
             }
             return;
           case ASSIGN:
@@ -458,7 +451,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
         Scope scope = t.getScope();
         Var var = scope.getVar(n.getString());
         if (var == null) {
-          varsToDeclareInExterns.add(n.getString());
+          undefinedNamesFromExterns.add(n.getString());
         }
       }
     }

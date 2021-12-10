@@ -203,7 +203,8 @@ public class Node {
     // list
     TRAILING_COMMA,
     // Indicates that a variable declaration was synthesized to provide a declaration of some
-    // name referenced but never defined, as most compiler passes expect that to be an invariant.
+    // name referenced in code but never defined, as most compiler passes expect that to be an
+    // invariant.
     // Only present in the "synthetic externs file". Builds initialized using a
     // "TypedAST filesystem" will delete any such declarations present in a different compilation
     // shard
@@ -1024,7 +1025,7 @@ public class Node {
           break;
         case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION:
           // note: we could relax this restriction if VarCheck needed to generate other forms of
-          // synthetic terns
+          // synthetic externs
           if (!isVar() || !hasOneChild() || !getFirstChild().isName()) {
             violationMessageConsumer.accept(
                 "Expected all synthetic unfulfilled declarations to be `var <name>`");
