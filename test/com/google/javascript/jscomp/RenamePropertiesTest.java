@@ -837,6 +837,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             compiler,
             generatePseudoNames,
             prevUsedPropertyMap,
+            null,
+            null,
             new DefaultNameGenerator());
   }
 }

@@ -115,39 +115,6 @@ class RenameProperties implements CompilerPass {
   /**
    * Creates an instance.
    *
-   * @param compiler The JSCompiler
-   * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
-   *        of compact obfuscated names. This is used for debugging.
-   * @param nameGenerator a shared NameGenerator that this instance can use;
-   *        the instance may reset or reconfigure it, so the caller should
-   *        not expect any state to be preserved
-   */
-  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames,
-      NameGenerator nameGenerator) {
-    this(compiler, generatePseudoNames, null, null, null, nameGenerator);
-  }
-
-  /**
-   * Creates an instance.
-   *
-   * @param compiler The JSCompiler.
-   * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
-   *        of compact obfuscated names. This is used for debugging.
-   * @param prevUsedPropertyMap The property renaming map used in a previous
-   *        compilation.
-   * @param nameGenerator a shared NameGenerator that this instance can use;
-   *        the instance may reset or reconfigure it, so the caller should
-   *        not expect any state to be preserved
-   */
-  RenameProperties(AbstractCompiler compiler,
-      boolean generatePseudoNames, VariableMap prevUsedPropertyMap,
-      NameGenerator nameGenerator) {
-    this(compiler, generatePseudoNames, prevUsedPropertyMap, null, null, nameGenerator);
-  }
-
-  /**
-   * Creates an instance.
-   *
    * @param compiler The JSCompiler.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead of compact
    *     obfuscated names. This is used for debugging.
