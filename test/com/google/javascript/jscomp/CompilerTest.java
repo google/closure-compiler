@@ -1249,14 +1249,15 @@ public final class CompilerTest {
     options.setMessageBundle(new EmptyMessageBundle());
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    compiler.init(
+    List<SourceFile> externs =
         Collections.singletonList(
             SourceFile.fromCode(
                 "externs.js",
                 lines(
                     "var console = {};", //
                     " console.log = function() {};",
-                    ""))),
+                    "")));
+    List<SourceFile> srcs =
         Collections.singletonList(
             SourceFile.fromCode(
                 "input.js",
@@ -1265,8 +1266,8 @@ public final class CompilerTest {
                     "const MSG_HELLO = goog.getMsg('hello');",
                     "function f() { return MSG_HELLO; }",
                     "console.log(f());",
-                    ""))),
-        options);
+                    "")));
+    compiler.init(externs, srcs, options);
 
     compiler.parse();
     compiler.check();
@@ -1274,7 +1275,7 @@ public final class CompilerTest {
     final byte[] stateAfterChecks = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.initOptions(options);
+    compiler.init(externs, srcs, options);
     restoreCompilerState(compiler, stateAfterChecks);
 
     compiler.performTranspilationAndOptimizations();
@@ -1289,7 +1290,7 @@ public final class CompilerTest {
     final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.initOptions(options);
+    compiler.init(externs, srcs, options);
     restoreCompilerState(compiler, stateAfterOptimizations);
 
     compiler.performFinalizations();
@@ -1332,6 +1333,11 @@ public final class CompilerTest {
     options.setCheckTypes(true);
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    ImmutableList<SourceFile> externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "externs.js",
+                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};")));
     JSChunk m = new JSChunk("m");
     SourceFile inputSourceFile =
         SourceFile.fromCode(
@@ -1339,13 +1345,7 @@ public final class CompilerTest {
             Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"));
     JsAst realAst = new JsAst(inputSourceFile);
     m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
-    compiler.initModules(
-        ImmutableList.of(
-            SourceFile.fromCode(
-                "externs.js",
-                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};"))),
-        ImmutableList.of(m),
-        options);
+    compiler.initModules(externs, ImmutableList.of(m), options);
 
     compiler.parse();
     compiler.check();
@@ -1355,7 +1355,9 @@ public final class CompilerTest {
     byteArrayOutputStream.close();
 
     compiler = new Compiler(new TestErrorManager());
-    compiler.initOptions(options);
+    m = new JSChunk("m");
+    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
+    compiler.initModules(externs, ImmutableList.of(m), options);
     restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 
     compiler.performTranspilationAndOptimizations();

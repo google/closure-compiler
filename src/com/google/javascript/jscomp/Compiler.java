@@ -3662,16 +3662,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Do not close the input stream, caller is responsible for closing it.
     CompilerState compilerState = (CompilerState) new ObjectInputStream(inputStream).readObject();
 
+    checkNotNull(
+        this.moduleGraph, "Did you forget to call .init or .initModules before restoreState?");
+    ImmutableMap.Builder<String, SourceFile> externFilesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, SourceFile> codeFilesBuilder = ImmutableMap.builder();
+    ImmutableList.Builder<SourceFile> allInputFiles = ImmutableList.builder();
+    for (CompilerInput input : this.moduleGraph.getAllInputs()) {
+      allInputFiles.add(input.getSourceFile());
+      codeFilesBuilder.put(input.getInputId().getIdName(), input.getSourceFile());
+    }
+    for (CompilerInput extern : this.externs) {
+      allInputFiles.add(extern.getSourceFile());
+      externFilesBuilder.put(extern.getInputId().getIdName(), extern.getSourceFile());
+    }
+
     TypedAstDeserializer.DeserializedAst deserializedAst =
         TypedAstDeserializer.deserializeFullAst(
             this,
             SYNTHETIC_EXTERNS_FILE,
-            // pass an empty list instead of any existing SourceFile objects.
-            // TODO(lharker): we could passing existing SourceFile objects to
-            // reuse if we could guarantee that .init/.initModules was always called before
-            // .restoreState. that would remove the need for
-            // TypedAstDeserializer.DeserializedAst::getAllFiles
-            ImmutableList.of(),
+            allInputFiles.build(),
             inputStream,
             compilerState.typeCheckingHasRun);
 
@@ -3719,11 +3728,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // overwrite any existing CompilerInput instances. Reuse the SourceFiles created by
     // TypedAstDeserializer; otherwise lookups in this.typedAstFilesystem will fail.
+    ImmutableMap<String, SourceFile> externFiles = externFilesBuilder.buildOrThrow();
+    ImmutableMap<String, SourceFile> codeFiles = codeFilesBuilder.buildOrThrow();
     for (InputId extern : compilerState.externs) {
-      SourceFile externFile = deserializedAst.getAllFiles().get(extern.getIdName());
-      if (externFile.equals(SYNTHETIC_EXTERNS_FILE)) {
+      if (extern.getIdName().equals(SYNTHETIC_EXTERNS_FILE.getName())) {
         this.getSynthesizedExternsInput();
         continue;
+      }
+      SourceFile externFile = externFiles.get(extern.getIdName());
+      if (externFile == null) {
+        // Extern files may passed in with regular source files, and later 'hoisted' to externs
+        // because they are annotated `@externs`.
+        externFile = checkNotNull(codeFiles.get(extern.getIdName()), "Missing %s", extern);
       }
       CompilerInput input = new CompilerInput(externFile, /* isExtern= */ true);
       Node script = input.getAstRoot(this); // accesses this.typedAstFilesystem
@@ -3736,7 +3752,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     for (JSChunk deserializedModule : getModules()) {
       for (InputId inputId : compilerState.moduleToInputList.get(deserializedModule)) {
-        SourceFile src = deserializedAst.getAllFiles().get(inputId.getIdName());
+        SourceFile src = checkNotNull(codeFiles.get(inputId.getIdName()), "Missing %s", inputId);
         CompilerInput input = new CompilerInput(src);
         Node script = input.getAstRoot(this); // accesses this.typedAstFilesystem
 

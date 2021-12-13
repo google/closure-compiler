@@ -82,8 +82,10 @@ public abstract class CompilerTestCase {
   public static final String GENERATED_SRC_NAME = "testcode";
   public static final String GENERATED_EXTERNS_NAME = "externs";
 
-  /** Externs for the test */
-  final List<SourceFile> externsInputs;
+  /**
+   * Default externs for the test. Individual calls to test() may provide their own externs instead.
+   */
+  private final ImmutableList<SourceFile> defaultExternsInputs;
 
   /** Libraries to inject before typechecking */
   final Set<String> librariesToInject;
@@ -595,7 +597,8 @@ public abstract class CompilerTestCase {
    * @param externs Externs JS as a string
    */
   protected CompilerTestCase(String externs) {
-    this.externsInputs = ImmutableList.of(SourceFile.fromCode(GENERATED_EXTERNS_NAME, externs));
+    this.defaultExternsInputs =
+        ImmutableList.of(SourceFile.fromCode(GENERATED_EXTERNS_NAME, externs));
     librariesToInject = new HashSet<>();
   }
 
@@ -1217,7 +1220,7 @@ public abstract class CompilerTestCase {
    * @param diagnostic Expected warning or error
    */
   protected void test(String js, String expected, Diagnostic diagnostic) {
-    test(externs(externsInputs), srcs(js), expected(expected), diagnostic);
+    test(externs(defaultExternsInputs), srcs(js), expected(expected), diagnostic);
   }
 
   protected void testInternal(
@@ -1234,7 +1237,7 @@ public abstract class CompilerTestCase {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
     }
 
-    testInternal(compiler, inputs, expected, diagnostics, postconditions);
+    testInternal(compiler, externs, inputs, expected, diagnostics, postconditions);
   }
 
   /**
@@ -1315,6 +1318,7 @@ public abstract class CompilerTestCase {
    */
   private void testInternal(
       Compiler compiler,
+      Externs externs,
       Sources inputsObj, // TODO remove this parameter
       Expected expectedObj,
       List<Diagnostic> diagnostics,
@@ -1460,7 +1464,7 @@ public abstract class CompilerTestCase {
               recentChange.reset();
               compiler =
                   CompilerTestCaseUtils.multistageSerializeAndDeserialize(
-                      this, compiler, inputs, recentChange);
+                      this, compiler, externs.externs, inputs, recentChange);
               root = compiler.getRoot();
               externsRoot = compiler.getExternsRoot();
               mainRoot = compiler.getJsRoot();
@@ -1803,7 +1807,7 @@ public abstract class CompilerTestCase {
   private Node parseExpectedJs(List<SourceFile> inputs) {
     Compiler compiler = createCompiler();
 
-    compiler.init(externsInputs, inputs, getOptions());
+    compiler.init(defaultExternsInputs, inputs, getOptions());
     Node root = compiler.parseInputs();
     assertWithMessage("Unexpected parse error(s): " + LINE_JOINER.join(compiler.getErrors()))
         .that(root)
@@ -2133,7 +2137,7 @@ public abstract class CompilerTestCase {
       expected = fromSources(srcs);
     }
     if (externs == null) {
-      externs = externs(externsInputs);
+      externs = externs(defaultExternsInputs);
     }
     testInternal(externs, srcs, expected, diagnostics, postconditions);
   }

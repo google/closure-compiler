@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
@@ -175,7 +174,6 @@ public final class TypedAstDeserializer {
             ? Optional.absent()
             : Optional.of(colorPoolBuilder.get().build().getRegistry());
     return DeserializedAst.create(
-        ImmutableMap.copyOf(filePoolBuilder),
         ImmutableMap.copyOf(typedAstFilesystem),
         registry,
         externProperties.build());
@@ -234,17 +232,6 @@ public final class TypedAstDeserializer {
   /** The result of deserializing a TypedAst.List */
   @AutoValue
   public abstract static class DeserializedAst {
-    /**
-     * Maps from file name to the canonical SourceFile for all source files referenced on the
-     * TypedAST
-     *
-     * <p>This will be a superset of {@link #getFilesystem()}, but some synthetic files referenced
-     * here might not exist in the file system.
-     *
-     * <p>If any files were passed to {@link TypedAstDeserializer#deserializeFullAst}, then those
-     * files will also appear in this set.
-     */
-    public abstract ImmutableMap<String, SourceFile> getAllFiles();
 
     /**
      * Maps from SourceFile to a lazy deserializer of the SCRIPT node for that file
@@ -271,15 +258,11 @@ public final class TypedAstDeserializer {
     public abstract ImmutableSet<String> getExternProperties();
 
     private static DeserializedAst create(
-        ImmutableMap<String, SourceFile> allFiles,
         ImmutableMap<SourceFile, Supplier<Node>> filesystem,
         Optional<ColorRegistry> colorRegistry,
         ImmutableSet<String> externProperties) {
-      checkState(
-          allFiles.values().containsAll(filesystem.keySet()),
-          "Expected allFiles.values() to contain filesystem.keySet()");
       return new AutoValue_TypedAstDeserializer_DeserializedAst(
-          allFiles, filesystem, colorRegistry, externProperties);
+          filesystem, colorRegistry, externProperties);
     }
   }
 }
