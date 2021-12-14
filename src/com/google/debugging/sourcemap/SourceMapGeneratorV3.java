@@ -134,6 +134,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    */
   @Override
   public void reset() {
+    // Do not reset sourceFileContentMap
     mappings.clear();
     lastMapping = null;
     sourceFileMap.clear();
@@ -495,13 +496,17 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     int size = sourceFileMap.size();
     List<String> contents = new ArrayList<>(size);
     contents.addAll(Collections.nCopies(size, ""));
-    for (Map.Entry<String, String> entry : sourceFileContentMap.entrySet()) {
-      Integer index = sourceFileMap.get(entry.getKey());
-      if (index != null && index < size) {
-        contents.set(index, entry.getValue());
+
+    for (Map.Entry<String, Integer> entry : sourceFileMap.entrySet()) {
+      Integer index = entry.getValue();
+      checkState(index < size);
+      String content = sourceFileContentMap.get(entry.getKey());
+      if (content != null) {
+        contents.set(index, content);
         found = true;
       }
     }
+
     if (!found) {
       return;
     }
