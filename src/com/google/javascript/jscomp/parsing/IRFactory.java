@@ -3039,7 +3039,9 @@ class IRFactory {
     // <CR><LF> and <CR> are normalized as <LF>. For raw template literal string values: this is the
     // spec behaviour. For regular string literals: they can only be part of a line continuation,
     // which we want to scrub.
-    value = value.replaceAll("\r\n?", "\n");
+    if (value.indexOf('\r') >= 0) {
+      value = value.replaceAll("\r\n?", "\n");
+    }
 
     int start = templateLiteral ? 0 : 1; // skip the leading quote
     int cur = value.indexOf('\\');
