@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ class OptimizeCalls implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Only global names are collected, which is insufficient if names have not been normalized.
-    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     if (passes.isEmpty()) {
       return;

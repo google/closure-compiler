@@ -114,7 +114,7 @@ public abstract class PassConfig {
   }
 
   /** Throws an exception if no pass with the given name exists. */
-  private static int findPassIndexByName(List<PassFactory> factoryList, String name) {
+  static int findPassIndexByName(List<PassFactory> factoryList, String name) {
     for (int i = 0; i < factoryList.size(); i++) {
       if (factoryList.get(i).getName().equals(name)) {
         return i;

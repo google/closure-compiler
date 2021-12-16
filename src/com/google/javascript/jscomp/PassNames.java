@@ -71,6 +71,7 @@ public final class PassNames {
   public static final String INLINE_TYPE_ALIASES = "inlineTypeAliases";
   public static final String INLINE_VARIABLES = "inlineVariables";
   public static final String LINT_CHECKS = "lintChecks";
+  public static final String MARK_UNNORMALIZED = "markUnnormalized";
   public static final String NORMALIZE = "normalize";
   public static final String OPTIMIZE_ARGUMENTS_ARRAY = "optimizeArgumentsArray";
   public static final String OPTIMIZE_CALLS = "optimizeCalls";
@@ -84,6 +85,7 @@ public final class PassNames {
   public static final String REPLACE_MESSAGES = "replaceMessages";
   public static final String RESOLVE_TYPES = "resolveTypes";
   public static final String REWRITE_FUNCTION_EXPRESSIONS = "rewriteFunctionExpressions";
+  public static final String RENAME_PROPERTIES = "renameProperties";
   public static final String RUNTIME_TYPE_CHECK = "runtimeTypeCheck";
   public static final String STRIP_SIDE_EFFECT_PROTECTION = "stripSideEffectProtection";
   public static final String WIZ_PASS = "wizPass";
