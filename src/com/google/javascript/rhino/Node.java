@@ -211,6 +211,9 @@ public class Node {
     SYNTHESIZED_UNFULFILLED_NAME_DECLARATION,
   }
 
+  // Avoid cloning "values" repeatedly in hot code, we save it off now.
+  private static final Prop[] PROP_VALUES = Prop.values();
+
   /**
    * Get the NonJSDoc comment string attached to this node.
    *
@@ -937,6 +940,8 @@ public class Node {
     return this;
   }
 
+
+
   /**
    * Checks for invalid or missing properties and feeds error messages for any violations to the
    * given `Consumer`.
@@ -970,12 +975,10 @@ public class Node {
       violationMessageConsumer.accept("ROOT has properties");
     }
 
-    // Used to look up the Prop based on the ordinal stored in the PropListItem.
-    final Prop[] propValues = Prop.values();
     for (PropListItem propListItem = propListHead;
         propListItem != null;
         propListItem = propListItem.next) {
-      final Prop prop = propValues[propListItem.propType];
+      final Prop prop = PROP_VALUES[propListItem.propType];
       // Catch it if the definition of Prop ever changes so that the ordinals don't line up.
       checkState(prop.ordinal() == propListItem.propType, "ordinal doesn't match: %s", prop);
 
@@ -1094,8 +1097,6 @@ public class Node {
       this.propListHead = new IntPropListItem((byte) prop.ordinal(), value, this.propListHead);
     }
   }
-
-  private static final Prop[] PROP_VALUES = Prop.values();
 
   public final EnumSet<NodeProperty> serializeProperties() {
     EnumSet<NodeProperty> propSet = EnumSet.noneOf(NodeProperty.class);
@@ -1314,7 +1315,7 @@ public class Node {
     if (printAnnotations) {
       byte[] keys = getSortedPropTypes();
       for (int i = 0; i < keys.length; i++) {
-        Prop type = Prop.values()[keys[i]];
+        Prop type = PROP_VALUES[keys[i]];
         PropListItem x = lookupProperty(type);
         sb.append(" [");
         sb.append(Ascii.toLowerCase(String.valueOf(type)));
