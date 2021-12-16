@@ -21,7 +21,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractScope.ImplicitVar;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -71,10 +70,6 @@ class VariableReferenceCheck implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  // If true, the pass will only check code that is at least ES6. Certain errors in block-scoped
-  // variable declarations will prevent correct transpilation, so this pass must be run.
-  private final boolean forTranspileOnly;
-
   private final boolean checkUnusedLocals;
 
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
@@ -89,39 +84,16 @@ class VariableReferenceCheck implements CompilerPass {
           Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.FOR_AWAIT_OF, Token.WHILE);
 
   public VariableReferenceCheck(AbstractCompiler compiler) {
-    this(compiler, false);
-  }
-
-  VariableReferenceCheck(AbstractCompiler compiler, boolean forTranspileOnly) {
     this.compiler = compiler;
-    this.forTranspileOnly = forTranspileOnly;
     this.checkUnusedLocals =
         compiler.getOptions().enables(DiagnosticGroup.forType(UNUSED_LOCAL_ASSIGNMENT));
   }
 
-  private boolean shouldProcess(Node root) {
-    if (!forTranspileOnly) {
-      return true;
-    }
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015)) {
-      for (Node singleRoot = root.getFirstChild();
-          singleRoot != null;
-          singleRoot = singleRoot.getNext()) {
-        if (TranspilationPasses.isScriptEs6OrHigher(singleRoot)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   @Override
   public void process(Node externs, Node root) {
-    if (shouldProcess(root)) {
-      new ReferenceCollector(
-              compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
-          .process(externs, root);
-    }
+    new ReferenceCollector(
+            compiler, new ReferenceCheckingBehavior(), new SyntacticScopeCreator(compiler))
+        .process(externs, root);
   }
 
   /**

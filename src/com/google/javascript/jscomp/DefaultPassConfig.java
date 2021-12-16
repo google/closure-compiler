@@ -126,7 +126,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(markUntranspilableFeaturesAsRemoved);
 
-    passes.add(checkVariableReferencesForTranspileOnly);
+    // Certain errors in block-scoped variable declarations will prevent correct transpilation
+    passes.add(checkVariableReferences);
+
     passes.add(gatherModuleMetadataPass);
     passes.add(createModuleMapPass);
 
@@ -1694,14 +1696,6 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSetForChecks()
-          .build();
-
-  /** Checks that references to variables look reasonable. */
-  private final PassFactory checkVariableReferencesForTranspileOnly =
-      PassFactory.builder()
-          .setName(PassNames.CHECK_VARIABLE_REFERENCES)
-          .setInternalFactory((compiler) -> new VariableReferenceCheck(compiler, true))
           .setFeatureSetForChecks()
           .build();
 

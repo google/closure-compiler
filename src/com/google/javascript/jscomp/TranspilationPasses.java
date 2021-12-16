@@ -405,15 +405,6 @@ public class TranspilationPasses {
 
   /**
    * @param script The SCRIPT node representing a JS file
-   * @return If the file has any features which are part of ES2015 or higher but not part of ES5.
-   */
-  static boolean isScriptEs6OrHigher(Node script) {
-    FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
-    return features != null && !FeatureSet.ES5.contains(features);
-  }
-
-  /**
-   * @param script The SCRIPT node representing a JS file
    * @return If the file has any features not in {@code supportedFeatures}
    */
   static boolean doesScriptHaveUnsupportedFeatures(Node script, FeatureSet supportedFeatures) {
