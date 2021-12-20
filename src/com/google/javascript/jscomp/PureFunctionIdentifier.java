@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
@@ -412,44 +411,57 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     // Make sure we get absolutely every R-value assigned to `name` or at the very least detect
     // there are some we're missing. Overlooking a single R-value would invalidate the analysis.
-    List<ImmutableList<Node>> rvaluesAssignedToName =
-        references.stream()
-            // Eliminate any references that we're sure are R-values themselves. Otherwise
-            // there's a high probability we'll inspect an R-value for futher R-values. We wouldn't
-            // find any, and then we'd have to consider `name` impure.
-            .filter((n) -> !isDefinitelyRValue(n))
-            // For anything that might be an L-reference, get the expression being assigned to it.
-            .map(NodeUtil::getRValueOfLValue)
-            // If the assigned R-value is an analyzable expression, collect all the possible
-            // FUNCTIONs that could result from that expression. If the expression isn't analyzable,
-            // represent that with `null` so we can skiplist `name`.
-            .map((n) -> (n == null) ? null : collectCallableLeaves(n))
-            .collect(toList());
 
-    if (rvaluesAssignedToName.isEmpty() || rvaluesAssignedToName.contains(null)) {
+    boolean invalid = false;
+    List<ImmutableList<Node>> rvaluesAssignedToName = new ArrayList<>();
+    for (Node reference : references) {
+      // Eliminate any references that we're sure are R-values themselves. Otherwise
+      // there's a high probability we'll inspect an R-value for futher R-values. We wouldn't
+      // find any, and then we'd have to consider `name` impure.
+      if (!isDefinitelyRValue(reference)) {
+        // For anything that might be an L-reference, get the expression being assigned to it.
+        Node rvalue = NodeUtil.getRValueOfLValue(reference);
+        if (rvalue == null) {
+          invalid = true;
+          break;
+        } else {
+          // If the assigned R-value is an analyzable expression, collect all the possible
+          // FUNCTIONs that could result from that expression. If the expression isn't analyzable,
+          // represent that with `null` so we can skiplist `name`.
+          ImmutableList<Node> callables = collectCallableLeaves(rvalue);
+          if (callables == null) {
+            invalid = true;
+            break;
+          }
+
+          rvaluesAssignedToName.add(callables);
+        }
+      }
+    }
+
+    if (rvaluesAssignedToName.isEmpty() || invalid) {
       // Any of:
       // - There are no L-values with this name.
       // - There's a an L-value and we can't find the associated R-values.
       // - There's a an L-value with R-values are not all known to be callable.
       summaryForName.setMutatesGlobalStateAndAllOtherFlags();
     } else {
-      rvaluesAssignedToName.stream()
-          .flatMap(List::stream)
-          .forEach(
-              (rvalue) -> {
-                if (rvalue.isFunction()) {
-                  summariesForAllNamesOfFunctionByNode.put(rvalue, summaryForName);
-                } else {
-                  String rvalueName = nameForReference(rvalue);
-                  AmbiguatedFunctionSummary rvalueSummary =
-                      summariesByName.getOrDefault(rvalueName, unknownFunctionSummary);
+      for (ImmutableList<Node> callables : rvaluesAssignedToName) {
+        for (Node rvalue : callables) {
+          if (rvalue.isFunction()) {
+            summariesForAllNamesOfFunctionByNode.put(rvalue, summaryForName);
+          } else {
+            String rvalueName = nameForReference(rvalue);
+            AmbiguatedFunctionSummary rvalueSummary =
+                summariesByName.getOrDefault(rvalueName, unknownFunctionSummary);
 
-                  reverseCallGraph.connect(
-                      rvalueSummary.graphNode,
-                      SideEffectPropagation.forAlias(),
-                      summaryForName.graphNode);
-                }
-              });
+            reverseCallGraph.connect(
+                rvalueSummary.graphNode,
+                SideEffectPropagation.forAlias(),
+                summaryForName.graphNode);
+          }
+        }
+      }
     }
   }
 
