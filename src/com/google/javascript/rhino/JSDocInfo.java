@@ -1504,7 +1504,7 @@ public class JSDocInfo implements Serializable {
     // the current marker, if any.
     Marker currentMarker;
     // the set of unique license texts
-    Set<String> licenseTexts = new HashSet<>();
+    Set<String> licenseTexts;
 
     public static Builder copyFrom(JSDocInfo info) {
       return info.toBuilder();
@@ -2179,6 +2179,14 @@ public class JSDocInfo implements Serializable {
     }
 
     public boolean addLicense(String license) {
+      // The vast majority of JSDoc doesn't have @license so it make sense to be lazy about building
+      // the HashSet.
+      if (licenseTexts == null) {
+        // The HashSet is only used to remove duplicates, it is never read beyond the add,
+        // so LinkedHashSet is not required.
+        licenseTexts = new HashSet<>();
+      }
+
       if (!licenseTexts.add(license)) {
         return false;
       }
