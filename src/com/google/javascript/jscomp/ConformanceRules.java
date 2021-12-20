@@ -2251,8 +2251,10 @@ public final class ConformanceRules {
           return ConformanceResult.VIOLATION;
         }
         if (keyType.isUnionType()) {
-          if (keyType.toMaybeUnionType().getAlternates().stream().anyMatch(JSType::isString)) {
-            return ConformanceResult.VIOLATION;
+          for (JSType alternate : keyType.toMaybeUnionType().getAlternates()) {
+            if (alternate.isString()) {
+              return ConformanceResult.VIOLATION;
+            }
           }
         }
       }
