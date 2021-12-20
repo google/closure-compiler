@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.util.Arrays.stream;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -748,8 +747,14 @@ class StripCode implements CompilerPass {
         String nameString = n.getString();
         // CollapseProperties may have turned "a.b.c" into "a$b$c",
         // so split that up and match its parts.
-        return nameString.contains("$")
-            && stream(nameString.split("\\$")).anyMatch(this::isStripName);
+        if (nameString.indexOf('$') != -1) {
+          for (String part : nameString.split("\\$")) {
+            if (isStripName(part)) {
+              return true;
+            }
+          }
+        }
+        return false;
       } else {
         return false;
       }
