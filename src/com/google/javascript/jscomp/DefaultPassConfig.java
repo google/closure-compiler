@@ -767,6 +767,14 @@ public final class DefaultPassConfig extends PassConfig {
       // folding, because `aliasStrings` may replace the string literals with variables before
       // they run.
       addSimpleCodeRemovingPasses(passes);
+
+      if (options.getInlineFunctionsLevel() != Reach.NONE) {
+        passes.add(inlineFunctions);
+      }
+
+      if (options.optimizeCalls) {
+        passes.add(optimizeCalls);
+      }
     }
 
     if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
