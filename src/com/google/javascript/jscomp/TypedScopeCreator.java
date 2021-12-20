@@ -2783,6 +2783,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           return false;
         }
       }
+      // treat "foo = bar = <VAL>" the same as "foo = <VAL>"
+      rhsValue = unwrapIfAssign(rhsValue);
 
       // If the jsdoc or RHS specifies a concrete type, it's not inferred.
       if ((info != null
@@ -2834,6 +2836,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       return false;
+    }
+
+    private Node unwrapIfAssign(Node maybeAssign) {
+      if (maybeAssign == null || !maybeAssign.isAssign()) {
+        return maybeAssign;
+      }
+      return unwrapIfAssign(maybeAssign.getSecondChild());
     }
 
     /**

@@ -1460,4 +1460,31 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         "/** @export */ function Foo() { alert('hi'); }",
         DiagnosticGroup.forType(GenerateExports.MISSING_GOOG_FOR_EXPORT));
   }
+
+  @Test
+  public void testTypecheckClass_assignedInNestedAssignInGoogModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
+
+    compile(
+        options,
+        lines(
+            "goog.module('main');",
+            "",
+            "var TestEl_1;",
+            "let TestEl = TestEl_1 = class TestEl {",
+            "  constructor() {",
+            "      this.someVal = false;",
+            "  }",
+            "}",
+            // pattern that may be generated from TypeScript decorators
+            "TestEl = TestEl_1 = (0, decorate)(TestEl);",
+            "exports.TestEl = TestEl;",
+            "/** @type {!TestEl} */ const t = new TestEl();"));
+
+    checkUnexpectedErrorsOrWarnings(lastCompiler, 0);
+  }
 }
