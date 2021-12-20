@@ -732,19 +732,41 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(getReplaceProtectedMessagesPass());
       }
       passes.add(substituteLocaleData);
-      // Now that we've replaced `goog.LOCALE` with a constant value, we need to re-run simple code
-      // removal passes, so they can throw away code for locales that aren't relevant.
-      addSimpleCodeRemovingPasses(passes);
     }
 
     if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(flowSensitiveInlineVariables);
 
-      // After inlining some of the variable uses, some variables are unused.
-      // Re-run remove unused vars to clean it up.
-      if (shouldRunRemoveUnusedCode()) {
+      // After inlining variable uses, some variables may be unused.
+      // If we're doing late localization, the simple code removal pass runs added below will clean
+      // those up. Otherwise, clean them up now.
+      if (!options.doLateLocalization() && shouldRunRemoveUnusedCode()) {
         passes.add(removeUnusedCodeOnce);
       }
+    }
+
+    if (options.doLateLocalization()) {
+      // Now that we've replaced message references with string constants and `goog.LOCALE` with a
+      // constant value, we need to re-run simple code removal passes, so they can throw away code
+      // for locales that aren't relevant and perform constant folding on the message strings we've
+      // now inserted.
+      //
+      // This needs to happen after the flowSensitiveInlineVariables above, because it will
+      // enable the PeepholeOptimizations we run here to do constant folding.
+      //
+      // For example, `flowSensitiveInlineVariables` will change this
+      // ```
+      // var x = 'localized version of message';
+      // x = x + '&nbsp';
+      // ```
+      // to this
+      // ```
+      // var x = 'localized version of message' + '&nbsp;';
+      // ```
+      // We cannot expect the peepholeOptimizations runs that come later to do this constant
+      // folding, because `aliasStrings` may replace the string literals with variables before
+      // they run.
+      addSimpleCodeRemovingPasses(passes);
     }
 
     if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
@@ -961,7 +983,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (shouldRunRemoveUnusedCode()) {
       passes.add(removeUnusedCode);
     }
-
   }
 
   /**
