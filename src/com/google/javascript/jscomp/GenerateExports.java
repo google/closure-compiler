@@ -278,7 +278,6 @@ public class GenerateExports implements CompilerPass {
                 context, exportPropertyFunction));
 
     Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
-    annotate(expression);
 
     addStatement(context, expression);
   }
@@ -298,7 +297,6 @@ public class GenerateExports implements CompilerPass {
                 context, export));
 
     Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
-    annotate(expression);
 
     addStatement(context, expression);
   }
@@ -327,10 +325,6 @@ public class GenerateExports implements CompilerPass {
 
     stmt.insertAfter(exprRoot);
     compiler.reportChangeToEnclosingScope(stmt);
-  }
-
-  private void annotate(Node node) {
-    NodeTraversal.traverse(compiler, node, new PrepareAst.PrepareAnnotations());
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */

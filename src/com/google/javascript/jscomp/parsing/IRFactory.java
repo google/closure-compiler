@@ -1364,7 +1364,54 @@ class IRFactory {
 
         attachPossibleTrailingCommentsForArg(childNode, zones.get(argCount));
       }
+      annotateCalls(node);
       return node;
+    }
+
+    /**
+     * There are two types of calls we are interested in calls without explicit "this" values (what
+     * we are call "free" calls) and direct call to eval.
+     */
+    private void annotateCalls(Node n) {
+      checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
+
+      // Keep track of of the "this" context of a call.  A call without an
+      // explicit "this" is a free call.
+      Node callee = n.getFirstChild();
+
+      // ignore cast nodes.
+      while (callee.isCast()) {
+        callee = callee.getFirstChild();
+      }
+
+      if (!isNormalOrOptChainGet(callee)) {
+        // This call originally was not passed a `this` value.
+        // Inlining could change the callee into a property reference of some kind.
+        // The code printer will recognize the `FREE_CALL` property and wrap the real callee with
+        // `(0, real.callee)(args)` when necessary to avoid changing the calling behavior.
+        n.putBooleanProp(Node.FREE_CALL, true);
+
+        if (callee.isName() && "eval".equals(callee.getString())) {
+          // Keep track of the context in which eval is called. It is important
+          // to distinguish between "(0, eval)()" and "eval()".
+          callee.putBooleanProp(Node.DIRECT_EVAL, true);
+        } else if (callee.isComma() && callee.getFirstChild().isNumber()) {
+          // The input code may actually already contain calls of the form
+          // `(0, real.callee)(arg1, arg2)`. For example, the TypeScript compiler outputs code like
+          // this in some cases.
+          // This makes it hard for us to connect calls with the called functions, though, so we
+          // will simplify these cases. The `FREE_CALL` property we've just applied will tell the
+          // code printer to put this wrapping back later.
+          final Node realCallee = callee.getSecondChild();
+          callee.replaceWith(realCallee.detach());
+          // TODO(bradfordcsmith): Why do I get an NPE if I try to report this code change?
+        }
+      }
+    }
+
+    /** Is this a GETPROP, OPTCHAIN_GETPROP, GETELEM, or OPTCHAIN_GETELEM? */
+    public boolean isNormalOrOptChainGet(Node n) {
+      return n.isGetProp() || n.isGetElem() || n.isOptChainGetProp() || n.isOptChainGetElem();
     }
 
     /**
@@ -1441,6 +1488,7 @@ class IRFactory {
         node.addChildToBack(transform(child));
       }
       node.setIsOptionalChainStart(callNode.isStartOfOptionalChain);
+      annotateCalls(node);
       return node;
     }
 
@@ -2172,6 +2220,9 @@ class IRFactory {
               : newNode(Token.TAGGED_TEMPLATELIT, transform(tree.operand), templateLitNode);
       for (ParseTree child : tree.elements) {
         templateLitNode.addChildToBack(transform(child));
+      }
+      if (node.isTaggedTemplateLit()) {
+        annotateCalls(node);
       }
       return node;
     }

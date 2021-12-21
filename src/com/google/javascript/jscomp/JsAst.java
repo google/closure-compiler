@@ -180,8 +180,6 @@ public class JsAst implements SourceAst {
 
     if (root == null) {
       root = IR.script();
-    } else {
-      compiler.prepareAst(root);
     }
 
     if (!reporter.errors.isEmpty() || !reporter.warnings.isEmpty()) {

@@ -1681,7 +1681,6 @@ public abstract class CompilerTestCase {
       Node normalizeCheckRootClone = root.cloneTree();
       Node normalizeCheckExternsRootClone = normalizeCheckRootClone.getFirstChild();
       Node normalizeCheckMainRootClone = normalizeCheckRootClone.getLastChild();
-      new PrepareAst(compiler).process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
 
       assertNode(normalizeCheckMainRootClone)
           .usingSerializer(createPrettyPrinter(compiler))

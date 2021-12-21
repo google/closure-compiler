@@ -375,13 +375,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Returns the parser configuration for the specified context. */
   abstract Config getParserConfig(ConfigContext context);
 
-  /**
-   * Normalizes the types of AST nodes in the given tree, and annotates any nodes to which the
-   * coding convention applies so that passes can read the annotations instead of using the coding
-   * convention.
-   */
-  abstract void prepareAst(Node root);
-
   /** Gets the error manager. */
   public abstract ErrorManager getErrorManager();
 

@@ -2977,7 +2977,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         lines(
             "const namespace = {};",
             "namespace.noSideEffects = function(x) { return 1; };",
-            // NOTE: `PrepareAst` will unwrap `(0, callee)(42)`, so we need to use a non-number
+            // NOTE: `IRFactory` will unwrap `(0, callee)(42)`, so we need to use a non-number
             // to preserve the parentheses for the test.
             "('', namespace.noSideEffects)(42);"),
         ImmutableList.of("('', namespace.noSideEffects)"));

@@ -295,8 +295,15 @@ public final class NodeSubject extends Subject {
   }
 
   public NodeSubject isFreeCall() {
-    check("isCall()").that(actual.isCall()).isTrue();
+    check("callable")
+        .that(actual.isCall() || actual.isOptChainCall() || actual.isTaggedTemplateLit())
+        .isTrue();
     check("getBooleanProp(Node.FREE_CALL)").that(actual.getBooleanProp(Node.FREE_CALL)).isTrue();
+    return this;
+  }
+
+  public NodeSubject isNotFreeCall() {
+    check("getBooleanProp(Node.FREE_CALL)").that(actual.getBooleanProp(Node.FREE_CALL)).isFalse();
     return this;
   }
 

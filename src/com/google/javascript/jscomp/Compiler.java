@@ -2613,12 +2613,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return cfa.getCfg();
   }
 
-  @Override
-  void prepareAst(Node root) {
-    CompilerPass pass = new PrepareAst(this);
-    pass.process(null, root);
-  }
-
   private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
 
   /**

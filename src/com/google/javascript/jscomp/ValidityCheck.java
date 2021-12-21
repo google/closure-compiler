@@ -83,7 +83,6 @@ class ValidityCheck implements CompilerPass {
     // TODO(johnlenz): Change these normalization checks Preconditions and
     // Exceptions into Errors so that it is easier to find the root cause
     // when there are cascading issues.
-    new PrepareAst(compiler, true).process(null, root);
     if (compiler.getLifeCycleStage().isNormalized()) {
       (new Normalize(compiler, true)).process(externs, root);
 

@@ -3966,7 +3966,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y"))).isTrue();
       assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y"))).isTrue();
 
-      // We're using string literals instead of numbers here, because PrepareAst will automatically
+      // We're using string literals instead of numbers here, because IRFactory will automatically
       // remove a number in an indirect call like `(0, some.callee)()` after applying FREE_CALL
       // to the `CALL` node.
       assertThat(NodeUtil.isExpressionResultUsed(getStringLitNodeFrom("('',eval)()", ""))).isTrue();

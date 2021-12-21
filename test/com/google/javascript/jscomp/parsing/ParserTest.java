@@ -6542,7 +6542,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node callTree = parse("f(import.meta.url)");
     assertNode(callTree.getFirstFirstChild())
-        .isEqualTo(IR.exprResult(IR.call(IR.name("f"), IR.getprop(IR.importMeta(), "url"))));
+        .isEqualTo(
+            IR.exprResult(freeCall(IR.call(IR.name("f"), IR.getprop(IR.importMeta(), "url")))));
+  }
+
+  private Node freeCall(Node n) {
+    n.putBooleanProp(Node.FREE_CALL, true);
+    return n;
   }
 
   @Test
@@ -6662,6 +6668,98 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertThat(comments).hasSize(1);
     assertThat(comments.get(0).value).isEqualTo("/** number */");
+  }
+
+  @Test
+  public void testIndirectCallName() {
+    Node script = parse("(0, foo)();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node exprResult = script.getFirstChild();
+    assertNode(exprResult).hasToken(Token.EXPR_RESULT);
+
+    // the `(0, foo)()` should have been converted to `foo()` with the
+    // `FREE_CALL` property.
+    Node call = exprResult.getFirstChild();
+    assertNode(call).isFreeCall().hasFirstChildThat().isName("foo");
+  }
+
+  @Test
+  public void testIndirectCallGetProp() {
+    Node script = parse("(0, foo.bar)();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node exprResult = script.getFirstChild();
+    assertNode(exprResult).hasToken(Token.EXPR_RESULT);
+
+    // the `(0, foo)()` should have been converted to `foo.bar()` with the
+    // `FREE_CALL` property, so it will actually get printed as `(0, foo.bar)()`.
+    Node call = exprResult.getFirstChild();
+    assertNode(call).isFreeCall().hasFirstChildThat().matchesQualifiedName("foo.bar");
+  }
+
+  @Test
+  public void testFreeCall1() {
+    Node script = parse("foo();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.CALL);
+
+    assertNode(call).isFreeCall();
+  }
+
+  @Test
+  public void testFreeCall2() {
+    Node script = parse("x.foo();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.CALL);
+
+    assertNode(call).isNotFreeCall();
+  }
+
+  @Test
+  public void testTaggedTemplateFreeCall1() {
+    Node script = parse("foo``;");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.TAGGED_TEMPLATELIT);
+
+    assertNode(call).isFreeCall();
+  }
+
+  @Test
+  public void testTaggedTemplateFreeCall2() {
+    Node script = parse("x.foo``;");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.TAGGED_TEMPLATELIT);
+
+    assertNode(call).isNotFreeCall();
+  }
+
+  @Test
+  public void optionalFreeCall1() {
+    Node script = parse("foo?.();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.OPTCHAIN_CALL);
+
+    assertNode(call).isFreeCall();
+  }
+
+  @Test
+  public void optChainFreeCall() {
+    Node script = parse("x?.foo();");
+    assertNode(script).hasToken(Token.SCRIPT);
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    assertNode(call).hasToken(Token.OPTCHAIN_CALL);
+
+    assertNode(call).isNotFreeCall();
   }
 
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {

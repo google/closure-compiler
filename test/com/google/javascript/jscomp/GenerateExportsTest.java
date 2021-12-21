@@ -29,8 +29,10 @@ import org.junit.runners.JUnit4;
 public final class GenerateExportsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
-      "function google_exportSymbol(a, b) {}; /** @const */ var goog = {}; goog.exportProperty ="
-          + " function(a, b, c) {}; ";
+      lines(
+          "/** @const */ var goog = {};",
+          "goog.exportSymbol = function(a, b, c) {};",
+          "goog.exportProperty = function(a, b, c) {};");
 
   private boolean allowNonGlobalExports = true;
   private String exportSymbolFunction;
@@ -57,7 +59,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.allowNonGlobalExports  = true;
-    this.exportSymbolFunction = "google_exportSymbol";
+    this.exportSymbolFunction = "goog.exportSymbol";
     this.exportPropertyFunction = "goog.exportProperty";
     // TODO(b/76025401): since this pass sometimes runs after typechecking, verify it correctly
     // propagates type information.
@@ -69,18 +71,18 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportSymbol() {
     test(
         "/** @export */function foo() {}",
-        "/** @export */function foo(){}google_exportSymbol(\"foo\",foo)");
+        lines(
+            "/** @export */ function foo(){}", //
+            "goog.exportSymbol(\"foo\",foo)"));
   }
 
   @Test
   public void testExportSymbolAndProperties() {
     test(
-        lines(
-            "/** @export */function foo() {}",
-            "/** @export */foo.prototype.bar = function() {}"),
+        lines("/** @export */function foo() {}", "/** @export */foo.prototype.bar = function() {}"),
         lines(
             "/** @export */function foo(){}",
-            "google_exportSymbol(\"foo\",foo);",
+            "goog.exportSymbol(\"foo\",foo);",
             "/** @export */foo.prototype.bar=function(){};",
             "goog.exportProperty(foo.prototype,\"bar\",foo.prototype.bar)"));
   }
@@ -100,12 +102,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
   @Test
   public void testExportSymbolAndConstantProperties() {
     test(
-        lines(
-            "/** @export */function foo() {}",
-            "/** @export */foo.BAR = 5;"),
+        lines("/** @export */function foo() {}", "/** @export */foo.BAR = 5;"),
         lines(
             "/** @export */function foo(){}",
-            "google_exportSymbol(\"foo\",foo);",
+            "goog.exportSymbol(\"foo\",foo);",
             "/** @export */foo.BAR=5;",
             "goog.exportProperty(foo,\"BAR\",foo.BAR)"));
   }
@@ -114,36 +114,28 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportVars() {
     test(
         "/** @export */var FOO = 5",
-        lines(
-            "/** @export */var FOO=5;",
-            "google_exportSymbol('FOO',FOO)"));
+        lines("/** @export */var FOO=5;", "goog.exportSymbol('FOO',FOO)"));
   }
 
   @Test
   public void testExportLet() {
     test(
         "/** @export */let FOO = 5",
-        lines(
-            "/** @export */let FOO = 5;",
-            "google_exportSymbol('FOO', FOO)"));
+        lines("/** @export */let FOO = 5;", "goog.exportSymbol('FOO', FOO)"));
   }
 
   @Test
   public void testExportConst() {
     test(
         "/** @export */const FOO = 5",
-        lines(
-            "/** @export */const FOO = 5;",
-            "google_exportSymbol('FOO', FOO)"));
+        lines("/** @export */const FOO = 5;", "goog.exportSymbol('FOO', FOO)"));
   }
 
   @Test
   public void testExportEs6ArrowFunction() {
     test(
         "/** @export */var fn = ()=>{};",
-        lines(
-            "/** @export */var fn = ()=>{};",
-            "google_exportSymbol('fn', fn)"));
+        lines("/** @export */var fn = ()=>{};", "goog.exportSymbol('fn', fn)"));
   }
 
   @Test
@@ -218,18 +210,17 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportClass() {
     test(
         "/** @export */ function G() {} foo();",
-        "/** @export */ function G() {} google_exportSymbol('G', G); foo();");
+        "/** @export */ function G() {} goog.exportSymbol('G', G); foo();");
   }
 
   @Test
   public void testExportClassMember() {
     test(
         lines(
-            "/** @export */ function F() {}",
-            "/** @export */ F.prototype.method = function() {};"),
+            "/** @export */ function F() {}", "/** @export */ F.prototype.method = function() {};"),
         lines(
             "/** @export */ function F() {}",
-            "google_exportSymbol('F', F);",
+            "goog.exportSymbol('F', F);",
             "/** @export */ F.prototype.method = function() {};",
             "goog.exportProperty(F.prototype, 'method', F.prototype.method);"));
   }
@@ -238,22 +229,20 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportEs6ClassSymbol() {
     test(
         "/** @export */ class G {} foo();",
-        "/** @export */ class G {} google_exportSymbol('G', G); foo();");
+        "/** @export */ class G {} goog.exportSymbol('G', G); foo();");
 
     test(
         "/** @export */ G = class {}; foo();",
-        "/** @export */ G = class {}; google_exportSymbol('G', G); foo();");
+        "/** @export */ G = class {}; goog.exportSymbol('G', G); foo();");
   }
 
   @Test
   public void testExportEs6ClassProperty() {
     test(
+        lines("/** @export */ G = class {};", "/** @export */ G.foo = class {};"),
         lines(
             "/** @export */ G = class {};",
-            "/** @export */ G.foo = class {};"),
-        lines(
-            "/** @export */ G = class {};",
-            "google_exportSymbol('G', G);",
+            "goog.exportSymbol('G', G);",
             "/** @export */ G.foo = class {};",
             "goog.exportProperty(G, 'foo', G.foo)"));
 
@@ -270,25 +259,17 @@ public final class GenerateExportsTest extends CompilerTestCase {
   @Test
   public void testExportEs6ClassMembers() {
     test(
-        lines(
-            "/** @export */",
-            "class G {",
-            "  /** @export */ method() {}",
-            "}"),
+        lines("/** @export */", "class G {", "  /** @export */ method() {}", "}"),
         lines(
             "/** @export */ class G { /** @export */ method() {} }",
-            "google_exportSymbol('G', G);",
+            "goog.exportSymbol('G', G);",
             "goog.exportProperty(G.prototype, 'method', G.prototype.method);"));
 
     test(
-        lines(
-            "/** @export */",
-            "class G {",
-            "  /** @export */ static method() {}",
-            "}"),
+        lines("/** @export */", "class G {", "  /** @export */ static method() {}", "}"),
         lines(
             "/** @export */ class G { /** @export */ static method() {} }",
-            "google_exportSymbol('G', G);",
+            "goog.exportSymbol('G', G);",
             "goog.exportProperty(G, 'method', G.method);"));
   }
 
@@ -311,13 +292,13 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "class G {",
             "  /** @export */ method() {}",
             "}",
-            "google_exportSymbol('G', G);",
+            "goog.exportSymbol('G', G);",
             "goog.exportProperty(G.prototype, 'method', G.prototype.method);",
             "/** @export */",
             "class H {",
             "  /** @export */ method() {}",
             "}",
-            "google_exportSymbol('H', H);",
+            "goog.exportSymbol('H', H);",
             "goog.exportProperty(H.prototype, 'method', H.prototype.method);"));
   }
 
@@ -395,7 +376,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
         "/** @export */ $jscomp.scope.foo = /** @export */ function() {}",
         lines(
             "/** @export */ $jscomp.scope.foo = /** @export */ function() {};",
-            "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
+            "goog.exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
   }
 
   @Test
@@ -404,7 +385,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
         "/** @export */ $jscomp.scope.foo = /** @export */ class {}",
         lines(
             "/** @export */ $jscomp.scope.foo = /** @export */ class {};",
-            "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
+            "goog.exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
   }
 
   @Test
@@ -415,14 +396,15 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "/** @export */ function G() {} goog.inherits(G, F);"),
         lines(
             "var goog = {}; function F() {}",
-            "/** @export */ function G() {} goog.inherits(G, F); google_exportSymbol('G', G);"));
+            "/** @export */ function G() {} goog.inherits(G, F); goog.exportSymbol('G', G);"));
   }
 
   @Test
   public void testExportEnum() {
     // TODO(johnlenz): Issue 310, should the values also be externed?
-    test("/** @enum {string}\n @export */ var E = {A:1, B:2};",
-         "/** @enum {string}\n @export */ var E = {A:1, B:2}; google_exportSymbol('E', E);");
+    test(
+        "/** @enum {string}\n @export */ var E = {A:1, B:2};",
+        "/** @enum {string}\n @export */ var E = {A:1, B:2}; goog.exportSymbol('E', E);");
   }
 
   @Test
@@ -479,14 +461,14 @@ public final class GenerateExportsTest extends CompilerTestCase {
     String code = lines(
         "var foo = function() { /** @export */ this.foo = 1; };",
         "/** @export */ foo.method = function(){};");
-    String result = lines(
-        "var foo = function() { /** @export */ this.foo = 1; };",
-        "/** @export */ foo.method = function(){};",
-        "google_exportSymbol('foo.method', foo.method);");
+    String result =
+        lines(
+            "var foo = function() { /** @export */ this.foo = 1; };",
+            "/** @export */ foo.method = function(){};",
+            "goog.exportSymbol('foo.method', foo.method);");
     test(code, result);
     disableCompareAsTree();
-    testExternChanges(
-        srcs(code), expected("Object.prototype.foo;var goog;var google_exportSymbol"));
+    testExternChanges(srcs(code), expected("Object.prototype.foo;var goog;"));
   }
 
   @Test
@@ -508,7 +490,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   @Test
   public void testRequiresExportSymbolDefinition() {
     test(
-        externs("var goog; goog.exportProperty;"),
+        externs(""),
         srcs("/** @export */ function Foo() {}"),
         error(GenerateExports.MISSING_GOOG_FOR_EXPORT));
   }
@@ -516,7 +498,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   @Test
   public void testRequiresExportPropertyDefinition() {
     test(
-        externs("var google_exportSymbol;"),
+        externs(""),
         srcs("var a = {}; /** @export */ a.b = function() {}"),
         error(GenerateExports.MISSING_GOOG_FOR_EXPORT));
   }
