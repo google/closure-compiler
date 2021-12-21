@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.DataFlowAnalysis.LinearFlowState;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.TypeInference.BigIntPresence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -214,7 +214,12 @@ public final class TypeInferenceTest {
       NodeTraversal.builder()
           .setCompiler(compiler)
           .setCallback(
-              new AbstractPostOrderCallback() {
+              new AbstractScopedCallback() {
+                @Override
+                public void enterScope(NodeTraversal t) {
+                  t.getTypedScope();
+                }
+
                 @Override
                 public void visit(NodeTraversal t, Node n, Node parent) {
                   TypedScope scope = t.getTypedScope();
@@ -238,7 +243,7 @@ public final class TypeInferenceTest {
       }
       scopeCreator.resolveWeakImportsPreResolution();
     }
-    scopeCreator.undoTypeAliasChains();
+    scopeCreator.finishAndFreeze();
     // Create the control graph.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, cfgRoot);

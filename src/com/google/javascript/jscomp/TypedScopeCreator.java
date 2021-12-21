@@ -55,8 +55,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
@@ -176,9 +178,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
-  // Untyped scopes which contain unqualified names. Populated by FirstOrderFunctionAnalyzer to
+  // Maps from scope root to declared variable names. Populated by FirstOrderFunctionAnalyzer to
   // reserve names before the TypedScope is populated.
-  private final Map<Node, Scope> untypedScopes = new HashMap<>();
+  private final ListMultimap<Node, String> reservedNamesForScope =
+      MultimapBuilder.hashKeys().arrayListValues().build();
 
   // Set of functions with non-empty returns, for passing to FunctionTypeBuilder.
   private final Set<Node> functionsWithNonEmptyReturns = new HashSet<>();
@@ -203,6 +206,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   // Maps EXPR_RESULT nodes from goog.provides to all implicitly provided names from the call
   private final Multimap<Node, ProvidedName> providedNamesFromCall = LinkedHashMultimap.create();
+
+  private enum Stage {
+    BUILDING,
+    FROZEN
+  }
+
+  private Stage stage = Stage.BUILDING;
 
   private class WeakModuleImport {
     private final Node moduleLocalNode;
@@ -359,6 +369,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   private TypedScope createScopeInternal(Node root, TypedScope typedParent) {
+    checkState(
+        stage.equals(Stage.BUILDING),
+        "Cannot create scope for %s after TypedScopeCreator is frozen",
+        root);
     // Constructing the global scope is very different than constructing
     // inner scopes, because only global scopes can contain named classes that
     // show up in the type registry.
@@ -387,11 +401,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Because JSTypeRegistry#getType looks up the scope in which a root of a qualified name is
       // declared, pre-populate this TypedScope with all qualified name roots. This prevents
       // type resolution from accidentally returning a type from an outer scope that is shadowed.
-      Scope untypedScope = untypedScopes.get(root);
       Set<String> reservedNames = new HashSet<>();
-      for (Var symbol : untypedScope.getAllSymbols()) {
-        reservedNames.add(symbol.getName());
-      }
+      reservedNames.addAll(reservedNamesForScope.removeAll(root));
       if (module != null && module.metadata().isGoogModule()) {
         // TypedScopeCreator treats default export assignments, like `exports = class {};`, as
         // declarations. However, the untyped scope only contains an implicit slot for `exports`.
@@ -588,12 +599,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     scope.declare(name, null, t, null, false);
   }
 
-  /** Set the type for a node now, and enqueue it to be updated with a resolved type later. */
+  /**
+   * Set the type for a node now
+   *
+   * <p>If the type is unresolved, enqueue it to be updated with a resolved type later.
+   */
   void setDeferredType(Node node, JSType type) {
     // Other parts of this pass may read the not-yet-resolved type off the node.
     // (like when we set the LHS of an assign with a typed RHS function.)
     node.setJSType(type);
-    deferredSetTypes.add(new DeferredSetType(node, type));
+    if (!type.isResolved()) {
+      deferredSetTypes.add(new DeferredSetType(node, type));
+    }
   }
 
   /** Needs to run pre-type-resolution to handle weak module imports */
@@ -604,8 +621,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
   }
 
-  /** Undo resolved type chains */
-  void undoTypeAliasChains() {
+  /**
+   * Performs some final work to resolve remaining types
+   *
+   * <p>After this call, calling this.createScope will crash if passed a scope root that hasn't
+   * already been visited.
+   */
+  void finishAndFreeze() {
     // Resolve types and attach them to nodes.
     for (DeferredSetType deferred : deferredSetTypes) {
       deferred.resolve(typeParsingErrorReporter);
@@ -618,6 +640,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
       scope.validateCompletelyBuilt();
     }
+
+    // free up memory. we no longer need this state now that all scopes have been visited
+    delegateProxyCtors.clear();
+    delegateCallingConventions.clear();
+    reservedNamesForScope.clear();
+    functionsWithNonEmptyReturns.clear();
+    escapedVarNames.clear();
+    assignedVarNames.clear();
+    weakImports.clear();
+    deferredSetTypes.clear();
+    undeclaredNamesForClosure.clear();
+    providedNamesFromCall.clear();
+    this.stage = Stage.FROZEN;
+
+    // we must keep the 'memoized' set of TypedScopes around, since later passes will use it.
   }
 
   /** Adds all enums and typedefs to the registry's list of non-nullable types. */
@@ -2173,6 +2210,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (assignedVarNames.count(scopedName) == 1) {
         var.markAssignedExactlyOnce();
       }
+      assignedVarNames.remove(scopedName); // free up memory
       return var;
     }
 
@@ -3500,7 +3538,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     public void enterScope(NodeTraversal t) {
       Scope scope = t.getScope();
       Node root = scope.getRootNode();
-      untypedScopes.put(root, scope);
+      for (Var symbol : scope.getVarIterable()) {
+        reservedNamesForScope.put(root, symbol.getName());
+      }
     }
 
     @Override

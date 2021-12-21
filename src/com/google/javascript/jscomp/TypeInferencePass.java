@@ -104,7 +104,7 @@ class TypeInferencePass {
           .traverseWithScope(inferenceRoot, this.topScope);
       scopeCreator.resolveWeakImportsPreResolution();
     }
-    scopeCreator.undoTypeAliasChains();
+    scopeCreator.finishAndFreeze();
 
     NodeTraversal.builder()
         .setCompiler(compiler)
