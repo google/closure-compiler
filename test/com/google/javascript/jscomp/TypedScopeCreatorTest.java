@@ -151,6 +151,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return (Node externs, Node root) -> {
       new GatherModuleMetadata(compiler, false, moduleResolutionMode).process(externs, root);
       new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
+      new InferConsts(compiler).process(externs, root);
+
       TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
       new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
           .inferAllScopes(root.getParent());
@@ -1570,7 +1572,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testNamespacedEnum() {
     testSame(
-        "var goog = {}; goog.ui = {};"
+        "goog.ui = {};"
             + "/** @constructor */goog.ui.Zippy = function() {};"
             + "/** @enum{string} */goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };"
             + "var x = goog.ui.Zippy.EventType;"
@@ -1677,9 +1679,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testNamespacesEnumAlias() {
-    testSame(
-        "var goog = {}; /** @enum */ goog.Foo = {BAR: 1}; "
-            + "/** @enum */ goog.FooAlias = goog.Foo;");
+    testSame("/** @enum */ goog.Foo = {BAR: 1}; " + "/** @enum */ goog.FooAlias = goog.Foo;");
 
     assertThat(registry.getType(null, "goog.FooAlias").toString()).isEqualTo("goog.Foo<number>");
     assertType(registry.getType(null, "goog.FooAlias"))
@@ -1718,7 +1718,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testNamespacedFunctionStub() {
-    testSame("var goog = {};" + "/** @param {number} x */ goog.foo;");
+    testSame("/** @param {number} x */ goog.foo;");
 
     ObjectType goog = (ObjectType) findNameType("goog", globalScope);
     assertThat(goog.hasProperty("foo")).isTrue();
@@ -2569,7 +2569,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testConstructorNode() {
-    testSame("var goog = {}; /** @constructor */ goog.Foo = function() {};");
+    testSame("/** @constructor */ goog.Foo = function() {};");
 
     ObjectType ctor = (ObjectType) (findNameType("goog.Foo", globalScope));
     assertThat(ctor).isNotNull();
@@ -3490,8 +3490,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testNamespacedConstructorAlias() {
     testSame(
-        "var goog = {};"
-            + "/** @constructor */ goog.Foo = function() {};"
+        "/** @constructor */ goog.Foo = function() {};"
             + "/** @constructor */ goog.FooAlias = goog.Foo;");
     assertThat(registry.getType(null, "goog.FooAlias").toString()).isEqualTo("goog.Foo");
     assertType(registry.getType(null, "goog.FooAlias"))
@@ -3776,7 +3775,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testTemplateType7() {
     testSame(
         lines(
-            "var goog = {};",
             "goog.array = {};",
             "/**",
             " * @param {Array<T>} arr",
@@ -3813,7 +3811,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testTemplateType7b() {
     testSame(
         lines(
-            "var goog = {};",
             "goog.array = {};",
             "/**",
             " * @param {Array<T>} arr",
@@ -3850,7 +3847,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testTemplateType7c() {
     testSame(
         lines(
-            "var goog = {};",
             "goog.array = {};",
             "/**",
             " * @param {Array<T>} arr",
@@ -4379,7 +4375,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAbstractMethod() {
+  public void testAbstractMethodOnPrototype() {
     testSame(
         "/** @type {!Function} */ var abstractMethod;"
             + "/** @constructor */ function Foo() {}"
@@ -4397,24 +4393,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAbstractMethod2() {
+  public void testAbstractMethod_cannotBeAssignedToName() {
     testSame(
         "/** @type {!Function} */ var abstractMethod;"
+            // this results in 'y' being typed as the type of 'abstractMethod'
             + "/** @param {number} x */ var y = abstractMethod;");
     assertThat(findNameType("y", globalScope).toString()).isEqualTo("Function");
-    assertThat(globalScope.getVar("y").getType().toString()).isEqualTo("function(number): ?");
+    assertThat(globalScope.getVar("y").getType().toString()).isEqualTo("Function");
   }
 
   @Test
-  public void testAbstractMethod3() {
-    testSame(
-        "/** @type {!Function} */ var abstractMethod;"
-            + "/** @param {number} x */ var y = abstractMethod; y;");
-    assertThat(findNameType("y", globalScope).toString()).isEqualTo("function(number): ?");
-  }
-
-  @Test
-  public void testAbstractMethod4() {
+  public void testAbstractMethod_inPrototypeObjectLiteral() {
     testSame(
         "/** @type {!Function} */ var abstractMethod;"
             + "/** @constructor */ function Foo() {}"
@@ -4870,8 +4859,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypedefName_usingLetWithLiteralRhs_hasNoType() {
-    testSame("/** @typedef {number} */ let Foo = 'a string';"); // This will cause a type error.
+  public void testTypedefName_usingLetWithLiteralRhs_hasNoTypeIfReassigned() {
+    // This will cause a type error during typechecking.
+    testSame("/** @typedef {number} */ let Foo = 'a string'; Foo = 3;");
 
     TypedVar foo = globalScope.getSlot("Foo");
     assertThat(foo).isNotInferred();

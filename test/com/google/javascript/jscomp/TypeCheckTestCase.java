@@ -235,6 +235,7 @@ public abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     Node externsNode = compiler.getExternsRoot();
     new GatherModuleMetadata(compiler, false, ResolutionMode.BROWSER).process(externsNode, jsNode);
     new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externsNode, jsNode);
+    new InferConsts(compiler).process(externsNode, jsNode);
 
     assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
 

@@ -3922,16 +3922,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testAbstractMethodHandling5() {
+  public void testAbstractFunctionHandling() {
     newTest()
         .addSource(
             "/** @type {!Function} */ var abstractFn = function() {};"
+                // the type of 'f' will become 'Function'
                 + "/** @param {number} x */ var f = abstractFn;"
                 + "f('x');")
-        .addDiagnostic(
-            "actual parameter 1 of f does not match formal parameter\n"
-                + "found   : string\n"
-                + "required: number")
         .run();
   }
 
@@ -11643,8 +11640,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testIssue61c() {
-    // TODO(johnlenz): I'm not sure why the '@const' and inferred const cases are handled
-    // differently.
     newTest()
         .addSource(
             "var ns = {};",
@@ -11653,7 +11648,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  ns.a = function(b) {};",
             "})();",
             "ns.a(123);")
-        .addDiagnostic("Property a never defined on ns")
         .addDiagnostic(
             "actual parameter 1 of ns.a does not match formal parameter\n"
                 + "found   : number\n"
@@ -28738,18 +28732,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testCannotUseLetToAssignValueToTypedef() {
-    // Note: 'const' works but not 'let' because const declarations with a literal rhs have a
-    // 'declared type'.
+  public void testLetTypedefWithAssignedValue_reassigned() {
     newTest()
         .addSource(
             "/** @typedef {!Object<string, number>} */", //
-            "let Type = {};")
+            "let Type = {};",
+            "Type = {x: 3};")
         .addDiagnostic(
             lines(
                 "initializing variable", //
                 "found   : {}",
                 "required: None"))
+        .addDiagnostic(
+            lines(
+                "assignment", //
+                "found   : {x: number}",
+                "required: None"))
+        .run();
+  }
+
+  @Test
+  public void testLetTypedefWithAssignedValue_notReassigned() {
+    newTest()
+        .addSource(
+            "/** @typedef {!Object<string, number>} */", //
+            "let Type = {};")
         .run();
   }
 
