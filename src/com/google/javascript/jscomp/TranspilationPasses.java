@@ -26,9 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 
-/**
- * Provides a single place to manage transpilation passes.
- */
+/** Provides a single place to manage transpilation passes. */
 public class TranspilationPasses {
   private TranspilationPasses() {}
 
@@ -117,6 +115,16 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(rewriteObjectSpread);
+      if (!options.needsTranspilationFrom(ES2015)
+          && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+        // We only need to transpile away object destructuring that uses `...`, rather than
+        // all destructuring.
+        // For this to work correctly for object destructuring in parameter lists and variable
+        // declarations, we need to normalize them a bit first.
+        passes.add(es6RenameVariablesInParamLists);
+        passes.add(es6SplitVariableDeclarations);
+        passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
+      }
     }
 
     if (options.needsTranspilationFrom(ES2017)) {
@@ -156,10 +164,6 @@ public class TranspilationPasses {
       passes.add(rewriteBlockScopedFunctionDeclaration);
       passes.add(rewriteBlockScopedDeclaration);
       passes.add(rewriteGenerators);
-    } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-      passes.add(es6RenameVariablesInParamLists);
-      passes.add(es6SplitVariableDeclarations);
-      passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
     }
   }
 
