@@ -1657,7 +1657,7 @@ public abstract class CompilerTestCase {
         if (compareAsTree) {
           if (compareJsDoc) {
             assertNode(mainRoot)
-                .usingSerializer(createASTPrinter())
+                .usingSerializer(createPrettyPrinter(compiler))
                 .isEqualIncludingJsDocTo(expectedRoot);
           } else {
             assertNode(mainRoot)
@@ -2306,9 +2306,5 @@ public abstract class CompilerTestCase {
             .setCompilerOptions(compiler.getOptions())
             .setPrettyPrint(true)
             .build();
-  }
-
-  private static Function<Node, String> createASTPrinter() {
-    return Node::toStringTree;
   }
 }
