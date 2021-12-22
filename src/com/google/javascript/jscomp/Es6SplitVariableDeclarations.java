@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
  * least one of the declarations is a destructuring declaration. For example
  *
  * <pre>
- *   var [a, b] = foo(), c = bar();}
+ *   var [a, b] = foo(), c = bar();
  * </pre>
  *
  * becomes
