@@ -196,7 +196,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   // All names imported through goog.requireType. Resolve these after all scopes are created.
   private final List<WeakModuleImport> weakImports = new ArrayList<>();
 
-  private final List<DeferredSetType> deferredSetTypes = new ArrayList<>();
+  private final List<Node> unresolvedNodes = new ArrayList<>();
 
   // Set of NAME, GETPROP, and STRING_KEY lvalues which should be treated as const declarations when
   // assigned. Treat simple names in this list as if they were declared `const`. E.g. treat `exports
@@ -244,26 +244,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         moduleLocalNode.setTypedefTypeProp(typedefType);
         typeRegistry.declareType(localModuleScope, moduleLocalNode.getString(), typedefType);
       }
-    }
-  }
-
-  /**
-   * Defer attachment of types to nodes until all type names have been resolved. Then, we can
-   * resolve the type and attach it.
-   */
-  private static class DeferredSetType {
-    final Node node;
-    final JSType type;
-
-    DeferredSetType(Node node, JSType type) {
-      checkNotNull(node);
-      checkNotNull(type);
-      this.node = node;
-      this.type = type;
-    }
-
-    void resolve(ErrorReporter errorReporter) {
-      node.setJSType(type.resolve(errorReporter));
     }
   }
 
@@ -609,7 +589,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     // (like when we set the LHS of an assign with a typed RHS function.)
     node.setJSType(type);
     if (!type.isResolved()) {
-      deferredSetTypes.add(new DeferredSetType(node, type));
+      unresolvedNodes.add(node);
     }
   }
 
@@ -629,8 +609,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    */
   void finishAndFreeze() {
     // Resolve types and attach them to nodes.
-    for (DeferredSetType deferred : deferredSetTypes) {
-      deferred.resolve(typeParsingErrorReporter);
+    for (Node node : unresolvedNodes) {
+      JSType resolved = node.getJSType().resolve(typeParsingErrorReporter);
+      node.setJSType(resolved);
     }
 
     // Resolve types and attach them to scope slots.
@@ -649,7 +630,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     escapedVarNames.clear();
     assignedVarNames.clear();
     weakImports.clear();
-    deferredSetTypes.clear();
+    unresolvedNodes.clear();
     undeclaredNamesForClosure.clear();
     providedNamesFromCall.clear();
     this.stage = Stage.FROZEN;
