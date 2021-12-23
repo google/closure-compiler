@@ -194,12 +194,14 @@ public final class JSTypeRegistry {
   private final transient Set<String> forwardDeclaredTypes;
 
   // A map of properties to the types on which those properties have been declared.
-  private transient Multimap<String, JSType> typesIndexedByProperty =
+  // "Reference" types are excluded because those already exist in eachRefTypeIndexedByProperty to
+  // avoid blowing up the size of this map.
+  private final transient SetMultimap<String, JSType> nonRefTypesIndexedByProperty =
       MultimapBuilder.hashKeys().linkedHashSetValues().build();
 
   private JSType sentinelObjectLiteral;
 
-  // To avoid blowing up the size of typesIndexedByProperty, we use the sentinel object
+  // To avoid blowing up the size of nonRefTypesIndexedByProperty, we use the sentinel object
   // literal instead of registering arbitrarily many types.
   // But because of the way unions are constructed, some properties of record types in unions
   // are getting dropped and cause spurious "non-existent property" warnings.
@@ -209,7 +211,7 @@ public final class JSTypeRegistry {
   // canPropertyBeDefined, if the type has a property in propertiesOfSupertypesInUnions, we
   // consider it to possibly have any property in droppedPropertiesOfUnions. This is a loose
   // check, but we restrict it to records that may be present in unions, and it allows us to
-  // keep typesIndexedByProperty small.
+  // keep nonRefTypesIndexedByProperty small.
   private final Set<String> propertiesOfSupertypesInUnions = new HashSet<>();
   private final Set<String> droppedPropertiesOfUnions = new HashSet<>();
 
@@ -1080,31 +1082,22 @@ public final class JSTypeRegistry {
    * show up in the type registry").
    */
   public void registerPropertyOnType(String propertyName, JSType type) {
+    if (type.isUnionType()) {
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        registerPropertyOnType(propertyName, alternate);
+      }
+      return;
+    }
+
     if (isObjectLiteralThatCanBeSkipped(type)) {
       type = getSentinelObjectLiteral();
     }
 
-    if (type.isUnionType()) {
-      typesIndexedByProperty.putAll(propertyName, type.toMaybeUnionType().getAlternates());
-    } else {
-      typesIndexedByProperty.put(propertyName, type);
-    }
-
-    addReferenceTypeIndexedByProperty(propertyName, type);
-  }
-
-  private void addReferenceTypeIndexedByProperty(
-      String propertyName, JSType type) {
     if (type instanceof ObjectType && ((ObjectType) type).hasReferenceName()) {
       ObjectType objType = (ObjectType) type;
       eachRefTypeIndexedByProperty.put(propertyName, objType);
-    } else if (type instanceof NamedType) {
-      addReferenceTypeIndexedByProperty(
-          propertyName, ((NamedType) type).getReferencedType());
-    } else if (type.isUnionType()) {
-      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
-        addReferenceTypeIndexedByProperty(propertyName, alternate);
-      }
+    } else {
+      nonRefTypesIndexedByProperty.put(propertyName, type);
     }
   }
 
@@ -1148,19 +1141,26 @@ public final class JSTypeRegistry {
         }
       }
 
-      if (typesIndexedByProperty.containsKey(propertyName)) {
-        for (JSType alternative : typesIndexedByProperty.get(propertyName)) {
-          JSType greatestSubtype = alternative.getGreatestSubtype(type);
-          if (!greatestSubtype.isEmptyType()) {
-            // We've found a type with this property. Now we just have to make
-            // sure it's not a type used for internal bookkeeping.
-            RecordType maybeRecordType = greatestSubtype.toMaybeRecordType();
-            if (maybeRecordType != null && maybeRecordType.isSynthetic()) {
-              continue;
-            }
+      Iterable<JSType> associatedTypes = ImmutableList.of();
+      if (nonRefTypesIndexedByProperty.containsKey(propertyName)) {
+        associatedTypes = nonRefTypesIndexedByProperty.get(propertyName);
+      }
+      if (eachRefTypeIndexedByProperty.containsKey(propertyName)) {
+        associatedTypes =
+            Iterables.concat(associatedTypes, eachRefTypeIndexedByProperty.get(propertyName));
+      }
 
-            return PropDefinitionKind.LOOSE;
+      for (JSType alternative : associatedTypes) {
+        JSType greatestSubtype = alternative.getGreatestSubtype(type);
+        if (!greatestSubtype.isEmptyType()) {
+          // We've found a type with this property. Now we just have to make
+          // sure it's not a type used for internal bookkeeping.
+          RecordType maybeRecordType = greatestSubtype.toMaybeRecordType();
+          if (maybeRecordType != null && maybeRecordType.isSynthetic()) {
+            continue;
           }
+
+          return PropDefinitionKind.LOOSE;
         }
       }
 
