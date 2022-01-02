@@ -634,10 +634,31 @@ AudioBufferSourceNode.prototype.noteGrainOn = function(when, opt_offset,
 AudioBufferSourceNode.prototype.noteOff = function(when) {};
 
 /**
- * @constructor
- * @extends {AudioNode}
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode/MediaElementAudioSourceNode
  */
-function MediaElementAudioSourceNode() {}
+function MediaElementAudioSourceOptions() {};
+
+/** @type {(HTMLMediaElement|undefined)} */
+MediaElementAudioSourceOptions.prototype.mediaElement;
+
+/** @type {(number|undefined)} */
+MediaElementAudioSourceOptions.prototype.channelCount;
+
+/** @type {(string|undefined)} */
+MediaElementAudioSourceOptions.prototype.channelCountMode;
+
+/** @type {(string|undefined)} */
+MediaElementAudioSourceOptions.prototype.channelInterpretation;
+
+/**
+ * @constructor
+ * @param {!AudioContext=} context
+ * @param {!MediaElementAudioSourceOptions=} options
+ * @extends {AudioNode}
+ * @see https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode-constructors
+ */
+function MediaElementAudioSourceNode(context, options) {}
 
 /**
  * @constructor
