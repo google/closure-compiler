@@ -333,6 +333,16 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(union(features, other.features));
   }
 
+  /** Does this {@link FeatureSet} contain at least one of the features of {@code other}? */
+  public boolean containsAtLeastOneOf(FeatureSet other) {
+    for (Feature otherFeature : other.features) {
+      if (this.features.contains(otherFeature)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Does this {@link FeatureSet} contain all of the features of {@code other}? */
   public boolean contains(FeatureSet other) {
     return this.features.containsAll(other.features);

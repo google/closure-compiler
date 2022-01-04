@@ -145,13 +145,17 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   @Override
   public void process(Node externs, Node root) {
     checkState(patternNestingStack.isEmpty());
-    TranspilationPasses.processTranspile(compiler, root, featuresToTriggerRunningPass, this);
+    NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
     checkState(patternNestingStack.isEmpty());
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isScript()) {
+      FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+      return scriptFeatures.containsAtLeastOneOf(featuresToTriggerRunningPass);
+    }
     switch (n.getToken()) {
       case FUNCTION:
         ensureArrowFunctionsHaveBlockBodies(t, n);
