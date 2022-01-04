@@ -152,14 +152,6 @@ final class ScriptNodeDeserializer {
           }
           return;
 
-        case PARAM_LIST:
-        case CALL:
-        case NEW:
-          if (node.hasTrailingComma()) {
-            this.addScriptFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST);
-          }
-          return;
-
         case STRING_KEY:
           if (node.isShorthandProperty()) {
             this.addScriptFeature(Feature.EXTENDED_OBJECT_LITERALS);
@@ -210,7 +202,6 @@ final class ScriptNodeDeserializer {
           this.addScriptFeature(Feature.BIGINT);
           return;
         case EXPONENT:
-        case ASSIGN_EXPONENT:
           this.addScriptFeature(Feature.EXPONENT_OP);
           return;
         case TAGGED_TEMPLATELIT:

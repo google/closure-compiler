@@ -302,13 +302,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTrailingComma() {
-    testSame("function f(x, y,) {}");
-    testSame("function f(x) {} f(1,);");
-    testSame("class C {constructor(x) {}} new C(1,);");
-  }
-
-  @Test
   public void testComputedProperty() {
     testSame("const o = {['foo']: 33};");
   }
@@ -333,11 +326,6 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     testSame("let x = 0; x ||= 1");
     testSame("function f(x, y) { return x &&= y; }");
     testSame("let y = null; if (y ??= 2) { function f() {} }");
-  }
-
-  @Test
-  public void testExponentAssignment() {
-    testSame("let x = 2; x **= 0;");
   }
 
   @Test
