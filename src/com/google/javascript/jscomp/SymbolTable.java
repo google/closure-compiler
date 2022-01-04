@@ -445,12 +445,12 @@ public final class SymbolTable {
 
     // All objects/classes have property scopes. They usually don't have parents. These scopes
     // confusingly are not included in "getAllScopes()" pass above.
-    HashSet<SymbolScope> visitedPropertyScopes = new HashSet<>();
+    HashSet<SymbolScope> visitedScopes = new HashSet<>(getAllScopes());
     for (Symbol symbol : getAllSymbols()) {
-      if (symbol.propertyScope == null || visitedPropertyScopes.contains(symbol.propertyScope)) {
+      if (symbol.propertyScope == null || visitedScopes.contains(symbol.propertyScope)) {
         continue;
       }
-      visitedPropertyScopes.add(symbol.getPropertyScope());
+      visitedScopes.add(symbol.getPropertyScope());
       toDebugStringTree(builder, "", symbol.propertyScope, childrenScopes);
     }
     return builder.toString();
@@ -1134,6 +1134,14 @@ public final class SymbolTable {
       return;
     }
 
+    // For cases like
+    // const foo = goog.require('some.foo');
+    // where createPropertyScopeFor() is called for 'foo' - instead of creating new PropertyScope we
+    // reuse ModuleScope corresponding to 'some.foo' module.
+    if (s.getName().equals("exports") && s.getDeclarationNode().isModuleBody()) {
+      s.propertyScope = scopes.get(s.getDeclarationNode());
+      return;
+    }
     // Create an empty property scope for the given symbol, maybe with a parent scope if it has
     // an implicit prototype.
     SymbolScope parentPropertyScope = maybeGetParentPropertyScope(type);
@@ -1945,7 +1953,7 @@ public final class SymbolTable {
           }
         }
         Symbol symbol = getSymbolForName(propNodeDecl, propName);
-        if (symbol != null) {
+        if (symbol != null && symbol.getDeclarationNode() != n) {
           symbol.defineReferenceAt(n);
           return true;
         }

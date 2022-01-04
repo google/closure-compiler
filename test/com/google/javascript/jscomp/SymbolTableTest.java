@@ -517,6 +517,28 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_typedef_module() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.module('some.foo');", "/** @typedef {string} */ exports.StringType;"),
+        lines(
+            "goog.module('some.bar');",
+            "const foo = goog.require('some.foo');",
+            "const /** !foo.StringType */ k = '123';"),
+        "StringType");
+  }
+
+  @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_typedef_provide() {
+    verifySymbolReferencedInSecondFile(
+        lines("goog.provide('some.foo');", "/** @typedef {string} */ some.foo.StringType;"),
+        lines(
+            "goog.module('some.bar');",
+            "const foo = goog.require('some.foo');",
+            "const /** !foo.StringType */ k = '123';"),
+        "StringType");
+  }
+
+  @Test
   public void testClassPropertiesDisableModuleRewriting() {
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
     options.setEnableModuleRewriting(false);
