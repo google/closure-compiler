@@ -1130,6 +1130,9 @@ public final class AstValidator implements CompilerPass {
 
   private void validateParameters(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
+    if (n.hasTrailingComma()) {
+      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
+    }
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
         validateRestParameters(Token.PARAM_LIST, c);
@@ -1159,6 +1162,9 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.CALL, n);
     validateProperties(n);
     validateMinimumChildCount(n, 1);
+    if (n.hasTrailingComma()) {
+      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
+    }
     Node callee = n.getFirstChild();
     if (callee.isSuper()) {
       validateSuper(callee);
@@ -1265,6 +1271,9 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.NEW, n);
     validateProperties(n);
     validateMinimumChildCount(n, 1);
+    if (n.hasTrailingComma()) {
+      validateFeature(Feature.TRAILING_COMMA_IN_PARAM_LIST, n);
+    }
 
     validateExpression(n.getFirstChild());
     for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
