@@ -559,11 +559,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     // (0, [...])() doesn't parse as expected.
     assertThat(compiler.toSource())
         .isEqualTo(
-            "" //
-                + "goog.$testing$={};"
-                + "goog.$testing$.$testSuite$=function($a$$){};"
-                + "var $module$exports$testing$$={};"
-                + "(0,goog.$testing$.$testSuite$)({\"testMethod\":function(){}});");
+            lines(
+                "goog.$testing$ = {};", //
+                "goog.$testing$.$testSuite$ = function($a$$) {",
+                "};",
+                "var $module$exports$testing$$ = {};",
+                "(0,goog.$testing$.$testSuite$)({\"testMethod\":function() {",
+                "}});",
+                ""));
   }
 
   @Test
@@ -3597,6 +3600,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testDefaultParameterRemoval() {
+    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     test(
@@ -3664,6 +3668,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testDestructuringRest() {
+    useNoninjectingCompiler = true;
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
@@ -3738,6 +3743,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
+    options.setPrettyPrint(true);
     return options;
   }
 

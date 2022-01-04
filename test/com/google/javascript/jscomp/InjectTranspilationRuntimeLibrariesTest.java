@@ -58,9 +58,9 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testObjectAssignInjectedForObjectPatternRest() {
+  public void testMakeIteratorAndObjectAssignInjectedForObjectPatternRest() {
     Set<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
-    assertThat(injected).containsExactly("es6/object/assign");
+    assertThat(injected).containsExactly("es6/util/makeiterator", "es6/object/assign");
   }
 
   @Test

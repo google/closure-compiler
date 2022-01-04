@@ -70,11 +70,12 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "createtemplatetagfirstarg");
     }
 
-    if (mustBeCompiledAway.contains(Feature.FOR_OF)) {
-      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
-    }
-
-    if (mustBeCompiledAway.contains(Feature.ARRAY_DESTRUCTURING)) {
+    if (mustBeCompiledAway.contains(Feature.FOR_OF)
+        || mustBeCompiledAway.contains(Feature.ARRAY_DESTRUCTURING)
+        || mustBeCompiledAway.contains(Feature.OBJECT_PATTERN_REST)) {
+      // `makeIterator` isn't needed directly for `OBJECT_PATTERN_REST`, but when we transpile
+      // a destructuring case that contains it, we transpile the entire destructured assignment,
+      // which may also include `ARRAY_DESTRUCTURING`.
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
 
