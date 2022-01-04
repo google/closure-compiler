@@ -35,7 +35,7 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
-    enableMultistageCompilation();
+    // TODO(b/211899097): enable multistage compilation
   }
 
   public Es7RewriteExponentialOperatorTest() {
