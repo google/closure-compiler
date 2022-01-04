@@ -37,6 +37,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

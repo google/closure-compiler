@@ -50,6 +50,7 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     disableCompareSyntheticCode();
     allowExternsChanges();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

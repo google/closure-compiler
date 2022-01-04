@@ -34,6 +34,7 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

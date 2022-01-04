@@ -54,6 +54,7 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
 
     enableTypeInfoValidation();
     enableTypeCheck();
+    enableMultistageCompilation();
   }
 
   @Override

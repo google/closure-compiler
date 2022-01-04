@@ -40,6 +40,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Test

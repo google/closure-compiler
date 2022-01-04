@@ -53,6 +53,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
 
     // there are a lot of 'property x never defined on ?' warnings caused by object destructuring
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);

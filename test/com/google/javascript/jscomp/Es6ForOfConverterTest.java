@@ -47,7 +47,9 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new Es6ForOfConverter(compiler);

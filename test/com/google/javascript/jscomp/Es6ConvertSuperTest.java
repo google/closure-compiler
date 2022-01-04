@@ -72,6 +72,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableScriptFeatureValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override
@@ -136,8 +137,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(4) // position and length of `super.g(3)`
-        .hasCharno(8)
-        .hasLength(10);
+        .hasCharno(8);
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.STRING);
 
     // A.prototype.g.call
@@ -145,8 +145,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(14)
-        .hasLength(1);
+        .hasCharno(14);
     assertNode(callee).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     // A.prototype.g
@@ -154,8 +153,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(14)
-        .hasLength(1);
+        .hasCharno(14);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -164,7 +162,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(4) // position and length of `super`
         .hasCharno(8)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
 
@@ -174,7 +171,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.THIS)
         .hasLineno(4) // position and length of `super.g`
         .hasCharno(14)
-        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBInstanceType);
   }
@@ -236,8 +232,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(5) // position and length of `super['g'](4)`
-        .hasCharno(12)
-        .hasLength(13);
+        .hasCharno(12);
     // computed property prevents doing any better than StandardColors.UNKNOWN
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -246,8 +241,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .hasToken(Token.GETPROP)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(12)
-        .hasLength(10);
+        .hasCharno(12);
     assertNode(callee).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     // A.prototype['g']
@@ -255,8 +249,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superGetelemReplacement)
         .hasToken(Token.GETELEM)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(12)
-        .hasLength(10);
+        .hasCharno(12);
     // computed property prevents doing any better than StandardColors.UNKNOWN
     assertNode(superGetelemReplacement).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -266,7 +259,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(5) // position and length of `super`
         .hasCharno(12)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
 
@@ -276,7 +268,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.THIS)
         .hasLineno(5) // position and length of `super['g']`
         .hasCharno(12)
-        .hasLength(10)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBInstanceType);
   }
@@ -334,8 +325,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(22)
-        .hasLength(1);
+        .hasCharno(22);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -344,7 +334,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(4) // position and length of `super`
         .hasCharno(16)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
   }
@@ -400,8 +389,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superGetelemReplacement)
         .hasToken(Token.GETELEM)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(20)
-        .hasLength(10);
+        .hasCharno(20);
     // getelem prevents us doing any better than unknown type
     assertNode(superGetelemReplacement).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -411,7 +399,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(5) // position and length of `super`
         .hasCharno(20)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
   }
@@ -510,8 +497,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(4) // position and length of `super.g(3)`
-        .hasCharno(15)
-        .hasLength(10);
+        .hasCharno(15);
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.STRING);
 
     // A.g.call
@@ -519,8 +505,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(21)
-        .hasLength(1);
+        .hasCharno(21);
     assertNode(callee).hasColorThat().isEqualTo(aDotGDotCallType);
 
     // A.g
@@ -528,8 +513,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(21)
-        .hasLength(1);
+        .hasCharno(21);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A
@@ -538,7 +522,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A")
         .hasLineno(4) // position and length of `super`
         .hasCharno(15)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAType);
 
@@ -596,8 +579,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(5) // position and length of `super['g'](4)`
-        .hasCharno(19)
-        .hasLength(13);
+        .hasCharno(19);
     // computed property prevents doing any better than StandardColors.UNKNOWN
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -606,8 +588,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .hasToken(Token.GETPROP)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(19)
-        .hasLength(10);
+        .hasCharno(19);
     assertNode(callee).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
     // A['g']
@@ -615,8 +596,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superGetelemReplacement)
         .hasToken(Token.GETELEM)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(19)
-        .hasLength(10);
+        .hasCharno(19);
     // computed property prevents doing any better than StandardColors.UNKNOWN
     assertNode(superGetelemReplacement).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -626,7 +606,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesName("A")
         .hasLineno(5) // position and length of `super`
         .hasCharno(19)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAType);
 
@@ -636,7 +615,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.THIS)
         .hasLineno(5) // position and length of `super['g']`
         .hasCharno(19)
-        .hasLength(10)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBType);
   }
@@ -692,8 +670,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(29)
-        .hasLength(1);
+        .hasCharno(29);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -702,7 +679,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A")
         .hasLineno(4) // position and length of `super`
         .hasCharno(23)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAType);
   }
@@ -756,8 +732,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superGetElemReplacement)
         .hasToken(Token.GETELEM)
         .hasLineno(5) // position and length of `super['g']`
-        .hasCharno(27)
-        .hasLength(10);
+        .hasCharno(27);
     // computed property prevents doing any better than StandardColors.UNKNOWN
     assertNode(superGetElemReplacement).hasColorThat().isEqualTo(StandardColors.UNKNOWN);
 
@@ -767,7 +742,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A")
         .hasLineno(5) // position and length of `super`
         .hasCharno(27)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAType);
   }
@@ -834,8 +808,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(4) // position and length of `super.g(3)`
-        .hasCharno(12)
-        .hasLength(10);
+        .hasCharno(12);
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.NUMBER);
 
     // A.prototype.g.call
@@ -843,8 +816,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(18)
-        .hasLength(1);
+        .hasCharno(18);
     assertNode(callee).hasColorThat().isEqualTo(aDotGDotCallType);
 
     // A.prototype.g
@@ -852,8 +824,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(4) // position and length of `super.g`
-        .hasCharno(18)
-        .hasLength(1);
+        .hasCharno(18);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -862,7 +833,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(4) // position and length of `super`
         .hasCharno(12)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
 
@@ -872,7 +842,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.THIS)
         .hasLineno(4) // position and length of `super.g`
         .hasCharno(18)
-        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBInstanceType);
   }
@@ -938,8 +907,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callNode)
         .hasToken(Token.CALL)
         .hasLineno(5) // position and length of `super.g(3)`
-        .hasCharno(13)
-        .hasLength(10);
+        .hasCharno(13);
     assertNode(callNode).hasColorThat().isEqualTo(StandardColors.STRING);
 
     // A.prototype.g.call
@@ -947,8 +915,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(callee)
         .matchesQualifiedName("A.prototype.g.call")
         .hasLineno(5) // position and length of `super.g`
-        .hasCharno(19)
-        .hasLength(1);
+        .hasCharno(19);
     assertNode(callee).hasColorThat().isEqualTo(aDotGDotCallType);
 
     // A.prototype.g
@@ -956,8 +923,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertNode(superDotGReplacement)
         .matchesQualifiedName("A.prototype.g")
         .hasLineno(5) // position and length of `super.g`
-        .hasCharno(19)
-        .hasLength(1);
+        .hasCharno(19);
     assertNode(superDotGReplacement).hasColorThat().isEqualTo(aDotGMethodType);
 
     // A.prototype
@@ -966,7 +932,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .matchesQualifiedName("A.prototype")
         .hasLineno(5) // position and length of `super`
         .hasCharno(13)
-        .hasLength(5)
         .hasOriginalName("super");
     assertNode(superReplacement).hasColorThat().isEqualTo(classAPrototypeType);
 
@@ -976,7 +941,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.THIS)
         .hasLineno(5) // position and length of `super.g`
         .hasCharno(19)
-        .hasLength(1)
         .isIndexable(false); // there's no direct correlation with text in the original source
     assertNode(thisNode).hasColorThat().isEqualTo(classBInstanceType);
   }
@@ -1017,7 +981,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .isMemberFunctionDef("constructor")
         .hasLineno(1) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(11)
         .isIndexable(false);
     assertNode(constructorMemberFunctionDefForA).hasColorThat().isEqualTo(classAConstructorType);
 
@@ -1026,7 +989,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.FUNCTION)
         .hasLineno(1) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(11)
         .isIndexable(false);
     assertNode(constructorFunctionForA).hasColorThat().isEqualTo(classAConstructorType);
   }
@@ -1070,7 +1032,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .isMemberFunctionDef("constructor")
         .hasLineno(5) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(21)
         .isIndexable(false);
     assertNode(constructorMemberFunctionDefForB).hasColorThat().isEqualTo(classBConstructorType);
 
@@ -1079,7 +1040,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.FUNCTION)
         .hasLineno(5) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(21)
         .isIndexable(false);
     assertNode(constructorFunctionForB).hasColorThat().isEqualTo(classBConstructorType);
 
@@ -1093,7 +1053,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.CALL)
         .hasLineno(5) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(21)
         .isIndexable(false);
     assertNode(superConstructorCall).hasColorThat().isEqualTo(classBInstanceType);
 
@@ -1102,7 +1061,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.SUPER)
         .hasLineno(5) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(21)
         .isIndexable(false);
     assertNode(superNode).hasColorThat().isEqualTo(classAConstructorType);
 
@@ -1114,7 +1072,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .isName("arguments")
         .hasLineno(5) // synthetic constructor gets position and length of original class definition
         .hasCharno(0)
-        .hasLength(21)
         .isIndexable(false);
   }
 
@@ -1138,7 +1095,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .isMemberFunctionDef("constructor")
         .hasLineno(1) // synthetic constructor gets position and length of original class definition
         .hasCharno(18)
-        .hasLength(11)
         .isIndexable(false);
     assertNode(constructorMemberFunctionDefForA).hasColorThat().isEqualTo(classAConstructorType);
 
@@ -1147,7 +1103,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         .hasToken(Token.FUNCTION)
         .hasLineno(1) // synthetic constructor gets position and length of original class definition
         .hasCharno(18)
-        .hasLength(11)
         .isIndexable(false);
     assertNode(constructorFunctionForA).hasColorThat().isEqualTo(classAConstructorType);
   }

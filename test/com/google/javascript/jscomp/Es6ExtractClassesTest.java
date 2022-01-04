@@ -43,6 +43,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     enableRewriteClosureCode();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Test

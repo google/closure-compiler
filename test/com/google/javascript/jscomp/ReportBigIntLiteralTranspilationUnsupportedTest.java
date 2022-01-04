@@ -32,6 +32,7 @@ public class ReportBigIntLiteralTranspilationUnsupportedTest extends CompilerTes
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

@@ -59,6 +59,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   // Spreading into array literals.

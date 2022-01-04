@@ -37,6 +37,7 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

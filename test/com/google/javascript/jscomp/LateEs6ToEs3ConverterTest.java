@@ -53,6 +53,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

@@ -41,6 +41,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

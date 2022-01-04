@@ -35,6 +35,7 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   public Es7RewriteExponentialOperatorTest() {

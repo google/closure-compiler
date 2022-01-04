@@ -63,6 +63,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

@@ -52,6 +52,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     enableTypeInfoValidation();
     allowExternsChanges();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

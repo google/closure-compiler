@@ -318,6 +318,7 @@ public final class RewriteOptionalChainingOperatorTest {
       enableTypeCheck();
       enableTypeInfoValidation();
       replaceTypesWithColors();
+      enableMultistageCompilation();
     }
 
     @Override
@@ -350,6 +351,7 @@ public final class RewriteOptionalChainingOperatorTest {
       enableTypeCheck();
       enableTypeInfoValidation();
       replaceTypesWithColors();
+      enableMultistageCompilation();
     }
 
     @Override

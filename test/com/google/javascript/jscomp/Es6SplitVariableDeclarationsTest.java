@@ -35,6 +35,7 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
+    enableMultistageCompilation();
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     // there are a lot of 'property x never defined on ?' warnings caused by object destructuring

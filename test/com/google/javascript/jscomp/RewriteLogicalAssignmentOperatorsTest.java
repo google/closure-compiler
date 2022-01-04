@@ -34,6 +34,7 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override

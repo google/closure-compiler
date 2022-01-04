@@ -34,6 +34,7 @@ public final class RewriteClassFieldsTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    enableMultistageCompilation();
   }
 
   @Override
