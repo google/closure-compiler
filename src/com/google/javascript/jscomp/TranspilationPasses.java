@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -127,15 +125,20 @@ public class TranspilationPasses {
       }
     }
 
-    if (options.needsTranspilationFrom(ES2017)) {
+    if (options.needsTranspilationOf(Feature.TRAILING_COMMA_IN_PARAM_LIST)) {
       passes.add(removeTrailingCommaFromParamList);
+    }
+
+    if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
       passes.add(rewriteAsyncFunctions);
     }
 
-    if (options.needsTranspilationFrom(ES2016)) {
+    if (options.needsTranspilationOf(Feature.EXPONENT_OP)) {
       passes.add(rewriteExponentialOperator);
     }
 
+    // TODO(lharker): break up this if block into individual Feature conditions
+    // as CompilerOptions.getOutputFeatureSet() may include some but not all ES2015 features
     if (options.needsTranspilationFrom(ES2015)) {
       // Binary and octal literals are effectively transpiled by the parser.
       // There's no transpilation we can do for the new regexp flags.
