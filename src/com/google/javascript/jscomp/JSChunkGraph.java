@@ -639,7 +639,7 @@ public final class JSChunkGraph implements Serializable {
     // Update the chunks to reflect this.
     for (CompilerInput input : orderedInputs) {
       JSChunk chunk = input.getChunk();
-      if (chunk != null && !chunk.getInputs().contains(input)) {
+      if (chunk != null && chunk.getByName(input.getName()) == null) {
         chunk.add(input);
       }
     }

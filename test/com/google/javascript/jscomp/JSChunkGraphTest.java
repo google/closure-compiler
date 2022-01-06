@@ -835,7 +835,8 @@ public final class JSChunkGraphTest {
         SourceFile.fromCode(
             "weak1",
             "goog.provide('weak1'); goog.requireType('weak2'); goog.require('strongFromWeak');");
-    SourceFile strongFromWeak = SourceFile.fromCode("weak1", "goog.provide('strongFromWeak');");
+    SourceFile strongFromWeak =
+        SourceFile.fromCode("strongFromWeak", "goog.provide('strongFromWeak');");
     SourceFile weak2 =
         SourceFile.fromCode("weak2", "goog.provide('weak2'); goog.requireType('weak3');");
     SourceFile weak3 = SourceFile.fromCode("weak3", "goog.provide('weak3');");

@@ -167,7 +167,7 @@ final class ConvertChunksToESModules implements CompilerPass {
   /** Add export statements to chunks */
   private void addExportStatements() {
     for (Map.Entry<JSChunk, Set<String>> jsModuleExports : crossChunkExports.entrySet()) {
-      CompilerInput firstInput = jsModuleExports.getKey().getInput(0);
+      CompilerInput firstInput = jsModuleExports.getKey().getFirst();
       Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
       checkState(moduleBody != null && moduleBody.isModuleBody());
       Node exportSpecs = new Node(Token.EXPORT_SPECS);
@@ -200,7 +200,7 @@ final class ConvertChunksToESModules implements CompilerPass {
         crossChunkImports.entrySet()) {
       ArrayList<Node> importStatements = new ArrayList<>();
       JSChunk importingChunk = chunkImportsEntry.getKey();
-      CompilerInput firstInput = importingChunk.getInput(0);
+      CompilerInput firstInput = importingChunk.getFirst();
       Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
       checkState(moduleBody != null && moduleBody.isModuleBody());
 
