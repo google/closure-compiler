@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -39,6 +40,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;
+  private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
   private static final SourceFile other =
       SourceFile.fromCode(
@@ -106,8 +108,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
               compiler.getModuleMetadataMap(),
               compiler.getModuleMap(),
               /* preprocessorSymbolTable= */ null,
-              globalTypedScope)
+              globalTypedScope,
+              chunkOutputType)
           .process(externs, root);
+
+      if (chunkOutputType == ChunkOutputType.ES_MODULES) {
+        new ConvertChunksToESModules(compiler).process(externs, root);
+      }
     };
   }
 
@@ -1260,5 +1267,19 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   @Test
   public void testImportMeta() {
     testError("import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+  }
+
+  @Test
+  public void testImportMetaESModuleOutput() {
+    chunkOutputType = ChunkOutputType.ES_MODULES;
+    test(
+        lines(
+            "const url = import.meta.url;",
+            "export {url};"),
+        lines(
+            "const url$$module$testcode = import.meta.url;",
+            "/** @const */ var module$testcode = {};",
+            "/** @const */ module$testcode.url = url$$module$testcode;",
+            "export {};"));
   }
 }

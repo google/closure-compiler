@@ -44,7 +44,8 @@ public class TranspilationPasses {
                       compiler.getModuleMetadataMap(),
                       compiler.getModuleMap(),
                       preprocessorTableFactory.getInstanceOrNull(),
-                      compiler.getTopScope());
+                      compiler.getTopScope(),
+                      compiler.getOptions().getChunkOutputType());
                 })
             .setFeatureSetForChecks()
             .build());
