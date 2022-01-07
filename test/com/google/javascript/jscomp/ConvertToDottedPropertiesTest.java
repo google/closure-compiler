@@ -188,4 +188,9 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("class C { ['constructor']() {} }");
     testSame("class C { ['constructor'] = 0 }");
   }
+
+  @Test
+  public void testComputedPropertyWithDefaultValue() {
+    test("const {['o']: o = 0} = {};", "const {o:o = 0} = {};");
+  }
 }
