@@ -165,7 +165,7 @@ public final class JSTypeRegistry {
   private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
 
   // Only needed for type resolution at the moment
-  private final transient Map<String, ModuleSlot> moduleToSlotMap = new HashMap<>();
+  private final transient Map<String, ClosureNamespace> closureNamespaces = new HashMap<>();
 
   // NOTE: This would normally be "static final" but that causes unit test failures
   // when serializing and deserializing compiler state for multistage builds.
@@ -919,16 +919,16 @@ public final class JSTypeRegistry {
     String prefix = reference;
     ImmutableList.Builder<String> unusedComponents = ImmutableList.builder();
     while (true) {
-      ModuleSlot module = this.getModuleSlot(prefix);
-      if (module != null) {
-        if (module.isLegacyModule()) {
+      ClosureNamespace namespace = this.closureNamespaces.get(prefix);
+      if (namespace != null) {
+        if (namespace.isLegacy()) {
           // Try to resolve this name via registry or properties.
           return null;
         } else {
           // Always stop resolution here whether successful or not, instead of continuing with
           // resolution via registry or via properties, to match legacy behavior.
           return resolveViaPropertyGivenSlot(
-              module.type(), module.definitionNode(), unusedComponents.build().reverse());
+              namespace.type(), namespace.definitionNode(), unusedComponents.build().reverse());
         }
       }
 
@@ -2301,33 +2301,32 @@ public final class JSTypeRegistry {
     return type;
   }
 
-  /** Ensures that a type annotation pointing to a Closure modules is correctly resolved. */
-  public void registerClosureModule(String moduleName, Node definitionNode, JSType type) {
-    moduleToSlotMap.put(moduleName, ModuleSlot.create(/* isLegacy= */ false, definitionNode, type));
+  /**
+   * Registers a goog.module namespace (that does not have goog.module.declareLegacyNamespace)
+   *
+   * <p>This allows JSTypeRegistry to resolve types that refer to goog.modules by namespace. These
+   * have unique handling because they exist only in the type space and do not have a corresponding
+   * value space value.
+   */
+  public void registerNonLegacyClosureNamespace(
+      String moduleName, Node definitionNode, JSType type) {
+    closureNamespaces.put(
+        moduleName, ClosureNamespace.create(/* isLegacy= */ false, definitionNode, type));
   }
 
-  /**
-   * Ensures that a type annotation pointing to a Closure modules is correctly resolved.
-   *
-   * <p>Currently this is useful because module rewriting will prevent type resolution given a
-   */
-  public void registerLegacyClosureModule(String moduleName) {
-    moduleToSlotMap.put(moduleName, ModuleSlot.create(/* isLegacy= */ true, null, null));
-  }
-
-  /**
-   * Returns the associated slot, if any, for the given module namespace.
-   *
-   * <p>Returns null if the given name is not a Closure namespace from a goog.provide or goog.module
-   */
-  ModuleSlot getModuleSlot(String moduleName) {
-    return moduleToSlotMap.get(moduleName);
+  /** Registers a goog.provide or legacy goog.module namespace with the type registry */
+  public void registerLegacyClosureNamespace(String moduleName) {
+    closureNamespaces.put(moduleName, ClosureNamespace.create(/* isLegacy= */ true, null, null));
   }
 
   /** Stores information about a Closure namespace. */
   @AutoValue
-  abstract static class ModuleSlot {
-    abstract boolean isLegacyModule();
+  abstract static class ClosureNamespace {
+    /**
+     * Returns true if this is a goog.provide'd namespace or a goog.module namespace followed by
+     * `goog.module.declareLegacyNamespace()
+     */
+    abstract boolean isLegacy();
 
     @Nullable
     abstract Node definitionNode();
@@ -2335,8 +2334,8 @@ public final class JSTypeRegistry {
     @Nullable
     abstract JSType type();
 
-    static ModuleSlot create(boolean isLegacy, Node definitionNode, JSType type) {
-      return new AutoValue_JSTypeRegistry_ModuleSlot(isLegacy, definitionNode, type);
+    static ClosureNamespace create(boolean isLegacy, Node definitionNode, JSType type) {
+      return new AutoValue_JSTypeRegistry_ClosureNamespace(isLegacy, definitionNode, type);
     }
   }
 }

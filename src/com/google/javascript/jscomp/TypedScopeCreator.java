@@ -508,7 +508,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       if (name.isExplicitlyProvided() && !name.isFromLegacyModule()) {
-        typeRegistry.registerLegacyClosureModule(name.getNamespace());
+        typeRegistry.registerLegacyClosureNamespace(name.getNamespace());
       }
     }
   }
@@ -817,7 +817,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       TypedVar exportsVar = checkNotNull(currentScope.getSlot("exports"));
 
       if (this.getModule().metadata().isLegacyGoogModule()) {
-        typeRegistry.registerLegacyClosureModule(this.getModule().closureNamespace());
+        typeRegistry.registerLegacyClosureNamespace(this.getModule().closureNamespace());
         QualifiedName moduleNamespace = QualifiedName.of(this.getModule().closureNamespace());
         new SlotDefiner()
             .inScope(currentScope.getGlobalScope())
@@ -848,7 +848,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             currentScope,
             currentScope.getGlobalScope());
       } else {
-        typeRegistry.registerClosureModule(
+        typeRegistry.registerNonLegacyClosureNamespace(
             this.getModule().closureNamespace(), exportsVar.getNameNode(), exportsVar.getType());
       }
       // Store the type of the namespace on the AST for the convenience of later passes that want

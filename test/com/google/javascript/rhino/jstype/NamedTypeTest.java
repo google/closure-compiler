@@ -240,7 +240,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testResolveToGoogModule() {
-    registry.registerClosureModule("mod.Foo", null, fooCtorType);
+    registry.registerNonLegacyClosureNamespace("mod.Foo", null, fooCtorType);
     NamedType modDotFoo = namedTypeBuilder("mod.Foo").build();
 
     modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
@@ -250,7 +250,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testResolveToPropertyOnGoogModule() {
     JSType exportsType = registry.createRecordType(ImmutableMap.of("Foo", fooCtorType));
-    registry.registerClosureModule("mod.Bar", null, exportsType);
+    registry.registerNonLegacyClosureNamespace("mod.Bar", null, exportsType);
     NamedType modBarFoo = namedTypeBuilder("mod.Bar.Foo").build();
 
     modBarFoo.resolve(ErrorReporter.NULL_INSTANCE);
@@ -263,9 +263,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType modDotFoo;
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       JSType exportsType = registry.createRecordType(ImmutableMap.of("Foo", fooCtorType));
-      registry.registerClosureModule("mod.Bar", null, exportsType);
+      registry.registerNonLegacyClosureNamespace("mod.Bar", null, exportsType);
       modDotFoo = namedTypeBuilder("mod.Bar.Foo").build();
-      registry.registerLegacyClosureModule("mod.Bar.Foo");
+      registry.registerLegacyClosureNamespace("mod.Bar.Foo");
     }
 
     assertType(modDotFoo.getReferencedType()).isUnknown();
@@ -274,9 +274,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testResolveToGoogModule_usesLongestModulePrefix() {
     ObjectType barType = createNominalType("Bar"/* resolve= */ );
-    registry.registerClosureModule(
+    registry.registerNonLegacyClosureNamespace(
         "mod.Foo", null, registry.createRecordType(ImmutableMap.of("Bar", fooCtorType)));
-    registry.registerClosureModule("mod.Foo.Bar", null, barType.getConstructor());
+    registry.registerNonLegacyClosureNamespace("mod.Foo.Bar", null, barType.getConstructor());
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
     NamedType modDotFoo = namedTypeBuilder("mod.Foo.Bar").setScope(scope).build();
 
@@ -288,7 +288,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   public void testReferenceGoogModuleByType_resolvesToModuleRatherThanRegistryType() {
     // Note: this logic was put in place to mimic the semantics of type resolution when
     // modules are rewritten before typechecking.
-    registry.registerClosureModule("mod.Foo", null, fooCtorType);
+    registry.registerNonLegacyClosureNamespace("mod.Foo", null, fooCtorType);
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
     NamedType modDotFoo = namedTypeBuilder("mod.Foo").setScope(scope).build();
     registry.declareType(scope, "mod.Foo", createNominalType("other.mod.Foo"));
