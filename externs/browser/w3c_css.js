@@ -1850,6 +1850,12 @@ CSSProperties.prototype.opacity;
 
 /**
  * @type {string}
+ * @see https://www.w3.org/TR/css-ui-3/#outline-offset
+ */
+CSSProperties.prototype.outlineOffset;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/css3-ui/#text-overflow
  */
 CSSProperties.prototype.textOverflow;
