@@ -319,16 +319,6 @@ class OptimizeCalls implements CompilerPass {
     }
 
     /**
-     * Whether the provided node acts as the target function in a new or call expression including
-     * .call expressions. For example, returns true for 'x' in 'x.call()'.
-     */
-    // TODO(rishipal): Remove this function's usage; use
-    //  `isNormalOrOptChainCallOrNewTarget` instead.
-    static boolean isCallOrNewTarget(Node n) {
-      return isCallTarget(n) || isNewTarget(n);
-    }
-
-    /**
      * Whether the provided node acts as the target function in a new or call or optional chain call
      * expression including .call expressions. For example, returns true for 'x' in 'x?.call()'.
      */
