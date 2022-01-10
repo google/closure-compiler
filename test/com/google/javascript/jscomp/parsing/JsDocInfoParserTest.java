@@ -5131,6 +5131,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @externs \n"
             + "* @field \n"
             + "* @function \n"
+            + "* @delcall \n"
+            + "* @deltemplate \n"
             + "* @hassoydelcall \n"
             + "* @hassoydeltemplate \n"
             + "* @id \n"

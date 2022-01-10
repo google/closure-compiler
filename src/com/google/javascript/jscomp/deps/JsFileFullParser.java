@@ -73,8 +73,8 @@ public class JsFileFullParser {
     public boolean testonly = false;
     public ModuleType moduleType = ModuleType.UNKNOWN;
 
-    public final Set<String> hasSoyDelcalls = new TreeSet<>();
-    public final Set<String> hasSoyDeltemplates = new TreeSet<>();
+    public final Set<String> delcalls = new TreeSet<>();
+    public final Set<String> deltemplates = new TreeSet<>();
     // Use a LinkedHashSet as import order matters!
     public final Set<String> importedModules = new LinkedHashSet<>();
     public final List<String> modName = new ArrayList<>();
@@ -295,14 +295,20 @@ public class JsFileFullParser {
             info.requiresCss.add(annotation.value);
           }
           break;
+        case "@deltemplate":
         case "@hassoydeltemplate":
+          // TODO(b/210468818): Remove legacy @hassoydeltemplate annotation once Soy gencode has
+          // been updated to use the new one.
           if (!annotation.value.isEmpty()) {
-            info.hasSoyDeltemplates.add(annotation.value);
+            info.deltemplates.add(annotation.value);
           }
           break;
+        case "@delcall":
         case "@hassoydelcall":
+          // TODO(b/210468818): Remove legacy @hassoydelcall annotation once Soy gencode has
+          // been updated to use the new one.
           if (!annotation.value.isEmpty()) {
-            info.hasSoyDelcalls.add(annotation.value);
+            info.delcalls.add(annotation.value);
           }
           break;
         case "@externs":

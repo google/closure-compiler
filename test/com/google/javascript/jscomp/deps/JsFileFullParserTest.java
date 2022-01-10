@@ -191,6 +191,30 @@ public final class JsFileFullParserTest {
     }
   }
 
+  @Test
+  public void testSoyDeltemplate() {
+    FileInfo info = parse("/**", " * @deltemplate {a}", " * @modName {m}", " */");
+    assertThat(info.deltemplates).containsExactly("a");
+  }
+
+  @Test
+  public void testSoyDeltemplate_legacy() {
+    FileInfo info = parse("/**", " * @hassoydeltemplate {a}", " * @modName {m}", " */");
+    assertThat(info.deltemplates).containsExactly("a");
+  }
+
+  @Test
+  public void testSoyDelcall() {
+    FileInfo info = parse("/**", " * @delcall {a}", " */");
+    assertThat(info.delcalls).containsExactly("a");
+  }
+
+  @Test
+  public void testSoyDelcall_legacy() {
+    FileInfo info = parse("/**", " * @hassoydelcall {a}", " */");
+    assertThat(info.delcalls).containsExactly("a");
+  }
+
   private static FileInfo parse(String... lines) {
     return JsFileFullParser.parse(
         Joiner.on('\n').join(lines),
