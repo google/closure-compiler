@@ -2273,7 +2273,7 @@ public final class ConformanceRules {
       // If the type of the object is not known to be a subtype of Element, the code is not
       // evquivlanet to setAttribute. Without this check, we will get overwhelmed by false
       // positives.
-      if (objType.isUnknownType() || !objType.isSubtypeOf(elementType)) {
+      if (objType.isUnknownType() || objType.isEmptyType() || !objType.isSubtypeOf(elementType)) {
         return false;
       }
 
