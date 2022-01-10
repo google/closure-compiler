@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import static java.lang.Integer.parseInt;
-import static java.lang.Math.min;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -188,7 +187,6 @@ class IRFactory {
   static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
-  private final String sourceString;
   private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final Config config;
@@ -240,12 +238,10 @@ class IRFactory {
   private Node resultNode;
 
   private IRFactory(
-      String sourceString,
       StaticSourceFile sourceFile,
       Config config,
       ErrorReporter errorReporter,
       ImmutableList<Comment> comments) {
-    this.sourceString = sourceString;
     this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
     this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
@@ -315,11 +311,9 @@ class IRFactory {
   public static IRFactory transformTree(
       ProgramTree tree,
       StaticSourceFile sourceFile,
-      String sourceString,
       Config config,
       ErrorReporter errorReporter) {
-    IRFactory irFactory =
-        new IRFactory(sourceString, sourceFile, config, errorReporter, tree.sourceComments);
+    IRFactory irFactory = new IRFactory(sourceFile, config, errorReporter, tree.sourceComments);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -2184,30 +2178,7 @@ class IRFactory {
 
     Node processStringLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-
-      Node n = processString(token);
-      String value = n.getString();
-      if (value.indexOf('\u000B') != -1) {
-        // NOTE(nicksantos): In JavaScript, there are 3 ways to
-        // represent a vertical tab: \v, \x0B, \u000B.
-        // The \v notation was added later, and is not understood
-        // on IE. So we need to preserve it as-is. This is really
-        // obnoxious, because we do not have a good way to represent
-        // how the original string was encoded without making the
-        // representation of strings much more complicated.
-        //
-        // To handle this, we look at the original source test, and
-        // mark the string as \v-encoded or not. If a string is
-        // \v encoded, then all the vertical tabs in that string
-        // will be encoded with a \v.
-        int start = token.location.start.offset;
-        int end = token.location.end.offset;
-        if (start < sourceString.length()
-            && (sourceString.substring(start, min(sourceString.length(), end)).contains("\\v"))) {
-          n.putBooleanProp(Node.SLASH_V, true);
-        }
-      }
-      return n;
+      return processString(token);
     }
 
     Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {

@@ -305,9 +305,8 @@ enum NodeProperty {
   DIRECT_EVAL = 9;
   // A CALL without an explicit "this" value.
   FREE_CALL = 10;
-  // Whether a STRING node contains a \v vertical tab escape. This is a total
-  // hack. See comments in IRFactory about this.
-  SLASH_V = 11;
+  // Unused.
+  UNUSED_11 = 11;
   // An object that's used for goog.object.reflect-style reflection.
   REFLECTED_OBJECT = 12;
   // Set if class member definition is static

@@ -134,8 +134,7 @@ public final class ParserRunner {
       List<Comment> comments = ImmutableList.of();
       FeatureSet features = p.getFeatures();
       if (tree != null && (!es6ErrorReporter.hadError() || keepGoing)) {
-        IRFactory factory =
-            IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
+        IRFactory factory = IRFactory.transformTree(tree, sourceFile, config, errorReporter);
         root = factory.getResultNode();
         features = features.union(factory.getFeatures());
         root.putProp(Node.FEATURE_SET, features);

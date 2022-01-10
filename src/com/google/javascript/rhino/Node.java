@@ -107,9 +107,6 @@ public class Node {
     SOURCE_FILE,
     // The id of the input associated with this node.
     INPUT_ID,
-    // Whether a STRING node contains a \v vertical tab escape. This is a total hack. See comments
-    // in IRFactory about this.
-    SLASH_V,
     // For passes that work only on changed funs.
     CHANGE_TIME,
     // An object that's used for goog.object.reflect-style reflection.
@@ -256,7 +253,6 @@ public class Node {
   public static final Prop IS_NAMESPACE = Prop.IS_NAMESPACE;
   public static final Prop DIRECT_EVAL = Prop.DIRECT_EVAL;
   public static final Prop FREE_CALL = Prop.FREE_CALL;
-  public static final Prop SLASH_V = Prop.SLASH_V;
   public static final Prop REFLECTED_OBJECT = Prop.REFLECTED_OBJECT;
   public static final Prop STATIC_MEMBER = Prop.STATIC_MEMBER;
   public static final Prop GENERATOR_FN = Prop.GENERATOR_FN;
@@ -1939,7 +1935,6 @@ public class Node {
           Node::isYieldAll,
           (n) -> n.getIntProp(Prop.EXPORT_DEFAULT),
           (n) -> n.getIntProp(Prop.EXPORT_ALL_FROM),
-          (n) -> n.getIntProp(Prop.SLASH_V),
           (n) -> n.getIntProp(Prop.INCRDECR),
           (n) -> n.getIntProp(Prop.QUOTED),
           (n) -> n.getBooleanProp(Prop.FREE_CALL),

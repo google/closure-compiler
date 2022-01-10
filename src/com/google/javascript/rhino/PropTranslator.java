@@ -121,8 +121,6 @@ final class PropTranslator {
         return NodeProperty.DIRECT_EVAL;
       case FREE_CALL:
         return NodeProperty.FREE_CALL;
-      case SLASH_V:
-        return NodeProperty.SLASH_V;
       case REFLECTED_OBJECT:
         return NodeProperty.REFLECTED_OBJECT;
       case EXPORT_DEFAULT:
@@ -183,7 +181,8 @@ final class PropTranslator {
           && protoProp != NodeProperty.NODE_PROPERTY_UNSPECIFIED
           && protoProp != NodeProperty.IS_DECLARED_CONSTANT
           && protoProp != NodeProperty.IS_INFERRED_CONSTANT
-          && protoProp != NodeProperty.UNRECOGNIZED) {
+          && protoProp != NodeProperty.UNRECOGNIZED
+          && protoProp != NodeProperty.UNUSED_11) {
         throw new IllegalStateException("Hit unhandled node property: " + protoProp);
       }
     }

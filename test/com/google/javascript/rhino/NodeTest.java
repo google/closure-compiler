@@ -266,14 +266,6 @@ public class NodeTest {
   }
 
   @Test
-  public void testIsEquivalentTo_withSlashV_isDifferent() {
-    Node node1 = Node.newString("\u000B");
-    node1.putBooleanProp(Node.SLASH_V, true);
-    Node node2 = Node.newString("\u000B");
-    assertThat(node1.isEquivalentTo(node2)).isFalse();
-  }
-
-  @Test
   public void testIsEquivalentToNumber() {
     assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(1))).isTrue();
     assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(2))).isFalse();

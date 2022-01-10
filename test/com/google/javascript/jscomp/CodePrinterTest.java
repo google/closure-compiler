@@ -2576,8 +2576,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Octal 12 = Hex 0A = \n
     assertPrint("var x ='\\012';", "var x=\"\\n\"");
 
-    // Octal 13 = Hex 0B = \v, but we print it as \x0B. See issue 601.
-    assertPrint("var x ='\\013';", "var x=\"\\x0B\"");
+    // Octal 13 = Hex 0B = \v
+    assertPrint("var x ='\\013';", "var x=\"\\v\"");
 
     // Octal 34 = Hex 1C
     assertPrint("var x ='\\034';", "var x=\"\\u001c\"");
@@ -2598,8 +2598,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Octal 12 = Hex 0A = \n
     assertPrint("var x ='\\12';", "var x=\"\\n\"");
 
-    // Octal 13 = Hex 0B = \v, but we print it as \x0B. See issue 601.
-    assertPrint("var x ='\\13';", "var x=\"\\x0B\"");
+    // Octal 13 = Hex 0B = \v.
+    assertPrint("var x ='\\13';", "var x=\"\\v\"");
 
     // Octal 34 = Hex 1C
     assertPrint("var x ='\\34';", "var x=\"\\u001c\"");
@@ -2669,8 +2669,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testIssue601() {
     assertPrint("'\\v' == 'v'", "\"\\v\"==\"v\"");
-    assertPrint("'\\u000B' == '\\v'", "\"\\x0B\"==\"\\v\"");
-    assertPrint("'\\x0B' == '\\v'", "\"\\x0B\"==\"\\v\"");
+    assertPrint("'\\u000B' == '\\v'", "\"\\v\"==\"\\v\"");
+    assertPrint("'\\x0B' == '\\v'", "\"\\v\"==\"\\v\"");
   }
 
   @Test
@@ -2785,6 +2785,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("/\\0/");
     assertPrintSame("/\\\\/");
     assertPrintSame("/(.)\\1/");
+    assertPrintSame("/\\x0B/"); // Don't print this as \v (as is done in strings)
   }
 
   @Test
@@ -2795,6 +2796,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("/\\h/", "/h/");
     assertPrint("/\\i/", "/i/");
     assertPrint("/\\¡/", "/\\u00a1/");
+
+
   }
 
   @Test

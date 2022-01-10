@@ -30,17 +30,12 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import java.util.HashMap;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** CodeGenerator generates codes from a parse tree, sending it to the specified CodeConsumer. */
 public class CodeGenerator {
   private static final String LT_ESCAPED = "\\x3c";
   private static final String GT_ESCAPED = "\\x3e";
-
-  // A memoizer for formatting strings as JS strings.
-  private final Map<String, String> escapedJsStrings = new HashMap<>();
 
   private final CodeConsumer cc;
 
@@ -1970,18 +1965,10 @@ public class CodeGenerator {
 
   /** Outputs a JS string, using the optimal (single/double) quote character */
   private void addJsString(Node n) {
-    String s = n.getString();
-    boolean useSlashV = n.getBooleanProp(Node.SLASH_V);
-    if (useSlashV) {
-      add(jsString(n.getString(), useSlashV));
-    } else {
-      String cached =
-          escapedJsStrings.computeIfAbsent(s, (String k) -> jsString(n.getString(), useSlashV));
-      add(cached);
-    }
+    add(jsString(n.getString()));
   }
 
-  private String jsString(String s, boolean useSlashV) {
+  private String jsString(String s) {
     int singleq = 0;
     int doubleq = 0;
 
@@ -2013,14 +2000,12 @@ public class CodeGenerator {
       singlequote = "\'";
     }
 
-    return quote
-        + strEscape(s, doublequote, singlequote, "`", "\\\\", "$", useSlashV, false)
-        + quote;
+    return quote + strEscape(s, doublequote, singlequote, "`", "\\\\", "$", false) + quote;
   }
 
   /** Escapes regular expression */
   String regexpEscape(String s) {
-    return '/' + strEscape(s, "\"", "'", "`", "\\", "$", false, true) + '/';
+    return '/' + strEscape(s, "\"", "'", "`", "\\", "$", true) + '/';
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
@@ -2031,7 +2016,6 @@ public class CodeGenerator {
       String backtickEscape,
       String backslashEscape,
       String dollarEscape,
-      boolean useSlashV,
       boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
     for (int i = 0; i < s.length(); i++) {
@@ -2041,7 +2025,7 @@ public class CodeGenerator {
           sb.append("\\x00");
           break;
         case '\u000B':
-          if (useSlashV) {
+          if (!isRegexp) {
             sb.append("\\v");
           } else {
             sb.append("\\x0B");
