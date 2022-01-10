@@ -2578,35 +2578,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRequireFileoverviewVisibility() {
-    configuration =
-        "requirement: {\n"
-            + "  type: CUSTOM\n"
-            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$"
-            + "RequireFileoverviewVisibility'\n"
-            + "  error_message: 'RequireFileoverviewVisibility Message'\n"
-            + "}";
-
-    testWarning(
-        "var foo = function() {};",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: RequireFileoverviewVisibility Message");
-
-    testWarning(
-        "/**\n" + "  * @fileoverview\n" + "  */\n" + "var foo = function() {};",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: RequireFileoverviewVisibility Message");
-
-    testWarning(
-        "/**\n" + "  * @package\n" + "  */\n" + "var foo = function() {};",
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: RequireFileoverviewVisibility Message");
-
-    testNoWarning(
-        "/**\n" + "  * @fileoverview\n" + "  * @package\n" + "  */\n" + "var foo = function() {};");
-  }
-
-  @Test
   public void testBanGlobalVarsInEs6Module() {
     // ES6 modules cannot be type checked yet
     disableTypeCheck();
