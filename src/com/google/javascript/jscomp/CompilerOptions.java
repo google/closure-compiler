@@ -2134,6 +2134,16 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  /** Whether any type-based optimizations are enabled */
+  boolean requiresTypesForOptimization() {
+    // Add new type-based optimization options to this list, or types may be erased from the AST
+    // before the optimziations run.
+    return this.disambiguateProperties
+        || this.ambiguateProperties
+        || this.inlineProperties
+        || this.useTypesForLocalOptimization;
+  }
+
   public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }

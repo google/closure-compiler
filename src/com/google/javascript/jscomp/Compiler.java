@@ -546,7 +546,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     ImmutableList<SourceFile> files =
         ImmutableList.<SourceFile>builder().addAll(externs).addAll(sources).build();
 
-    this.initTypedAstFilesystem(files, typedAstListStream);
+    this.initTypedAstFilesystem(files, typedAstListStream, options);
     this.init(externs, sources, options);
   }
 
@@ -570,29 +570,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     ImmutableList<SourceFile> files = filesBuilder.build();
 
-    this.initTypedAstFilesystem(files, typedAstListStream);
+    this.initTypedAstFilesystem(files, typedAstListStream, options);
     this.initModules(externs, modules, options);
   }
 
   @GwtIncompatible
   private void initTypedAstFilesystem(
-      ImmutableList<SourceFile> existingSourceFiles, InputStream typedAstListStream) {
+      ImmutableList<SourceFile> existingSourceFiles,
+      InputStream typedAstListStream,
+      CompilerOptions options) {
     checkState(this.typedAstFilesystem == null);
 
     this.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
+    // To speed up builds that don't run type-based optimizations, skip type deserialization
+    boolean deserializeTypes = options.requiresTypesForOptimization();
     TypedAstDeserializer.DeserializedAst astData =
         TypedAstDeserializer.deserializeFullAst(
             this,
             SYNTHETIC_EXTERNS_FILE,
             existingSourceFiles,
             typedAstListStream,
-            // TODO(b/183734515): consider setting 'includeTypeInformation' to false when no type-
-            // based optimziation flags are enabled, as a performance optimization.
-            /* includeTypeInformation= */ true);
+            deserializeTypes);
 
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
-    this.colorRegistry = astData.getColorRegistry().get();
+    this.colorRegistry = astData.getColorRegistry().orNull();
   }
 
   @Override
