@@ -1734,9 +1734,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         propName = lvalueNode.isComputedProp() ? null : lvalueNode.getString();
       } else {
         String ownerName = NodeUtil.getBestLValueName(ownerNode);
-        TypedVar ownerVar = ownerName != null ? currentScope.getVar(ownerName) : null;
-        if (ownerVar != null) {
-          ownerType = ObjectType.cast(ownerVar.getType());
+        if (ownerName != null) {
+          ownerType =
+              ObjectType.cast(currentScope.lookupQualifiedName(QualifiedName.of(ownerName)));
         }
 
         if (ownerName != null && name != null) {

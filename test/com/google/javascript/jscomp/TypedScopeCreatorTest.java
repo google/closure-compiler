@@ -5492,6 +5492,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequire_namedExportImportedAsNamespace_andModded() {
+    testSame(
+        srcs(
+            "goog.module('a'); class C { m() {} } exports = {C}; C: C;",
+            "goog.module('b'); const a = goog.require('a'); a.C.prototype.n = function() {};"));
+
+    Node cCtor = getLabeledStatement("C").statementNode.getOnlyChild();
+    assertNode(cCtor).hasJSTypeThat().isFunctionTypeThat().isConstructorFor("C");
+
+    FunctionType cCtorType = cCtor.getJSType().assertFunctionType();
+    ObjectType cPrototype = cCtorType.getPrototype();
+    assertType(cPrototype).hasDeclaredProperty("n");
+    assertType(cPrototype.getPropertyType("n"))
+        .isFunctionTypeThat()
+        .hasTypeOfThisThat()
+        .isEqualTo(cCtorType.getInstanceType());
+  }
+
+  @Test
   public void testGoogRequire_destructuringInferredNamedExport() {
     testSame(
         srcs(
