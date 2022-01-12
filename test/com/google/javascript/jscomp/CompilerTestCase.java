@@ -1455,7 +1455,8 @@ public abstract class CompilerTestCase {
         }
 
         if (gatherExternPropertiesEnabled && i == 0) {
-          new GatherExternProperties(compiler).process(externsRoot, mainRoot);
+          new GatherExternProperties(compiler, GatherExternProperties.Mode.CHECK_AND_OPTIMIZE)
+              .process(externsRoot, mainRoot);
         }
 
         if (i == 0) {

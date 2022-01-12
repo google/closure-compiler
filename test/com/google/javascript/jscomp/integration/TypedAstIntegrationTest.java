@@ -202,8 +202,32 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compileTypedAstShards(options);
 
-    // TODO(b/207693227): stop renaming x and y to a and b
-    Node expectedRoot = parseExpectedCode("takeCoord({a: 1, b: 2});");
+    Node expectedRoot = parseExpectedCode("takeCoord({x: 1, y: 2});");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void gatherExternProperties() throws IOException {
+    precompileLibrary(
+        extern(
+            new TestExternsBuilder()
+                .addExtra(
+                    lines(
+                        "/** @fileoverview @externs */ ", //
+                        "var ns = {}; ",
+                        "ns.x; "))
+                .addConsole()
+                .build()),
+        code("console.log(ns.x); console.log(ns.nonExternProperty);"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("console.log(ns.x);console.log(ns.a);");
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);

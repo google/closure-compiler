@@ -477,10 +477,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (!options.checksOnly) {
       checks.add(removeWeakSources);
-      // Gather property names in externs so they can be queried by the optimizing passes.
-      // See b/180424427 for why this runs in stage 1 and not stage 2.
-      checks.add(gatherExternProperties);
     }
+
+    // Gather property names in externs so they can be queried by the optimizing passes.
+    // See b/180424427 for why this runs in stage 1 and not stage 2.
+    checks.add(gatherExternPropertiesCheck);
 
     if (options.checksOnly && options.closurePass && options.shouldRewriteProvidesInChecksOnly()) {
       checks.add(closureProvidesRequires);
@@ -563,6 +564,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
       passes.add(instrumentForCodeCoverage);
     }
+
+    passes.add(gatherExternPropertiesOptimize);
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
 
@@ -718,6 +721,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.customPasses != null) {
       passes.add(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
+
+
 
     assertValidOrderForOptimizations(passes);
     return passes;
@@ -2660,13 +2665,20 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
+  private final PassFactory gatherExternPropertiesCheck =
+      createGatherExternProperties(GatherExternProperties.Mode.CHECK);
+
+  private final PassFactory gatherExternPropertiesOptimize =
+      createGatherExternProperties(GatherExternProperties.Mode.OPTIMIZE);
+
   /** Extern property names gathering pass. */
-  private final PassFactory gatherExternProperties =
-      PassFactory.builder()
-          .setName("gatherExternProperties")
-          .setInternalFactory(GatherExternProperties::new)
-          .setFeatureSetForChecks()
-          .build();
+  private final PassFactory createGatherExternProperties(GatherExternProperties.Mode mode) {
+    return PassFactory.builder()
+        .setName("gatherExternProperties")
+        .setInternalFactory((compiler) -> new GatherExternProperties(compiler, mode))
+        .setFeatureSetForChecks()
+        .build();
+  }
 
   /**
    * Runs custom passes that are designated to run at a particular time.

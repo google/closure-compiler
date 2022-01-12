@@ -30,14 +30,38 @@ import java.util.LinkedHashSet;
  * <p>The collection of these property names could easily happen during type checking. However, when
  * exporting local property definitions, the externs may be modified after type checking, and we
  * want to collect the new names as well.
+ *
+ * <p>Mode.CHECK is set when checksOnly=true and only collects the externs in the type expressions
+ * in JSDoc. Mode.OPTIMIZE is set when checksOnly=false and only collects the externs in AST
+ * properties.
+ *
+ * <p>To optimize build time, we collect only type expression externs in getChecks() and only AST
+ * property externs in getOptimizations() instead of collecting all in both.
  */
 final class GatherExternProperties implements NodeTraversal.Callback, CompilerPass {
   private final AbstractCompiler compiler;
 
   private final LinkedHashSet<String> externProperties = new LinkedHashSet<>();
 
-  GatherExternProperties(AbstractCompiler compiler) {
+  enum Mode {
+    CHECK(true, false),
+    OPTIMIZE(false, true),
+    CHECK_AND_OPTIMIZE(true, true);
+
+    private final boolean check;
+    private final boolean optimize;
+
+    Mode(boolean check, boolean optimize) {
+      this.check = check;
+      this.optimize = optimize;
+    }
+  }
+
+  private final Mode mode;
+
+  GatherExternProperties(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;
+    this.mode = mode;
 
     if (compiler.getExternProperties() != null) {
       this.externProperties.addAll(compiler.getExternProperties());
@@ -57,25 +81,27 @@ final class GatherExternProperties implements NodeTraversal.Callback, CompilerPa
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case GETPROP:
-        // Gathers "name" from (someObject.name).
-        externProperties.add(n.getString());
-        break;
-      case STRING_KEY:
-        if (parent.isObjectLit()) {
+    if (this.mode.optimize) {
+      switch (n.getToken()) {
+        case GETPROP:
+          // Gathers "name" from (someObject.name).
           externProperties.add(n.getString());
-        }
-        break;
-      case MEMBER_FUNCTION_DEF:
-        externProperties.add(n.getString());
-        break;
-      default:
-        break;
+          break;
+        case STRING_KEY:
+          if (parent.isObjectLit()) {
+            externProperties.add(n.getString());
+          }
+          break;
+        case MEMBER_FUNCTION_DEF:
+          externProperties.add(n.getString());
+          break;
+        default:
+          break;
+      }
     }
 
     JSDocInfo jsDocInfo = n.getJSDocInfo();
-    if (jsDocInfo != null) {
+    if (jsDocInfo != null && this.mode.check) {
       gatherPropertiesFromJSDocInfo(jsDocInfo);
     }
   }
