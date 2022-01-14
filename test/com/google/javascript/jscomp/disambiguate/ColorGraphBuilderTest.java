@@ -473,7 +473,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
       table.put(
           nameOf(edge.getSource()), nameOf(edge.getDestination()), (EdgeReason) edge.getValue());
     }
-    return assertThat(table.build());
+    return assertThat(table.buildOrThrow());
   }
 
   /**
