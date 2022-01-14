@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
@@ -206,8 +205,11 @@ final class JSTypeReconserializer {
       return Iterables.getOnlyElement(altRecords);
     }
 
-    ColorId unionId =
-        ColorId.union(altRecords.stream().map((r) -> r.colorId).collect(toImmutableSet()));
+    ImmutableSet.Builder<ColorId> alternateIds = ImmutableSet.builder();
+    for (SeenTypeRecord altRecord : altRecords) {
+      alternateIds.add(altRecord.colorId);
+    }
+    ColorId unionId = ColorId.union(alternateIds.build());
     SeenTypeRecord record = this.getOrCreateRecord(unionId, type);
 
     if (record.unionMembers == null) {
@@ -361,11 +363,13 @@ final class JSTypeReconserializer {
       return ImmutableList.of();
     }
 
-    return Streams.concat(
-            ctorType.getExtendedInterfaces().stream(),
-            ctorType.getOwnImplementedInterfaces().stream())
-        .map(this::serializeType)
-        .collect(toImmutableList());
+    ImmutableList.Builder<TypePointer> ancestors = ImmutableList.builder();
+    for (JSType ancestor :
+        Iterables.concat(
+            ctorType.getExtendedInterfaces(), ctorType.getOwnImplementedInterfaces())) {
+      ancestors.add(this.serializeType(ancestor));
+    }
+    return ancestors.build();
   }
 
   /**

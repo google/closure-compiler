@@ -40,7 +40,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Preconditions;
@@ -78,12 +77,13 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   public static TemplateTypeReplacer forInference(
       JSTypeRegistry registry, Map<TemplateType, JSType> bindings) {
     ImmutableList<TemplateType> keys = ImmutableList.copyOf(bindings.keySet());
-    ImmutableList<JSType> values =
-        keys.stream()
-            .map(bindings::get)
-            .map((v) -> (v != null) ? v : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
-            .collect(toImmutableList());
-    TemplateTypeMap map = registry.getEmptyTemplateTypeMap().copyWithExtension(keys, values);
+    ImmutableList.Builder<JSType> values = ImmutableList.builder();
+    for (TemplateType key : keys) {
+      JSType value = bindings.get(key);
+      values.add(value != null ? value : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    }
+    TemplateTypeMap map =
+        registry.getEmptyTemplateTypeMap().copyWithExtension(keys, values.build());
     return new TemplateTypeReplacer(registry, map, true, true, true);
   }
 
