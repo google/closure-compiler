@@ -833,10 +833,11 @@ public final class SymbolTable {
             // propery type mostly works. It only fails on Foo.prototype cases for some reason.
             // It's pretty rare case when Foo.prototype defined in global scope though so for now
             // just carve it out.
+            JSType nodeType = currentNode.getJSType();
             JSType symbolType =
-                currentNode.getJSType().isFunctionPrototypeType()
-                    ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)
-                    : currentNode.getJSType();
+                (nodeType != null && !nodeType.isFunctionPrototypeType())
+                    ? nodeType
+                    : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
             namespace =
                 declareSymbol(
                     name, symbolType, true, root.scope, currentNode, null /* JsDoc info */);
