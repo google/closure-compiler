@@ -1009,11 +1009,11 @@ public final class SymbolTable {
   void pruneOrphanedNames() {
     nextSymbol:
     for (Symbol s : getAllSymbols()) {
-      if (s.isProperty()) {
+      String currentName = s.getName();
+      if (s.isProperty() || compiler.getModuleMap().getClosureModule(currentName) != null) {
         continue;
       }
 
-      String currentName = s.getName();
       int dot = -1;
       while (-1 != (dot = currentName.lastIndexOf('.'))) {
         currentName = currentName.substring(0, dot);
@@ -1176,6 +1176,16 @@ public final class SymbolTable {
       // throw out the old symbol and use the type-based symbol.
       Symbol oldProp =
           symbols.get(newProp.getDeclaration().getNode(), s.getName() + "." + propName);
+
+      if (oldProp != null && compiler.getModuleMap().getClosureModule(oldProp.getName()) != null) {
+        // This handles cases like:
+        // goog.provide('a.b.c');
+        // goog.provide('a.b.c.Foo');
+        // Here were are creating scope for module 'a.b.c' and 'Foo' looks like a property of that
+        // module. But it's a module by itself - so we don't move it to the scope of 'a.b.c' and
+        // instead keeping 'a.b.c.Foo'  in global namespace.
+        continue;
+      }
 
       // If we've already have an entry in the table for this symbol,
       // then skip it. This should only happen if we screwed up,

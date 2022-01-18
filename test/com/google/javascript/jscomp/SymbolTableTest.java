@@ -474,6 +474,22 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testDisableModuleRewriteNestedGoogProvides() {
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines(
+                "goog.provide('a.b.c.d');",
+                "goog.provide('a.b.c.d.Foo');",
+                "goog.provide('a.b.c.d.Foo.Bar');",
+                "a.b.c.d.Foo = class {};",
+                "a.b.c.d.Foo.Bar = class {};"));
+    assertThat(getGlobalVar(table, "a.b.c.d.Foo")).isNotNull();
+    assertThat(getGlobalVar(table, "a.b.c.d.Foo.Bar")).isNotNull();
+  }
+
+  @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_provideIndividualExports() {
     verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.foo');", "some.foo.one = 1;"),
