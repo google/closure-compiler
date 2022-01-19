@@ -576,6 +576,12 @@ final class ClosureRewriteModule implements CompilerPass {
             // defined in this script then that var will have been previously renamed from Foo to
             // module$contents$Foo_Foo. Update the JsDoc reference to match.
             safeSetString(typeRefNode, currentScript.contentsPrefix + typeName);
+          } else if (currentScript.isModule && rootOfType.equals("exports")) {
+            // rewrite a type reference to the implicit "exports" variable
+            // e.g. /** @type {exports.Foo} */ -> /** @type {module$exports$my$mod.Foo} */
+            String namespace = currentScript.getBinaryNamespace();
+            String remainder = dot == -1 ? "" : typeName.substring(dot);
+            safeSetString(typeRefNode, namespace + remainder);
           } else {
             rewriteIfClosureNamespaceRef(typeName, typeRefNode);
           }

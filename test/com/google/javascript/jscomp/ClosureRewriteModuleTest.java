@@ -3073,4 +3073,37 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         lines("goog.module('Foo');", "exports = 0;", "exports = 1;"),
         lines("0;", "/** @const */ var module$exports$Foo = 1;"));
   }
+
+  @Test
+  public void testTypeReferenceToDefaultExport() {
+    test(
+        lines(
+            "goog.module('Foo');",
+            "exports = class Bar {};",
+            "/** @type {!exports} */",
+            "const e = new exports();"),
+        lines(
+            "/** @const */",
+            "var module$exports$Foo = class Bar {};",
+            "/** @type {!module$exports$Foo} */",
+            "const module$contents$Foo_e = new module$exports$Foo();"));
+  }
+
+  @Test
+  public void testTypeReferenceToNamedExport() {
+    test(
+        lines(
+            "goog.module('Foo');",
+            "/** @enum {number} */",
+            "exports.Foo = {A: 1};",
+            "/** @type {!exports.Foo} */",
+            "const z = exports.Foo.A;"),
+        lines(
+            "/** @const */",
+            "var module$exports$Foo = {};",
+            "/** @const @enum {number} */",
+            "module$exports$Foo.Foo = {A: 1};",
+            "/** @type {!module$exports$Foo.Foo} */",
+            "const module$contents$Foo_z = module$exports$Foo.Foo.A;"));
+  }
 }
