@@ -34,6 +34,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MOD
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.ModuleRenaming.GlobalizedModuleName;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -133,6 +134,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   private final ModuleMetadataMap moduleMetadataMap;
   private final ModuleMap moduleMap;
   private final TypedScope globalTypedScope;
+  private final ChunkOutputType chunkOutputType;
 
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
@@ -144,6 +146,26 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       ModuleMap moduleMap,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       @Nullable TypedScope globalTypedScope) {
+    this(
+        compiler,
+        moduleMetadataMap,
+        moduleMap,
+        preprocessorSymbolTable,
+        globalTypedScope,
+        ChunkOutputType.GLOBAL_NAMESPACE);
+  }
+
+  /**
+   * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
+   * concatenable form.
+   */
+  Es6RewriteModules(
+      AbstractCompiler compiler,
+      ModuleMetadataMap moduleMetadataMap,
+      ModuleMap moduleMap,
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
+      @Nullable TypedScope globalTypedScope,
+      ChunkOutputType chunkOutputType) {
     checkNotNull(moduleMetadataMap);
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
@@ -152,6 +174,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.globalTypedScope = globalTypedScope;
     this.unknownType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    this.chunkOutputType = chunkOutputType;
   }
 
   /**
@@ -396,10 +419,14 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         n.getParent().detach();
       }
     } else if (n.isImportMeta()) {
-      // We're choosing to not "support" import.meta because currently all the outputs from the
-      // compiler are scripts and support for import.meta (only works in modules) would be
-      // meaningless
-      t.report(n, Es6ToEs3Util.CANNOT_CONVERT, "import.meta");
+      if (chunkOutputType != ChunkOutputType.ES_MODULES) {
+        // Since import.meta cannot be transpiled, we are only supporting it when the output format
+        // is a module. The default output format type is just script.
+        t.report(
+            n,
+            Es6ToEs3Util.CANNOT_CONVERT,
+            "import.meta. Use --chunk_output_type=ES_MODULES to allow passthrough support.");
+      }
     }
   }
 
