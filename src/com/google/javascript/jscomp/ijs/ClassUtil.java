@@ -119,6 +119,6 @@ final class ClassUtil {
           "constructor".equals(functionNode.getParent().getString());
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(functionNode);
-    return jsdoc != null && jsdoc.isConstructor();
+    return jsdoc != null && jsdoc.isConstructorOrInterface();
   }
 }

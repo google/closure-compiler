@@ -1909,6 +1909,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs5RecordWithCtorThisDefinitions() {
+    test(
+        "/** @record */ function Foo() {  /** @type {number} */ this.x = 42;}",
+        "/** @record */ function Foo() {}  /** @type {number} */ Foo.prototype.x;");
+  }
+
+  @Test
+  public void testEs5InterfaceWithCtorThisDefinitions() {
+    test(
+        "/** @interface */ function Foo() {  /** @type {number} */ this.x = 42;}",
+        "/** @interface */ function Foo() {}  /** @type {number} */ Foo.prototype.x;");
+  }
+
+  @Test
   public void testPropertyAssignment() {
     // Test for b/123413988 which used to crash the ijs generator
     // These tests also exposes a bug tracked in b/124946590
