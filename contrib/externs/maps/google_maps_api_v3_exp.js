@@ -112,7 +112,9 @@ google.maps.CameraOptions.prototype.zoom;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * Used for getting the map&#39;s camera options.
+ * Used for retrieving camera parameters, such as that of the GL camera used for
+ * the {@link google.maps.WebGLOverlayView}.
+ * @extends {google.maps.CameraOptions}
  * @record
  */
 google.maps.CameraParams = function() {};
@@ -136,7 +138,6 @@ google.maps.CameraParams.prototype.tilt;
  * @type {number}
  */
 google.maps.CameraParams.prototype.zoom;
-
 
 /**
  * A circle on the Earth&#39;s surface; also known as a &quot;spherical
@@ -466,7 +467,7 @@ google.maps.ControlPosition = {
  * This class provides convenience methods for generating matrices to use for
  * rendering WebGL scenes on top of the Google base map. <br><br>Note: A
  * reference to this object should <b>not</b> be held outside of the scope of
- * the encapsulating {@link google.maps.WebGLOverlayView.onDraw} call.
+ * the encapsulating {@link google.maps.WebglOverlayView.onDraw} call.
  * @record
  */
 google.maps.CoordinateTransformer = function() {};
@@ -3805,15 +3806,14 @@ google.maps.KmlMouseEvent.prototype.pixelOffset;
  * followed by the longitude.<br> Notice that you cannot modify the coordinates
  * of a <code>LatLng</code>. If you want to compute another point, you have to
  * create a new one.<br> <p> Most methods that accept <code>LatLng</code>
- * objects also accept a <code>{@link google.maps.LatLngLiteral}</code> object,
- * so that the following are equivalent: <pre> map.setCenter(new
- * google.maps.LatLng(-34, 151));<br> map.setCenter({lat: -34, lng: 151});
- * </pre> <p> The constructor also accepts <code>{@link
- * google.maps.LatLngLiteral}</code> and <code>LatLng</code> objects. If a
- * <code>LatLng</code> instance is passed to the constructor, a copy is created.
- * <p> The possible calls to the constructor are below: <pre> new
- * google.maps.LatLng(-34, 151);<br> new google.maps.LatLng(-34, 151, true);<br>
- * new google.maps.LatLng({lat: -34, lng: 151});<br> new
+ * objects also accept a {@link google.maps.LatLngLiteral} object, so that the
+ * following are equivalent: <pre> map.setCenter(new google.maps.LatLng(-34,
+ * 151));<br> map.setCenter({lat: -34, lng: 151}); </pre> <p> The constructor
+ * also accepts {@link google.maps.LatLngLiteral} and <code>LatLng</code>
+ * objects. If a <code>LatLng</code> instance is passed to the constructor, a
+ * copy is created. <p> The possible calls to the constructor are below: <pre>
+ * new google.maps.LatLng(-34, 151);<br> new google.maps.LatLng(-34, 151,
+ * true);<br> new google.maps.LatLng({lat: -34, lng: 151});<br> new
  * google.maps.LatLng({lat: -34, lng: 151}, true);<br> new
  * google.maps.LatLng({lat: -34, lng: 151}, null, true);<br> new
  * google.maps.LatLng(new google.maps.LatLng(-34, 151));<br> new
@@ -4734,12 +4734,9 @@ google.maps.MapOptions.prototype.isFractionalZoomEnabled;
 google.maps.MapOptions.prototype.keyboardShortcuts;
 
 /**
- * The unique identifier that represents a single instance of a Google Map. You
- * can create Map IDs and update a style associated with a Map ID at any time in
- * the Google Cloud Console <a
- * href="https://console.cloud.google.com/google/maps-apis/studio/maps">Maps
- * Management page</a> without changing embedded JSON styling in your
- * application code.
+ * The <a href="https://developers.google.com/maps/documentation/get-map-id">Map
+ * ID</a> of the map. This parameter cannot be set or changed after a map is
+ * instantiated.
  * @type {?string|undefined}
  */
 google.maps.MapOptions.prototype.mapId;
@@ -8220,92 +8217,23 @@ google.maps.VisibleRegion.prototype.nearRight;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * A <code>WebglCameraParams</code> is a snapshot of camera properties used to
- * render the current frame.
- * @record
- * @deprecated This method will be going away in January 2022. Please use {@link
- *     google.maps.WebGLCameraParams} instead.
- */
-google.maps.WebglCameraParams = function() {};
-
-/**
- * Heading of the camera in degrees.
- * @type {number}
- * @deprecated This will be going away in January 2022. Please use {@link
- *     google.maps.CameraParams.heading} instead.
- */
-google.maps.WebglCameraParams.prototype.heading;
-
-/**
- * Latitude and longitudes of the camera in degrees.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLng}
- */
-google.maps.WebglCameraParams.prototype.center;
-
-/**
- * Latitude in degrees.
- * @type {number}
- * @deprecated This will be going away in January 2022. Please use {@link
- *     google.maps.CameraParams.center} instead.
- */
-google.maps.WebglCameraParams.prototype.lat;
-
-/**
- * Longitude in degrees.
- * @type {number}
- * @deprecated This will be going away in January 2022. Please use {@link
- *     google.maps.CameraParams.center} instead.
- */
-google.maps.WebglCameraParams.prototype.lng;
-
-/**
- * Angle of incidence of the camera, in degrees.
- * @type {number}
- * @deprecated This will be going away in January 2022. Please use {@link
- *     google.maps.WebGLCameraParams.tilt} instead.
- */
-google.maps.WebglCameraParams.prototype.tilt;
-
-/**
- * Zoom level of the camera.
- * @type {number}
- * @deprecated This will be going away in January 2022. Please use {@link
- *     google.maps.WebGLCameraParams.zoom} instead.
- */
-google.maps.WebglCameraParams.prototype.zoom;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * GL state options for a WebGLOverlayView.
- * @record
- */
-google.maps.WebGLStateOptions = function() {};
-
-/**
- * WebGL rendering context for state management.
- * @type {!WebGLRenderingContext}
- */
-google.maps.WebGLStateOptions.gl;
-
-/**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- * GL drawing options for a WebGLOverlayView.
+ * Drawing options.
  * @record
  */
 google.maps.WebGLDrawOptions = function() {};
 
 /**
- * WebGL rendering context for drawing.
+ * The WebGLRenderingContext on which to render this WebGLOverlayView.
  * @type {!WebGLRenderingContext}
  */
-google.maps.WebGLDrawOptions.gl;
+google.maps.WebGLDrawOptions.prototype.gl;
 
 /**
- * The transformer for providing camera transforms to center objects at
- * latitude/longitude coordinates.
+ * The matrix transformation from camera space to latitude/longitude
+ * coordinates.
  * @type {!google.maps.CoordinateTransformer}
  */
-google.maps.WebGLDrawOptions.transformer;
+google.maps.WebGLDrawOptions.prototype.transformer;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -8360,8 +8288,8 @@ google.maps.WebGLOverlayView.prototype.onContextLost = function() {};
 /**
  * This method is called once the rendering context is available. Use it to
  * initialize or bind any WebGL state such as shaders or buffer objects.
- * @param {!google.maps.WebGLStateOptions} options that contain the GL rendering
- *     context for for developers to access WebGL.
+ * @param {!google.maps.WebGLStateOptions} options that allow developers to
+ *     restore the GL context.
  * @return {undefined}
  */
 google.maps.WebGLOverlayView.prototype.onContextRestored = function(options) {};
@@ -8370,21 +8298,11 @@ google.maps.WebGLOverlayView.prototype.onContextRestored = function(options) {};
  * Implement this method to draw WebGL content directly on the map. Note that if
  * the overlay needs a new frame drawn then call {@link
  * google.maps.WebGLOverlayView.requestRedraw}.
- * @param {!google.maps.WebGLDrawOptions} options that contain the GL rendering
- *     context for developers to access WebGL and matrix transforms from camera
- *     space to objects centered at latitude/longitude coordinates.
+ * @param {!google.maps.WebGLDrawOptions} options that allow developers to
+ *     render content to an associated Google basemap.
  * @return {undefined}
  */
 google.maps.WebGLOverlayView.prototype.onDraw = function(options) {};
-
-/**
- * Implement this method to handle any GL state updates outside of the render
- * animation frame.
- * @param {!google.maps.WebGLStateOptions} options that contain the GL rendering
- *     context for developers to access WebGL.
- * @return {undefined}
- */
-google.maps.WebGLOverlayView.prototype.onStateUpdate = function(options) {};
 
 /**
  * This method is called when the overlay is removed from the map with
@@ -8395,16 +8313,25 @@ google.maps.WebGLOverlayView.prototype.onStateUpdate = function(options) {};
 google.maps.WebGLOverlayView.prototype.onRemove = function() {};
 
 /**
- * Triggers the map to update GL state.
+ * Implement this method to handle any GL state updates outside of the render
+ * animation frame.
+ * @param {!google.maps.WebGLStateOptions} options that allow developerse to
+ *     restore the GL context.
  * @return {undefined}
  */
-google.maps.WebGLOverlayView.prototype.requestStateUpdate = function() {};
+google.maps.WebGLOverlayView.prototype.onStateUpdate = function(options) {};
 
 /**
  * Triggers the map to redraw a frame.
  * @return {undefined}
  */
 google.maps.WebGLOverlayView.prototype.requestRedraw = function() {};
+
+/**
+ * Triggers the map to update GL state.
+ * @return {undefined}
+ */
+google.maps.WebGLOverlayView.prototype.requestStateUpdate = function() {};
 
 /**
  * Adds the overlay to the map.
@@ -8414,7 +8341,40 @@ google.maps.WebGLOverlayView.prototype.requestRedraw = function() {};
  */
 google.maps.WebGLOverlayView.prototype.setMap = function(map) {};
 
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * GL state options.
+ * @record
+ */
+google.maps.WebGLStateOptions = function() {};
 
+/**
+ * The WebGLRenderingContext on which to render this WebGLOverlayView.
+ * @type {!WebGLRenderingContext}
+ */
+google.maps.WebGLStateOptions.prototype.gl;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A <code>WebglCameraParams</code> is a snapshot of camera properties used to
+ * render the current frame.
+ * @extends {google.maps.CameraParams}
+ * @record
+ * @deprecated Please use {@link google.maps.CameraParams} instead.
+ */
+google.maps.WebglCameraParams = function() {};
+
+/**
+ * Latitude in degrees.
+ * @type {number}
+ */
+google.maps.WebglCameraParams.prototype.lat;
+
+/**
+ * Longitude in degrees.
+ * @type {number}
+ */
+google.maps.WebglCameraParams.prototype.lng;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
@@ -8442,17 +8402,13 @@ google.maps.WebGLOverlayView.prototype.setMap = function(map) {};
  * having a {@link google.maps.MapOptions.mapId}.
  * @extends {google.maps.MVCObject}
  * @constructor
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView} instead.
  */
 google.maps.WebglOverlayView = function() {};
 
 /**
  * @return {?google.maps.Map|undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.getMap} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.getMap} instead.
  */
 google.maps.WebglOverlayView.prototype.getMap = function() {};
 
@@ -8461,9 +8417,7 @@ google.maps.WebglOverlayView.prototype.getMap = function() {};
  * the overlay is drawn that don’t require immediate access to the WebGL
  * rendering context.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onAdd} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onAdd} instead.
  */
 google.maps.WebglOverlayView.prototype.onAdd = function() {};
 
@@ -8472,9 +8426,8 @@ google.maps.WebglOverlayView.prototype.onAdd = function() {};
  * is where you should clean up any pre-existing GL state, since it is no longer
  * needed.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onContextLost} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onContextLost}
+ *     instead.
  */
 google.maps.WebglOverlayView.prototype.onContextLost = function() {};
 
@@ -8484,9 +8437,8 @@ google.maps.WebglOverlayView.prototype.onContextLost = function() {};
  * @param {!WebGLRenderingContext} gl rendering context for developers to access
  *     WebGL.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onContextRestored} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onContextRestored}
+ *     instead.
  */
 google.maps.WebglOverlayView.prototype.onContextRestored = function(gl) {};
 
@@ -8500,9 +8452,7 @@ google.maps.WebglOverlayView.prototype.onContextRestored = function(gl) {};
  *     providing camera transforms to center objects at latitude/longitude
  *     coordinates.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onDraw} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onDraw} instead.
  */
 google.maps.WebglOverlayView.prototype.onDraw = function(gl, transformer) {};
 
@@ -8512,9 +8462,8 @@ google.maps.WebglOverlayView.prototype.onDraw = function(gl, transformer) {};
  * @param {!WebGLRenderingContext} gl rendering context for developers to access
  *     WebGL.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onStateUpdate} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onStateUpdate}
+ *     instead.
  */
 google.maps.WebglOverlayView.prototype.onGlStateUpdate = function(gl) {};
 
@@ -8523,27 +8472,23 @@ google.maps.WebglOverlayView.prototype.onGlStateUpdate = function(gl) {};
  * <code>WebglOverlayView.setMap(null)</code>, and is where you should remove
  * all intermediate objects.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.onRemove} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.onRemove} instead.
  */
 google.maps.WebglOverlayView.prototype.onRemove = function() {};
 
 /**
  * Triggers the map to update GL state.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.requestStateUpdate} instead.
+ * @deprecated Please use {@link
+ *     google.maps.WebGLOverlayView.requestStateUpdate} instead.
  */
 google.maps.WebglOverlayView.prototype.requestGlStateUpdate = function() {};
 
 /**
  * Triggers the map to redraw a frame.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.requestRedraw} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.requestRedraw}
+ *     instead.
  */
 google.maps.WebglOverlayView.prototype.requestRedraw = function() {};
 
@@ -8552,9 +8497,7 @@ google.maps.WebglOverlayView.prototype.requestRedraw = function() {};
  * @param {?google.maps.Map=} map The map to access the div, model and view
  *     state.
  * @return {undefined}
- * @deprecated Deprecated in 2021 (WebGL Overlay View Beta). This will be going
- *     away in January 2022. Please use
- * {@link google.maps.WebGLOverlayView.setMap} instead.
+ * @deprecated Please use {@link google.maps.WebGLOverlayView.setMap} instead.
  */
 google.maps.WebglOverlayView.prototype.setMap = function(map) {};
 
@@ -10006,7 +9949,9 @@ google.maps.places.PlaceOpeningHours.prototype.weekday_text;
  * google.maps.places.PlaceResult.utc_offset_minutes} or {@link
  * google.maps.places.PlaceOpeningHours.periods} then <code>undefined</code> is
  * returned ({@link google.maps.places.PlaceOpeningHours.periods} is only
- * available via {@link google.maps.places.PlacesService.getDetails}).
+ * available via {@link google.maps.places.PlacesService.getDetails}). This
+ * method does not take exceptional hours, such as holiday hours, into
+ * consideration.
  * @param {!Date=} date
  * @return {boolean|undefined}
  */
