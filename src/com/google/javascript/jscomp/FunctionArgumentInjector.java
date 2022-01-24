@@ -152,8 +152,8 @@ class FunctionArgumentInjector {
       } else { // cArg != null
         if (fnParam.isRest()) {
           checkState(fnParam.getOnlyChild().isName(), fnParam);
-          //No arguments for REST parameters
-          Node array = IR.arraylit();
+          // No arguments for REST parameters
+          Node array = IR.arraylit().srcref(fnParam);
           argMap.put(fnParam.getOnlyChild().getString(), array);
         } else {
           checkState(fnParam.isName(), fnParam);

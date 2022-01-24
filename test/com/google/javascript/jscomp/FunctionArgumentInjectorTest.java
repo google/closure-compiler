@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -25,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -572,14 +574,19 @@ public final class FunctionArgumentInjectorTest {
         "function foo(...args){return args;} foo(1, 2);", "foo", ImmutableSet.of("this", "args"));
   }
 
+  @Test
+  public void testArgMapWithRestParam2() {
+    assertArgMapHasKeys(
+        "function foo(...args){return args;} foo();", "foo", ImmutableSet.of("this", "args"));
+  }
+
   private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
     assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
     assertThat(call).isNotNull();
-    ImmutableMap<String, Node> actualMap =
-        functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
+    ImmutableMap<String, Node> actualMap = getAndValidateFunctionCallParameterMap(fn, call);
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
 
@@ -589,14 +596,28 @@ public final class FunctionArgumentInjectorTest {
     assertThat(fn).isNotNull();
     Node call = findCall(n, fnName);
     assertThat(call).isNotNull();
-    ImmutableMap<String, Node> args =
-        functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
+    ImmutableMap<String, Node> args = getAndValidateFunctionCallParameterMap(fn, call);
 
     Set<String> actualTemps = new HashSet<>();
     functionArgumentInjector.maybeAddTempsForCallArguments(
         compiler, fn, args, actualTemps, new ClosureCodingConvention());
 
     assertThat(actualTemps).isEqualTo(expectedTemps);
+  }
+
+  private ImmutableMap<String, Node> getAndValidateFunctionCallParameterMap(Node fn, Node call) {
+    final ImmutableMap<String, Node> map =
+        functionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
+    // Verify that all nodes in the map have source info, so they are valid to add to the AST
+    for (Entry<String, Node> nameToNodeEntry : map.entrySet()) {
+      final String name = nameToNodeEntry.getKey();
+      final Node node = nameToNodeEntry.getValue();
+
+      new SourceInfoCheck(compiler).setCheckSubTree(node);
+      assertWithMessage("errors for name: %s", name).that(compiler.getErrors()).isEmpty();
+    }
+
+    return map;
   }
 
   private static Supplier<String> getNameSupplier() {
