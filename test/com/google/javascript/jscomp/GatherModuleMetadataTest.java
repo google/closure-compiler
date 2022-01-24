@@ -460,7 +460,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicateProvideAndGoogModule() {
     testError(
         srcs("goog.provide('duplciated');", "goog.module('duplciated');"),
-        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
     testError(
         srcs("goog.module('duplciated');", "goog.provide('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
@@ -470,7 +470,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicateProvideAndEs6Module() {
     testError(
         srcs("goog.provide('duplciated');", "export {}; goog.declareModuleId('duplciated');"),
-        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
     testError(
         srcs("export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
@@ -516,7 +516,8 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     // duplicate of provide in earlier file
     test(
         srcs("goog.provide('duplicated');", "goog.module('duplicated')"),
-        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE).withMessageContaining("testcode0"));
+        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE)
+            .withMessageContaining("testcode0"));
     // duplicate of module in earlier file
     test(
         srcs("goog.module('duplicated');", "goog.module('duplicated')"),

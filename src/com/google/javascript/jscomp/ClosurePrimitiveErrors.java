@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 /** Common errors for Closure primitives that are reported in multiple passses. */
-final class ClosurePrimitiveErrors {
+public final class ClosurePrimitiveErrors {
 
   private ClosurePrimitiveErrors() {}
 
@@ -29,6 +29,11 @@ final class ClosurePrimitiveErrors {
       DiagnosticType.error(
           "JSC_DUPLICATE_NAMESPACE",
           "Duplicate namespace: {0}. Namespace already provided in other file {1}");
+
+  public static final DiagnosticType DUPLICATE_NAMESPACE_AND_MODULE =
+      DiagnosticType.error(
+          "JSC_DUPLICATE_NAMESPACE_AND_MODULE",
+          "Duplicate module: {0}. Module already goog.provided in other file {1}");
 
   static final DiagnosticType INVALID_DESTRUCTURING_FORWARD_DECLARE =
       DiagnosticType.error(

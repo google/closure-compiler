@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.ijs;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.ClosurePrimitiveErrors;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.WarningsGuard;
 
@@ -36,6 +37,9 @@ public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
   @Override
   public CheckLevel level(JSError error) {
     checkNotNull(error);
+    if (!shouldDemoteIfTypeSummary(error)) {
+      return null;
+    }
     if (inTypeSummary(error)) {
       return this.level;
     }
@@ -51,5 +55,12 @@ public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
   /** Return whether the given error was produced inside a type summary file */
   private boolean inTypeSummary(JSError error) {
     return error.getSourceName() != null && error.getSourceName().endsWith(".i.js");
+  }
+
+  /** Return whether the given error should be demoted even if in a type summary file */
+  private boolean shouldDemoteIfTypeSummary(JSError error) {
+    // TODO(b/215776774): also skip demoting DUPLICATE_MODULE and DUPLICATE_NAMESPACE errors.
+    // DUPLICATE_NAMESPACE_AND_MODULE is only special-cased because it was easier to land.
+    return !error.getType().equals(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
   }
 }

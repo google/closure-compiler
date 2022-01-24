@@ -475,7 +475,11 @@ public final class GatherModuleMetadata implements CompilerPass {
             t.report(n, ClosurePrimitiveErrors.DUPLICATE_MODULE, namespace, existingFileSource);
             return;
           case GOOG_PROVIDE:
-            t.report(n, ClosurePrimitiveErrors.DUPLICATE_NAMESPACE, namespace, existingFileSource);
+            DiagnosticType diagnostic =
+                moduleType.equals(ModuleType.GOOG_PROVIDE)
+                    ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
+                    : ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
+            t.report(n, diagnostic, namespace, existingFileSource);
             return;
           case COMMON_JS:
           case SCRIPT:

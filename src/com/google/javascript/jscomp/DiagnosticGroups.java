@@ -663,7 +663,9 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup DUPLICATE_NAMESPACES =
       DiagnosticGroups.registerUnsuppressibleGroup(
-          ClosurePrimitiveErrors.DUPLICATE_MODULE, ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
+          ClosurePrimitiveErrors.DUPLICATE_MODULE,
+          ClosurePrimitiveErrors.DUPLICATE_NAMESPACE,
+          ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
 
   public static final DiagnosticGroup INVALID_DEFINES =
       DiagnosticGroups.registerUnsuppressibleGroup(
