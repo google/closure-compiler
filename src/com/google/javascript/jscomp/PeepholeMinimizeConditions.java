@@ -53,11 +53,8 @@ class PeepholeMinimizeConditions
     this.late = late;
   }
 
-  /**
-   * Tries to apply our various peephole minimizations on the passed in node.
-   */
+  /** Tries to apply our various peephole minimizations on the passed in node. */
   @Override
-  @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch (node.getToken()) {
       case THROW:
@@ -168,7 +165,7 @@ class PeepholeMinimizeConditions
           Node nextCond = nextNode.getFirstChild();
           Node nextThen = nextCond.getNext();
           Node nextElse = nextThen.getNext();
-          if (thenBranch.isEquivalentToTyped(nextThen)) {
+          if (areNodesEqualForInlining(thenBranch, nextThen)) {
             // Transform
             //   if (x) return 1; if (y) return 1;
             // to
@@ -179,8 +176,7 @@ class PeepholeMinimizeConditions
             nextCond.replaceWith(newCond);
             newCond.addChildToBack(nextCond);
             reportChangeToEnclosingScope(newCond);
-          } else if (nextElse != null
-              && thenBranch.isEquivalentToTyped(nextElse)) {
+          } else if (nextElse != null && areNodesEqualForInlining(thenBranch, nextElse)) {
             // Transform
             //   if (x) return 1; if (y) foo() else return 1;
             // to
