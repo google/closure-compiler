@@ -313,11 +313,31 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     // Methods redefined in inner scopes should not trigger a warning
     testSame(
         externs(externs),
-        srcs(lines(
-            "(function() {",
-            "  var foo = {};",
-            "  foo.noSideEffectsExtern = function() {};",
-            "  noSideEffectsExtern();",
-            " })()")));
+        srcs(
+            lines(
+                "(function() {",
+                "  var foo = {};",
+                "  foo.noSideEffectsExtern = function() {};",
+                "  noSideEffectsExtern();",
+                " })()")));
+  }
+
+  @Test
+  public void testIgnoresRuntimeLibRequireStatementsOnly() {
+    testSame(srcs(SourceFile.fromCode(AbstractCompiler.RUNTIME_LIB_DIR, "'require base'")));
+
+    testWarning(
+        srcs(SourceFile.fromCode(AbstractCompiler.RUNTIME_LIB_DIR, "'other string lit'")),
+        warning(CheckSideEffects.USELESS_CODE_ERROR));
+
+    testWarning(
+        srcs(
+            SourceFile.fromCode(
+                AbstractCompiler.RUNTIME_LIB_DIR, "function f() { 'require base' }")),
+        warning(CheckSideEffects.USELESS_CODE_ERROR));
+
+    testWarning(
+        srcs(SourceFile.fromCode("other/file.js", "'require base'")),
+        warning(CheckSideEffects.USELESS_CODE_ERROR));
   }
 }

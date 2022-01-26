@@ -120,6 +120,16 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
       return;
     }
 
+    // These are used by the compiler's built-in runtime libraries for dependency management
+    // they have a special meaning used in Compiler.ensureLibraryInjected
+    if (n.isStringLit()
+        && n.getParent().isExprResult()
+        && n.getGrandparent().isScript()
+        && n.getSourceFileName().startsWith(AbstractCompiler.RUNTIME_LIB_DIR)
+        && n.getString().startsWith("require ")) {
+      return;
+    }
+
     boolean isResultUsed = NodeUtil.isExpressionResultUsed(n);
     boolean isSimpleOp = NodeUtil.isSimpleOperator(n);
     if (!isResultUsed) {
