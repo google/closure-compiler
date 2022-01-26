@@ -2127,10 +2127,10 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
     if (useTypesForOptimization) {
-      this.disambiguateProperties = useTypesForOptimization;
-      this.ambiguateProperties = useTypesForOptimization;
-      this.inlineProperties = useTypesForOptimization;
-      this.useTypesForLocalOptimization = useTypesForOptimization;
+      this.disambiguateProperties = true;
+      this.ambiguateProperties = true;
+      this.inlineProperties = true;
+      this.useTypesForLocalOptimization = true;
     }
   }
 
