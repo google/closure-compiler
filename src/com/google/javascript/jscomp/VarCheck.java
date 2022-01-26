@@ -325,6 +325,7 @@ class VarCheck implements ScopedCallback, CompilerPass {
           "Function",
           "Infinity",
           "JSCompiler_renameProperty",
+          "JSCOMPILER_PRESERVE", // added by CheckSideEffects
           "Map",
           "Math",
           "NaN",

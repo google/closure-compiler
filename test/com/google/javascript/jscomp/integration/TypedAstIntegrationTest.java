@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -165,14 +166,19 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     // both externs and code have bad references to the same lateDefinedVar
     precompileLibrary(
-        extern("/** @fileoverview @suppress {externsValidation,checkVars} */ lateDefinedVar;"),
-        code("/** @fileoverview @suppress {checkVars} */ lateDefinedVar;"));
+        extern(
+            "/** @fileoverview @suppress {externsValidation,checkVars} */", //
+            "lateDefinedVar;"),
+        code(
+            "/** @fileoverview @suppress {checkVars,uselessCode} */", //
+            "lateDefinedVar;"));
     // and another, entirely separate library defines it.
     precompileLibrary(code("var lateDefinedVar; var normalVar;"));
 
     CompilerOptions options = new CompilerOptions();
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     options.setGeneratePseudoNames(true);
+    options.setProtectHiddenSideEffects(true);
 
     Compiler compiler = compileTypedAstShards(options);
 
@@ -220,14 +226,14 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
                         "ns.x; "))
                 .addConsole()
                 .build()),
-        code("console.log(ns.x); console.log(ns.nonExternProperty);"));
+        code("ns.nonExternProperty = 2; console.log(ns.x); console.log(ns.nonExternProperty);"));
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
     Compiler compiler = compileTypedAstShards(options);
 
-    Node expectedRoot = parseExpectedCode("console.log(ns.x);console.log(ns.a);");
+    Node expectedRoot = parseExpectedCode("ns.a = 2; console.log(ns.x);console.log(ns.a);");
     assertNode(compiler.getRoot().getSecondChild())
         .usingSerializer(compiler::toSource)
         .isEqualTo(expectedRoot);
@@ -246,6 +252,23 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         .comparingElementsUsing(JSCompCorrespondences.OWNING_DIAGNOSTIC_GROUP)
         .containsExactly(DiagnosticGroups.UNKNOWN_DEFINES);
     assertThat(compiler.getErrors()).isEmpty();
+  }
+
+  @Test
+  public void protectsHiddenSideEffects() throws IOException {
+    precompileLibrary(
+        extern("const foo = {}; foo.bar;"),
+        code("/** @fileoverview @suppress {uselessCode} */ foo.bar;"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("foo.bar");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
   }
 
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
@@ -274,16 +297,16 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     return compiler;
   }
 
-  private SourceFile code(String code) {
+  private SourceFile code(String... code) {
     SourceFile sourceFile =
-        SourceFile.fromCode("input_" + (sourceFiles.size() + 1), code, SourceKind.STRONG);
+        SourceFile.fromCode("input_" + (sourceFiles.size() + 1), lines(code), SourceKind.STRONG);
     this.sourceFiles.add(sourceFile);
     return sourceFile;
   }
 
-  private SourceFile extern(String code) {
+  private SourceFile extern(String... code) {
     SourceFile sourceFile =
-        SourceFile.fromCode("extern_" + (externFiles.size() + 1), code, SourceKind.EXTERN);
+        SourceFile.fromCode("extern_" + (externFiles.size() + 1), lines(code), SourceKind.EXTERN);
     this.externFiles.add(sourceFile);
     return sourceFile;
   }
@@ -309,8 +332,8 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
-    options.setCheckTypes(true);
-    options.setCheckSymbols(true);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setProtectHiddenSideEffects(true);
     options.setTypedAstOutputFile(typedAstPath);
 
     ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();

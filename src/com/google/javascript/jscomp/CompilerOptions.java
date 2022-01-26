@@ -1054,7 +1054,10 @@ public class CompilerOptions implements Serializable {
    * being removed
    */
   public boolean shouldProtectHiddenSideEffects() {
-    return protectHiddenSideEffects && !checksOnly;
+    // TODO(lharker): would it make sense to make 'checksOnly' a tristate instead? either we're
+    // running only checks for refactoring; running checks to generate a .typedast; or running
+    // checks as part of a fully optimizing build?
+    return protectHiddenSideEffects && (!checksOnly || getTypedAstOutputFile() != null);
   }
 
   /**
