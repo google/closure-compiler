@@ -40,5 +40,5 @@ public abstract class JSTypeReconserializer {
 
   abstract ImmutableMultimap<String, String> getColorIdToJSTypeMapForDebugging();
 
-  abstract TypePointer serializeType(JSType type);
+  abstract Integer serializeType(JSType type);
 }

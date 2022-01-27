@@ -62,7 +62,7 @@ public final class SerializeTypesToPointersTest {
 
     assertThat(serializer.getTypePointersByJstype()).containsKey(fooCtorType);
 
-    TypePointer fooCtorPointer = serializer.getTypePointersByJstype().get(fooCtorType);
+    int fooCtorPointer = serializer.getTypePointersByJstype().get(fooCtorType);
     assertThat(
             serializer
                 .getTypePool()
@@ -83,7 +83,7 @@ public final class SerializeTypesToPointersTest {
     serializer.gatherTypesOnAst(src);
 
     assertThat(serializer.getTypePointersByJstype()).containsKey(fooPrototypeType);
-    TypePointer fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
+    int fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
     assertThat(
             serializer
                 .getTypePool()
@@ -107,7 +107,7 @@ public final class SerializeTypesToPointersTest {
     serializer.gatherTypesOnAst(root);
 
     assertThat(serializer.getTypePointersByJstype()).containsKey(fooPrototypeType);
-    TypePointer fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
+    int fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
     assertThat(
             serializer
                 .getTypePool()
@@ -135,7 +135,7 @@ public final class SerializeTypesToPointersTest {
     serializer.gatherTypesOnAst(root);
 
     assertThat(serializer.getTypePointersByJstype()).containsKey(fooPrototypeType);
-    TypePointer fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
+    int fooPrototypePointer = serializer.getTypePointersByJstype().get(fooPrototypeType);
     assertThat(
             serializer
                 .getTypePool()

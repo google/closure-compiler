@@ -531,8 +531,8 @@ public class ColorSerializerTest {
   }
 
   /**
-   * Builds objects to represent both an object Color to be added and the TypePointer and TypeProto
-   * we expect to be generated for it.
+   * Builds objects to represent both an object Color to be added and the Integer and TypeProto we
+   * expect to be generated for it.
    */
   private static class TestObjectColorBuilder {
     private final ArrayList<TestColor> instanceTestColors = new ArrayList<>();
@@ -612,10 +612,7 @@ public class ColorSerializerTest {
                   prototypeTestColors.stream().map(TestColor::getColor).collect(toImmutableSet()))
               .setOwnProperties(
                   ownProperties.stream().map(PooledString::getValue).collect(toImmutableSet()));
-      final TypePointer typePointer =
-          TypePointer.newBuilder()
-              .setPoolOffset(TypePointers.untrimOffset(trimmedPoolOffset))
-              .build();
+      final Integer typePointer = TypePointers.untrimOffset(trimmedPoolOffset);
       final TypeProto.Builder typeProtoBuilder = TypeProto.newBuilder();
       final ObjectTypeProto.Builder objectTypeProtoBuilder = typeProtoBuilder.getObjectBuilder();
       objectTypeProtoBuilder
@@ -666,12 +663,9 @@ public class ColorSerializerTest {
           memberTestColors.stream().map(TestColor::getColor).collect(toImmutableSet());
       Color color = Color.createUnion(memberColors);
 
-      final TypePointer typePointer =
-          TypePointer.newBuilder()
-              .setPoolOffset(TypePointers.untrimOffset(trimmedPoolOffset))
-              .build();
+      final Integer typePointer = TypePointers.untrimOffset(trimmedPoolOffset);
 
-      final List<TypePointer> memberTypePoiners =
+      final List<Integer> memberTypePoiners =
           memberTestColors.stream()
               .map(TestColor::getExpectedTypePointer)
               .collect(Collectors.toList());
@@ -685,8 +679,7 @@ public class ColorSerializerTest {
   TestColor getAxiomaticTestColor(Color axiomaticColor) {
     final int poolOffset = TypePointers.OFFSET_TO_AXIOMATIC_COLOR.indexOf(axiomaticColor);
     checkArgument(poolOffset >= 0, "Not an axiomatic color: %s", axiomaticColor);
-    return TestColor.create(
-        axiomaticColor, null, TypePointer.newBuilder().setPoolOffset(poolOffset).build());
+    return TestColor.create(axiomaticColor, null, poolOffset);
   }
 
   /** Represents a Color that has been or will be added to the ColorSerializer. */
@@ -705,15 +698,15 @@ public class ColorSerializerTest {
     @Nullable
     public abstract TypeProto getNullableExpectedTypeProto();
 
-    // The TypePointer we expect ColorSerializer to create for this Color.
-    public abstract TypePointer getExpectedTypePointer();
+    // The Integer we expect ColorSerializer to create for this Color.
+    public abstract Integer getExpectedTypePointer();
 
     public TypeProto getExpectedTypeProto() {
       return checkNotNull(getNullableExpectedTypeProto());
     }
 
     static TestColor create(
-        Color color, TypeProto expectedTypeProto, TypePointer nullableExpectedTypePointer) {
+        Color color, TypeProto expectedTypeProto, Integer nullableExpectedTypePointer) {
       return new AutoValue_ColorSerializerTest_TestColor(
           color, expectedTypeProto, nullableExpectedTypePointer);
     }
@@ -733,7 +726,7 @@ public class ColorSerializerTest {
     }
 
     public TypePool.DebugInfo.Mismatch getExpectedMismatch() {
-      final List<TypePointer> involvedColorTypePointers =
+      final List<Integer> involvedColorTypePointers =
           getTestColors().stream()
               .map(TestColor::getExpectedTypePointer)
               .collect(Collectors.toList());
@@ -822,8 +815,8 @@ public class ColorSerializerTest {
     }
 
     Tester addColor(TestColor testColor) {
-      final TypePointer typePointer = colorSerializer.addColor(testColor.getColor());
-      ProtoTruth.assertThat(typePointer).isEqualTo(testColor.getExpectedTypePointer());
+      final Integer typePointer = colorSerializer.addColor(testColor.getColor());
+      assertThat(typePointer).isEqualTo(testColor.getExpectedTypePointer());
       return this;
     }
 
@@ -835,10 +828,9 @@ public class ColorSerializerTest {
       checkNotNull(colorSerializer, "call init() first");
       final List<Color> colors =
           testColorList.stream().map(TestColor::getColor).collect(Collectors.toList());
-      final ImmutableList<TypePointer> typePointers = colorSerializer.addColors(colors);
+      final ImmutableList<Integer> typePointers = colorSerializer.addColors(colors);
       for (int i = 0; i < testColorList.size(); ++i) {
-        ProtoTruth.assertThat(typePointers.get(i))
-            .isEqualTo(testColorList.get(i).getExpectedTypePointer());
+        assertThat(typePointers.get(i)).isEqualTo(testColorList.get(i).getExpectedTypePointer());
       }
       return this;
     }

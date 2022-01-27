@@ -86,7 +86,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testAst_constNumber() throws InvalidProtocolBufferException {
-    TypePointer numberType = pointerForType(PrimitiveType.NUMBER_TYPE);
+    int numberType = PrimitiveType.NUMBER_TYPE.getNumber();
     SerializationResult result = compile("const x = 5;");
 
     assertThat(result.sourceNodes.get(0))
@@ -158,7 +158,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testAst_letString() throws InvalidProtocolBufferException {
-    TypePointer stringType = pointerForType(PrimitiveType.STRING_TYPE);
+    int stringType = PrimitiveType.STRING_TYPE.getNumber();
     SerializationResult result = compile("let s = 'hello';");
 
     assertThat(result.sourceNodes.get(0))
@@ -238,7 +238,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   public void testAst_numberInCast() {
     // CAST nodes in JSCompiler are a combination of a child node + JSDoc @type. Because we don't
     // serialize JSDoc @types it doesn't make sense to serialize the CAST node.
-    TypePointer unknownType = pointerForType(PrimitiveType.UNKNOWN_TYPE);
+    int unknownType = PrimitiveType.UNKNOWN_TYPE.getNumber();
     assertThat(compileToAstNode("/** @type {?} */ (1);"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .ignoringFieldDescriptors(
@@ -488,10 +488,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   private SerializationResult compileWithExterns(String externs, String source) {
     return compile(externs(externs), srcs(source));
-  }
-
-  private static TypePointer pointerForType(PrimitiveType primitive) {
-    return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
   }
 
   private void generateDiagnosticFiles() {

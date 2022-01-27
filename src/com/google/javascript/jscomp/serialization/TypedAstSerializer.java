@@ -577,7 +577,7 @@ final class TypedAstSerializer {
 
   /** Used to provide TypePointers for serializing Nodes and to generate the TypePool. */
   interface TypeSerializer {
-    /** If appropriate for `node` add a `TypePointer` to `astNodeBuilder` */
+    /** If appropriate for `node` add a `Integer` to `astNodeBuilder` */
     void addTypeForNode(Node node, AstNode.Builder astNodeBuilder);
 
     /** Returns a `TypePool` containing the types used by `addTypeForNode()` */
@@ -614,11 +614,10 @@ final class TypedAstSerializer {
   /** Used when the AST's JSTypes have not been converted to Colors */
   private static class JSTypeSerializer implements TypeSerializer {
     // Everything is pre-calculated with this form of serialization.
-    private final IdentityHashMap<JSType, TypePointer> typesToPointers;
+    private final IdentityHashMap<JSType, Integer> typesToPointers;
     private final TypePool typePool;
 
-    private JSTypeSerializer(
-        IdentityHashMap<JSType, TypePointer> typesToPointers, TypePool typePool) {
+    private JSTypeSerializer(IdentityHashMap<JSType, Integer> typesToPointers, TypePool typePool) {
       this.typesToPointers = typesToPointers;
       this.typePool = typePool;
     }
@@ -628,7 +627,7 @@ final class TypedAstSerializer {
       JSType type = node.getJSType();
       if (type != null) {
         astNodeBuilder.setType(
-            checkNotNull(typesToPointers.get(type), "cannot find TypePointer for %s", type));
+            checkNotNull(typesToPointers.get(type), "cannot find pointer for %s", type));
       }
     }
 

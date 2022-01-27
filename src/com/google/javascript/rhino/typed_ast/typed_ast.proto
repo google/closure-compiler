@@ -98,7 +98,9 @@ message AstNode {
   uint32 original_name_pointer = 9;
 
   repeated NodeProperty boolean_property = 14;
-  TypePointer type = 15;
+  // Associated type of the node, if present
+  // See types.proto for what the int32 pointer means
+  optional int32 type = 15;
 
   // pointer into the TypedAst's SourceFilePool
   // 0 is equivalent to 'not set' and assumed to be equal to the source_file of

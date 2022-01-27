@@ -66,11 +66,10 @@ public final class ConvertTypesToColors implements CompilerPass {
 
   private static class RemoveTypesAndApplyColors extends RemoveTypes {
     private final ColorPool.ShardView colorPoolShard;
-    private final IdentityHashMap<JSType, TypePointer> typePointersByJstype;
+    private final IdentityHashMap<JSType, Integer> typePointersByJstype;
 
     RemoveTypesAndApplyColors(
-        ColorPool.ShardView colorPoolShard,
-        IdentityHashMap<JSType, TypePointer> typePointersByJstype) {
+        ColorPool.ShardView colorPoolShard, IdentityHashMap<JSType, Integer> typePointersByJstype) {
       super();
       this.colorPoolShard = colorPoolShard;
       this.typePointersByJstype = typePointersByJstype;
@@ -84,7 +83,7 @@ public final class ConvertTypesToColors implements CompilerPass {
       super.visit(t, n, parent);
 
       if (oldType != null) {
-        TypePointer pointer = typePointersByJstype.get(oldType);
+        Integer pointer = typePointersByJstype.get(oldType);
         if (pointer != null) {
           n.setColor(colorPoolShard.getColor(pointer));
         }

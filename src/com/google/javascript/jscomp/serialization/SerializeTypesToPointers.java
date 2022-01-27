@@ -39,13 +39,16 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 
-/** Grab a TypePointer for each JSType on the AST and log information about the pointers. */
+/**
+ * Grab an integer TypePool pointer for each JSType on the AST and log information about the
+ * pointers.
+ */
 final class SerializeTypesToPointers {
 
   private final AbstractCompiler compiler;
   private final JSTypeReconserializer jstypeReconserializer;
   private final LinkedHashSet<String> propertiesReferencedInAst;
-  private final IdentityHashMap<JSType, TypePointer> typePointersByJstype = new IdentityHashMap<>();
+  private final IdentityHashMap<JSType, Integer> typePointersByJstype = new IdentityHashMap<>();
   private static final Gson GSON = new Gson();
   private TypePool typePool = null;
 
@@ -145,7 +148,7 @@ final class SerializeTypesToPointers {
     }
   }
 
-  IdentityHashMap<JSType, TypePointer> getTypePointersByJstype() {
+  IdentityHashMap<JSType, Integer> getTypePointersByJstype() {
     return typePointersByJstype;
   }
 
@@ -193,8 +196,8 @@ final class SerializeTypesToPointers {
 
     static TypeMismatchJson create(
         TypeMismatch x, JSTypeReconserializer serializer, TypePool typePool) {
-      TypePointer foundPointer = serializer.serializeType(x.getFound());
-      TypePointer requiredPointer = serializer.serializeType(x.getRequired());
+      int foundPointer = serializer.serializeType(x.getFound());
+      int requiredPointer = serializer.serializeType(x.getRequired());
 
       return new TypeMismatchJson(
           x, typePointerToId(foundPointer, typePool), typePointerToId(requiredPointer, typePool));
@@ -207,8 +210,7 @@ final class SerializeTypesToPointers {
      * all types reachable from the AST, while a TypeMismatch may contain a type in dead code no
      * longer reachable from the AST.
      */
-    private static ColorId typePointerToId(TypePointer typePointer, TypePool typePool) {
-      int poolOffset = typePointer.getPoolOffset();
+    private static ColorId typePointerToId(int poolOffset, TypePool typePool) {
       if (isAxiomatic(poolOffset)) {
         return TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(poolOffset).getId();
       }

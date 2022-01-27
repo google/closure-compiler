@@ -7,9 +7,14 @@ option java_multiple_files = true;
 
 // All of these proto definitions are in flux.  Please don't depend on them.
 
+/**
+ * Holds all user-defined types in this program plus some additional debugging
+ * information
+ */
 message TypePool {
-  // All user-defined types. Reference a TypeProto in this list with a
-  // TypePointer.
+  // List of user-defined types, excluding PrimitiveTypes.
+  // Reference a TypeProto in this list with an int32 pointer equal to its index
+  // + the # of PrimitiveTypes
   repeated TypeProto type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
@@ -25,34 +30,18 @@ message TypePool {
     repeated Mismatch mismatch = 1;
     message Mismatch {
       string source_ref = 1;
-      repeated TypePointer involved_color = 2;
+      repeated int32 involved_color = 2;
     }
   }
 }
 
-/**
- * References a serialized TypeProto in a TypePool.
- *
- * Message fields should generally be TypePointers instead of TypeProtos. This
- * avoid the overhead of serializing the same TypeProto multiple times.
- */
-message TypePointer {
-  // required
-  // Points to either a TypeProto in a TypePool or a PrimitiveType.
-  // If the offset is < # of PrimitiveTypes, points to the corresponding
-  // PrimitiveType. Otherwise if
-  //   actual_offset = pool_offset - # of PrimitiveTypes
-  // reference the actual_offset'th element in the TypePool
-  int32 pool_offset = 1;
-}
-
 message SubtypingEdge {
-  TypePointer subtype = 1;
-  TypePointer supertype = 2;
+  int32 subtype = 1;
+  int32 supertype = 2;
 }
 
 message UnionTypeProto {
-  repeated TypePointer union_member = 1;
+  repeated int32 union_member = 1;
 }
 
 message ObjectTypeProto {
@@ -69,9 +58,9 @@ message ObjectTypeProto {
   bool properties_keep_original_name = 4;
 
   // The instance types of a constructor
-  repeated TypePointer instance_type = 5;
+  repeated int32 instance_type = 5;
   // If this is a constructor, its .prototype field (not the implicit prototype)
-  repeated TypePointer prototype = 6;
+  repeated int32 prototype = 6;
   // Whether this was declared as either a class constructor or Closure ES5-
   // style constructor.
   bool marked_constructor = 7;
@@ -110,12 +99,12 @@ message TypeProto {
  * This set includes the JS primitives (string, number) and the type-system
  * primitives UNKNOWN_TYPE and TOP_OBJECT_TYPE.
  *
- * To reference a PrimitiveType in a TypePointer, create a TypePointer whose
- * pool offset equals the numeric value of the NativeType.
+ * To reference a PrimitiveType in an int32 type pointer, use the numeric
+ * value of the NativeType.
  *
- * IMPORTANT: to simplify the PrimitiveType => TypePointer mapping, the compiler
- * requires that the numeric values of this enum are sequential. Do not skip
- * numbers. This is also checked inside
+ * IMPORTANT: to simplify the PrimitiveType => int32 pointer mapping, the
+ * compiler requires that the numeric values of this enum are sequential. Do not
+ * skip numbers. This is also checked inside
  * jscomp.serialization.JSTypeReconserializer.
  */
 enum PrimitiveType {

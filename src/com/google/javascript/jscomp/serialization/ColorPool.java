@@ -91,13 +91,9 @@ public final class ColorPool {
       this.trimmedOffsetToId = trimmedOffsetToId;
     }
 
-    public Color getColor(TypePointer pointer) {
+    public Color getColor(int pointer) {
       checkState(this.colorPool != null, this);
       return this.colorPool.getColor(this.getId(pointer));
-    }
-
-    private ColorId getId(TypePointer pointer) {
-      return this.getId(pointer.getPoolOffset());
     }
 
     private ColorId getId(int untrimmedOffset) {
@@ -155,7 +151,7 @@ public final class ColorPool {
 
       if (typePool.hasDebugInfo()) {
         for (TypePool.DebugInfo.Mismatch m : typePool.getDebugInfo().getMismatchList()) {
-          for (TypePointer pointer : m.getInvolvedColorList()) {
+          for (Integer pointer : m.getInvolvedColorList()) {
             this.registry.addMismatchLocation(shard.getId(pointer), m.getSourceRef());
           }
         }
@@ -266,7 +262,7 @@ public final class ColorPool {
         if (objProto.hasDebugInfo()) {
           debugTypenames.addAll(objProto.getDebugInfo().getTypenameList());
         }
-        for (TypePointer p : objProto.getInstanceTypeList()) {
+        for (Integer p : objProto.getInstanceTypeList()) {
           instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
         }
 
@@ -280,7 +276,7 @@ public final class ColorPool {
         isConstructor |= objProto.getMarkedConstructor();
         isInvalidating |= objProto.getIsInvalidating();
         propertiesKeepOriginalName |= objProto.getPropertiesKeepOriginalName();
-        for (TypePointer p : objProto.getPrototypeList()) {
+        for (Integer p : objProto.getPrototypeList()) {
           prototypes.add(this.lookupOrReconcileColor(shard.getId(p)));
         }
         for (int i = 0; i < objProto.getOwnPropertyCount(); i++) {
@@ -312,7 +308,7 @@ public final class ColorPool {
       viewToProto.forEach(
           (shard, proto) -> {
             checkState(proto.hasUnion(), proto);
-            for (TypePointer memberPointer : proto.getUnion().getUnionMemberList()) {
+            for (Integer memberPointer : proto.getUnion().getUnionMemberList()) {
               ColorId memberId = shard.getId(memberPointer);
               Color member = this.lookupOrReconcileColor(memberId);
               checkWellFormed(!member.isUnion(), "Reconciling union with non-union", proto);
@@ -353,12 +349,11 @@ public final class ColorPool {
             checkWellFormed(
                 proto.getUnion().getUnionMemberCount() > 1, "Union has too few members", proto);
             LinkedHashSet<ColorId> members = new LinkedHashSet<>();
-            for (TypePointer memberPointer : proto.getUnion().getUnionMemberList()) {
-              int offset = memberPointer.getPoolOffset();
+            for (Integer memberPointer : proto.getUnion().getUnionMemberList()) {
               ColorId memberId =
-                  isAxiomatic(offset)
-                      ? OFFSET_TO_AXIOMATIC_COLOR.get(offset).getId()
-                      : ids[trimOffset(offset)];
+                  isAxiomatic(memberPointer)
+                      ? OFFSET_TO_AXIOMATIC_COLOR.get(memberPointer).getId()
+                      : ids[trimOffset(memberPointer)];
               checkWellFormed(memberId != null, "Union member not found", proto);
               members.add(memberId);
             }
@@ -379,13 +374,12 @@ public final class ColorPool {
     return ImmutableList.copyOf(ids);
   }
 
-  private static TypePointer validatePointer(TypePointer p, ShardView shard) {
-    int offset = p.getPoolOffset();
+  private static int validatePointer(int offset, ShardView shard) {
     checkWellFormed(
         0 <= offset && offset < untrimOffset(shard.trimmedOffsetToId.size()),
         "Pointer offset outside of shard",
-        p);
-    return p;
+        offset);
+    return offset;
   }
 
   private static final Color PENDING_COLOR =

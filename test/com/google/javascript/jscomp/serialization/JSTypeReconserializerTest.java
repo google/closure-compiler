@@ -61,9 +61,6 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   private static final FieldDescriptor IS_INVALIDATING =
       ObjectTypeProto.getDescriptor().findFieldByName("is_invalidating");
 
-  private static final FieldDescriptor TYPE_OFFSET =
-      TypePointer.getDescriptor().findFieldByName("pool_offset");
-
   private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
       ImmutableList.of(OBJECT_UUID, OBJECT_PROPERTIES);
 
@@ -295,10 +292,10 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
             TypeProto.newBuilder()
                 .setUnion(
                     UnionTypeProto.newBuilder()
-                        .addUnionMember(pointerForType(PrimitiveType.BOOLEAN_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.STRING_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.NUMBER_TYPE))
-                        .addUnionMember(pointerForType(PrimitiveType.SYMBOL_TYPE))
+                        .addUnionMember(PrimitiveType.BOOLEAN_TYPE.getNumber())
+                        .addUnionMember(PrimitiveType.STRING_TYPE.getNumber())
+                        .addUnionMember(PrimitiveType.NUMBER_TYPE.getNumber())
+                        .addUnionMember(PrimitiveType.SYMBOL_TYPE.getNumber())
                         .build())
                 .build());
   }
@@ -359,7 +356,6 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
   public void testSerializeObjectLiteralTypesAsInvalidating() {
     List<TypeProto> typePool = compileToTypes("const /** {x: string} */ obj = {x: ''};");
     assertThat(typePool)
-        .ignoringFieldDescriptors(TYPE_OFFSET)
         .ignoringFieldDescriptors(OBJECT_UUID)
         .contains(
             TypeProto.newBuilder()
@@ -460,8 +456,8 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                 .setObject(
                     namedObjectBuilder("function(new:*): ?")
                         .setIsInvalidating(true)
-                        .addPrototype(pointerForType(PrimitiveType.UNKNOWN_TYPE))
-                        .addInstanceType(pointerForType(PrimitiveType.UNKNOWN_TYPE))
+                        .addPrototype(PrimitiveType.UNKNOWN_TYPE.getNumber())
+                        .addInstanceType(PrimitiveType.UNKNOWN_TYPE.getNumber())
                         .setMarkedConstructor(true)
                         .build())
                 .build());
@@ -549,7 +545,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                         .setMarkedConstructor(true)
                         .addInstanceType(pointerForType("Foo"))
                         .addInstanceType(pointerForType("Bar"))
-                        .addPrototype(TypePointer.getDefaultInstance()))
+                        .addPrototype(PrimitiveType.UNKNOWN_TYPE.getNumber()))
                 .build());
   }
 
@@ -698,15 +694,11 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     return stream(str).map(this::findInStringPool).collect(toImmutableList());
   }
 
-  private static TypePointer pointerForType(PrimitiveType primitive) {
-    return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
-  }
-
-  private TypePointer pointerForType(String className) {
+  private int pointerForType(String className) {
     List<TypeProto> types = this.typePool.getTypeList();
     for (int i = 0; i < types.size(); i++) {
       if (types.get(i).getObject().getDebugInfo().getTypenameList().contains(className)) {
-        return TypePointer.newBuilder().setPoolOffset(untrimOffset(i)).build();
+        return untrimOffset(i);
       }
     }
     throw new AssertionError("Unable to find type '" + className + "' in " + this.typePool);

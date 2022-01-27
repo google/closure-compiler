@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
@@ -64,7 +64,7 @@ final class JSTypeReconserializer {
 
   private final IdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache = new IdentityHashMap<>();
   private final LinkedHashMap<ColorId, SeenTypeRecord> seenTypeRecords = new LinkedHashMap<>();
-  private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
+  private final SetMultimap<Integer, Integer> disambiguateEdges = LinkedHashMultimap.create();
 
   private State state = State.COLLECTING_TYPES;
 
@@ -143,7 +143,7 @@ final class JSTypeReconserializer {
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
-  TypePointer serializeType(JSType type) {
+  int serializeType(JSType type) {
     SeenTypeRecord record = recordType(type);
     return record.pointer;
   }
@@ -246,10 +246,10 @@ final class JSTypeReconserializer {
     return record;
   }
 
-  private void addSupertypeEdges(ObjectType subtype, TypePointer serializedSubtype) {
+  private void addSupertypeEdges(ObjectType subtype, Integer serializedSubtype) {
     this.disambiguateEdges.putAll(serializedSubtype, ownAncestorInterfacesOf(subtype));
     if (subtype.getImplicitPrototype() != null) {
-      TypePointer supertype = this.serializeType(subtype.getImplicitPrototype());
+      Integer supertype = this.serializeType(subtype.getImplicitPrototype());
       this.disambiguateEdges.put(serializedSubtype, supertype);
     }
   }
@@ -262,8 +262,7 @@ final class JSTypeReconserializer {
         this.seenTypeRecords.computeIfAbsent(
             id,
             (unused) -> {
-              TypePointer pointer =
-                  TypePointer.newBuilder().setPoolOffset(this.seenTypeRecords.size()).build();
+              int pointer = this.seenTypeRecords.size();
               return new SeenTypeRecord(id, pointer);
             });
     this.typeToRecordCache.put(jstype, record);
@@ -279,7 +278,7 @@ final class JSTypeReconserializer {
                 .addAllUnionMember(
                     seen.unionMembers.stream()
                         .map((r) -> r.pointer)
-                        .sorted(TypePointers.OFFSET_ASCENDING)
+                        .sorted()
                         .collect(toImmutableList()))
                 .build())
         .build();
@@ -287,8 +286,8 @@ final class JSTypeReconserializer {
 
   private TypeProto reconcileObjectTypes(SeenTypeRecord seen) {
     TreeSet<String> debugTypenames = new TreeSet<>();
-    LinkedHashSet<TypePointer> instancePointers = new LinkedHashSet<>();
-    LinkedHashSet<TypePointer> prototypePointers = new LinkedHashSet<>();
+    LinkedHashSet<Integer> instancePointers = new LinkedHashSet<>();
+    LinkedHashSet<Integer> prototypePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> ownProperties = new LinkedHashSet<>();
     boolean isClosureAssert = false;
     boolean isConstructor = false;
@@ -357,13 +356,13 @@ final class JSTypeReconserializer {
    * edges for safe disambiguation. In particular, code generated from other languages (e.g TS)
    * might have more flexible subtyping rules.
    */
-  private ImmutableList<TypePointer> ownAncestorInterfacesOf(ObjectType type) {
+  private ImmutableList<Integer> ownAncestorInterfacesOf(ObjectType type) {
     FunctionType ctorType = type.getConstructor();
     if (ctorType == null) {
       return ImmutableList.of();
     }
 
-    ImmutableList.Builder<TypePointer> ancestors = ImmutableList.builder();
+    ImmutableList.Builder<Integer> ancestors = ImmutableList.builder();
     for (JSType ancestor :
         Iterables.concat(
             ctorType.getExtendedInterfaces(), ctorType.getOwnImplementedInterfaces())) {
@@ -376,7 +375,7 @@ final class JSTypeReconserializer {
    * Inserts dummy pointers corresponding to all {@link PrimitiveType}s in the type pool.
    *
    * <p>These types will never correspond to an actual {@link TypeProto}. Instead, all normal {@link
-   * TypePointer} offsets into the pool are offset by a number equivalent to the number of {@link
+   * Integer} offsets into the pool are offset by a number equivalent to the number of {@link
    * PrimitiveType} enum elements.
    */
   private void seedCachesWithAxiomaticTypes() {
@@ -385,8 +384,7 @@ final class JSTypeReconserializer {
     // Load all the axiomatic records in the right order without any types.
     for (Color axiomatic : TypePointers.OFFSET_TO_AXIOMATIC_COLOR) {
       int index = this.seenTypeRecords.size();
-      TypePointer pointer = TypePointer.newBuilder().setPoolOffset(index).build();
-      SeenTypeRecord record = new SeenTypeRecord(axiomatic.getId(), pointer);
+      SeenTypeRecord record = new SeenTypeRecord(axiomatic.getId(), index);
       this.seenTypeRecords.put(axiomatic.getId(), record);
     }
 
@@ -406,7 +404,7 @@ final class JSTypeReconserializer {
 
     final int totalTypeCount = this.seenTypeRecords.size();
     for (SeenTypeRecord seen : this.seenTypeRecords.values()) {
-      int offset = seen.pointer.getPoolOffset();
+      int offset = seen.pointer;
       checkState(offset >= 0);
       checkState(
           offset <= totalTypeCount,
@@ -447,7 +445,7 @@ final class JSTypeReconserializer {
                               // Ensure all types are recorded before reconciliation.
                               .map(this::serializeType)
                               .distinct()
-                              .sorted(TypePointers.OFFSET_ASCENDING)
+                              .sorted()
                               .collect(toImmutableList())));
     }
 
@@ -464,8 +462,8 @@ final class JSTypeReconserializer {
               : this.reconcileObjectTypes(seen));
     }
 
-    for (TypePointer subtype : this.disambiguateEdges.keySet()) {
-      for (TypePointer supertype : this.disambiguateEdges.get(subtype)) {
+    for (Integer subtype : this.disambiguateEdges.keySet()) {
+      for (Integer supertype : this.disambiguateEdges.get(subtype)) {
         builder.addDisambiguationEdges(
             SubtypingEdge.newBuilder().setSubtype(subtype).setSupertype(supertype));
       }
@@ -493,7 +491,7 @@ final class JSTypeReconserializer {
 
   private static final class SeenTypeRecord {
     final ColorId colorId;
-    final TypePointer pointer;
+    final int pointer;
 
     /**
      * 2021-05-25: It's faster to build a list and reconcile duplicates than to deduplicate using a
@@ -504,7 +502,7 @@ final class JSTypeReconserializer {
 
     @Nullable ImmutableSet<SeenTypeRecord> unionMembers = null;
 
-    SeenTypeRecord(ColorId colorId, TypePointer pointer) {
+    SeenTypeRecord(ColorId colorId, int pointer) {
       this.colorId = colorId;
       this.pointer = pointer;
     }
