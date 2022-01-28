@@ -844,6 +844,29 @@ public class TestExternsBuilder {
           "Math.pow = function(a, b) {};",
           "");
 
+  private static final String REG_EXP_EXTERNS =
+      lines(
+          "/**",
+          " * @constructor",
+          " * @param {*=} opt_pattern",
+          " * @param {*=} opt_flags",
+          " * @return {!RegExp}",
+          " * @throws {SyntaxError} if opt_pattern is an invalid pattern.",
+          " */",
+          "function RegExp(opt_pattern, opt_flags) {}",
+          "/**",
+          " * @param {*} str The string to search.",
+          " * @return {?RegExpResult}",
+          " */",
+          "RegExp.prototype.exec = function(str) {};",
+          "/**",
+          " * @constructor",
+          " * @extends {Array<string>}",
+          " */",
+          "var RegExpResult = function() {};",
+          "/** @type {string} */",
+          "RegExp.$1;");
+
   private boolean includeBigIntExterns = false;
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
@@ -860,6 +883,7 @@ public class TestExternsBuilder {
   private boolean includeClosureExterns = false;
   private boolean includeJSCompLibraries = false;
   private boolean includeMathExterns = false;
+  private boolean includeRegExpExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addBigInt() {
@@ -964,6 +988,12 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addRegExp() {
+    addArray(); // RegExpResult needs definition of Array
+    includeRegExpExterns = true;
+    return this;
+  }
+
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -1016,6 +1046,9 @@ public class TestExternsBuilder {
     }
     if (includeMathExterns) {
       externSections.add(MATH_EXTERNS);
+    }
+    if (includeRegExpExterns) {
+      externSections.add(REG_EXP_EXTERNS);
     }
     if (includeEs6ClassTranspilationExterns) {
       externSections.add(ES6_CLASS_TRANSPILATION_EXTERNS);

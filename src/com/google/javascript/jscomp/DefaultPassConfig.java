@@ -509,7 +509,13 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    addNonTypedAstNormalizationPasses(passes);
+    if (options.getMergedPrecompiledLibraries()) {
+      // it would be safe to always recompute side effects even if not using precompiled libraries
+      // (the else case) but it's unecessary so skip it to improve build times.
+      passes.add(checkRegExpForOptimizations);
+    } else {
+      addNonTypedAstNormalizationPasses(passes);
+    }
 
     // Remove synthetic extern declarations of names that are now defined in source
     // This is expected to do nothing when in a monolithic build
@@ -1720,7 +1726,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.CHECK_REG_EXP)
           .setInternalFactory(
               (compiler) -> {
-                final CheckRegExp pass = new CheckRegExp(compiler);
+                final CheckRegExp pass = new CheckRegExp(compiler, /* reportErrors= */ true);
 
                 return new CompilerPass() {
                   @Override
@@ -1731,6 +1737,27 @@ public final class DefaultPassConfig extends PassConfig {
                 };
               })
           .setFeatureSetForChecks()
+          .build();
+
+  // This pass is redundant if we've already run checkRegExp during this compilation
+  private final PassFactory checkRegExpForOptimizations =
+      PassFactory.builder()
+          .setName("checkRegExpForOptimizations")
+          .setInternalFactory(
+              (compiler) -> {
+                final CheckRegExp regExpCheck =
+                    new CheckRegExp(compiler, /* reportErrors= */ false);
+
+                return new CompilerPass() {
+                  @Override
+                  public void process(Node externs, Node root) {
+                    regExpCheck.process(externs, root);
+                    compiler.setHasRegExpGlobalReferences(
+                        regExpCheck.isGlobalRegExpPropertiesUsed());
+                  }
+                };
+              })
+          .setFeatureSetForOptimizations()
           .build();
 
   /** Checks that references to variables look reasonable. */

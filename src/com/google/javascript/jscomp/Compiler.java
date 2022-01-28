@@ -581,6 +581,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       CompilerOptions options) {
     checkState(this.typedAstFilesystem == null);
 
+    options.setMergedPrecompiledLibraries(true);
+
     this.setLifeCycleStage(LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC);
     // To speed up builds that don't run type-based optimizations, skip type deserialization
     boolean deserializeTypes = options.requiresTypesForOptimization();
@@ -3454,7 +3456,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       ast = parseCodeHelper(source);
     }
 
-    // Look for string literals of the form 'require foo bar' or 'declare baz''.
+    // Look for string literals of the form 'require foo bar'
     // As we process each one, remove it from its parent.
     for (Node node = ast.getFirstChild();
         node != null && node.isExprResult() && node.getFirstChild().isStringLit();

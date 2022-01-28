@@ -215,6 +215,16 @@ public class CompilerOptions implements Serializable {
     return this.typedAstOutputFile;
   }
 
+  private boolean mergedPrecompiledLibraries = false;
+
+  void setMergedPrecompiledLibraries(boolean mergedPrecompiledLibraries) {
+    this.mergedPrecompiledLibraries = mergedPrecompiledLibraries;
+  }
+
+  boolean getMergedPrecompiledLibraries() {
+    return this.mergedPrecompiledLibraries;
+  }
+
   @Deprecated
   public void setSkipTranspilationAndCrash(boolean value) {}
 

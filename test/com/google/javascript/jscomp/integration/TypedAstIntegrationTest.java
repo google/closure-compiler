@@ -271,6 +271,41 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         .isEqualTo(expectedRoot);
   }
 
+  @Test
+  public void removesRegExpCallsIfSafe() throws IOException {
+    precompileLibrary(
+        extern(new TestExternsBuilder().addRegExp().build()), code("(/abc/gi).exec('')"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void removesRegExpCallsIfUnsafelyReferenced() throws IOException {
+    precompileLibrary(
+        extern(new TestExternsBuilder().addRegExp().addConsole().build()),
+        code(
+            "(/abc/gi).exec('');", //
+            "console.log(RegExp.$1);"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("(/abc/gi).exec(''); console.log(RegExp.$1);");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
