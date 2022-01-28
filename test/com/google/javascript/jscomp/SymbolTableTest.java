@@ -506,6 +506,18 @@ public final class SymbolTableTest {
   }
 
   @Test
+  public void testGoogRequiredSymbolsConnectedToDefinitions_moduleEarlyLexicographically() {
+    // Tests bug where imported module is named 'a' which is lexigraphically earlier than 'exports'
+    // so 'a' becomes the symbol on which exported module properties are defined. The issue that
+    // both 'a' and 'exports' have the same object type and we don't know which one is the true
+    // object that declares it. So we just treat 'exports' as special name.
+    verifySymbolReferencedInSecondFile(
+        lines("goog.module('some.foo');", "const one = 1", "exports.one = one;"),
+        lines("goog.module('some.bar');", "const a = goog.require('some.foo');", "a.one;"),
+        "one");
+  }
+
+  @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_property_moduleImportsProvide() {
     verifySymbolReferencedInSecondFile(
         lines("goog.provide('some.foo');", "some.foo.one = 1;"),

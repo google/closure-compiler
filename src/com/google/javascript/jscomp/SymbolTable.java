@@ -858,6 +858,7 @@ public final class SymbolTable {
     List<Symbol> types = new ArrayList<>();
     List<Symbol> googModuleExportTypes = new ArrayList<>();
     List<Symbol> moduleTypes = new ArrayList<>();
+    List<Symbol> exports = new ArrayList<>();
 
     // Create a property scope for each named type and each anonymous object,
     // and populate it with that object's properties.
@@ -868,10 +869,13 @@ public final class SymbolTable {
     for (Symbol sym : getAllSymbols()) {
       if (needsPropertyScope(sym)) {
         String name = sym.getName();
+        // TODO(b/144595458): remove module$ handling given that module rewriting is disabled.
         if (name.startsWith("module$exports")) {
           googModuleExportTypes.add(sym);
         } else if (name.startsWith("module$")) {
           moduleTypes.add(sym);
+        } else if (name.equals("exports")) {
+          exports.add(sym);
         } else {
           types.add(sym);
         }
@@ -908,7 +912,8 @@ public final class SymbolTable {
     Collections.sort(types, getNaturalSymbolOrdering().reverse());
     Collections.sort(googModuleExportTypes, getNaturalSymbolOrdering().reverse());
     Collections.sort(moduleTypes, getNaturalSymbolOrdering().reverse());
-    Iterable<Symbol> allTypes = Iterables.concat(googModuleExportTypes, types, moduleTypes);
+    Iterable<Symbol> allTypes =
+        Iterables.concat(googModuleExportTypes, types, moduleTypes, exports);
 
     // If you thought we are done with tricky case - you were wrong. There is another one!
     // The problem with the same property scope appearing several times. For example when using
