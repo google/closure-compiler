@@ -246,6 +246,12 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
           convertYieldOfAsyncGenerator(ctx, n);
         }
         break;
+      case RETURN:
+        checkNotNull(ctx.function);
+        if (ctx.function.isAsyncGeneratorFunction()) {
+          convertReturnOfAsyncGenerator(ctx, n);
+        }
+        break;
 
         // For-Await-Of loops
       case FOR_AWAIT_OF:
@@ -405,6 +411,44 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     newActionRecord.srcrefTreeIfMissing(yieldNode);
     yieldNode.addChildToFront(newActionRecord);
     yieldNode.putBooleanProp(Node.YIELD_ALL, false);
+  }
+
+  /**
+   * Converts a return into a return of an ActionRecord.
+   *
+   * <pre>{@code
+   * return;
+   * return value;
+   * }</pre>
+   *
+   * <p>becomes
+   *
+   * <pre>{@code
+   * return new ActionRecord(ActionEnum.YIELD_VALUE, undefined);
+   * return new ActionRecord(ActionEnum.YIELD_VALUE, value);
+   * }</pre>
+   *
+   * @param returnNode the Node to be converted
+   */
+  private void convertReturnOfAsyncGenerator(LexicalContext ctx, Node returnNode) {
+    checkNotNull(returnNode);
+    checkState(returnNode.isReturn());
+    checkState(ctx != null && ctx.function != null);
+    checkState(ctx.function.isAsyncGeneratorFunction());
+
+    Node expression = returnNode.removeFirstChild();
+    Node newActionRecord =
+        astFactory.createNewNode(astFactory.createQName(this.namespace, ACTION_RECORD_NAME));
+
+    if (expression == null) {
+      expression = NodeUtil.newUndefinedNode(null);
+    }
+    // return expression becomes new ActionRecord(YIELD, expression)
+    newActionRecord.addChildToBack(astFactory.createQName(this.namespace, ACTION_ENUM_YIELD));
+    newActionRecord.addChildToBack(expression);
+
+    newActionRecord.srcrefTreeIfMissing(returnNode);
+    returnNode.addChildToFront(newActionRecord);
   }
 
   /**

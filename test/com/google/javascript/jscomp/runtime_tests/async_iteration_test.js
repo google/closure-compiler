@@ -113,10 +113,12 @@ testSuite({
   },
   testAsyncGenReturn() {
     async function* foo() {
-      yield await Promise.resolve(1);
-      yield await Promise.resolve(2);
-      yield await Promise.resolve(3);
-      return 4;
+      // NOTE all of these get "awaited" automatically so the resolved values
+      // are what appear in the iteration records.
+      yield Promise.resolve(1);
+      yield Promise.resolve(2);
+      yield Promise.resolve(3);
+      return Promise.resolve(4);
     }
     return (async function() {
       let gen = foo();

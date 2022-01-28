@@ -324,18 +324,22 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines(
             // `this` in parameter list shouldn't be aliased
             "function baz(outerT = this) {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "  return new $jscomp.AsyncGeneratorWrapper(",
+            "      (function*() {",
+            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
             // `this` in parameter list shouldn't be aliased
-            "    return function(innerT = this) {",
-            "      const $jscomp$asyncIter$this = this;",
-            "      return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "            function(innerT = this) {",
+            "              const $jscomp$asyncIter$this = this;",
+            "              return new $jscomp.AsyncGeneratorWrapper(",
+            "                  (function*() {",
+            "                    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "                        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
             // `this` in body should be aliased
-            "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "          $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "          innerT || $jscomp$asyncIter$this);",
+            "                        innerT || $jscomp$asyncIter$this);",
+            "                  })());",
+            "            });",
             "      })());",
-            "    };",
-            "  })());",
             "}"));
   }
 
@@ -351,9 +355,10 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "function baz() {",
             "  const $jscomp$asyncIter$this = this;",
             "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    return (t = $jscomp$asyncIter$this) =>",
-            "        t || $jscomp$asyncIter$this;",
-            "      })());",
+            "    return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "        (t = $jscomp$asyncIter$this) => t || $jscomp$asyncIter$this);",
+            "  })());",
             "}",
             ""));
   }
@@ -364,9 +369,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines("async function* baz() {  return function() { return this; }; }"),
         lines(
             "function baz() {",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    return function() { return this; };",
-            "  })());",
+            "  return new $jscomp.AsyncGeneratorWrapper(",
+            "      (function*() {",
+            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "            function() { return this; });",
+            "      })());",
             "}"));
 
     test(
@@ -374,9 +382,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
         lines(
             "function baz() {",
             "  const $jscomp$asyncIter$this = this;",
-            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
-            "    return () => $jscomp$asyncIter$this;",
-            "  })());",
+            "  return new $jscomp.AsyncGeneratorWrapper(",
+            "      (function*() {",
+            "        return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "            () => $jscomp$asyncIter$this);",
+            "      })());",
             "}"));
   }
 
@@ -408,7 +419,9 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
             "          const tmp = $jscomp$asyncIter$super$get$m();",
-            "          return tmp.call(null);",
+            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "              tmp.call(null));",
             "        }());",
             "  }",
             "}"));
@@ -441,7 +454,9 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "        () => super.m;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
-            "          return $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this);",
+            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "              $jscomp$asyncIter$super$get$m().call($jscomp$asyncIter$this));",
             "        }());",
             "  }",
             "}"));
@@ -478,7 +493,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "class X {",
             "  async *m() {",
             "    return new Promise((resolve, reject) => {",
-            "      return arguments;",
+            "      resolve(arguments);",
             "    });",
             "  }",
             "}"),
@@ -488,9 +503,11 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "    const $jscomp$asyncIter$arguments = arguments;",
             "    return new $jscomp.AsyncGeneratorWrapper(",
             "        function* () {",
-            "          return new Promise((resolve, reject) => {",
-            "            return $jscomp$asyncIter$arguments",
-            "          });",
+            "          return new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "              new Promise((resolve, reject) => {",
+            "                resolve($jscomp$asyncIter$arguments);",
+            "              }));",
             "        }());",
             "  }",
             "}"));
