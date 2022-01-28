@@ -716,6 +716,7 @@ class RemoveUnusedCode implements CompilerPass {
     } else {
       Node parent = callNode.getParent();
       String classVarName = null;
+      boolean classDefiningCall = false;
 
       // A call that is a statement unto itself or the left side of a comma expression might be
       // a call to a known method for doing class setup
@@ -730,6 +731,7 @@ class RemoveUnusedCode implements CompilerPass {
           // NOTE: DerivedClass and BaseClass must be QNames. Otherwise getClassesDefinedByCall()
           // will return null.
           classVarName = subclassRelationship.subclassName;
+          classDefiningCall = true;
         } else {
           // Look for calls to addSingletonGetter calls.
           classVarName = codingConvention.getSingletonGetterClassName(callNode);
@@ -753,7 +755,8 @@ class RemoveUnusedCode implements CompilerPass {
         for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
           builder.addContinuation(new Continuation(child, scope));
         }
-        traverseVar(classVar).addRemovable(builder.buildClassSetupCall(callNode));
+        traverseVar(classVar)
+            .addRemovable(builder.buildClassSetupCall(callNode, classDefiningCall));
       }
     }
   }
@@ -1979,7 +1982,11 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     ClassSetupCall buildClassSetupCall(Node callNode) {
-      return new ClassSetupCall(this, callNode);
+      return buildClassSetupCall(callNode, /* classDefiningCall */ false);
+    }
+
+    ClassSetupCall buildClassSetupCall(Node callNode, boolean classDefiningCall) {
+      return new ClassSetupCall(this, callNode, classDefiningCall);
     }
 
     VanillaForNameDeclaration buildVanillaForNameDeclaration(Node nameNode) {
@@ -2720,10 +2727,12 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private class ClassSetupCall extends Removable {
     final Node callNode;
+    final boolean classDefiningCall;
 
-    ClassSetupCall(RemovableBuilder builder, Node callNode) {
+    ClassSetupCall(RemovableBuilder builder, Node callNode, boolean classDefiningCall) {
       super(/* targetNode= */ null, builder);
       this.callNode = callNode;
+      this.classDefiningCall = classDefiningCall;
     }
 
     @Override
@@ -2737,7 +2746,9 @@ class RemoveUnusedCode implements CompilerPass {
       callNode.removeFirstChild();
       for (Node arg = callNode.getLastChild(); arg != null; arg = callNode.getLastChild()) {
         arg.detach();
-        if (astAnalyzer.mayHaveSideEffects(arg)) {
+        // If this is a class defining call, the arguments are well defined and verified so they are
+        // always safe to drop.
+        if (!classDefiningCall && astAnalyzer.mayHaveSideEffects(arg)) {
           if (replacement == null) {
             replacement = arg;
           } else {

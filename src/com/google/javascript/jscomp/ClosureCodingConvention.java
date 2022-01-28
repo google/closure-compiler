@@ -98,33 +98,29 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     Node callName = callNode.getFirstChild();
     SubclassType type = typeofClassDefiningName(callName);
     if (type != null) {
-      Node subclass = null;
-      Node superclass = callNode.getLastChild();
-
-      // There are four possible syntaxes for a class-defining method:
+      // Possible formats for a class-defining method call:
       // goog.inherits(SubClass, SuperClass)
       // goog$inherits(SubClass, SuperClass)
       // goog.mixin(SubClass.prototype, SuperClass.prototype)
       // goog$mixin(SubClass.prototype, SuperClass.prototype)
-      if (callNode.hasXChildren(3)) {
-        // goog.inherits(SubClass, SuperClass)
-        subclass = callName.getNext();
-      } else {
+      // ValueType.mixin(SubClass, SuperClass, ...) // used by J2CL.
+      // ValueType$mixin(SubClass, SuperClass, ...)
+      if (callNode.getChildCount() < 3) {
         return null;
       }
 
+      // goog.inherits(SubClass, SuperClass)
+      Node subclass = callName.getNext();
+      Node superclass = subclass.getNext();
+
       if (type == SubclassType.MIXIN) {
-        // Only consider mixins that mix two prototypes as related to
-        // inheritance.
-        if (!endsWithPrototype(superclass)) {
-          return null;
-        }
-        if (!endsWithPrototype(subclass)) {
-          return null;
-        }
         // Strip off the prototype from the name.
-        subclass = subclass.getFirstChild();
-        superclass = superclass.getFirstChild();
+        if (endsWithPrototype(superclass)) {
+          superclass = superclass.getFirstChild();
+        }
+        if (endsWithPrototype(subclass)) {
+          subclass = subclass.getFirstChild();
+        }
       }
 
       // bail out if either of the side of the "inherits"

@@ -55,8 +55,10 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "/** @const {!Global} */ goog.global;",
             "goog.reflect = {};",
             "goog.reflect.object = function(obj, propertiesObj) {};",
+            "goog.reflect.objectProperty = function(prop, obj) {};",
             "function goog$inherits(subClass, superClass) {}",
             "function goog$mixin(dstPrototype, srcPrototype) {}",
+            "function valueType$mixin(dstPrototype, srcPrototype, flags, ...args) {}",
             "function alert() {}",
             "function use() {}",
             "function externFunction() {}",
@@ -1359,6 +1361,16 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "function b(){}",
             "(goog$inherits(b, a), 1);"),
         "1");
+  }
+
+  @Test
+  public void testRemoveInheritedClass13() {
+    test(
+        lines(
+            "class D {}", //
+            "class C {}",
+            "valueType$mixin(C, D, 1, goog.reflect.objectProperty('a', C))"),
+        "");
   }
 
   @Test

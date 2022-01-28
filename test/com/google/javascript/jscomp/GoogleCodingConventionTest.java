@@ -133,7 +133,7 @@ public final class GoogleCodingConventionTest {
 
   @Test
   public void testInheritanceDetection8() {
-    assertNotClassDefining("goog.inherits(A, B, C);");
+    assertDefinesClasses("goog.inherits(A, B, C);", "A", "B");
   }
 
   @Test

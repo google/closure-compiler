@@ -754,6 +754,29 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassMovement_mixins() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    lines(
+                        "class ValueType {}",
+                        "class Foo {}",
+                        "ValueType.mixin(Foo, ValueType, 5,"
+                            + " goog.reflect.objectProperty('foo', Foo))"))
+                .addChunk("new Foo();")
+                .build()),
+        expected(
+            "", // m1
+            lines(
+                "class ValueType {}",
+                "class Foo {}",
+                "ValueType.mixin(Foo, ValueType, 5, goog.reflect.objectProperty('foo', Foo))",
+                "new Foo();") // m2
+            ));
+  }
+
+  @Test
   public void testPureOrBreakMyCodedStaticClassFieldIsMovable() {
     //
     //

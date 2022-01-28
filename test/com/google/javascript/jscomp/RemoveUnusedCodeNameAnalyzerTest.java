@@ -1327,13 +1327,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnintendedUseOfInheritsInLocalScope2() {
-    testSame(
-        "goog.mixin = function() {}; "
-            + "var x = {}; var y = {}; (function() { goog.mixin(x, y); })();");
-  }
-
-  @Test
   public void testUnintendedUseOfInheritsInLocalScope3() {
     testSame(
         "goog.mixin = function() {}; "
