@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.io.Writer;
 import java.text.ParseException;
 import java.util.Map;
@@ -41,7 +42,7 @@ import java.util.Map;
  * @see RenameVars
  */
 @Immutable
-public final class VariableMap {
+public final class VariableMap implements Serializable {
 
   private static final char SEPARATOR = ':';
 

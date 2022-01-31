@@ -1247,6 +1247,9 @@ public final class CompilerTest {
     // Supply a message bundle to trigger the replaceStrings pass.
     // We don't need to actually translate anything, though.
     options.setMessageBundle(new EmptyMessageBundle());
+    // Enable the ReplaceStrings pass, so we can confirm that the stringMap it creates survives
+    // serialization and deserialization.
+    options.setReplaceStringsFunctionDescriptions(ImmutableList.of("Error(*)"));
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     List<SourceFile> externs =
@@ -1265,7 +1268,9 @@ public final class CompilerTest {
                     "/** @desc greeting */", //
                     "const MSG_HELLO = goog.getMsg('hello');",
                     "function f() { return MSG_HELLO; }",
-                    "console.log(f());",
+                    // Use `Error()` in order to make sure we generate a non-empty
+                    // compiler.stringMap, so we can confirm it is saved and restored.
+                    "console.log(Error('string to replace'), f());",
                     "")));
     compiler.init(externs, srcs, options);
 
@@ -1283,7 +1288,9 @@ public final class CompilerTest {
     assertThat(source)
         .isEqualTo(
             concatStrings(
-                "console.log(__jscomp_define_msg__(",
+                "console.log(",
+                "Error(\"a\"),", // replaceStrings obfuscated this
+                "__jscomp_define_msg__(",
                 "{\"key\":\"MSG_HELLO\",\"msg_text\":\"hello\"}",
                 "));"));
 
@@ -1294,8 +1301,14 @@ public final class CompilerTest {
     restoreCompilerState(compiler, stateAfterOptimizations);
 
     compiler.performFinalizations();
+
+    final Result result = compiler.getResult();
+    // confirm that the string map was built with a mapping from an obfuscated string to
+    // the string used in the Error() call above.
+    assertThat(result.stringMap.toMap()).containsExactly("a", "string to replace");
+
     source = compiler.toSource();
-    assertThat(source).isEqualTo("console.log(\"hello\");");
+    assertThat(source).isEqualTo("console.log(Error(\"a\"),\"hello\");");
   }
 
   private String concatStrings(String... strings) {

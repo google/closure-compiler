@@ -3573,6 +3573,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final LinkedHashSet<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
+    private final VariableMap stringMap;
 
     CompilerState(Compiler compiler) {
       this.featureSet = checkNotNull(compiler.featureSet);
@@ -3598,6 +3599,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               ? compiler.jsRoot.getFirstChild().getIndexOfChild(compiler.lastInjectedLibrary)
               : -1;
       this.accessorSummary = compiler.accessorSummary;
+      this.stringMap = compiler.getStringMap();
     }
   }
 
@@ -3703,7 +3705,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     cssNames = compilerState.cssNames;
     variableMap = null;
     propertyMap = null;
-    stringMap = null;
+    stringMap = compilerState.stringMap;
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
