@@ -1,3 +1,6 @@
+# proto-file: third_party/java_src/rhino_ast/java/com/google/javascript/rhino/typed_ast/typed_ast.proto
+# proto-message: jscomp.NonLazyTypedAst.List
+
 typed_asts {
   type_pool {
     type {
