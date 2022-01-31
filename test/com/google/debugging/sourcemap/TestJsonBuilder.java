@@ -80,7 +80,7 @@ final class TestJsonBuilder {
         ImmutableMap.<String, Object>builder()
             .put("offset", ImmutableMap.of("line", 1, "column", 2))
             .put("map", map.build())
-            .build());
+            .buildOrThrow());
     internal.put("sections", sections.build());
     return this;
   }
@@ -91,7 +91,7 @@ final class TestJsonBuilder {
   }
 
   ImmutableMap<String, ?> build() {
-    return internal.build();
+    return internal.buildOrThrow();
   }
 
   private TestJsonBuilder() {}
