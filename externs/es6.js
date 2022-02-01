@@ -710,10 +710,10 @@ function Int8Array(length, opt_byteOffset, opt_length) {}
 Int8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Int8Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -743,10 +743,10 @@ function Uint8Array(length, opt_byteOffset, opt_length) {}
 Uint8Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Uint8Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -776,10 +776,10 @@ function Uint8ClampedArray(length, opt_byteOffset, opt_length) {}
 Uint8ClampedArray.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Uint8ClampedArray}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -818,10 +818,10 @@ function Int16Array(length, opt_byteOffset, opt_length) {}
 Int16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Int16Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -851,10 +851,10 @@ function Uint16Array(length, opt_byteOffset, opt_length) {}
 Uint16Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Uint16Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -884,10 +884,10 @@ function Int32Array(length, opt_byteOffset, opt_length) {}
 Int32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Int32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -917,10 +917,10 @@ function Uint32Array(length, opt_byteOffset, opt_length) {}
 Uint32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Uint32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -950,10 +950,10 @@ function Float32Array(length, opt_byteOffset, opt_length) {}
 Float32Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Float32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -983,10 +983,10 @@ function Float64Array(length, opt_byteOffset, opt_length) {}
 Float64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<number>|!Iterable<number>} source
- * @param {function(this:S, number): number=} opt_mapFn
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): number=} opt_mapFn
  * @param {S=} opt_this
- * @template S
+ * @template T,S
  * @return {!Float64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -1016,14 +1016,14 @@ function BigInt64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
 BigInt64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
- * @param {function(this:S, bigint): bigint=} mapFn
- * @param {S=} thisArg
- * @template S
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): bigint=} opt_mapFn
+ * @param {S=} opt_this
+ * @template T,S
  * @return {!BigInt64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-BigInt64Array.from = function(source, mapFn, thisArg) {};
+BigInt64Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...bigint} var_args
@@ -1049,14 +1049,14 @@ function BigUint64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
 BigUint64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
- * @param {function(this:S, bigint): bigint=} mapFn
- * @param {S=} thisArg
- * @template S
+ * @param {string|!IArrayLike<T>|!Iterable<T>} source
+ * @param {function(this:S, (string|T), number): bigint=} opt_mapFn
+ * @param {S=} opt_this
+ * @template T,S
  * @return {!BigUint64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-BigUint64Array.from = function(source, mapFn, thisArg) {};
+BigUint64Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...bigint} var_args
