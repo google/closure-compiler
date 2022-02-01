@@ -761,7 +761,7 @@ public final class SymbolTable {
     // let foo = {a: 1, b: 2};
     // foo declares property scope with a and b as its children. When removing foo we should also
     // remove a and b.
-    if (s.propertyScope != null && s.propertyScope.getSymbolForScope().equals(s)) {
+    if (s.propertyScope != null && s.equals(s.propertyScope.getSymbolForScope())) {
       // Need to iterate over copy of values list because removeSymbol() will change the map
       // and we'll get ConcurrentModificationException
       for (Symbol childSymbol : ImmutableList.copyOf(s.propertyScope.ownSymbols.values())) {
@@ -1556,6 +1556,12 @@ public final class SymbolTable {
         if (!symbolAlreadyRemoved) {
           removeSymbol(symbol);
         }
+      } else if (symbol.getDeclarationNode() != null
+          && symbol.getDeclarationNode().isModuleBody()) {
+        // Symbols that represent whole module (goog.module) aren't needed for indexing. We already
+        // recorded imports/references of that module in fillGoogProvideModuleRequires() function.
+        // Individual exported functions/variables also have their own symbols.
+        removeSymbol(symbol);
       }
     }
     mergeExternSymbolsDuplicatedOnWindow();
