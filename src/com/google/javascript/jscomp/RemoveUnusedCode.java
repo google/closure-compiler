@@ -2758,29 +2758,33 @@ class RemoveUnusedCode implements CompilerPass {
           NodeUtil.markFunctionsDeleted(arg, compiler);
         }
       }
-      // NOTE: The call must either be its own statement or the LHS of a comma expression,
-      // because it doesn't have a meaningful return value.
+
+      // This can be part of an arbitrary expression but the results must be unused.
       if (replacement != null) {
         replaceNodeWith(callNode, replacement);
       } else if (parent.isExprResult()) {
         NodeUtil.deleteNode(parent, compiler);
       } else {
-        checkState(parent.isComma());
-        if (parent.getFirstChild() == callNode) {
-          // `(goog.inherits(A, B), something)` -> `something`
-          Node rhs = checkNotNull(callNode.getNext());
-          compiler.reportChangeToEnclosingScope(parent);
-          parent.replaceWith(rhs.detach());
+        // We have been asked to remove the value inside an expression. This will only happen if
+        // we know the result of this sub-expression is otherwise unused (doesn't change the result
+        // of the expression when removed).
+        if (parent.isComma() || parent.isAnd() || parent.isOr()) {
+          if (parent.getFirstChild() == callNode) {
+            // `(goog.inherits(A, B), something)` -> `something`
+            Node rhs = checkNotNull(callNode.getNext());
+            compiler.reportChangeToEnclosingScope(parent);
+            parent.replaceWith(rhs.detach());
+          } else {
+            // `(something, Object.defineProperties(A, B))` -> `something`
+            Node lhs = parent.getFirstChild();
+            compiler.reportChangeToEnclosingScope(parent);
+            parent.replaceWith(lhs.detach());
+          }
         } else {
-
-          // As we have been asked to remove the RHS of the comma expression, we know the value is
-          // unused, as such it is safe to expose the LHS's value as the result of the
-          // expression.
-
-          // `(something, Object.defineProperties(A, B))` -> `something`
-          Node lhs = parent.getFirstChild();
+          // `x ? Object.defineProperties(A, B) : something` -> `x ? 0 : something`
+          // Leave simplifying arbitrary expressions to the peephole passes.
           compiler.reportChangeToEnclosingScope(parent);
-          parent.replaceWith(lhs.detach());
+          callNode.replaceWith(IR.number(0));
         }
       }
     }

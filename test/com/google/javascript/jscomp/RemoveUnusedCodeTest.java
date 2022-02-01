@@ -3229,4 +3229,58 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "alert(a);"),
         lines("function a() {", "}; ", "alert(a);"));
   }
+
+  @Test
+  public void testRemovalFromRHSOfAND() {
+    test(
+        lines(
+            "function a() {",
+            "    var a = {};",
+            "    var CONDITION = true;",
+            "    CONDITION && Object.defineProperties(a, b);",
+            "}; ",
+            "alert(a);"),
+        lines(
+            "function a() {", //
+            "  var CONDITION = true;",
+            "  CONDITION;",
+            "};",
+            "alert(a);"));
+  }
+
+  @Test
+  public void testRemovalFromRHSOfOR() {
+    test(
+        lines(
+            "function a() {",
+            "    var a = {};",
+            "    var CONDITION = true;",
+            "    CONDITION || Object.defineProperties(a, b);",
+            "}; ",
+            "alert(a);"),
+        lines(
+            "function a() {", //
+            "  var CONDITION = true;",
+            "  CONDITION;",
+            "};",
+            "alert(a);"));
+  }
+
+  @Test
+  public void testRemovalFromExpression() {
+    test(
+        lines(
+            "function a() {",
+            "    var a = {};",
+            "    var CONDITION = true;",
+            "    CONDITION ? Object.defineProperties(a, b) : 'something';",
+            "}; ",
+            "alert(a);"),
+        lines(
+            "function a() {", //
+            "  var CONDITION = true;",
+            "  CONDITION ? 0 : 'something';",
+            "};",
+            "alert(a);"));
+  }
 }
