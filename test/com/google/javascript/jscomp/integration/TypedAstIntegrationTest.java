@@ -306,6 +306,32 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         .isEqualTo(expectedRoot);
   }
 
+  @Test
+  public void runsJ2clOptimizations() throws IOException {
+    SourceFile f =
+        SourceFile.fromCode(
+            "f.java.js",
+            lines(
+                "function InternalWidget(){}",
+                "InternalWidget.$clinit = function () {",
+                "  InternalWidget.$clinit = function() {};",
+                "  InternalWidget.$clinit();",
+                "};",
+                "InternalWidget.$clinit();"));
+    sourceFiles.add(f);
+    precompileLibrary(f);
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)

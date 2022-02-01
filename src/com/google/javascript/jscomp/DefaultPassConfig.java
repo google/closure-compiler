@@ -513,6 +513,11 @@ public final class DefaultPassConfig extends PassConfig {
       // it would be safe to always recompute side effects even if not using precompiled libraries
       // (the else case) but it's unecessary so skip it to improve build times.
       passes.add(checkRegExpForOptimizations);
+
+      // This runs during getChecks(), so only needs to be run here if using precompiled .typedasts
+      if (options.j2clPassMode.shouldAddJ2clPasses()) {
+        passes.add(j2clSourceFileChecker);
+      }
     } else {
       addNonTypedAstNormalizationPasses(passes);
     }
