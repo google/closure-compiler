@@ -322,6 +322,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   private static void reportInvalidRequirement(
       AbstractCompiler compiler, Requirement requirement, String reason) {
     compiler.report(
-        JSError.make(INVALID_REQUIREMENT_SPEC, reason, TextFormat.printToString(requirement)));
+        JSError.make(
+            INVALID_REQUIREMENT_SPEC, reason, TextFormat.printer().printToString(requirement)));
   }
 }
