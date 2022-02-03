@@ -1016,11 +1016,10 @@ function BigInt64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
 BigInt64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<T>|!Iterable<T>} source
- * @param {function(this:S, (string|T), number): bigint=} opt_mapFn
+ * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
+ * @param {function(this:S, ?, number): bigint=} opt_mapFn
  * @param {S=} opt_this
- * @template T,S
- * @throws {Error}
+ * @template S
  * @return {!BigInt64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
@@ -1050,11 +1049,10 @@ function BigUint64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
 BigUint64Array.BYTES_PER_ELEMENT;
 
 /**
- * @param {string|!IArrayLike<T>|!Iterable<T>} source
- * @param {function(this:S, (string|T), number): bigint=} opt_mapFn
+ * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
+ * @param {function(this:S, ?, number): bigint=} opt_mapFn
  * @param {S=} opt_this
- * @template T,S
- * @throws {Error}
+ * @template S
  * @return {!BigUint64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
