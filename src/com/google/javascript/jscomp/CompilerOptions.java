@@ -36,7 +36,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -130,63 +129,44 @@ public class CompilerOptions implements Serializable {
    */
   private class BrowserFeaturesetYear implements Serializable {
 
-    private Integer year = 0;
+    final int year;
 
-    public Integer getYear() {
-      return this.year;
+    BrowserFeaturesetYear(int year) {
+      checkState(
+          year == 2012 || (year >= 2018 && year <= 2022),
+          "Illegal browser_featureset_year=%s. We support values 2012, or 2018..2022 only",
+          year);
+      this.year = year;
     }
 
-    public void setYear(Integer inputYear) {
-      this.year = inputYear;
-      this.setDependentValuesFromYear();
-    }
-
-    public void setDependentValuesFromYear() {
-      if (year != 0) {
-        if (year == 2021) {
-          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2021);
-        } else if (year == 2020) {
-          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2020);
-        } else if (year == 2019) {
-          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
-        } else if (year == 2018) {
-          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2016);
-        } else if (year == 2012) {
-          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
-        }
+    void setDependentValuesFromYear() {
+      if (year == 2022) {
+        setOutputFeatureSet(FeatureSet.BROWSER_2022);
+      } else if (year == 2021) {
+        setOutputFeatureSet(FeatureSet.BROWSER_2021);
+      } else if (year == 2020) {
+        setOutputFeatureSet(FeatureSet.BROWSER_2020);
+      } else if (year == 2019) {
+        setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+      } else if (year == 2018) {
+        setLanguageOut(LanguageMode.ECMASCRIPT_2016);
+      } else if (year == 2012) {
+        setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
       }
+      setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
     }
   }
 
   /** Represents browserFeaturesetYear to use for compilation */
-  private final BrowserFeaturesetYear browserFeaturesetYear;
+  @Nullable private BrowserFeaturesetYear browserFeaturesetYear;
 
-  public Integer getBrowserFeaturesetYear() {
-    return this.browserFeaturesetYear.getYear();
+  public int getBrowserFeaturesetYear() {
+    return this.browserFeaturesetYear != null ? this.browserFeaturesetYear.year : 0;
   }
 
-  /**
-   * Validates whether browser featureset year option is legal
-   *
-   * @param inputYear Integer value passed as input
-   */
-  public void validateBrowserFeaturesetYearOption(Integer inputYear) {
-    checkState(
-        inputYear == 2021
-            || inputYear == 2020
-            || inputYear == 2019
-            || inputYear == 2018
-            || inputYear == 2012,
-        SimpleFormat.format(
-            "Illegal browser_featureset_year=%d. We support values 2012, 2018, 2019, 2020 and 2021"
-                + " only",
-            inputYear));
-  }
-
-  public void setBrowserFeaturesetYear(Integer year) {
-    validateBrowserFeaturesetYearOption(year);
-    this.browserFeaturesetYear.setYear(year);
-    this.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
+  public void setBrowserFeaturesetYear(int year) {
+    this.browserFeaturesetYear = new BrowserFeaturesetYear(year);
+    browserFeaturesetYear.setDependentValuesFromYear();
   }
 
   /**
@@ -1284,7 +1264,6 @@ public class CompilerOptions implements Serializable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.STABLE_IN;
-    browserFeaturesetYear = new BrowserFeaturesetYear();
 
     // Which environment to use
     environment = Environment.BROWSER;

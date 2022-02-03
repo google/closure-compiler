@@ -2814,7 +2814,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private Integer browserFeaturesetYear = 0;
+    private int browserFeaturesetYear = 0;
 
     /** Indicates target browser's year */
     public CommandLineConfig setBrowserFeaturesetYear(Integer browserFeaturesetYear) {

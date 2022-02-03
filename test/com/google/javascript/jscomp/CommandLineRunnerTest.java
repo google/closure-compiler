@@ -667,9 +667,8 @@ public final class CommandLineRunnerTest {
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
     assertThat(e)
         .hasMessageThat()
-        .isEqualTo(
-            "Illegal browser_featureset_year=2011. We support values 2012, 2018, 2019, 2020 and"
-                + " 2021 only");
+        .matches(
+            "Illegal browser_featureset_year=2011. We support values 2012, or 2018..\\d{4} only");
   }
 
   /** Giving a browser featureset year between 2012 and 2018 reports error */
@@ -679,9 +678,8 @@ public final class CommandLineRunnerTest {
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
     assertThat(e)
         .hasMessageThat()
-        .isEqualTo(
-            "Illegal browser_featureset_year=2015. We support values 2012, 2018, 2019, 2020 and"
-                + " 2021 only");
+        .matches(
+            "Illegal browser_featureset_year=2015. We support values 2012, or 2018..\\d{4} only");
   }
 
   /** Giving a future year as the browser featureset year reports error */
@@ -693,10 +691,10 @@ public final class CommandLineRunnerTest {
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
     assertThat(e)
         .hasMessageThat()
-        .isEqualTo(
+        .matches(
             "Illegal browser_featureset_year="
                 + higherThanCurrentYear
-                + ". We support values 2012, 2018, 2019, 2020 and 2021 only");
+                + ". We support values 2012, or 2018..\\d{4} only");
   }
 
   /** Check that --browser_featureset_year = 2012 correctly sets the language out */
