@@ -321,12 +321,17 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       String functionNameString = callTarget.getString();
       Node firstArgument = callTarget.getNext();
       if ((firstArgument != null)
-          && (firstArgument.isStringLit() || firstArgument.isNumber())
+          && (firstArgument.isStringLit() || isNumericLiteral(firstArgument))
           && (functionNameString.equals("parseInt") || functionNameString.equals("parseFloat"))) {
         subtree = tryFoldParseNumber(subtree, functionNameString, firstArgument);
       }
     }
     return subtree;
+  }
+
+  /** Returns true both for number literals and their negations (e.g. `-12.3`). */
+  private boolean isNumericLiteral(Node n) {
+    return n.isNumber() || (n.isNeg() && n.getOnlyChild().isNumber());
   }
 
   /**
@@ -456,7 +461,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // stringVal must be a valid string.
     String stringVal = null;
     Double checkVal;
-    if (firstArg.isNumber()) {
+    if (isNumericLiteral(firstArg)) {
       checkVal = getSideEffectFreeNumberValue(firstArg);
       if (!(radix == 0 || radix == 10) && isParseInt) {
         // Convert a numeric first argument to a different base
@@ -468,9 +473,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         // is 10 or omitted, just replace it with the number
         Node numericNode;
         if (isParseInt) {
-          numericNode = NodeUtil.numberNode(checkVal.intValue(), null);
+          numericNode = NodeUtil.numberNode(checkVal.intValue(), n);
         } else {
-          numericNode = NodeUtil.numberNode(checkVal, null);
+          numericNode = NodeUtil.numberNode(checkVal, n);
         }
         n.replaceWith(numericNode);
         reportChangeToEnclosingScope(numericNode);
@@ -523,12 +528,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         return n;
       }
 
-      newNode = NodeUtil.numberNode(newVal, null);
+      newNode = NodeUtil.numberNode(newVal, n);
     } else {
       String normalizedNewVal = "0";
       try {
         double newVal = Double.parseDouble(stringVal);
-        newNode = NodeUtil.numberNode(newVal, null);
+        newNode = NodeUtil.numberNode(newVal, n);
         normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
       } catch (NumberFormatException e) {
         return n;
@@ -580,7 +585,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         isIndexOf
             ? lstring.indexOf(searchValue, fromIndex)
             : lstring.lastIndexOf(searchValue, fromIndex);
-    Node newNode = NodeUtil.numberNode(indexVal, null);
+    Node newNode = NodeUtil.numberNode(indexVal, n);
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
 

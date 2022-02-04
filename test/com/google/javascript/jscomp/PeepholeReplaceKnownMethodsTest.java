@@ -79,6 +79,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testStringIndexOf() {
+    fold("x = 'abcdef'.indexOf('g')", "x = -1");
     fold("x = 'abcdef'.indexOf('b')", "x = 1");
     fold("x = 'abcdefbe'.indexOf('b', 2)", "x = 6");
     fold("x = 'abcdef'.indexOf('bcd')", "x = 1");
@@ -634,6 +635,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('0')", "x = 0");
     fold("x = parseFloat('0')", "x = 0");
     fold("x = parseFloat('1.23')", "x = 1.23");
+    fold("x = parseFloat('-1.23')", "x = -1.23");
     fold("x = parseFloat('1.2300')", "x = 1.23");
     fold("x = parseFloat(' 0.3333')", "x = 0.3333");
     fold("x = parseFloat('0100')", "x = 100");
@@ -647,8 +649,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('1111', 2)", "x = 15");
     fold("x = parseInt('12', 13)", "x = 15");
     fold("x = parseInt(15.99, 10)", "x = 15");
+    fold("x = parseInt(-15.99, 10)", "x = -15");
+    // Java's Integer.parseInt("-15.99", 10) throws an exception, because of the decimal point.
+    foldSame("x = parseInt('-15.99', 10)");
     fold("x = parseFloat('3.14')", "x = 3.14");
     fold("x = parseFloat(3.14)", "x = 3.14");
+    fold("x = parseFloat(-3.14)", "x = -3.14");
+    fold("x = parseFloat('-3.14')", "x = -3.14");
 
     // Valid calls - unable to fold
     foldSame("x = parseInt('FXX123', 16)");
@@ -673,9 +680,9 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldParseOctalNumbers() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    setExpectParseWarningsInThisTest();
 
-    fold("x = parseInt(021, 8)", "x = 15");
+    fold("x = parseInt('021', 8)", "x = 17");
+    fold("x = parseInt('-021', 8)", "x = -17");
   }
 
   @Test
