@@ -1824,6 +1824,30 @@ CSSProperties.prototype.textDecoration;
 
 /**
  * @type {string}
+ * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-line-property
+ */
+CSSProperties.prototype.textDecorationLine;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-style-property
+ */
+CSSProperties.prototype.textDecorationStyle;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-color-property
+ */
+CSSProperties.prototype.textDecorationColor;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-text-decor-3/#text-underline-position-property
+ */
+CSSProperties.prototype.textDecorationPosition;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textIndent
  */
 CSSProperties.prototype.textIndent;
