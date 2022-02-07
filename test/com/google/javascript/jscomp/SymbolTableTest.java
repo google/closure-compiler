@@ -67,8 +67,7 @@ public final class SymbolTableTest {
     options.setPreserveClosurePrimitives(true);
     options.setContinueAfterErrors(true);
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(true);
-    options.setBadRewriteProvidesInChecksOnlyThatWeWantToGetRidOf(true);
+    options.setEnableModuleRewriting(false);
   }
 
   /**
@@ -140,11 +139,13 @@ public final class SymbolTableTest {
 
     Symbol foo = getGlobalVar(table, "foo");
     assertThat(foo).isNotNull();
-    assertNode(table.getReferenceList(foo).get(0).getNode()).hasCharno(14);
+    // goog.provide doesn't define foo. Instead foo is declared by the firts occurence in actual
+    // code.
+    assertNode(table.getReferenceList(foo).get(0).getNode()).hasCharno(29);
 
     Symbol fooBar = getGlobalVar(table, "foo.bar");
     assertThat(fooBar).isNotNull();
-    assertNode(table.getReferenceList(fooBar).get(0).getNode()).hasCharno(18);
+    assertNode(table.getReferenceList(fooBar).get(0).getNode()).hasCharno(33);
 
     Symbol fooBarBaz = getGlobalVar(table, "foo.bar.Baz");
     assertThat(fooBarBaz).isNotNull();
@@ -361,7 +362,7 @@ public final class SymbolTableTest {
   public void testNamespaceReferencesInGoogRequire() {
     SymbolTable table =
         createSymbolTable(lines("goog.provide('my.dom');", "goog.require('my.dom');"));
-    Symbol googRequire = getGlobalVar(table, "my");
+    Symbol googRequire = getGlobalVar(table, "ns$my.dom");
     assertThat(googRequire).isNotNull();
 
     assertThat(table.getReferences(googRequire)).hasSize(2);
@@ -411,8 +412,6 @@ public final class SymbolTableTest {
 
   private void verifySymbolReferencedInSecondFile(
       String firstFile, String secondFile, String symbolName) {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
     SymbolTable table = createSymbolTableFromManySources(firstFile, secondFile);
     Symbol symbol =
         table.getAllSymbols().stream()
@@ -446,8 +445,6 @@ public final class SymbolTableTest {
 
   @Test
   public void testGoogRequiredSymbolsConnectedToDefinitions_requireType() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
     SymbolTable table =
         createSymbolTableFromManySources(
             lines("goog.module('some.bar');", "const {one} = goog.requireType('some.foo');"),
@@ -474,9 +471,7 @@ public final class SymbolTableTest {
   }
 
   @Test
-  public void testDisableModuleRewriteNestedGoogProvides() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
+  public void testNestedGoogProvides() {
     SymbolTable table =
         createSymbolTableFromManySources(
             lines(
@@ -568,8 +563,6 @@ public final class SymbolTableTest {
 
   @Test
   public void testClassPropertiesDisableModuleRewriting() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
     SymbolTable table =
         createSymbolTableFromManySources(
             lines(
@@ -595,9 +588,7 @@ public final class SymbolTableTest {
   }
 
   @Test
-  public void testEnumsWithDisableRewriting() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
+  public void testEnums() {
     SymbolTable table =
         createSymbolTableFromManySources(
             lines(
@@ -617,9 +608,7 @@ public final class SymbolTableTest {
   }
 
   @Test
-  public void testEnumsWithDirectExportWithDisableRewriting() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setEnableModuleRewriting(false);
+  public void testEnumsWithDirectExport() {
     SymbolTable table =
         createSymbolTableFromManySources(
             lines(
@@ -1699,25 +1688,6 @@ public final class SymbolTableTest {
       refsPerFile.put(file, refsPerFile.getOrDefault(file, 0) + 1);
     }
     assertThat(refsPerFile).containsExactly("in1", 2, "externs1", 1);
-  }
-
-  @Test
-  public void testMethodUsageWithBadRewriteDisable() {
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    SymbolTable table =
-        createSymbolTable(
-            lines(
-                "goog.module('some.module');",
-                "class Apple {eat(){}}",
-                "const /** !Apple */ apple = new Apple();",
-                "apple.eat();"),
-            "");
-    for (Symbol symbol : getVars(table)) {
-      if (symbol.getName().equals("eat")) {
-        // TODO(b/1914393990): there should be 2 references to 'eat()', on line 2 and line 4.
-        assertThat(table.getReferences(symbol)).hasSize(1);
-      }
-    }
   }
 
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
