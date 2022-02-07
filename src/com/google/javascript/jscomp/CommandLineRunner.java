@@ -841,6 +841,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean rewritePolyfills = true;
 
     @Option(
+        name = "--isolate_polyfills",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Hides injected polyfills from the global scope and any external code. See the"
+                + " the \"Polyfills\" GitHub Wiki page for details.")
+    private boolean isolatePolyfills = false;
+
+    @Option(
         name = "--print_source_after_each_pass",
         handler = BooleanOptionHandler.class,
         hidden = true,
@@ -1023,7 +1031,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "inject_libraries",
                     "polymer_version",
                     "process_closure_primitives",
-                    "rewrite_polyfills"))
+                    "rewrite_polyfills",
+                    "isolate_polyfills"))
             .putAll(
                 "Code Splitting",
                 ImmutableList.of(
@@ -1923,6 +1932,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.rewritePolyfills =
         flags.rewritePolyfills
             && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES2015);
+    options.setIsolatePolyfills(flags.isolatePolyfills);
 
     if (!flags.translationsFile.isEmpty()) {
       try {

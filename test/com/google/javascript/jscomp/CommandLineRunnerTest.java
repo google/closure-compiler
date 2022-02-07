@@ -2961,6 +2961,20 @@ public final class CommandLineRunnerTest {
     assertThat(lastCompiler.getOptions().getAssumeStaticInheritanceIsNotUsed()).isFalse();
   }
 
+  @Test
+  public void testRewriteAndIsolatePolyfills() {
+    testSame("");
+
+    assertThat(lastCompiler.getOptions().getRewritePolyfills()).isTrue();
+    assertThat(lastCompiler.getOptions().getIsolatePolyfills()).isFalse();
+
+    args.add("--isolate_polyfills=true");
+    testSame("");
+
+    assertThat(lastCompiler.getOptions().getRewritePolyfills()).isTrue();
+    assertThat(lastCompiler.getOptions().getIsolatePolyfills()).isTrue();
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
