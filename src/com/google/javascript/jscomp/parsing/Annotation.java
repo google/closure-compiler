@@ -48,6 +48,8 @@ enum Annotation {
   IMPLICIT_CAST,
   INHERIT_DOC,
   INTERFACE,
+  JSX,
+  JSX_FRAGMENT,
   LENDS,
   LICENSE, // same as preserve
   LOCALE_FILE,

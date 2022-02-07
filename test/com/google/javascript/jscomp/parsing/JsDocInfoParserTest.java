@@ -5137,6 +5137,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @hassoydeltemplate \n"
             + "* @id \n"
             + "* @ignore \n"
+            + "* @jsx \n"
+            + "* @jsxFrag \n"
             + "* @inner \n"
             + "* @lends {string} \n"
             + "* @link \n"

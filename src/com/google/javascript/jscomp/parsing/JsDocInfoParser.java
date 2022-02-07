@@ -1020,6 +1020,8 @@ public final class JsDocInfoParser {
         case IDGENERATOR:
           token = parseIdGeneratorTag(next());
           return token;
+        case JSX:
+        case JSX_FRAGMENT:
         case SOY_MODULE:
         case SOY_TEMPLATE:
           return eatUntilEOLIfNotAnnotation();
