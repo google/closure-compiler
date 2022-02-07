@@ -483,10 +483,6 @@ public final class DefaultPassConfig extends PassConfig {
     // See b/180424427 for why this runs in stage 1 and not stage 2.
     checks.add(gatherExternPropertiesCheck);
 
-    if (options.checksOnly && options.closurePass && options.shouldRewriteProvidesInChecksOnly()) {
-      checks.add(closureProvidesRequires);
-    }
-
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 

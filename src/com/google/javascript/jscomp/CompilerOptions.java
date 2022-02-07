@@ -1192,18 +1192,6 @@ public class CompilerOptions implements Serializable {
     return this.enableModuleRewriting;
   }
 
-  private boolean rewriteProvidesInChecksOnly;
-
-  public void setBadRewriteProvidesInChecksOnlyThatWeWantToGetRidOf(boolean b) {
-    this.rewriteProvidesInChecksOnly = b;
-  }
-
-  boolean shouldRewriteProvidesInChecksOnly() {
-    // Disabling module rewriting automatically disables provide rewriting, as provide rewriting
-    // must happen after module rewriting.
-    return this.rewriteProvidesInChecksOnly && this.shouldRewriteModules();
-  }
-
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ResolutionMode moduleResolutionMode;
 
@@ -1274,7 +1262,6 @@ public class CompilerOptions implements Serializable {
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
     rewriteModulesBeforeTypechecking = false;
-    rewriteProvidesInChecksOnly = false;
     enableModuleRewriting = true;
 
     // Checks
