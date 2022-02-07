@@ -840,9 +840,9 @@ public final class ConformanceRules {
             Node parent = n.getParent();
             switch (parent.getToken()) {
               case OBJECT_PATTERN:
+              case OBJECTLIT:
                 return parent.getJSType();
 
-              case OBJECTLIT:
               case CLASS_MEMBERS:
                 return null;
 
