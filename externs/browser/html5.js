@@ -4007,6 +4007,14 @@ DOMTokenList.prototype.values = function() {};
 Element.prototype.classList;
 
 /**
+ * Requests to submit the form.
+ * @param {?HTMLElement=} submitter Submit button, whose attributes can impact
+ *     submission.
+ * @see https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit-dev
+ */
+HTMLFormElement.prototype.requestSubmit = function(submitter) {};
+
+/**
  * Constraint Validation API properties and methods
  * @see http://www.w3.org/TR/2009/WD-html5-20090423/forms.html#the-constraint-validation-api
  */
