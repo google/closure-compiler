@@ -338,11 +338,6 @@ public class JSDocInfo implements Serializable {
     MIXIN_CLASS,
     MIXIN_FUNCTION,
 
-    LOCALE_FILE,
-    LOCALE_SELECT,
-    LOCALE_OBJECT,
-    LOCALE_VALUE,
-
     // `@provideGoog` only appears in base.js
     PROVIDE_GOOG;
 
@@ -852,26 +847,6 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isPureOrBreakMyCode() {
     return checkBit(Bit.PURE_OR_BREAK_MY_CODE);
-  }
-
-  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
-  public boolean isLocaleFile() {
-    return checkBit(Bit.LOCALE_FILE);
-  }
-
-  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
-  public boolean isLocaleSelect() {
-    return checkBit(Bit.LOCALE_SELECT);
-  }
-
-  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
-  public boolean isLocaleObject() {
-    return checkBit(Bit.LOCALE_OBJECT);
-  }
-
-  /** Returns whether the {@code @localeFile} annotation is present on this {@link JSDocInfo}. */
-  public boolean isLocaleValue() {
-    return checkBit(Bit.LOCALE_VALUE);
   }
 
   /** Returns whether the {@code @provideGoog} annotation is present on this {@link JSDocInfo}. */
@@ -2286,50 +2261,6 @@ public class JSDocInfo implements Serializable {
           && !isConstructorOrInterface()
           && populateBit(Bit.RECORD, true)
           && populateBit(Bit.INTERFACE, true);
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
-     * set to {@code true}.
-     *
-     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
-     *     recorded
-     */
-    public boolean recordLocaleFile() {
-      return populateBit(Bit.LOCALE_FILE, true);
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
-     * set to {@code true}.
-     *
-     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
-     *     recorded
-     */
-    public boolean recordLocaleObject() {
-      return populateBit(Bit.LOCALE_OBJECT, true);
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
-     * set to {@code true}.
-     *
-     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
-     *     recorded
-     */
-    public boolean recordLocaleValue() {
-      return populateBit(Bit.LOCALE_VALUE, true);
-    }
-
-    /**
-     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#xxx()} flag
-     * set to {@code true}.
-     *
-     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
-     *     recorded
-     */
-    public boolean recordLocaleSelect() {
-      return populateBit(Bit.LOCALE_SELECT, true);
     }
 
     public boolean recordProvideGoog() {

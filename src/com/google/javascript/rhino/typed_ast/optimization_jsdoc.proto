@@ -61,15 +61,8 @@ enum JsdocTag {
   JSDOC_COLLAPSIBLE_OR_BREAK_MY_CODE = 25;
 
   // Used by unit tests
-  JSDOC_FILEOVERVIEW = 26;
+  JSDOC_FILEOVERVIEW = 26;  // Used to specially mark the base.js file.
 
-  // Used by localization logic
-  JSDOC_LOCALE_FILE = 27;
-  JSDOC_LOCALE_OBJECT = 28;
-  JSDOC_LOCALE_SELECT = 29;
-  JSDOC_LOCALE_VALUE = 30;
-
-  // Used to specially mark the base.js file.
   JSDOC_PROVIDE_GOOG = 31;
 
   // Used to identify type summary (i.js) files.

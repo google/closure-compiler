@@ -1169,20 +1169,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocaleFileOnScriptOK() {
-    testSame(
-        lines(
-            "/** @fileoverview", //
-            " * @localeFile",
-            " */"));
-  }
-
-  @Test
-  public void testLocaleFileNotOnScriptIsNotAllowed() {
-    testWarning("/** @fileoverview */ /** @localeFile */ var x;", MISPLACED_ANNOTATION);
-  }
-
-  @Test
   public void testConstructorFieldError_withTypeAnnotation() {
     testSame("class C { /** @constructor */ x = function() {}; }");
   }

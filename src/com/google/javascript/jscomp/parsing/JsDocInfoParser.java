@@ -698,29 +698,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case LOCALE_FILE:
-          if (!jsdocBuilder.recordLocaleFile()) {
-            addParserWarning(Msg.JSDOC_LOCALEFILE);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case LOCALE_OBJECT:
-          if (!jsdocBuilder.recordLocaleObject()) {
-            addParserWarning(Msg.JSDOC_LOCALEOBJECT);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case LOCALE_SELECT:
-          if (!jsdocBuilder.recordLocaleSelect()) {
-            addParserWarning(Msg.JSDOC_LOCALESELECT);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case LOCALE_VALUE:
-          if (!jsdocBuilder.recordLocaleValue()) {
-            addParserWarning(Msg.JSDOC_LOCALEVALUE);
-          }
-          return eatUntilEOLIfNotAnnotation();
 
         case PROVIDE_GOOG:
           if (!jsdocBuilder.recordProvideGoog()) {

@@ -66,19 +66,6 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_NO_COLLAPSE);
     }
 
-    if (jsdoc.isLocaleFile()) {
-      builder.addKind(JsdocTag.JSDOC_LOCALE_FILE);
-    }
-    if (jsdoc.isLocaleObject()) {
-      builder.addKind(JsdocTag.JSDOC_LOCALE_OBJECT);
-    }
-    if (jsdoc.isLocaleSelect()) {
-      builder.addKind(JsdocTag.JSDOC_LOCALE_SELECT);
-    }
-    if (jsdoc.isLocaleValue()) {
-      builder.addKind(JsdocTag.JSDOC_LOCALE_VALUE);
-    }
-
     if (jsdoc.isProvideGoog()) {
       builder.addKind(JsdocTag.JSDOC_PROVIDE_GOOG);
     }
@@ -246,19 +233,6 @@ public final class JSDocSerializer {
         case JSDOC_NO_INLINE:
           builder.recordNoInline();
           continue;
-        case JSDOC_LOCALE_FILE:
-          builder.recordLocaleFile();
-          continue;
-        case JSDOC_LOCALE_OBJECT:
-          builder.recordLocaleObject();
-          continue;
-        case JSDOC_LOCALE_SELECT:
-          builder.recordLocaleSelect();
-          continue;
-        case JSDOC_LOCALE_VALUE:
-          builder.recordLocaleValue();
-          continue;
-
         case JSDOC_PROVIDE_GOOG:
           builder.recordProvideGoog();
           continue;
