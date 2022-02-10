@@ -1961,6 +1961,9 @@ public final class SymbolTable {
       // here n is foo, propName is doSomething and owner is module type.
       if (owner.isObjectType() && owner.toMaybeObjectType() != null) {
         Node propNodeDecl = owner.assertObjectType().getPropertyNode(propName);
+        if (propNodeDecl == null) {
+          return false;
+        }
         // There is no handy way to find symbol object the given property node. So we do
         // property node => namespace node => namespace symbol => property symbol.
         if (propNodeDecl != null && propNodeDecl.isGetProp()) {
@@ -1973,6 +1976,22 @@ public final class SymbolTable {
               return true;
             }
           }
+        }
+
+        // Here handle the case of goog.module exports that have shape of:
+        //
+        // goog.module('foo.bar');
+        // function doOne() { ... }
+        // exports = {doOne};
+        //
+        // propNodeDecl is `doOne` node on the last line with exports. From that node and propName
+        // `doOne` we need to get symbol for the `function doOne`. To achieve that we get scope of
+        // `doOne` node which should be whole module scope and look for symbol with corresponding
+        // name. This relies on the assumption that function name in module scope exported name. But
+        // if export is renamed: `exports = {doOneRenamed: doOne}`, then this approach will fail.
+        SymbolScope propNodeDeclScope = getEnclosingScope(propNodeDecl);
+        if (propNodeDeclScope == null || !propNodeDeclScope.isModuleScope()) {
+          return false;
         }
         Symbol symbol = getSymbolForName(propNodeDecl, propName);
         if (symbol != null && symbol.getDeclarationNode() != n) {
