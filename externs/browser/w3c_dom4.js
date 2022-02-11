@@ -179,6 +179,27 @@ DocumentFragment.prototype.prepend = function(nodes) {};
 /**
  * @param {...(!Node|string)} nodes
  * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-replacechildren
+ */
+Element.prototype.replaceChildren = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-replacechildren
+ */
+Document.prototype.replaceChildren = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-replacechildren
+ */
+DocumentFragment.prototype.replaceChildren = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-childnode-before
  */
 Element.prototype.before = function(nodes) {};
