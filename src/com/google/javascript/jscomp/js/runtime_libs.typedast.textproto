@@ -11049,12 +11049,10 @@ typed_asts {
     strings: "opt_offset"
     strings: "opt_compareFunction"
     strings: "opt_byteOffset"
-    strings: "opt_mapFn"
-    strings: "opt_this"
-    strings: "lengthOrArrayOrBuffer"
-    strings: "bufferLength"
     strings: "mapFn"
     strings: "thisArg"
+    strings: "lengthOrArrayOrBuffer"
+    strings: "bufferLength"
     strings: "opt_byteLength"
     strings: "opt_littleEndian"
     strings: "littleEndian"
@@ -11065,6 +11063,8 @@ typed_asts {
     strings: "iterable"
     strings: "onRejected"
     strings: "arrayLike"
+    strings: "opt_mapFn"
+    strings: "opt_this"
     strings: "predicateFn"
     strings: "depth"
     strings: "getOwnPropertySymbols"
@@ -28211,14 +28211,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 17
             type: 392
@@ -28269,7 +28269,7 @@ typed_asts {
           type: 394
         }
         relative_line: 7
-        relative_column: -55
+        relative_column: -50
       }
       child {
         kind: FUNCTION_LITERAL
@@ -28373,14 +28373,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 18
             type: 398
@@ -28431,7 +28431,7 @@ typed_asts {
           type: 399
         }
         relative_line: 7
-        relative_column: -56
+        relative_column: -51
       }
       child {
         kind: FUNCTION_LITERAL
@@ -28535,14 +28535,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 25
             type: 403
@@ -28593,7 +28593,7 @@ typed_asts {
           type: 404
         }
         relative_line: 7
-        relative_column: -63
+        relative_column: -58
       }
       child {
         kind: VAR_DECLARATION
@@ -28708,14 +28708,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 18
             type: 408
@@ -28766,7 +28766,7 @@ typed_asts {
           type: 409
         }
         relative_line: 7
-        relative_column: -56
+        relative_column: -51
       }
       child {
         kind: FUNCTION_LITERAL
@@ -28870,14 +28870,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 19
             type: 413
@@ -28928,7 +28928,7 @@ typed_asts {
           type: 414
         }
         relative_line: 7
-        relative_column: -57
+        relative_column: -52
       }
       child {
         kind: FUNCTION_LITERAL
@@ -29032,14 +29032,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 18
             type: 418
@@ -29090,7 +29090,7 @@ typed_asts {
           type: 419
         }
         relative_line: 7
-        relative_column: -56
+        relative_column: -51
       }
       child {
         kind: FUNCTION_LITERAL
@@ -29194,14 +29194,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 19
             type: 423
@@ -29252,7 +29252,7 @@ typed_asts {
           type: 424
         }
         relative_line: 7
-        relative_column: -57
+        relative_column: -52
       }
       child {
         kind: FUNCTION_LITERAL
@@ -29356,14 +29356,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 20
             type: 428
@@ -29414,7 +29414,7 @@ typed_asts {
           type: 429
         }
         relative_line: 7
-        relative_column: -58
+        relative_column: -53
       }
       child {
         kind: FUNCTION_LITERAL
@@ -29518,14 +29518,14 @@ typed_asts {
               child {
                 kind: IDENTIFIER
                 string_value_pointer: 737
-                relative_column: 11
+                relative_column: 7
                 type: 0
               }
               relative_column: 8
             }
             child {
               kind: BLOCK
-              relative_column: 10
+              relative_column: 9
             }
             relative_column: 20
             type: 433
@@ -29576,7 +29576,7 @@ typed_asts {
           type: 434
         }
         relative_line: 7
-        relative_column: -58
+        relative_column: -53
       }
       child {
         kind: FUNCTION_LITERAL
@@ -29673,13 +29673,13 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 740
+                string_value_pointer: 736
                 relative_column: 8
                 type: 82
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 7
                 type: 0
               }
@@ -29835,13 +29835,13 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 740
+                string_value_pointer: 736
                 relative_column: 8
                 type: 82
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 7
                 type: 0
               }
@@ -29926,7 +29926,7 @@ typed_asts {
           }
           child {
             kind: IDENTIFIER
-            string_value_pointer: 742
+            string_value_pointer: 740
             relative_column: 16
             type: 48
           }
@@ -30088,7 +30088,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30147,7 +30147,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30206,7 +30206,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30265,7 +30265,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30324,7 +30324,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30383,7 +30383,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 12
                 type: 276
               }
@@ -30442,7 +30442,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 744
+                string_value_pointer: 742
                 relative_column: 12
                 type: 276
               }
@@ -30501,7 +30501,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 744
+                string_value_pointer: 742
                 relative_column: 12
                 type: 276
               }
@@ -30684,7 +30684,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -30749,7 +30749,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -30814,7 +30814,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -30879,7 +30879,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -30945,7 +30945,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -31011,7 +31011,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 743
+                string_value_pointer: 741
                 relative_column: 7
                 type: 276
               }
@@ -31076,7 +31076,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 744
+                string_value_pointer: 742
                 relative_column: 7
                 type: 276
               }
@@ -31141,7 +31141,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 744
+                string_value_pointer: 742
                 relative_column: 7
                 type: 276
               }
@@ -31228,13 +31228,13 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 745
+                string_value_pointer: 743
                 relative_column: 1
                 type: 82
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 746
+                string_value_pointer: 744
                 relative_column: 17
                 type: 82
               }
@@ -31264,7 +31264,7 @@ typed_asts {
           kind: PARAMETER_LIST
           child {
             kind: IDENTIFIER
-            string_value_pointer: 747
+            string_value_pointer: 745
             relative_column: 1
             type: 81
           }
@@ -31351,7 +31351,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 748
+                string_value_pointer: 746
                 relative_column: 1
                 type: 0
               }
@@ -31395,7 +31395,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 type: 18
               }
@@ -31439,7 +31439,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 type: 18
               }
@@ -31609,7 +31609,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 type: 18
               }
@@ -31652,7 +31652,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 type: 18
               }
@@ -31702,13 +31702,13 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 745
+                string_value_pointer: 743
                 relative_column: 1
                 type: 82
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 746
+                string_value_pointer: 744
                 relative_column: 17
                 type: 82
               }
@@ -31758,7 +31758,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 750
+                string_value_pointer: 748
                 relative_column: 1
                 type: 81
               }
@@ -31896,19 +31896,19 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 751
+                string_value_pointer: 749
                 relative_column: 1
                 type: 393
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 736
+                string_value_pointer: 750
                 relative_column: 11
                 type: 82
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 737
+                string_value_pointer: 751
                 relative_column: 11
                 type: 0
               }
@@ -32034,7 +32034,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 737
+                string_value_pointer: 751
                 relative_column: 13
                 type: 0
               }
@@ -32092,7 +32092,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 737
+                string_value_pointer: 751
                 relative_column: 13
                 type: 0
               }
@@ -32341,7 +32341,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 10
                 type: 0
               }
@@ -33228,7 +33228,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 10
                 type: 0
               }
@@ -42891,7 +42891,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 741
+                        string_value_pointer: 737
                         relative_column: 10
                         boolean_property: IS_INFERRED_CONSTANT
                         type: 0
@@ -42988,7 +42988,7 @@ typed_asts {
                                 }
                                 child {
                                   kind: IDENTIFIER
-                                  string_value_pointer: 741
+                                  string_value_pointer: 737
                                   relative_column: 14
                                   type: 0
                                 }
@@ -43294,13 +43294,13 @@ typed_asts {
                       kind: PARAMETER_LIST
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 751
+                        string_value_pointer: 749
                         relative_column: 1
                         type: 639
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 736
+                        string_value_pointer: 750
                         relative_column: 11
                         type: 82
                       }
@@ -43321,7 +43321,7 @@ typed_asts {
                           kind: ASSIGNMENT
                           child {
                             kind: IDENTIFIER
-                            string_value_pointer: 736
+                            string_value_pointer: 750
                             type: 7
                           }
                           child {
@@ -43330,7 +43330,7 @@ typed_asts {
                               kind: NOT_EQUAL
                               child {
                                 kind: IDENTIFIER
-                                string_value_pointer: 736
+                                string_value_pointer: 750
                                 type: 82
                               }
                               child {
@@ -43342,7 +43342,7 @@ typed_asts {
                             }
                             child {
                               kind: IDENTIFIER
-                              string_value_pointer: 736
+                              string_value_pointer: 750
                               relative_column: 7
                               type: 81
                             }
@@ -43451,7 +43451,7 @@ typed_asts {
                               kind: ELEMENT_ACCESS
                               child {
                                 kind: IDENTIFIER
-                                string_value_pointer: 751
+                                string_value_pointer: 749
                                 relative_column: 1
                                 boolean_property: IS_PARENTHESIZED
                                 boolean_property: COLOR_FROM_CAST
@@ -43516,7 +43516,7 @@ typed_asts {
                               kind: ASSIGNMENT
                               child {
                                 kind: IDENTIFIER
-                                string_value_pointer: 751
+                                string_value_pointer: 749
                                 type: 0
                               }
                               child {
@@ -43535,7 +43535,7 @@ typed_asts {
                                 }
                                 child {
                                   kind: IDENTIFIER
-                                  string_value_pointer: 751
+                                  string_value_pointer: 749
                                   relative_column: 22
                                   type: 639
                                 }
@@ -43594,7 +43594,7 @@ typed_asts {
                                       kind: PROPERTY_ACCESS
                                       child {
                                         kind: IDENTIFIER
-                                        string_value_pointer: 751
+                                        string_value_pointer: 749
                                         relative_column: -10
                                         type: 0
                                       }
@@ -43640,7 +43640,7 @@ typed_asts {
                                       kind: PROPERTY_ACCESS
                                       child {
                                         kind: IDENTIFIER
-                                        string_value_pointer: 736
+                                        string_value_pointer: 750
                                         relative_column: -10
                                         type: 7
                                       }
@@ -43704,7 +43704,7 @@ typed_asts {
                                 kind: PROPERTY_ACCESS
                                 child {
                                   kind: IDENTIFIER
-                                  string_value_pointer: 751
+                                  string_value_pointer: 749
                                   relative_column: -10
                                   type: 639
                                 }
@@ -43788,7 +43788,7 @@ typed_asts {
                                       kind: PROPERTY_ACCESS
                                       child {
                                         kind: IDENTIFIER
-                                        string_value_pointer: 736
+                                        string_value_pointer: 750
                                         relative_column: -10
                                         type: 7
                                       }
@@ -43808,7 +43808,7 @@ typed_asts {
                                       kind: ELEMENT_ACCESS
                                       child {
                                         kind: IDENTIFIER
-                                        string_value_pointer: 751
+                                        string_value_pointer: 749
                                         type: 639
                                       }
                                       child {
@@ -52488,7 +52488,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_line: 1
                 relative_column: -51
                 boolean_property: IS_INFERRED_CONSTANT
@@ -52525,7 +52525,7 @@ typed_asts {
                     }
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_column: 21
                       type: 713
                     }
@@ -79017,7 +79017,7 @@ typed_asts {
                   kind: PARAMETER_LIST
                   child {
                     kind: IDENTIFIER
-                    string_value_pointer: 749
+                    string_value_pointer: 747
                     relative_column: 1
                     boolean_property: IS_INFERRED_CONSTANT
                     type: 18
@@ -79032,7 +79032,7 @@ typed_asts {
                       kind: INSTANCEOF
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 749
+                        string_value_pointer: 747
                         type: 18
                       }
                       child {
@@ -79050,7 +79050,7 @@ typed_asts {
                         kind: RETURN_STATEMENT
                         child {
                           kind: IDENTIFIER
-                          string_value_pointer: 749
+                          string_value_pointer: 747
                           relative_column: 7
                           type: 71
                         }
@@ -79079,7 +79079,7 @@ typed_asts {
                           }
                           child {
                             kind: IDENTIFIER
-                            string_value_pointer: 749
+                            string_value_pointer: 747
                             relative_column: 11
                             type: 18
                           }
@@ -84232,7 +84232,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 750
+                        string_value_pointer: 748
                         relative_column: 13
                         boolean_property: IS_INFERRED_CONSTANT
                         type: 82
@@ -84596,7 +84596,7 @@ typed_asts {
                             }
                             child {
                               kind: IDENTIFIER
-                              string_value_pointer: 750
+                              string_value_pointer: 748
                               relative_column: 15
                               type: 82
                             }
@@ -84669,7 +84669,7 @@ typed_asts {
                       kind: PARAMETER_LIST
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 750
+                        string_value_pointer: 748
                         relative_column: 1
                         boolean_property: IS_INFERRED_CONSTANT
                         type: 81
@@ -84701,7 +84701,7 @@ typed_asts {
                           }
                           child {
                             kind: IDENTIFIER
-                            string_value_pointer: 750
+                            string_value_pointer: 748
                             relative_column: 11
                             type: 81
                           }
@@ -84761,7 +84761,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 750
+                        string_value_pointer: 748
                         relative_column: 13
                         boolean_property: IS_INFERRED_CONSTANT
                         type: 0
@@ -84892,7 +84892,7 @@ typed_asts {
                                     kind: CALL
                                     child {
                                       kind: IDENTIFIER
-                                      string_value_pointer: 750
+                                      string_value_pointer: 748
                                       type: 0
                                     }
                                     child {
@@ -86520,7 +86520,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 741
+                        string_value_pointer: 737
                         relative_column: 8
                         boolean_property: IS_INFERRED_CONSTANT
                         type: 0
@@ -86560,7 +86560,7 @@ typed_asts {
                           }
                           child {
                             kind: IDENTIFIER
-                            string_value_pointer: 741
+                            string_value_pointer: 737
                             relative_column: 8
                             type: 0
                           }
@@ -101370,7 +101370,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 boolean_property: IS_INFERRED_CONSTANT
                 type: 888
@@ -101385,7 +101385,7 @@ typed_asts {
                   kind: INSTANCEOF
                   child {
                     kind: IDENTIFIER
-                    string_value_pointer: 749
+                    string_value_pointer: 747
                     type: 888
                   }
                   child {
@@ -101403,7 +101403,7 @@ typed_asts {
                     kind: RETURN_STATEMENT
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_column: 7
                       type: 71
                     }
@@ -101446,7 +101446,7 @@ typed_asts {
                         }
                         child {
                           kind: IDENTIFIER
-                          string_value_pointer: 749
+                          string_value_pointer: 747
                           relative_column: 21
                           type: 890
                         }
@@ -104360,7 +104360,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 boolean_property: IS_INFERRED_CONSTANT
                 type: 910
@@ -104377,7 +104377,7 @@ typed_asts {
                     kind: ELEMENT_ACCESS
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_column: 1
                       boolean_property: IS_PARENTHESIZED
                       type: 910
@@ -104443,7 +104443,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 749
+                        string_value_pointer: 747
                         relative_column: 27
                         type: 910
                       }
@@ -104490,7 +104490,7 @@ typed_asts {
                     }
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_line: 2
                       relative_column: -43
                       boolean_property: IS_PARENTHESIZED
@@ -105069,7 +105069,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 749
+                string_value_pointer: 747
                 relative_column: 1
                 boolean_property: IS_INFERRED_CONSTANT
                 type: 713
@@ -105124,7 +105124,7 @@ typed_asts {
                       kind: ELEMENT_ACCESS
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 749
+                        string_value_pointer: 747
                         relative_column: 1
                         boolean_property: IS_PARENTHESIZED
                         boolean_property: COLOR_FROM_CAST
@@ -105183,7 +105183,7 @@ typed_asts {
                     }
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_column: 22
                       type: 713
                     }
@@ -105206,7 +105206,7 @@ typed_asts {
                     }
                     child {
                       kind: IDENTIFIER
-                      string_value_pointer: 749
+                      string_value_pointer: 747
                       relative_column: 45
                       boolean_property: IS_PARENTHESIZED
                       boolean_property: COLOR_FROM_CAST
@@ -110468,7 +110468,7 @@ typed_asts {
               kind: PARAMETER_LIST
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 1
                 boolean_property: IS_INFERRED_CONSTANT
                 type: 0
@@ -110497,7 +110497,7 @@ typed_asts {
                   kind: EQUAL
                   child {
                     kind: IDENTIFIER
-                    string_value_pointer: 741
+                    string_value_pointer: 737
                     type: 0
                   }
                   child {
@@ -110634,7 +110634,7 @@ typed_asts {
                   kind: ADD
                   child {
                     kind: IDENTIFIER
-                    string_value_pointer: 741
+                    string_value_pointer: 737
                     type: 0
                   }
                   child {
@@ -111407,7 +111407,7 @@ typed_asts {
               }
               child {
                 kind: IDENTIFIER
-                string_value_pointer: 741
+                string_value_pointer: 737
                 relative_column: 10
                 boolean_property: IS_INFERRED_CONSTANT
                 type: 0
@@ -111589,7 +111589,7 @@ typed_asts {
                       }
                       child {
                         kind: IDENTIFIER
-                        string_value_pointer: 741
+                        string_value_pointer: 737
                         relative_column: 14
                         type: 0
                       }
