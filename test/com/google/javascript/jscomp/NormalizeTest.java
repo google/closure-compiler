@@ -1024,6 +1024,21 @@ public final class NormalizeTest extends CompilerTestCase {
       assertThat(hasProp.getString()).isEqualTo("CONST");
     }
   }
+
+  @Test
+  public void testPropertyIsConstantIfMatchesConstantName() {
+    // verify that the /** @const */ 'other' doesn't accidentally cause the string key in
+    // {'other: 4'} to be marked const
+    testSame("var a = {other: 4}; /** @const */ var other = 5;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(1);
+    for (Node hasProp : constantNodes) {
+      assertThat(hasProp.getString()).isEqualTo("other");
+    }
+  }
+
   @Test
   public void testShadowFunctionName() {
     test(

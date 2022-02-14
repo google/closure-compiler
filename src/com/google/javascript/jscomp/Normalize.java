@@ -133,8 +133,9 @@ class Normalize implements CompilerPass {
         }
 
         JSDocInfo info = null;
-        // Find the JSDocInfo for a top-level variable.
-        Var var = t.getScope().getVar(n.getString());
+        // Find the JSDocInfo for a top-level variable (only if this is a name and not an object
+        // literal key)
+        Var var = n.isName() ? t.getScope().getVar(n.getString()) : null;
         if (var != null) {
           info = var.getJSDocInfo();
         }
