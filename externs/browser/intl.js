@@ -273,3 +273,40 @@ Intl.RelativeTimeFormat.prototype.formatToParts = function(value, unit) {};
  * @return {{locale: string, pluralCategories: Array<string>, type: string}}
  */
 Intl.RelativeTimeFormat.prototype.resolvedOptions = function() {};
+
+/**
+ * @constructor
+ * @param {string|Array<string>=} locales
+ * @param {{
+ *     localeMatcher: (string|undefined),
+ *     type: (string|undefined),
+ *     style: (string|undefined)
+ *     }=} options
+ */
+Intl.ListFormat = function(locales, options) {};
+
+/**
+ * @param {Array<string>} locales
+ * @param {{localeMatcher: (string|undefined)}=} options
+ * @return {Array<string>}
+ */
+Intl.ListFormat.supportedLocalesOf = function(locales, options) {};
+
+/**
+ * @param {Array<string|number>} items
+ * @return {string}
+ */
+Intl.ListFormat.prototype.format = function(items) {};
+
+/**
+ * @param {Array<string|number>} items
+ * @return {!Array<{type: string, value: string}>}
+ * @see http://www.ecma-international.org/ecma-402/#sec-intl.listformat.prototype.formattoparts
+ */
+Intl.ListFormat.prototype.formatToParts = function(items) {};
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ListFormat/resolvedOptions#Syntax
+ * @return {{locale: string, style: string, type: string}}
+ */
+Intl.ListFormat.prototype.resolvedOptions = function() {};
