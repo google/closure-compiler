@@ -190,7 +190,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
           }
 
           String propName = n.getString();
-          if (owningType.hasOwnProperty(propName)) {
+          if (owningType.hasOwnProperty(propName)
+              && owningType.getPropertyJSDocInfo(propName) == null) {
             owningType.setPropertyJSDocInfo(propName, typeDoc);
           }
         }
@@ -222,7 +223,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements CompilerPass {
 
           // Put the JSDoc in the property slot, if there is one.
           String propName = n.getString();
-          if (lhsType.hasOwnProperty(propName)) {
+          if (lhsType.hasOwnProperty(propName) && lhsType.getPropertyJSDocInfo(propName) == null) {
             lhsType.setPropertyJSDocInfo(propName, typeDoc);
           }
 

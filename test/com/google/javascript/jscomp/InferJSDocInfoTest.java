@@ -1150,6 +1150,72 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   @Test
+  public void testJSDocFromDuplicatePropertyDefinitionDoesNotOverrideJSDoc_es6Style() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "class Foo {",
+                "",
+                "  /**",
+                "   * I'm the first definition",
+                "   * @param {string} s",
+                "   */",
+                "  x(s) {}",
+                "",
+                "  /**",
+                "   * I'm the second definition",
+                "   * @param {string} s",
+                "   */",
+                "  x(s) {}",
+                "}",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+
+    // Then
+    assertThat(xType.assertObjectType().getPropertyJSDocInfo("x").getBlockDescription())
+        .isEqualTo("I'm the first definition");
+  }
+
+  @Test
+  public void testJSDocFromDuplicatePropertyDefinitionDoesNotOverrideJSDoc_es5Style() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * @constructor",
+                " */",
+                "var Foo = function() {};",
+                "",
+                "/**",
+                " * I'm the first definition",
+                " * @type {string}",
+                " */",
+                "Foo.prototype.x;",
+                "",
+                "/**",
+                " * I'm the second definition",
+                " * @type {string}",
+                " */",
+                "Foo.prototype.x;",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertThat(xType.toString()).isEqualTo("Foo");
+
+    // Then
+    assertThat(xType.assertObjectType().getPropertyJSDocInfo("x").getBlockDescription())
+        .isEqualTo("I'm the first definition");
+  }
+
+  @Test
   public void testJSDocIsPropagatedToTypeFromObjectLiteralPrototype() {
     testSame(
         lines(

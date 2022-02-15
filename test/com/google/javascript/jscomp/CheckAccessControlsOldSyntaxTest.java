@@ -407,11 +407,11 @@ public final class CheckAccessControlsOldSyntaxTest extends CompilerTestCase {
   }
 
   @Test
-  public void testWarningForBind() {
+  public void testWarningForFunctionProp() {
     testDepProp(
-        "/** @deprecated I'm bound to this method... */ Function.prototype.bind = function() {};"
-            + "(function() {}).bind();",
-        "Property bind of type function has been deprecated: I'm bound to this method...");
+        "/** @deprecated Don't call me... */ Function.prototype.deprecatedMethod = function() {};"
+            + "(function() {}).deprecatedMethod();",
+        "Property deprecatedMethod of type function has been deprecated: Don't call me...");
   }
 
   @Test
