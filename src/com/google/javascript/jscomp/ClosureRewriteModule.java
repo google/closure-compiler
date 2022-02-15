@@ -1141,20 +1141,11 @@ final class ClosureRewriteModule implements CompilerPass {
           statementNode.detach();
         }
       } else if (targetIsNonLegacyGoogModule) {
-        if (!isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
-          // TODO(johnlenz): This case is suspicious. Why do we support non-global goog.require?
-
-          // Rewrite
-          //   "function() {var Foo = goog.require("bar.Foo");}" to
-          //   "function() {var Foo = module$exports$bar$Foo;}"
-          Node binaryNamespaceName =
-              astFactory.createName(
-                  rewriteState.getBinaryNamespace(namespaceId),
-                  type(rewriteState.getGoogModuleNamespaceType(namespaceId)));
-          binaryNamespaceName.setOriginalName(namespaceId);
-          call.replaceWith(binaryNamespaceName);
-          compiler.reportChangeToEnclosingScope(binaryNamespaceName);
-        } else if (importHasAlias || !rewriteState.isLegacyModule(namespaceId)) {
+        checkState(
+            isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT),
+            "Unexpected non-top-level require at %s",
+            call);
+        if (importHasAlias || !rewriteState.isLegacyModule(namespaceId)) {
           if (!preserveSugar) {
             // Delete the goog.require() because we're going to inline its alias later.
             compiler.reportChangeToEnclosingScope(statementNode);
