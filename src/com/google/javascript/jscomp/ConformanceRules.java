@@ -2142,6 +2142,10 @@ public final class ConformanceRules {
               .collect(toImmutableList());
     }
 
+    private static boolean isEventHandlerAttrName(String attr) {
+      return !attr.equals("on") && attr.startsWith("on");
+    }
+
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
       if (node.isCall()) {
@@ -2173,8 +2177,8 @@ public final class ConformanceRules {
         return ConformanceResult.VIOLATION;
       }
 
-      String attrName = attr.getString();
-      if (bannedAttrs.contains(attrName.toLowerCase(Locale.ROOT))) {
+      String attrName = attr.getString().toLowerCase(Locale.ROOT);
+      if (bannedAttrs.contains(attrName) || isEventHandlerAttrName(attrName)) {
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
@@ -2203,8 +2207,8 @@ public final class ConformanceRules {
     private ConformanceResult checkConformanceOnGetElement(Node node) {
       Node key = node.getSecondChild();
       if (key.isStringLit()) {
-        String keyName = key.getString();
-        if (!bannedAttrs.contains(keyName.toLowerCase(Locale.ROOT))) {
+        String keyName = key.getString().toLowerCase(Locale.ROOT);
+        if (!bannedAttrs.contains(keyName) && !isEventHandlerAttrName(keyName)) {
           return ConformanceResult.CONFORMANCE;
         } else if (hasElementType(node)) {
           return ConformanceResult.VIOLATION;
