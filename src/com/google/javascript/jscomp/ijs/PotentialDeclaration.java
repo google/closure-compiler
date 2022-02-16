@@ -17,6 +17,7 @@ package com.google.javascript.jscomp.ijs;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
@@ -138,6 +139,18 @@ abstract class PotentialDeclaration {
   abstract void simplify(AbstractCompiler compiler);
 
   /**
+   * Breaks down this declaration if it's a destructuring LHS by replacing it with a VAR node and
+   * removing the RHS.
+   *
+   * <p>TODO(lharker): can we merge this code into {@link #simplify(AbstractCompiler)}?
+   *
+   * @return true if the declaration is broken down. Otherwise, returns false.
+   */
+  boolean breakDownDestructure(AbstractCompiler compiler) {
+    return false;
+  }
+
+  /**
    * A potential declaration that has a fully qualified name to describe it. This includes things
    * like: var/let/const/function/class declarations, assignments to a fully qualified name, and
    * goog.module exports This is the most common type of potential declaration.
@@ -204,6 +217,41 @@ abstract class PotentialDeclaration {
         oldStatement.replaceWith(newStatement);
       }
       compiler.reportChangeToEnclosingScope(newStatement);
+    }
+
+    @Override
+    boolean breakDownDestructure(AbstractCompiler compiler) {
+      if (!NodeUtil.isLhsByDestructuring(getLhs())) {
+        return false;
+      }
+
+      Node rootTarget = NodeUtil.getRootTarget(getLhs());
+
+      checkState(rootTarget.getParent().isDestructuringLhs());
+      if (!NodeUtil.isNameDeclaration(rootTarget.getGrandparent())) {
+        return false;
+      }
+
+      Node definitionNode = rootTarget.getGrandparent();
+
+      Node prev = null;
+
+      for (Node n : NodeUtil.findLhsNodesInNode(rootTarget.getParent())) {
+
+        n.detach();
+        Node temp = IR.var(n);
+
+        if (prev == null) {
+          definitionNode.replaceWith(temp);
+          compiler.reportChangeToEnclosingScope(temp);
+        } else {
+          temp.insertAfter(prev);
+          compiler.reportChangeToEnclosingScope(temp);
+          temp.srcrefTree(prev);
+        }
+        prev = temp;
+      }
+      return true;
     }
 
     private static void replaceRhsWithUnknown(Node rhs) {
@@ -512,7 +560,7 @@ abstract class PotentialDeclaration {
     }
 
     @Override
-    boolean isDefiniteDeclaration() {
+    boolean isDefiniteDeclaration(AbstractCompiler compiler) {
       return true;
     }
 
@@ -532,9 +580,24 @@ abstract class PotentialDeclaration {
     }
   }
 
-  boolean isDefiniteDeclaration() {
+  boolean isDefiniteDeclaration(AbstractCompiler compiler) {
     Node parent = getLhs().getParent();
     switch (parent.getToken()) {
+      case DEFAULT_VALUE:
+        if (!parent.getParent().isStringKey()) {
+          return false;
+        }
+        // fall through
+      case COMPUTED_PROP:
+      case STRING_KEY:
+        if (NodeUtil.isLhsByDestructuring(getLhs())) {
+          Node rootTarget = NodeUtil.getRootTarget(getLhs());
+          checkState(rootTarget.getParent().isDestructuringLhs());
+          if (NodeUtil.isNameDeclaration(rootTarget.getGrandparent())) {
+            return true;
+          }
+        }
+        return false;
       case VAR:
       case LET:
       case CONST:

@@ -618,6 +618,72 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBreakDownDestructuringForConst() {
+
+    test(
+        lines(
+            "goog.module('m');", //
+            "const {x,y}=fn();",
+            "exports.x=x;",
+            "exports.y=y;"),
+        lines(
+            "goog.module(\"m\");",
+            "/** @const @type {UnusableType} */",
+            "var x;",
+            "/** @const @type {UnusableType} */",
+            "var y;",
+            "exports.x=x;",
+            "exports.y = y;"),
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
+
+    test(
+        lines(
+            "goog.module('m');", //
+            "const {x=0} = fn();",
+            "exports.x = x;"),
+        lines(
+            "goog.module(\"m\");",
+            "/** @const @type {UnusableType} */",
+            "var x;",
+            "exports.x = x;"),
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
+
+    test(
+        lines(
+            "goog.module('m');", //
+            "const {x:{y}} = fn();",
+            "exports.x = x;"),
+        lines(
+            "goog.module(\"m\");",
+            "/** @const @type {UnusableType} */",
+            "var y;",
+            "exports.x = x;"),
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
+
+    test(
+        lines(
+            "goog.module('m');", //
+            "const {[x()]:x} = fn();",
+            "exports.x = x;"),
+        lines(
+            "goog.module(\"m\");",
+            "/** @const @type {UnusableType} */",
+            "var x;",
+            "exports.x = x;"),
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
+  }
+
+  @Test
+  public void testBreakDownDestructuringWarning() {
+    testWarning(
+        lines(
+            "goog.module('m');", //
+            "const x = ({y: obj.y} = fn());",
+            "exports.x = x;"),
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  @Test
   public void testDuplicateDeclarationWAliasNotRemoved() {
     test(
         lines(
@@ -633,8 +699,18 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLetDestructuringDeclarationsRemoved() {
-    test("let {Foo, Bar} = a.b.c; exports = Foo;", "exports = Foo;");
+  public void testBreakDownDestructuringForLet() {
+    test(
+        lines(
+            "let {Foo, Bar} = a.b.c;", //
+            "exports = Foo;"),
+        lines(
+            "/** @const @type {UnusableType} */",
+            "var Foo",
+            "/** @const @type {UnusableType} */",
+            "var Bar;",
+            "exports = Foo;"),
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
   @Test

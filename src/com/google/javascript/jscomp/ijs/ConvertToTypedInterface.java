@@ -192,7 +192,9 @@ public class ConvertToTypedInterface implements CompilerPass {
               return false;
           }
         case COMPUTED_PROP:
-          NodeUtil.deleteNode(n, t.getCompiler());
+          if (!NodeUtil.isLhsByDestructuring(n.getSecondChild())) {
+            NodeUtil.deleteNode(n, t.getCompiler());
+          }
           return false;
         case THROW:
         case RETURN:
@@ -313,15 +315,6 @@ public class ConvertToTypedInterface implements CompilerPass {
       Node statement = isExport ? n.getParent() : n;
       while (n.hasChildren()) {
         Node lhsToSplit = n.getLastChild();
-        if (lhsToSplit.isDestructuringLhs()
-            && !PotentialDeclaration.isImportRhs(lhsToSplit.getLastChild())
-            && !PotentialDeclaration.isAliasDeclaration(lhsToSplit, lhsToSplit.getLastChild())) {
-          // Remove destructuring statements, which we assume are not type declarations
-          NodeUtil.markFunctionsDeleted(lhsToSplit, t.getCompiler());
-          NodeUtil.removeChild(n, lhsToSplit);
-          t.reportCodeChange();
-          continue;
-        }
         JSDocInfo nameJsdoc = lhsToSplit.getJSDocInfo();
         lhsToSplit.setJSDocInfo(null);
         JSDocInfo mergedJsdoc = JsdocUtil.mergeJsdocs(sharedJsdoc, nameJsdoc);
@@ -446,6 +439,11 @@ public class ConvertToTypedInterface implements CompilerPass {
         decl.remove(compiler);
         return;
       }
+
+      if (decl.breakDownDestructure(compiler)) {
+        maybeReport(compiler, decl.getLhs(), CONSTANT_WITHOUT_EXPLICIT_TYPE);
+      }
+
       if (decl.getRhs() != null && decl.getRhs().isFunction()) {
         processFunction(decl.getRhs());
       } else if (decl.getRhs() != null && isClass(decl.getRhs())) {
@@ -511,7 +509,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       }
       // This looks like an update rather than a declaration in this file.
       return !name.startsWith("this.")
-          && !decl.isDefiniteDeclaration()
+          && !decl.isDefiniteDeclaration(compiler)
           && !currentFile.isPrefixProvided(name)
           && !currentFile.isStrictPrefixDeclared(name);
     }
