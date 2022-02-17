@@ -1710,6 +1710,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseTsType() {
+    assertThat(parse("@tsType ():this */").getTsTypes()).containsExactly("():this");
+  }
+
+  @Test
   public void testParseClosurePrimitiveIdMissingIdentifier() {
     parse("@closurePrimitive */", "missing opening {");
   }

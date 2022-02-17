@@ -497,6 +497,17 @@ public final class JsDocInfoParser {
             return token;
           }
 
+        case TS_TYPE:
+          {
+            ExtractionInfo tsTypeInfo = extractMultilineTextualBlock(token);
+
+            String tsType = tsTypeInfo.string;
+
+            jsdocBuilder.recordTsType(tsType);
+            token = tsTypeInfo.token;
+            return token;
+          }
+
         case FILE_OVERVIEW:
           String fileOverview = "";
           if (jsdocBuilder.shouldParseDocumentation() && !lookAheadForAnnotation()) {

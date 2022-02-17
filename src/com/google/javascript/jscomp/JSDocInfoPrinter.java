@@ -346,6 +346,10 @@ public final class JSDocInfoPrinter {
       parts.add("@ngInject");
     }
 
+    for (String tsType : info.getTsTypes()) {
+      parts.add("@tsType " + tsType);
+    }
+
     if (printDesc && info.getBlockDescription() != null) {
       String cleaned = info.getBlockDescription().replaceAll("\n\\s*\\*\\s*", "\n");
       if (!cleaned.isEmpty()) {

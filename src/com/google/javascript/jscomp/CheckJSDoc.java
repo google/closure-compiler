@@ -158,6 +158,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateImplicitCast(n, info);
     validateClosurePrimitive(n, info);
     validateReturnJsDoc(n, info);
+    validateTsType(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -777,6 +778,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     // @type and @typedef are handled separately
     if (info.containsDeclaration() && !info.hasType() && !info.hasTypedefType()) {
       report(n, JSDOC_ON_RETURN);
+    }
+  }
+
+  /** Checks that a @tsType is on a function in a supported file */
+  private void validateTsType(Node n, JSDocInfo info) {
+    if (info == null || info.getTsTypes().isEmpty()) {
+      return;
+    }
+
+    if (!isJSDocOnFunctionNode(n, info)) {
+      report(n, MISPLACED_ANNOTATION, "tsType", "must be on a function node");
     }
   }
 }

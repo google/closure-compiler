@@ -470,6 +470,7 @@ public class JSDocInfo implements Serializable {
   private static final Property<String> RETURN_DESCRIPTION = new Property<>("returnDescription");
   private static final Property<String> VERSION = new Property<>("version");
   private static final Property<String> ENHANCED_NAMESPACE = new Property<>("enhance");
+  private static final Property<List<String>> TS_TYPES = new Property<>("tsType");
 
   private static final Property<List<String>> AUTHORS = new Property<>("authors");
   private static final Property<List<String>> SEES = new Property<>("sees");
@@ -1089,6 +1090,12 @@ public class JSDocInfo implements Serializable {
   /** Gets the description specified by the {@code @desc} annotation. */
   public String getDescription() {
     return DESCRIPTION.get(this);
+  }
+
+  /** Gets the ts type declarations specified by the {@code @tsType} annotations. */
+  public ImmutableList<String> getTsTypes() {
+    List<String> types = TS_TYPES.get(this);
+    return types != null ? ImmutableList.copyOf(types) : ImmutableList.of();
   }
 
   /**
@@ -2091,6 +2098,12 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordDescription(String description) {
       return populateProp(DESCRIPTION, description);
+    }
+
+    /** Records a tsType giving context for .d.ts generation */
+    public void recordTsType(String tsType) {
+      populated = true;
+      getPropWithDefault(TS_TYPES, ArrayList::new).add(tsType);
     }
 
     /**

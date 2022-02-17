@@ -700,6 +700,12 @@ public final class JSDocInfoPrinterTest {
     testSame("/** @ngInject */ ");
   }
 
+  @Test
+  public void testTsType() {
+    testSame("/** @tsType ():string */ ");
+    testSame("/** @tsType ():string @tsType (x:string):number */ ");
+  }
+
   private void testSame(String jsdoc) {
     test(jsdoc, jsdoc);
   }
