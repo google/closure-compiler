@@ -448,7 +448,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         hidden = true,
         usage =
             "Apply input source maps to the output source map, i.e. have the result map back"
-                + " tooriginal inputs.  Input sourcemaps can be located in 2 ways:\n"
+                + " to original inputs.  Input sourcemaps can be located in 2 ways:\n"
                 + " 1) by the//# sourceMappingURL=<url>. \n"
                 + " 2) using the--source_map_location_mapping flag.\n"
                 + "sourceMappingURL=<url> can read both paths and inline Base64 encoded"
