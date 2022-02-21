@@ -30,7 +30,7 @@ EventSourceInit.prototype.withCredentials;
 /**
  * @constructor
  * @implements {EventTarget}
- * @param {string} url
+ * @param {!URL|string} url
  * @param {EventSourceInit=} opt_eventSourceInitDict
  */
 function EventSource(url, opt_eventSourceInitDict) {}

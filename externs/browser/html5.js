@@ -3358,7 +3358,7 @@ TimeRanges.prototype.end = function(index) { return 0; };
 /**
  * @see https://html.spec.whatwg.org/multipage/web-sockets.html
  * @constructor
- * @param {string} url
+ * @param {!URL|string} url
  * @param {(string|!Array<string>)=} opt_protocol
  * @implements {EventTarget}
  */
@@ -3531,20 +3531,20 @@ History.prototype.go = function(delta) {};
  * @see http://www.w3.org/TR/html5/history.html#the-history-interface
  * @param {*} data New state.
  * @param {string} title The title for a new session history entry.
- * @param {string=} opt_url The URL for a new session history entry.
+ * @param {!URL|string=} url The URL for a new session history entry.
  * @return {undefined}
  */
-History.prototype.pushState = function(data, title, opt_url) {};
+History.prototype.pushState = function(data, title, url) {};
 
 /**
  * Replaces the current state in the session history.
  * @see http://www.w3.org/TR/html5/history.html#the-history-interface
  * @param {*} data New state.
  * @param {string} title The title for a session history entry.
- * @param {string=} opt_url The URL for a new session history entry.
+ * @param {!URL|string=} url The URL for a new session history entry.
  * @return {undefined}
  */
-History.prototype.replaceState = function(data, title, opt_url) {};
+History.prototype.replaceState = function(data, title, url) {};
 
 /**
  * Pending state object.
@@ -3654,7 +3654,7 @@ Location.prototype.hash;
 
 /**
  * Navigates to the given page.
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-assign
  */
@@ -3663,7 +3663,7 @@ Location.prototype.assign = function(url) {};
 /**
  * Removes the current page from the session history and navigates to the given
  * page.
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
  */
