@@ -2139,16 +2139,15 @@ public final class SymbolTable {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getJSDocInfo() != null) {
+      JSDocInfo info = n.getJSDocInfo();
+      if (info == null) {
+        return;
+      }
+      docInfos.add(n);
 
-        // Find references in the JSDocInfo.
-        JSDocInfo info = n.getJSDocInfo();
-        docInfos.add(n);
-
-        for (Node typeAst : info.getTypeNodes()) {
-          SymbolScope scope = scopes.get(t.getScopeRoot());
-          visitTypeNode(info.getTemplateTypes(), scope == null ? globalScope : scope, typeAst);
-        }
+      for (Node typeAst : info.getTypeNodes()) {
+        SymbolScope scope = scopes.get(t.getScopeRoot());
+        visitTypeNode(info.getTemplateTypes(), scope == null ? globalScope : scope, typeAst);
       }
     }
 
@@ -2197,44 +2196,17 @@ public final class SymbolTable {
     // TODO(peterhal): @template types.
     private Symbol lookupPossiblyDottedName(SymbolScope scope, String dottedName) {
       // Try the dotted name to start.
-      String[] names = dottedName.split("\\.");
-      Symbol result = null;
-      SymbolScope currentScope = scope;
-      for (int i = 0; i < names.length; i++) {
-        String name = names[i];
-        result = currentScope.getSlot(name);
-        if (result == null) {
-          break;
-        }
-        if (i < (names.length - 1)) {
-          currentScope = result.getPropertyScope();
-          if (currentScope == null) {
-            result = null;
-            break;
-          }
-        }
+      Symbol result = scope.getQualifiedSlot(dottedName);
+      if (result != null) {
+        return result;
       }
-
-      if (result == null) {
-        // If we can't find this type, it might be a reference to a
-        // primitive type (like {string}). Autobox it to check.
-        // Alternatively it can be a type from externs.
-        JSType type = typeRegistry.getGlobalType(dottedName);
-        JSType autobox = type == null ? null : type.autoboxesTo();
-        result =
-            autobox == null
-                ? getSymbolForTypeHelper(type, true)
-                : getSymbolForTypeHelper(autobox, true);
-      }
-      if (result == null) {
-        // dotted name might be a type/variable declared in externs. In that case look it up in
-        // global scope.
-        result = globalScope.getSlot(dottedName);
-        if (result != null && !result.getDeclarationNode().getStaticSourceFile().isExtern()) {
-          result = null;
-        }
-      }
-      return result;
+      // If we can't find this type, it might be a reference to a
+      // primitive type (like {string}). Autobox it to check.
+      JSType type = typeRegistry.getGlobalType(dottedName);
+      JSType autobox = type == null ? null : type.autoboxesTo();
+      return autobox == null
+          ? getSymbolForTypeHelper(type, true)
+          : getSymbolForTypeHelper(autobox, true);
     }
   }
 

@@ -619,10 +619,46 @@ public final class SymbolTableTest {
             lines("goog.module('baz');", "const {Color} = goog.require('foo');", "Color.RED;"));
     Symbol red =
         table.getAllSymbols().stream().filter((s) -> s.getName().equals("RED")).findFirst().get();
+    assertThat(table.getScope(red).getSymbolForScope().getSourceFileName()).isEqualTo("file1.js");
+    assertThat(table.getReferences(red)).hasSize(3);
+  }
+
+  @Test
+  public void testEnumsProvidedAsNamespace() {
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines(
+                "goog.provide('foo.bar.Color');",
+                "/** @enum {number} */",
+                "foo.bar.Color = {RED: 1};",
+                "const /** !foo.bar.Color */ color = ",
+                "  foo.bar.Color.RED;"));
+    Symbol red =
+        table.getAllSymbols().stream().filter((s) -> s.getName().equals("RED")).findFirst().get();
+    assertThat(table.getScope(red).getSymbolForScope().getSourceFileName()).isEqualTo("file1.js");
+    assertThat(table.getReferences(red)).hasSize(2);
+    assertThat(table.getReferences(getGlobalVar(table, "foo.bar.Color"))).hasSize(3);
+  }
+
+  @Test
+  public void testEnumsProvidedAsMemberOfNamespace() {
+    SymbolTable table =
+        createSymbolTableFromManySources(
+            lines(
+                "goog.provide('foo.bar');",
+                "/** @enum {number} */",
+                "foo.bar.Color = {RED: 1};",
+                "const /** !foo.bar.Color */ color = ",
+                "  foo.bar.Color.RED;"));
+    Symbol red =
+        table.getAllSymbols().stream().filter((s) -> s.getName().equals("RED")).findFirst().get();
     // Make sure that RED belongs to the scope of Color that is defined in the first file and not
     // third. Because the third file also has "Color" enum that has the same type.
     assertThat(table.getScope(red).getSymbolForScope().getSourceFileName()).isEqualTo("file1.js");
-    assertThat(table.getReferences(red)).hasSize(3);
+    assertThat(table.getReferences(red)).hasSize(2);
+    Symbol colorEnum =
+        table.getAllSymbols().stream().filter((s) -> s.getName().equals("Color")).findFirst().get();
+    assertThat(table.getReferences(colorEnum)).hasSize(3);
   }
 
   @Test
