@@ -513,6 +513,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
+      if (NodeUtil.isFromTypeSummary(n)) {
+        // Errors in type summary files are suppressed, so no use traversing them.
+        return false;
+      }
       String filename = n.getSourceFileName();
       if (filename != null && filename.endsWith(".java.js")) {
         this.subtypingMode = SubtypingMode.IGNORE_NULL_UNDEFINED;
