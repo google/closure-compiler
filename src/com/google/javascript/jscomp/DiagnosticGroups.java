@@ -379,7 +379,6 @@ public class DiagnosticGroups {
           InlineAndCollapseProperties.NAMESPACE_REDEFINED_WARNING,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
-          TypeValidator.DUP_VAR_DECLARATION_PLACEHOLDER_DO_NOT_USE,
           TypeCheck.FUNCTION_MASKS_VARIABLE,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           VariableReferenceCheck.REDECLARED_VARIABLE);

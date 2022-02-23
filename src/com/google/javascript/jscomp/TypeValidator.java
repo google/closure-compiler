@@ -128,10 +128,6 @@ class TypeValidator implements Serializable {
           "JSC_DUP_VAR_DECLARATION_TYPE_MISMATCH",
           "variable {0} redefined with type {1}, original definition at {2}:{3} with type {4}");
 
-  // Only used in TypeValidator.hasDuplicateDeclarationSuppression as a performance improvement.
-  static final DiagnosticType DUP_VAR_DECLARATION_PLACEHOLDER_DO_NOT_USE =
-      DiagnosticType.warning("JSC_DUP_VAR_DECLARATION_PLACEHOLDER_DO_NOT_USE", "");
-
   static final DiagnosticType INTERFACE_METHOD_NOT_IMPLEMENTED =
       DiagnosticType.warning(
           "JSC_INTERFACE_METHOD_NOT_IMPLEMENTED",
@@ -1168,11 +1164,10 @@ class TypeValidator implements Serializable {
    * @return Whether duplicated declarations warnings should be suppressed for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(AbstractCompiler compiler, Node decl) {
-    // NB: DUP_VAR_DECLARATION_PLACEHOLDER_DO_NOT_USE is somewhat arbitrary. It must be one of the
-    // errors suppressed by the "duplicate" group. Using an actual error causes unnecessary time
-    // spent formatting the error message.
+    // NB: DUP_VAR_DECLARATION is somewhat arbitrary here, but it must be one of the errors
+    // suppressed by the "duplicate" group.
     CheckLevel originalDeclLevel =
-        compiler.getErrorLevel(JSError.make(decl, DUP_VAR_DECLARATION_PLACEHOLDER_DO_NOT_USE));
+        compiler.getErrorLevel(JSError.make(decl, DUP_VAR_DECLARATION, "dummy", "dummy"));
     return originalDeclLevel == CheckLevel.OFF;
   }
 
