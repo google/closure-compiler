@@ -770,6 +770,17 @@ public final class JSTypeRegistry {
     JSType numberStringSymbol = createUnionType(numberType, stringType, symbolType);
     registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, numberStringSymbol);
 
+    // (boolean,Boolean,number,Number,null,undefined)
+    JSType numberAdditionSupertype =
+        createUnionType(
+            JSTypeNative.VOID_TYPE,
+            JSTypeNative.NULL_TYPE,
+            JSTypeNative.NUMBER_TYPE,
+            JSTypeNative.NUMBER_OBJECT_TYPE,
+            JSTypeNative.BOOLEAN_TYPE,
+            JSTypeNative.BOOLEAN_OBJECT_TYPE);
+    registerNativeType(JSTypeNative.NUMBER_ADDITION_SUPERTYPE, numberAdditionSupertype);
+
     // Native object properties are filled in by externs...
 
     // least function type, i.e. (All...) -> NoType

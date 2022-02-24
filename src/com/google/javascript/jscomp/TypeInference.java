@@ -21,12 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
@@ -129,14 +126,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     this.assertionFunctionLookup = checkNotNull(assertionFunctionLookup);
 
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
-    this.numberAdditionSupertype =
-        registry.createUnionType(
-            VOID_TYPE,
-            NULL_TYPE,
-            NUMBER_TYPE,
-            NUMBER_OBJECT_TYPE,
-            BOOLEAN_TYPE,
-            BOOLEAN_OBJECT_TYPE);
+    this.numberAdditionSupertype = registry.getNativeType(JSTypeNative.NUMBER_ADDITION_SUPERTYPE);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(

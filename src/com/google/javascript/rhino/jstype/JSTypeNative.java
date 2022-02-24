@@ -207,5 +207,8 @@ public enum JSTypeNative {
   BIGINT_NUMBER_STRING,
 
   /** (Bigint,Number,String) */
-  BIGINT_NUMBER_STRING_OBJECT;
+  BIGINT_NUMBER_STRING_OBJECT,
+
+  /** (boolean,Boolean,number,Number,null,undefined) */
+  NUMBER_ADDITION_SUPERTYPE;
 }
