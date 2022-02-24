@@ -109,7 +109,9 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
           Node newGetProp =
               n.isGetElem()
                   ? IR.getprop(left, right.getString())
-                  : IR.startOptChainGetprop(left, right.getString());
+                  : (n.isOptionalChainStart()
+                      ? IR.startOptChainGetprop(left, right.getString())
+                      : IR.continueOptChainGetprop(left, right.getString()));
           n.replaceWith(newGetProp);
           compiler.reportChangeToEnclosingScope(newGetProp);
         }

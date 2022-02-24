@@ -193,4 +193,19 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
   public void testComputedPropertyWithDefaultValue() {
     test("const {['o']: o = 0} = {};", "const {o:o = 0} = {};");
   }
+
+  @Test
+  public void testContinueOptionalChaining() {
+    test("const opt1 = window?.a?.['b'];", "const opt1 = window?.a?.b;");
+
+    test("const opt2 = window?.a['b'];", "const opt2 = window?.a.b;");
+    test(
+        lines(
+            "const chain =",
+            "window['a'].x.y.b.x.y['c'].x.y?.d.x.y['e'].x.y",
+            "['f-f'].x.y?.['g-g'].x.y?.['h'].x.y['i'].x.y;"),
+        lines(
+            "const chain = window.a.x.y.b.x.y.c.x.y?.d.x.y.e.x.y",
+            "['f-f'].x.y?.['g-g'].x.y?.h.x.y.i.x.y;"));
+  }
 }
