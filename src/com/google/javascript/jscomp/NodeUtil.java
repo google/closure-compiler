@@ -1224,7 +1224,9 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the new has a local result. */
+  /**
+   * @return Whether the new has a local result.
+   */
   static boolean newHasLocalResult(Node n) {
     checkState(n.isNew(), n);
     return n.isOnlyModifiesThisCall();
@@ -1243,7 +1245,9 @@ public final class NodeUtil {
   static final ImmutableSet<String> KNOWN_CONSTANTS =
       ImmutableSet.of("undefined", "Infinity", "NaN");
 
-  /** @return Whether the tree can be affected by side-effects or has side-effects. */
+  /**
+   * @return Whether the tree can be affected by side-effects or has side-effects.
+   */
   static boolean canBeSideEffected(Node n) {
     return canBeSideEffected(n, KNOWN_CONSTANTS, null);
   }
@@ -1466,7 +1470,9 @@ public final class NodeUtil {
     return n.isNull() || isUndefined(n);
   }
 
-  /** @see #getKnownValueType(Node) */
+  /**
+   * @see #getKnownValueType(Node)
+   */
   public enum ValueType {
     UNDETERMINED,
     NULL,
@@ -1674,17 +1680,23 @@ public final class NodeUtil {
     return getKnownValueType(n) == ValueType.BIGINT;
   }
 
-  /** @return Whether the result of node evaluation is always a boolean */
+  /**
+   * @return Whether the result of node evaluation is always a boolean
+   */
   public static boolean isBooleanResult(Node n) {
     return getKnownValueType(n) == ValueType.BOOLEAN;
   }
 
-  /** @return Whether the result of node evaluation is always a string */
+  /**
+   * @return Whether the result of node evaluation is always a string
+   */
   public static boolean isStringResult(Node n) {
     return getKnownValueType(n) == ValueType.STRING;
   }
 
-  /** @return Whether the result of node evaluation is always an object */
+  /**
+   * @return Whether the result of node evaluation is always an object
+   */
   public static boolean isObjectResult(Node n) {
     return getKnownValueType(n) == ValueType.OBJECT;
   }
@@ -1949,7 +1961,9 @@ public final class NodeUtil {
     return curr;
   }
 
-  /** @return The first property in the objlit or class members, that matches the key. */
+  /**
+   * @return The first property in the objlit or class members, that matches the key.
+   */
   @Nullable
   static Node getFirstPropMatchingKey(Node n, String keyName) {
     checkState(n.isObjectLit() || n.isClassMembers());
@@ -1962,7 +1976,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** @return The first getter in the class members that matches the key. */
+  /**
+   * @return The first getter in the class members that matches the key.
+   */
   @Nullable
   static Node getFirstGetterMatchingKey(Node n, String keyName) {
     checkState(n.isClassMembers() || n.isObjectLit(), n);
@@ -2309,7 +2325,9 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the specified node has a loop parent that is within the current scope. */
+  /**
+   * @return Whether the specified node has a loop parent that is within the current scope.
+   */
   static boolean isWithinLoop(Node n) {
     for (Node parent : n.getAncestors()) {
       if (NodeUtil.isLoopStructure(parent)) {
@@ -2400,7 +2418,9 @@ public final class NodeUtil {
     throw new IllegalArgumentException(n + " does not have a condition.");
   }
 
-  /** @return Whether the node is of a type that contain other statements. */
+  /**
+   * @return Whether the node is of a type that contain other statements.
+   */
   public static boolean isStatementBlock(Node n) {
     return n.isRoot() || n.isScript() || n.isBlock() || n.isModuleBody();
   }
@@ -2449,7 +2469,9 @@ public final class NodeUtil {
     return DEFINITE_CFG_ROOTS.contains(n.getToken());
   }
 
-  /** @return Whether the node is used as a statement. */
+  /**
+   * @return Whether the node is used as a statement.
+   */
   public static boolean isStatement(Node n) {
     return !n.isModuleBody() && !n.isScript() && !n.isRoot() && isStatementParent(n.getParent());
   }
@@ -2985,7 +3007,9 @@ public final class NodeUtil {
     return n.isFunction() && !NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isMethodDeclaration(n);
   }
 
-  /** @return Whether the node is both a function expression and the function is named. */
+  /**
+   * @return Whether the node is both a function expression and the function is named.
+   */
   static boolean isNamedFunctionExpression(Node n) {
     return NodeUtil.isFunctionExpression(n) && !n.getFirstChild().getString().isEmpty();
   }
@@ -3000,7 +3024,9 @@ public final class NodeUtil {
     return n.isClass() && (!isNamedClass(n) || !isDeclarationParent(n.getParent()));
   }
 
-  /** @return Whether the node is both a function expression and the function is named. */
+  /**
+   * @return Whether the node is both a function expression and the function is named.
+   */
   static boolean isNamedClassExpression(Node n) {
     return NodeUtil.isClassExpression(n) && n.getFirstChild().isName();
   }
@@ -3055,7 +3081,9 @@ public final class NodeUtil {
     return isFunctionExpression(node) && isEmptyBlock(node.getLastChild());
   }
 
-  /** @return Whether a function has a reference to its own "arguments" object. */
+  /**
+   * @return Whether a function has a reference to its own "arguments" object.
+   */
   static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {
     checkArgument(fn.isFunction());
     if (fn.isArrowFunction()) {
@@ -4145,7 +4173,9 @@ public final class NodeUtil {
         && isKnownGlobalObjectReference(getprop.getFirstChild());
   }
 
-  /** @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call */
+  /**
+   * @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call
+   */
   static Iterable<Node> getObjectDefinedPropertiesKeys(Node definePropertiesCall) {
     checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
     List<Node> properties = new ArrayList<>();
@@ -4159,12 +4189,16 @@ public final class NodeUtil {
     return properties;
   }
 
-  /** @return {@code true} if the node an assignment to a prototype property of some constructor. */
+  /**
+   * @return {@code true} if the node an assignment to a prototype property of some constructor.
+   */
   public static boolean isPrototypePropertyDeclaration(Node n) {
     return isExprAssign(n) && isPrototypeProperty(n.getFirstFirstChild());
   }
 
-  /** @return Whether the node represents a qualified prototype property. */
+  /**
+   * @return Whether the node represents a qualified prototype property.
+   */
   static boolean isPrototypeProperty(Node n) {
     if (!n.isGetProp()) {
       return false;
@@ -4173,7 +4207,9 @@ public final class NodeUtil {
     return recv.isGetProp() && recv.getString().equals("prototype");
   }
 
-  /** @return Whether the node represents a prototype method. */
+  /**
+   * @return Whether the node represents a prototype method.
+   */
   static boolean isPrototypeMethod(Node n) {
     if (!n.isFunction()) {
       return false;
@@ -4287,7 +4323,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** @return The string property name part of a qualified prototype name. */
+  /**
+   * @return The string property name part of a qualified prototype name.
+   */
   static String getPrototypePropertyName(Node qName) {
     String qNameStr = qName.getQualifiedName();
     int prototypeIdx = qNameStr.lastIndexOf(".prototype.");
@@ -4414,7 +4452,9 @@ public final class NodeUtil {
     return getCount(node, new MatchNameNode(name), Predicates.alwaysTrue());
   }
 
-  /** @return Whether the predicate is true for the node or any of its descendants. */
+  /**
+   * @return Whether the predicate is true for the node or any of its descendants.
+   */
   public static boolean has(Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
       return true;
@@ -4454,7 +4494,9 @@ public final class NodeUtil {
     return null;
   }
 
-  /** @return The number of times the predicate is true for the node or any of its descendants. */
+  /**
+   * @return The number of times the predicate is true for the node or any of its descendants.
+   */
   public static int getCount(Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     int total = 0;
 
@@ -4612,19 +4654,25 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether an EXPORT node has a from clause. */
+  /**
+   * @return Whether an EXPORT node has a from clause.
+   */
   static boolean isExportFrom(Node n) {
     checkArgument(n.isExport());
     return n.hasTwoChildren();
   }
 
-  /** @return Whether a TRY node has a finally block. */
+  /**
+   * @return Whether a TRY node has a finally block.
+   */
   static boolean hasFinally(Node n) {
     checkArgument(n.isTry());
     return n.hasXChildren(3);
   }
 
-  /** @return The BLOCK node containing the CATCH node (if any) of a TRY. */
+  /**
+   * @return The BLOCK node containing the CATCH node (if any) of a TRY.
+   */
   static Node getCatchBlock(Node n) {
     checkArgument(n.isTry());
     return n.getSecondChild();
@@ -4885,7 +4933,9 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the provided expression is may evaluate to 'undefined'. */
+  /**
+   * @return Whether the provided expression is may evaluate to 'undefined'.
+   */
   static boolean mayBeUndefined(Node n) {
     return !isDefinedValue(n);
   }
@@ -5215,7 +5265,9 @@ public final class NodeUtil {
     }
   }
 
-  /** @return true iff the result of the expression is consumed. */
+  /**
+   * @return true iff the result of the expression is consumed.
+   */
   public static boolean isExpressionResultUsed(Node expr) {
     Node parent = expr.getParent();
     switch (parent.getToken()) {
@@ -5318,12 +5370,16 @@ public final class NodeUtil {
     return true;
   }
 
-  /** @return An appropriate AST node for the boolean value. */
+  /**
+   * @return An appropriate AST node for the boolean value.
+   */
   static Node booleanNode(boolean value) {
     return value ? IR.trueNode() : IR.falseNode();
   }
 
-  /** @return An appropriate AST node for the double value. */
+  /**
+   * @return An appropriate AST node for the double value.
+   */
   static Node numberNode(double value, Node srcref) {
     Node result;
     if (Double.isNaN(value)) {
@@ -5366,7 +5422,9 @@ public final class NodeUtil {
     return (n.isScript() || n.isFunction());
   }
 
-  /** @return the change scope root */
+  /**
+   * @return the change scope root
+   */
   static Node getEnclosingChangeScopeRoot(Node n) {
     while (n != null && !isChangeScopeRoot(n)) {
       n = n.getParent();
@@ -5485,7 +5543,9 @@ public final class NodeUtil {
     return n.isScript() || n.isModuleBody();
   }
 
-  /** @return Whether the node is a goog.module file's SCRIPT node. */
+  /**
+   * @return Whether the node is a goog.module file's SCRIPT node.
+   */
   static boolean isGoogModuleFile(Node n) {
     return n.isScript()
         && n.hasChildren()
@@ -5829,7 +5889,9 @@ public final class NodeUtil {
         || node.isComputedProp();
   }
 
-  /** @return Whether the node represents the return value of a blockless Arrow function */
+  /**
+   * @return Whether the node represents the return value of a blockless Arrow function
+   */
   public static boolean isBlocklessArrowFunctionResult(Node n) {
     Node parent = n.getParent();
     return parent != null && parent.isFunction() && n == parent.getLastChild() && !n.isBlock();
