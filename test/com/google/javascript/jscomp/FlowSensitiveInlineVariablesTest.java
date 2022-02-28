@@ -21,10 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link FlowSensitiveInlineVariables}.
- *
- */
+/** Unit tests for {@link FlowSensitiveInlineVariables}. */
 @RunWith(JUnit4.class)
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
@@ -91,8 +88,9 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testSimpleForIn() {
-    inline("var a,b,x = a in b; x",
-           "var a,b,x; a in b");
+    inline(
+        "var a,b,x = a in b; x", //
+        "var a,b,x;  a in b;  ");
     noInline("var a, b; var x = a in b; print(1); x");
     noInline("var a,b,x = a in b; delete a[b]; x");
   }
@@ -125,7 +123,9 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testAssignmentBeforeDefinition() {
-    inline("x = 1; var x = 0; print(x)","x = 1; var x; print(0)" );
+    inline(
+        "x = 1; var x = 0; print(x)", //
+        "x = 1; var x    ; print(0)");
   }
 
   @Test
@@ -174,62 +174,68 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   @Test
   public void testDoNotInlineCatchExpression1() {
     noInline(
-        "var a;\n" +
-        "try {\n" +
-        "  throw Error(\"\");\n" +
-        "}catch(err) {" +
-        "   a = err;\n" +
-        "}\n" +
-        "return a.stack\n");
+        lines(
+            "var a;",
+            "try {",
+            "  throw Error(\"\");",
+            "}catch(err) {",
+            "   a = err;",
+            "}",
+            "return a.stack"));
   }
 
   @Test
   public void testDoNotInlineCatchExpression1a() {
     noInline(
-        "var a;\n" +
-        "try {\n" +
-        "  throw Error(\"\");\n" +
-        "}catch(err) {" +
-        "   a = err + 1;\n" +
-        "}\n" +
-        "return a.stack\n");
+        lines(
+            "var a;",
+            "try {",
+            "  throw Error(\"\");",
+            "} catch(err) {",
+            "   a = err + 1;",
+            "}",
+            "return a.stack"));
   }
 
   @Test
   public void testDoNotInlineCatchExpression2() {
     noInline(
-        "var a;\n" +
-        "try {\n" +
-        "  if (x) {throw Error(\"\");}\n" +
-        "}catch(err) {" +
-        "   a = err;\n" +
-        "}\n" +
-        "return a.stack\n");
+        lines(
+            "var a;",
+            "try {",
+            "  if (x) {throw Error(\"\");}",
+            "} catch(err) {",
+            "   a = err;",
+            "}",
+            "return a.stack"));
   }
 
   @Test
   public void testDoNotInlineCatchExpression3() {
     noInline(
-        "var a;\n" +
-        "try {\n" +
-        "  throw Error(\"\");\n" +
-        "} catch(err) {" +
-        "  err = x;\n" +
-        "  a = err;\n" +
-        "}\n" +
-        "return a.stack\n");
+        lines(
+            "var a;",
+            "try {",
+            "  throw Error(\"\");",
+            "} catch(err) {",
+            "  err = x;",
+            "  a = err;",
+            "}",
+            "return a.stack"));
   }
 
   @Test
   public void testDoNotInlineCatchExpression4() {
     // Note: it is valid to inline "x" here but we currently don't.
     noInline(
-        "try {\n" +
-        " stuff();\n" +
-        "} catch (e) {\n" +
-        " x = e;\n" +
-        " print(x);\n" +
-        "}");
+        lines(
+            "", //
+            "try {",
+            "  stuff();",
+            "} catch (e) {",
+            "  x = e;",
+            "  print(x);",
+            "}"));
   }
 
   @Test
@@ -239,20 +245,21 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineSameVariableInStraightLine() {
-    inline("var x; x = 1; print(x); x = 2; print(x)",
-        "var x; print(1); print(2)");
+    inline(
+        "var x; x = 1; print(x); x = 2; print(x)", //
+        "var x;        print(1);        print(2)");
   }
 
   @Test
   public void testInlineInDifferentPaths() {
-    inline("var x; if (print) {x = 1; print(x)} else {x = 2; print(x)}",
-        "var x; if (print) {print(1)} else {print(2)}");
+    inline(
+        "var x; if (print) {x = 1; print(x)} else {x = 2; print(x)}",
+        "var x; if (print) {       print(1)} else {       print(2)}");
   }
 
   @Test
   public void testNoInlineInMergedPath() {
-    noInline(
-        "var x,y;x = 1;while(y) { if(y){ print(x) } else { x = 1 } } print(x)");
+    noInline("var x,y;x = 1;while(y) { if(y){ print(x) } else { x = 1 } } print(x)");
   }
 
   @Test
@@ -273,8 +280,9 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineExpressions3() {
-    inline("var a,b,x; x=a+b; x=a-b ; print(x)",
-           "var a,b,x; x=a+b; print(a-b)");
+    inline(
+        "var a,b,x; x=a+b; x=a-b; print(  x)", //
+        "var a,b,x; x=a+b;        print(a-b)");
   }
 
   @Test
@@ -308,20 +316,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   public void testInlineExpression8() {
     // The same variable inlined twice.
     inline(
-        "var a,b;" +
-        "var x = a + b; print(x);      x = a - b; print(x)",
-        "var a,b;" +
-        "var x;         print(a + b);             print(a - b)");
+        "var a,b; var x = a + b; print(    x); x = a - b; print(    x)",
+        "var a,b; var x        ; print(a + b);            print(a - b)");
   }
 
   @Test
   public void testInlineExpression9() {
     // Check for actual control flow sensitivity.
     inline(
-        "var a,b;" +
-        "var x; if (g) { x= a + b; print(x)    }  x = a - b; print(x)",
-        "var a,b;" +
-        "var x; if (g) {           print(a + b)}             print(a - b)");
+        "var a,b; var x; if (g) { x= a + b; print(    x)}  x = a - b; print(    x)",
+        "var a,b; var x; if (g) {           print(a + b)}             print(a - b)");
   }
 
   @Test
@@ -345,21 +349,23 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineExpressions13() {
-    inline("var a = 1, b = 2;" +
-           "var x = a;" +
-           "var y = b;" +
-           "var z = x + y;" +
-           "var i = z;" +
-           "var j = z + y;" +
-           "var k = i;",
-
-           "var a, b;" +
-           "var x;" +
-           "var y = 2;" +
-           "var z = 1 + y;" +
-           "var i;" +
-           "var j = z + y;" +
-           "var k = z;");
+    inline(
+        lines(
+            "var a = 1, b = 2;",
+            "var x = a;",
+            "var y = b;",
+            "var z = x + y;",
+            "var i = z;",
+            "var j = z + y;",
+            "var k = i;"),
+        lines(
+            "var a, b;",
+            "var x;",
+            "var y = 2;",
+            "var z = 1 + y;",
+            "var i;",
+            "var j = z + y;",
+            "var k = z;"));
   }
 
   @Test
@@ -389,8 +395,9 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testShadowedVariableInnerFunction() {
-    inline("var x = 1; print(x) || (function() {  var x; x = 1; print(x)})()",
-        "var x; print(1) || (function() {  var x; print(1)})()");
+    inline(
+        "var x = 1; print(x) || (function() {  var x; x = 1; print(x)})()",
+        "var x    ; print(1) || (function() {  var x;        print(1)})()");
   }
 
   @Test
@@ -451,16 +458,27 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   @Test
   public void testInlineConstructorCallsIntoLoop() {
     // Don't inline construction into loops.
-    noInline("var x = new Iterator();" +
-             "for(i = 0; i < 10; i++) {j = x.next()}");
+    noInline(
+        lines(
+            "", //
+            "var x = new Iterator();",
+            "for(i = 0; i < 10; i++) {",
+            "  j = x.next();",
+            "}",
+            ""));
   }
 
   @Test
   public void testRemoveWithLabels() {
-    inline("var x = 1; L: x = 2; print(x)", "var x = 1; L:{} print(2)");
-    inline("var x = 1; L: M: x = 2; print(x)", "var x = 1; L:M:{} print(2)");
-    inline("var x = 1; L: M: N: x = 2; print(x)",
-           "var x = 1; L:M:N:{} print(2)");
+    inline(
+        "var x = 1; L: x = 2; print(x)", //
+        "var x = 1; L: {    } print(2)");
+    inline(
+        "var x = 1; L: M: x = 2; print(x)", //
+        "var x = 1; L: M: {    } print(2)");
+    inline(
+        "var x = 1; L: M: N: x = 2; print(x)", //
+        "var x = 1; L: M: N: {    } print(2)");
   }
 
   @Test
@@ -470,7 +488,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     //
     // noSFX must be both const and pure in order to inline it.
     noInline("var y; var x = noSFX(y); print(x)");
-    //inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
+    // inline("var y; var x = noSFX(y); print(x)", "var y;var x;print(noSFX(y))");
   }
 
   @Test
@@ -508,8 +526,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     // the definition of noSFX. We should be able to mark noSFX as const
     // in some way.
     noInline(
-        "var y; var x = noSFX(y), z = noSFX(); noSFX(); noSFX(), print(x)");
-    //inline(
+        lines(
+            "", //
+            "var y;",
+            "var x = noSFX(y),",
+            "z = noSFX();",
+            "noSFX();",
+            "noSFX(),",
+            "print(x)",
+            ""));
+    // inline(
     //    "var y; var x = noSFX(y), z = noSFX(); noSFX(); noSFX(), print(x)",
     //    "var y; var x, z = noSFX(); noSFX(); noSFX(), print(noSFX(y))");
   }
@@ -542,25 +568,44 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     testSame("function _func(x) { print(x) }");
     testSame("function _func(x,y) { if(y) { x = 1 }; print(x) }");
 
-    test("function f(x, y) { x = 1; print(x) }",
-         "function f(x, y) { print(1) }");
+    test(
+        "function f(x, y) { x = 1; print(x) }", //
+        "function f(x, y) {        print(1) }");
 
-    test("function f(x, y) { if (y) { x = 1; print(x) }}",
-         "function f(x, y) { if (y) { print(1) }}");
+    test(
+        "function f(x, y) { if (y) { x = 1; print(x) }}",
+        "function f(x, y) { if (y) {        print(1) }}");
   }
 
   @Test
   public void testInvalidInlineArguments1() {
     testSame("function f(x, y) { x = 1; arguments[0] = 2; print(x) }");
-    testSame("function f(x, y) { x = 1; var z = arguments;" +
-        "z[0] = 2; z[1] = 3; print(x)}");
+    testSame(
+        lines(
+            "", //
+            "function f(x, y) {",
+            "  x = 1;",
+            "  var z = arguments;",
+            "  z[0] = 2;",
+            "  z[1] = 3;",
+            "  print(x);",
+            "}",
+            ""));
     testSame("function g(a){a[0]=2} function f(x){x=1;g(arguments);print(x)}");
   }
 
   @Test
   public void testInvalidInlineArguments2() {
-    testSame("function f(c) {var f = c; arguments[0] = this;" +
-             "f.apply(this, arguments); return this;}");
+    testSame(
+        lines(
+            "", //
+            "function f(c) {",
+            "  var f = c;",
+            "  arguments[0] = this;",
+            "  f.apply(this, arguments);",
+            "  return this;",
+            "}",
+            ""));
   }
 
   @Test
@@ -594,53 +639,57 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     // sure the algorithm bails out appropriately if it sees
     // a var that it doesn't know about.
     inline(
-        "var x = ''; "
-        + "unknown.length < 2 && (unknown='0' + unknown);"
-        + "x = x + unknown; "
-        + "unknown.length < 3 && (unknown='0' + unknown);"
-        + "x = x + unknown; "
-        + "return x;",
-        "var x; "
-        + "unknown.length < 2 && (unknown='0' + unknown);"
-        + "x = '' + unknown; "
-        + "unknown.length < 3 && (unknown='0' + unknown);"
-        + "x = x + unknown; "
-        + "return x;");
+        lines(
+            "var x = ''; ",
+            "unknown.length < 2 && (unknown='0' + unknown);",
+            "x = x + unknown; ",
+            "unknown.length < 3 && (unknown='0' + unknown);",
+            "x = x + unknown; ",
+            "return x;"),
+        lines(
+            "var x; ",
+            "unknown.length < 2 && (unknown='0' + unknown);",
+            "x = '' + unknown; ",
+            "unknown.length < 3 && (unknown='0' + unknown);",
+            "x = x + unknown; ",
+            "return x;"));
   }
 
   @Test
   public void testIssue777() {
     test(
-        "function f(cmd, ta) {" +
-        "  var temp = cmd;" +
-        "  var temp2 = temp >> 2;" +
-        "  cmd = STACKTOP;" +
-        "  for (var src = temp2, dest = cmd >> 2, stop = src + 37;" +
-        "       src < stop;" +
-        "       src++, dest++) {" +
-        "    HEAP32[dest] = HEAP32[src];" +
-        "  }" +
-        "  temp = ta;" +
-        "  temp2 = temp >> 2;" +
-        "  ta = STACKTOP;" +
-        "  STACKTOP += 8;" +
-        "  HEAP32[ta >> 2] = HEAP32[temp2];" +
-        "  HEAP32[ta + 4 >> 2] = HEAP32[temp2 + 1];" +
-        "}",
-        "function f(cmd, ta){" +
-        "  var temp;" +
-        "  var temp2 = cmd >> 2;" +
-        "  cmd = STACKTOP;" +
-        "  var src = temp2;" +
-        "  var dest = cmd >> 2;" +
-        "  var stop = src + 37;" +
-        "  for(;src<stop;src++,dest++)HEAP32[dest]=HEAP32[src];" +
-        "  temp2 = ta >> 2;" +
-        "  ta = STACKTOP;" +
-        "  STACKTOP += 8;" +
-        "  HEAP32[ta>>2] = HEAP32[temp2];" +
-        "  HEAP32[ta+4>>2] = HEAP32[temp2+1];" +
-        "}");
+        lines(
+            "function f(cmd, ta) {",
+            "  var temp = cmd;",
+            "  var temp2 = temp >> 2;",
+            "  cmd = STACKTOP;",
+            "  for (var src = temp2, dest = cmd >> 2, stop = src + 37;",
+            "       src < stop;",
+            "       src++, dest++) {",
+            "    HEAP32[dest] = HEAP32[src];",
+            "  }",
+            "  temp = ta;",
+            "  temp2 = temp >> 2;",
+            "  ta = STACKTOP;",
+            "  STACKTOP += 8;",
+            "  HEAP32[ta >> 2] = HEAP32[temp2];",
+            "  HEAP32[ta + 4 >> 2] = HEAP32[temp2 + 1];",
+            "}"),
+        lines(
+            "function f(cmd, ta){",
+            "  var temp;",
+            "  var temp2 = cmd >> 2;",
+            "  cmd = STACKTOP;",
+            "  var src = temp2;",
+            "  var dest = cmd >> 2;",
+            "  var stop = src + 37;",
+            "  for(;src<stop;src++,dest++)HEAP32[dest]=HEAP32[src];",
+            "  temp2 = ta >> 2;",
+            "  ta = STACKTOP;",
+            "  STACKTOP += 8;",
+            "  HEAP32[ta>>2] = HEAP32[temp2];",
+            "  HEAP32[ta+4>>2] = HEAP32[temp2+1];",
+            "}"));
   }
 
   @Test
@@ -660,21 +709,23 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   @Test
   public void testIssue794a() {
     noInline(
-        "var x = 1; " +
-        "try { x += someFunction(); } catch (e) {}" +
-        "x += 1;" +
-        "try { x += someFunction(); } catch (e) {}" +
-        "return x;");
+        lines(
+            "var x = 1; ",
+            "try { x += someFunction(); } catch (e) {}",
+            "x += 1;",
+            "try { x += someFunction(); } catch (e) {}",
+            "return x;"));
   }
 
   @Test
   public void testIssue794b() {
     noInline(
-        "var x = 1; " +
-        "try { x = x + someFunction(); } catch (e) {}" +
-        "x = x + 1;" +
-        "try { x = x + someFunction(); } catch (e) {}" +
-        "return x;");
+        lines(
+            "var x = 1; ",
+            "try { x = x + someFunction(); } catch (e) {}",
+            "x = x + 1;",
+            "try { x = x + someFunction(); } catch (e) {}",
+            "return x;"));
   }
 
   @Test
@@ -688,96 +739,105 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   @Test
   public void testInlineStringConcat() {
-    test(lines(
-        "function f() {",
-        "  var x = '';",
-        "  x = x + '1';",
-        "  x = x + '2';",
-        "  x = x + '3';",
-        "  x = x + '4';",
-        "  x = x + '5';",
-        "  x = x + '6';",
-        "  x = x + '7';",
-        "  return x;",
-        "}"),
+    test(
+        lines(
+            "function f() {",
+            "  var x = '';",
+            "  x = x + '1';",
+            "  x = x + '2';",
+            "  x = x + '3';",
+            "  x = x + '4';",
+            "  x = x + '5';",
+            "  x = x + '6';",
+            "  x = x + '7';",
+            "  return x;",
+            "}"),
         "function f() { var x; return '' + '1' + '2' + '3' + '4' + '5' + '6' + '7'; }");
   }
 
   @Test
   public void testInlineInArrowFunctions() {
-    test("() => {var v; v = 1; return v;} ",
-        "() => {var v; return 1;}");
+    test(
+        "() => {var v; v = 1; return v;} ", //
+        "() => {var v       ; return 1;}");
 
-    test("(v) => {v = 1; return v;}",
-        "(v) => {return 1;}");
+    test(
+        "(v) => {v = 1; return v;}", //
+        "(v) => {       return 1;}");
   }
 
   @Test
   public void testInlineInClassMemberFunctions() {
     test(
         lines(
+            "", //
             "class C {",
             "  func() {",
             "    var x;",
             "    x = 1;",
             "    return x;",
             "  }",
-            "}"
-        ),
+            "}",
+            ""),
         lines(
+            "", //
             "class C {",
             "  func() {",
             "    var x;",
             "    return 1;",
             "  }",
-            "}"
-        )
-    );
+            "}",
+            ""));
   }
 
   @Test
   public void testInlineLet() {
-    inline("let a = 1; print(a + 1)",
-         "let a; print(1 + 1)");
+    inline(
+        "let a = 1; print(a + 1)", //
+        "let a;     print(1 + 1)");
 
-    inline("let a; a = 1; print(a + 1)",
-        "let a; print(1 + 1)");
+    inline(
+        "let a; a = 1; print(a + 1)", //
+        "let a;        print(1 + 1)");
 
     noInline("let a = noSFX(); print(a)");
   }
 
   @Test
   public void testInlineConst() {
-    inline("const a = 1; print(a + 1)",
+    inline(
+        "const a = 1        ; print(a + 1)", //
         "const a = undefined; print(1 + 1)");
 
-    inline("const a = 1; const b = a; print(b + 1)",
+    inline(
+        "const a =         1; const b =         a; print(b + 1)",
         "const a = undefined; const b = undefined; print(1 + 1)");
 
     noInline("const a = noSFX(); print(a)");
-
   }
 
   @Test
   public void testSpecific() {
-    inline("let a = 1; print(a + 1)",
-        "let a; print(1 + 1)");
+    inline(
+        "let a = 1; print(a + 1)", //
+        "let a    ; print(1 + 1)");
   }
 
   @Test
   public void testBlockScoping() {
     inline(
         lines(
+            "", //
             "let a = 1",
             "print(a + 1);",
             "{",
             "  let b = 2;",
             "  print(b + 1);",
-            "}"
-        ),
+            "}"),
         lines(
+            "", //
             "let a;",
-            "print(1 + 1);",
+            "print(1 + 1);", //
             "{",
             "  let b;",
             "  print(2 + 1);",
@@ -785,36 +845,43 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
     inline(
         lines(
+            "", //
             "let a = 1",
             "{",
             "  let a = 2;",
             "  print(a + 1);",
             "}",
-            "print(a + 1);"
-        ),
+            "print(a + 1);",
+            ""),
         lines(
+            "", //
             "let a = 1",
             "{",
             "  let a;",
             "  print(2 + 1);",
             "}",
-            "print(a + 1);"));
+            "print(a + 1);",
+            ""));
 
     inline(
         lines(
+            "", //
             "let a = 1;",
             "  {let b;}",
-            "print(a)"
-        ),
+            "print(a)",
+            ""),
         lines(
+            "", //
             "let a;",
             "  {let b;}",
-            "print(1)"));
+            "print(1)",
+            ""));
 
     // This test fails to inline due to CheckPathsBetweenNodes analysis in the canInline function
     // in FlowSensitiveInlineVariables.
     noInline(
         lines(
+            "", //
             "let a = 1;",
             "{",
             "  let b;",
@@ -840,16 +907,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     // test let/const shadowing of a var
     noInline(
         lines(
-        "var JSCompiler_inline_result;",
-        "var a = 0;",
-        "{",
-        "  let a = 1;",
-        "  if (3 < 4) {",
-        "    a = 2;",
-        "  }",
-        "  JSCompiler_inline_result = a;",
-        "}",
-        "alert(JSCompiler_inline_result);"));
+            "var JSCompiler_inline_result;",
+            "var a = 0;",
+            "{",
+            "  let a = 1;",
+            "  if (3 < 4) {",
+            "    a = 2;",
+            "  }",
+            "  JSCompiler_inline_result = a;",
+            "}",
+            "alert(JSCompiler_inline_result);"));
 
     noInline("{ let value = 1; var g = () => value; } return g;");
   }
@@ -858,18 +925,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   public void testInlineInGenerators() {
     test(
         lines(
+            "", //
             "function* f() {",
             "  var x = 1;",
             "  return x + 1;",
-            "}"
-        ),
+            "}"),
         lines(
+            "", //
             "function* f() {",
             "  var x;",
             "  return 1 + 1;",
-            "}"
-        )
-    );
+            "}"));
   }
 
   @Test
@@ -895,14 +961,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testTemplateStrings() {
-    inline("var name = 'Foo'; `Hello ${name}`",
-        "var name; `Hello ${'Foo'}`");
+    inline(
+        "var name = 'Foo'; `Hello ${ name}`", //
+        "var name        ; `Hello ${'Foo'}`");
 
-    inline("var name = 'Foo'; var foo = name; `Hello ${foo}`",
-        "var name; var foo; `Hello ${'Foo'}`");
+    inline(
+        "var name = 'Foo'; var foo = name; `Hello ${ foo }`", //
+        "var name        ; var foo       ; `Hello ${'Foo'}`");
 
-    inline(" var age = 3; `Age: ${age}`",
-        "var age; `Age: ${3}`");
+    inline(
+        "var age = 3; `Age: ${age}`", //
+        "var age    ; `Age: ${  3}`");
   }
 
   @Test
@@ -1047,7 +1116,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   private void inline(String input, String expected) {
     test(
         externs(EXTERN_FUNCTIONS),
-        srcs("function _func() {" + input + "}"),
-        expected("function _func() {" + expected + "}"));
+        srcs(
+            lines(
+                "", //
+                "function _func() {",
+                input,
+                "}")),
+        expected(
+            lines(
+                "", //
+                "function _func() {",
+                expected,
+                "}")));
   }
 }
