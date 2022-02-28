@@ -30,7 +30,7 @@ import java.util.Set;
  * class.
  *
  * <p>See <a
- * href="http://www.algorithmist.com/index.php?title=Union_Find&oldid=7575">
+ * href="https://algorithmist.com/wiki/Union_find">
  * algorithmist</a> for more detail.
  *
  * @param <E> element type
