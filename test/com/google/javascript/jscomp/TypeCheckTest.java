@@ -29288,6 +29288,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .run();
   }
 
+  @Test
+  @Ignore("b/221480261")
+  public void testSymbolIteratorMethod() {
+    newTest()
+        .includeDefaultExterns()
+        .addSource("const /** number */ num = [][Symbol.iterator];")
+        .addDiagnostic(TypeValidator.TYPE_MISMATCH_WARNING)
+        .run();
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(
         js, description == null ? null : ImmutableList.of(description));
