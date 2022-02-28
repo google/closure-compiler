@@ -160,7 +160,7 @@ StorageEvent.prototype.storageArea;
  * @param {string} keyArg
  * @param {?string} oldValueArg
  * @param {?string} newValueArg
- * @param {string} urlArg
+ * @param {!URL|string} urlArg
  * @param {?Storage} storageAreaArg
  * @return {void}
  */

@@ -277,17 +277,17 @@ ServiceWorkerContainer.prototype.controller;
 ServiceWorkerContainer.prototype.ready;
 
 /**
- * @param {!TrustedScriptURL|string} scriptURL
+ * @param {!TrustedScriptURL|!URL|string} scriptURL
  * @param {RegistrationOptions=} opt_options
  * @return {!Promise<!ServiceWorkerRegistration>}
  */
 ServiceWorkerContainer.prototype.register = function(scriptURL, opt_options) {};
 
 /**
- * @param {string=} opt_documentURL
+ * @param {!URL|string=} documentURL
  * @return {!Promise<!ServiceWorkerRegistration|undefined>}
  */
-ServiceWorkerContainer.prototype.getRegistration = function(opt_documentURL) {};
+ServiceWorkerContainer.prototype.getRegistration = function(documentURL) {};
 
 /**
  * @return {!Promise<Array<!ServiceWorkerRegistration>>}
@@ -419,7 +419,7 @@ ServiceWorkerClient.prototype.postMessage = function(message, opt_transfer) {};
 ServiceWorkerClient.prototype.focus = function() {};
 
 /**
- * @param {string} url
+ * @param {!URL|string} url
  * @return {!Promise<!ServiceWorkerClient>}
  */
 ServiceWorkerClient.prototype.navigate = function(url) {};
@@ -451,7 +451,7 @@ ServiceWorkerClients.prototype.matchAll = function(opt_options) {};
 ServiceWorkerClients.prototype.claim = function() {};
 
 /**
- * @param {string} url
+ * @param {!URL|string} url
  * @return {!Promise<!ServiceWorkerClient>}
  */
 ServiceWorkerClients.prototype.openWindow = function(url) {};

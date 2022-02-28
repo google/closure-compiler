@@ -475,7 +475,7 @@ Navigator.prototype.productSub;
 Navigator.prototype.securityPolicy;
 
 /**
- * @param {string} url
+ * @param {!URL|string} url
  * @param {ArrayBufferView|Blob|string|FormData|URLSearchParams=} opt_data
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/navigator.sendBeacon

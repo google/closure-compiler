@@ -1467,10 +1467,10 @@ Window.prototype.applicationCache;
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...!TrustedScriptURL|string} var_args
+ * @param {...!TrustedScriptURL|!URL|string} urls
  * @return {undefined}
  */
-Window.prototype.importScripts = function(var_args) {};
+Window.prototype.importScripts = function(urls) {};
 
 /**
  * Decodes a string of data which has been encoded using base-64 encoding.
@@ -1492,14 +1492,14 @@ function btoa(stringToEncode) {}
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...!TrustedScriptURL|string} var_args
+ * @param {...!TrustedScriptURL|!URL|string} urls
  * @return {undefined}
  */
-function importScripts(var_args) {}
+function importScripts(urls) {}
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!TrustedScriptURL|string} scriptURL
+ * @param {!TrustedScriptURL|!URL|string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
@@ -1575,7 +1575,7 @@ WorkerOptions.prototype.type;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!TrustedScriptURL|string} scriptURL The URL of the script to run in
+ * @param {!TrustedScriptURL|!URL|string} scriptURL The URL of the script to run in
  *     the SharedWorker.
  * @param {(string|!WorkerOptions)=} options A name that can
  *     later be used to obtain a reference to the same SharedWorker or a
@@ -5371,7 +5371,7 @@ Navigator.prototype.cookieEnabled;
 
 /**
  * @param {string} scheme
- * @param {string} url
+ * @param {!URL|string} url
  * @param {string} title
  * @return {undefined}
  */
@@ -5387,7 +5387,7 @@ Navigator.prototype.registerContentHandler = function(mimeType, url, title) {}
 
 /**
  * @param {string} scheme
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  */
 Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {}
