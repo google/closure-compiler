@@ -1354,8 +1354,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // exception somewhere.
       compiler.generateReport();
     }
-    Result result = compiler.getResult();
-    return result;
+    return compiler.getResult();
   }
 
   @GwtIncompatible("Unnecessary")
@@ -1508,8 +1507,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // exception somewhere.
       compiler.generateReport();
     }
-    Result result = compiler.getResult();
-    return result;
+    return compiler.getResult();
   }
 
   @GwtIncompatible("Unnecessary")
@@ -1524,8 +1522,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     } finally {
       compiler.generateReport();
     }
-    Result result = compiler.getResult();
-    return result;
+    return compiler.getResult();
   }
 
   /** Processes the results of the compile job, and returns an error code. */

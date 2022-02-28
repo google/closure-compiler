@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.extensions.proto.ProtoSubject;
-import com.google.common.truth.extensions.proto.ProtoTruth;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.DebugInfo;
@@ -851,7 +851,7 @@ public class ColorSerializerTest {
     public abstract TypePool getTypePool();
 
     ProtoSubject assertThatTypePool() {
-      return ProtoTruth.assertThat(getTypePool());
+      return assertThat(getTypePool());
     }
 
     static GenerateTypePoolTestResult create(TypePool typePool) {

@@ -25,6 +25,8 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
@@ -64,8 +66,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1312,7 +1312,7 @@ public final class CompilerTest {
   }
 
   private String concatStrings(String... strings) {
-    return Stream.of(strings).collect(Collectors.joining());
+    return stream(strings).collect(joining());
   }
 
   private void restoreCompilerState(Compiler compiler, byte[] stateAfterChecks)

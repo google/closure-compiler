@@ -1472,14 +1472,14 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory injectRuntimeLibrariesForChecks =
       PassFactory.builder()
           .setName("InjectRuntimeLibraries")
-          .setInternalFactory((compiler) -> InjectRuntimeLibraries.forChecks(compiler))
+          .setInternalFactory(InjectRuntimeLibraries::forChecks)
           .setFeatureSetForChecks()
           .build();
 
   private final PassFactory injectRuntimeLibrariesForOptimizations =
       PassFactory.builder()
           .setName("InjectRuntimeLibraries")
-          .setInternalFactory((compiler) -> InjectRuntimeLibraries.forOptimizations(compiler))
+          .setInternalFactory(InjectRuntimeLibraries::forOptimizations)
           .setFeatureSetForChecks()
           .build();
 

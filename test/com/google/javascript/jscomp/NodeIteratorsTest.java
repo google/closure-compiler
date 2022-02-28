@@ -200,7 +200,7 @@ public final class NodeIteratorsTest {
     assertWithMessage("Variable X not found! " + root.toStringTree()).that(found).isTrue();
 
     List<Node> currentAncestors = searchIt.currentAncestors();
-    assertThat(currentAncestors.size() >= 3).isTrue();
+    assertThat(currentAncestors.size()).isAtLeast(3);
     Iterator<Node> moveIt =
         LocalVarMotion.forVar(
             compiler, currentAncestors.get(0), currentAncestors.get(1), currentAncestors.get(2));
