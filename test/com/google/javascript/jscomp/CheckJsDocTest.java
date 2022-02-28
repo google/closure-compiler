@@ -552,6 +552,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("/** @desc Foo. */ const {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
     testWarning(
         "var bar;\n/** @desc Foo. */ ({bar} = goog.getMsg('x'));", MISPLACED_MSG_ANNOTATION);
+
+    // allow in TS code
+    testNoWarning(
+        srcs(
+            SourceFile.fromCode(
+                "foo.closure.js", "/** @desc Foo. */ var bar = goog.getMsg('hello');")));
   }
 
   @Test

@@ -525,10 +525,13 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       return;
     }
 
-    if (info.getDescription() != null
-        || info.isHidden()
-        || info.getMeaning() != null
-        || info.getAlternateMessageId() != null) {
+    boolean hasNonDescMsgTag =
+        info.isHidden() || info.getMeaning() != null || info.getAlternateMessageId() != null;
+
+    if (hasNonDescMsgTag
+        // Don't error on TS gencode using @desc on a non-message. There's a lot of code that
+        // uses @desc as a general purpose "@desc" tag
+        || (info.getDescription() != null && !isFromTs(n))) {
       boolean descOkay = false;
       switch (n.getToken()) {
         case ASSIGN:
@@ -790,5 +793,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     if (!isJSDocOnFunctionNode(n, info)) {
       report(n, MISPLACED_ANNOTATION, "tsType", "must be on a function node");
     }
+  }
+
+  private static boolean isFromTs(Node n) {
+    return n.getSourceFileName().endsWith(".closure.js");
   }
 }
