@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
@@ -204,7 +205,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     reachingUses.analyze();
     while (!candidates.isEmpty()) {
       Candidate c = candidates.iterator().next();
-      if (c.canInline(t.getScope())) {
+      Var candidateVar = checkNotNull(allVarsInFn.get(c.varName));
+      if (c.canInline(candidateVar.getScope())) {
         c.inlineVariable();
         candidates.remove(c);
 

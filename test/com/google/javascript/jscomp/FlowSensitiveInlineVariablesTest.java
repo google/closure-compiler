@@ -553,9 +553,63 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
   @Test
   public void testInlineIfNameIsLeftSideOfAssign() {
-    inline("var x = 1; x = print(x) + 1", "var x; x = print(1) + 1");
-    inline("var x = 1; L: x = x + 2", "var x; L: x = 1 + 2");
-    inline("var x = 1; x = (x = x + 1)", "var x; x = (x = 1 + 1)");
+    inline(
+        "var x = 1; x = print(x) + 1", //
+        "var x    ; x = print(1) + 1");
+    inline(
+        "var x = 1; L: x = x + 2", //
+        "var x    ; L: x = 1 + 2");
+    inline(
+        "var x = 1; x = (x = x + 1)", //
+        "var x    ; x = (x = 1 + 1)");
+
+    inline(
+        lines(
+            "", //
+            // Create a block scope within the function
+            "{",
+            "  const C1 = 1;",
+            "  const C2 = 2;",
+            // `var` gives `x` a larger scope than `C1`
+            "  var x = C1;",
+            "  x = x == C1 ? C1 * 2 : C2 * 2;",
+            "}",
+            // `x` still exists here
+            "console.log(x);",
+            ""),
+        lines(
+            "", //
+            "{",
+            "  const C1 = 1;",
+            "  const C2 = undefined;", // C2 was inlined
+            "  var x = C1;",
+            "  x = x == C1 ? C1 * 2 : 2 * 2;",
+            "}",
+            // Inlining `C1` to replace `x` here would not work, since `C1` is out of scope here.
+            "console.log(x);",
+            ""));
+
+    inline(
+        lines(
+            "", //
+            // Create a block scope within the function
+            "{",
+            "  const C1 = 1;",
+            "  const C2 = 2;",
+            // `let` gives `x` the same scope as `C1`
+            "  let x = C1;",
+            "  x = x == C1 ? C1 * 2 : C2 * 2;",
+            "}",
+            ""),
+        lines(
+            "", //
+            "{",
+            "  const C1 = 1;",
+            "  const C2 = undefined;", // C2 was inlined
+            "  let x;", // x was inlined
+            "  x = C1 == C1 ? C1 * 2 : 2 * 2;",
+            "}",
+            ""));
 
     noInline("var x = 1; x = (x = (x = 10) + x)");
     noInline("var x = 1; x = (f(x) + (x = 10) + x);");
