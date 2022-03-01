@@ -950,7 +950,7 @@ public enum CompilationParam {
   },
 
   /** Preserve more non-type-related information from JSDoc. */
-  PRESERVE_FULL_JSDOC_DESCRIPTIONS(ParamGroup.MISC) {
+  PARSE_FULL_JSDOC_DESCRIPTIONS(ParamGroup.MISC) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setParseJsDocDocumentation(
@@ -966,7 +966,7 @@ public enum CompilationParam {
     }
   },
 
-  PRESERVE_TYPE_ANNOTATIONS(true, ParamGroup.MISC) {
+  PARSE_TYPE_ANNOTATIONS(true, ParamGroup.MISC) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setPreserveTypeAnnotations(value);
