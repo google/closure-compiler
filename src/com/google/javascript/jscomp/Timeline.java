@@ -33,7 +33,7 @@ final class Timeline<T> {
   private static class Event<T> {
     Event<?> nextEvent;
     Event<?> previousEvent;
-    T value;
+    final T value;
 
     Event(T value) {
       checkNotNull(value);

@@ -174,7 +174,7 @@ public class TypedAstSerializerTest extends CompilerTestCase {
   }
 
   private class Tester {
-    Map<String, ImmutableSet<String>> expectedTypeNameToPropertyNamesMap = new HashMap<>();
+    final Map<String, ImmutableSet<String>> expectedTypeNameToPropertyNamesMap = new HashMap<>();
 
     Tester expectTypeNamed(String typeName) {
       expectedTypeNameToPropertyNamesMap.put(typeName, ImmutableSet.of());

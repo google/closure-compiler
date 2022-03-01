@@ -209,9 +209,6 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       isRead = true;
     }
 
-    boolean isChildPropOf(String lesserPropertyQName) {
-      return qualifiedName != null && qualifiedName.startsWith(lesserPropertyQName + ".");
-    }
   }
 
   /**
@@ -223,10 +220,10 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     /**
      * A map of property names to their nodes.
      *
-     * <p>Note: the references {@code a.b} and {@code c.b} will assume that it's the same b,
-     * because a and c may be aliased, and we don't track aliasing.
+     * <p>Note: the references {@code a.b} and {@code c.b} will assume that it's the same b, because
+     * a and c may be aliased, and we don't track aliasing.
      */
-    Map<String, Property> propertyMap = new HashMap<>();
+    final Map<String, Property> propertyMap = new HashMap<>();
 
     /** A set of properties names that are potentially unsafe to remove duplicate writes to. */
     private final Set<String> skiplistedPropNames;

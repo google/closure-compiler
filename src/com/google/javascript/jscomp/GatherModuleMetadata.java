@@ -133,7 +133,7 @@ public final class GatherModuleMetadata implements CompilerPass {
     private Node declaredModuleId;
     private Node declaresLegacyNamespace;
     final ModuleMetadata.Builder metadataBuilder;
-    LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
+    final LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
 
     ModuleMetadataBuilder(Node rootNode, @Nullable ModulePath path) {
       this.metadataBuilder =

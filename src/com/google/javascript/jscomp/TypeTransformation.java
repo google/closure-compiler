@@ -100,8 +100,8 @@ class TypeTransformation {
    * and the name variables in maprecord expressions
    */
   private static class NameResolver {
-    ImmutableMap<String, JSType> typeVars;
-    ImmutableMap<String, String> nameVars;
+    final ImmutableMap<String, JSType> typeVars;
+    final ImmutableMap<String, String> nameVars;
 
     NameResolver(ImmutableMap<String, JSType> typeVars, ImmutableMap<String, String> nameVars) {
       this.typeVars = typeVars;

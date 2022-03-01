@@ -630,8 +630,8 @@ final class Tracer {
 
   /** An event is created every time a Tracer is created or stopped */
   private static final class Event {
-    boolean isStart;   // else is_stop
-    Tracer tracer;
+    final boolean isStart; // else is_stop
+    final Tracer tracer;
 
     Event(boolean start, Tracer t) {
       isStart = start;

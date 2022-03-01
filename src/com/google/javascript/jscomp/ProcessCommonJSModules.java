@@ -933,8 +933,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
 
     private class UmdTestInfo {
-      public Node enclosingIf;
-      public Node activeBranch;
+      public final Node enclosingIf;
+      public final Node activeBranch;
 
       UmdTestInfo(Node enclosingIf, Node activeBranch) {
         this.enclosingIf = enclosingIf;

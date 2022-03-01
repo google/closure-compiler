@@ -36,7 +36,7 @@ public final class CheckPathsBetweenNodesTest {
    * Predicate satisfied by strings with a given prefix.
    */
   private static class PrefixPredicate implements Predicate<String> {
-    String prefix;
+    final String prefix;
 
     PrefixPredicate(String prefix) {
       this.prefix = prefix;

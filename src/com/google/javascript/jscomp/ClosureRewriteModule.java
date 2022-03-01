@@ -185,12 +185,10 @@ final class ClosureRewriteModule implements CompilerPass {
     // A goog.require() call, or a goog.module.get() call.
     final Node requireNode;
     final String namespaceId;
-    final boolean mustBeOrdered;
 
     UnrecognizedRequire(Node requireNode, String namespaceId, boolean mustBeOrdered) {
       this.requireNode = requireNode;
       this.namespaceId = namespaceId;
-      this.mustBeOrdered = mustBeOrdered;
     }
   }
 
@@ -291,8 +289,8 @@ final class ClosureRewriteModule implements CompilerPass {
     boolean hasCreatedExportObject;
     ExportDefinition defaultExport;
     String defaultExportLocalName;
-    Set<String> namedExports = new HashSet<>();
-    Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
+    final Set<String> namedExports = new HashSet<>();
+    final Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
 
     // The root of the module. The MODULE_BODY node that contains the module contents.
     // For recognizing top level names.
@@ -672,13 +670,6 @@ final class ClosureRewriteModule implements CompilerPass {
       return script == null ? null : script.getExportedNamespace();
     }
 
-    void removeRoot(Node toRemove) {
-      if (namespaceIdsByScriptNode.containsKey(toRemove)) {
-        scriptDescriptionsByGoogModuleNamespace
-            .keySet()
-            .removeAll(namespaceIdsByScriptNode.removeAll(toRemove));
-      }
-    }
   }
 
   private final GlobalRewriteState rewriteState = new GlobalRewriteState();

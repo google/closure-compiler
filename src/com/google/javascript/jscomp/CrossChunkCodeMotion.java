@@ -240,7 +240,7 @@ class CrossChunkCodeMotion implements CompilerPass {
      */
     final Set<GlobalSymbol> referencingGlobalSymbols = new LinkedHashSet<>();
     /** Instanceof references we may need to update with a guard after moving declarations. */
-    Deque<InstanceofReference> instanceofReferencesToGuard = new ArrayDeque<>();
+    final Deque<InstanceofReference> instanceofReferencesToGuard = new ArrayDeque<>();
     /** Used by OrderAndCombineGlobalSymbols to find reference cycles. */
     int preorderNumber = -1;
     /** Used by OrderAndCombineGlobalSymbols to find reference cycles. */
@@ -411,7 +411,7 @@ class CrossChunkCodeMotion implements CompilerPass {
     /** chunk containing the statements */
     JSChunk currentModule;
     /** statements in the group, latest first */
-    Deque<TopLevelStatement> statementStack = new ArrayDeque<>();
+    final Deque<TopLevelStatement> statementStack = new ArrayDeque<>();
 
     DeclarationStatementGroup(GlobalSymbol declaredGlobalSymbol, JSChunk currentModule) {
       this.declaredGlobalSymbol = declaredGlobalSymbol;
@@ -539,12 +539,10 @@ class CrossChunkCodeMotion implements CompilerPass {
    * global symbols refer to each other.
    */
   private class DeclarationStatementGroupCycle {
-    GlobalSymbolCycle globalSymbolCycle;
-    JSChunk currentModule;
-    Deque<DeclarationStatementGroup> dsgs;
+    final JSChunk currentModule;
+    final Deque<DeclarationStatementGroup> dsgs;
 
     DeclarationStatementGroupCycle(GlobalSymbolCycle globalSymbolCycle, JSChunk currentModule) {
-      this.globalSymbolCycle = globalSymbolCycle;
       this.currentModule = currentModule;
       this.dsgs = new ArrayDeque<>();
     }
@@ -641,8 +639,8 @@ class CrossChunkCodeMotion implements CompilerPass {
   }
 
   private static class ImmovableInstanceofReference implements InstanceofReference {
-    JSChunk module;
-    Reference reference;
+    final JSChunk module;
+    final Reference reference;
 
     ImmovableInstanceofReference(JSChunk module, Reference reference) {
       this.module = module;
@@ -661,8 +659,8 @@ class CrossChunkCodeMotion implements CompilerPass {
   }
 
   private static class MovableInstanceofReference implements InstanceofReference {
-    DeclarationStatementGroup containingDsg;
-    Reference reference;
+    final DeclarationStatementGroup containingDsg;
+    final Reference reference;
 
     MovableInstanceofReference(DeclarationStatementGroup containingDsg, Reference reference) {
       this.containingDsg = containingDsg;

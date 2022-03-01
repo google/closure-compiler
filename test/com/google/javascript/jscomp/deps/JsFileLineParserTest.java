@@ -154,8 +154,8 @@ public final class JsFileLineParserTest {
   }
 
   private static class TestParser extends JsFileLineParser {
-    StringBuilder sb = new StringBuilder();
-    StringBuilder comments = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
+    final StringBuilder comments = new StringBuilder();
 
     TestParser(ErrorManager errorManager) {
       super(errorManager);

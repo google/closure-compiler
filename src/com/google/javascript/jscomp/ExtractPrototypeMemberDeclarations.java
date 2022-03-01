@@ -334,7 +334,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   }
 
   private class ExtractionInstance {
-    List<PrototypeMemberDeclaration> declarations = new ArrayList<>();
+    final List<PrototypeMemberDeclaration> declarations = new ArrayList<>();
     private int delta = 0;
     private final Node parent;
 

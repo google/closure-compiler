@@ -77,8 +77,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   private static class MarkNoSideEffectCallsAndRemoveUnusedCodeRunner implements CompilerPass {
-    PureFunctionIdentifier.Driver pureFunctionIdentifier;
-    RemoveUnusedCode removeUnusedCode;
+    final PureFunctionIdentifier.Driver pureFunctionIdentifier;
+    final RemoveUnusedCode removeUnusedCode;
 
     MarkNoSideEffectCallsAndRemoveUnusedCodeRunner(Compiler compiler) {
       this.pureFunctionIdentifier = new PureFunctionIdentifier.Driver(compiler);

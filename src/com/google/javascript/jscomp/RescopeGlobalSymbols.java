@@ -331,7 +331,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * (This is invalid syntax, but the VAR token is removed later).
    */
   private class RewriteScopeCallback implements NodeTraversal.Callback {
-    List<ModuleGlobal> preDeclarations = new ArrayList<>();
+    final List<ModuleGlobal> preDeclarations = new ArrayList<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {

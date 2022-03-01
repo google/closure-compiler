@@ -216,8 +216,8 @@ public final class CombinedCompilerPassTest {
    */
   private static class ScopeRecordingCallback implements ScopedCallback {
 
-    Set<Node> visitedScopes = new HashSet<>();
-    Set<String> ignoring = new HashSet<>();
+    final Set<Node> visitedScopes = new HashSet<>();
+    final Set<String> ignoring = new HashSet<>();
 
     void ignore(String name) {
       ignoring.add(name);

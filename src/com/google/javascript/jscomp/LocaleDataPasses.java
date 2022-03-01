@@ -59,7 +59,7 @@ final class LocaleDataPasses {
           "JSC_LOCALE_MISSING_BASE_FILE", "Missing base file for extension file: {0}");
 
   private static class LocaleDataImpl implements LocaleData {
-    ArrayList<LinkedHashMap<String, Node>> data;
+    final ArrayList<LinkedHashMap<String, Node>> data;
 
     LocaleDataImpl(ArrayList<LinkedHashMap<String, Node>> data) {
       this.data = data;
@@ -150,14 +150,12 @@ final class LocaleDataPasses {
     private final Node qnameForLocale = IR.name(GOOG_LOCALE_REPLACEMENT);
 
     private final AbstractCompiler compiler;
-    private final ArrayList<LinkedHashMap<String, Node>> localeValueMap;
     private final String locale;
 
     LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {
       this.compiler = compiler;
       // Use the "default" locale if not otherwise set.
       this.locale = locale == null ? DEFAULT_LOCALE : locale;
-      this.localeValueMap = null;
     }
 
     @Override
