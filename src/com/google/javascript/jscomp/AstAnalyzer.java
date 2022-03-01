@@ -278,11 +278,11 @@ public class AstAnalyzer {
 
       case OBJECT_REST:
       case OBJECT_SPREAD:
-          // Object-rest and object-spread may trigger a getter.
-          if (assumeGettersArePure) {
-            break; // We still need to inspect the children.
-          }
-          return true;
+        // Object-rest and object-spread may trigger a getter.
+        if (assumeGettersArePure) {
+          break; // We still need to inspect the children.
+        }
+        return true;
 
       case ITER_REST:
       case ITER_SPREAD:

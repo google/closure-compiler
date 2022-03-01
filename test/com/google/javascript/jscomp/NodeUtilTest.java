@@ -4825,7 +4825,9 @@ public final class NodeUtilTest {
     return null;
   }
 
-  /** @return The first node in {@code tree} that is an array pattern or object pattern. */
+  /**
+   * @return The first node in {@code tree} that is an array pattern or object pattern.
+   */
   @Nullable
   private static Node getPattern(Node tree) {
     if (tree.isDestructuringPattern()) {

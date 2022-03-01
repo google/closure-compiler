@@ -42,9 +42,8 @@ import java.util.Set;
  */
 final class CheckSideEffects extends AbstractPostOrderCallback implements CompilerPass {
 
-  static final DiagnosticType USELESS_CODE_ERROR = DiagnosticType.warning(
-      "JSC_USELESS_CODE",
-      "Suspicious code. {0}");
+  static final DiagnosticType USELESS_CODE_ERROR =
+      DiagnosticType.warning("JSC_USELESS_CODE", "Suspicious code. {0}");
 
   // Protect function is used to protect the underlying node from removal. At the very end, this
   // protector function will be completely removed from production but the underlying node will be
@@ -69,8 +68,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
   /** Whether the synthetic extern for JSCOMPILER_PRESERVE has been injected */
   private boolean preserveFunctionInjected = false;
 
-  CheckSideEffects(AbstractCompiler compiler, boolean report,
-      boolean protectSideEffectFreeCode) {
+  CheckSideEffects(AbstractCompiler compiler, boolean report, boolean protectSideEffectFreeCode) {
     this.compiler = compiler;
     this.report = report;
     this.protectSideEffectFreeCode = protectSideEffectFreeCode;
@@ -162,10 +160,11 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
         boolean isDefinedInSrc = false;
         if (qname != null) {
           if (n.getFirstChild().isGetProp()) {
-            Node rootNameNode =
-                NodeUtil.getRootOfQualifiedName(n.getFirstChild());
-            isDefinedInSrc = rootNameNode != null && rootNameNode.isName()
-                && t.getScope().getVar(rootNameNode.getString()) != null;
+            Node rootNameNode = NodeUtil.getRootOfQualifiedName(n.getFirstChild());
+            isDefinedInSrc =
+                rootNameNode != null
+                    && rootNameNode.isName()
+                    && t.getScope().getVar(rootNameNode.getString()) != null;
           } else {
             isDefinedInSrc = t.getScope().getVar(qname) != null;
           }
@@ -174,8 +173,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
         if (qname != null && noSideEffectExterns.contains(qname) && !isDefinedInSrc) {
           problemNodes.add(n);
           if (report) {
-            String msg = "The result of the extern function call '" + qname
-                + "' is not being used.";
+            String msg =
+                "The result of the extern function call '" + qname + "' is not being used.";
             t.report(n, USELESS_CODE_ERROR, msg);
           }
         }
@@ -184,9 +183,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
   }
 
   /**
-   * Protect side-effect free nodes by making them parameters
-   * to a extern function call.  This call will be removed
-   * after all the optimizations passes have run.
+   * Protect side-effect free nodes by making them parameters to a extern function call. This call
+   * will be removed after all the optimizations passes have run.
    */
   private void protectSideEffects() {
     if (!problemNodes.isEmpty()) {
@@ -210,9 +208,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
     NodeUtil.createSynthesizedExternsSymbol(compiler, PROTECTOR_FN);
   }
 
-  /**
-   * Remove side-effect sync functions.
-   */
+  /** Remove side-effect sync functions. */
   static class StripProtection extends AbstractPostOrderCallback implements CompilerPass {
 
     private final AbstractCompiler compiler;
@@ -254,10 +250,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
   }
 
   /**
-   * Get fully qualified function names which are marked
-   * with @nosideeffects
+   * Get fully qualified function names which are marked with @nosideeffects
    *
-   * TODO(ChadKillingsworth) Add support for object literals
+   * <p>TODO(ChadKillingsworth) Add support for object literals
    */
   private class GetNoSideEffectExterns extends AbstractPostOrderCallback {
     @Override
