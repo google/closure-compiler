@@ -64,7 +64,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType MISSING_RETURN_JSDOC =
       DiagnosticType.disabled(
           "JSC_MISSING_RETURN_JSDOC",
-          "Function with non-trivial return must have JSDoc indicating the return type.{0}");
+          "Function that returns a value must have JSDoc indicating the return type.{0}");
 
   public static final DiagnosticType OPTIONAL_PARAM_NOT_MARKED_OPTIONAL =
       DiagnosticType.disabled(
