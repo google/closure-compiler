@@ -3987,10 +3987,11 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isSimpleOperator(parseExpr("x = 5"))).isFalse();
       assertThat(NodeUtil.isSimpleOperator(parseExpr("x++"))).isFalse();
       assertThat(NodeUtil.isSimpleOperator(parseExpr("--y"))).isFalse();
-      // prop access are simple
+      // prop access with IN are simple
       assertThat(NodeUtil.isSimpleOperator(parseExpr("y in x"))).isTrue();
-      assertThat(NodeUtil.isSimpleOperator(parseExpr("x.y"))).isTrue();
-      assertThat(NodeUtil.isSimpleOperator(parseExpr("x[y]"))).isTrue();
+      // prop access have side effects because of getters/setters
+      assertThat(NodeUtil.isSimpleOperator(parseExpr("x.y"))).isFalse();
+      assertThat(NodeUtil.isSimpleOperator(parseExpr("x[y]"))).isFalse();
     }
 
     @Test

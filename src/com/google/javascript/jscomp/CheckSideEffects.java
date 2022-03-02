@@ -129,7 +129,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback implements Compil
     }
 
     boolean isResultUsed = NodeUtil.isExpressionResultUsed(n);
-    boolean isSimpleOp = NodeUtil.isSimpleOperator(n);
+    boolean isSimpleOp = NodeUtil.isSimpleOperator(n) || n.isGetProp() || n.isGetElem();
     if (!isResultUsed) {
       if (isSimpleOp || !t.getCompiler().getAstAnalyzer().mayHaveSideEffects(n)) {
         if (report) {

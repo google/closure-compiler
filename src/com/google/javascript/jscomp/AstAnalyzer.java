@@ -434,7 +434,7 @@ public class AstAnalyzer {
         break;
 
       default:
-        if (NodeUtil.isSimpleOperator(n)) {
+        if (NodeUtil.isSimpleOperator(n) || n.isGetProp() || n.isGetElem()) {
           break;
         }
 
