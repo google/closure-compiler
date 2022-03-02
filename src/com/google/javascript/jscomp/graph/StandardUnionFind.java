@@ -40,12 +40,9 @@ import javax.annotation.Nullable;
 /**
  * A Union-Find implementation.
  *
- * <p>This class implements Union-Find algorithm with rank and path
- * compression.
+ * <p>This class implements Union-Find algorithm with rank and path compression.
  *
- * <p>See <a
- * href="http://www.algorithmist.com/index.php?title=Union_Find&oldid=7575">
- * algorithmist</a> for more detail.
+ * <p>See <a href="https://algorithmist.com/wiki/Union_find">algorithmist</a> for more detail.
  *
  * @param <E> element type
  */

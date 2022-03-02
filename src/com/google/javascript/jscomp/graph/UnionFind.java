@@ -22,16 +22,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Set;
 
 /**
- * Union-Find is a classical algorithm used to find connected components in
- * graph theory.
+ * Union-Find is a classical algorithm used to find connected components in graph theory.
  *
- * <p>Each equivalence class has a representative element that is chosen
- * arbitrarily and is used to determine if two elements are members of the same
- * class.
+ * <p>Each equivalence class has a representative element that is chosen arbitrarily and is used to
+ * determine if two elements are members of the same class.
  *
- * <p>See <a
- * href="http://www.algorithmist.com/index.php?title=Union_Find&oldid=7575">
- * algorithmist</a> for more detail.
+ * <p>See <a href="https://algorithmist.com/wiki/Union_find">algorithmist</a> for more detail.
  *
  * @param <E> element type
  */
