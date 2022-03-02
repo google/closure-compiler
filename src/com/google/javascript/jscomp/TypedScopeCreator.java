@@ -163,8 +163,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_DYNAMIC_EXTENDS_WITHOUT_JSDOC",
           "The right-hand side of an extends clause must be a qualified name, or else @extends must"
               + " be specified in JSDoc");
-  static final DiagnosticType DUPLICATE_CLASS_FIELD =
-      DiagnosticType.warning("DUPLICATE_CLASS_FIELD", "Class field {0} is duplicated");
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -3442,10 +3440,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     void defineMemberField(Node n) {
       ObjectType ownerType = determineOwnerTypeForClassMember(n);
-      String propName = n.getString();
-      if (ownerType.hasOwnProperty(propName)) {
-        report(JSError.make(n, DUPLICATE_CLASS_FIELD, propName));
-      }
 
       JSType declaredType = getDeclaredType(n.getJSDocInfo(), n, n.getFirstChild(), null);
       if (declaredType == null) {
@@ -3453,6 +3447,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         declaredType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
       }
 
+      String propName = n.getString();
       ownerType.defineDeclaredProperty(propName, declaredType, n);
       n.setJSType(declaredType);
     }

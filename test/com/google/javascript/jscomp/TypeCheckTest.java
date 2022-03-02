@@ -26760,7 +26760,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest().addSource("class A { static x=2; }").run();
     newTest().addSource("class B { static x; }").run();
     newTest().addSource("class C { static x }").run();
-    newTest().addSource("class D { static /** @type {string|undefined} */ x;}").run();
+    newTest().addSource("class D { /** @type {string|undefined} */ static x;}").run();
     newTest()
         .addSource("class E { /** @type {string} @suppress {checkTypes} */ static x = 2; }")
         .run();
@@ -26876,29 +26876,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 "found   : number",
                 "required: string"))
         .run();
-  }
-
-  @Test
-  public void testClassDuplicateFieldError() {
-    newTest()
-        .addSource("class C { /** @type {string} */ dog = ''; /** @type {number} */ dog = 0; }")
-        .addDiagnostic("Class field dog is duplicated")
-        .run();
-  }
-
-  @Test
-  public void testClassDuplicateStaticFieldError() {
-    newTest()
-        .addSource(
-            "class C { static /** @type {string} */ dog = ''; static /** @type {number} */ dog = 0;"
-                + " }")
-        .addDiagnostic("Class field dog is duplicated")
-        .run();
-  }
-
-  @Test
-  public void testClassDuplicateOneStaticFieldNoError() {
-    newTest().addSource("class C {dog = 2; static dog = 'hi';}").run();
   }
 
   @Test

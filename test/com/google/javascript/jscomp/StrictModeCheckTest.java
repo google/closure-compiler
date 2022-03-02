@@ -33,7 +33,7 @@ public final class StrictModeCheckTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    disableTypeCheck();
   }
 
   @Override
@@ -164,11 +164,13 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallerProp() {
+    enableTypeCheck();
     testWarning("function foo() {foo.caller}", StrictModeCheck.FUNCTION_CALLER_FORBIDDEN);
   }
 
   @Test
   public void testFunctionArgumentsProp() {
+    enableTypeCheck();
     testWarning(
         "function foo() {foo.arguments}", StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
   }
@@ -204,7 +206,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
   public void testValidDelete() {
     testSame("var obj = { a: 0 }; delete obj.a;");
     testSame("var obj = { a: function() {} }; delete obj.a;");
-    disableTypeCheck();
     testSameEs6Strict("var obj = { a(){} }; delete obj.a;");
     testSameEs6Strict("var obj = { a }; delete obj.a;");
   }
@@ -238,8 +239,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
             "  set appData(data) { this.appData_ = data; }",
             "};"));
 
-    disableTypeCheck();
-
     testWarning("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
     testWarning("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
     testWarning("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
@@ -265,8 +264,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testClass() {
-    disableTypeCheck();
-
     testSame(
         lines(
             "class A {",
@@ -342,8 +339,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testComputedPropInClass() {
-    disableTypeCheck();
-
     testSame(
         lines(
             "class Example {",
@@ -354,8 +349,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testStaticAndNonstaticMethodWithSameName() {
-    disableTypeCheck();
-
     testSame(
         lines(
             "class Example {",
@@ -366,8 +359,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testStaticAndNonstaticGetterWithSameName() {
-    disableTypeCheck();
-
     testSame(
         lines(
             "class Example {",
@@ -378,8 +369,6 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testStaticAndNonstaticSetterWithSameName() {
-    disableTypeCheck();
-
     testSame(
         lines(
             "class Example {",
@@ -390,22 +379,38 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testClassWithEmptyMembers() {
-    disableTypeCheck();
-
     testWarning("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_MEMBER);
   }
 
   @Test
-  public void testClassField() {
-    disableTypeCheck();
+  public void testClassDuplicateFieldError() {
+    testWarning(
+        lines(
+            "class Example {", //
+            "  a;",
+            "  a;",
+            "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
+  }
 
+  @Test
+  public void testClassDuplicateStaticFieldError() {
+    testWarning(
+        lines(
+            "class Example {", //
+            "  static a;",
+            "  static a;",
+            "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
+  }
+
+  @Test
+  public void testClassFields_noError() {
     testSame(
         lines(
-            "class Example {",
-            "  a = 2;",
-            "  static b;",
-            "  ['a'] = 'hi';",
-            "  static ['b'];",
+            "class Example {", //
+            "  a;",
+            "  static a;",
             "}"));
   }
 
