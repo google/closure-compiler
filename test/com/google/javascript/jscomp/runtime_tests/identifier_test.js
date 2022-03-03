@@ -20,11 +20,11 @@
  */
 goog.require('goog.testing.jsunit');
 
-// Test Scanner.java workaround to prevent GWT-compiled compiler from choking
+// Test Scanner.java workaround to prevent J2CL-compiled compiler from choking
 // on a special character used by Angular in some names.
-// Note that the non-GWT compiler allows all legal JS identifier names, but
-// due to GWT lack for Unicode support for Java's Character.is* methods, the
-// GWT-compiled compiler does not.
+// Note that the non-J2CL compiler allows all legal JS identifier names, but
+// due to J2CL lack for Unicode support for Java's Character.is* methods, the
+// J2CL-compiled compiler does not.
 function testUnicodeInVariableName() {
   var ɵ = true;
   // Note: a failure of this test actually manifests as
