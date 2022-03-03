@@ -34,7 +34,7 @@ public class RemoveTrailingCommaFromParamListTest extends CompilerTestCase {
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
-    // TODO(b/211899097): enable multistage compilation
+    enableMultistageCompilation();
     // Trailing commas are not considered when comparing Nodes for equality, so we must do a text
     // comparison.
     disableCompareAsTree();
