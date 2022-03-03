@@ -2443,6 +2443,27 @@ chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode = {
 };
 
 /**
+ * Represents possible states for the SafeBrowsingProtectionLevel policy
+ * @enum {number}
+ */
+chrome.enterprise.reportingPrivate.SafeBrowsingLevel = {
+  DISABLED: 0,
+  STANDARD: 0,
+  ENHANCED: 0,
+};
+
+/**
+ * Represents possible states for the PasswordProtectionWarningTrigger policy
+ * @enum {number}
+ */
+chrome.enterprise.reportingPrivate.PasswordProtectionTrigger = {
+  PASSWORD_PROTECTION_OFF: 0,
+  PASSWORD_REUSE: 0,
+  PHISHING_REUSE: 0,
+  POLICY_UNSET: 0,
+};
+
+/**
  * Type of the object returned by getContextInfo.
  * @typedef {?{
  *   browserAffiliationIds: (!Array<string>|undefined),
@@ -2453,6 +2474,15 @@ chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode = {
  *   onSecurityEventProviders: (!Array<string>|undefined),
  *   realtimeUrlCheckMode: chrome.enterprise.reportingPrivate.RealtimeUrlCheckMode,
  *   browserVersion: string,
+ *   safeBrowsingProtectionLevel: chrome.enterprise.reportingPrivate.SafeBrowsingLevel,
+ *   siteIsolationEnabled: (!boolean|undefined),
+ *   builtInDnsClientEnabled: (!boolean|undefined),
+ *   passwordProtectionWarningTrigger: chrome.enterprise.reportingPrivate.PasswordProtectionTrigger,
+ *   chromeCleanupEnabled: (!boolean|undefined),
+ *   chromeRemoteDesktopAppBlocked: (!boolean|undefined),
+ *   thirdPartyBlockingEnabled: (!boolean|undefined),
+ *   osFirewall: chrome.enterprise.reportingPrivate.SettingValue,
+ *   systemDnsServers: (!Array<string>|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.ContextInfo;
