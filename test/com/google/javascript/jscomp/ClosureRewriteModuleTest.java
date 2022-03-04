@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
@@ -2026,7 +2027,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Test
   public void testDuplicateNamespaceDoesntCrash() {
     // The compiler emits a warning elsewhere for this code
-    testError(srcs("goog.module('ns.a');", "goog.provide('ns.a');"), DUPLICATE_MODULE);
+    testError(
+        srcs("goog.module('ns.a');", "goog.provide('ns.a');"), DUPLICATE_NAMESPACE_AND_MODULE);
   }
 
   @Test

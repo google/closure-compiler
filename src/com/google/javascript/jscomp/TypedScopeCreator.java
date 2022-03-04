@@ -768,7 +768,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               .forEachOrdered(weakImports::add);
           break;
         default:
-          // This should have been a build-breaking JSC_DUPLICATE_NAMESPACE_MODULE error in
+          // This should have been a build-breaking DUPLICATE_NAMESPACE_AND_MODULE error in
           // GatherModuleMetadata
           throw new IllegalStateException(
               SimpleFormat.format(
