@@ -420,7 +420,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("" + "for (var x of [1, 2, 3]) {\n" + "  if (x == 2) continue;\n" + "}");
   }
 
-  /** @bug 19100575 */
+  /**
+   * @bug 19100575
+   */
   @Test
   public void testVarSourceLocations() {
     isIdeMode = true;
@@ -4806,7 +4808,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "var unterm = 'forgot closing quote\n" + "alert(unterm);", "Unterminated string literal");
   }
 
-  /** @bug 14231379 */
+  /**
+   * @bug 14231379
+   */
   @Test
   public void testUnterminatedRegExp() {
     parseError("var unterm = /forgot trailing slash", "Expected '/' in regular expression literal");
