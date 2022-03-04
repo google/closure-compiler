@@ -3427,6 +3427,12 @@ google.maps.InfoWindowOpenOptions.prototype.shouldFocus;
 google.maps.InfoWindowOptions = function() {};
 
 /**
+ * AriaLabel to assign to the InfoWindow.
+ * @type {?string|undefined}
+ */
+google.maps.InfoWindowOptions.prototype.ariaLabel;
+
+/**
  * Content to display in the InfoWindow. This can be an HTML element, a
  * plain-text string, or a string containing HTML. The InfoWindow will be sized
  * according to the content. To set an explicit size for the content, set
