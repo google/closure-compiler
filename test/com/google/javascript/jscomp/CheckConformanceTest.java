@@ -1284,8 +1284,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   @Test
   public void testBannedPropertyWhitelist_recordType() {
-    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
-    enableTranspile();
     configuration =
         lines(
             "requirement: {",
@@ -1323,8 +1321,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   @Test
   public void testBannedPropertyAllowlist_recordType() {
-    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
-    enableTranspile();
     configuration =
         lines(
             "requirement: {",
@@ -2835,9 +2831,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   @Test
   public void testRequireUseStrictEs6Module() {
-    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
-    enableTranspile();
     configuration = config(rule("RequireUseStrict"), "My rule message");
+    enableRewriteEsModules();
 
     testNoWarning("export var x = 2;");
   }

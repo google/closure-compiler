@@ -650,7 +650,6 @@ public final class TypeValidatorTest extends CompilerTestCase {
 
   @Test
   public void testDuplicateSuppression_class() {
-    enableTranspile();
     testWarning(
         lines(
             "class X { constructor() {} }", //

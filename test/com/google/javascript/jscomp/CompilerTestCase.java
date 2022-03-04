@@ -152,6 +152,9 @@ public abstract class CompilerTestCase {
 
   private boolean polymerPass;
 
+  /** Whether ES module rewriting runs before the pass being tested. */
+  private boolean rewriteEsModulesEnabled;
+
   /** Whether the transpilation passes run before the pass being tested. */
   private boolean transpileEnabled;
 
@@ -649,6 +652,7 @@ public abstract class CompilerTestCase {
     this.processCommonJsModules = false;
     this.rewriteClosureCode = false;
     this.runTypeCheckAfterProcessing = false;
+    this.rewriteEsModulesEnabled = false;
     this.transpileEnabled = false;
     this.typeCheckEnabled = false;
 
@@ -954,6 +958,12 @@ public abstract class CompilerTestCase {
   protected final void disableNormalize() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     normalizeEnabled = false;
+  }
+
+  /** Perform ES module transpilation before running the test pass. */
+  protected final void enableRewriteEsModules() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    rewriteEsModulesEnabled = true;
   }
 
   /**
@@ -1429,6 +1439,10 @@ public abstract class CompilerTestCase {
           recentChange.reset();
           transpileToEs5(compiler, externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        } else if (rewriteEsModulesEnabled && i == 0) {
+          recentChange.reset();
+          rewriteEsModules(compiler, externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
         final boolean injectLibrariesFromTypedAsts =
@@ -1717,9 +1731,10 @@ public abstract class CompilerTestCase {
     }
   }
 
-  private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
+  private static void rewriteEsModules(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     List<PassFactory> factories = new ArrayList<>();
     CompilerOptions options = compiler.getOptions();
+
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
@@ -1740,6 +1755,17 @@ public abstract class CompilerTestCase {
             .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
+    for (PassFactory factory : factories) {
+      factory.create(compiler).process(externsRoot, codeRoot);
+    }
+  }
+
+  private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
+    rewriteEsModules(compiler, externsRoot, codeRoot);
+
+    List<PassFactory> factories = new ArrayList<>();
+    CompilerOptions options = compiler.getOptions();
+
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
