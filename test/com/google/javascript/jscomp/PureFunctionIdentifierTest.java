@@ -2695,7 +2695,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     // TODO(b/127862986): We could consider iteration over a known Array value to be pure.
     assertNoPureCalls(
         lines(
-            "function foo(a) { for await (const t of a) { } }", //
+            "async function foo(a) { for await (const t of a) { } }", //
             "foo(x);"));
   }
 
@@ -2813,7 +2813,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertNoPureCalls(
         lines(
             // We use an array-literal so that it's not just the iteration that's impure.
-            "function foo() { for await (const t of []) { } }", //
+            "async function foo() { for await (const t of []) { } }", //
             "foo();"));
   }
 

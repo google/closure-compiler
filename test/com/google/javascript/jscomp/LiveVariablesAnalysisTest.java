@@ -276,16 +276,17 @@ public final class LiveVariablesAnalysisTest {
 
   @Test
   public void testForAwaitOfLoopsVar() {
-    assertLiveBeforeX("var a; for await (a of [1, 2, 3]) {X:{}}", "a");
-    assertLiveAfterX("for await (var a of [1, 2, 3]) {X:{}}", "a");
-    assertLiveBeforeX("var a,b; for await (var y of a = [0, 1, 2]) { X:a[y] }", "a");
+    assertLiveBeforeX("var a; for await (a of [1, 2, 3]) {X:{}}", "a", true);
+    assertLiveAfterX("for await (var a of [1, 2, 3]) {X:{}}", "a", true);
+    assertLiveBeforeX("var a,b; for await (var y of a = [0, 1, 2]) { X:a[y] }", "a", true);
   }
 
   @Test
   public void testForAwaitOfLoopsDestructuring() {
-    assertLiveBeforeX("var key, value; X:for await ([key, value] of arr) {value;} value;", "value");
-    assertLiveBeforeX("let x = 3; X:for await (var [y = x] of arr) { y; }", "x");
-    assertLiveBeforeX("for await (let [key, value] of arr) { X: key; value; }", "key");
+    assertLiveBeforeX(
+        "var key, value; X:for await ([key, value] of arr) {value;} value;", "value", true);
+    assertLiveBeforeX("let x = 3; X:for await (var [y = x] of arr) { y; }", "x", true);
+    assertLiveBeforeX("for await (let [key, value] of arr) { X: key; value; }", "key", true);
   }
 
   @Test

@@ -685,35 +685,36 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   @Test
   public void testForAwaitOfLoops_allSameModule() {
     assumeCrossModuleNames = false;
-    testSame("for await (var i of [1, 2, 3]);");
-    testSame("for await (var [a] of []);");
-    testSame("for await (var {a: a} of {});");
+    testSame("async () => { for await (var i of [1, 2, 3]);}");
+    testSame("async () => { for await (var [a] of []);}");
+    testSame("async () => { for await (var {a: a} of {});}");
   }
 
   @Test
   public void testForAwaitOfLoops_acrossModules() {
+    // TODO(b/128938049): re-enable it once we support top-level await.
     assumeCrossModuleNames = false;
-    test(
+    testError(
         srcs(
             JSChunkGraphBuilder.forUnordered()
                 .addChunk("for await (var i of []);")
                 .addChunk("i")
                 .build()),
-        expected("for await (_.i of []);", "_.i"));
-    test(
+        RhinoErrorReporter.PARSE_ERROR);
+    testError(
         srcs(
             JSChunkGraphBuilder.forUnordered()
                 .addChunk("       for await (var [  a, b] of []);")
                 .addChunk("a;")
                 .build()),
-        expected("var b; for await (    [_.a, b] of []);", "_.a"));
-    test(
+        RhinoErrorReporter.PARSE_ERROR);
+    testError(
         srcs(
             JSChunkGraphBuilder.forUnordered()
                 .addChunk("       for await (var {i: i, c:   c} of []);")
                 .addChunk("c")
                 .build()),
-        expected("var i; for await (    {i: i, c: _.c} of []);", "_.c"));
+        RhinoErrorReporter.PARSE_ERROR);
   }
 
   @Test

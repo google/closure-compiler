@@ -931,10 +931,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testForAwaitOf() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
 
-    assertPrintSame("for await(a of b)c");
-    assertPrintSame("for await(var a of b)c");
-    assertPrintSame("for await(var a of b=c)d");
-    assertPrintSame("for await(var a of(b,c))d");
+    assertPrintSame("async()=>{for await(a of b)c}");
+    assertPrintSame("async()=>{for await(var a of b)c}");
+    assertPrintSame("async()=>{for await(var a of b=c)d}");
+    assertPrintSame("async()=>{for await(var a of(b,c))d}");
   }
 
   // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
@@ -942,9 +942,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testForAwaitOfPretty() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
 
-    assertPrettyPrintSame("for await ([x, y] of b) {\n  c;\n}\n");
-    assertPrettyPrintSame("for await (x of [[1, 2]]) {\n  c;\n}\n");
-    assertPrettyPrintSame("for await ([x, y] of [[1, 2]]) {\n  c;\n}\n");
+    assertPrettyPrintSame("async() => {\n  for await ([x, y] of b) {\n    c;\n  }\n};\n");
+    assertPrettyPrintSame("async() => {\n  for await (x of [[1, 2]]) {\n    c;\n  }\n};\n");
+    assertPrettyPrintSame("async() => {\n  for await ([x, y] of [[1, 2]]) {\n    c;\n  }\n};\n");
   }
 
   @Test
@@ -953,7 +953,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(let a in b)c");
     assertPrintSame("for(let a of b)c");
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
-    assertPrintSame("for await(let a of b)c");
+    assertPrintSame("async()=>{for await(let a of b)c}");
   }
 
   @Test
@@ -963,7 +963,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(const a of b)c");
 
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
-    assertPrintSame("for await(const a of b)c");
+    assertPrintSame("async()=>{for await(const a of b)c}");
   }
 
   @Test
@@ -2796,8 +2796,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("/\\h/", "/h/");
     assertPrint("/\\i/", "/i/");
     assertPrint("/\\¡/", "/\\u00a1/");
-
-
   }
 
   @Test

@@ -3639,7 +3639,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     testSame(options, "async function* foo() {}");
-    testSame(options, "for await (a of b) {}");
+    testSame(options, "async () => { for await (a of b) {} }");
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     test(

@@ -1406,6 +1406,10 @@ public class Parser {
   }
 
   private ParseTree parseForAwaitOfStatement(SourcePosition start, ParseTree initializer) {
+    // TODO(b/128938049): when top-level await is supported, this shouldn't be a parse error.
+    if (functionContextStack.isEmpty() || !functionContextStack.peekLast().isAsynchronous) {
+      reportError("'for-await-of' used in a non-async function context");
+    }
     eatPredefinedString(PredefinedName.OF);
     ParseTree collection = parseExpression();
     eat(TokenType.CLOSE_PAREN);
@@ -3521,7 +3525,9 @@ public class Parser {
     return peekId(0);
   }
 
-  /** @return whether the next token is an identifier. */
+  /**
+   * @return whether the next token is an identifier.
+   */
   private boolean peekId(int index) {
     TokenType type = peekType(index);
     // There is one special case to handle here: outside of strict-mode code, strict-mode keywords
