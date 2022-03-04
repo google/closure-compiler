@@ -155,6 +155,11 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRenameParamsWithLeadingUnderscores() {
+    test("(function (_v1, _v2) {});", "(function (a, b) {});");
+  }
+
+  @Test
   public void testRenameLocalsToSame() {
     preferStableNames = true;
     testSame("(function(a) {})");

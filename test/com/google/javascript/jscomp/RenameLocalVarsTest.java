@@ -118,6 +118,11 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRenameParamsWithLeadingUnderscores() {
+    test("function Foo(_v1, _v2) {return _v1;} Foo();", "function Foo(a, b) {return a;} Foo();");
+  }
+
+  @Test
   public void testRenameWithNameOverlap() {
     test("function local() { var a = 1; var b = 2; b + b; }",
         "function local() { var b = 1; var a = 2; a + a; }");
