@@ -95,8 +95,8 @@ public final class MultiPassTest extends CompilerTestCase {
   @Test
   public void testInlineVarsAndDeadCodeElim() {
     passes = new ArrayList<>();
-    addDeadCodeElimination();
     addInlineVariables();
+    addDeadCodeElimination();
     test("function f() { var x = 1; return x; x = 3; }", "function f() { return 1; }");
   }
 

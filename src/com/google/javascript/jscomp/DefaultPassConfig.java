@@ -654,9 +654,13 @@ public final class DefaultPassConfig extends PassConfig {
     assertAllOneTimePasses(passes);
 
     if (options.smartNameRemoval) {
-      passes.addAll(getCodeRemovingPasses());
-      // TODO(b/66971163): Remove this early loop or rename the option that enables it
+      // Place one-time marker passes around this loop to prevent the addition of a looping pass
+      // above or below from accidentally becoming part of the loop.
+      passes.add(createEmptyPass(PassNames.BEFORE_EARLY_OPTIMIZATION_LOOP));
+      passes.addAll(getEarlyOptimizationLoopPasses());
+      // TODO(): Remove this early loop or rename the option that enables it
       // to something more appropriate.
+      passes.add(createEmptyPass(PassNames.AFTER_EARLY_OPTIMIZATION_LOOP));
     }
 
     // This needs to come after the inline constants pass, which is run within
@@ -729,8 +733,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
 
-
-
     assertValidOrderForOptimizations(passes);
     return passes;
   }
@@ -758,35 +760,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.doLateLocalization()) {
-      // Now that we've replaced message references with string constants and `goog.LOCALE` with a
-      // constant value, we need to re-run simple code removal passes, so they can throw away code
-      // for locales that aren't relevant and perform constant folding on the message strings we've
-      // now inserted.
-      //
-      // This needs to happen after the flowSensitiveInlineVariables above, because it will
-      // enable the PeepholeOptimizations we run here to do constant folding.
-      //
-      // For example, `flowSensitiveInlineVariables` will change this
-      // ```
-      // var x = 'localized version of message';
-      // x = x + '&nbsp';
-      // ```
-      // to this
-      // ```
-      // var x = 'localized version of message' + '&nbsp;';
-      // ```
-      // We cannot expect the peepholeOptimizations runs that come later to do this constant
-      // folding, because `aliasStrings` may replace the string literals with variables before
-      // they run.
-      addSimpleCodeRemovingPasses(passes);
-
-      if (options.getInlineFunctionsLevel() != Reach.NONE) {
-        passes.add(inlineFunctions);
-      }
-
-      if (options.optimizeCalls) {
-        passes.add(optimizeCalls);
-      }
+      addPostL10nOptimizations(passes);
     }
 
     if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
@@ -928,6 +902,112 @@ public final class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
+  private List<PassFactory> getEarlyOptimizationLoopPasses() {
+    List<PassFactory> earlyLoopPasses = new ArrayList<>();
+    if (options.inlineVariables || options.inlineLocalVariables) {
+      earlyLoopPasses.add(inlineVariables);
+    } else if (options.inlineConstantVars) {
+      earlyLoopPasses.add(inlineConstants);
+    }
+
+    if (options.collapseObjectLiterals) {
+      earlyLoopPasses.add(collapseObjectLiterals);
+    }
+
+    if (shouldRunRemoveUnusedCode()) {
+      earlyLoopPasses.add(removeUnusedCode);
+    }
+
+    if (options.foldConstants) {
+      earlyLoopPasses.add(peepholeOptimizations);
+    }
+
+    if (options.removeDeadCode) {
+      earlyLoopPasses.add(removeUnreachableCode);
+    }
+
+    assertAllLoopablePasses(earlyLoopPasses);
+    return earlyLoopPasses;
+  }
+
+  /**
+   * Add optimization passes that need to run after late localization has been done.
+   *
+   * <p>Once we've replaced message references with string constants and `goog.LOCALE` with a
+   * constant value, we need to re-run some optimizations, so they can throw away code for locales
+   * that aren't relevant and perform constant folding on the message strings we've now inserted.
+   *
+   * @param passes Append passes to this list
+   */
+  private void addPostL10nOptimizations(List<PassFactory> passes) {
+    // Localization replaced lots of function calls with constants to get statements like these.
+    //
+    // `goog.LOCALE = 'es-419';`
+    // `const MSG_GREETING = 'Hola';`
+    // `const MSG_GREETING_WITH_NAME = 'Hola, ' + person.getName();`
+    //
+    // Before calling this method we should also have run `flowSensitiveInlineVariables`
+    // To make optimization opportunities for peepholeOptimizations.
+    //
+    // For example, `flowSensitiveInlineVariables` will change this
+    // ```
+    // var x = 'localized version of message';
+    // x = x + '&nbsp';
+    // ```
+    // to this
+    // ```
+    // var x = 'localized version of message' + '&nbsp;';
+    // ```
+    // Which constant folding can then turn into this
+    // ```
+    // var x = 'localized version of message&nbsp;';
+    // ```
+    // Now we should have unblocked a lot of potential optimizations,
+    // so do an optimization loop to perform those.
+    // This loop is similar to the one created by getMainOptimizationLoop().
+    // These should be in the same order as those, but only optimizations we expect to need
+    // doing to clean up after localization are included.
+    List<PassFactory> loopPasses = new ArrayList<>();
+
+    if (options.optimizeCalls) {
+      loopPasses.add(optimizeCalls);
+    }
+
+    final boolean shouldRunInlineVariables =
+        options.inlineVariables || options.inlineLocalVariables;
+    // TODO(b/222940912): This should probably execute after inlineFunctions just like
+    // inlineVariables does.
+    if (options.inlineConstantVars && !shouldRunInlineVariables) {
+      loopPasses.add(inlineConstants);
+    }
+
+    // It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
+    // because inlineFunctions relies on them to clean up patterns it introduces. This affects our
+    // size-based loop-termination heuristic.
+    if (options.getInlineFunctionsLevel() != Reach.NONE) {
+      loopPasses.add(inlineFunctions);
+    }
+
+    //
+    if (shouldRunInlineVariables) {
+      loopPasses.add(inlineVariables);
+    }
+
+    if (shouldRunRemoveUnusedCode()) {
+      loopPasses.add(removeUnusedCode);
+    }
+
+    if (options.foldConstants) {
+      loopPasses.add(peepholeOptimizations);
+    }
+
+    if (options.removeDeadCode) {
+      loopPasses.add(removeUnreachableCode);
+    }
+    assertAllLoopablePasses(loopPasses);
+    passes.addAll(loopPasses);
+  }
+
   /** Creates the passes for the main optimization loop. */
   private List<PassFactory> getMainOptimizationLoop() {
     List<PassFactory> passes = new ArrayList<>();
@@ -935,28 +1015,28 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineSimpleMethods);
     }
 
-    passes.addAll(getCodeRemovingPasses());
-
-    if (options.getInlineFunctionsLevel() != Reach.NONE) {
-      passes.add(inlineFunctions);
+    final boolean shouldInlineVariables = options.inlineVariables || options.inlineLocalVariables;
+    // TODO(b/222940912): This should probably execute after inlineFunctions like inlineVariables
+    // does.
+    if (!shouldInlineVariables && options.inlineConstantVars) {
+      passes.add(inlineConstants);
     }
 
     if (options.shouldInlineProperties() && options.isTypecheckingEnabled()) {
       passes.add(inlineProperties);
     }
 
-    if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-      if (options.deadAssignmentElimination) {
-        passes.add(deadAssignmentsElimination);
-
-        // The Polymer source is usually not included in the compilation, but it creates
-        // getters/setters for many properties in compiled code. Dead property assignment
-        // elimination is only safe when it knows about getters/setters. Therefore, we skip
-        // it if the polymer pass is enabled.
-        if (options.polymerVersion == null) {
-          passes.add(deadPropertyAssignmentElimination);
-        }
-      }
+    // The Polymer source is usually not included in the compilation, but it creates
+    // getters/setters for many properties in compiled code. Dead property property assignment
+    // elimination is only safe when it knows about getters/setters. Therefore, we skip
+    // it if the polymer pass is enabled.
+    final boolean shouldRunDeadAssignmentElimination =
+        (options.removeUnusedVars || options.removeUnusedLocalVars)
+            && options.deadAssignmentElimination;
+    final boolean shouldRunDeadPropertyAssignmentElimination =
+        shouldRunDeadAssignmentElimination && options.polymerVersion == null;
+    if (shouldRunDeadPropertyAssignmentElimination) {
+      passes.add(deadPropertyAssignmentElimination);
     }
 
     if (options.optimizeCalls) {
@@ -968,28 +1048,27 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clClinitPass);
     }
 
-    assertAllLoopablePasses(passes);
-    return passes;
-  }
+    // It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
+    // because inlineFunctions relies on them to clean up patterns it introduces. This affects our
+    // size-based loop-termination heuristic.
+    if (options.getInlineFunctionsLevel() != Reach.NONE) {
+      passes.add(inlineFunctions);
+    }
 
-  /** Creates several passes aimed at removing code. */
-  private List<PassFactory> getCodeRemovingPasses() {
-    List<PassFactory> passes = new ArrayList<>();
+    if (shouldInlineVariables) {
+      passes.add(inlineVariables);
+    }
+
+    if (shouldRunDeadAssignmentElimination) {
+      passes.add(deadAssignmentsElimination);
+    }
+
     if (options.collapseObjectLiterals) {
       passes.add(collapseObjectLiterals);
     }
 
-    addSimpleCodeRemovingPasses(passes);
-
-    assertAllLoopablePasses(passes);
-    return passes;
-  }
-
-  private void addSimpleCodeRemovingPasses(List<PassFactory> passes) {
-    if (options.inlineVariables || options.inlineLocalVariables) {
-      passes.add(inlineVariables);
-    } else if (options.inlineConstantVars) {
-      passes.add(inlineConstants);
+    if (shouldRunRemoveUnusedCode()) {
+      passes.add(removeUnusedCode);
     }
 
     if (options.foldConstants) {
@@ -1000,9 +1079,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnreachableCode);
     }
 
-    if (shouldRunRemoveUnusedCode()) {
-      passes.add(removeUnusedCode);
-    }
+    assertAllLoopablePasses(passes);
+    return passes;
   }
 
   /**

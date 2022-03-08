@@ -21,11 +21,13 @@ package com.google.javascript.jscomp;
  * symbolic name here.
  */
 public final class PassNames {
+  public static final String AFTER_EARLY_OPTIMIZATION_LOOP = "afterEarlyOptimizationLoop";
   public static final String AFTER_MAIN_OPTIMIZATIONS = "afterMainOptimizations";
   public static final String AFTER_STANDARD_CHECKS = "afterStandardChecks";
   public static final String AMBIGUATE_PROPERTIES = "ambiguateProperties";
   public static final String ANALYZER_CHECKS = "analyzerChecks";
   public static final String ANGULAR_PASS = "angularPass";
+  public static final String BEFORE_EARLY_OPTIMIZATION_LOOP = "beforeEarlyOptimizationLoop";
   public static final String BEFORE_STANDARD_OPTIMIZATIONS = "beforeStandardOptimizations";
   public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";

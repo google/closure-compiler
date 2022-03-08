@@ -391,7 +391,7 @@ class PhaseOptimizer implements CompilerPass {
     public void process(Node externs, Node root) {
       checkState(!inLoop, "Nested loops are forbidden");
       inLoop = true;
-      optimizePasses();
+      checkLoopedPassesOrder();
       this.isCodeRemovalLoop = isCodeRemovalLoop();
 
       // Set up function-change tracking
@@ -514,8 +514,17 @@ class PhaseOptimizer implements CompilerPass {
       return true;
     }
 
-    /** Re-arrange the passes in an optimal order. */
-    private void optimizePasses() {
+    /**
+     * Check that the passes are already in the order that we previously enforced by sorting them.
+     */
+    private void checkLoopedPassesOrder() {
+      // TODO(b/222940912): remove this ordering check.
+      // It would be more efficient to avoid building an ordered list
+      // to compare against, but modifying this logic would risk accidentally changing
+      // the expected order from what this code previously enforced.
+      // This whole method should be removed as soon as we're sure that
+      // all users of PhaseOptimizer add passes in the expected order.
+      List<NamedPass> orderedPassList = new ArrayList<>(myPasses);
       // It's important that this ordering is deterministic, so that
       // multiple compiles with the same input produce exactly the same
       // results.
@@ -524,7 +533,7 @@ class PhaseOptimizer implements CompilerPass {
       // in an "optimal" order.
       List<NamedPass> optimalPasses = new ArrayList<>();
       for (String passInOptimalOrder : OPTIMAL_ORDER) {
-        for (NamedPass loopablePass : myPasses) {
+        for (NamedPass loopablePass : orderedPassList) {
           if (loopablePass.name.equals(passInOptimalOrder)) {
             optimalPasses.add(loopablePass);
             break;
@@ -532,8 +541,24 @@ class PhaseOptimizer implements CompilerPass {
         }
       }
 
-      myPasses.removeAll(optimalPasses);
-      myPasses.addAll(optimalPasses);
+      orderedPassList.removeAll(optimalPasses);
+      orderedPassList.addAll(optimalPasses);
+
+      final int numPasses = myPasses.size();
+      checkState(
+          orderedPassList.size() == numPasses,
+          "sorted size (%s) does not match original size (%s)",
+          orderedPassList.size(),
+          numPasses);
+      for (int i = 0; i < numPasses; ++i) {
+        final NamedPass orderedPass = orderedPassList.get(i);
+        final NamedPass originalPass = myPasses.get(i);
+        checkState(
+            orderedPass.equals(originalPass),
+            "unexpected pass order:\n%s\nexpected:\n%s",
+            myPasses,
+            orderedPassList);
+      }
     }
 
     boolean isPopulated() {

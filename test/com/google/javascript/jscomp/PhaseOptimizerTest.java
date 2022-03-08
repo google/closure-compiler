@@ -19,9 +19,11 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS;
+import static com.google.javascript.jscomp.PhaseOptimizer.OPTIMAL_ORDER;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -30,7 +32,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -183,15 +184,20 @@ public final class PhaseOptimizerTest {
   }
 
   @Test
-  public void testPassOrdering() {
+  public void testReversedPassOrdering() {
+
     Loop loop = optimizer.addFixedPointLoop();
-    List<String> optimalOrder = new ArrayList<>(PhaseOptimizer.OPTIMAL_ORDER);
-    Random random = new Random();
-    while (!optimalOrder.isEmpty()) {
-      addLoopedPass(loop, optimalOrder.remove(random.nextInt(optimalOrder.size())), 0);
+    final List<String> reversedOrder = Lists.reverse(OPTIMAL_ORDER);
+    for (String passName : reversedOrder) {
+      addLoopedPass(loop, passName, 0);
     }
-    optimizer.process(null, dummyRoot);
-    assertThat(passesRun).isEqualTo(PhaseOptimizer.OPTIMAL_ORDER);
+    try {
+      optimizer.process(null, dummyRoot);
+      assertWithMessage("no exception for invalid pass order").fail();
+    } catch (IllegalStateException e) {
+      // expected exception
+      assertThat(e).hasMessageThat().contains("unexpected pass order");
+    }
   }
 
   @Test
