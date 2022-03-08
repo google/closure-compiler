@@ -48,7 +48,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
@@ -1886,9 +1886,26 @@ public class Node {
       return false;
     }
 
-    for (Function<Node, Object> getter : PROP_GETTERS_FOR_EQUALITY) {
-      if (!Objects.equals(getter.apply(this), getter.apply(node))) {
-        return false;
+    EnumSet<Prop> propSet = EnumSet.noneOf(Prop.class);
+    for (PropListItem propListItem = this.propListHead;
+        propListItem != null;
+        propListItem = propListItem.next) {
+      Prop prop = PROP_VALUES[propListItem.propType];
+      propSet.add(prop);
+    }
+    for (PropListItem propListItem = node.propListHead;
+        propListItem != null;
+        propListItem = propListItem.next) {
+      Prop prop = PROP_VALUES[propListItem.propType];
+      propSet.add(prop);
+    }
+
+    for (Prop prop : propSet) {
+      if (PROP_MAP_FOR_EQUALITY_KEYS.contains(prop)) {
+        Function<Node, Object> getter = PROP_MAP_FOR_EQUALITY.get(prop);
+        if (!Objects.equals(getter.apply(this), getter.apply(node))) {
+          return false;
+        }
       }
     }
 
@@ -1924,23 +1941,27 @@ public class Node {
    * <p>Accessor functions are used rather than {@link Prop}s to encode the correct way of reading
    * the prop.
    */
-  private static final ImmutableList<Function<Node, Object>> PROP_GETTERS_FOR_EQUALITY =
-      ImmutableList.of(
-          Node::isArrowFunction,
-          Node::isAsyncFunction,
-          Node::isAsyncGeneratorFunction,
-          Node::isGeneratorFunction,
-          Node::isOptionalChainStart,
-          Node::isStaticMember,
-          Node::isYieldAll,
-          (n) -> n.getIntProp(Prop.EXPORT_DEFAULT),
-          (n) -> n.getIntProp(Prop.EXPORT_ALL_FROM),
-          (n) -> n.getIntProp(Prop.INCRDECR),
-          (n) -> n.getIntProp(Prop.QUOTED),
-          (n) -> n.getBooleanProp(Prop.FREE_CALL),
-          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_METHOD),
-          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_GETTER),
-          (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_SETTER));
+  private static final ImmutableMap<Prop, Function<Node, Object>> PROP_MAP_FOR_EQUALITY =
+      new ImmutableMap.Builder<Prop, Function<Node, Object>>()
+          .put(Prop.ARROW_FN, Node::isArrowFunction)
+          .put(Prop.ASYNC_FN, Node::isAsyncFunction)
+          .put(Prop.GENERATOR_FN, Node::isGeneratorFunction)
+          .put(Prop.START_OF_OPT_CHAIN, Node::isOptionalChainStart)
+          .put(Prop.STATIC_MEMBER, Node::isStaticMember)
+          .put(Prop.YIELD_ALL, Node::isYieldAll)
+          .put(Prop.EXPORT_DEFAULT, (n) -> n.getIntProp(Prop.EXPORT_DEFAULT))
+          .put(Prop.EXPORT_ALL_FROM, (n) -> n.getIntProp(Prop.EXPORT_ALL_FROM))
+          .put(Prop.INCRDECR, (n) -> n.getIntProp(Prop.INCRDECR))
+          .put(Prop.QUOTED, (n) -> n.getIntProp(Prop.QUOTED))
+          .put(Prop.FREE_CALL, (n) -> n.getBooleanProp(Prop.FREE_CALL))
+          .put(Prop.COMPUTED_PROP_METHOD, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_METHOD))
+          .put(Prop.COMPUTED_PROP_GETTER, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_GETTER))
+          .put(Prop.COMPUTED_PROP_SETTER, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_SETTER))
+          .buildOrThrow();
+
+  /** Used for faster Map.containsKey() lookups in PROP_MAP_FOR_EQUALITY */
+  private static final EnumSet<Prop> PROP_MAP_FOR_EQUALITY_KEYS =
+      EnumSet.copyOf(PROP_MAP_FOR_EQUALITY.keySet());
 
   /**
    * This function takes a set of GETPROP nodes and produces a string that is each property
