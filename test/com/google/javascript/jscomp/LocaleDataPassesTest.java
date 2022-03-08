@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,8 +75,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
         return new CompilerPass() {
           @Override
           public void process(Node externs, Node root) {
-            final LocaleDataPasses.ExtractAndProtect extract =
-                new LocaleDataPasses.ExtractAndProtect(compiler);
+            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
             extract.process(externs, root);
           }
         };
@@ -83,8 +83,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
         return new CompilerPass() {
           @Override
           public void process(Node externs, Node root) {
-            final LocaleDataPasses.ExtractAndProtect extract =
-                new LocaleDataPasses.ExtractAndProtect(compiler);
+            final ProtectGoogLocale extract = new ProtectGoogLocale(compiler);
             extract.process(externs, root);
             final LocaleDataPasses.LocaleSubstitutions subs =
                 new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
@@ -166,7 +165,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             " */",
             "goog.provide('some.Obj');",
             "goog.LOCALE = __JSC_LOCALE__;",
-            "console.log(goog.LOCALE);",
+            "console.log(__JSC_LOCALE__);",
             ""),
         new LocaleResult(
             "es_ES",
@@ -177,7 +176,7 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
                 " */",
                 "goog.provide('some.Obj');",
                 "goog.LOCALE = 'es_ES';",
-                "console.log(goog.LOCALE);",
+                "console.log('es_ES');",
                 "")));
   }
 }

@@ -23,9 +23,9 @@ final class LocaleDataPasses {
 
   private LocaleDataPasses() {}
 
-  static class ExtractAndProtect implements CompilerPass {
+  static class ProtectGoogLocale implements CompilerPass {
 
-    ExtractAndProtect(AbstractCompiler compiler) {}
+    ProtectGoogLocale(AbstractCompiler compiler) {}
 
     @Override
     public void process(Node externs, Node root) {}

@@ -31,7 +31,7 @@ import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
-import com.google.javascript.jscomp.LocaleDataPasses.ExtractAndProtect;
+import com.google.javascript.jscomp.LocaleDataPasses.ProtectGoogLocale;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
@@ -3076,7 +3076,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("protectLocaleData")
           .setInternalFactory(
               (compiler) ->
-                  (externs, root) -> new ExtractAndProtect(compiler).process(externs, root))
+                  (externs, root) -> new ProtectGoogLocale(compiler).process(externs, root))
           .setFeatureSetForOptimizations()
           .build();
 

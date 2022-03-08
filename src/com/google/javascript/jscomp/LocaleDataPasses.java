@@ -36,10 +36,10 @@ final class LocaleDataPasses {
   // Replacements for values that needed to be protected from optimizations.
   static final String GOOG_LOCALE_REPLACEMENT = "__JSC_LOCALE__";
 
-  static class ExtractAndProtect implements CompilerPass {
+  static class ProtectGoogLocale implements CompilerPass {
     private final AbstractCompiler compiler;
 
-    ExtractAndProtect(AbstractCompiler compiler) {
+    ProtectGoogLocale(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
@@ -52,39 +52,25 @@ final class LocaleDataPasses {
     }
   }
 
-  /**
-   * To avoid the optimizations from optimizing known constants, make then non-const by replacing
-   * them with a call to an extern value.
-   */
-  private static class ProtectCurrentLocale implements NodeTraversal.Callback {
+  /** Protect `goog.LOCALE` by replacing it with an extern-defined name. */
+  private static class ProtectCurrentLocale extends NodeTraversal.AbstractPostOrderCallback {
     private final AbstractCompiler compiler;
-    private boolean replaced = false;
 
     ProtectCurrentLocale(AbstractCompiler compiler) {
       this.compiler = compiler;
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return !replaced;
-    }
-
-    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (parent != null
-          && parent.isAssign()
-          && parent.getFirstChild() == n
-          && isGoogDotLocaleReference(n)) {
-
-        Node value = parent.getLastChild();
+      if (isGoogDotLocaleReference(n)) {
+        // We will replace the RHS of `goog.LOCALE = goog.define(...);`, but everywhere
+        // else we will replace `goog.LOCALE` itself, so we don't have to waste time
+        // inlining it later.
+        final Node nodeToReplace = NodeUtil.isLhsOfAssign(n) ? n.getNext() : n;
         Node replacement = IR.name(GOOG_LOCALE_REPLACEMENT);
         replacement.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        value.replaceWith(replacement);
+        nodeToReplace.replaceWith(replacement);
         compiler.reportChangeToEnclosingScope(parent);
-
-        // Mark the value as found.  The definition should be early in the traversal so
-        // we can avoid most of the work by terminating early.
-        replaced = true;
       }
     }
   }
@@ -98,11 +84,7 @@ final class LocaleDataPasses {
     return n.matchesQualifiedName(QNAME_FOR_GOOG_LOCALE);
   }
 
-  /**
-   * This class performs the actual locale specific substitutions for the stand-in values create by
-   * `ExtractAndProtectLocaleData` It will replace both __JSC_LOCALE__ and __JSC_LOCALE_VALUE__
-   * references.
-   */
+  /** This class replaces `__JSC_LOCALE__` with the actual locale string. */
   static class LocaleSubstitutions extends AbstractPostOrderCallback implements CompilerPass {
 
     private static final String DEFAULT_LOCALE = "en";
