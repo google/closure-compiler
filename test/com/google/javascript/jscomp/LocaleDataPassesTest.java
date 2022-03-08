@@ -77,7 +77,6 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             final LocaleDataPasses.ExtractAndProtect extract =
                 new LocaleDataPasses.ExtractAndProtect(compiler);
             extract.process(externs, root);
-            compiler.setLocaleSubstitutionData(extract.getLocaleValuesDataMaps());
           }
         };
       case REPLACE_PROTECTED_DATA:
@@ -87,10 +86,8 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
             final LocaleDataPasses.ExtractAndProtect extract =
                 new LocaleDataPasses.ExtractAndProtect(compiler);
             extract.process(externs, root);
-            compiler.setLocaleSubstitutionData(extract.getLocaleValuesDataMaps());
             final LocaleDataPasses.LocaleSubstitutions subs =
-                new LocaleDataPasses.LocaleSubstitutions(
-                    compiler, compiler.getOptions().locale, compiler.getLocaleSubstitutionData());
+                new LocaleDataPasses.LocaleSubstitutions(compiler, compiler.getOptions().locale);
             subs.process(externs, root);
           }
         };
@@ -147,20 +144,6 @@ public final class LocaleDataPassesTest extends CompilerTestCase {
    */
   private void multiTest(String originalJs, String protectedJs, LocaleResult... allExpected) {
     multiTest(srcs(originalJs), expected(protectedJs), allExpected);
-  }
-
-  /**
-   * Test for errors that are detected before attempting to look up the messages in the bundle.
-   *
-   * @param originalJs The original, input JS code
-   * @param diagnosticType expected error
-   */
-  private void multiTestProtectionError(
-      String originalJs, DiagnosticType diagnosticType, String description) {
-    // The PROTECT_DATA mode needs to add externs for the protection functions.
-    allowExternsChanges();
-    testMode = TestMode.PROTECT_DATA;
-    testError(originalJs, diagnosticType, description);
   }
 
   @Test

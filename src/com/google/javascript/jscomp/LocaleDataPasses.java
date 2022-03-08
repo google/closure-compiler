@@ -17,26 +17,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
- * A compiler pass to collect locale data for substitution at a later stage of the compilation,
- * where the locale data to be collected present in files annotated with `@localeFile`, and the
- * locale extracted for assignments annotated with `@localeObject` and specific values within the
- * structure are annotated with `@localeValue`.
- *
- * <p>The actual locale selection is a switch with a specific structure annotated with
- * `@localeSelect`. This switch is replaced with an assignment to a clone of the first locale with
- * the locale specific values replaced.
+ * Contains compiler passes to protect `goog.LOCALE` from optimization during the main optimizations
+ * phase of compilation, then replace it with the specific destination locale near the end of
+ * compilation.
  */
 @GwtIncompatible("Unnecessary")
 final class LocaleDataPasses {
@@ -45,30 +35,9 @@ final class LocaleDataPasses {
 
   // Replacements for values that needed to be protected from optimizations.
   static final String GOOG_LOCALE_REPLACEMENT = "__JSC_LOCALE__";
-  static final String LOCALE_VALUE_REPLACEMENT = "__JSC_LOCALE_VALUE__";
-
-  static final DiagnosticType UNEXPECTED_GOOG_LOCALE =
-      DiagnosticType.error(
-          "JSC_UNEXPECTED_GOOG_LOCALE", "`goog.LOCALE` appears in a file lacking `@localeFile`.");
-
-  public static final DiagnosticType LOCALE_FILE_MALFORMED =
-      DiagnosticType.error("JSC_LOCALE_FILE_MALFORMED", "Malformed locale data file. {0}");
-
-  public static final DiagnosticType LOCALE_MISSING_BASE_FILE =
-      DiagnosticType.error(
-          "JSC_LOCALE_MISSING_BASE_FILE", "Missing base file for extension file: {0}");
-
-  private static class LocaleDataImpl implements LocaleData {
-    final ArrayList<LinkedHashMap<String, Node>> data;
-
-    LocaleDataImpl(ArrayList<LinkedHashMap<String, Node>> data) {
-      this.data = data;
-    }
-  }
 
   static class ExtractAndProtect implements CompilerPass {
     private final AbstractCompiler compiler;
-    private LocaleData localeData;
 
     ExtractAndProtect(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -80,12 +49,6 @@ final class LocaleDataPasses {
       NodeUtil.createSynthesizedExternsSymbol(compiler, GOOG_LOCALE_REPLACEMENT);
       ProtectCurrentLocale protectLocaleCallback = new ProtectCurrentLocale(compiler);
       NodeTraversal.traverse(compiler, root, protectLocaleCallback);
-      localeData = new LocaleDataImpl(null);
-    }
-
-    public LocaleData getLocaleValuesDataMaps() {
-      checkNotNull(localeData, "process must be called before getLocaleValuesDataMaps");
-      return localeData;
     }
   }
 
@@ -135,10 +98,6 @@ final class LocaleDataPasses {
     return n.matchesQualifiedName(QNAME_FOR_GOOG_LOCALE);
   }
 
-  private static String normalizeLocale(String locale) {
-    return locale.replace('-', '_');
-  }
-
   /**
    * This class performs the actual locale specific substitutions for the stand-in values create by
    * `ExtractAndProtectLocaleData` It will replace both __JSC_LOCALE__ and __JSC_LOCALE_VALUE__
@@ -152,7 +111,7 @@ final class LocaleDataPasses {
     private final AbstractCompiler compiler;
     private final String locale;
 
-    LocaleSubstitutions(AbstractCompiler compiler, String locale, LocaleData localeData) {
+    LocaleSubstitutions(AbstractCompiler compiler, String locale) {
       this.compiler = compiler;
       // Use the "default" locale if not otherwise set.
       this.locale = locale == null ? DEFAULT_LOCALE : locale;
@@ -172,79 +131,5 @@ final class LocaleDataPasses {
         compiler.reportChangeToEnclosingScope(replacement);
       }
     }
-  }
-
-  /**
-   * Hack things a bit and stuff some data into the AST in order to serialize it. It will be removed
-   * when deserializing.
-   */
-  public static void addLocaleDataToAST(AbstractCompiler compiler, LocaleData localeData) {
-    ArrayList<LinkedHashMap<String, Node>> data =
-        localeData == null ? null : ((LocaleDataImpl) localeData).data;
-
-    // Serialize locale data as:
-    //   [{...},{...}]
-    // Where each object is
-    //   {"locale": value, "otherLocale": otherValue}
-    Node arr = IR.arraylit();
-    if (data != null) {
-      for (LinkedHashMap<String, Node> localeValueEntry : data) {
-        Node obj = IR.objectlit();
-        arr.addChildToBack(obj);
-        for (Map.Entry<String, Node> entry : localeValueEntry.entrySet()) {
-          String locale = entry.getKey();
-          Node value = entry.getValue();
-
-          obj.addChildToBack(IR.quotedStringKey(locale, value));
-        }
-      }
-    }
-
-    Node stmt = IR.var(IR.name("__JSC_LOCALE_DATA__"), arr);
-
-    Node root = compiler.getJsRoot();
-    Node script = root.getFirstChild();
-    checkState(script.isScript());
-    stmt.srcrefTreeIfMissing(script);
-
-    script.addChildToFront(stmt);
-  }
-
-  /** Remove LocaleData prepended in the AST for serialization, remove it and restore the AST. */
-  public static LocaleData reconstituteLocaleDataFromAST(AbstractCompiler compiler) {
-    ArrayList<LinkedHashMap<String, Node>> localeData = new ArrayList<>();
-
-    // Remove the first expression which is expected to be an array literal,
-    // Where every entry is an object literal where the key is the locale
-    // and the data is value
-
-    Node root = compiler.getJsRoot();
-    Node script = root.getFirstChild();
-    checkState(script.isScript());
-
-    // Remove it from the AST.
-    Node stmt = script.removeFirstChild();
-    checkState(stmt.isVar());
-
-    Node nameNode = stmt.getFirstChild();
-    checkState(nameNode.isName());
-
-    Node arrlit = nameNode.getLastChild();
-    checkState(arrlit.isArrayLit());
-
-    for (Node obj = arrlit.getFirstChild(); obj != null; obj = obj.getNext()) {
-      checkState(obj.isObjectLit());
-      LinkedHashMap<String, Node> map = new LinkedHashMap<>();
-      localeData.add(map);
-      for (Node member = obj.getFirstChild(); member != null; member = member.getNext()) {
-        checkState(member.isStringKey());
-        String locale = member.getString();
-        Node value = member.removeFirstChild();
-
-        map.put(normalizeLocale(locale), value);
-      }
-    }
-
-    return new LocaleDataImpl(localeData);
   }
 }

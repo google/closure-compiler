@@ -2345,11 +2345,8 @@ public final class CompilerTest {
       compiler.saveState(byteArrayOutputStream);
       byteArrayOutputStream.close();
 
-      // NOTE: The AST is not expected to be used after serialization to the save file
-      // and it has been modified to transport the locale data to the next stage via
-      // `__JSC_LOCALE_DATA__`
-      assertThat(compiler.toSource(m1))
-          .isEqualTo("var __JSC_LOCALE_DATA__=[];goog.provide(\"a.b\");");
+      // NOTE: The AST is not expected to be used after serialization to the save file.
+      assertThat(compiler.toSource(m1)).isEqualTo("goog.provide(\"a.b\");");
 
       restoreCompilerState(compiler, byteArrayOutputStream.toByteArray());
 

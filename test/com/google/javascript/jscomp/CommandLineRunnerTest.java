@@ -215,9 +215,7 @@ public final class CommandLineRunnerTest {
     assertThat(runner.doRun()).isEqualTo(0);
 
     assertThat(runner.getCompiler().toSource())
-        .isEqualTo(
-            "var __JSC_LOCALE_DATA__=[];"
-                + "const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
+        .isEqualTo("const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
 
     // Create a path for the stage 2 output
     File stage2Save = new File(testDir, "stage2.save");
@@ -237,7 +235,6 @@ public final class CommandLineRunnerTest {
     assertThat(runner.getCompiler().toSource())
         .isEqualTo(
             concatStrings(
-                "var __JSC_LOCALE_DATA__=[];",
                 "console.log(",
                 "__jscomp_define_msg__({\"key\":\"MSG_HELLO\",\"msg_text\":\"hello\"})",
                 ");"));

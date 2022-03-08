@@ -191,8 +191,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private ImmutableMap<String, String> inputPathByWebpackId;
 
-  private LocaleData localeDataValueMap;
-
   private StaticScope transpilationNamespace;
 
   /**
@@ -3345,16 +3343,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.removeSyntheticCodeInput(/* mergeContentIntoFirstInput= */ true);
   }
 
-  @Override
-  void setLocaleSubstitutionData(LocaleData localeDataValueMap) {
-    this.localeDataValueMap = localeDataValueMap;
-  }
-
-  @Override
-  LocaleData getLocaleSubstitutionData() {
-    return localeDataValueMap;
-  }
-
   /**
    * Deletes the synthesized code input and optionally moves all its subtree contents into the first
    * non-synthetic input
@@ -3624,7 +3612,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           new ObjectOutputStream(outputStream).writeObject(new CompilerState(this));
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
-          LocaleDataPasses.addLocaleDataToAST(this, this.getLocaleSubstitutionData());
           SerializeTypedAstPass.createFromOutputStream(this, outputStream)
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
@@ -3766,7 +3753,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.typedAstFilesystem = null; // allow garbage collection
 
-    setLocaleSubstitutionData(LocaleDataPasses.reconstituteLocaleDataFromAST(this));
     lastInjectedLibrary =
         compilerState.lastInjectedLibraryIndexInFirstScript != -1
             ? jsRoot

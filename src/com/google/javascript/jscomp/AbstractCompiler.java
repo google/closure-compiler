@@ -317,7 +317,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @Deprecated
   abstract Supplier<String> getUniqueNameIdSupplier();
 
-  /** @return Whether any errors have been encountered that should stop the compilation process. */
+  /**
+   * @return Whether any errors have been encountered that should stop the compilation process.
+   */
   abstract boolean hasHaltingErrors();
 
   /** Register a listener for code change events. */
@@ -396,10 +398,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract void setHasRegExpGlobalReferences(boolean references);
 
-  /** @return Whether the AST contains references to the RegExp global object properties. */
+  /**
+   * @return Whether the AST contains references to the RegExp global object properties.
+   */
   abstract boolean hasRegExpGlobalReferences();
 
-  /** @return The error level the given error object will be reported at. */
+  /**
+   * @return The error level the given error object will be reported at.
+   */
   abstract CheckLevel getErrorLevel(JSError error);
 
   /** What point in optimizations we're in. For use by compiler passes */
@@ -679,19 +685,4 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * rewriting has not occurred.
    */
   abstract void mergeSyntheticCodeInput();
-
-  /** A trivial interface to make the LocaleData opaque */
-  interface LocaleData {}
-
-  /**
-   * Storage for i18n data extracted from the compilation set, to use for localization of the
-   * compilation late in the compilation process.
-   */
-  abstract void setLocaleSubstitutionData(LocaleData localeDataValueMap);
-
-  /**
-   * Retrieve extracted i18n data extracted, to use for localization of the compilation late in the
-   * compilation process.
-   */
-  abstract LocaleData getLocaleSubstitutionData();
 }

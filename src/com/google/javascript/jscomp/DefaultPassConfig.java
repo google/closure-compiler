@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.AbstractCompiler.LocaleData;
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -3077,22 +3076,9 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("protectLocaleData")
           .setInternalFactory(
               (compiler) ->
-                  new CompilerPass() {
-                    @Override
-                    public void process(Node externs, Node root) {
-                      compiler.setLocaleSubstitutionData(
-                          runLocaleDataProtect(compiler, externs, root));
-                    }
-                  })
+                  (externs, root) -> new ExtractAndProtect(compiler).process(externs, root))
           .setFeatureSetForOptimizations()
           .build();
-
-  LocaleData runLocaleDataProtect(AbstractCompiler compiler, Node externs, Node root) {
-    LocaleDataPasses.ExtractAndProtect pass = new ExtractAndProtect(compiler);
-
-    pass.process(externs, root);
-    return pass.getLocaleValuesDataMaps();
-  }
 
   /** Replace locale data stubs with the values for a locale. */
   private final PassFactory substituteLocaleData =
@@ -3104,9 +3090,7 @@ public final class DefaultPassConfig extends PassConfig {
                     @Override
                     public void process(Node externs, Node root) {
                       new LocaleDataPasses.LocaleSubstitutions(
-                              compiler,
-                              compiler.getOptions().locale,
-                              compiler.getLocaleSubstitutionData())
+                              compiler, compiler.getOptions().locale)
                           .process(externs, root);
                     }
                   })
