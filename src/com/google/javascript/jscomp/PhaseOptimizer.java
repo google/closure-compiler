@@ -79,27 +79,6 @@ class PhaseOptimizer implements CompilerPass {
     RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
   }
 
-  /**
-   * NOTE(dimvar): There used to be some code that tried various orderings of loopable passes and
-   * picked the fastest one. This code became stale gradually and I decided to remove it. It was
-   * also never tried after the new pass scheduler was written. If we need to revisit this order in
-   * the future, we should write new code to do it.
-   *
-   * <p>It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
-   * because inlineFunctions relies on them to clean up patterns it introduces. This affects our
-   * size-based loop-termination heuristic.
-   */
-  @VisibleForTesting
-  static final ImmutableList<String> OPTIMAL_ORDER =
-      ImmutableList.of(
-          PassNames.INLINE_FUNCTIONS,
-          PassNames.INLINE_VARIABLES,
-          PassNames.DEAD_ASSIGNMENT_ELIMINATION,
-          PassNames.COLLAPSE_OBJECT_LITERALS,
-          PassNames.REMOVE_UNUSED_CODE,
-          PassNames.PEEPHOLE_OPTIMIZATIONS,
-          PassNames.REMOVE_UNREACHABLE_CODE);
-
   static final ImmutableList<String> CODE_REMOVING_PASSES =
       ImmutableList.of(PassNames.PEEPHOLE_OPTIMIZATIONS, PassNames.REMOVE_UNREACHABLE_CODE);
 
@@ -391,7 +370,6 @@ class PhaseOptimizer implements CompilerPass {
     public void process(Node externs, Node root) {
       checkState(!inLoop, "Nested loops are forbidden");
       inLoop = true;
-      checkLoopedPassesOrder();
       this.isCodeRemovalLoop = isCodeRemovalLoop();
 
       // Set up function-change tracking
@@ -512,53 +490,6 @@ class PhaseOptimizer implements CompilerPass {
         return this.howmanyIterationsUnderThreshold < 2;
       }
       return true;
-    }
-
-    /**
-     * Check that the passes are already in the order that we previously enforced by sorting them.
-     */
-    private void checkLoopedPassesOrder() {
-      // TODO(b/222940912): remove this ordering check.
-      // It would be more efficient to avoid building an ordered list
-      // to compare against, but modifying this logic would risk accidentally changing
-      // the expected order from what this code previously enforced.
-      // This whole method should be removed as soon as we're sure that
-      // all users of PhaseOptimizer add passes in the expected order.
-      List<NamedPass> orderedPassList = new ArrayList<>(myPasses);
-      // It's important that this ordering is deterministic, so that
-      // multiple compiles with the same input produce exactly the same
-      // results.
-      //
-      // To do this, grab any passes we recognize, and move them to the end
-      // in an "optimal" order.
-      List<NamedPass> optimalPasses = new ArrayList<>();
-      for (String passInOptimalOrder : OPTIMAL_ORDER) {
-        for (NamedPass loopablePass : orderedPassList) {
-          if (loopablePass.name.equals(passInOptimalOrder)) {
-            optimalPasses.add(loopablePass);
-            break;
-          }
-        }
-      }
-
-      orderedPassList.removeAll(optimalPasses);
-      orderedPassList.addAll(optimalPasses);
-
-      final int numPasses = myPasses.size();
-      checkState(
-          orderedPassList.size() == numPasses,
-          "sorted size (%s) does not match original size (%s)",
-          orderedPassList.size(),
-          numPasses);
-      for (int i = 0; i < numPasses; ++i) {
-        final NamedPass orderedPass = orderedPassList.get(i);
-        final NamedPass originalPass = myPasses.get(i);
-        checkState(
-            orderedPass.equals(originalPass),
-            "unexpected pass order:\n%s\nexpected:\n%s",
-            myPasses,
-            orderedPassList);
-      }
     }
 
     boolean isPopulated() {

@@ -19,11 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS;
-import static com.google.javascript.jscomp.PhaseOptimizer.OPTIMAL_ORDER;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -180,23 +178,6 @@ public final class PhaseOptimizerTest {
       assertWithMessage("Expected exception").fail();
     } catch (IllegalArgumentException e) {
       return;
-    }
-  }
-
-  @Test
-  public void testReversedPassOrdering() {
-
-    Loop loop = optimizer.addFixedPointLoop();
-    final List<String> reversedOrder = Lists.reverse(OPTIMAL_ORDER);
-    for (String passName : reversedOrder) {
-      addLoopedPass(loop, passName, 0);
-    }
-    try {
-      optimizer.process(null, dummyRoot);
-      assertWithMessage("no exception for invalid pass order").fail();
-    } catch (IllegalStateException e) {
-      // expected exception
-      assertThat(e).hasMessageThat().contains("unexpected pass order");
     }
   }
 
