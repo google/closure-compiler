@@ -972,14 +972,6 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.add(optimizeCalls);
     }
 
-    final boolean shouldRunInlineVariables =
-        options.inlineVariables || options.inlineLocalVariables;
-    // TODO(b/222940912): This should probably execute after inlineFunctions just like
-    // inlineVariables does.
-    if (options.inlineConstantVars && !shouldRunInlineVariables) {
-      loopPasses.add(inlineConstants);
-    }
-
     // It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
     // because inlineFunctions relies on them to clean up patterns it introduces. This affects our
     // size-based loop-termination heuristic.
@@ -987,9 +979,10 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.add(inlineFunctions);
     }
 
-    //
-    if (shouldRunInlineVariables) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       loopPasses.add(inlineVariables);
+    } else if (options.inlineConstantVars) {
+      loopPasses.add(inlineConstants);
     }
 
     if (shouldRunRemoveUnusedCode()) {
@@ -1012,13 +1005,6 @@ public final class DefaultPassConfig extends PassConfig {
     List<PassFactory> passes = new ArrayList<>();
     if (options.inlineGetters) {
       passes.add(inlineSimpleMethods);
-    }
-
-    final boolean shouldInlineVariables = options.inlineVariables || options.inlineLocalVariables;
-    // TODO(b/222940912): This should probably execute after inlineFunctions like inlineVariables
-    // does.
-    if (!shouldInlineVariables && options.inlineConstantVars) {
-      passes.add(inlineConstants);
     }
 
     if (options.shouldInlineProperties() && options.isTypecheckingEnabled()) {
@@ -1054,8 +1040,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
-    if (shouldInlineVariables) {
+    if (options.inlineVariables || options.inlineLocalVariables) {
       passes.add(inlineVariables);
+    } else if (options.inlineConstantVars) {
+      passes.add(inlineConstants);
     }
 
     if (shouldRunDeadAssignmentElimination) {
