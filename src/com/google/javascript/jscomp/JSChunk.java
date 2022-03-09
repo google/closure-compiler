@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
-import com.google.javascript.jscomp.deps.Es6SortedDependencies;
+import com.google.javascript.jscomp.deps.SortedDependencies;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -296,7 +296,7 @@ public final class JSChunk extends DependencyInfo.Base implements Serializable {
 
     // Sort the JSChunk in this order.
     List<CompilerInput> sortedList =
-        new Es6SortedDependencies<CompilerInput>(getInputs()).getSortedList();
+        new SortedDependencies<CompilerInput>(getInputs()).getSortedList();
     inputs.clear();
     for (CompilerInput input : sortedList) {
       inputs.put(input.getName(), input);

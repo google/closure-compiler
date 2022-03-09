@@ -25,12 +25,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link Es6SortedDependencies} */
+/** Tests for {@link SortedDependencies} */
 @RunWith(JUnit4.class)
-public class Es6SortedDependenciesTest {
+public class SortedDependenciesTest {
   private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
       List<SimpleDependencyInfo> shuffled) {
-    return new Es6SortedDependencies<>(shuffled);
+    return new SortedDependencies<>(shuffled);
   }
 
   @Test

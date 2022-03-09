@@ -16,42 +16,107 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * A sorted list of inputs with dependency information.
- * <p>
- * Performs a sort to make sure that an input always comes after its
- * dependencies.
- * <p>
- * Also exposes other information about the inputs, like which inputs
- * do not provide symbols.
+ * A sorted list of inputs following the ES6 module ordering spec.
  *
- * TODO(tbreisacher): Consider removing this interface, since it now
- * has only one class implementing it.
+ * <p>Orders such that each input always comes after its dependencies. Circular references are
+ * allowed by emitting the current input in the moment before a loop would complete.
+ *
+ * <p>The resulting order is not the same as the user-provided order but is influenced by it since
+ * it may take more than one graph traversal to account for all provided inputs and the graph
+ * traversals start with the first user provided input and continue from there.
+ *
+ * <p>Also exposes other information about the inputs, like which inputs do not provide symbols.
  */
-public interface SortedDependencies<INPUT extends DependencyInfo> {
+public final class SortedDependencies<InputT extends DependencyInfo> {
+
+  private final List<InputT> userOrderedInputs = new ArrayList<>();
+  private final List<InputT> importOrderedInputs = new ArrayList<>();
+  private final Set<InputT> completedInputs = new HashSet<>();
+  private final Map<String, InputT> nonExportingInputs = new LinkedHashMap<>();
+  private final Map<String, InputT> exportingInputBySymbolName = new HashMap<>();
+  // Maps an input A to the inputs it depends on, ie, inputs that provide stuff that A requires.
+  private final SetMultimap<InputT, InputT> importedInputByImportingInput =
+      LinkedHashMultimap.create();
+
+  public SortedDependencies(List<InputT> userOrderedInputs) {
+    this.userOrderedInputs.addAll(userOrderedInputs);
+    processInputs();
+  }
+
+  /**
+   * Gets all the strong dependencies of the given roots. The inputs must be returned in a stable
+   * order. In other words, if A comes before B, and A does not transitively depend on B, then A
+   * must also come before B in the returned list.
+   *
+   * @param sorted If true, get them in topologically sorted order. If false, get them in the
+   *     original order they were passed to the compiler.
+   */
+  public ImmutableList<InputT> getStrongDependenciesOf(List<InputT> rootInputs, boolean sorted) {
+    Set<InputT> includedInputs = new HashSet<>();
+    Deque<InputT> worklist = new ArrayDeque<>(rootInputs);
+    while (!worklist.isEmpty()) {
+      InputT input = worklist.pop();
+      if (includedInputs.add(input)) {
+        for (String symbolName : input.getRequiredSymbols()) {
+          InputT importedSymbolName = exportingInputBySymbolName.get(symbolName);
+          if (importedSymbolName != null) {
+            worklist.add(importedSymbolName);
+          }
+        }
+      }
+    }
+
+    ImmutableList.Builder<InputT> builder = ImmutableList.builder();
+    for (InputT input : (sorted ? importOrderedInputs : userOrderedInputs)) {
+      if (includedInputs.contains(input)) {
+        builder.add(input);
+      }
+    }
+    return builder.build();
+  }
 
   /**
    * Return the input that gives us the given symbol.
-   * @throws MissingProvideException An exception if there is no
-   *     input for this symbol.
+   *
+   * @throws MissingProvideException An exception if there is no input for this symbol.
    */
-  public INPUT getInputProviding(String symbol) throws MissingProvideException;
+  public InputT getInputProviding(String symbolName) throws MissingProvideException {
+    InputT input = maybeGetInputProviding(symbolName);
+    if (input != null) {
+      return input;
+    }
 
-  /**
-   * Return the input that gives us the given symbol, or null.
-   */
-  public INPUT maybeGetInputProviding(String symbol);
+    throw new MissingProvideException(symbolName);
+  }
 
-  public List<INPUT> getSortedList();
+  public ImmutableList<InputT> getInputsWithoutProvides() {
+    return ImmutableList.copyOf(nonExportingInputs.values());
+  }
 
   /**
    * Gets all the strong dependencies of the given roots. The inputs must be returned in a stable
    * order. In other words, if A comes before B, and A does not transitively depend on B, then A
    * must also come before B in the returned list.
    */
-  public List<INPUT> getSortedStrongDependenciesOf(List<INPUT> roots);
+  public ImmutableList<InputT> getSortedStrongDependenciesOf(List<InputT> roots) {
+    return getStrongDependenciesOf(roots, true);
+  }
 
   /**
    * Gets all the weak dependencies of the given roots. The inputs must be returned in stable order.
@@ -66,19 +131,111 @@ public interface SortedDependencies<INPUT extends DependencyInfo> {
    *
    * <p>Root inputs will never be in the returned list as they are all considered strong.
    */
-  public List<INPUT> getSortedWeakDependenciesOf(List<INPUT> roots);
+  public ImmutableList<InputT> getSortedWeakDependenciesOf(List<InputT> rootInputs) {
+    Set<InputT> strongInputs = new HashSet<>(getSortedStrongDependenciesOf(rootInputs));
+    Set<InputT> weakInputs = new HashSet<>();
+    Deque<InputT> worklist = new ArrayDeque<>(strongInputs);
+    while (!worklist.isEmpty()) {
+      InputT input = worklist.pop();
+      boolean isStrong = strongInputs.contains(input);
 
-  /**
-   * Gets all the strong dependencies of the given roots. The inputs must be returned in a stable
-   * order. In other words, if A comes before B, and A does not transitively depend on B, then A
-   * must also come before B in the returned list.
-   *
-   * @param sorted If true, get them in topologically sorted order. If false, get them in the
-   *     original order they were passed to the compiler.
-   */
-  public List<INPUT> getStrongDependenciesOf(List<INPUT> roots, boolean sorted);
+      Iterable<String> edges =
+          isStrong
+              ? input.getTypeRequires()
+              : Iterables.concat(input.getRequiredSymbols(), input.getTypeRequires());
 
-  public List<INPUT> getInputsWithoutProvides();
+      if (!isStrong && !weakInputs.add(input)) {
+        continue;
+      }
+
+      for (String symbolName : edges) {
+        InputT importedSymbolName = exportingInputBySymbolName.get(symbolName);
+        if (importedSymbolName != null
+            && !strongInputs.contains(importedSymbolName)
+            && !weakInputs.contains(importedSymbolName)) {
+          worklist.add(importedSymbolName);
+        }
+      }
+    }
+
+    ImmutableList.Builder<InputT> builder = ImmutableList.builder();
+    for (InputT input : importOrderedInputs) {
+      if (weakInputs.contains(input)) {
+        builder.add(input);
+      }
+    }
+
+    return builder.build();
+  }
+
+  public List<InputT> getSortedList() {
+    return Collections.unmodifiableList(importOrderedInputs);
+  }
+
+  /** Return the input that gives us the given symbol, or null. */
+  public InputT maybeGetInputProviding(String symbol) {
+    if (exportingInputBySymbolName.containsKey(symbol)) {
+      return exportingInputBySymbolName.get(symbol);
+    }
+
+    return nonExportingInputs.get(ModuleNames.fileToModuleName(symbol));
+  }
+
+  private void orderInput(InputT input) {
+    if (completedInputs.contains(input)) {
+      return;
+    }
+
+    completedInputs.add(input);
+    for (InputT importedInput : importedInputByImportingInput.get(input)) {
+      orderInput(importedInput);
+    }
+
+    // Emit an input after its imports have been emitted.
+    importOrderedInputs.add(input);
+  }
+
+  private void processInputs() {
+    // Index.
+    for (InputT userOrderedInput : userOrderedInputs) {
+      ImmutableList<String> provides = userOrderedInput.getProvides();
+      String firstProvide = Iterables.getFirst(provides, null);
+      if (firstProvide == null
+          // "module$" indicates the provide is generated from the path. If this is the only thing
+          // the module provides and it is not an ES6 module then it is just a script and doesn't
+          // export anything.
+          || (provides.size() == 1
+              && firstProvide.startsWith("module$")
+              // ES6 modules should always be considered as exporting something.
+              && !"es6".equals(userOrderedInput.getLoadFlags().get("module")))) {
+        nonExportingInputs.put(
+            ModuleNames.fileToModuleName(userOrderedInput.getName()), userOrderedInput);
+      }
+      for (String providedSymbolName : userOrderedInput.getProvides()) {
+        exportingInputBySymbolName.put(providedSymbolName, userOrderedInput);
+      }
+    }
+    for (InputT userOrderedInput : userOrderedInputs) {
+      for (String symbolName : userOrderedInput.getRequiredSymbols()) {
+        InputT importedInput = exportingInputBySymbolName.get(symbolName);
+        if (importedInput != null) {
+          importedInputByImportingInput.put(userOrderedInput, importedInput);
+        }
+      }
+    }
+
+    // Order.
+    // For each input, traverse in user-provided order.
+    for (InputT userOrderedInput : userOrderedInputs) {
+      // Traverse the graph starting from this input and record any
+      // newly-reached inputs.
+      orderInput(userOrderedInput);
+    }
+
+    // Free temporary indexes.
+    completedInputs.clear();
+    importedInputByImportingInput.clear();
+  }
 
   public static class MissingProvideException extends Exception {
     public MissingProvideException(String provide) {

@@ -33,7 +33,6 @@ import com.google.common.collect.Ordering;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.javascript.jscomp.deps.Es6SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -518,7 +517,7 @@ public final class JSChunkGraph implements Serializable {
     // Make a copy since we're going to mutate the graph below.
     List<CompilerInput> originalInputs = ImmutableList.copyOf(getAllInputs());
 
-    SortedDependencies<CompilerInput> sorter = new Es6SortedDependencies<>(originalInputs);
+    SortedDependencies<CompilerInput> sorter = new SortedDependencies<>(originalInputs);
 
     Set<CompilerInput> entryPointInputs =
         createEntryPointInputs(compiler, dependencyOptions, getAllInputs(), sorter);
