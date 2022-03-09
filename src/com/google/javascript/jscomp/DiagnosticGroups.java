@@ -529,8 +529,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "jsdocMissingType", RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
 
-  public static final DiagnosticGroup UNNECESSARY_ESCAPE =
-      DiagnosticGroups.registerGroup("unnecessaryEscape", RhinoErrorReporter.UNNECESSARY_ESCAPE);
+
 
   public static final DiagnosticGroup TYPE_IMPORT_CODE_REFERENCES =
       DiagnosticGroups.registerGroup(
@@ -597,7 +596,8 @@ public class DiagnosticGroups {
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
-              RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
+              RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
+              RhinoErrorReporter.UNNECESSARY_ESCAPE));
 
   public static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
@@ -708,6 +708,8 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerDeprecatedGroup("es6Typed");
 
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
+
+    DiagnosticGroups.registerDeprecatedGroup("unnecessaryEscape");
 
     DiagnosticGroups.registerGroup("conflictingIjsFile", IjsErrors.CONFLICTING_IJS_FILE);
 

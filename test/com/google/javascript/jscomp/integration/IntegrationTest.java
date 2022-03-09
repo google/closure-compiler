@@ -3452,12 +3452,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testWarnUnnecessaryBackslashInStringLiteral() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.UNNECESSARY_ESCAPE, CheckLevel.WARNING);
-    test(
-        options,
-        new String[] {"var str = '\\q';"},
-        new String[] {"var str = 'q';"},
-        DiagnosticGroups.UNNECESSARY_ESCAPE);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+
+    compile(options, "const str = '\\q';");
+    assertThat(lastCompiler.getWarnings()).hasSize(1);
+    assertThat(lastCompiler.getWarnings().get(0).getDescription()).contains("Unnecessary escape");
   }
 
   // NOTE(dimvar): the jsdocs are ignored in the comparison of the before/after ASTs. It'd be nice
