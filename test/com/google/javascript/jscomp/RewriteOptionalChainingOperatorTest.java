@@ -308,6 +308,36 @@ public final class RewriteOptionalChainingOperatorTest {
                       + " =>",
                   "{ return p;}")
             },
+            {
+              lines(
+                  "const a = { b: [3] };",
+                  "label: for (const val of a?.b) {",
+                  "  if (val != 3) {",
+                  "    continue label;",
+                  "  }",
+                  "}"),
+              lines(
+                  "const a = {b:[3]};",
+                  "let tmp0;",
+                  "label: for (const val of (tmp0 = a) == null ? void 0 : tmp0.b) {",
+                  "  if (val != 3) {",
+                  "  continue label;",
+                  "  }",
+                  "}")
+            },
+            {
+              lines(
+                  "{", //
+                  "  const x = 1;",
+                  "  label: for (const a of b?.c) {}",
+                  "}"),
+              lines(
+                  "{", //
+                  "  const x = 1;",
+                  "  let tmp0;",
+                  "  label: for (const a of (tmp0 = b) == null ? void 0 : tmp0.c) {}",
+                  "}")
+            }
           });
     }
 

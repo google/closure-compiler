@@ -56,7 +56,7 @@ class OptionalChainRewriter {
   @Nullable final Scope scope;
   final Node chainParent;
   final Node wholeChain;
-  final Node enclosingStatement;
+  final Node insertionPoint;
   final ArrayDeque<Node> deletesToDelete;
 
   /** Creates unique names to be used for temporary variables. */
@@ -107,7 +107,21 @@ class OptionalChainRewriter {
     this.scope = builder.scope;
     this.wholeChain = wholeChain;
     this.chainParent = checkNotNull(wholeChain.getParent(), wholeChain);
-    this.enclosingStatement = NodeUtil.getEnclosingStatement(wholeChain);
+    // Insert temporaries just before the enclosing statement.
+    Node enclosingStatement = NodeUtil.getEnclosingStatement(wholeChain);
+    if (enclosingStatement.getPrevious() != null
+        && enclosingStatement.getPrevious().isLabelName()) {
+      // Do not insert temporaries between a label name and its statement.
+      // e.g. `{ label: for (const a of b?.c) {...}`
+      // AST shape is
+      // BLOCK
+      //      LABEL // parent of enclosingStatement - insert above this
+      //          LABEL_NAME
+      //          enclosingStatement
+      this.insertionPoint = enclosingStatement.getParent();
+    } else {
+      this.insertionPoint = enclosingStatement;
+    }
     this.deletesToDelete = new ArrayDeque<>();
   }
 
@@ -196,7 +210,7 @@ class OptionalChainRewriter {
     // be transpiled away, if necessary. If it is being used after transpilation, then using `let`
     // must be OK, because optional chains weren't transpiled away and `let` existed before they
     // did.
-    final Node enclosingScript = NodeUtil.getEnclosingScript(enclosingStatement);
+    final Node enclosingScript = NodeUtil.getEnclosingScript(insertionPoint);
     NodeUtil.addFeatureToScript(enclosingScript, Feature.LET_DECLARATIONS, compiler);
   }
 
@@ -326,7 +340,7 @@ class OptionalChainRewriter {
     Node declarationStatement =
         astFactory.createSingleLetNameDeclaration(tempVarName).srcrefTree(valueNode);
     declarationStatement.getFirstChild().setInferredConstantVar(true);
-    declarationStatement.insertBefore(enclosingStatement);
+    declarationStatement.insertBefore(insertionPoint);
     compiler.reportChangeToEnclosingScope(declarationStatement);
     if (scope != null) {
       scope.declare(tempVarName, declarationStatement.getFirstChild(), /* input= */ null);
