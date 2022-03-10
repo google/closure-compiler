@@ -381,7 +381,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             .setVersion(3)
             .setFile("testcode")
             .setLineCount(3)
-            .setMappings("A,aAAA,IAAIA,oBAAsB,QAAQC,CAAR;OACnBC,CADmB;OAEnBC,CAFmB;")
+            .setMappings("A,aAAA,IAAIA,oBAAuB,QAAOC,CAAP;OACpBC,CADoB;OAEpBC,CAFoB;")
             .setSources(getEncodedFileName())
             .setNames("myMultilineTemplate", "a", "b", "c")
             .build());

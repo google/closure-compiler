@@ -3821,6 +3821,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // newline before invalid escape sequence
     parseError("`\n\\1`", "Invalid escape sequence");
+    parseError("`\n\\1 ${0}`", "Invalid escape sequence");
   }
 
   @Test
@@ -4806,6 +4807,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError(
         "var unterm = 'forgot closing quote\n" + "alert(unterm);", "Unterminated string literal");
+
+    // test combo of a string continuation + useless escape warning + unterminated literal error
+    // create a TestErrorReporter so that we can expect both a warning and an error
+    String js = "var unterm = ' \\\n \\a \n";
+
+    TestErrorReporter testErrorReporter =
+        new TestErrorReporter()
+            .expectAllWarnings("Unnecessary escape: '\\a' is equivalent to just 'a'")
+            .expectAllErrors("Unterminated string literal");
+    StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
+    ParserRunner.parse(file, js, createConfig(), testErrorReporter);
+
+    // verify we reported both the warning and error
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   /**

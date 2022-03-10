@@ -888,7 +888,7 @@ public class Scanner {
       }
     }
     if (peekChar() != terminator) {
-      reportError(getPosition(beginIndex), "Unterminated string literal");
+      reportError(startingPosition, "Unterminated string literal");
     } else {
       nextChar();
     }
@@ -914,7 +914,7 @@ public class Scanner {
     SourcePosition startingPosition = getPosition(beginIndex);
     SkipTemplateCharactersResult skipTemplateCharactersResult = skipTemplateCharacters();
     if (isAtEnd()) {
-      reportError(getPosition(beginIndex), "Unterminated template literal");
+      reportError(startingPosition, "Unterminated template literal");
     }
 
     String value = getTokenString(beginIndex);
@@ -935,14 +935,14 @@ public class Scanner {
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getPosition(),
-            getTokenRange(beginIndex - 1));
+            getTokenRange(startingPosition));
       default: // Should have reported error already
         return new TemplateLiteralToken(
             endType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
             skipTemplateCharactersResult.getPosition(),
-            getTokenRange(beginIndex - 1));
+            getTokenRange(startingPosition));
     }
   }
 
