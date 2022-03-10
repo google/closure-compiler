@@ -2076,14 +2076,19 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test("`hello\r\nworld`", "'hello\\nworld'");
     test("`hello\n\nworld`", "'hello\\n\\nworld'");
     test("`hello\\r\\nworld`", "'hello\\r\\nworld'");
-    test("`${world}`", "'' + world");
-    test("`hello ${world}`", "'hello ' + world");
-    test("`${hello} world`", "hello + ' world'");
-    test("`${hello}${world}`", "'' + hello + world");
-    test("`${a} b ${c} d ${e}`", "a + ' b ' + c + ' d ' + e");
-    test("`hello ${a + b}`", "'hello ' + (a + b)");
-    test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
-    test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
+    test("`${world}`", "$jscomp.global.String(world)");
+    test("`hello ${world}`", "'hello ' + $jscomp.global.String(world)");
+    test("`${hello} world`", "$jscomp.global.String(hello) + ' world'");
+    test("`${hello}${world}`", "$jscomp.global.String(hello) + $jscomp.global.String(world)");
+    test(
+        "`${a} b ${c} d ${e}`",
+        "$jscomp.global.String(a) + ' b ' + $jscomp.global.String(c) + ' d ' +"
+            + " $jscomp.global.String(e)");
+    test("`hello ${a + b}`", "'hello ' + $jscomp.global.String((a + b))");
+    test("`hello ${a, b, c}`", "'hello ' + $jscomp.global.String((a, b, c))");
+    test(
+        "`hello ${a ? b : c}${a * b}`",
+        "'hello ' + $jscomp.global.String((a ? b : c)) + $jscomp.global.String((a * b))");
   }
 
   @Test
