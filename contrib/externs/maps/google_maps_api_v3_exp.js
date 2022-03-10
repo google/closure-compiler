@@ -3319,6 +3319,15 @@ google.maps.InfoWindow = function(opts) {};
 google.maps.InfoWindow.prototype.close = function() {};
 
 /**
+ * Sets focus on this <code>InfoWindow</code>. You may wish to consider using
+ * this method along with a <code>visible</code> event to make sure that
+ * <code>InfoWindow</code> is visible before setting focus on it. An
+ * <code>InfoWindow</code> that is not visible cannot be focused.
+ * @return {undefined}
+ */
+google.maps.InfoWindow.prototype.focus = function() {};
+
+/**
  * @return {string|?Element|?Text|undefined} The content of this InfoWindow. The
  *     same as what was previously set as the content.
  */
