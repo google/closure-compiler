@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -55,9 +56,11 @@ final class LocaleDataPasses {
   /** Protect `goog.LOCALE` by replacing it with an extern-defined name. */
   private static class ProtectCurrentLocale extends NodeTraversal.AbstractPostOrderCallback {
     private final AbstractCompiler compiler;
+    private final AstFactory astFactory;
 
     ProtectCurrentLocale(AbstractCompiler compiler) {
       this.compiler = compiler;
+      this.astFactory = compiler.createAstFactory();
     }
 
     @Override
@@ -67,7 +70,7 @@ final class LocaleDataPasses {
         // else we will replace `goog.LOCALE` itself, so we don't have to waste time
         // inlining it later.
         final Node nodeToReplace = NodeUtil.isLhsOfAssign(n) ? n.getNext() : n;
-        Node replacement = IR.name(GOOG_LOCALE_REPLACEMENT);
+        Node replacement = astFactory.createName(GOOG_LOCALE_REPLACEMENT, type(nodeToReplace));
         replacement.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         nodeToReplace.replaceWith(replacement);
         compiler.reportChangeToEnclosingScope(parent);
@@ -91,10 +94,12 @@ final class LocaleDataPasses {
     private final Node qnameForLocale = IR.name(GOOG_LOCALE_REPLACEMENT);
 
     private final AbstractCompiler compiler;
+    private final AstFactory astFactory;
     private final String locale;
 
     LocaleSubstitutions(AbstractCompiler compiler, String locale) {
       this.compiler = compiler;
+      this.astFactory = compiler.createAstFactory();
       // Use the "default" locale if not otherwise set.
       this.locale = locale == null ? DEFAULT_LOCALE : locale;
     }
@@ -108,7 +113,7 @@ final class LocaleDataPasses {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.matchesName(this.qnameForLocale)) {
-        Node replacement = IR.string(checkNotNull(locale)).srcref(n);
+        Node replacement = astFactory.createString(checkNotNull(locale)).srcref(n);
         n.replaceWith(replacement);
         compiler.reportChangeToEnclosingScope(replacement);
       }
