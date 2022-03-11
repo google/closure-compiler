@@ -2808,36 +2808,37 @@ public final class CommandLineRunnerTest {
   public void testEscapeDollarInTemplateLiteralEs5Output() {
     args.add("--language_in=ECMASCRIPT6");
     args.add("--language_out=ECMASCRIPT5");
-    String externLines =
+
+    test(
+        "let Foo; const x = `${Foo}`;",
         lines(
             "var $jscomp=$jscomp||{};$jscomp.scope={};",
             "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
-            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};");
-    String externsWithStringInterpolationLines =
-        externLines
-            + lines(
-                "$jscomp.getGlobal=function(a){a=[\"object\"==typeof"
-                    + " globalThis&&globalThis,a,\"object\"==typeof"
-                    + " window&&window,\"object\"==typeof self&&self,\"object\"==typeof"
-                    + " global&&global];for(var b=0;b<a.length;++b){var"
-                    + " c=a[b];if(c&&c.Math==Math)return c}throw Error(\"Cannot find global"
-                    + " object\");};$jscomp.global=$jscomp.getGlobal(this);");
-    test(
-        "let Foo; const x = `${Foo}`;",
-        lines(externsWithStringInterpolationLines, "var Foo,x=$jscomp.global.String(Foo)"));
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "var Foo,x=\"\"+Foo"));
 
-    test("const x = `\\${Foo}`;", lines(externLines, "var x=\"${Foo}\""));
+    test(
+        "const x = `\\${Foo}`;",
+        lines(
+            "var $jscomp=$jscomp||{};$jscomp.scope={};",
+            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "var x=\"${Foo}\""));
 
     test(
         "let Foo; const x = `${Foo}\\${Foo}`;",
         lines(
-            externsWithStringInterpolationLines,
-            "var Foo,x=$jscomp.global.String(Foo)+\"${Foo}\""));
+            "var $jscomp=$jscomp||{};$jscomp.scope={};",
+            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "var Foo,x=Foo+\"${Foo}\""));
     test(
         "let Foo; const x = `\\${Foo}${Foo}`;",
         lines(
-            externsWithStringInterpolationLines,
-            "var Foo,x=\"${Foo}\"+$jscomp.global.String(Foo)"));
+            "var $jscomp=$jscomp||{};$jscomp.scope={};",
+            "$jscomp.createTemplateTagFirstArg=function(a){return a.raw=a;};",
+            "$jscomp.createTemplateTagFirstArgWithRaw=function(a,b){a.raw=b;return a};",
+            "var Foo,x=\"${Foo}\"+Foo"));
   }
 
   /** windows shells can add extra quotes to an argument */

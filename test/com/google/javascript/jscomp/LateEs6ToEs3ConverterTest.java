@@ -15,12 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,16 +42,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   public LateEs6ToEs3ConverterTest() {
     super(MINIMAL_EXTERNS + RUNTIME_STUBS);
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 
   @Override
@@ -85,18 +73,20 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         externs("/** @type {symbol} */ Symbol.iterator;"),
         srcs("var x = {[Symbol.iterator]: function() { return this; }};"),
-        expected(
-            lines(
-                "var $jscomp$compprop0 = {};",
-                "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
-                "         $jscomp$compprop0)")));
+        expected(lines(
+            "var $jscomp$compprop0 = {};",
+            "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
+            "         $jscomp$compprop0)")));
   }
 
   @Test
   public void testMethodInObject() {
-    test("var obj = { f() {alert(1); } };", "var obj = { f: function() {alert(1); } };");
+    test("var obj = { f() {alert(1); } };",
+        "var obj = { f: function() {alert(1); } };");
 
-    test("var obj = { f() { alert(1); }, x };", "var obj = { f: function() { alert(1); }, x: x };");
+    test(
+        "var obj = { f() { alert(1); }, x };",
+        "var obj = { f: function() { alert(1); }, x: x };");
   }
 
   @Test
@@ -157,13 +147,12 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "($jscomp$compprop0['f' + 1] = 1,",
             "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
 
-    test(
-        "({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
+    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
         lines(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['a'] = 1,",
-            "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1,"
-                + " $jscomp$compprop0)));"));
+        "var $jscomp$compprop0 = {};",
+        "($jscomp$compprop0['a'] = 1,",
+        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
+    ));
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
@@ -232,81 +221,29 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   @Test
   public void testUntaggedTemplateLiteral() {
     test("``", "''");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\"`", "'\\\"'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`'`", "\"'\"");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\\``", "'`'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\\\"`", "'\\\"'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\\\\\"`", "'\\\\\\\"'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\"\\\\`", "'\"\\\\'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`$$`", "'$$'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`$$$`", "'$$$'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`\\$$$`", "'$$$'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello`", "'hello'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello\nworld`", "'hello\\nworld'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello\rworld`", "'hello\\nworld'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello\r\nworld`", "'hello\\nworld'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello\n\nworld`", "'hello\\n\\nworld'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
     test("`hello\\r\\nworld`", "'hello\\r\\nworld'");
-    assertThat(getLastCompiler().getInjected()).isEmpty();
-
-    test("`${world}`", "$jscomp.global.String(world)");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test("`hello ${world}`", "'hello ' + $jscomp.global.String(world)");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test("`${hello} world`", "$jscomp.global.String(hello) + ' world'");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test("`${hello}${world}`", "$jscomp.global.String(hello) + $jscomp.global.String(world)");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test(
-        "`${a} b ${c} d ${e}`",
-        "$jscomp.global.String(a) + ' b ' + $jscomp.global.String(c) + ' d ' +"
-            + " $jscomp.global.String(e)");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test("`hello ${a + b}`", "'hello ' + $jscomp.global.String((a + b))");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-
-    test("`hello ${a, b, c}`", "'hello ' + $jscomp.global.String((a, b, c))");
-
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
-    test(
-        "`hello ${a ? b : c}${a * b}`",
-        "'hello ' + $jscomp.global.String((a ? b : c)) + $jscomp.global.String((a * b))");
-    assertThat(getLastCompiler().getInjected()).containsExactly("util/global");
+    test("`${world}`", "'' + world");
+    test("`hello ${world}`", "'hello ' + world");
+    test("`${hello} world`", "hello + ' world'");
+    test("`${hello}${world}`", "'' + hello + world");
+    test("`${a} b ${c} d ${e}`", "a + ' b ' + c + ' d ' + e");
+    test("`hello ${a + b}`", "'hello ' + (a + b)");
+    test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
+    test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
   }
 
   /**

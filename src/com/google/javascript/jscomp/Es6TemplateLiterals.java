@@ -41,54 +41,46 @@ class Es6TemplateLiterals {
   }
 
   /**
-   * Converts `${a} b ${c} d ${e}` to (String(a) + " b " + String(c) + " d " + String(e))
+   * Converts `${a} b ${c} d ${e}` to (a + " b " + c + " d " + e)
    *
    * @param n A TEMPLATELIT node that is not prefixed with a tag
    */
   void visitTemplateLiteral(NodeTraversal t, Node n) {
-    Node replacement = null;
-    boolean requestedUtilLibrary = false;
-    while (n.hasChildren()) {
-      Node child = n.removeFirstChild();
-      final Node stringPart;
-      if (child.isTemplateLitString()) {
-        String cooked = child.getCookedString();
-        checkState(cooked != null);
-        // Skip emitting anything for parts of the template that are statically known to be empty
-        // strings.
-        if (cooked.isEmpty()) {
-          continue;
-        }
-        stringPart = astFactory.createString(cooked);
-      } else if (child.isTemplateLitSub()) {
-        // Template Literal Substitution nodes have the expression of the substitution as their
-        // first child.
-        // Wrap these in the String constructor to force objects to use `toString` over `valueOf`
-        // (which would otherwise be called by the `+` operator).
-        stringPart =
-            this.astFactory.createCall(
-                astFactory.createQNameWithUnknownType("$jscomp.global.String"),
-                type(StandardColors.STRING),
-                child.removeFirstChild());
-        if (!requestedUtilLibrary) {
-          compiler.ensureLibraryInjected("util/global", /* force= */ false);
-          requestedUtilLibrary = true;
-        }
+    int length = n.getChildCount();
+    if (length == 0) {
+      n.replaceWith(astFactory.createString("\"\""));
+    } else {
+      Node first = n.removeFirstChild();
+      checkState(first.isTemplateLitString() && first.getCookedString() != null);
+      Node firstStr = astFactory.createString(first.getCookedString());
+      if (length == 1) {
+        n.replaceWith(firstStr);
       } else {
-        throw new IllegalStateException();
-      }
-
-      if (replacement != null) {
-        replacement = astFactory.createAdd(replacement, stringPart);
-      } else {
-        replacement = stringPart;
+        // Add the first string with the first substitution expression
+        Node add = astFactory.createAdd(firstStr, n.removeFirstChild().removeFirstChild());
+        // Process the rest of the template literal
+        for (int i = 2; i < length; i++) {
+          Node child = n.removeFirstChild();
+          if (child.isTemplateLitString()) {
+            checkState(child.getCookedString() != null);
+            if (child.getCookedString().isEmpty()) {
+              continue;
+            } else if (i == 2 && first.getCookedString().isEmpty()) {
+              // So that `${hello} world` gets translated into (hello + " world")
+              // instead of ("" + hello + " world").
+              add = add.getSecondChild().detach();
+            }
+          }
+          add =
+              astFactory.createAdd(
+                  add,
+                  child.isTemplateLitString()
+                      ? astFactory.createString(child.getCookedString())
+                      : child.removeFirstChild());
+        }
+        n.replaceWith(add.srcrefTreeIfMissing(n));
       }
     }
-
-    if (replacement == null) {
-      replacement = astFactory.createString("");
-    }
-    n.replaceWith(replacement.srcrefTreeIfMissing(n));
     t.reportCodeChange();
   }
 

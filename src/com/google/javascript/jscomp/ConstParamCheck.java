@@ -44,13 +44,6 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
       IR.getprop(IR.name("goog"), "string", "Const", "from");
   private static final Node CONST_FUNCTION_NAME_COLLAPSED = IR.name("goog$string$Const$from");
 
-  // $jscomp.global.String
-  // $jscomp$global.String
-  private static final Node GLOBAL_STRING_CTOR_NAME =
-      IR.getprop(IR.name("$jscomp"), "global", "String");
-  private static final Node GLOBAL_STRING_CTOR_NAME_COLLAPSED =
-      IR.getprop(IR.name("$jscomp$global"), "String");
-
   @VisibleForTesting
   static final DiagnosticType CONST_NOT_STRING_LITERAL_ERROR =
       DiagnosticType.error(
@@ -154,13 +147,6 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
         return false;
       }
       return isSafeValue(var.getScope(), initialValue);
-    } else if (argument.isCall()) {
-      Node fn = argument.getFirstChild();
-      if (fn.matchesQualifiedName(GLOBAL_STRING_CTOR_NAME)
-          || fn.matchesQualifiedName(GLOBAL_STRING_CTOR_NAME_COLLAPSED)) {
-        // already safe values wrapped in the String constructor are constant as well.
-        return isSafeValue(scope, argument.getSecondChild());
-      }
     }
     return false;
   }

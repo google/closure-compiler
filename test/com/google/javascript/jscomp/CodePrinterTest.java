@@ -3806,19 +3806,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     checkWithOriginalName(
-        "let Foo; const x = `${Foo}`;",
-        "var Foo;\nvar x = $jscomp.global.String(Foo);\n",
-        compilerOptions);
+        "let Foo; const x = `${Foo}`;", "var Foo;\nvar x = '' + Foo;\n", compilerOptions);
 
     checkWithOriginalName("const x = `\\${Foo}`;", "var x = '${Foo}';\n", compilerOptions);
 
     checkWithOriginalName(
         "let Foo; const x = `${Foo}\\${Foo}`;",
-        "var Foo;\nvar x = $jscomp.global.String(Foo) + '${Foo}';\n",
+        "var Foo;\nvar x = Foo + '${Foo}';\n",
         compilerOptions);
     checkWithOriginalName(
         "let Foo; const x = `\\${Foo}${Foo}`;",
-        "var Foo;\nvar x = '${Foo}' + $jscomp.global.String(Foo);\n",
+        "var Foo;\nvar x = '${Foo}' + Foo;\n",
         compilerOptions);
   }
 
