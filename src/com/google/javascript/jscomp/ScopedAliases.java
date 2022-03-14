@@ -85,13 +85,15 @@ class ScopedAliases implements CompilerPass {
   private final AliasTransformationHandler transformationHandler;
 
   // Errors
-  static final DiagnosticType GOOG_SCOPE_MUST_BE_ALONE = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_MUST_BE_ALONE",
-      "The call to goog.scope must be alone in a single statement.");
+  static final DiagnosticType GOOG_SCOPE_MUST_BE_ALONE =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_MUST_BE_ALONE",
+          "The call to goog.scope must be alone in a single statement.");
 
-  static final DiagnosticType GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE",
-      "The call to goog.scope must be in the global scope.");
+  static final DiagnosticType GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE",
+          "The call to goog.scope must be in the global scope.");
 
   static final DiagnosticType GOOG_SCOPE_HAS_BAD_PARAMETERS =
       DiagnosticType.error(
@@ -99,29 +101,30 @@ class ScopedAliases implements CompilerPass {
           "The call to goog.scope must take only a single parameter.  It must"
               + " be an anonymous function that itself takes no parameters.");
 
-  static final DiagnosticType GOOG_SCOPE_REFERENCES_THIS = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_REFERENCES_THIS",
-      "The body of a goog.scope function cannot reference 'this'.");
+  static final DiagnosticType GOOG_SCOPE_REFERENCES_THIS =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_REFERENCES_THIS",
+          "The body of a goog.scope function cannot reference 'this'.");
 
-  static final DiagnosticType GOOG_SCOPE_USES_RETURN = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_USES_RETURN",
-      "The body of a goog.scope function cannot use 'return'.");
+  static final DiagnosticType GOOG_SCOPE_USES_RETURN =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_USES_RETURN", "The body of a goog.scope function cannot use 'return'.");
 
-  static final DiagnosticType GOOG_SCOPE_USES_THROW = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_USES_THROW",
-      "The body of a goog.scope function cannot use 'throw'.");
+  static final DiagnosticType GOOG_SCOPE_USES_THROW =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_USES_THROW", "The body of a goog.scope function cannot use 'throw'.");
 
-  static final DiagnosticType GOOG_SCOPE_ALIAS_REDEFINED = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_ALIAS_REDEFINED",
-      "The alias {0} is assigned a value more than once.");
+  static final DiagnosticType GOOG_SCOPE_ALIAS_REDEFINED =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_ALIAS_REDEFINED", "The alias {0} is assigned a value more than once.");
 
-  static final DiagnosticType GOOG_SCOPE_ALIAS_CYCLE = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_ALIAS_CYCLE",
-      "The aliases {0} has a cycle.");
+  static final DiagnosticType GOOG_SCOPE_ALIAS_CYCLE =
+      DiagnosticType.error("JSC_GOOG_SCOPE_ALIAS_CYCLE", "The aliases {0} has a cycle.");
 
-  static final DiagnosticType GOOG_SCOPE_NON_ALIAS_LOCAL = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
-      "The local variable {0} is in a goog.scope and is not an alias.");
+  static final DiagnosticType GOOG_SCOPE_NON_ALIAS_LOCAL =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
+          "The local variable {0} is in a goog.scope and is not an alias.");
 
   static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE =
       DiagnosticType.error(
@@ -141,7 +144,9 @@ class ScopedAliases implements CompilerPass {
     }
   }
 
-  /** @deprecated use the builder instead of this constructor */
+  /**
+   * @deprecated use the builder instead of this constructor
+   */
   @Deprecated
   ScopedAliases(
       AbstractCompiler compiler,
@@ -228,8 +233,7 @@ class ScopedAliases implements CompilerPass {
 
     if (!traversal.hasErrors()) {
       // Apply the aliases.
-      List<AliasUsage> aliasWorkQueue =
-           new ArrayList<>(traversal.getAliasUsages());
+      List<AliasUsage> aliasWorkQueue = new ArrayList<>(traversal.getAliasUsages());
       while (!aliasWorkQueue.isEmpty()) {
         List<AliasUsage> newQueue = new ArrayList<>();
         for (AliasUsage aliasUsage : aliasWorkQueue) {
@@ -243,8 +247,8 @@ class ScopedAliases implements CompilerPass {
         // Prevent an infinite loop.
         if (newQueue.size() == aliasWorkQueue.size()) {
           Var cycleVar = newQueue.get(0).aliasVar;
-          compiler.report(JSError.make(
-              cycleVar.getNode(), GOOG_SCOPE_ALIAS_CYCLE, cycleVar.getName()));
+          compiler.report(
+              JSError.make(cycleVar.getNode(), GOOG_SCOPE_ALIAS_CYCLE, cycleVar.getName()));
           break;
         } else {
           aliasWorkQueue = newQueue;
@@ -372,10 +376,9 @@ class ScopedAliases implements CompilerPass {
         return;
       }
       String aliasExpanded = checkNotNull(getAliasedNamespace(aliasDefinition));
-      Preconditions.checkState(typeName.startsWith(aliasName),
-          "%s must start with %s", typeName, aliasName);
-      String replacement =
-          aliasExpanded + typeName.substring(aliasName.length());
+      Preconditions.checkState(
+          typeName.startsWith(aliasName), "%s must start with %s", typeName, aliasName);
+      String replacement = aliasExpanded + typeName.substring(aliasName.length());
       aliasReference.setString(replacement);
     }
   }
@@ -409,8 +412,7 @@ class ScopedAliases implements CompilerPass {
     // normalization (before optimizations). We run it here on a limited
     // set of variables, but only as a last resort (because this will screw
     // up warning messages downstream).
-    private final Set<String> forbiddenLocals = new HashSet<>(
-        ImmutableSet.of("$jscomp"));
+    private final Set<String> forbiddenLocals = new HashSet<>(ImmutableSet.of("$jscomp"));
 
     private boolean hasNamespaceShadows = false;
 
@@ -438,16 +440,12 @@ class ScopedAliases implements CompilerPass {
       return hasErrors;
     }
 
-    /**
-     * Returns true if this NodeTraversal is currently within a goog.scope function body
-     */
+    /** Returns true if this NodeTraversal is currently within a goog.scope function body */
     private boolean inGoogScopeBody() {
       return scopeFunctionBody != null;
     }
 
-    /**
-     * Returns true if n is the goog.scope function body
-     */
+    /** Returns true if n is the goog.scope function body */
     private boolean isGoogScopeFunctionBody(Node n) {
       return inGoogScopeBody() && n == scopeFunctionBody;
     }
@@ -458,8 +456,8 @@ class ScopedAliases implements CompilerPass {
 
     /**
      * @param scopeRoot the Node which is the root of the current scope
-     * @return the goog.scope() CALL node containing the scopeRoot, or null if scopeRoot is not
-     *     in a goog.scope() call.
+     * @return the goog.scope() CALL node containing the scopeRoot, or null if scopeRoot is not in a
+     *     goog.scope() call.
      */
     private Node findScopeMethodCall(Node scopeRoot) {
       Node n = scopeRoot.getGrandparent();
@@ -476,8 +474,9 @@ class ScopedAliases implements CompilerPass {
       }
       Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
-        transformation = transformationHandler.logAliasTransformation(
-            scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));
+        transformation =
+            transformationHandler.logAliasTransformation(
+                scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));
         findAliases(t.getScope());
         scopeFunctionBody = scopeMethodCall.getLastChild().getLastChild();
       }
@@ -522,17 +521,15 @@ class ScopedAliases implements CompilerPass {
     private SourcePosition<AliasTransformation> getSourceRegion(Node n) {
       Node testNode = n;
       Node next = null;
-      for (; next != null || testNode.isScript();) {
+      for (; next != null || testNode.isScript(); ) {
         next = testNode.getNext();
         testNode = testNode.getParent();
       }
 
       int endLine = next == null ? Integer.MAX_VALUE : next.getLineno();
       int endChar = next == null ? Integer.MAX_VALUE : next.getCharno();
-      SourcePosition<AliasTransformation> pos =
-          new SourcePosition<AliasTransformation>() {};
-      pos.setPositionInformation(
-          n.getLineno(), n.getCharno(), endLine, endChar);
+      SourcePosition<AliasTransformation> pos = new SourcePosition<AliasTransformation>() {};
+      pos.setPositionInformation(n.getLineno(), n.getCharno(), endLine, endChar);
       return pos;
     }
 
@@ -640,9 +637,7 @@ class ScopedAliases implements CompilerPass {
           }
 
           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
-          v.getNameNode().addChildToFront(
-              NodeUtil.newQName(
-                  compiler, globalName, n, name));
+          v.getNameNode().addChildToFront(NodeUtil.newQName(compiler, globalName, n, name));
 
           recordAlias(v);
         } else {
@@ -707,9 +702,8 @@ class ScopedAliases implements CompilerPass {
     }
 
     /**
-     * Rename any local shadows of namespaces.
-     * This should be a very rare occurrence, so only do this traversal
-     * if we know that we need it.
+     * Rename any local shadows of namespaces. This should be a very rare occurrence, so only do
+     * this traversal if we know that we need it.
      */
     private void renameNamespaceShadows(NodeTraversal t) {
       checkState(NodeUtil.isFunctionBlock(t.getScopeRoot()), t.getScopeRoot());
@@ -870,8 +864,7 @@ class ScopedAliases implements CompilerPass {
           typeNode.setOriginalName(name);
         }
       }
-      for (Node child = typeNode.getFirstChild(); child != null;
-           child = child.getNext()) {
+      for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
         fixTypeNode(child);
       }
     }
