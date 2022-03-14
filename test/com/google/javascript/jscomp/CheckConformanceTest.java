@@ -1427,6 +1427,128 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedPropertyWhitelist_bundledNamespacedType() {
+    disableRewriteClosureCode();
+
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: BANNED_PROPERTY",
+            "  value: 'test.bns.BC.prototype.p'",
+            "  error_message: 'test.bns.BC.p is not allowed'",
+            "  whitelist: 'SRC1'",
+            "}");
+
+    String declarations =
+        lines(
+            "/** @fileoverview @typeSummary */",
+            "goog.loadModule(function(exports) {",
+            "goog.module('test.bns');",
+            "/** @constructor */ function SBC() {}",
+            "exports.SBC = SBC;",
+            "/** @constructor @extends {SBC} */",
+            "BC = function() {}",
+            "/** @type {string} */",
+            "BC.prototype.p;",
+            "exports.BC = BC;",
+            "/** @constructor */ function D() {}",
+            "exports.D = D;",
+            "/** @type {string} */",
+            "D.prototype.p;",
+            "return exports;",
+            "});");
+
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const {D} = goog.require('test.bns');",
+            "var d = new D();",
+            "d.p = 'boo';"));
+
+    // This case should be a certain violation, but the compiler cannot figure out that the imported
+    // type is the same as the one found from the type registry.
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const {BC} = goog.require('test.bns');",
+            "var bc = new BC();",
+            "bc.p = 'boo';"),
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const bns = goog.require('test.bns');",
+            "var bc = new bns.SBC();",
+            "bc.p = 'boo';"),
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
+  @Test
+  public void testBannedPropertyAllowlist_bundledNamespacedType() {
+    disableRewriteClosureCode();
+
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: BANNED_PROPERTY",
+            "  value: 'test.bns.BC.prototype.p'",
+            "  error_message: 'test.bns.BC.p is not allowed'",
+            "  allowlist: 'SRC1'",
+            "}");
+
+    String declarations =
+        lines(
+            "/** @fileoverview @typeSummary */",
+            "goog.loadModule(function(exports) {",
+            "goog.module('test.bns');",
+            "/** @constructor */ function SBC() {}",
+            "exports.SBC = SBC;",
+            "/** @constructor @extends {SBC} */",
+            "BC = function() {}",
+            "/** @type {string} */",
+            "BC.prototype.p;",
+            "exports.BC = BC;",
+            "/** @constructor */ function D() {}",
+            "exports.D = D;",
+            "/** @type {string} */",
+            "D.prototype.p;",
+            "return exports;",
+            "});");
+
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const {D} = goog.require('test.bns');",
+            "var d = new D();",
+            "d.p = 'boo';"));
+
+    // This case should be a certain violation, but the compiler cannot figure out that the imported
+    // type is the same as the one found from the type registry.
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const {BC} = goog.require('test.bns');",
+            "var bc = new BC();",
+            "bc.p = 'boo';"),
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+
+    testConformance(
+        declarations,
+        lines(
+            "goog.module('test');",
+            "const bns = goog.require('test.bns');",
+            "var bc = new bns.SBC();",
+            "bc.p = 'boo';"),
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
+  @Test
   public void testBannedPropertyWhitelist_destructuring() {
     configuration =
         lines(

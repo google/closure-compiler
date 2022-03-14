@@ -739,9 +739,14 @@ public final class ConformanceRules {
           throw new InvalidRequirementSpec("bad prop value");
         }
 
-        // Type doesn't exist in the copmilation, so it can't be a violation.
         JSType type = registry.getGlobalType(typename);
         if (type == null) {
+          type = registry.resolveViaClosureNamespace(typename);
+        }
+
+        // If type doesn't exist in the copmilation, it can't be a violation. Also, bottom types
+        // match everything, which is almost surely not what the check is intended to check against.
+        if (type == null || type.isUnknownType() || type.isEmptyType()) {
           continue;
         }
 

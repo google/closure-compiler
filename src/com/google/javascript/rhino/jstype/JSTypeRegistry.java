@@ -924,7 +924,7 @@ public final class JSTypeRegistry {
    * if any, then attempting to resolve via properties based on the type of the `exports` object in
    * that namespace.
    */
-  private JSType resolveViaClosureNamespace(String reference) {
+  public JSType resolveViaClosureNamespace(String reference) {
     // Find the `exports` type of the longest prefix match of this namespace, if any. Then resolve
     // it via property.
     String prefix = reference;
