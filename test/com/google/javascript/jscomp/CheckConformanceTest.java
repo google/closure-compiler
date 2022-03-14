@@ -3196,7 +3196,43 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanSetAttribute Message");
 
+    testWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "const foo = 'safe';",
+                "var bar = foo;",
+                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
     testNoWarning(externs(externs), srcs("(new HTMLScriptElement)['data-random'] = 'xxx';"));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "const foo = 'safe';",
+                "const bar = foo;",
+                "(new HTMLScriptElement).setAttribute(bar, 'xxx');")));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            new String[] {
+              lines(
+                  "goog.provide('test.Attribute');",
+                  "",
+                  "/** @enum {string} */",
+                  "test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};"),
+              lines(
+                  "goog.module('test.setAttribute');",
+                  "",
+                  "const Attribute = goog.require('test.Attribute');",
+                  "",
+                  "const attr = Attribute.SAFE;",
+                  "(new HTMLScriptElement).setAttribute(attr, 'xxx');")
+            }));
   }
 
   @Test

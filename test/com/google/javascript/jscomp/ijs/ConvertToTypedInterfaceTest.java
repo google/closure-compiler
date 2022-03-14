@@ -1194,11 +1194,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @enum {number} */ var E = { A: foo(), B: bar(), C: baz()};",
         "/** @enum {number} */ var E = { A: 0, B: 0, C: 0};");
 
-    // NOTE: This pattern typechecks when found in externs, but not for code.
-    // Since the goal of this pass is intended to be used as externs, this is acceptable.
+    // No corrosion into 0 for string enums. This allows conformance to emit fewer false positives.
+    // Values longer than 10 gets truncated.
     test(
-        "/** @enum {string} */ var E = { A: 'hello', B: 'world'};",
-        "/** @enum {string} */ var E = { A: 0, B: 0};");
+        "/** @enum {string} */ var E = { A: 'hello', B: 'world', C: 'some_string_longer_than_10'};",
+        "/** @enum {string} */ var E = { A: 'hello', B: 'world', C: 'some_str..'};");
 
     test(
         "/** @enum {Object} */ var E = { A: {b: 'c'}, D: {e: 'f'} };",

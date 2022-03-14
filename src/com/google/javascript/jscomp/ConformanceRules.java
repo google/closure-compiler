@@ -2149,14 +2149,14 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
       if (node.isCall()) {
-        return checkConformanceOnPropertyCall(node);
+        return checkConformanceOnPropertyCall(traversal, node);
       } else if (node.isGetElem() && NodeUtil.isLValue(node)) {
         return checkConformanceOnGetElement(node);
       }
       return ConformanceResult.CONFORMANCE;
     }
 
-    private ConformanceResult checkConformanceOnPropertyCall(Node node) {
+    private ConformanceResult checkConformanceOnPropertyCall(NodeTraversal traversal, Node node) {
       Optional<String> calledProperty = getBannedPropertyName(node);
       if (!calledProperty.isPresent()) {
         return ConformanceResult.CONFORMANCE;
@@ -2173,11 +2173,13 @@ public final class ConformanceRules {
       }
 
       Node attr = node.getSecondChild();
-      if (!attr.isStringLit()) {
+      String attrName = inferStringValue(traversal.getScope(), attr);
+      if (attrName == null) {
         return ConformanceResult.VIOLATION;
       }
 
-      String attrName = attr.getString().toLowerCase(Locale.ROOT);
+      attrName = attrName.toLowerCase(Locale.ROOT);
+
       if (bannedAttrs.contains(attrName) || isEventHandlerAttrName(attrName)) {
         return ConformanceResult.VIOLATION;
       }
@@ -2254,6 +2256,52 @@ public final class ConformanceRules {
       }
 
       return true;
+    }
+
+    @Nullable
+    private String inferStringValue(Scope scope, Node node) {
+      if (node == null) {
+        return null;
+      }
+
+      switch (node.getToken()) {
+        case STRING_KEY:
+        case STRINGLIT:
+        case TEMPLATELIT:
+        case TEMPLATELIT_STRING:
+          return NodeUtil.getStringValue(node);
+        case NAME:
+          if (scope == null) {
+            return null;
+          }
+          String name = node.getString();
+          Var var = scope.getVar(name);
+          if (var == null || !var.isConst()) {
+            return null;
+          }
+          Node initialValue = var.getInitialValue();
+          return inferStringValue(var.getScope(), initialValue);
+        case GETPROP:
+          JSType type = node.getJSType();
+          if (type == null || !type.isEnumElementType()) {
+            // For simplicity, only support enums. The JS style guide requires enums to be
+            // effectively immutable and all enum items should be statically known.
+            // See go/js-style#features-objects-enums.
+            return null;
+          }
+
+          Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
+          if (enumSource == null) {
+            return null;
+          }
+          if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
+            return null;
+          }
+          return inferStringValue(
+              null, NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()));
+        default:
+          return null;
+      }
     }
   }
 

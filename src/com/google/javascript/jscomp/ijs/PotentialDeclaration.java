@@ -36,6 +36,10 @@ import javax.annotation.Nullable;
  * / Foo.prototype.bar`)
  */
 abstract class PotentialDeclaration {
+  // The threshold for trunctating string enum items. Any string literal longer than this will get
+  // truncated in the generated IJS file. This value is decided by the length of the longest
+  // security-sensitive attribute name.
+  private static final int STRING_ENUM_RETAIN_CAP = 10;
   // The fully qualified name of the declaration.
   private final String fullyQualifiedName;
   // The LHS node of the declaration.
@@ -573,10 +577,23 @@ abstract class PotentialDeclaration {
   /** Remove values from enums */
   private void simplifyEnumValues(AbstractCompiler compiler) {
     if (getRhs().isObjectLit() && getRhs().hasChildren()) {
+      boolean changed = false;
       for (Node key = getRhs().getFirstChild(); key != null; key = key.getNext()) {
-        removeStringKeyValue(key);
+        Node value = key.getOnlyChild();
+        if (!value.isStringLit()) {
+          removeStringKeyValue(key);
+          changed = true;
+        } else {
+          String content = value.getString();
+          if (content.length() > STRING_ENUM_RETAIN_CAP) {
+            truncateStringKeyValue(key);
+            changed = true;
+          }
+        }
       }
-      compiler.reportChangeToEnclosingScope(getRhs());
+      if (changed) {
+        compiler.reportChangeToEnclosingScope(getRhs());
+      }
     }
   }
 
@@ -663,6 +680,14 @@ abstract class PotentialDeclaration {
   private static void removeStringKeyValue(Node stringKey) {
     Node value = stringKey.getOnlyChild();
     Node replacementValue = IR.number(0).srcrefTree(value);
+    value.replaceWith(replacementValue);
+  }
+
+  private static void truncateStringKeyValue(Node stringKey) {
+    Node value = stringKey.getOnlyChild();
+    Node replacementValue =
+        IR.string(value.getString().substring(0, STRING_ENUM_RETAIN_CAP - 2) + "..")
+            .srcrefTree(value);
     value.replaceWith(replacementValue);
   }
 }
