@@ -1458,7 +1458,11 @@ class RemoveUnusedCode implements CompilerPass {
     if (removable.isNamedProperty()) {
       String propertyName = removable.getPropertyName();
 
-      if (pinnedPropertyNames.contains(propertyName) || codingConvention.isExported(propertyName)) {
+      if (pinnedPropertyNames.contains(propertyName)
+          || codingConvention.isExported(
+              propertyName,
+              /** local */
+              false)) {
         // Referenced or exported, so not removable.
         removable.applyContinuations();
       } else if (isIndependentlyRemovable(removable)) {
@@ -1657,7 +1661,7 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
       return canonicalUnremovableVarInfo;
-    } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
+    } else if (codingConvention.isExported(var.getName(), /* local */ !isGlobal)) {
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
       return canonicalUnremovableVarInfo;

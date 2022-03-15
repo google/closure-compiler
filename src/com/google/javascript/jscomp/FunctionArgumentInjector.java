@@ -335,7 +335,9 @@ class FunctionArgumentInjector {
         switch (cArg.getToken()) {
           case NAME:
             String name = cArg.getString();
-            safe = !(convention.isExported(name));
+            // Don't worry about whether this is global or local, just check if it is
+            // "exported" in either case.
+            safe = !(convention.isExported(name, true) || convention.isExported(name, false));
             break;
           case THIS:
             safe = true;

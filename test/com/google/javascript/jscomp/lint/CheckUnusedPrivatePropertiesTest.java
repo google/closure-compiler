@@ -278,12 +278,13 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPrototypeProps2() {
-    // don't warn about properties that are exported by convention
-    used(lines(
-        "/** @constructor */ function A() {this._foo = 1;}",
-        "/** @private */ A.prototype._foo = 0;",
-        "A.prototype.method = function() {this._foo++};",
-        "new A().method()"));
+    // warn about all private properties
+    unused(
+        lines(
+            "/** @constructor */ function A() {this._foo = 1;}",
+            "/** @private */ A.prototype._foo = 0;",
+            "A.prototype.method = function() {this._foo++};",
+            "new A().method()"));
   }
 
   @Test

@@ -314,7 +314,13 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         }
 
         String name = n.getString();
-        if (compiler.getCodingConvention().isExported(name)) {
+        // This pass only runs on local scopes.
+        if (compiler
+            .getCodingConvention()
+            .isExported(
+                name,
+                /** local */
+                true)) {
           return;
         }
 

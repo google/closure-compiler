@@ -525,7 +525,7 @@ final class RenameVars implements CompilerPass {
    * Determines whether a variable name is okay to rename.
    */
   private boolean okToRenameVar(String name, boolean isLocal) {
-    return !compiler.getCodingConvention().isExported(name, isLocal);
+    return !compiler.getCodingConvention().isExported(name, /* local */ isLocal);
   }
 
   /**

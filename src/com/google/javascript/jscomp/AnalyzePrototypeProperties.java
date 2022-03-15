@@ -281,7 +281,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
                 // reference.
                 return;
               }
-            } else if (compiler.getCodingConvention().isExported(propName)) {
+            } else if (compiler.getCodingConvention().isExported(propName, /* local */ false)) {
               // TODO(bradfordcsmith): We don't seem to have any tests that cover this case.
               // This class has no unit tests of its own and it is only used by
               // CrossChunkMethodMotion.
@@ -489,7 +489,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
         // If the function name is exported, we should create an edge here
         // so that it's never removed.
-        if (compiler.getCodingConvention().isExported(name) || anchorUnusedVars) {
+        if (compiler.getCodingConvention().isExported(name, /* local */ false)
+            || anchorUnusedVars) {
           addGlobalUseOfSymbol(name, t.getChunk(), VAR);
         }
 

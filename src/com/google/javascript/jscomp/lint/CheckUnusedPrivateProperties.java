@@ -98,9 +98,7 @@ public class CheckUnusedPrivateProperties implements CompilerPass, NodeTraversal
 
        case GETPROP: {
           String propName = n.getString();
-          if (compiler.getCodingConvention().isExported(propName)
-              || isPinningPropertyUse(n)
-              || !isCandidatePropertyDefinition(n)) {
+          if (isPinningPropertyUse(n) || !isCandidatePropertyDefinition(n)) {
            used.add(propName);
          } else {
            // Only consider "private" properties.

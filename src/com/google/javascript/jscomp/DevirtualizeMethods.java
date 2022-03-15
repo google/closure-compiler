@@ -258,7 +258,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
 
     // Exporting a method prevents rewrite.
     CodingConvention codingConvention = compiler.getCodingConvention();
-    if (codingConvention.isExported(name)) {
+    if (codingConvention.isExported(name, /* local */ false)) {
       return false;
     }
 
