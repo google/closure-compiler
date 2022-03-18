@@ -21,7 +21,6 @@ import java.util.Map;
 
 /** All natively recognized JSDoc annotations. */
 enum Annotation {
-  NG_INJECT,
   ABSTRACT,
   ALTERNATE_MESSAGE_ID,
   AUTHOR,
@@ -56,6 +55,7 @@ enum Annotation {
   MIXIN_CLASS,
   MIXIN_FUNCTION,
   MODIFIES,
+  NG_INJECT,
   NO_COLLAPSE,
   NO_COMPILE,
   NO_INLINE,
@@ -70,6 +70,7 @@ enum Annotation {
   PRIVATE,
   PROTECTED,
   PROVIDE_GOOG, // @provideGoog - appears only in base.js
+  PROVIDE_ALREADY_PROVIDED,
   PUBLIC,
   PURE_OR_BREAK_MY_CODE,
   RETURN,
@@ -141,6 +142,7 @@ enum Annotation {
           .put("private", Annotation.PRIVATE)
           .put("protected", Annotation.PROTECTED)
           .put("provideGoog", Annotation.PROVIDE_GOOG)
+          .put("provideAlreadyProvided", Annotation.PROVIDE_ALREADY_PROVIDED)
           .put("public", Annotation.PUBLIC)
           .put("pureOrBreakMyCode", Annotation.PURE_OR_BREAK_MY_CODE)
           .put("return", Annotation.RETURN)

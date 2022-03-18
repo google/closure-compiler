@@ -70,6 +70,10 @@ public final class JSDocSerializer {
       builder.addKind(JsdocTag.JSDOC_PROVIDE_GOOG);
     }
 
+    if (jsdoc.isProvideAlreadyProvided()) {
+      builder.addKind(JsdocTag.JSDOC_PROVIDE_ALREADY_PROVIDED);
+    }
+
     if (jsdoc.isTypeSummary()) {
       builder.addKind(JsdocTag.JSDOC_TYPE_SUMMARY_FILE);
     }
@@ -235,6 +239,9 @@ public final class JSDocSerializer {
           continue;
         case JSDOC_PROVIDE_GOOG:
           builder.recordProvideGoog();
+          continue;
+        case JSDOC_PROVIDE_ALREADY_PROVIDED:
+          builder.recordProvideAlreadyProvided();
           continue;
 
         case JSDOC_TYPE_SUMMARY_FILE:

@@ -339,7 +339,8 @@ public class JSDocInfo implements Serializable {
     MIXIN_FUNCTION,
 
     // `@provideGoog` only appears in base.js
-    PROVIDE_GOOG;
+    PROVIDE_GOOG,
+    PROVIDE_ALREADY_PROVIDED;
 
     final String name;
     final long mask;
@@ -853,6 +854,14 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @provideGoog} annotation is present on this {@link JSDocInfo}. */
   public boolean isProvideGoog() {
     return checkBit(Bit.PROVIDE_GOOG);
+  }
+
+  /**
+   * Returns whether the {@code @provideAlreadyProvided} annotation is present on this {@link
+   * JSDocInfo}.
+   */
+  public boolean isProvideAlreadyProvided() {
+    return checkBit(Bit.PROVIDE_ALREADY_PROVIDED);
   }
 
   /**
@@ -2278,6 +2287,10 @@ public class JSDocInfo implements Serializable {
 
     public boolean recordProvideGoog() {
       return populateBit(Bit.PROVIDE_GOOG, true);
+    }
+
+    public boolean recordProvideAlreadyProvided() {
+      return populateBit(Bit.PROVIDE_ALREADY_PROVIDED, true);
     }
 
     /**

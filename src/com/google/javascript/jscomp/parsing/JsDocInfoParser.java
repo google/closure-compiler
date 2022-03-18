@@ -715,6 +715,13 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_PROVIDE_GOOG);
           }
           return eatUntilEOLIfNotAnnotation();
+
+        case PROVIDE_ALREADY_PROVIDED:
+          if (!jsdocBuilder.recordProvideAlreadyProvided()) {
+            addParserWarning(Msg.JSDOC_PROVIDE_ALREADY_PROVIDED);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case PURE_OR_BREAK_MY_CODE:
           if (!jsdocBuilder.recordPureOrBreakMyCode()) {
             addParserWarning(Msg.JSDOC_PUREORBREAKMYCODE);

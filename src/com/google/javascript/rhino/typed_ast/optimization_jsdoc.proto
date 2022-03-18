@@ -67,4 +67,7 @@ enum JsdocTag {
 
   // Used to identify type summary (i.js) files.
   JSDOC_TYPE_SUMMARY_FILE = 32;
+
+  // Use by goog.provide rewriting
+  JSDOC_PROVIDE_ALREADY_PROVIDED = 33;
 }

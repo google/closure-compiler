@@ -194,6 +194,18 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testProvideAlreadyProvided() {
+    test(
+        srcs(
+            lines(
+                "goog.provide('a.b')",
+                "/** @provideAlreadyProvided */",
+                "goog.provide('a.b.c')",
+                "a.b = something;")),
+        expected(lines("/** @const */ var a = {};", "a.b = something;")));
+  }
+
+  @Test
   public void testRemovalOfProvidedObjLit() {
     test(srcs("goog.provide('foo'); foo = 0;"), expected("var foo = 0;"));
     test(srcs("goog.provide('foo'); foo = {a: 0};"), expected("var foo = {a: 0};"));

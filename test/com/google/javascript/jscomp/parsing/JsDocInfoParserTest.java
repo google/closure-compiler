@@ -5272,6 +5272,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseProvideAlreadyProvided() {
+    assertThat(parse("@provideAlreadyProvided*/").isProvideAlreadyProvided()).isTrue();
+  }
+
+  @Test
+  public void testParseProvideAlreadyProvidedExtra() {
+    parse(
+        "@provideAlreadyProvided \n@provideAlreadyProvided*/", "extra @provideAlreadyProvided tag");
+  }
+
+  @Test
   public void testTextExtents() {
     parse(
         "@return {@code foo} bar \n *    baz. */",

@@ -86,6 +86,7 @@ public enum Msg {
   JSDOC_LOCALESELECT("extra @localeSelect tag"),
   JSDOC_LOCALEVALUE("extra @localeValue tag"),
   JSDOC_PROVIDE_GOOG("extra @provideGoog tag"),
+  JSDOC_PROVIDE_ALREADY_PROVIDED("extra @provideAlreadyProvided tag"),
   JSDOC_MEANING_EXTRA("extra @meaning tag"),
   JSDOC_MISSING_BRACES("Type annotations should have curly braces."),
   JSDOC_MISSING_COLON("expecting colon after this"),

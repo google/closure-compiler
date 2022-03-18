@@ -33,14 +33,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Replaces goog.provide calls and removes goog.{require,requireType,forwardDeclare} calls.
+ * Replaces `goog.provide` calls and removes goog.{require,requireType,forwardDeclare} calls.
  *
- * <p>We expect all goog.modules and goog.requires in modules to have been rewritten. This is why
- * all remaining require/requireType calls must refer to a goog.provide, although the original JS
- * code may contain goog.requires of a goog.module.
+ * <p>We expect all `goog.modules` and `goog.require`s in modules to have been rewritten. This is
+ * why all remaining require/requireType calls must refer to a `goog.provide`, although the original
+ * JS code may contain `goog.require`s of a `goog.module`.
  *
  * <p>This also annotates all provided namespace definitions `a.b = {};` with {@link
- * Node#IS_NAMESPACE} so that later passes know they refer to a goog.provide'd namespace.
+ * Node#IS_NAMESPACE} so that later passes know they refer to a `goog.provide`d namespace.
  *
  * <p>If modules have not been rewritten, this pass also includes legacy Closure module namespaces
  * in the list of {@link ProvidedName}s.
@@ -85,7 +85,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     rewriteProvidesAndRequires(externs, root);
   }
 
-  /** Collects all goog.provides in the given namespace and warns on invalid code */
+  /** Collects all `goog.provide`s in the given namespace and warns on invalid code */
   Map<String, ProvidedName> collectProvidedNames(Node externs, Node root) {
     if (this.providedNames.isEmpty()) {
       // goog is special-cased because it is provided in Closure's base library.
@@ -233,6 +233,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     Node arg = left.getNext();
     String ns = arg.getString();
 
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(call);
+    boolean isImplicitlyInitialized = info != null && info.isProvideAlreadyProvided();
+
     if (providedNames.containsKey(ns)) {
       ProvidedName previouslyProvided = providedNames.get(ns);
       if (!previouslyProvided.isExplicitlyProvided()) {
@@ -247,6 +250,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
               .setNode(parent)
               .setChunk(t.getChunk())
               .setExplicit(true)
+              .setHasImplicitInitialization(isImplicitlyInitialized)
               .build());
     }
   }
@@ -422,6 +426,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     private JSChunk chunk;
     private boolean explicit;
     private boolean fromLegacyModule;
+    private boolean hasImplicitInitialization;
 
     ProvidedNameBuilder setNamespace(String namespace) {
       this.namespace = namespace;
@@ -445,6 +450,14 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     /** @param explicit Whether this came from an actual goog.provide('a.b.c'); call */
     ProvidedNameBuilder setExplicit(boolean explicit) {
       this.explicit = explicit;
+      return this;
+    }
+
+    /**
+     * @param alreadyInitialized Whether this came from an actual goog.provide('a.b.c'); call
+     */
+    ProvidedNameBuilder setHasImplicitInitialization(boolean alreadyInitialized) {
+      this.hasImplicitInitialization = alreadyInitialized;
       return this;
     }
 
@@ -485,6 +498,11 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     // The chunk where this namespace was first goog.provided, if chunks exist. */
     private final JSChunk firstChunk;
 
+    // When set the namespace will not have an initialization added, even if the namespace
+    // initialization is not otherwise visibile to this pass.  This allows for trivial aliasing of
+    // a tree of namespaces.
+    private final boolean hasImplicitInitialization;
+
     // The node where the call was explicitly goog.provided. Null if the namespace is implicit.
     // If this is previously provided, this will instead be the expression or declaration marked
     // as IS_NAMESPACE.
@@ -522,6 +540,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       this.firstNode = builder.node;
       this.firstChunk = builder.chunk;
       this.fromLegacyModule = builder.fromLegacyModule;
+      this.hasImplicitInitialization = builder.hasImplicitInitialization;
 
       addProvide(node, builder.chunk, builder.explicit);
     }
@@ -661,7 +680,9 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
         }
       } else {
         // Handle the case where there's not an existing definition.
-        createNamespaceInitialization(createDeclarationNode(astFactory.createObjectLit()));
+        if (!hasImplicitInitialization) {
+          createNamespaceInitialization(createDeclarationNode(astFactory.createObjectLit()));
+        }
       }
 
       // Remove the `goog.provide('a.b.c');` call.
