@@ -141,8 +141,7 @@ class InlineVariables implements CompilerPass {
               referenceInfo.isAssignedOnceInLifetime()) {
             Reference init = referenceInfo.getInitializingReference();
             Node value = init.getAssignedValue();
-            if (value != null && value.isName()
-                && !value.getString().equals(v.getName())) {
+            if (value != null && value.isName() && !value.getString().equals(v.getName())) {
               aliasCandidates.put(value, new AliasCandidate(v, referenceInfo));
             }
           }
@@ -162,9 +161,16 @@ class InlineVariables implements CompilerPass {
 
         // referenceInfo will be null if we're in constants-only mode
         // and the variable is not a constant.
-        if (referenceInfo == null || isVarInlineForbidden(v)) {
+        if (referenceInfo == null
+            || isVarInlineForbidden(v)
+            || valueUsesGoogLocale(referenceInfo)) {
           // Never try to inline exported variables or variables that
           // were not collected or variables that have already been inlined.
+          // Also, don't inline values that include `goog$LOCALE`, because that would force us
+          // to mark it as stale and prevent us from inlining it in this pass run.
+          // It's important that we inline `goog$LOCALE` ASAP to reduce the number of optimization
+          // loop iterations required to eliminate unused locale-specific code.
+          // TODO(b/225049652): In general favor inlining outer scope variables first.
           continue;
         } else if (isInlineableDeclaredConstant(v, referenceInfo)) {
           Reference init = referenceInfo.getInitializingReferenceForConstants();
@@ -178,6 +184,30 @@ class InlineVariables implements CompilerPass {
         } else {
           inlineNonConstants(v, referenceInfo, maybeModifiedArguments);
         }
+      }
+    }
+
+    private boolean valueUsesGoogLocale(ReferenceCollection referenceInfo) {
+      // getInitializingReferenceForConstants() is the most robust way of getting the initializing
+      // reference.
+      Reference initRef = referenceInfo.getInitializingReferenceForConstants();
+      if (initRef != null) {
+        Node value = initRef.getAssignedValue();
+        return value != null && containsGoogLocale(value);
+      }
+      return false;
+    }
+
+    private boolean containsGoogLocale(Node value) {
+      if (value.isName()) {
+        return isGoogLocaleNameString(value.getString());
+      } else {
+        for (Node c = value.getFirstChild(); c != null; c = c.getNext()) {
+          if (containsGoogLocale(c)) {
+            return true;
+          }
+        }
+        return false;
       }
     }
 
@@ -200,6 +230,14 @@ class InlineVariables implements CompilerPass {
         }
       }
       return false;
+    }
+
+    private boolean isGoogLocaleVar(Var v) {
+      return v != null && isGoogLocaleNameString(v.getName());
+    }
+
+    private boolean isGoogLocaleNameString(String s) {
+      return s.equals("goog$LOCALE");
     }
 
     private void inlineNonConstants(
@@ -416,6 +454,11 @@ class InlineVariables implements CompilerPass {
      * Compute whether the given string is worth inlining.
      */
     private boolean isStringWorthInlining(Var var, List<Reference> refs) {
+      if (isGoogLocaleVar(var)) {
+        // Once we have a literal string value for it, we always want to inline `goog.LOCALE`,
+        // because doing so lets us rip out lots of unused locale-specific code.
+        return true;
+      }
       if (!inlineAllStrings && !var.isDefine()) {
         int len = var.getInitialValue().getString().length() + "''".length();
 
