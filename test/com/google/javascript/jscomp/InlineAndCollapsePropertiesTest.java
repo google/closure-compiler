@@ -2411,6 +2411,27 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testToStringValueOfInObjectLiteral() {
+    test(
+        lines(
+            "let z = {",
+            "  toString() { return 'toString';},",
+            "  valueOf() { return 'valueOf';},",
+            "};",
+            "var zAsString = z + \"\";"),
+        lines(
+            "var z$toString = function() {",
+            "  return \"toString\";",
+            "};",
+            "var z$valueOf = function() {",
+            "  return \"valueOf\";",
+            "};",
+            // TODO(b/223896059): CollapseProperties breaks references to toString/valueOf
+            "let z = {}",
+            "var zAsString = z + \"\";"));
+  }
+
+  @Test
   public void testLoopInAliasChainOfTypedefConstructorProperty() {
     test(
         lines(
