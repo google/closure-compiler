@@ -714,18 +714,6 @@ public final class DefaultPassConfig extends PassConfig {
     passes.addAll(getMainOptimizationLoop());
     passes.add(createEmptyPass(PassNames.AFTER_MAIN_OPTIMIZATIONS));
 
-    passes.add(createEmptyPass("beforeModuleMotion"));
-
-    if (options.shouldRunCrossChunkCodeMotion()) {
-      passes.add(crossModuleCodeMotion);
-    }
-
-    if (options.shouldRunCrossChunkMethodMotion()) {
-      passes.add(crossModuleMethodMotion);
-    }
-
-    passes.add(createEmptyPass("afterModuleMotion"));
-
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.
     if (options.customPasses != null) {
@@ -745,6 +733,7 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(getReplaceProtectedMessagesPass());
       }
       passes.add(substituteLocaleData);
+      passes.add(peepholeOptimizationsOnce);
     }
 
     if (options.inlineVariables || options.inlineLocalVariables) {
@@ -761,6 +750,18 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.doLateLocalization()) {
       addPostL10nOptimizations(passes);
     }
+
+    passes.add(createEmptyPass("beforeModuleMotion"));
+
+    if (options.shouldRunCrossChunkCodeMotion()) {
+      passes.add(crossModuleCodeMotion);
+    }
+
+    if (options.shouldRunCrossChunkMethodMotion()) {
+      passes.add(crossModuleMethodMotion);
+    }
+
+    passes.add(createEmptyPass("afterModuleMotion"));
 
     if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES2015)) {
       passes.add(optimizeConstructors);
