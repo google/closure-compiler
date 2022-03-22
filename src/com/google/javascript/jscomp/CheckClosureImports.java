@@ -300,10 +300,36 @@ final class CheckClosureImports implements CompilerPass {
 
       if (!currentModule.isEs6Module()
           && !currentModule.isGoogModule()
-          && t.inGlobalScope()
           && compiler.getOptions().moduleResolutionMode != ResolutionMode.WEBPACK) {
-        t.report(call, INVALID_GET_CALL_SCOPE);
-        return;
+        // Here we are making a heuristic check of the use of goog.module.get.  There are many
+        // different ways to deliberately subvert these checks.  What we are trying to avoid
+        // is accidential use of a `goog.provide` file as module scoped. So we want to avoid:
+        //   `const Foo = goog.module.get('a.b.Foo');
+        // and similar patterns, but we won't try to make this a perfect check.
+
+        // Anything not in global scope is ok.
+        if (t.inGlobalScope()) {
+          // Find the root of expressions like `goog.module.get().export`
+          Node getSubExprRoot = call;
+          while (NodeUtil.isNormalOrOptChainGetProp(getSubExprRoot.getParent())) {
+            getSubExprRoot = getSubExprRoot.getParent();
+          }
+
+          boolean invalid = false;
+          Node parent = getSubExprRoot.getParent();
+          if (parent.isName() || parent.isDestructuringLhs()) {
+            invalid = true;
+          } else if (parent.isAssign()) {
+            Node target = parent.getFirstChild();
+            if (target.isName() || target.isObjectPattern()) {
+              invalid = true;
+            }
+          }
+
+          if (invalid) {
+            t.report(call, INVALID_GET_CALL_SCOPE);
+          }
+        }
       }
 
       if (!call.hasTwoChildren() || !call.getSecondChild().isStringLit()) {

@@ -21,11 +21,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
@@ -235,25 +232,23 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         return;
       }
 
-      boolean isRequire = n.getFirstChild().matchesQualifiedName("goog.require");
-      boolean isRequireType = n.getFirstChild().matchesQualifiedName("goog.requireType");
-      boolean isGet = n.getFirstChild().matchesQualifiedName("goog.module.get");
-      boolean isForwardDeclare = n.getFirstChild().matchesQualifiedName("goog.forwardDeclare");
+      Node callTarget = n.getFirstChild();
+      if (!callTarget.isGetProp()) {
+        return;
+      }
+
+      boolean isRequire = callTarget.matchesQualifiedName("goog.require");
+      boolean isRequireType = callTarget.matchesQualifiedName("goog.requireType");
+      boolean isGet = callTarget.matchesQualifiedName("goog.module.get");
+      boolean isForwardDeclare = callTarget.matchesQualifiedName("goog.forwardDeclare");
 
       if (!isRequire && !isRequireType && !isGet && !isForwardDeclare) {
         return;
       }
 
       if (!n.hasTwoChildren() || !n.getLastChild().isStringLit()) {
-        if (isRequire) {
-          t.report(n, INVALID_REQUIRE_NAMESPACE);
-        } else if (isRequireType) {
-          t.report(n, INVALID_REQUIRE_TYPE_NAMESPACE);
-        } else if (isGet) {
-          t.report(n, INVALID_GET_NAMESPACE);
-        } else {
-          t.report(n, INVALID_FORWARD_DECLARE_NAMESPACE);
-        }
+        // Reported in CheckClosureImports, don't report here.
+
         return;
       }
 
@@ -276,7 +271,6 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
       }
 
       if (isGet && t.inGlobalHoistScope()) {
-        t.report(n, INVALID_GET_CALL_SCOPE);
         return;
       }
 

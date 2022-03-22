@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NA
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -1550,6 +1549,24 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAliasedGoogModuleGetInGoogProvide() {
+    test(
+        srcs(
+            "goog.module('a.b.c.D');",
+            lines(
+                "goog.provide('x.y.z');",
+                "goog.require('a.b.c.D');",
+                "x.y.z = goog.module.get('a.b.c.D');",
+                "")),
+        expected(
+            "/** @const */ var module$exports$a$b$c$D = {};",
+            lines(
+                "goog.provide('x.y.z');", //
+                "x.y.z = module$exports$a$b$c$D;",
+                "")));
+  }
+
+  @Test
   public void testInvalidGoogForwardDeclareParameter() {
     // Wrong parameter count.
     testError(
@@ -1565,28 +1582,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     testError(
         lines("goog.module('a');", "var x = goog.forwardDeclare({});"),
         INVALID_FORWARD_DECLARE_NAMESPACE);
-  }
-
-  @Test
-  public void testInvalidGoogModuleGetAlias() {
-    testError(
-        srcs("goog.provide('g');", lines("goog.module('a');", "x = goog.module.get('g');")),
-        INVALID_GET_ALIAS);
-
-    testError(
-        srcs(
-            "goog.provide('g');",
-            lines("goog.module('a');", "var x;", "x = goog.module.get('g');")),
-        INVALID_GET_ALIAS);
-
-    testError(
-        srcs(
-            "goog.provide('g'); goog.provide('z');",
-            lines(
-                "goog.module('a');",
-                "var x = goog.forwardDeclare('z');",
-                "x = goog.module.get('g');")),
-        INVALID_GET_ALIAS);
   }
 
   @Test

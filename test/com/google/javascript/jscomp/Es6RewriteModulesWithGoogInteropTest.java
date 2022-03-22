@@ -690,7 +690,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
-  public void testGoogRequireTypeForNonEs6LhsNonConst() {
+  public void testGoogRequireTypeForNonEs6LhsNonConst1() {
     testError(
         srcs(
             SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('es6');"),
@@ -698,7 +698,10 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
                 "closure.js",
                 lines("goog.module('my.module');", "var es6 = goog.requireType('es6');"))),
         error(REQUIRE_TYPE_FOR_ES6_SHOULD_BE_CONST));
+  }
 
+  @Test
+  public void testGoogRequireTypeForNonEs6LhsNonConst2() {
     testError(
         srcs(
             SourceFile.fromCode("es6.js", "export var x; goog.declareModuleId('es6');"),

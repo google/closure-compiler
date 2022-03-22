@@ -930,7 +930,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
           // input 0
           "goog.module('a.b');",
           // input 1
-          "goog.module.get('a.b');"
+          "var unsupportedAssignmentToGlobal = goog.module.get('a.b');"
         },
         DiagnosticGroups.CLOSURE_DEP_METHOD_USAGE_CHECKS);
 
@@ -941,7 +941,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
           // input 0
           "goog.module('a.b');",
           // input 1
-          "goog.provide('c'); goog.module.get('a.b');"
+          "goog.provide('c'); var unsupportedAssignmentToGlobal = goog.module.get('a.b');"
         },
         DiagnosticGroups.CLOSURE_DEP_METHOD_USAGE_CHECKS);
   }

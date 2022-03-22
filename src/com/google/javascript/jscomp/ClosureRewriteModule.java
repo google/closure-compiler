@@ -959,7 +959,7 @@ final class ClosureRewriteModule implements CompilerPass {
     // If the assignment isn't into a var in our scope then it's not ok.
     Var aliasVar = t.getScope().getVar(aliasName);
     if (aliasVar == null) {
-      t.report(call, INVALID_GET_ALIAS);
+      // Reported in CheckClosureImports
       return;
     }
 
@@ -969,7 +969,7 @@ final class ClosureRewriteModule implements CompilerPass {
     if (aliasVarNodeRhs == null
         || !isCallTo(aliasVarNodeRhs, GOOG_FORWARDDECLARE)
         || !namespaceId.equals(aliasVarNodeRhs.getLastChild().getString())) {
-      t.report(call, INVALID_GET_ALIAS);
+      // Reported in CheckClosureImports
       return;
     }
 
