@@ -653,8 +653,8 @@ MediaElementAudioSourceOptions.prototype.channelInterpretation;
 
 /**
  * @constructor
- * @param {!AudioContext=} context
- * @param {!MediaElementAudioSourceOptions=} options
+ * @param {!AudioContext} context
+ * @param {!MediaElementAudioSourceOptions} options
  * @extends {AudioNode}
  * @see https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode-constructors
  */
