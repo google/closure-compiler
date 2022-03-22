@@ -1978,6 +1978,101 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEndOfFileNonJSDocComments_lineComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node scriptNode =
+        parse(
+            lines(
+                "function f1() {}", //
+                "// first",
+                "f1();",
+                "// second"));
+
+    assertNode(scriptNode).hasType(Token.SCRIPT);
+
+    Node exprNode = scriptNode.getLastChild();
+    assertNode(exprNode).hasType(Token.EXPR_RESULT);
+
+    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("// second");
+    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  @Test
+  public void testEndOfFileNonJSDocComments_blockComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node scriptNode =
+        parse(
+            lines(
+                "function f1() {}", //
+                "// first",
+                "f1();",
+                "/* second */"));
+
+    assertNode(scriptNode).hasType(Token.SCRIPT);
+
+    Node exprNode = scriptNode.getLastChild();
+    assertNode(exprNode).hasType(Token.EXPR_RESULT);
+
+    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("/* second */");
+    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  @Test
+  public void testEndOfFileNonJSDocComments_manyComments() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node scriptNode =
+        parse(
+            lines(
+                "function f1() {}", //
+                "// first",
+                "f1();",
+                "// second",
+                "/* third */",
+                "// fourth"));
+
+    assertNode(scriptNode).hasType(Token.SCRIPT);
+
+    Node exprNode = scriptNode.getLastChild();
+    assertNode(exprNode).hasType(Token.EXPR_RESULT);
+
+    assertThat(scriptNode.getNonJSDocCommentString())
+        .isEqualTo("// second\n/* third */\n// fourth");
+    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  @Test
+  public void testEndOfFileNonJSDocComments() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node scriptNode =
+        parse(
+            lines(
+                "function f1() {}", //
+                "if (true) {",
+                "// first",
+                "f1(); // second ",
+                "}",
+                "// third"));
+
+    assertNode(scriptNode).hasType(Token.SCRIPT);
+
+    Node exprNode = scriptNode.getLastChild().getLastChild().getFirstChild();
+    assertNode(exprNode).hasType(Token.EXPR_RESULT);
+    // Ideally, exprNode contains "// first\n// second".
+    assertThat(exprNode.getNonJSDocCommentString()).isEqualTo("// first");
+    assertThat(exprNode.getNonJSDocComment().isTrailing()).isFalse();
+
+    // TODO(rishipal): the comments `// second` and `// third` do not have an AST node to attach to
+    // that "starts" after them (the `if(true) {..}` block starts before the comments).
+    // Hence both comments get attached to the SCRIPT node as a trailing comment.
+    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("// second\n\n// third");
+    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  @Test
   public void testBoth_TrailingAndNonTrailing_NonJSDocCommentsGetAttachedToSameNode_SingleLine() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;

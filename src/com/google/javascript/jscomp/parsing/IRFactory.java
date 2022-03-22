@@ -309,10 +309,7 @@ class IRFactory {
   }
 
   public static IRFactory transformTree(
-      ProgramTree tree,
-      StaticSourceFile sourceFile,
-      Config config,
-      ErrorReporter errorReporter) {
+      ProgramTree tree, StaticSourceFile sourceFile, Config config, ErrorReporter errorReporter) {
     IRFactory irFactory = new IRFactory(sourceFile, config, errorReporter, tree.sourceComments);
 
     // don't call transform as we don't want standard jsdoc handling.
@@ -324,6 +321,18 @@ class IRFactory {
         if ((comment.type == Comment.Type.JSDOC || comment.type == Comment.Type.IMPORTANT)
             && !irFactory.parsedComments.contains(comment)) {
           irFactory.handlePossibleFileOverviewJsDoc(comment);
+        }
+      }
+
+      if (n.isScript()) {
+        SourcePosition endOfFilePos = tree.location.end;
+        // Handle end of file comments that are still pending
+        NonJSDocComment nonJSDocComment =
+            irFactory.parseNonJSDocCommentAt(endOfFilePos, /* isInline= */ false);
+        if (nonJSDocComment != null) {
+          // pending end-of-file comment exists && parsing mode is set to INCLUDE_ALL_COMMENTS
+          nonJSDocComment.setIsTrailing(true);
+          n.setNonJSDocComment(nonJSDocComment);
         }
       }
     }

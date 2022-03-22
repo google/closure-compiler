@@ -1959,6 +1959,95 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testNonJSDocCommentsPrinted_endOfFile_lineComment() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        lines(
+            "function f1() {}", //
+            "if (true) {",
+            "// first",
+            "f1();",
+            "}",
+            "// second"),
+        lines(
+            "function f1() {\n}", //
+            "if (true) {",
+            "  // first",
+            "  f1();",
+            "}",
+            " // second\n"));
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_endOfFile_blockComment() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        lines(
+            "function f1() {}", //
+            "if (true) {",
+            "// first",
+            "f1();",
+            "/* second */",
+            "}"),
+        lines(
+            "function f1() {\n}", //
+            "if (true) {",
+            "  // first",
+            "  f1();",
+            "}",
+            // The comment `/* second */` does not have an AST node to attach to
+            // that "starts" after it (the `if(true) {..}` block starts before the comment).
+            // Hence the comment gets attached to the SCRIPT node as a trailing comment and gets
+            // printed at the end.
+            " /* second */\n"));
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_endOfFile_manyMixedComments() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        lines(
+            "function f1() {}", //
+            "if (true) {",
+            "// first",
+            "f1();",
+            "// second",
+            "/* third */",
+            "// fourth",
+            "}"),
+        lines(
+            "function f1() {\n}", //
+            "if (true) {",
+            "  // first",
+            "  f1();",
+            "}",
+            " // second",
+            "/* third */",
+            "// fourth\n"));
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_lastTrailing() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        lines(
+            "function f1() {}", //
+            "if (true) {",
+            "// first",
+            "f1(); // second ",
+            "}"),
+        lines(
+            "function f1() {\n}", //
+            "if (true) {",
+            "  // first",
+            "  f1();",
+            "}",
+            // This is not ideal. Ideally the last comment `// second` attaches as a trailing
+            // comment of the `f1()` call.
+            " // second\n"));
+  }
+
+  @Test
   public void testNonJSDocCommentsPrinted_nonTrailing_lineComment() {
     preserveNonJSDocComments = true;
     assertPrettyPrint("// testComment\nfunction Foo(){}", "// testComment\nfunction Foo() {\n}\n");
