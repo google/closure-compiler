@@ -505,6 +505,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getMergedPrecompiledLibraries()) {
+      // Weak sources aren't removed at the library level
+      passes.add(removeWeakSources);
+
       // it would be safe to always recompute side effects even if not using precompiled libraries
       // (the else case) but it's unecessary so skip it to improve build times.
       passes.add(checkRegExpForOptimizations);
