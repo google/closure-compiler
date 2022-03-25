@@ -2959,14 +2959,8 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2021. */
     ECMASCRIPT_2021,
 
-    /** ECMAScript latest draft standard. */
+    /** ECMAScript features from the upcoming standard. */
     ECMASCRIPT_NEXT,
-
-    /**
-     * ECMAScript latest draft standard. Transpiled but no pass through. Should ONLY be used for
-     * language_in
-     */
-    ECMASCRIPT_NEXT_IN,
 
     /** Use stable features. */
     STABLE,
@@ -2975,8 +2969,14 @@ public class CompilerOptions implements Serializable {
     NO_TRANSPILE,
 
     /**
-     * For testing only. Features that can be parsed but cannot be understood by the rest of the
-     * compiler yet.
+     * For testing only. Features that can be parsed/checked but cannot necessarily be understood by
+     * the rest of the compiler yet.
+     */
+    ECMASCRIPT_NEXT_IN,
+
+    /**
+     * For testing only. Features that can be parsed but cannot necessarily be understood by the
+     * rest of the compiler yet.
      */
     UNSUPPORTED;
 
