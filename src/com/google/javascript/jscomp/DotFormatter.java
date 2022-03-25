@@ -93,7 +93,7 @@ public final class DotFormatter {
   static String toDot(Node n, ControlFlowGraph<Node> inCFG)
       throws IOException  {
     StringBuilder builder = new StringBuilder();
-    new DotFormatter(n, inCFG, builder, false);
+    DotFormatter unused = new DotFormatter(n, inCFG, builder, false);
     return builder.toString();
   }
 
@@ -169,7 +169,7 @@ public final class DotFormatter {
    */
   static void appendDot(Node n, ControlFlowGraph<Node> inCFG,
       Appendable builder) throws IOException {
-    new DotFormatter(n, inCFG, builder, false);
+    DotFormatter unused = new DotFormatter(n, inCFG, builder, false);
   }
 
   /**

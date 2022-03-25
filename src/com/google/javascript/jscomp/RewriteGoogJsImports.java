@@ -310,8 +310,12 @@ public class RewriteGoogJsImports implements CompilerPass {
       if (googImportNode != null && mode == Mode.LINT_AND_REWRITE) {
         // If googModule is null then goog.js was not part of the input. Try to be fault tolerant
         // and just assume that everything exported is on the global goog.
-        new ReferenceReplacer(
-            scriptRoot, googImportNode, module, /* globalizeAllReferences= */ googModule == null);
+        ReferenceReplacer unused =
+            new ReferenceReplacer(
+                scriptRoot,
+                googImportNode,
+                module,
+                /* globalizeAllReferences= */ googModule == null);
       }
     }
   }
