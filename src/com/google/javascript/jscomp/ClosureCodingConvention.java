@@ -101,8 +101,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       // Possible formats for a class-defining method call:
       // goog.inherits(SubClass, SuperClass)
       // goog$inherits(SubClass, SuperClass)
-      // goog.mixin(SubClass.prototype, SuperClass.prototype)
-      // goog$mixin(SubClass.prototype, SuperClass.prototype)
       // ValueType.mixin(SubClass, SuperClass, ...) // used by J2CL.
       // ValueType$mixin(SubClass, SuperClass, ...)
       if (callNode.getChildCount() < 3) {

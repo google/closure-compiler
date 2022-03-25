@@ -145,11 +145,6 @@ public final class DefaultCodingConventionTest {
   }
 
   @Test
-  public void testInheritanceDetection10() {
-    assertNotClassDefining("goog.mixin(A.prototype, B.prototype);");
-  }
-
-  @Test
   public void testInheritanceDetection11() {
     assertDefinesClasses("$jscomp.inherits(A, B)", "A", "B");
   }

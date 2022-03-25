@@ -142,12 +142,6 @@ public final class GoogleCodingConventionTest {
   }
 
   @Test
-  public void testInheritanceDetection10() {
-    assertDefinesClasses("goog.mixin(A.prototype, B.prototype);",
-        "A", "B");
-  }
-
-  @Test
   public void testInheritanceDetectionPostCollapseProperties() {
     assertDefinesClasses("goog$inherits(A, B);", "A", "B");
     assertNotClassDefining("goog$inherits(A);");

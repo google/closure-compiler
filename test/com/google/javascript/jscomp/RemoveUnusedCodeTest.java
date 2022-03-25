@@ -57,7 +57,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "goog.reflect.object = function(obj, propertiesObj) {};",
             "goog.reflect.objectProperty = function(prop, obj) {};",
             "function goog$inherits(subClass, superClass) {}",
-            "function goog$mixin(dstPrototype, srcPrototype) {}",
             "function valueType$mixin(dstPrototype, srcPrototype, flags, ...args) {}",
             "function alert() {}",
             "function use() {}",
@@ -1269,34 +1268,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRemoveInheritedClass6() {
-    test(
-        lines(
-            "/** @constructor*/ function a(){}",
-            "/** @constructor*/ function b(){}",
-            "/** @constructor*/ function c(){}",
-            "/** @constructor*/ function d(){}",
-            "goog$mixin(b.prototype,a.prototype);",
-            "goog$mixin(c.prototype,a.prototype); new c;",
-            "goog$mixin(d.prototype,a.prototype)"),
-        lines(
-            "/** @constructor*/ function a(){}",
-            "/** @constructor*/ function c(){}",
-            "goog$mixin(c.prototype,a.prototype); new c"));
-  }
-
-  @Test
-  public void testRemoveInheritedClass7() {
-    test(
-        lines(
-            "/**@constructor*/function a(){alert(goog$mixin(a, a))}",
-            "/**@constructor*/function b(){}",
-            "goog$mixin(b.prototype,a.prototype); new a"),
-        lines(
-            "/**@constructor*/function a(){alert(goog$mixin(a, a))} new a"));
-  }
-
-  @Test
   public void testRemoveInheritedClass8() {
     testSame("/**@constructor*/function a(){}" +
         "/**@constructor*/function b(){}" +
@@ -1319,16 +1290,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "/**@constructor*/ function b(){}",
             "goog$inherits(b,a); ",
             "new a; new b"));
-  }
-
-  @Test
-  public void testRemoveInheritedClass10() {
-    testSame(
-        lines(
-            "/**@constructor*/function a(){}",
-            "/**@constructor*/function b(){}",
-            "goog$mixin(b.prototype,a.prototype);",
-            "new b"));
   }
 
   @Test

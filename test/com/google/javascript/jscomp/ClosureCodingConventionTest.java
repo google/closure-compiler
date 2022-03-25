@@ -142,29 +142,8 @@ public final class ClosureCodingConventionTest {
   }
 
   @Test
-  public void testInheritanceDetection10() {
-    assertDefinesClasses("goog.mixin(A.prototype, B.prototype);",
-        "A", "B");
-  }
-
-  @Test
   public void testInheritanceDetection11() {
     assertNotClassDefining("A.mixin(B)");
-  }
-
-  @Test
-  public void testInheritanceDetection12() {
-    assertDefinesClasses("goog.mixin(A.prototype, B)", "A", "B");
-  }
-
-  @Test
-  public void testInheritanceDetection13() {
-    assertDefinesClasses("goog.mixin(A, B)", "A", "B");
-  }
-
-  @Test
-  public void testInheritanceDetection14() {
-    assertNotClassDefining("goog$mixin((function(){}).prototype)");
   }
 
   @Test

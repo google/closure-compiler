@@ -413,8 +413,8 @@ public class CompilerOptions implements Serializable {
    * Don't generate stub functions when moving methods deeper.
    *
    * <p>Note, switching on this option may break existing code that depends on enumerating prototype
-   * methods for mixin behavior, such as goog.mixin or goog.object.extend, since the prototype
-   * assignments will be removed from the parent chunk and moved to a later chunk.
+   * methods for mixin behavior, such as goog.object.extend, since the prototype assignments will be
+   * removed from the parent chunk and moved to a later chunk.
    */
   boolean crossChunkCodeMotionNoStubMethods;
 

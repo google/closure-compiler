@@ -1048,7 +1048,7 @@ class GlobalNamespace
 
     private boolean isClassDefiningCall(Node callNode) {
       CodingConvention convention = compiler.getCodingConvention();
-      // Look for goog.inherits, goog.mixin
+      // Look for goog.inherits and J2CL mixin calls
       SubclassRelationship classes = convention.getClassesDefinedByCall(callNode);
       if (classes != null) {
         return true;
