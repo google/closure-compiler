@@ -229,6 +229,7 @@ class InlineFunctions implements CompilerPass {
       switch (n.getToken()) {
           // Functions expressions in the form of:
           //   (function(){})();
+        case OPTCHAIN_CALL:
         case CALL:
           Node fnNode = null;
           if (n.getFirstChild().isFunction()) {
@@ -423,7 +424,7 @@ class InlineFunctions implements CompilerPass {
           } else if (child.isFunction()) {
             name = anonFunctionMap.get(child);
           } else if (NodeUtil.isFunctionObjectCall(n)) {
-            checkState(NodeUtil.isNormalGet(child));
+            checkState(NodeUtil.isNormalOrOptChainGet(child));
             Node fnIdentifyingNode = child.getFirstChild();
             if (fnIdentifyingNode.isName()) {
               name = fnIdentifyingNode.getString();

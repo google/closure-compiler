@@ -123,6 +123,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInline_optChain_1() {
+    // Empty function, no params.
+    test("(function(){}).call?.(this)", "void 0;");
+    test("(function(){})?.call(this)", "void 0;");
+  }
+
+  @Test
   public void testInlineEmptyFunction2() {
     // Empty function, params with no side-effects.
     test("function foo(){}\n foo(1, new Date, function(){});", "void 0;");
