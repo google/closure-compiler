@@ -770,13 +770,17 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         "function f(c = 1, d = 2){};f(1,2,3);f(4,5,6)",
         "function f(            ){};f(     );f(     )");
-    testSame("function f(c = alert()){};f(undefined);f(4)");
+    test(
+        "function f(c = alert()){};f(undefined);f(4)",
+        "function f(c = alert()){};f(         );f(4)");
     test(
         "function f(c = alert()){};f();f()", //
         "function f(){var c = alert();};f();f()");
     // TODO(johnlenz): handle this like the "no value" case above and
     // allow the default value to inlined into the body.
-    testSame("function f(c = alert()){};f(undefined);f(undefined)");
+    test(
+        "function f(c = alert()){};f(undefined);f(undefined)",
+        "function f(c = alert()){};f(          );f(        )");
   }
 
   @Test
@@ -853,5 +857,23 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             "var x = new Bar();",
             "x.foo = function(param) { return param; };",
             "x.foo();"));
+  }
+
+  @Test
+  public void testUndefinedLiterals_beforeOtherUnused() {
+    test(
+        lines(
+            "", //
+            "function foo(a, b) { use(a); }",
+            // check that this undefined gets removed if it is before another unused param
+            "foo(undefined, 3);",
+            "foo(void 0, 4);",
+            ""),
+        lines(
+            "", //
+            "function foo(a) { use(a); }",
+            "foo();",
+            "foo();",
+            ""));
   }
 }

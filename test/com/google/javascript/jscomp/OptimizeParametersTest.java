@@ -282,7 +282,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     // so that this can be inlined into the function body
     testSame("function f(a = 2){} f(alert);");
 
-    testSame("function f(a = 2){} f(void 0);");
+    test("function f(a = 2){} f(void 0);", "function f(a = 2){} f();");
 
     // Make sure `sideEffects()` is always evaluated before `x`;
     testSame("var x = 0; function f(a = sideEffects(), b = x) {}; f(void 0, something);");
@@ -1831,5 +1831,56 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "  x = function(a,b) { return a + b };",
             "}",
             "new C().x(1,2)"));
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals() {
+    test(
+        "function foo(a) { use(a);}; foo(undefined); foo(2);",
+        "function foo(a) { use(a);}; foo(         ); foo(2);");
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals_multiple() {
+    test(
+        lines(
+            "", //
+            "function foo(a, b, c) { use(a, b, c); }",
+            "foo(undefined);",
+            "foo(undefined, void 0);",
+            "foo(undefined, void 0, undefined);",
+            "foo(2);",
+            ""),
+        lines(
+            "", //
+            "function foo(a, b, c) { use(a, b, c); }",
+            "foo();",
+            "foo();",
+            "foo();",
+            "foo(2);",
+            ""));
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals_functionRefsArguments() {
+    testSame("function foo(a) { use(arguments);}; foo(undefined); foo(2);");
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals_afterASpread() {
+    testSame("function foo(a,b) { use(a)}; foo(...[1], undefined, undefined);");
+    testSame("function foo(a,b) { use(a)}; foo(undefined, ...[1], undefined); foo(2);");
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals_afterAllFormalParameters() {
+    test(
+        "function foo(a, b) { use(a)}; foo('used', undefined, undefined, 2, 'a'); foo(2);",
+        "function foo(a, b) { use(a)}; foo('used');                               foo(2);");
+  }
+
+  @Test
+  public void testTrailingUndefinedLiterals_afterAllFormalParameters_sideEffects() {
+    testSame("function foo(a, b) { use(a)}; foo('used', undefined, sideEffects()); foo(2);");
   }
 }

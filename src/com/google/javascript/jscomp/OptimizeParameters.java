@@ -46,6 +46,8 @@ import javax.annotation.Nullable;
  *   <li>Removes optional parameters if no caller specifies it as argument.
  *   <li>Removes arguments at call site to function that ignores the parameter.
  *   <li>Inline a parameter if the function is always called with that constant.
+ *   <li>Removes trailing `undefined` values if the callee doesn't query `arguments` or have a rest
+ *       parameter
  * </ul>
  */
 class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
@@ -293,8 +295,20 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
     }
 
-    // Either firstRestIndex will be MAX_VALUE or removeAllAfterIndex will be MAX_VALUE
-    void recordRemovalCallArguments(
+    /**
+     * Either firstRestIndex will be MAX_VALUE or removeAllAfterIndex will be MAX_VALUE
+     *
+     * @param firstRestIndex The lowest index that might match a rest parameter
+     * @param removeAllAfterIndex The index of the last known parameter, all arguments with higher
+     *     indexes must be unused, but it won't be tracked in unused
+     * @param unused All parameter indexes that are known to be unused by the callee
+     * @param unremovable All parameter indexes that are used by a callee, or have defaults with
+     *     side effects
+     * @param arg The current argument being considered for removal
+     * @param index The index of arg in the argument list
+     * @return {true} if all arguments >= index have been removed.
+     */
+    boolean recordRemovalCallArguments(
         int firstRestIndex,
         int removeAllAfterIndex,
         BitSet unused,
@@ -302,42 +316,65 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         Node arg,
         int index) {
       if (arg == null) {
-        return;
+        // base case
+        return true;
       }
 
       if (index > removeAllAfterIndex) {
-        removeArgAndFollowing(arg);
-        return;
+        return removeArgAndFollowing(arg);
       }
 
       if (arg.isSpread()) {
         // There is no meaningful "index" after a spread.
-        return;
+        return false;
       }
 
-      recordRemovalCallArguments(
-          firstRestIndex, removeAllAfterIndex, unused, unremovable, arg.getNext(), index + 1);
+      boolean removedAllTrailing =
+          recordRemovalCallArguments(
+              firstRestIndex, removeAllAfterIndex, unused, unremovable, arg.getNext(), index + 1);
+      if (index < firstRestIndex) {
+        // An 'undefined' in trailing position calling a function that doesn't reference
+        // `arguments` is removable, since the function will see an `undefined` value there
+        // even if we remove it.
+        boolean isRemovableTrailingUndefined = NodeUtil.isUndefined(arg) && removedAllTrailing;
+        if (isRemovableTrailingUndefined && !astAnalyzer.mayHaveSideEffects(arg)) {
+          toRemove.add(arg);
+          return true;
+        }
 
-      if (index < firstRestIndex && unused.get(index)) {
-        if (!astAnalyzer.mayHaveSideEffects(arg)) {
-          if (unremovable.get(index)) {
-            if (!arg.isNumber() || arg.getDouble() != 0) {
-              toReplaceWithZero.add(arg);
+        if (unused.get(index)) {
+          // If isRemovableTrailingUndefined is true, then we know the arg has side effects
+          // otherwise we would have already returned above.
+          boolean hasSideEffects =
+              isRemovableTrailingUndefined || astAnalyzer.mayHaveSideEffects(arg);
+          if (!hasSideEffects) {
+            if (unremovable.get(index)) {
+              if (!arg.isNumber() || arg.getDouble() != 0) {
+                toReplaceWithZero.add(arg);
+              }
+            } else {
+              toRemove.add(arg);
+              return removedAllTrailing;
             }
-          } else {
-            toRemove.add(arg);
           }
         }
       }
+      return false;
     }
 
-    void removeArgAndFollowing(Node arg) {
+    /**
+     * @return true if all following args were removed
+     */
+    boolean removeArgAndFollowing(Node arg) {
       if (arg != null) {
-        removeArgAndFollowing(arg.getNext());
+        boolean removedAll = removeArgAndFollowing(arg.getNext());
         if (!astAnalyzer.mayHaveSideEffects(arg)) {
           toRemove.add(arg);
+          return removedAll;
         }
+        return false;
       }
+      return true;
     }
 
     void removeUnusedFunctionParameters(BitSet unremovable, Node param, int index) {
@@ -780,7 +817,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
     }
 
-    return (continueLooking) ? parameters : null;
+    return continueLooking ? parameters : null;
   }
 
   /**
@@ -1103,9 +1140,6 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       this.mayBeUndefined = mayBeUndefined;
     }
 
-    public boolean mayBeUndefined() {
-      return mayBeUndefined;
-    }
   }
 
   private void addRestVariableToFunction(Node function, Node lhs, Node value) {
