@@ -173,7 +173,7 @@ public final class ParserRunner {
       case ECMASCRIPT_2020:
       case ECMASCRIPT_2021:
       case ES_NEXT:
-      case ES_NEXT_IN:
+      case UNSTABLE:
       case UNSUPPORTED:
         parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;

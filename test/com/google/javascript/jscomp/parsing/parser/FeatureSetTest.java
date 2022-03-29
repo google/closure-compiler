@@ -48,8 +48,8 @@ public final class FeatureSetTest {
   @Test
   public void testEsOrdering() {
     assertFS(FeatureSet.ALL).contains(FeatureSet.ES_UNSUPPORTED);
-    assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT_IN);
-    assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
+    assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_UNSTABLE);
+    assertFS(FeatureSet.ES_UNSTABLE).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2021);
     assertFS(FeatureSet.ES2021).contains(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2020).contains(FeatureSet.ES2019);
@@ -97,13 +97,13 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsNextAndNewer() {
-    // ES_NEXT, ES_NEXT_IN, and ES_UNSUPPORTED are moving targets that may or may not have any
+    // ES_NEXT, ES_UNSTABLE, and ES_UNSUPPORTED are moving targets that may or may not have any
     // unique features.  If any of these `FeatureSet`s are identical to a lower FeatureSet,
     // `version()` will return the lowest equivalent version that contains features.
     // This could be es_XXX, es_next, etc. and will change as new features are added and removed
     // from these `FeatureSet`s.
     assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
-    assertThat(FeatureSet.ES_NEXT_IN.version()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_UNSTABLE.version()).isEqualTo("es_next");
     assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_next");
   }
 
@@ -121,7 +121,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es_2020")).equals(FeatureSet.ES2020);
     assertFS(FeatureSet.valueOf("es_2021")).equals(FeatureSet.ES2021);
     assertFS(FeatureSet.valueOf("es_next")).equals(FeatureSet.ES_NEXT);
-    assertFS(FeatureSet.valueOf("es_next_in")).equals(FeatureSet.ES_NEXT_IN);
+    assertFS(FeatureSet.valueOf("es_unstable")).equals(FeatureSet.ES_UNSTABLE);
     assertFS(FeatureSet.valueOf("es_unsupported")).equals(FeatureSet.ES_UNSUPPORTED);
     assertFS(FeatureSet.valueOf("all")).equals(FeatureSet.ALL);
     assertThrows(IllegalArgumentException.class, () -> FeatureSet.valueOf("bad"));

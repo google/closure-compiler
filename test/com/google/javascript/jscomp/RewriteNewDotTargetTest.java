@@ -44,7 +44,7 @@ public class RewriteNewDotTargetTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
     return options;
   }

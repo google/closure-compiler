@@ -79,7 +79,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testSubstituteEs6Syntax() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
 
     externs =
@@ -100,7 +100,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testNewDotTargetTranspilation() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
     test(
         options,
@@ -127,7 +127,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testNumericSeparator() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     test(options, "1_000", "1000");
   }
@@ -4268,7 +4268,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // Repro case for Github issue 3607.  Don't crash with a reference to new.target
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     WarningLevel.QUIET.setOptionsForWarningLevel(options);
     test(
@@ -4299,7 +4299,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
         options,

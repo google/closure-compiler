@@ -1235,7 +1235,7 @@ public final class CompilerTest {
 
     CompilerOptions options = new CompilerOptions();
     options.setAssumeForwardDeclaredForMissingTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setCheckTypes(true);
     options.setStrictModeInput(true);

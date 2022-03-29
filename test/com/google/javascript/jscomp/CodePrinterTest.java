@@ -51,7 +51,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testTrailingCommaInArrayAndObjectWithPrettyPrint() {
-    languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
     assertPrettyPrintSame("({a:1, b:2,});\n");
     assertPrettyPrintSame("[1, 2, 3,];\n");
     // An array starting with a hole is printed ideally but this is very rare.
@@ -60,7 +59,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testTrailingCommaInArrayAndObjectWithoutPrettyPrint() {
-    languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
     assertPrint("({a:1, b:2,})", "({a:1,b:2})");
     assertPrint("[1, 2, 3,]", "[1,2,3]");
 

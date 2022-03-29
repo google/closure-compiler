@@ -88,11 +88,11 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet ES_NEXT = ES2021_MODULES.with(LangVersion.ES_NEXT.features());
 
   // Set of features fully supported in checks, even those not fully supported in optimizations
-  public static final FeatureSet ES_NEXT_IN = ES_NEXT.with(LangVersion.ES_NEXT_IN.features());
+  public static final FeatureSet ES_UNSTABLE = ES_NEXT.with(LangVersion.ES_UNSTABLE.features());
 
   // Set of all features that can be parsed, even those not yet fully supported in checks.
   public static final FeatureSet ES_UNSUPPORTED =
-      ES_NEXT_IN.with(LangVersion.ES_UNSUPPORTED.features());
+      ES_UNSTABLE.with(LangVersion.ES_UNSUPPORTED.features());
 
   public static final FeatureSet BROWSER_2020 =
       ES2019_MODULES.without(
@@ -135,8 +135,8 @@ public final class FeatureSet implements Serializable {
     ES2019,
     ES2020,
     ES2021,
-    ES_NEXT_IN,
     ES_NEXT,
+    ES_UNSTABLE,
     ES_UNSUPPORTED,
     TYPESCRIPT,
     ;
@@ -302,8 +302,8 @@ public final class FeatureSet implements Serializable {
     if (ES_NEXT.contains(this)) {
       return "es_next";
     }
-    if (ES_NEXT_IN.contains(this)) {
-      return "es_next_in";
+    if (ES_UNSTABLE.contains(this)) {
+      return "es_unstable";
     }
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
@@ -466,8 +466,8 @@ public final class FeatureSet implements Serializable {
         return ES2021;
       case "es_next":
         return ES_NEXT;
-      case "es_next_in":
-        return ES_NEXT_IN;
+      case "es_unstable":
+        return ES_UNSTABLE;
       case "es_unsupported":
         return ES_UNSUPPORTED;
       case "all":

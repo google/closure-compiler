@@ -2800,12 +2800,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return LanguageMode.ECMASCRIPT_2020;
       case ECMASCRIPT_2021:
         return LanguageMode.ECMASCRIPT_2021;
-      case UNSUPPORTED:
-        return LanguageMode.UNSUPPORTED;
       case ECMASCRIPT_NEXT:
         return LanguageMode.ES_NEXT;
-      case ECMASCRIPT_NEXT_IN:
-        return LanguageMode.ES_NEXT_IN;
+      case UNSTABLE:
+        return LanguageMode.UNSTABLE;
+      case UNSUPPORTED:
+        return LanguageMode.UNSUPPORTED;
       default:
         throw new IllegalStateException("Unexpected language mode: " + options.getLanguageIn());
     }

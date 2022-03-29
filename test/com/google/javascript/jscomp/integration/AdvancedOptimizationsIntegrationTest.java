@@ -2079,7 +2079,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceSimple() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     test(options, "var x = 0; var y = {}; alert(x ?? y)", "alert(0)");
@@ -2089,7 +2089,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceChain() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     test(options, "var x, y; alert(x ?? y ?? 'default string')", "alert('default string')");
@@ -2099,7 +2099,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceWithAnd() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     test(options, "var x, y, z; alert(x ?? (y && z))", "alert(void 0)");
@@ -2109,7 +2109,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceWithAssign() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     test(options, "var x, y; var z = 1; x ?? (y = z); alert(y)", "alert(1)");
@@ -2119,7 +2119,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceTranspiledOutput() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     externs =
@@ -2132,7 +2132,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void nullishCoalesceChainTranspiledOutput() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
 
     externs =

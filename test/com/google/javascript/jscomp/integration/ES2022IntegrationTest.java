@@ -39,7 +39,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   /** Creates a CompilerOptions object with google coding conventions. */
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     return options;

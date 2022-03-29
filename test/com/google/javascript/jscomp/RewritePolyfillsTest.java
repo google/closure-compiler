@@ -294,8 +294,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
   @Test
   public void testStaticMethodsNotInstalledIfGuardedByNullishCoalesce() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
-    addLibrary("Array.of", "es_next_in", "es5", "es6/array/of");
+    setAcceptedLanguage(LanguageMode.UNSTABLE);
+    addLibrary("Array.of", "es_unstable", "es5", "es6/array/of");
 
     testDoesNotInject("!Array.of ?? Array.of();");
     // NOTE: ?? is not safe by itself.
@@ -450,8 +450,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
   @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByNullishCoalesce() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
-    addLibrary("String.prototype.endsWith", "es_next_in", "es5", "es6/string/endswith");
+    setAcceptedLanguage(LanguageMode.UNSTABLE);
+    addLibrary("String.prototype.endsWith", "es_unstable", "es5", "es6/string/endswith");
 
     testDoesNotInject("!String.prototype.endsWith ?? x.endsWith();");
     // NOTE: ?? is not safe by itself.

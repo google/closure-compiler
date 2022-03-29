@@ -83,13 +83,13 @@ public abstract class PassFactory {
 
     /** Record that the pass will support all of the features required for checks passes. */
     public final Builder setFeatureSetForChecks() {
-      // ES_NEXT_IN is the set of features the compiler supports in input code.
-      return this.setFeatureSet(FeatureSet.ES_NEXT_IN);
+      // ES_UNSTABLE is the set of features the compiler supports in checks passes
+      return this.setFeatureSet(FeatureSet.ES_UNSTABLE);
     }
 
     /** Record that the pass will support all of the features required for optimization passes. */
     public final Builder setFeatureSetForOptimizations() {
-      // ES_NEXT is the set of features the compiler supports in output code.
+      // ES_NEXT is the set of features the compiler supports thoughout the compiler.
       return this.setFeatureSet(FeatureSet.ES_NEXT);
     }
 

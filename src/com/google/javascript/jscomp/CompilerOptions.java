@@ -2972,7 +2972,7 @@ public class CompilerOptions implements Serializable {
      * For testing only. Features that can be parsed/checked but cannot necessarily be understood by
      * the rest of the compiler yet.
      */
-    ECMASCRIPT_NEXT_IN,
+    UNSTABLE,
 
     /**
      * For testing only. Features that can be parsed but cannot necessarily be understood by the
@@ -3037,8 +3037,8 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_NEXT:
           return FeatureSet.ES_NEXT;
         case NO_TRANSPILE:
-        case ECMASCRIPT_NEXT_IN:
-          return FeatureSet.ES_NEXT_IN;
+        case UNSTABLE:
+          return FeatureSet.ES_UNSTABLE;
         case UNSUPPORTED:
           return FeatureSet.ES_UNSUPPORTED;
         case STABLE:

@@ -1766,7 +1766,7 @@ public abstract class CompilerTestCase {
     List<PassFactory> factories = new ArrayList<>();
     CompilerOptions options = compiler.getOptions();
 
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageIn(LanguageMode.UNSUPPORTED);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
     TranspilationPasses.addRewritePolyfillPass(factories);
