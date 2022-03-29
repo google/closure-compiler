@@ -79,7 +79,7 @@ class GlobalNamespace
     implements StaticScope, StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private final AbstractCompiler compiler;
-  private final boolean enableImplicityAliasedValues;
+  private final boolean enableImplicitlyAliasedValues;
   private final Node root;
   private final Node externsRoot;
   private final Node globalRoot = IR.root();
@@ -175,7 +175,7 @@ class GlobalNamespace
     this.compiler = compiler;
     this.externsRoot = externsRoot;
     this.root = root;
-    this.enableImplicityAliasedValues =
+    this.enableImplicitlyAliasedValues =
         !compiler.getOptions().getAssumeStaticInheritanceIsNotUsed();
   }
 
@@ -2142,7 +2142,7 @@ class GlobalNamespace
     }
 
     private boolean valueImplicitlySupportsAliasing() {
-      if (!GlobalNamespace.this.enableImplicityAliasedValues) {
+      if (!GlobalNamespace.this.enableImplicitlyAliasedValues) {
         return false;
       }
 
