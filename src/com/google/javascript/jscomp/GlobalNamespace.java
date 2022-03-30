@@ -1855,6 +1855,14 @@ class GlobalNamespace
         return Inlinability.DO_NOT_INLINE;
       }
 
+      if (isToStringValueOfInObjectLiteral()) {
+        logDecision(
+            Inlinability.DO_NOT_INLINE,
+            "references explicit definition of toString/valueOf functions used implicitly in the JS"
+                + " language");
+        return Inlinability.DO_NOT_INLINE;
+      }
+
       if (getDeclaration() != null) {
         Node declaration = getDeclaration().getNode();
         if (declaration.getParent().isObjectLit()) {
@@ -2002,6 +2010,16 @@ class GlobalNamespace
 
     boolean canCollapseUnannotatedChildNames() {
       return canCollapseOrInlineChildNames().canCollapse();
+    }
+
+    // toString/valueOf are implicitly used as part of the JS language should not be collapsed.
+    boolean isToStringValueOfInObjectLiteral() {
+      Name parent = this.getParent();
+      String baseName = this.getBaseName();
+      return this.isFunction()
+          && parent != null
+          && parent.isObjectLiteral()
+          && (baseName.equals("toString") || baseName.equals("valueOf"));
     }
 
     /**
