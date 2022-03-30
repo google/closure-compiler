@@ -856,8 +856,6 @@ public final class SymbolTable {
     // All symbols that came from goog.module are collected separately because they will have to
     // be processed first. See explanation below.
     List<Symbol> types = new ArrayList<>();
-    List<Symbol> googModuleExportTypes = new ArrayList<>();
-    List<Symbol> moduleTypes = new ArrayList<>();
     List<Symbol> exports = new ArrayList<>();
 
     // Create a property scope for each named type and each anonymous object,
@@ -869,12 +867,7 @@ public final class SymbolTable {
     for (Symbol sym : getAllSymbols()) {
       if (needsPropertyScope(sym)) {
         String name = sym.getName();
-        // TODO(b/144595458): remove module$ handling given that module rewriting is disabled.
-        if (name.startsWith("module$exports")) {
-          googModuleExportTypes.add(sym);
-        } else if (name.startsWith("module$")) {
-          moduleTypes.add(sym);
-        } else if (name.equals("exports")) {
+        if (name.equals("exports")) {
           exports.add(sym);
         } else {
           types.add(sym);
@@ -889,31 +882,11 @@ public final class SymbolTable {
     // property scope. So the symbol for Foo.prototype in
     // {@code instances} will be stale.
     //
-    // To prevent this, we sort the list by the reverse of the
-    // default symbol order, which will do the right thing. Essentially going from leaf symbols
-    // to roots.
-    //
-    // Also sorting all symbols is not enough. There is a tricky case with symbols declared in
-    // goog.module that also has declareLegacyNamespace. Example:
-    //
-    // goog.module('x.y');
-    // goog.module.declareLegacyNamespace();
-    // exports.foo = function() {};
-    //
-    // Symbols are following:
-    // x.y
-    // x
-    // module$exports$x$y.foo
-    // module$exports$x$y
-    //
     // If we order them in reverse lexicographical order symbols x.y and x will be processed before
     // foo. This is wrong as foo is in fact property of x.y namespace. So we must process all
     // module$exports$ symbols first. That's why we collected them in a separate list.
     Collections.sort(types, getNaturalSymbolOrdering().reverse());
-    Collections.sort(googModuleExportTypes, getNaturalSymbolOrdering().reverse());
-    Collections.sort(moduleTypes, getNaturalSymbolOrdering().reverse());
-    Iterable<Symbol> allTypes =
-        Iterables.concat(googModuleExportTypes, types, moduleTypes, exports);
+    Iterable<Symbol> allTypes = Iterables.concat(types, exports);
 
     // If you thought we are done with tricky case - you were wrong. There is another one!
     // The problem with the same property scope appearing several times. For example when using
