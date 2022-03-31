@@ -2482,12 +2482,188 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 .addExtra("/** @fileoverview @suppress {externsValidation} */ foobar")
                 .buildExternsFile("externs.js"));
 
-    // with just variable renaming on, the code is unchanged becasue of the 'foobar' externs ref.
+    // with just variable renaming on, the code is unchanged because of the 'foobar' externs ref.
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     test(options, "foobar = {x: 1}; alert(foobar.x);", "foobar = {x:1}; alert(foobar.x);");
 
     // with inlining + other advanced optimizations, foobar.x is renamed
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(options, "foobar = {x: 1}; alert(foobar.x);", "foobar = {a: 1}; alert(foobar.a);");
+  }
+
+  /**
+   * Validates that a private interface implemented by two classes will merge their disambiguation
+   * clusters even if it is DCE'd.
+   */
+  @Test
+  public void testHiddenInterfacesDisambiguateProperties() {
+
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    test(
+        options,
+        lines(
+            "/** @interface */",
+            "class Interface {",
+            "  /** @return {number} */",
+            "  getField() {}",
+            "}",
+            "/** @interface */",
+            "class Interface2 {",
+            "  /** @return {number} */",
+            "  getOtherField() {}",
+            "}",
+            "/** ",
+            " * @implements {Interface}",
+            " * @implements {Interface2}",
+            " */",
+            "class Foo {",
+            "  constructor(/** number */ bar) {",
+            "    this.bar = bar;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getOtherField() {",
+            "    return this.bar + this.bar;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getField() {",
+            "    return this.bar;",
+            "  }",
+            "}",
+            "/** @implements {Interface} */",
+            "class Bar {",
+            "  constructor(baz) {",
+            "    this.baz = baz;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getField() {",
+            "    return this.baz;",
+            "  }",
+            "}",
+            // Needed or jscomp will devirtualize getOtherField().
+            "window['Interface2'] = Interface2;",
+            "window['Foo'] = Foo;",
+            "window['Bar'] = Bar;",
+            "/**",
+            " * @param {!Foo} foo",
+            " * @param {!Bar} bar",
+            " */",
+            "window['foobar'] = function(foo, bar) {",
+            "  return foo.getField() + foo.getOtherField() + bar.getField();",
+            "};"),
+        lines(
+            "class b {",
+            "  c() {}",
+            "}",
+            "class c {",
+            "  constructor(a) {",
+            "    this.a = a;",
+            "  }",
+            "  c() {",
+            "    return this.a + this.a;",
+            "  }",
+            "  b() {",
+            "    return this.a;",
+            "  }",
+            "}",
+            "class d {",
+            "  constructor(a) {",
+            "    this.a = a;",
+            "  }",
+            "  b() {",
+            "    return this.a;",
+            "  }",
+            "}",
+            "window.Interface2 = b;",
+            "window.Foo = c;",
+            "window.Bar = d;",
+            "window.foobar = function(a, e) {",
+            // Property disambiguation renames both ".getField()" calls to .b().
+            "  return a.b() + a.c() + e.b();",
+            "};"));
+  }
+
+  /**
+   * Validates that a private interface implemented by two classes allows for devirtualization when
+   * the interface is DCE'd.
+   */
+  @Test
+  public void testHiddenInterfacesDoNotInhibitDevirtualization() {
+
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    test(
+        options,
+        lines(
+            "/** @interface */",
+            "class Interface {",
+            "  /** @return {number} */",
+            "  getField() {}",
+            "}",
+            "/** @interface */",
+            "class Interface2 {",
+            "  /** @return {number} */",
+            "  getOtherField() {}",
+            "}",
+            "/** ",
+            " * @implements {Interface}",
+            " * @implements {Interface2}",
+            " */",
+            "class Foo {",
+            "  constructor(/** number */ bar) {",
+            "    this.bar = bar;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getOtherField() {",
+            "    return this.bar + this.bar;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getField() {",
+            "    return this.bar;",
+            "  }",
+            "}",
+            "/** @implements {Interface} */",
+            "class Bar {",
+            "  constructor(baz) {",
+            "    this.baz = baz;",
+            "  }",
+            "  /** @override @noinline */",
+            "  getField() {",
+            "    return this.baz;",
+            "  }",
+            "}",
+            // Needed or jscomp will devirtualize getOtherField().
+            "window['Foo'] = Foo;",
+            "/**",
+            " * @param {!Foo} foo",
+            " * @param {!Bar} bar",
+            " */",
+            "window['foobar'] = function(foo, bar) {",
+            "  return foo.getField() + foo.getOtherField() + bar.getField();",
+            "};"),
+        lines(
+            "function b(a) {",
+            "  return a.a + a.a;",
+            "}",
+            "function c(a) {",
+            "  return a.a;",
+            "}",
+            "class d {",
+            "  constructor(a) {",
+            "    this.a = a;",
+            "  }",
+            "}",
+            "window.Foo = d;",
+            "window.foobar = function(a, e) {",
+            "  return c(a) + b(a) + c(e);",
+            "};"));
   }
 }
