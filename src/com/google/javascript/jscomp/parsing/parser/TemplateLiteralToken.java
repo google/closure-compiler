@@ -24,20 +24,30 @@ import javax.annotation.Nullable;
  * A token representing a javascript template literal substring.
  *
  * <p>The value of the Token is the raw string. The token also stores whether this token contains
- * any error messages that should be passed to the parser due to invalid escapes.
+ * any error messages that should be passed to the parser due to invalid escapes or unnecessary
+ * escapes. The parser, not the scanner, reports these errors because the errors are suppressed in
+ * tagged template literals. The scanner does not know if it's in a tagged or untagged template lit.
  */
 public class TemplateLiteralToken extends LiteralToken {
   @Nullable public final String errorMessage;
   public final SourcePosition errorPosition;
+  public final ErrorLevel errorLevel;
+
+  enum ErrorLevel {
+    WARNING,
+    ERROR
+  }
 
   public TemplateLiteralToken(
       TokenType type,
       String value,
       String errorMsg,
+      ErrorLevel errorLevel,
       SourcePosition position,
       SourceRange location) {
     super(type, value, location);
     this.errorMessage = errorMsg;
+    this.errorLevel = errorLevel;
     this.errorPosition = position;
   }
 
@@ -47,6 +57,6 @@ public class TemplateLiteralToken extends LiteralToken {
   }
 
   public boolean hasError() {
-    return errorMessage != null;
+    return ErrorLevel.ERROR.equals(errorLevel);
   }
 }

@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import static com.google.common.base.Strings.lenientFormat;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
+import com.google.javascript.jscomp.parsing.parser.TemplateLiteralToken.ErrorLevel;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
@@ -925,6 +928,7 @@ public class Scanner {
             endType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
       case '$':
@@ -934,6 +938,7 @@ public class Scanner {
             middleType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
       default: // Should have reported error already
@@ -941,6 +946,7 @@ public class Scanner {
             endType,
             value,
             skipTemplateCharactersResult.getErrorMessage(),
+            skipTemplateCharactersResult.getErrorLevel(),
             skipTemplateCharactersResult.getPosition(),
             getTokenRange(startingPosition));
     }
@@ -963,7 +969,7 @@ public class Scanner {
   }
 
   private SkipTemplateCharactersResult skipTemplateCharacters() {
-    SkipTemplateCharactersResult result = createSkipTemplateCharactersResult(null);
+    SkipTemplateCharactersResult result = createSkipTemplateCharactersResult(null, null);
     while (!isAtEnd()) {
       switch (peekChar()) {
         case '`':
@@ -1002,7 +1008,7 @@ public class Scanner {
     switch (next) {
       case '0':
         if (peekOctalDigit()) {
-          return createSkipTemplateCharactersResult("Invalid escape sequence");
+          return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
         }
         return null;
       case '1':
@@ -1012,25 +1018,25 @@ public class Scanner {
       case '5':
       case '6':
       case '7':
-        return createSkipTemplateCharactersResult("Invalid escape sequence");
+        return createSkipTemplateCharactersResult("Invalid escape sequence", ErrorLevel.ERROR);
       case 'x':
         boolean doubleHexDigit = skipHexDigit() && skipHexDigit();
         if (!doubleHexDigit) {
-          return createSkipTemplateCharactersResult("Hex digit expected");
+          return createSkipTemplateCharactersResult("Hex digit expected", ErrorLevel.ERROR);
         }
         return null;
       case 'u':
         if (peek('{')) {
           nextChar();
           if (peek('}')) {
-            return createSkipTemplateCharactersResult("Empty unicode escape");
+            return createSkipTemplateCharactersResult("Empty unicode escape", ErrorLevel.ERROR);
           }
           boolean allHexDigits = true;
           while (!peek('}') && allHexDigits) {
             allHexDigits = allHexDigits && skipHexDigit();
           }
           if (!allHexDigits) {
-            return createSkipTemplateCharactersResult("Hex digit expected");
+            return createSkipTemplateCharactersResult("Hex digit expected", ErrorLevel.ERROR);
           }
           nextChar();
           return null;
@@ -1038,12 +1044,31 @@ public class Scanner {
           boolean quadHexDigit =
               skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
           if (!quadHexDigit) {
-            return createSkipTemplateCharactersResult("Hex digit expected");
+            return createSkipTemplateCharactersResult("Hex digit expected", ErrorLevel.ERROR);
           }
           return null;
         }
-      default:
+        // https://tc39.es/ecma262/#prod-TemplateEscapeSequence
+      case '\\':
+      case 'b':
+      case 'f':
+      case 'n':
+      case 'r':
+      case 't':
+      case 'v':
+        // special meaning in template literal
+      case '$':
+      case '`':
         return null;
+      case '\'':
+        // special the error message for a single quote
+        return createSkipTemplateCharactersResult(
+            lenientFormat("Unnecessary escape: \"\\%s\" is equivalent to just \"%s\"", next, next),
+            ErrorLevel.WARNING);
+      default:
+        return createSkipTemplateCharactersResult(
+            lenientFormat("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next),
+            ErrorLevel.WARNING);
     }
   }
 
@@ -1330,21 +1355,29 @@ public class Scanner {
     typeParameterLevel--;
   }
 
-  private SkipTemplateCharactersResult createSkipTemplateCharactersResult(String message) {
-    return new SkipTemplateCharactersResult(message, getPosition());
+  private SkipTemplateCharactersResult createSkipTemplateCharactersResult(
+      String message, TemplateLiteralToken.ErrorLevel errorLevel) {
+    return new SkipTemplateCharactersResult(message, errorLevel, getPosition());
   }
 
   private static class SkipTemplateCharactersResult {
     @Nullable private final String errorMessage;
     private final SourcePosition position;
+    private final TemplateLiteralToken.ErrorLevel errorLevel;
 
-    SkipTemplateCharactersResult(String message, SourcePosition position) {
+    SkipTemplateCharactersResult(
+        String message, TemplateLiteralToken.ErrorLevel errorLevel, SourcePosition position) {
       this.errorMessage = message;
+      this.errorLevel = errorLevel;
       this.position = position;
     }
 
     String getErrorMessage() {
       return this.errorMessage;
+    }
+
+    TemplateLiteralToken.ErrorLevel getErrorLevel() {
+      return this.errorLevel;
     }
 
     SourcePosition getPosition() {

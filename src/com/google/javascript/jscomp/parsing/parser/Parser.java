@@ -3756,9 +3756,18 @@ public class Parser {
   }
 
   private void reportTemplateErrorIfPresent(TemplateLiteralToken templateToken) {
-    if (templateToken.errorMessage != null) {
-      reportError(templateToken.errorPosition, "%s", templateToken.errorMessage);
+    if (templateToken.errorMessage == null) {
+      return;
     }
+    switch (templateToken.errorLevel) {
+      case WARNING:
+        errorReporter.reportWarning(templateToken.errorPosition, "%s", templateToken.errorMessage);
+        return;
+      case ERROR:
+        reportError(templateToken.errorPosition, "%s", templateToken.errorMessage);
+        return;
+    }
+    throw new AssertionError();
   }
 
   private Parser recordFeatureUsed(Feature feature) {

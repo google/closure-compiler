@@ -3819,7 +3819,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.TEMPLATE_LITERALS);
     testTemplateLiteral("``");
     testTemplateLiteral("`\"`");
-    testTemplateLiteral("`\\\"`");
     testTemplateLiteral("`\\``");
     testTemplateLiteral("`hello world`;");
     testTemplateLiteral("`hello\nworld`;");
@@ -3906,6 +3905,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\5`", "Invalid escape sequence");
     parseError("`hello\\6`", "Invalid escape sequence");
     parseError("`hello\\7`", "Invalid escape sequence");
+    // TODO(b/223649306): \8 and \9 should cause "Invalid escape sequence" parse errors
+    parseWarning("`hello\\8`", "Unnecessary escape: '\\8' is equivalent to just '8'");
+    parseWarning("`hello\\9`", "Unnecessary escape: '\\9' is equivalent to just '9'");
     parseError("`hello\\01`", "Invalid escape sequence");
     parseError("`hello\\02`", "Invalid escape sequence");
     parseError("`hello\\03`", "Invalid escape sequence");
@@ -4742,23 +4744,47 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testUnnecessaryEscapeTemplateLiterals() {
+  public void testUnnecessaryEscapeUntaggedTemplateLiterals() {
+    parseWarning("var str = `\\a`", "Unnecessary escape: '\\a' is equivalent to just 'a'");
+    parse("var str = `\\b`");
+    parseWarning("var str = `\\c`", "Unnecessary escape: '\\c' is equivalent to just 'c'");
+    parseWarning("var str = `\\d`", "Unnecessary escape: '\\d' is equivalent to just 'd'");
+    parseWarning("var str = `\\e`", "Unnecessary escape: '\\e' is equivalent to just 'e'");
+    parse("var str = `\\f`");
+    parseWarning("var str = `\\/`", "Unnecessary escape: '\\/' is equivalent to just '/'");
+    parse("var str = `\\0`");
+    parseWarning("var str = `\\%`", "Unnecessary escape: '\\%' is equivalent to just '%'");
+
+    // single and double quotes have no meaning in a template lit
+    parseWarning("var str = `\\\"`", "Unnecessary escape: '\\\"' is equivalent to just '\"'");
+    parseWarning("var str = `\\'`", "Unnecessary escape: \"\\'\" is equivalent to just \"'\"");
+
+    // $ needs to be escaped to distinguish it from use of ${}
+    parse("var str = `\\$`");
+    // ` needs to be escaped to avoid ending the template lit
+    parse("var str = `\\``");
+  }
+
+  @Test
+  public void testUnnecessaryEscapeTaggedTemplateLiterals() {
     expectFeatures(Feature.TEMPLATE_LITERALS);
 
-    // Don't warn for unnecessary escapes in template literals since tagged template literals
-    // can access the raw string value
-    parse("var str = `\\a`");
-    parse("var str = `\\b`");
-    parse("var str = `\\c`");
-    parse("var str = `\\d`");
-    parse("var str = `\\e`");
-    parse("var str = `\\f`");
-    parse("var str = `\\/`");
-    parse("var str = `\\0`");
-    parse("var str = `\\8`");
-    parse("var str = `\\9`");
-    parse("var str = `\\%`");
-    parse("var str = `\\$`");
+    // Don't warn for unnecessary escapes in tagged template literals since they may access the
+    // raw string value
+    parse("var str = String.raw`\\a`");
+    parse("var str = String.raw`\\b`");
+    parse("var str = String.raw`\\c`");
+    parse("var str = String.raw`\\d`");
+    parse("var str = String.raw`\\e`");
+    parse("var str = String.raw`\\f`");
+    parse("var str = String.raw`\\/`");
+    parse("var str = String.raw`\\0`");
+    parse("var str = String.raw`\\8`");
+    parse("var str = String.raw`\\9`");
+    parse("var str = String.raw`\\%`");
+
+    parse("var str = String.raw`\\$`");
+    parse("var str = String.raw`\\``");
   }
 
   @Test
