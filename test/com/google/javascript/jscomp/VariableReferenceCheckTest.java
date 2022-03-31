@@ -465,7 +465,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         lines(
             "export function f(elapsed) {",
             "  let fakeMs = 0;",
-            "  stubs.replace(goog, 'now', () => fakeMs -= elapsed);",
+            "  stubs.replace(Date, 'now', () => fakeMs -= elapsed);",
             "}"));
   }
 
