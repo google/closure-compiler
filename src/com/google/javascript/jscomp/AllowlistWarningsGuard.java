@@ -177,7 +177,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    */
   protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
-    sb.append(error.getSourceName()).append(":");
+    sb.append(normalizeSourceName(error.getSourceName())).append(":");
     if (withMetaData) {
       sb.append(error.getLineNumber());
     }
@@ -193,6 +193,15 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     }
 
     return sb.toString();
+  }
+
+  private String normalizeSourceName(String sourceName) {
+    if (sourceName != null) {
+      // e.g.
+      // "blaze-out/k8-fastbuild/genfiles/some/path/foo.js" -> "some/path/foo.js"
+      return sourceName.replaceFirst("blaze-out/[^/]*/(bin|genfiles)/", "");
+    }
+    return sourceName;
   }
 
   public static String getFirstLine(String warning) {
