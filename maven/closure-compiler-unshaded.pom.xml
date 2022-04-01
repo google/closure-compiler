@@ -43,4 +43,7 @@
     <version>1.0-SNAPSHOT</version>
     <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
+  <dependencies>
+    {generated_bzl_deps}
+  </dependencies>
 </project>
