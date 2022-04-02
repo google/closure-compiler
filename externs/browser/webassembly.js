@@ -77,9 +77,12 @@ WebAssembly.LinkError = function() {};
 
 /**
  * @constructor
+ * @param {string=} message
+ * @param {string=} fileName
+ * @param {number=} lineNumber
  * @extends {Error}
  */
-WebAssembly.RuntimeError = function() {};
+WebAssembly.RuntimeError = function(message, fileName, lineNumber) {};
 
 // Note: Closure compiler does not support function overloading, omit this overload for now.
 // {function(!WebAssembly.Module, Object=):!Promise<!WebAssembly.Instance>}
@@ -91,11 +94,11 @@ WebAssembly.RuntimeError = function() {};
 WebAssembly.instantiate = function(moduleObject, importObject) {};
 
 /**
- * @param {!Promise<!Response>} moduleStream
+ * @param {!Promise<!Response>|!Response} source
  * @param {Object=} importObject
  * @return {!Promise<{module:!WebAssembly.Module, instance:!WebAssembly.Instance}>}
  */
-WebAssembly.instantiateStreaming = function(moduleStream, importObject) {};
+WebAssembly.instantiateStreaming = function(source, importObject) {};
 
 /**
  * @param {!BufferSource} bytes
