@@ -24,11 +24,13 @@ import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -68,7 +70,6 @@ public abstract class JsMessage {
     LEGACY, // All legacy code is completely OK
     RELAX, // You allowed to use legacy code but it would be reported as warn
     CLOSURE; // Any legacy code is prohibited
-
   }
 
   private static final String MESSAGE_REPRESENTATION_FORMAT = "{$%s}";
@@ -128,8 +129,20 @@ public abstract class JsMessage {
     return getParts();
   }
 
+  public abstract ImmutableMap<String, String> getPlaceholderNameToExampleMap();
+
+  public abstract ImmutableMap<String, String> getPlaceholderNameToOriginalCodeMap();
+
   /** Gets a set of the registered placeholders in this message. */
   public abstract ImmutableSet<String> placeholders();
+
+  public String getPlaceholderOriginalCode(PlaceholderReference placeholderReference) {
+    return getPlaceholderNameToOriginalCodeMap().getOrDefault(placeholderReference.getName(), "-");
+  }
+
+  public String getPlaceholderExample(PlaceholderReference placeholderReference) {
+    return getPlaceholderNameToExampleMap().getOrDefault(placeholderReference.getName(), "-");
+  }
 
   /** Returns a String containing the original message text. */
   @Override
@@ -141,7 +154,9 @@ public abstract class JsMessage {
     return sb.toString();
   }
 
-  /** @return false iff the message is represented by empty string. */
+  /**
+   * @return false iff the message is represented by empty string.
+   */
   public final boolean isEmpty() {
     for (CharSequence part : getParts()) {
       if (part.length() > 0) {
@@ -196,7 +211,9 @@ public abstract class JsMessage {
     // Allow arbitrary suffixes to allow for local variable disambiguation.
     private static final String MSG_EXTERNAL_PREFIX = "MSG_EXTERNAL_";
 
-    /** @return an external message id or null if this is not an external message identifier */
+    /**
+     * @return an external message id or null if this is not an external message identifier
+     */
     private static String getExternalMessageId(String identifier) {
       if (identifier.startsWith(MSG_EXTERNAL_PREFIX)) {
         int start = MSG_EXTERNAL_PREFIX.length();
@@ -225,6 +242,8 @@ public abstract class JsMessage {
 
     private final List<CharSequence> parts = new ArrayList<>();
     private final Set<String> placeholders = new HashSet<>();
+    private ImmutableMap<String, String> placeholderNameToExampleMap = ImmutableMap.of();
+    private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
 
     private String sourceName;
 
@@ -251,7 +270,9 @@ public abstract class JsMessage {
       return this;
     }
 
-    /** @param sourceName The message's sourceName. */
+    /**
+     * @param sourceName The message's sourceName.
+     */
     public Builder setSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
@@ -314,6 +335,16 @@ public abstract class JsMessage {
     /** Returns the message registered placeholders */
     public Set<String> getPlaceholders() {
       return placeholders;
+    }
+
+    public Builder setPlaceholderNameToExampleMap(Map<String, String> map) {
+      this.placeholderNameToExampleMap = ImmutableMap.copyOf(map);
+      return this;
+    }
+
+    public Builder setPlaceholderNameToOriginalCodeMap(Map<String, String> map) {
+      this.placeholderNameToOriginalCodeMap = ImmutableMap.copyOf(map);
+      return this;
     }
 
     /** Sets the description of the message, which helps translators. */
@@ -397,6 +428,8 @@ public abstract class JsMessage {
           desc,
           meaning,
           hidden,
+          placeholderNameToExampleMap,
+          placeholderNameToOriginalCodeMap,
           ImmutableSet.copyOf(placeholders));
     }
 

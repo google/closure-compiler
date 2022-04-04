@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -338,8 +339,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * f(s) { s.MSG_UNNAMED_X = 'Some untrackable message'; }
    */
   private void trackNormalMessage(JsMessage message, String msgName, Node msgNode) {
-      MessageLocation location = new MessageLocation(message, msgNode);
-      messageNames.put(msgName, location);
+    MessageLocation location = new MessageLocation(message, msgNode);
+    messageNames.put(msgName, location);
   }
 
   /**
@@ -410,9 +411,8 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   /** Get a previously tracked message. */
   private JsMessage getTrackedNormalMessage(String msgName) {
-      MessageLocation location = messageNames.get(msgName);
-      return location == null ? null : location.message;
-
+    MessageLocation location = messageNames.get(msgName);
+    return location == null ? null : location.message;
   }
 
   /**
@@ -725,11 +725,23 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *  |
    *  |-- string 'Hi {$userName}! Welcome to {$product}.'
    *  +-- objlit
-   *      |-- string_key 'userName'
-   *      |   +-- name 'someUserName'
-   *      +-- string_key 'product'
-   *          +-- call
-   *              +-- name 'getProductName'
+   *  |   |-- string_key 'userName'
+   *  |   |   +-- name 'someUserName'
+   *  |   +-- string_key 'product'
+   *  |       +-- call
+   *  |           +-- name 'getProductName'
+   *  +-- objlit // optional options bag
+   *      |-- string_key 'example'
+   *      |   + objlit
+   *      |     |-- string_key 'userName'
+   *      |     |   +-- 'Jonathan Tuttle'
+   *      |     |-- string_key 'product'
+   *      |     |   +-- 'Google Anonymizer'
+   *      +-- string_key 'original_code'
+   *            |-- string_key 'userName'
+   *            |   +-- 'user.getName()'
+   *            +-- string_key 'product'
+   *                +-- string_key 'product.getName()'
    * </pre>
    *
    * @param builder the message builder
@@ -761,14 +773,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     // Parse the message string and append parts to the builder
     parseMessageTextNode(builder, stringLiteralNode);
 
-    Node objLitNode = stringLiteralNode.getNext();
+    Node valuesObjLit = stringLiteralNode.getNext();
     Set<String> phNames = new HashSet<>();
-    if (objLitNode != null) {
+    if (valuesObjLit != null) {
       // Register the placeholder names
-      if (!objLitNode.isObjectLit()) {
-        throw new MalformedException("OBJLIT node expected", objLitNode);
+      if (!valuesObjLit.isObjectLit()) {
+        throw new MalformedException("OBJLIT node expected", valuesObjLit);
       }
-      for (Node aNode = objLitNode.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
+      for (Node aNode = valuesObjLit.getFirstChild(); aNode != null; aNode = aNode.getNext()) {
         if (!aNode.isStringKey()) {
           throw new MalformedException("STRING_KEY node expected as OBJLIT key", aNode);
         }
@@ -785,9 +797,18 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       }
     }
 
+    // Now we have all the placeholder names that were referenced in the message string.
+    // Verify that other references to placeholder names match one of these.
+    Set<String> usedPlaceholders = builder.getPlaceholders();
+
+    final Node optionsBagArgument = valuesObjLit == null ? null : valuesObjLit.getNext();
+
+    if (optionsBagArgument != null) {
+      extractPlaceholderInfoFromOptionsBagArgument(optionsBagArgument, usedPlaceholders, builder);
+    }
+
     // Check that all placeholders from the message text have appropriate objlit
     // values
-    Set<String> usedPlaceholders = builder.getPlaceholders();
     for (String phName : usedPlaceholders) {
       if (!phNames.contains(phName)) {
         throw new MalformedException(
@@ -802,6 +823,76 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         throw new MalformedException("Unused message placeholder: " + phName, node);
       }
     }
+  }
+
+  private void extractPlaceholderInfoFromOptionsBagArgument(
+      Node optionsBagArgument, Set<String> knownPlaceholders, JsMessage.Builder builder)
+      throws MalformedException {
+    if (!optionsBagArgument.isObjectLit()) {
+      throw new MalformedException("object literal expected", optionsBagArgument);
+    }
+
+    for (Node stringKey = optionsBagArgument.getFirstChild();
+        stringKey != null;
+        stringKey = stringKey.getNext()) {
+      if (!stringKey.isStringKey()) {
+        throw new MalformedException("string key expected", stringKey);
+      }
+      if (stringKey.getString().equals("original_code")) {
+        extractOriginalCodeMapFromObjectLiteral(
+            stringKey.getOnlyChild(), knownPlaceholders, builder);
+      } else if (stringKey.getString().equals("example")) {
+        extractExampleMapFromObjectLiteral(stringKey.getOnlyChild(), knownPlaceholders, builder);
+      } // TODO(bradfordcsmith): Consider reporting an error for an unexpected option
+    }
+  }
+
+  private void extractOriginalCodeMapFromObjectLiteral(
+      Node objectLiteral, Set<String> knownPlaceholderNames, JsMessage.Builder builder)
+      throws MalformedException {
+    if (!objectLiteral.isObjectLit()) {
+      throw new MalformedException("object literal expected", objectLiteral);
+    }
+    final Map<String, String> stringToStringMap =
+        extractPlaceholderNameToStringMapFromObjectLiteral(objectLiteral, knownPlaceholderNames);
+    builder.setPlaceholderNameToOriginalCodeMap(stringToStringMap);
+  }
+
+  private void extractExampleMapFromObjectLiteral(
+      Node objectLiteral, Set<String> knownPlaceholderNames, JsMessage.Builder builder)
+      throws MalformedException {
+    if (!objectLiteral.isObjectLit()) {
+      throw new MalformedException("object literal expected", objectLiteral);
+    }
+    final Map<String, String> stringToStringMap =
+        extractPlaceholderNameToStringMapFromObjectLiteral(objectLiteral, knownPlaceholderNames);
+    builder.setPlaceholderNameToExampleMap(stringToStringMap);
+  }
+
+  private Map<String, String> extractPlaceholderNameToStringMapFromObjectLiteral(
+      Node objectLiteral, Set<String> knownPlaceholderNames) throws MalformedException {
+    LinkedHashMap<String, String> map = new LinkedHashMap<>();
+    for (Node stringKey = objectLiteral.getFirstChild();
+        stringKey != null;
+        stringKey = stringKey.getNext()) {
+      if (!stringKey.isStringKey()) {
+        throw new MalformedException("string key expected", stringKey);
+      }
+      Node valueNode = stringKey.getOnlyChild();
+      if (!valueNode.isStringLit()) {
+        throw new MalformedException("string literal expected", valueNode);
+      }
+      String placeholderName = stringKey.getString();
+      String value = valueNode.getString();
+      if (!knownPlaceholderNames.contains(placeholderName)) {
+        throw new MalformedException("unexpected placeholder name", stringKey);
+      }
+      if (map.containsKey(placeholderName)) {
+        throw new MalformedException("duplicate string key", stringKey);
+      }
+      map.put(placeholderName, value);
+    }
+    return map;
   }
 
   /**
