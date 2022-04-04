@@ -2422,6 +2422,9 @@ chrome.enterprise.reportingPrivate.SettingValue = {
  *   screenLockSecured: chrome.enterprise.reportingPrivate.SettingValue,
  *   diskEncrypted: chrome.enterprise.reportingPrivate.SettingValue,
  *   macAddresses: (!Array<string>|undefined),
+ *   windowsMachineDomain: (!string|undefined),
+ *   windowsUserDomain: (!string|undefined),
+ *   securityPatchLevel: (!string|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.DeviceInfo;
