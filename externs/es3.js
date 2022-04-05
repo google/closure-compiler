@@ -635,9 +635,184 @@ Function.prototype.toString = function() {};
 
 
 /**
+ * @record
+ * @extends {IArrayLike<T>}
+ * @extends {Iterable<T>}
+ * @template T
+ */
+function ReadonlyArray() {}
+
+// TODO(johnlenz): remove the suppression when the compiler understands
+// "symbol" natively
+/**
+ * @return {Iterator<T>}
+ * @suppress {externsValidation}
+ */
+ReadonlyArray.prototype[Symbol.iterator] = function() {};
+
+/**
+ * Returns a new array comprised of this array joined with other array(s)
+ * and/or value(s).
+ *
+ * @param {...*} var_args
+ * @return {!ReadonlyArray<?>}
+ * @this {*}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
+ */
+ReadonlyArray.prototype.concat = function(var_args) {};
+
+/**
+ * Joins all elements of an array into a string.
+ *
+ * @param {*=} opt_separator Specifies a string to separate each element of the
+ *     array. The separator is converted to a string if necessary. If omitted,
+ *     the array elements are separated with a comma.
+ * @return {string}
+ * @this {IArrayLike<?>|string}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join
+ */
+ReadonlyArray.prototype.join = function(opt_separator) {};
+
+/**
+ * Extracts a section of an array and returns a new array.
+ *
+ * @param {?number=} begin Zero-based index at which to begin extraction.
+ * @param {?number=} end Zero-based index at which to end extraction.  slice
+ *     extracts up to but not including end.
+ * @return {!Array<T>}
+ * @this {IArrayLike<T>|string}
+ * @template T
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+ */
+ReadonlyArray.prototype.slice = function(begin, end) {};
+
+/**
+ * @this {ReadonlyArray<?>}
+ * @return {string}
+ * @nosideeffects
+ * @override
+ */
+ReadonlyArray.prototype.toString = function() {};
+
+/**
+ * Apply a function simultaneously against two values of the array (from
+ * left-to-right) as to reduce it to a single value.
+ *
+ * @param {?function(?, T, number, !ReadonlyArray<T>) : R} callback
+ * @param {*=} opt_initialValue
+ * @return {R}
+ * @this {IArrayLike<T>|string}
+ * @template T,R
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+ */
+ReadonlyArray.prototype.reduce = function(callback, opt_initialValue) {};
+
+/**
+ * Apply a function simultaneously against two values of the array (from
+ * right-to-left) as to reduce it to a single value.
+ *
+ * @param {?function(?, T, number, !ReadonlyArray<T>) : R} callback
+ * @param {*=} opt_initialValue
+ * @return {R}
+ * @this {IArrayLike<T>|string}
+ * @template T,R
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduceRight
+ */
+ReadonlyArray.prototype.reduceRight = function(callback, opt_initialValue) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {S=} opt_thisobj
+ * @return {boolean}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
+ */
+ReadonlyArray.prototype.every = function(callback, opt_thisobj) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {S=} opt_thisobj
+ * @return {!ReadonlyArray<T>}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
+ */
+ReadonlyArray.prototype.filter = function(callback, opt_thisobj) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {S=} opt_thisobj
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+ * @return {undefined}
+ */
+ReadonlyArray.prototype.forEach = function(callback, opt_thisobj) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {T} obj
+ * @param {number=} opt_fromIndex
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @nosideeffects
+ * @template T
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
+ */
+ReadonlyArray.prototype.indexOf = function(obj, opt_fromIndex) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {T} obj
+ * @param {number=} opt_fromIndex
+ * @return {number}
+ * @this {IArrayLike<T>|string}
+ * @nosideeffects
+ * @template T
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
+ */
+ReadonlyArray.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): R} callback
+ * @param {S=} opt_thisobj
+ * @return {!ReadonlyArray<R>}
+ * @this {IArrayLike<T>|string}
+ * @template T,S,R
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+ */
+ReadonlyArray.prototype.map = function(callback, opt_thisobj) {};
+
+/**
+ * Available in ECMAScript 5, Mozilla 1.6+.
+ * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
+ * @param {S=} opt_thisobj
+ * @return {boolean}
+ * @this {IArrayLike<T>|string}
+ * @template T,S
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
+ */
+ReadonlyArray.prototype.some = function(callback, opt_thisobj) {};
+
+/**
+ * @const {number}
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length
+ */
+ReadonlyArray.prototype.length;
+
+/**
  * @constructor
  * @implements {IArrayLike<T>}
  * @implements {Iterable<T>}
+ * @implements {ReadonlyArray<T>}
  * @param {...*} var_args
  * @return {!Array}
  * @nosideeffects
@@ -649,6 +824,7 @@ function Array(var_args) {}
 /**
  * @return {Iterator<T>}
  * @suppress {externsValidation}
+ * @override
  */
 Array.prototype[Symbol.iterator] = function() {};
 
@@ -662,6 +838,7 @@ Array.prototype[Symbol.iterator] = function() {};
  * @return {!Array<?>}
  * @this {*}
  * @nosideeffects
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
  */
 Array.prototype.concat = function(var_args) {};
@@ -675,6 +852,7 @@ Array.prototype.concat = function(var_args) {};
  * @return {string}
  * @this {IArrayLike<?>|string}
  * @nosideeffects
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join
  */
 Array.prototype.join = function(opt_separator) {};
@@ -738,6 +916,7 @@ Array.prototype.shift = function() {};
  * @this {IArrayLike<T>|string}
  * @template T
  * @nosideeffects
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
  */
 Array.prototype.slice = function(begin, end) {};
@@ -809,6 +988,7 @@ Array.prototype.unshift = function(var_args) {};
  * @return {R}
  * @this {IArrayLike<T>|string}
  * @template T,R
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
  */
 Array.prototype.reduce = function(callback, opt_initialValue) {};
@@ -822,6 +1002,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * @return {R}
  * @this {IArrayLike<T>|string}
  * @template T,R
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduceRight
  */
 Array.prototype.reduceRight = function(callback, opt_initialValue) {};
@@ -833,6 +1014,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
  * @return {boolean}
  * @this {IArrayLike<T>|string}
  * @template T,S
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
  */
 Array.prototype.every = function(callback, opt_thisobj) {};
@@ -844,6 +1026,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
  * @template T,S
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
  */
 Array.prototype.filter = function(callback, opt_thisobj) {};
@@ -852,10 +1035,11 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
  * Available in ECMAScript 5, Mozilla 1.6+.
  * @param {?function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
+ * @return {undefined}
  * @this {IArrayLike<T>|string}
  * @template T,S
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
- * @return {undefined}
  */
 Array.prototype.forEach = function(callback, opt_thisobj) {};
 
@@ -867,6 +1051,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
  * @this {IArrayLike<T>|string}
  * @nosideeffects
  * @template T
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
  */
 Array.prototype.indexOf = function(obj, opt_fromIndex) {};
@@ -879,6 +1064,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
  * @this {IArrayLike<T>|string}
  * @nosideeffects
  * @template T
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
  */
 Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
@@ -890,6 +1076,7 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
  * @return {!Array<R>}
  * @this {IArrayLike<T>|string}
  * @template T,S,R
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
  */
 Array.prototype.map = function(callback, opt_thisobj) {};
@@ -901,13 +1088,13 @@ Array.prototype.map = function(callback, opt_thisobj) {};
  * @return {boolean}
  * @this {IArrayLike<T>|string}
  * @template T,S
+ * @override
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
  */
 Array.prototype.some = function(callback, opt_thisobj) {};
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/index
  */
 Array.prototype.index;
 
