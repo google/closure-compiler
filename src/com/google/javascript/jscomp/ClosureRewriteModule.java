@@ -31,6 +31,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -211,7 +212,7 @@ final class ClosureRewriteModule implements CompilerPass {
     }
 
     private static final ImmutableSet<Token> INLINABLE_NAME_PARENTS =
-        ImmutableSet.of(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
+        Sets.immutableEnumSet(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
 
     static ExportDefinition newDefaultExport(NodeTraversal t, Node rhs) {
       return newNamedExport(t, null, rhs);

@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
@@ -30,8 +31,9 @@ import java.io.Serializable;
  */
 public final class Reference implements StaticRef, Serializable {
 
+  // Favor EnumSet over ImmutableSet for performance
   private static final ImmutableSet<Token> DECLARATION_PARENTS =
-      ImmutableSet.of(
+      Sets.immutableEnumSet(
           Token.VAR,
           Token.LET,
           Token.CONST,

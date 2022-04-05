@@ -34,6 +34,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -858,7 +859,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   // undeclared names assigned in multiple local scopes. The compiler also infers call and new
   // types when the invocation target is such a name.
   private static final ImmutableSet<Token> TOKENS_ALLOWING_NULL_TYPES =
-      ImmutableSet.of(Token.NAME, Token.CALL, Token.NEW);
+      Sets.immutableEnumSet(Token.NAME, Token.CALL, Token.NEW);
 
   private FlowScope initializeEnhancedForScope(Node source, FlowScope output) {
     Node item = source.getFirstChild();
