@@ -687,6 +687,9 @@ TypedArray.prototype[Symbol.iterator] = function() {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -730,6 +733,9 @@ Int8Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -763,6 +769,9 @@ Uint8Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -805,6 +814,9 @@ var CanvasPixelArray;
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -838,6 +850,9 @@ Int16Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -871,6 +886,9 @@ Uint16Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -904,6 +922,9 @@ Int32Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -937,6 +958,9 @@ Uint32Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -970,6 +994,9 @@ Float32Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
  *     length or array or buffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -1003,6 +1030,9 @@ Float64Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
  *     lengthOrArrayOrBuffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
  * @constructor
@@ -1036,6 +1066,9 @@ BigInt64Array.of = function(var_args) {};
 /**
  * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
  *     lengthOrArrayOrBuffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors.
  * @param {number=} byteOffset
  * @param {number=} bufferLength
  * @constructor
