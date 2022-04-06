@@ -21,6 +21,7 @@
 
 delete Array.of;
 delete Array.from;
+delete Array.prototype.at;
 delete Array.prototype.entries;
 delete Array.prototype.keys;
 delete Array.prototype.values;

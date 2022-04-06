@@ -1,6 +1,7 @@
 AggregateError es_2021 es3 es6/promise/aggregateerror
 Array.from es6 es3 es6/array/from
 Array.of es6 es3 es6/array/of
+Array.prototype.at es_next es3 es6/array/at
 Array.prototype.copyWithin es6 es3 es6/array/copywithin
 Array.prototype.entries es6 es3 es6/array/entries
 Array.prototype.fill es6 es3 es6/array/fill

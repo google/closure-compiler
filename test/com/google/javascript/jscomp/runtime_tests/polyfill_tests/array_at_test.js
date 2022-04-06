@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2022 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Array polyfills.
- * @suppress {uselessCode}
- */
-'require es6/array/at';
-'require es6/array/copywithin';
-'require es6/array/entries';
-'require es6/array/fill';
-'require es6/array/find';
-'require es6/array/findindex';
-'require es6/array/flat';
-'require es6/array/flatmap';
-'require es6/array/from';
-'require es6/array/includes';
-'require es6/array/keys';
-'require es6/array/of';
-'require es6/array/values';
+goog.module('jscomp.runtime_tests.polyfill_tests.array_at_test');
+goog.setTestOnly();
+
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testAt() {
+    let arr = [1, 2, 3, 4, 5];
+    assertEquals(2, arr.at(1));
+    assertEquals(4, arr.at(-2));
+    assertEquals(1, arr.at(0));
+    assertUndefined(arr.at(5));
+  },
+});

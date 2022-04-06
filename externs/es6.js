@@ -1587,6 +1587,17 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 
 /**
+ * NOTE: this is an ES2022 extern.
+ * @param {number} index
+ * @return {T}
+ * @this {!IArrayLike<T>|string}
+ * @template T
+ * @nosideeffects
+ * @see https://tc39.github.io/ecma262/#sec-array.prototype.at
+ */
+Array.prototype.at = function(index) {};
+
+/**
  * NOTE: this is an ES2016 (ES7) extern.
  * @param {T} searchElement
  * @param {number=} opt_fromIndex
