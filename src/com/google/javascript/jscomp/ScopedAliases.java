@@ -80,6 +80,8 @@ class ScopedAliases implements CompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
+  private static final String SCOPED_ALIASES_PREFIX = "$jscomp$scope$";
+
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final AliasTransformationHandler transformationHandler;
@@ -868,5 +870,9 @@ class ScopedAliases implements CompilerPass {
         fixTypeNode(child);
       }
     }
+  }
+
+  public static boolean isScopedAliases(String name) {
+    return name.startsWith(SCOPED_ALIASES_PREFIX);
   }
 }

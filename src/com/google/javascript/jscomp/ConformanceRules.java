@@ -1757,7 +1757,8 @@ public final class ConformanceRules {
       return name.equals("$jscomp")
           || name.startsWith("$jscomp$compprop")
           || ClosureRewriteModule.isModuleContent(name)
-          || ClosureRewriteModule.isModuleExport(name);
+          || ClosureRewriteModule.isModuleExport(name)
+          || ScopedAliases.isScopedAliases(name);
     }
   }
 
