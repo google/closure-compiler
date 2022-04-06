@@ -44,7 +44,7 @@ sonatype_artifact_bundle(
 sonatype_artifact_bundle(
     name = "compiler_unshaded_bundle",
     artifact_id = "closure-compiler-unshaded",
-    jar = ":compiler_unshaded_deploy.jar",
+    jar = ":compiler_unshaded",
     javadoc = ":compiler_lib_no_runtime_libs.javadoc",
     pom = "maven/closure-compiler-unshaded.pom.xml",
     sources = ":compiler_lib_no_runtime_libs.sources",
@@ -71,14 +71,24 @@ sonatype_artifact_bundle(
 
 jar_jar(
     name = "compiler_shaded",
-    input_jar = ":compiler_unshaded_deploy.jar",
+    input_jar = ":compiler_uberjar_deploy.jar",
     rules = "rules.jarjar",
 )
 
 java_binary(
-    name = "compiler_unshaded",
+    name = "compiler_uberjar",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
     runtime_deps = [":compiler_lib"],
+)
+
+# Produce an unshaded export jar based on :compiler_lib
+load("@rules_jvm_external//:defs.bzl", "java_export")
+java_export(
+    name = "compiler_unshaded",
+    maven_coordinates = "com.google.javascript:closure-compiler-unshaded:v20220401",
+    runtime_deps = [
+        "//:compiler_lib",
+    ],
 )
 
 java_binary(
@@ -125,43 +135,6 @@ filegroup(
         ],
     ),
 )
-
-#attempt 3
-load("@rules_jvm_external//:defs.bzl", "java_export")
-java_export(
-    name = "exported_compiler_unshaded",
-    maven_coordinates = "com.google.javascript:closure-compiler-unshaded:v20220401",
-    runtime_deps = [
-        "//:compiler_lib",
-    ],
-)
-
-#attempt 2
-#load("@vaticle_bazel_distribution//maven:rules.bzl","assemble_maven")
-#assemble_maven(
-#    name = "compiler_unshaded_maven",
-#    target = '//:compiler_lib'
-#)
-
-#attempt 1
-#load("@google_bazel_common//tools/maven:pom_file.bzl", "pom_file")
-#pom_file(
-#    name = 'compiler_unshaded_pom',
-#    template_file = 'maven/closure-compiler-unshaded.pom.xml',
-#    targets = [
-#        '//:compiler_lib'
-#    ],
-#)
-
-
-# need a magic bazel rule that combines the following into a single jar for deployment to maven central
-# //:compiler_lib for the "runtime libs", apparently js and typedast contents
-# //:compiler_lib_no_runtime_libs for most of the sources
-# then, from compiler_lib_no_runtime_libs, we need these deps (but no others, as they are external):
-#             "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
-#            "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
-#            "//src/com/google/javascript/jscomp/instrumentation/reporter/proto:profile_java_proto",
-#            "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
 
 java_binary(# also a lie, as this is a java_binary, the _deploy.jar contains all deps
     name = "compiler_unshaded_no_runtime_libs",
