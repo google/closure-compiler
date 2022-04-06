@@ -16,32 +16,55 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
- * Using the infrastructure provided by VariableReferencePass, identify variables that are used only
- * once and in a way that is safe to move, and then inline them.
+ * Using the infrastructure provided by {@link ReferenceCollector}, identify variables that are used
+ * in a way that is safe to move, and then inline them.
  *
  * <p>This pass has two "modes." One mode only inlines variables declared as constants, for legacy
  * compiler clients. The second mode inlines any variable that we can provably inline. Note that the
  * second mode is a superset of the first mode. We only support the first mode for
  * backwards-compatibility with compiler clients that don't want --inline_variables.
  *
- * <p>The approach of this pass is similar to {@link CrossChunkCodeMotion}
+ * <p>The basic structure of this class is as follows.
+ *
+ * <ol>
+ *   <li>{@link ReferenceCollector#process} is invoked on the AST with an instance of {@link
+ *       InliningBehavior}
+ *   <li>{@link InliningBehavior#afterExitScope} gets invoked on each scope in DFS order
+ *   <li>It iterates through the variables defined in that scope:
+ *       <ol>
+ *         <li>For each variable a {@link VarExpert} is created. This object is responsible for
+ *             determining:
+ *             <ul>
+ *               <li>Can it be inlined?
+ *               <li>If so, how should the inlining be done?
+ *               <li>If not, is it safe to inline aliases of the variable? (e.g. {@code const b =
+ *                   doSomething();} isn't safe to inline due to side-effects, but it should be OK
+ *                   to inline {@code const aliasB = b;} in many cases.
+ *             </ul>
+ *         <li>The {@link VarExpert} creates an {@link InlineVarAnalysis} object containing its
+ *             decisions and possibly a method to invoke to do the inlining.
+ *         <li>The {@link InlineVarAnalysis} may indicate that a variable is an alias of another
+ *             variable. If so, {@link InliningBehavior} will wait until the aliased variable has
+ *             been analyzed, then pass that analysis back to the {@link VarExpert} for the aliasing
+ *             variable, so it can complete its decision.
+ *       </ol>
+ * </ol>
  */
 class InlineVariables implements CompilerPass {
 
@@ -67,10 +90,7 @@ class InlineVariables implements CompilerPass {
   // Inlines all strings, even if they increase the size of the gzipped binary.
   private final boolean inlineAllStrings;
 
-  InlineVariables(
-      AbstractCompiler compiler,
-      Mode mode,
-      boolean inlineAllStrings) {
+  InlineVariables(AbstractCompiler compiler, Mode mode, boolean inlineAllStrings) {
     this.compiler = compiler;
     this.mode = mode;
     this.inlineAllStrings = inlineAllStrings;
@@ -87,143 +107,186 @@ class InlineVariables implements CompilerPass {
     callback.process(externs, root);
   }
 
-  private static class AliasCandidate {
-    private final Var alias;
-    private final ReferenceCollection refInfo;
+  /** Responsible for analyzing a variable to determine if it can be inlined. */
+  private abstract static class VarExpert {
 
-    AliasCandidate(Var alias, ReferenceCollection refInfo) {
-      this.alias = alias;
-      this.refInfo = refInfo;
+    /** Called to conduct the initial analysis */
+    abstract InlineVarAnalysis analyze();
+
+    /**
+     * Called for a Var that is an alias after the original variable is handled.
+     *
+     * @param aliasedVar The variable that was aliased.
+     * @param aliasedVarAnalysis The analysis results for the aliased variable
+     */
+    InlineVarAnalysis reanalyzeAfterAliasedVar(
+        Var aliasedVar, InlineVarAnalysis aliasedVarAnalysis) {
+      throw new UnsupportedOperationException("not waiting for an aliased variable");
     }
   }
 
+  // Canonical `VarExpert` objects for common cases.
+  private static final VarExpert NO_INLINE_SELF_OR_ALIASES_EXPERT =
+      new VarExpert() {
+        @Override
+        public InlineVarAnalysis analyze() {
+          return NO_INLINE_SELF_OR_ALIASES_ANALYSIS;
+        }
+      };
+  private static final VarExpert NO_INLINE_SELF_ALIASES_OK_EXPERT =
+      new VarExpert() {
+        @Override
+        public InlineVarAnalysis analyze() {
+          return NO_INLINE_SELF_ALIASES_OK_ANALYSIS;
+        }
+      };
+
   /**
-   * Builds up information about nodes in each scope. When exiting the
-   * scope, inspects all variables in that scope, and inlines any
-   * that we can.
+   * The result of analyzing a variable to see if it can be inlined.
+   *
+   * <p>Non-abstract classes should be created by extending this class and overriding the methods
+   * that should return `true` or perform an operation.
+   */
+  private abstract static class InlineVarAnalysis {
+
+    /**
+     * Should we inline this variable?
+     *
+     * <p>Mutually exclusive with `shouldWaitForAliasedVar()`.
+     */
+    public boolean shouldInline() {
+      return false;
+    }
+
+    /**
+     * True if this variable is an alias.
+     *
+     * <p>The caller should wait for the aliased variable to be handled, then call the expert's
+     * `reanalyzeAfterAliasedVar()` method.
+     *
+     * <p>Mutually exclusive with `shouldInline()`
+     */
+    public boolean shouldWaitForAliasedVar() {
+      return false;
+    }
+
+    /**
+     * Gets the aliased variable, if this is an alias.
+     *
+     * @return The `Var` for which this one is an alias
+     * @throws `UnsupportedOperationException` if `shouldWaitForAliasedVar()` is `false`.
+     */
+    public Var getAliasedVar() {
+      throw new UnsupportedOperationException("no aliased Var");
+    }
+
+    /** True if it is safe for aliases of this variable to inline this variable's name. */
+    public boolean isSafeToInlineAliases() {
+      return false;
+    }
+
+    /** Performs the inline operation. */
+    public void performInline() {
+      throw new UnsupportedOperationException("cannot inline");
+    }
+  }
+
+  // Canonical `InlineVarAnalysis` values.
+  // We'll use these instead of creating new objects for each analysis.
+  private static final InlineVarAnalysis NO_INLINE_SELF_OR_ALIASES_ANALYSIS =
+      new InlineVarAnalysis() {};
+  private static final InlineVarAnalysis NO_INLINE_SELF_ALIASES_OK_ANALYSIS =
+      new InlineVarAnalysis() {
+        @Override
+        public boolean isSafeToInlineAliases() {
+          return true;
+        }
+      };
+
+  /**
+   * Builds up information about nodes in each scope. When exiting the scope, inspects all variables
+   * in that scope, and inlines any that we can.
    */
   private class InliningBehavior implements Behavior {
 
     /**
-     * A list of variables that should not be inlined, because their
-     * reference information is out of sync with the state of the AST.
+     * Records the analyses of variables that have already been handled in the current scope.
+     *
+     * <p>This is necessary in order for aliases of those variables to determine whether they may be
+     * inlined.
      */
-    private final Set<Var> staleVars = new HashSet<>();
+    final HashMap<Var, InlineVarAnalysis> currentScopeHandledVarAnalysesMap = new HashMap<>();
 
     /**
-     * Stored possible aliases of variables that never change, with
-     * all the reference info about those variables. Hashed by the NAME
-     * node of the variable being aliased.
+     * Records alias variables that are waiting for the original variables to be handled.
+     *
+     * <p>The value is an object that knows what to do when the original variable is handled.
      */
-    final Map<Node, AliasCandidate> aliasCandidates = new HashMap<>();
+    final LinkedHashMultimap<Var, AliasInlineRetryHandler> varToAliasRetryHandlersMap =
+        LinkedHashMultimap.create();
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-      collectAliasCandidates(t, referenceMap);
       doInlinesForScope(t, referenceMap);
     }
 
     /**
-     * If any of the variables are well-defined and alias other variables,
-     * mark them as aliasing candidates.
+     * For all variables in this scope, see if they are only used once. If it looks safe to do so,
+     * inline them.
      */
-    private void collectAliasCandidates(NodeTraversal t,
-        ReferenceMap referenceMap) {
-      if (mode != Mode.CONSTANTS_ONLY) {
-        for (Var v : t.getScope().getVarIterable()) {
-          ReferenceCollection referenceInfo = referenceMap.getReferences(v);
-
-          // NOTE(nicksantos): Don't handle variables that are never used.
-          // The tests are much easier to write if you don't, and there's
-          // another pass that handles unused variables much more elegantly.
-          if (referenceInfo != null && referenceInfo.references.size() >= 2 &&
-              referenceInfo.isWellDefined() &&
-              referenceInfo.isAssignedOnceInLifetime()) {
-            Reference init = referenceInfo.getInitializingReference();
-            Node value = init.getAssignedValue();
-            if (value != null && value.isName() && !value.getString().equals(v.getName())) {
-              aliasCandidates.put(value, new AliasCandidate(v, referenceInfo));
-            }
+    private void doInlinesForScope(NodeTraversal t, ReferenceMap referenceMap) {
+      // Any variables we completed in an earlier scope are now out of scope,
+      // so we can clear this map.
+      currentScopeHandledVarAnalysesMap.clear();
+      boolean mayBeAParameterModifiedViaArguments =
+          varsInThisScopeMayBeModifiedUsingArguments(t.getScope(), referenceMap);
+      for (Var v : t.getScope().getVarIterable()) {
+        ReferenceCollection referenceInfo = referenceMap.getReferences(v);
+        VarExpert expert = createVarExpert(v, referenceInfo, mayBeAParameterModifiedViaArguments);
+        final InlineVarAnalysis analysis = expert.analyze();
+        if (analysis.shouldWaitForAliasedVar()) {
+          // We need to wait for the aliased variable to be handled.
+          final AliasInlineRetryHandler retryHandler = new AliasInlineRetryHandler(v, expert);
+          final Var aliasedVar = analysis.getAliasedVar();
+          final InlineVarAnalysis aliasedVarAnalysis =
+              currentScopeHandledVarAnalysesMap.get(aliasedVar);
+          if (aliasedVarAnalysis != null) {
+            // We've actually already completed the aliased Var
+            retryHandler.handleAliasedVarCompletion(aliasedVar, aliasedVarAnalysis);
+          } else {
+            // wait for completion of the aliased Var
+            varToAliasRetryHandlersMap.put(aliasedVar, retryHandler);
           }
+        } else {
+          if (analysis.shouldInline()) {
+            analysis.performInline();
+          }
+          // Record the results for aliases we may find later
+          currentScopeHandledVarAnalysesMap.put(v, analysis);
+          // Retry any aliases we saw before handling this Var
+          retryAliases(v, analysis);
         }
       }
     }
 
     /**
-     * For all variables in this scope, see if they are only used once.
-     * If it looks safe to do so, inline them.
+     * Returns true for function scopes (the whole function, not the body), if the function uses
+     * `arguments` in some way other than a few that are known not to change the values of parameter
+     * variables.
+     *
+     * <p>TODO(bradfordcsmith): In strict mode `arguments` is a copy of the parameters, so modifying
+     * it cannot change the parameters. Sloppy mode is now so rare, that we should probably just
+     * ignore the possibility of `arguments` being used to modify a parameter value. We ignore loose
+     * mode issues or simply don't support them ("with" for instance).
      */
-    private void doInlinesForScope(NodeTraversal t, ReferenceMap referenceMap) {
-      boolean maybeModifiedArguments =
-          maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
-      for (Var v : t.getScope().getVarIterable()) {
-        ReferenceCollection referenceInfo = referenceMap.getReferences(v);
-
-        // referenceInfo will be null if we're in constants-only mode
-        // and the variable is not a constant.
-        if (referenceInfo == null
-            || isVarInlineForbidden(v)
-            || valueUsesGoogLocale(referenceInfo)) {
-          // Never try to inline exported variables or variables that
-          // were not collected or variables that have already been inlined.
-          // Also, don't inline values that include `goog$LOCALE`, because that would force us
-          // to mark it as stale and prevent us from inlining it in this pass run.
-          // It's important that we inline `goog$LOCALE` ASAP to reduce the number of optimization
-          // loop iterations required to eliminate unused locale-specific code.
-          // TODO(b/225049652): In general favor inlining outer scope variables first.
-          continue;
-        } else if (isInlineableDeclaredConstant(v, referenceInfo)) {
-          Reference init = referenceInfo.getInitializingReferenceForConstants();
-          Node value = init.getAssignedValue();
-          inlineWellDefinedVariable(v, value, referenceInfo.references);
-          staleVars.add(v);
-        } else if (mode == Mode.CONSTANTS_ONLY) {
-          // If we're in constants-only mode, don't run more aggressive
-          // inlining heuristics. See InlineConstantsTest.
-          continue;
-        } else {
-          inlineNonConstants(v, referenceInfo, maybeModifiedArguments);
-        }
-      }
-    }
-
-    private boolean valueUsesGoogLocale(ReferenceCollection referenceInfo) {
-      // getInitializingReferenceForConstants() is the most robust way of getting the initializing
-      // reference.
-      Reference initRef = referenceInfo.getInitializingReferenceForConstants();
-      if (initRef != null) {
-        Node value = initRef.getAssignedValue();
-        return value != null && containsGoogLocale(value);
-      }
-      return false;
-    }
-
-    private boolean containsGoogLocale(Node value) {
-      if (value.isName()) {
-        return isGoogLocaleNameString(value.getString());
-      } else {
-        for (Node c = value.getFirstChild(); c != null; c = c.getNext()) {
-          if (containsGoogLocale(c)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
-
-    private boolean maybeEscapedOrModifiedArguments(Scope scope, ReferenceMap referenceMap) {
+    private boolean varsInThisScopeMayBeModifiedUsingArguments(
+        Scope scope, ReferenceMap referenceMap) {
       if (scope.isFunctionScope() && !scope.getRootNode().isArrowFunction()) {
         Var arguments = scope.getArgumentsVar();
         ReferenceCollection refs = referenceMap.getReferences(arguments);
         if (refs != null && !refs.references.isEmpty()) {
           for (Reference ref : refs.references) {
-            Node refNode = ref.getNode();
-            Node refParent = ref.getParent();
-            // Any reference that is not a read of the arguments property
-            // consider a escape of the arguments object.
-            if (!(NodeUtil.isNormalGet(refParent)
-                && refNode == ref.getParent().getFirstChild()
-                && !NodeUtil.isLValue(refParent))) {
+            if (!isSafeUseOfArguments(ref.getNode())) {
               return true;
             }
           }
@@ -232,118 +295,486 @@ class InlineVariables implements CompilerPass {
       return false;
     }
 
-    private boolean isGoogLocaleVar(Var v) {
-      return v != null && isGoogLocaleNameString(v.getName());
+    private void retryAliases(Var aliasedVar, InlineVarAnalysis aliasedVarAnalysis) {
+      for (AliasInlineRetryHandler aliasInlineRetryHandler :
+          varToAliasRetryHandlersMap.removeAll(aliasedVar)) {
+        aliasInlineRetryHandler.handleAliasedVarCompletion(aliasedVar, aliasedVarAnalysis);
+      }
     }
 
-    private boolean isGoogLocaleNameString(String s) {
-      return s.equals("goog$LOCALE");
+    /** Retries inlining an alias variable after the original variable has been dealt with. */
+    private class AliasInlineRetryHandler {
+      private final Var v;
+      private final VarExpert expert;
+
+      AliasInlineRetryHandler(Var v, VarExpert expert) {
+        this.v = v;
+        this.expert = expert;
+      }
+
+      void handleAliasedVarCompletion(Var aliasedVar, InlineVarAnalysis aliasedVarAnalyis) {
+        InlineVarAnalysis newAnalysis =
+            expert.reanalyzeAfterAliasedVar(aliasedVar, aliasedVarAnalyis);
+        checkState(
+            !newAnalysis.shouldWaitForAliasedVar(), "expert for %s asked to wait a second time", v);
+        if (newAnalysis.shouldInline()) {
+          newAnalysis.performInline();
+        }
+        currentScopeHandledVarAnalysesMap.put(v, newAnalysis);
+        retryAliases(v, newAnalysis);
+      }
     }
 
-    private void inlineNonConstants(
-        Var v, ReferenceCollection referenceInfo,
-        boolean maybeModifiedArguments) {
-      int refCount = referenceInfo.references.size();
-      Reference declaration = referenceInfo.references.get(0);
-      Reference init = referenceInfo.getInitializingReference();
-      int firstRefAfterInit = (declaration == init) ? 2 : 3;
-      if (refCount > 1 &&
-          isImmutableAndWellDefinedVariable(v, referenceInfo)) {
-        // if the variable is referenced more than once, we can only
-        // inline it if it's immutable and never defined before referenced.
-        Node value;
-        if (init != null) {
-          value = init.getAssignedValue();
+    /**
+     * Knows how to analyze a variable to determine whether it should be inlined, how to do the
+     * inlining, and whether it's OK to inline aliases of the variable.
+     */
+    private class StandardVarExpert extends VarExpert {
+      private final Var v;
+      private final ReferenceCollection referenceInfo;
+      private final Reference declaration;
+      private final boolean isDeclaredOrInferredConstant;
+      private final boolean mayBeAParameterModifiedViaArguments;
+
+      StandardVarExpert(VarExpertInitData initData) {
+        this.v = initData.v;
+        this.referenceInfo = initData.referenceInfo;
+        this.declaration = initData.referenceInfo.references.get(0);
+        this.isDeclaredOrInferredConstant = initData.isDeclaredOrInferredConstant;
+        this.mayBeAParameterModifiedViaArguments = initData.mayBeAParameterModifiedViaArguments;
+      }
+
+      private final InitiallyUnknown<Boolean> isNeverAssigned = new InitiallyUnknown<>();
+
+      private boolean isNeverAssigned() {
+        if (isNeverAssigned.isKnown()) {
+          return isNeverAssigned.getKnownValue();
+        } else if (initializationReference.isKnownNotNull()
+            || isAssignedOnceInLifetime.isKnownToBe(true)) {
+          return isNeverAssigned.setKnownValueOnce(false);
         } else {
-          // Create a new node for variable that is never initialized.
-          Node srcLocation = declaration.getNode();
-          value = NodeUtil.newUndefinedNode(srcLocation);
-        }
-        checkNotNull(value);
-        inlineWellDefinedVariable(v, value, referenceInfo.references);
-        staleVars.add(v);
-      } else if (refCount == firstRefAfterInit) {
-        // The variable likely only read once, try some more
-        // complex inlining heuristics.
-        Reference reference = referenceInfo.references.get(firstRefAfterInit - 1);
-        if (canInline(declaration, init, reference)) {
-          inline(v, declaration, init, reference);
-          staleVars.add(v);
-        }
-      } else if (declaration != init && refCount == 2) {
-        if (isValidDeclaration(declaration) && isValidInitialization(init)) {
-          // The only reference is the initialization, remove the assignment and
-          // the variable declaration.
-          Node value = init.getAssignedValue();
-          checkNotNull(value);
-          inlineWellDefinedVariable(v, value, referenceInfo.references);
-          staleVars.add(v);
+          return isNeverAssigned.setKnownValueOnce(referenceInfo.isNeverAssigned());
         }
       }
 
-      // If this variable was not inlined normally, check if we can
-      // inline an alias of it. (If the variable was inlined, then the
-      // reference data is out of sync. We're better off just waiting for
-      // the next pass.)
-      if (!maybeModifiedArguments
-          && !staleVars.contains(v)
-          && referenceInfo.isWellDefined()
-          && referenceInfo.isAssignedOnceInLifetime()) {
-        List<Reference> refs = referenceInfo.references;
-        for (int i = 1 /* start from a read */; i < refs.size(); i++) {
-          Node nameNode = refs.get(i).getNode();
+      private final InitiallyUnknown<Boolean> isWellDefined = new InitiallyUnknown<>();
 
-          AliasCandidate candidate = aliasCandidates.get(nameNode);
-          if (candidate == null
-              || staleVars.contains(candidate.alias)
-              || isVarInlineForbidden(candidate.alias)) {
-            continue;
+      private boolean isWellDefined() {
+        if (isWellDefined.isKnown()) {
+          return isWellDefined.getKnownValue();
+        } else {
+          return isWellDefined.setKnownValueOnce(referenceInfo.isWellDefined());
+        }
+      }
+
+      private final InitiallyUnknown<Boolean> isAssignedOnceInLifetime = new InitiallyUnknown<>();
+
+      private boolean isAssignedOnceInLifetime() {
+        if (isAssignedOnceInLifetime.isKnown()) {
+          return isAssignedOnceInLifetime.getKnownValue();
+        } else {
+          return isAssignedOnceInLifetime.setKnownValueOnce(
+              referenceInfo.isAssignedOnceInLifetime());
+        }
+      }
+
+      private final InitiallyUnknown<Boolean> isWellDefinedAssignedOnce = new InitiallyUnknown<>();
+
+      /**
+       * A more efficient way to ask if the variable is both well defined and assigned exactly once
+       * in its lifetime.
+       */
+      private boolean isWellDefinedAssignedOnce() {
+        if (isWellDefinedAssignedOnce.isKnown()) {
+          return isWellDefinedAssignedOnce.getKnownValue();
+        } else {
+          // Check first to see if either is already known to be false before calculating anything.
+          return isWellDefinedAssignedOnce.setKnownValueOnce(
+              !isWellDefined.isKnownToBe(false)
+                  && !isAssignedOnceInLifetime.isKnownToBe(false)
+                  // isWellDefined is generally less expensive to calculate
+                  && isWellDefined()
+                  && isAssignedOnceInLifetime());
+        }
+      }
+
+      private final InitiallyUnknown<Reference> initializationReference = new InitiallyUnknown<>();
+
+      private Reference getInitialization() {
+        if (initializationReference.isKnown()) {
+          return initializationReference.getKnownValue();
+        } else {
+          final Reference initRef =
+              isDeclaredOrInferredConstant
+                  ? referenceInfo.getInitializingReferenceForConstants()
+                  : referenceInfo.getInitializingReference();
+          return initializationReference.setKnownValueOnce(initRef);
+        }
+      }
+
+      private boolean hasValidDeclaration() {
+        return isValidDeclaration(declaration);
+      }
+
+      private boolean hasValidInitialization() {
+        return isValidInitialization(getInitialization());
+      }
+
+      private final InitiallyUnknown<Boolean> allReferencesAreValid = new InitiallyUnknown<>();
+
+      private boolean allReferencesAreValid() {
+        if (allReferencesAreValid.isKnown()) {
+          return allReferencesAreValid.getKnownValue();
+        } else {
+          final boolean hasValidDeclaration = hasValidDeclaration();
+          final boolean hasValidInitialization = hasValidInitialization();
+          final boolean neverAssigned = isNeverAssigned();
+          if (hasValidDeclaration && (hasValidInitialization || neverAssigned)) {
+            Reference initialization = getInitialization();
+            for (Reference ref : referenceInfo.references) {
+              if (ref != declaration && ref != initialization && !isValidReference(ref)) {
+                return allReferencesAreValid.setKnownValueOnce(false);
+              }
+            }
+            return allReferencesAreValid.setKnownValueOnce(true);
+          }
+          return allReferencesAreValid.setKnownValueOnce(false);
+        }
+      }
+
+      @Override
+      public InlineVarAnalysis analyze() {
+        if (hasNoInlineAnnotation(v)) {
+          return getNegativeInlineVarAnalysis();
+        }
+        final Reference initialization = getInitialization();
+        final Node initValue = initialization == null ? null : initialization.getAssignedValue();
+        final InitialValueAnalysis initialValueAnalysis = new InitialValueAnalysis(initValue);
+
+        if (isDeclaredOrInferredConstant
+            && initialValueAnalysis.isImmutableValueWorthInlining()
+            // isAssignedOnceInLifetime() is much more expensive than the other checks
+            && isAssignedOnceInLifetime()) {
+          return createInlineWellDefinedVarAnalysis(initValue);
+        }
+
+        if (mode == Mode.CONSTANTS_ONLY) {
+          // If we're in constants-only mode, don't run more aggressive
+          // inlining heuristics. See InlineConstantsTest.
+          return getNegativeInlineVarAnalysis();
+        }
+
+        if (initialValueAnalysis.isAlias()) {
+          return new VarIsAliasAnalysis(initialValueAnalysis.getAliasedVar());
+        }
+
+        return analyzeWithInitialValue(initialization, initValue, initialValueAnalysis);
+      }
+
+      private InlineVarAnalysis analyzeWithInitialValue(
+          Reference initialization, Node initValue, InitialValueAnalysis initialValueAnalysis) {
+        final int refCount = referenceInfo.references.size();
+
+        // TODO(bradfordcsmith): We could remove the `refCount > 1` here, but:
+        //  1. That will require some additional logic to handle stuff like named function
+        //     expressions and avoiding the removal of side-effects.
+        //  2. RemoveUnusedCode will remove those cases anyway.
+        //  3. The unit tests will have to be more verbose to make sure stuff we don't want to be
+        //  removed is used.
+        if (refCount > 1 && allReferencesAreValid()) {
+          if (referenceInfo.isNeverAssigned()) {
+            return new PositiveInlineVarAnalysis(
+                () -> {
+                  // Create a new `undefined` node to inline for a variable that is never
+                  // initialized.
+                  Node srcLocation = declaration.getNode();
+                  final Node undefinedNode = NodeUtil.newUndefinedNode(srcLocation);
+                  inlineWellDefinedVariable(v, undefinedNode, referenceInfo.references);
+                });
+          }
+          if (isWellDefined()
+              && (initialValueAnalysis.isImmutableValueWorthInlining()
+                  || (initValue.isThis() && !referenceInfo.isEscaped()))) {
+            // if the variable is referenced more than once, we can only
+            // inline it if it's immutable and never defined before referenced.
+            return createInlineWellDefinedVarAnalysis(initValue);
           }
 
-          Reference aliasInit = candidate.refInfo.getInitializingReference();
-          Node value = checkNotNull(aliasInit.getAssignedValue());
-          inlineWellDefinedVariable(candidate.alias, value, candidate.refInfo.references);
-          staleVars.add(candidate.alias);
+          final int firstReadRefIndex = (declaration == initialization ? 1 : 2);
+          final int numReadRefs = refCount - firstReadRefIndex;
+          if (numReadRefs == 0) {
+            // The only reference is the initialization.
+            // Remove the assignment and the variable declaration.
+            return createInlineWellDefinedVarAnalysis(initValue);
+          }
+
+          if (numReadRefs == 1) {
+            // The variable is likely only read once, so we can try some more complex inlining
+            // heuristics.
+            final Reference singleReadReference = referenceInfo.references.get(firstReadRefIndex);
+            if (canInline(declaration, initialization, singleReadReference, initValue)) {
+              // A custom inline method is needed for this case.
+              return new PositiveInlineVarAnalysis(
+                  () -> inline(declaration, initialization, singleReadReference));
+            }
+          }
+        }
+
+        return getNegativeInlineVarAnalysis();
+      }
+
+      private InlineVarAnalysis getNegativeInlineVarAnalysis() {
+
+        // If we already know whether it is safe to inline aliases of this variable,
+        // use canonical analysis values to save on memory space.
+        if (mayBeAParameterModifiedViaArguments
+            || mode == Mode.CONSTANTS_ONLY
+            || isWellDefinedAssignedOnce.isKnownToBe(false)) {
+          return NO_INLINE_SELF_OR_ALIASES_ANALYSIS;
+        }
+        if (isWellDefinedAssignedOnce.isKnownToBe(true)) {
+          return NO_INLINE_SELF_ALIASES_OK_ANALYSIS;
+        }
+
+        // Delay calculating safety until we're actually asked.
+        return new InlineVarAnalysis() {
+          @Override
+          public boolean isSafeToInlineAliases() {
+            return isWellDefinedAssignedOnce();
+          }
+        };
+      }
+
+      private PositiveInlineVarAnalysis createInlineWellDefinedVarAnalysis(Node initValue) {
+        return new PositiveInlineVarAnalysis(
+            () -> inlineWellDefinedVariable(v, initValue, referenceInfo.references));
+      }
+
+      @Override
+      public InlineVarAnalysis reanalyzeAfterAliasedVar(
+          Var aliasedVar, InlineVarAnalysis aliasedVarAnalysis) {
+        final Reference initialization = getInitialization();
+        final Node initValue = initialization == null ? null : initialization.getAssignedValue();
+        final InitialValueAnalysis initialValueAnalysis = new InitialValueAnalysis(initValue);
+
+        if (isDeclaredOrInferredConstant
+            && initialValueAnalysis.isImmutableValueWorthInlining()
+            // isAssignedOnceInLifetime() is much more expensive than the other checks
+            && isAssignedOnceInLifetime()) {
+          return createInlineWellDefinedVarAnalysis(initValue);
+        }
+
+        if (initialValueAnalysis.isAlias()
+            && aliasedVarAnalysis.isSafeToInlineAliases()
+            && isWellDefinedAssignedOnce()) {
+          // The variable we aliased couldn't be inlined itself, or it was an alias for another
+          // variable that got inlined in its place.
+          // However, it is safe to inline the name assigned to this variable now.
+          return createInlineWellDefinedVarAnalysis(initValue);
+        }
+        return analyzeWithInitialValue(initialization, initValue, initialValueAnalysis);
+      }
+
+      /** Information about a value used to initialize a variable. */
+      private class InitialValueAnalysis {
+        private final Node value;
+
+        InitialValueAnalysis(Node value) {
+          this.value = value;
+        }
+
+        private final InitiallyUnknown<Boolean> isImmutableValueWorthInlining =
+            new InitiallyUnknown<>();
+
+        boolean isImmutableValueWorthInlining() {
+          if (isImmutableValueWorthInlining.isKnown()) {
+            return isImmutableValueWorthInlining.getKnownValue();
+          } else {
+            return isImmutableValueWorthInlining.setKnownValueOnce(
+                value != null
+                    && NodeUtil.isImmutableValue(value)
+                    && (!value.isStringLit()
+                        || isStringWorthInlining(v, referenceInfo.references)));
+          }
+        }
+
+        private final InitiallyUnknown<Var> aliasedVar = new InitiallyUnknown<>();
+
+        boolean isAlias() {
+          return getAliasedVar() != null;
+        }
+
+        Var getAliasedVar() {
+          if (aliasedVar.isKnown()) {
+            return aliasedVar.getKnownValue();
+          } else {
+            if (value != null && value.isName()) {
+              String aliasedName = value.getString();
+              // Never consider this variable to be an alias of itself.
+              return aliasedVar.setKnownValueOnce(
+                  aliasedName.equals(v.getName()) ? null : v.getScope().getVar(aliasedName));
+            }
+            return aliasedVar.setKnownValueOnce(null);
+          }
         }
       }
     }
 
-    /**
-     * If there are any variable references in the given node tree, skiplist them to prevent the
-     * pass from trying to inline the variable.
-     */
-    private void recordStaleVarReferencesInTree(Node root, Scope scope) {
-      for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
-        recordStaleVarReferencesInTree(c, scope);
+    /** Indicates that the analyzed variable may be inlined. */
+    private class PositiveInlineVarAnalysis extends InlineVarAnalysis {
+      private final Runnable inliner;
+
+      private PositiveInlineVarAnalysis(Runnable inliner) {
+        this.inliner = inliner;
       }
 
-      if (root.isName()) {
-        staleVars.add(scope.getVar(root.getString()));
+      @Override
+      public boolean shouldInline() {
+        return true;
+      }
+
+      @Override
+      public void performInline() {
+        inliner.run();
+      }
+
+      @Override
+      public boolean isSafeToInlineAliases() {
+        // If we've inlined this variable, then any aliases of it should definitely try to
+        // inline themselves with the new value that replaced this variable.
+        // If for some reason the logic that requested this analysis decided not to actually
+        // do the inlining, it's still safe to inline the name of this variable.
+        // If it weren't, we wouldn't have said it was OK to inline its value.
+        return true;
       }
     }
 
     /**
-     * Whether the given variable is forbidden from being inlined.
+     * Indicates that the analyzed variable is an alias and the decision about whether to inline it
+     * must wait until inlining has been done (or not) for the original value it aliases.
      */
-    private boolean isVarInlineForbidden(Var var) {
-      // A variable may not be inlined if:
-      // 1) The variable is exported,
-      // 2) A reference to the variable has been inlined. We're downstream
-      //    of the mechanism that creates variable references, so we don't
-      //    have a good way to update the reference. Just punt on it.
-      // 3) Don't inline the special property rename functions.
-      return var.isExtern()
-          || compiler.getCodingConvention().isExported(var.getName(), /* local */ var.isLocal())
-          || compiler.getCodingConvention().isPropertyRenameFunction(var.getNameNode())
-          || staleVars.contains(var)
-          || hasNoInlineAnnotation(var);
+    private class VarIsAliasAnalysis extends InlineVarAnalysis {
+      private final Var aliasedVar;
+
+      private VarIsAliasAnalysis(Var aliasedVar) {
+        this.aliasedVar = aliasedVar;
+      }
+
+      @Override
+      public boolean shouldWaitForAliasedVar() {
+        return true;
+      }
+
+      @Override
+      public Var getAliasedVar() {
+        return aliasedVar;
+      }
+
+      @Override
+      public boolean isSafeToInlineAliases() {
+        throw new UnsupportedOperationException("analysis is incomplete");
+      }
+    }
+
+    /** Creates a VarExpert object appropriate for the given variable. */
+    private VarExpert createVarExpert(
+        Var v, ReferenceCollection referenceInfo, boolean mayBeAParameterModifiedViaArguments) {
+      if (referenceInfo == null) {
+        // If we couldn't collect any reference info, don't try to inline and assume it's unsafe
+        // to inline aliases of this variable, too.
+        return NO_INLINE_SELF_OR_ALIASES_EXPERT;
+      }
+
+      final boolean isDeclaredOrInferredConstant = v.isDeclaredOrInferredConst();
+      if (!isDeclaredOrInferredConstant && mode == Mode.CONSTANTS_ONLY) {
+        // If we're only inlining constants, then we shouldn't inline an alias.
+        return NO_INLINE_SELF_OR_ALIASES_EXPERT;
+      }
+
+      if (v.isExtern()) {
+        // TODO(bradfordcsmith): Extern variables are generally unsafe to inline.
+        return NO_INLINE_SELF_OR_ALIASES_EXPERT;
+      }
+
+      if (compiler.getCodingConvention().isExported(v.getName(), /* local */ v.isLocal())) {
+        // If the variable is exported, it might be assigned a new value by code we cannot see,
+        // so aliases to it are creating snapshots of its state.
+        // We cannot inline this variable or its aliases.
+        return NO_INLINE_SELF_OR_ALIASES_EXPERT;
+      }
+
+      if (compiler.getCodingConvention().isPropertyRenameFunction(v.getNameNode())) {
+        // It's not terribly likely that anything creates an alias of our special property rename
+        // function, but its value never changes, so it should be safe to inline aliases to it.
+        return NO_INLINE_SELF_ALIASES_OK_EXPERT;
+      }
+
+      final VarExpertInitData initData = new VarExpertInitData();
+      initData.v = v;
+      initData.referenceInfo = referenceInfo;
+      initData.isDeclaredOrInferredConstant = isDeclaredOrInferredConstant;
+      initData.mayBeAParameterModifiedViaArguments = mayBeAParameterModifiedViaArguments;
+
+      return new StandardVarExpert(initData);
+    }
+
+    /** Used to initialize fields in a `StandardVarExpert` object. */
+    private class VarExpertInitData {
+
+      Var v;
+      ReferenceCollection referenceInfo;
+      boolean isDeclaredOrInferredConstant;
+      boolean mayBeAParameterModifiedViaArguments;
     }
 
     /**
-     * Do the actual work of inlining a single declaration into a single
-     * reference.
+     * True if `argumentsNode` is a use of `arguments` we know won't modify any parameter values.
+     *
+     * <p>In sloppy mode it is possible to change the value of a function parameter by assigning to
+     * the corresponding entry in {@code arguments}.
+     *
+     * <p>This method checks for just a few common uses that are known to be safe. However, we may
+     * soon remove this check entirely because unsafe uses aren't worth worrying about. See the
+     * comment on {@link #varsInThisScopeMayBeModifiedUsingArguments}.
      */
-    private void inline(Var v, Reference decl, Reference init, Reference ref) {
+    boolean isSafeUseOfArguments(Node argumentsNode) {
+      checkArgument(argumentsNode.matchesName("arguments"));
+      // `arguments[i]` that is only read, not assigned
+      // or `fn.apply(thisArg, arguments)`
+      return isTargetOfPropertyRead(argumentsNode)
+          || isSecondArgumentToDotApplyMethod(argumentsNode);
+    }
+
+    /**
+     * True if `n` is the object in a property access expression (`obj[prop]` or `obj.prop` or an
+     * optional chain version of one of those) and the property is only being read, not modified.
+     */
+    boolean isTargetOfPropertyRead(Node n) {
+      Node getNode = n.getParent();
+      return n.isFirstChildOf(getNode)
+          && NodeUtil.isNormalOrOptChainGet(getNode)
+          && !NodeUtil.isLValue(getNode);
+    }
+
+    /** True if `n` is being used in a call like this: `fn.apply(thisArg, n)`. */
+    boolean isSecondArgumentToDotApplyMethod(Node n) {
+      Node callNode = n.getParent();
+      if (NodeUtil.isNormalOrOptChainCall(callNode)) {
+        Node calleeNode = callNode.getFirstChild();
+        if (NodeUtil.isNormalOrOptChainGetProp(calleeNode)) {
+          if (calleeNode.getString().equals("apply")) {
+            Node thisArgNode = calleeNode.getNext();
+            if (thisArgNode != null) {
+              return thisArgNode.getNext() == n;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    /** Do the actual work of inlining a single declaration into a single reference. */
+    private void inline(Reference decl, Reference init, Reference ref) {
       Node value = init.getAssignedValue();
       checkState(value != null);
       // Check for function declarations before the value is moved in the AST.
@@ -354,7 +785,7 @@ class InlineVariables implements CompilerPass {
         compiler.reportChangeToChangeScope(value);
         compiler.reportChangeToEnclosingScope(value.getParent());
       }
-      inlineValue(v.getScope(), ref.getNode(), value.detach());
+      inlineValue(ref.getNode(), value.detach());
       if (decl != init) {
         Node expressRoot = init.getGrandparent();
         checkState(expressRoot.isExprResult());
@@ -368,7 +799,6 @@ class InlineVariables implements CompilerPass {
 
     /** Inline an immutable variable into all of its references. */
     private void inlineWellDefinedVariable(Var v, Node value, List<Reference> refSet) {
-      Scope scope = v.getScope();
       for (Reference r : refSet) {
         if (r.getNode() == v.getNameNode()) {
           removeDeclaration(r);
@@ -379,18 +809,16 @@ class InlineVariables implements CompilerPass {
            * <p>Replace the entire assignment with just the value, and use the original value node
            * in case it contains references to variables that still require inlining.
            */
-          inlineValue(scope, r.getParent(), value.detach());
+          inlineValue(r.getParent(), value.detach());
         } else {
           Node clonedValue = value.cloneTree();
           NodeUtil.markNewScopesChanged(clonedValue, compiler);
-          inlineValue(scope, r.getNode(), clonedValue);
+          inlineValue(r.getNode(), clonedValue);
         }
       }
     }
 
-    /**
-     * Remove the given VAR declaration.
-     */
+    /** Remove the given VAR declaration. */
     private void removeDeclaration(Reference decl) {
       Node varNode = decl.getParent();
       checkState(NodeUtil.isNameDeclaration(varNode), varNode);
@@ -404,7 +832,7 @@ class InlineVariables implements CompilerPass {
       }
     }
 
-    private void inlineValue(Scope scope, Node toRemove, Node toInsert) {
+    private void inlineValue(Node toRemove, Node toInsert) {
       compiler.reportChangeToEnclosingScope(toRemove);
 
       // Help type-based optimizations by propagating more specific types from type assertions
@@ -414,51 +842,10 @@ class InlineVariables implements CompilerPass {
       }
       toRemove.replaceWith(toInsert);
       NodeUtil.markFunctionsDeleted(toRemove, compiler);
-
-      recordStaleVarReferencesInTree(toInsert, scope);
     }
 
-    /** Determines whether the given variable is declared as a constant and may be inlined. */
-    private boolean isInlineableDeclaredConstant(Var var, ReferenceCollection refInfo) {
-      if (!Mode.CONSTANTS_ONLY.varPredicate.apply(var)) {
-        return false;
-      }
-
-      if (!refInfo.isAssignedOnceInLifetime()) {
-        return false;
-      }
-
-      Reference init = refInfo.getInitializingReferenceForConstants();
-      if (init == null) {
-        return false;
-      }
-
-      Node value = init.getAssignedValue();
-      if (value == null) {
-        // This constant is either externally defined or initialized indirectly
-        // (e.g. in an function expression used to hide
-        // temporary variables), so the constant is ineligible for inlining.
-        return false;
-      }
-
-      // Is the constant's value immutable?
-      if (!NodeUtil.isImmutableValue(value)) {
-        return false;
-      }
-
-      // Determine if we should really inline a String or not.
-      return !value.isStringLit() || isStringWorthInlining(var, refInfo.references);
-    }
-
-    /**
-     * Compute whether the given string is worth inlining.
-     */
+    /** Compute whether the given string is worth inlining. */
     private boolean isStringWorthInlining(Var var, List<Reference> refs) {
-      if (isGoogLocaleVar(var)) {
-        // Once we have a literal string value for it, we always want to inline `goog.LOCALE`,
-        // because doing so lets us rip out lots of unused locale-specific code.
-        return true;
-      }
       if (!inlineAllStrings && !var.isDefine()) {
         int len = var.getInitialValue().getString().length() + "''".length();
 
@@ -466,8 +853,7 @@ class InlineVariables implements CompilerPass {
         // The 4 bytes per reference is just a heuristic:
         // 2 bytes per var name plus maybe 2 bytes if we don't inline, e.g.
         // in the case of "foo " + CONST + " bar"
-        int noInlineBytes = "var xx=;".length() + len +
-                            4 * (refs.size() - 1);
+        int noInlineBytes = "var xx=;".length() + len + 4 * (refs.size() - 1);
 
         // if inlined:
         // I'm going to assume that half of the quotes will be eliminated
@@ -484,24 +870,15 @@ class InlineVariables implements CompilerPass {
     }
 
     /**
-     * @return true if the provided reference and declaration can be safely
-     *         inlined according to our criteria
+     * @return true if the provided reference and declaration can be safely inlined according to our
+     *     criteria
      */
     private boolean canInline(
-        Reference declaration,
-        Reference initialization,
-        Reference reference) {
-      if (!isValidDeclaration(declaration)
-          || !isValidInitialization(initialization)
-          || !isValidReference(reference)) {
-        return false;
-      }
-
+        Reference declaration, Reference initialization, Reference reference, Node initValue) {
       // If the value is read more than once, skip it.
       // VAR declarations and EXPR_RESULT don't need the value, but other
       // ASSIGN expressions parents do.
-      if (declaration != initialization &&
-          !initialization.getGrandparent().isExprResult()) {
+      if (declaration != initialization && !initialization.getGrandparent().isExprResult()) {
         return false;
       }
 
@@ -520,22 +897,20 @@ class InlineVariables implements CompilerPass {
       //   var a = b.c;
       //   f(a)
       // is OK.
-      Node value = initialization.getAssignedValue();
-      checkState(value != null);
-      if (value.isGetProp()
+      checkState(initValue != null);
+      if (initValue.isGetProp()
           && reference.getParent().isCall()
           && reference.getParent().getFirstChild() == reference.getNode()) {
         return false;
       }
 
-      if (value.isFunction()) {
+      if (initValue.isFunction()) {
         Node callNode = reference.getParent();
         if (reference.getParent().isCall()) {
           CodingConvention convention = compiler.getCodingConvention();
           // Bug 2388531: Don't inline subclass definitions into class defining
           // calls as this confused class removing logic.
-          SubclassRelationship relationship =
-              convention.getClassesDefinedByCall(callNode);
+          SubclassRelationship relationship = convention.getClassesDefinedByCall(callNode);
           if (relationship != null) {
             return false;
           }
@@ -553,27 +928,22 @@ class InlineVariables implements CompilerPass {
         return false;
       }
 
-      return canMoveAggressively(value) || canMoveModerately(initialization, reference);
+      return canMoveAggressively(initValue) || canMoveModerately(initialization, reference);
     }
 
-    /**
-     * If the value is a literal, we can cross more boundaries to inline it.
-     */
+    /** If the value is a literal, we can cross more boundaries to inline it. */
     private boolean canMoveAggressively(Node value) {
       // Function expressions and other mutable objects can move within
       // the same basic block.
-      return NodeUtil.isLiteralValue(value, true)
-          || value.isFunction();
+      return NodeUtil.isLiteralValue(value, true) || value.isFunction();
     }
 
     /**
-     * If the value of a variable is not constant, then it may read or modify
-     * state. Therefore it cannot be moved past anything else that may modify
-     * the value being read or read values that are modified.
+     * If the value of a variable is not constant, then it may read or modify state. Therefore it
+     * cannot be moved past anything else that may modify the value being read or read values that
+     * are modified.
      */
-    private boolean canMoveModerately(
-        Reference initialization,
-        Reference reference) {
+    private boolean canMoveModerately(Reference initialization, Reference reference) {
       // Check if declaration can be inlined without passing
       // any side-effect causing nodes.
       Iterator<Node> it;
@@ -594,8 +964,8 @@ class InlineVariables implements CompilerPass {
                 initialization.getGrandparent(), // EXPR_RESULT
                 initialization.getGrandparent().getParent()); // EXPR container
       } else {
-        throw new IllegalStateException("Unexpected initialization parent\n"
-            + initialization.getParent().toStringTree());
+        throw new IllegalStateException(
+            "Unexpected initialization parent\n" + initialization.getParent().toStringTree());
       }
       Node targetName = reference.getNode();
       while (it.hasNext()) {
@@ -649,63 +1019,43 @@ class InlineVariables implements CompilerPass {
     private boolean isValidReference(Reference reference) {
       return !reference.isDeclaration() && !reference.isLvalue();
     }
-
-    /**
-     * Determines whether the reference collection describes a variable that
-     * is initialized to an immutable value, never modified, and defined before
-     * every reference.
-     */
-    private boolean isImmutableAndWellDefinedVariable(Var v,
-        ReferenceCollection refInfo) {
-      List<Reference> refSet = refInfo.references;
-      int startingReadRef = 1;
-      Reference refDecl = refSet.get(0);
-      if (!isValidDeclaration(refDecl)) {
-        return false;
-      }
-
-      boolean isNeverAssigned = refInfo.isNeverAssigned();
-      // For values that are never assigned, only the references need to be
-      // checked.
-      if (!isNeverAssigned) {
-        Reference refInit = refInfo.getInitializingReference();
-        if (!isValidInitialization(refInit)) {
-          return false;
-        }
-
-        if (refDecl != refInit) {
-          checkState(refInit == refSet.get(1));
-          startingReadRef = 2;
-        }
-
-        if (!refInfo.isWellDefined()) {
-          return false;
-        }
-
-        Node value = refInit.getAssignedValue();
-        checkNotNull(value);
-
-        boolean isImmutableValueWorthInlining =
-            NodeUtil.isImmutableValue(value)
-                && (!value.isStringLit() || isStringWorthInlining(v, refInfo.references));
-        boolean isInlinableThisAlias = value.isThis() && !refInfo.isEscaped();
-        if (!isImmutableValueWorthInlining && !isInlinableThisAlias) {
-          return false;
-        }
-      }
-
-      for (int i = startingReadRef; i < refSet.size(); i++) {
-        Reference ref = refSet.get(i);
-        if (!isValidReference(ref)) {
-          return false;
-        }
-      }
-      return true;
-    }
   }
 
   private static boolean hasNoInlineAnnotation(Var var) {
     JSDocInfo jsDocInfo = var.getJSDocInfo();
     return jsDocInfo != null && jsDocInfo.isNoInline();
+  }
+
+  private static class InitiallyUnknown<T> {
+    protected boolean isKnown = false;
+    @Nullable protected T value = null;
+
+    boolean isKnown() {
+      return isKnown;
+    }
+
+    boolean isKnownNotNull() {
+      return isKnownNotToBe(null);
+    }
+
+    boolean isKnownToBe(T other) {
+      return isKnown && value == other;
+    }
+
+    boolean isKnownNotToBe(T other) {
+      return isKnown && value != other;
+    }
+
+    T setKnownValueOnce(T value) {
+      checkState(!isKnown, "already known");
+      this.value = value;
+      isKnown = true;
+      return value;
+    }
+
+    T getKnownValue() {
+      checkState(isKnown, "not yet known");
+      return value;
+    }
   }
 }
