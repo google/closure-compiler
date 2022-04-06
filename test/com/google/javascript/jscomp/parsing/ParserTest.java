@@ -1506,6 +1506,114 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testObjLitKeyNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node exprResult = parse("a = {\n// blah\n1n: 3};").getFirstChild();
+    Node assignNode = exprResult.getFirstChild();
+    Node objectLit = assignNode.getSecondChild();
+    Node stringKey = objectLit.getFirstChild();
+    assertThat(stringKey.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testLabelNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node label = parse("\n// blah\nlabel:\nfor(;;){ continue label; }").getFirstChild();
+    assertNode(label).hasType(Token.LABEL);
+    assertThat(label.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testFieldNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node field =
+        parse("class C{\n// blah\n field }").getFirstChild().getLastChild().getFirstChild();
+    assertNode(field).hasType(Token.MEMBER_FIELD_DEF);
+    assertThat(field.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testPropertyNameAssignmentNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node varName =
+        parse("let {key: \n// blah\nvarName} = someObject")
+            .getFirstChild()
+            .getFirstChild()
+            .getFirstChild()
+            .getFirstChild()
+            .getFirstChild();
+    assertNode(varName).hasType(Token.NAME);
+    assertThat(varName.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testGetPropCallNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node exprResult = parse("foo.\n// blah\nbaz(3);").getFirstChild();
+    Node call = exprResult.getFirstChild();
+    assertNode(call).hasType(Token.CALL);
+
+    Node bazAccess = call.getFirstChild();
+    assertThat(bazAccess.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testGetPropOptionalCallNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node exprResult = parse("foo?.\n// blah\nbaz(3);").getFirstChild();
+    Node callNode = exprResult.getFirstChild();
+    assertNode(callNode).hasType(Token.OPTCHAIN_CALL);
+
+    Node bazAccess = callNode.getFirstChild();
+    assertThat(bazAccess.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testGetPropAssignmentNonJSDocComment() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node exprResult = parse("foo.\n// blah\nbaz = 5;").getFirstChild();
+    Node assign = exprResult.getFirstChild();
+    assertNode(assign).hasType(Token.ASSIGN);
+
+    Node bazAccess = assign.getFirstChild();
+    assertThat(bazAccess.getNonJSDocCommentString()).contains("// blah");
+  }
+
+  @Test
+  public void testNonJSDocCommentsOnAdjacentNodes() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node root =
+        parse(
+            lines(
+                "// comment before GETPROP",
+                "a(",
+                "// comment on GETPROP",
+                ")",
+                ".b();",
+                "// comment after GETPROP",
+                "c();"));
+    Node exprResultA = root.getFirstChild();
+    assertNode(exprResultA).hasType(Token.EXPR_RESULT);
+    assertThat(exprResultA.getNonJSDocCommentString()).isEqualTo("// comment before GETPROP");
+
+    Node nodeB = exprResultA.getFirstChild().getFirstChild();
+    assertNode(nodeB).hasType(Token.GETPROP);
+    assertThat(nodeB.getNonJSDocCommentString()).isEqualTo("// comment on GETPROP");
+
+    Node exprResultC = root.getLastChild();
+    assertNode(exprResultC).hasType(Token.EXPR_RESULT);
+    assertThat(exprResultC.getNonJSDocCommentString()).isEqualTo("// comment after GETPROP");
+  }
+
+  @Test
   public void testInlineJSDocAttachmentToObjPatComputedPropKey() {
     Node letNode =
         parse("let { /** string */ ['computedProp']: computedProp } = {};").getFirstChild();

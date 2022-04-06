@@ -3958,6 +3958,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             ""));
   }
 
+  @Test
+  public void testNonJSDocCommentsPrinted_getProp() {
+    preserveNonJSDocComments = true;
+    // TODO(b/228156705): Fix comment printing properly for GETPROP.
+    assertPrettyPrint("a.// testComment\nb", "// testComment\na.b;\n");
+  }
+
   private void checkWithOriginalName(
       String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);

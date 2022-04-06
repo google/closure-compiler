@@ -1079,7 +1079,9 @@ class IRFactory {
       // Store in AST as non-shorthand form & just note it was originally shorthand
       // {name: /**inlineType */ name = default }
       Node nameNode = defaultValueNode.getFirstChild();
-      Node stringKeyNode = newStringNode(Token.STRING_KEY, nameNode.getString());
+      Node stringKeyNode =
+          newStringNodeWithNonJSDocComment(
+              Token.STRING_KEY, nameNode.getString(), defaultParameter.getStart());
       setSourceInfo(stringKeyNode, nameNode);
       stringKeyNode.setShorthandProperty(true);
       stringKeyNode.addChildToBack(defaultValueNode);
@@ -1243,7 +1245,8 @@ class IRFactory {
     }
 
     Node transformLabelName(IdentifierToken token) {
-      Node label = newStringNode(Token.LABEL_NAME, token.value);
+      Node label =
+          newStringNodeWithNonJSDocComment(Token.LABEL_NAME, token.value, token.getStart());
       setSourceInfo(label, token);
       return label;
     }
@@ -1587,7 +1590,9 @@ class IRFactory {
     Node processField(FieldDeclarationTree tree) {
       maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
 
-      Node node = newStringNode(Token.MEMBER_FIELD_DEF, tree.name.value);
+      Node node =
+          newStringNodeWithNonJSDocComment(
+              Token.MEMBER_FIELD_DEF, tree.name.value, tree.getStart());
       if (tree.initializer != null) {
         Node initializer = transform(tree.initializer);
         node.addChildToBack(initializer);
@@ -1731,14 +1736,15 @@ class IRFactory {
     }
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
+      if (jsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)
+          || nonJsdocTracker.hasPendingCommentBefore(exprNode.right.location.start)) {
         markBinaryExpressionFeatures(exprNode);
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
             transform(exprNode.right));
       } else {
-        // No JSDoc, we can traverse out of order.
+        // No pending comments, we can traverse out of order.
         return processBinaryExpressionHelper(exprNode);
       }
     }
@@ -2072,7 +2078,9 @@ class IRFactory {
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
       } else {
-        Node value = newStringNode(Token.NAME, key.getString()).srcref(key);
+        Node value =
+            newStringNodeWithNonJSDocComment(Token.NAME, key.getString(), tree.name.getStart())
+                .srcref(key);
         key.setShorthandProperty(true);
         key.addChildToFront(value);
       }
@@ -2107,7 +2115,9 @@ class IRFactory {
         return leftChild;
       }
 
-      Node getProp = newStringNode(Token.GETPROP, propName.value);
+      Node getProp =
+          newStringNodeWithNonJSDocComment(
+              Token.GETPROP, propName.value, getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       setSourceInfo(getProp, propName);
       maybeWarnKeywordProperty(getProp);
@@ -2123,7 +2133,9 @@ class IRFactory {
         return leftChild;
       }
 
-      Node getProp = newStringNode(Token.OPTCHAIN_GETPROP, propName.value);
+      Node getProp =
+          newStringNodeWithNonJSDocComment(
+              Token.OPTCHAIN_GETPROP, propName.value, getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
       setSourceInfo(getProp, propName);
@@ -3590,6 +3602,16 @@ class IRFactory {
 
   Node newStringNode(Token type, String value) {
     return Node.newString(type, value).clonePropsFrom(templateNode);
+  }
+
+  /** Creates a new string node and attaches any pending JSDoc comments for it. */
+  Node newStringNodeWithNonJSDocComment(Token type, String value, SourcePosition start) {
+    Node node = newStringNode(type, value);
+    NonJSDocComment comment = parseNonJSDocCommentAt(start, false);
+    if (comment != null) {
+      node.setNonJSDocComment(comment);
+    }
+    return node;
   }
 
   Node newTemplateLitStringNode(String cooked, String raw) {
