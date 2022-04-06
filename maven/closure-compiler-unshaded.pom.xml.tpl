@@ -44,6 +44,6 @@
     <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
   <dependencies>
-    {generated_bzl_deps}
+{dependencies}
   </dependencies>
 </project>

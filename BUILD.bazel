@@ -46,7 +46,7 @@ sonatype_artifact_bundle(
     artifact_id = "closure-compiler-unshaded",
     jar = ":compiler_unshaded",
     javadoc = ":compiler_lib_no_runtime_libs.javadoc",
-    pom = "maven/closure-compiler-unshaded.pom.xml",
+    pom = ":compiler_unshaded-pom",
     sources = ":compiler_lib_no_runtime_libs.sources",
 )
 
@@ -89,6 +89,7 @@ java_export(
     runtime_deps = [
         "//:compiler_lib",
     ],
+    pom_template = "maven/closure-compiler-unshaded.pom.xml.tpl"
 )
 
 java_binary(
