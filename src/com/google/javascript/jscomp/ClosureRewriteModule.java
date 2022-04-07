@@ -98,13 +98,11 @@ final class ClosureRewriteModule implements CompilerPass {
 
   static final DiagnosticType INVALID_PROVIDE_CALL =
       DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_PROVIDE_CALL",
-          "goog.provide can not be called in goog.module.");
+          "JSC_GOOG_MODULE_INVALID_PROVIDE_CALL", "goog.provide can not be called in goog.module.");
 
   static final DiagnosticType INVALID_GET_ALIAS =
       DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_GET_ALIAS",
-          "goog.module.get should not be aliased.");
+          "JSC_GOOG_MODULE_INVALID_GET_ALIAS", "goog.module.get should not be aliased.");
 
   static final DiagnosticType INVALID_EXPORT_COMPUTED_PROPERTY =
       DiagnosticType.error(
@@ -113,8 +111,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   static final DiagnosticType USELESS_USE_STRICT_DIRECTIVE =
       DiagnosticType.disabled(
-          "JSC_USELESS_USE_STRICT_DIRECTIVE",
-          "'use strict' is unnecessary in goog.module files.");
+          "JSC_USELESS_USE_STRICT_DIRECTIVE", "'use strict' is unnecessary in goog.module files.");
 
   static final DiagnosticType IMPORT_INLINING_SHADOWS_VAR =
       DiagnosticType.error(
@@ -164,9 +161,7 @@ final class ClosureRewriteModule implements CompilerPass {
   private final LinkedHashMap<String, Node> syntheticExterns = new LinkedHashMap<>();
   private Scope globalScope = null; // non-final because it must be set after process() is called
 
-  /**
-   * Indicates where new nodes should be added in relation to some other node.
-   */
+  /** Indicates where new nodes should be added in relation to some other node. */
   private static enum AddAt {
     BEFORE,
     AFTER
@@ -283,10 +278,9 @@ final class ClosureRewriteModule implements CompilerPass {
     final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
     final Map<String, AliasName> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
-    /**
-     * Transient state.
-     */
+    /** Transient state. */
     boolean willCreateExportsObject;
+
     boolean hasCreatedExportObject;
     ExportDefinition defaultExport;
     String defaultExportLocalName;
@@ -306,7 +300,8 @@ final class ClosureRewriteModule implements CompilerPass {
     }
 
     // "module$exports$a$b$c" for non-legacy modules
-    @Nullable String getBinaryNamespace() {
+    @Nullable
+    String getBinaryNamespace() {
       if (!this.isModule || this.declareLegacyNamespace) {
         return null;
       }
@@ -670,7 +665,6 @@ final class ClosureRewriteModule implements CompilerPass {
       ScriptDescription script = scriptDescriptionsByGoogModuleNamespace.get(namespaceId);
       return script == null ? null : script.getExportedNamespace();
     }
-
   }
 
   private final GlobalRewriteState rewriteState = new GlobalRewriteState();
@@ -949,8 +943,10 @@ final class ClosureRewriteModule implements CompilerPass {
     this.googModuleGetCalls.add(call);
 
     Node maybeAssign = call.getParent();
-    boolean isFillingAnAlias = maybeAssign.isAssign() && maybeAssign.getFirstChild().isName()
-        && maybeAssign.getParent().isExprResult();
+    boolean isFillingAnAlias =
+        maybeAssign.isAssign()
+            && maybeAssign.getFirstChild().isName()
+            && maybeAssign.getParent().isExprResult();
     if (!isFillingAnAlias || !currentScript.isModule) {
       return;
     }
@@ -998,9 +994,7 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
-    if (!currentScript.isModule
-        || !n.getString().equals("exports")
-        || !isAssignTarget(n)) {
+    if (!currentScript.isModule || !n.getString().equals("exports") || !isAssignTarget(n)) {
       return;
     }
 
@@ -1259,9 +1253,8 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   /**
-   * Rewrites top level var names from
-   * "var foo; console.log(foo);" to
-   * "var module$contents$Foo_foo; console.log(module$contents$Foo_foo);"
+   * Rewrites top level var names from "var foo; console.log(foo);" to "var module$contents$Foo_foo;
+   * console.log(module$contents$Foo_foo);"
    */
   private void maybeUpdateTopLevelName(NodeTraversal t, Node nameNode) {
     String name = nameNode.getString();
@@ -1385,13 +1378,9 @@ final class ClosureRewriteModule implements CompilerPass {
     markConstAndCopyJsDoc(target, target);
   }
 
-  /**
-   * In module "foo.Bar", rewrite "exports = Bar" to "var module$exports$foo$Bar = Bar".
-   */
+  /** In module "foo.Bar", rewrite "exports = Bar" to "var module$exports$foo$Bar = Bar". */
   private void maybeUpdateExportDeclaration(NodeTraversal t, Node n) {
-    if (!currentScript.isModule
-        || !n.getString().equals("exports")
-        || !isAssignTarget(n)) {
+    if (!currentScript.isModule || !n.getString().equals("exports") || !isAssignTarget(n)) {
       return;
     }
 
@@ -1579,7 +1568,8 @@ final class ClosureRewriteModule implements CompilerPass {
         currentScript.exportsToInline.keySet());
     checkState(
         null == currentScript.exportsToInline.put(exportDefinition.nameDecl, exportDefinition),
-        "Already found a mapping for inlining export: %s", exportDefinition.nameDecl);
+        "Already found a mapping for inlining export: %s",
+        exportDefinition.nameDecl);
     String localName = exportDefinition.getLocalName();
     String fullExportedName =
         currentScript.getBinaryNamespace() + exportDefinition.getExportPostfix();
@@ -1816,10 +1806,9 @@ final class ClosureRewriteModule implements CompilerPass {
   }
 
   /**
-   * @return Whether the getprop is used as an assignment target, and that
-   *     target represents a module export.
-   * Note: that "export.name = value" is an export, while "export.name.foo = value"
-   *     is not (it is an assignment to a property of an exported value).
+   * @return Whether the getprop is used as an assignment target, and that target represents a
+   *     module export. Note: that "export.name = value" is an export, while "export.name.foo =
+   *     value" is not (it is an assignment to a property of an exported value).
    */
   private static boolean isExportPropertyAssignment(Node n) {
     Node target = n.getFirstChild();
@@ -1841,8 +1830,7 @@ final class ClosureRewriteModule implements CompilerPass {
   /**
    * Add alias nodes to the symbol table as they going to be removed by rewriter. Example aliases:
    *
-   * const Foo = goog.require('my.project.Foo');
-   * const bar = goog.require('my.project.baz');
+   * <p>const Foo = goog.require('my.project.Foo'); const bar = goog.require('my.project.baz');
    * const {baz} = goog.require('my.project.utils');
    */
   private void maybeAddAliasToSymbolTable(Node n, String module) {

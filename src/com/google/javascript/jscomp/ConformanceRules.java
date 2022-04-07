@@ -279,7 +279,9 @@ public final class ConformanceRules {
       }
     }
 
-    /** @return Whether the code represented by the Node conforms to the rule. */
+    /**
+     * @return Whether the code represented by the Node conforms to the rule.
+     */
     protected abstract ConformanceResult checkConformance(NodeTraversal t, Node n);
 
     /** Returns the first AllowList entry that matches the given path, and null otherwise. */
