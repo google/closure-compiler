@@ -85,7 +85,7 @@ java_binary(
 load("@rules_jvm_external//:defs.bzl", "java_export")
 java_export(
     name = "compiler_unshaded",
-    maven_coordinates = "com.google.javascript:closure-compiler-unshaded:v20220401",
+    maven_coordinates = "com.google.javascript:closure-compiler-unshaded:HEAD-SNAPSHOT",
     runtime_deps = [
         "//:compiler_lib",
     ],
