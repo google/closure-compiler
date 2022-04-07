@@ -2980,7 +2980,10 @@ public class CompilerOptions implements Serializable {
      */
     UNSUPPORTED;
 
-    public static final LanguageMode STABLE_IN = ECMASCRIPT_2021;
+    /** The default input language level of JSCompiler. */
+    public static final LanguageMode STABLE_IN = ECMASCRIPT_NEXT;
+
+    /** The default output language level of JSCompiler. */
     public static final LanguageMode STABLE_OUT = ECMASCRIPT5;
 
     /** Whether this language mode defaults to strict mode */
