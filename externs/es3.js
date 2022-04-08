@@ -655,7 +655,7 @@ ReadonlyArray.prototype[Symbol.iterator] = function() {};
  * and/or value(s).
  *
  * @param {...*} var_args
- * @return {!ReadonlyArray<?>}
+ * @return {!Array<?>}
  * @this {*}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
@@ -738,7 +738,7 @@ ReadonlyArray.prototype.every = function(callback, opt_thisobj) {};
  * Available in ECMAScript 5, Mozilla 1.6+.
  * @param {?function(this:S, T, number, !ReadonlyArray<T>): ?} callback
  * @param {S=} opt_thisobj
- * @return {!ReadonlyArray<T>}
+ * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
@@ -784,7 +784,7 @@ ReadonlyArray.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
  * Available in ECMAScript 5, Mozilla 1.6+.
  * @param {?function(this:S, T, number, !ReadonlyArray<T>): R} callback
  * @param {S=} opt_thisobj
- * @return {!ReadonlyArray<R>}
+ * @return {!Array<R>}
  * @this {IArrayLike<T>|string}
  * @template T,S,R
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
