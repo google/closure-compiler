@@ -4922,11 +4922,7 @@ public final class NodeUtil {
         // Other op force a local value:
         //  '' + g (a local string)
         //  x -= g (x is now an local number)
-        if (isAssignmentOp(value)
-            || isSimpleOperator(value)
-            || isImmutableValue(value)
-            || value.isGetProp()
-            || value.isGetElem()) {
+        if (isAssignmentOp(value) || isSimpleOperator(value) || isImmutableValue(value)) {
           return true;
         }
 
@@ -5005,10 +5001,7 @@ public final class NodeUtil {
         // Other op force a local value:
         //  '' + g (a  string)
         //  x -= g (x is now an number)
-        if (isAssignmentOp(value)
-            || isSimpleOperator(value)
-            || value.isGetProp()
-            || value.isGetElem()) {
+        if (isAssignmentOp(value) || isSimpleOperator(value)) {
           return true;
         }
 
