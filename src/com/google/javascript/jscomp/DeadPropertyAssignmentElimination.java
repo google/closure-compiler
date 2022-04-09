@@ -366,15 +366,18 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           }
 
           if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
-            // We always visit the LHS assignment in post-order
-            return false;
+            // This is a write to the property, so skip the read handling below.
+            // We'll handle this write in the visit() method
+            // We need to continue traversing, because there could be a function call
+            // child.
+            return true;
           }
           Property property = getOrCreateProperty(n);
           if (property != null) {
             // Mark all children properties as read.
             property.markLastWriteRead();
 
-            // Only mark children properties as read if we're at at the end of the referenced
+            // Only mark children properties as read if we're at the end of the referenced
             // property chain.
             // Ex. A read of "a.b.c" should mark a, a.b, a.b.c, and a.b.c.* as read, but not a.d
             if (!parent.isGetProp()) {

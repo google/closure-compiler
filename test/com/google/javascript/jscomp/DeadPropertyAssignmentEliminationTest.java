@@ -190,6 +190,14 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething().b.c = 25;",
+            "  a.b.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
             "var foo = function() {", // to preserve newlines
             "  a.b.c = 20;",
             "  doSomething?.();",
