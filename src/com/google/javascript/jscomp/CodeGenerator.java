@@ -25,6 +25,7 @@ import com.google.debugging.sourcemap.Util;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
@@ -92,6 +93,57 @@ public class CodeGenerator {
     cc.endLine();
   }
 
+  private void printJSDocComment(Node node, JSDocInfo jsDocInfo) {
+    String jsdocAsString = jsDocInfoPrinter.print(jsDocInfo);
+    // Don't print an empty jsdoc
+    if (!jsdocAsString.equals("/** */ ")) {
+      add(jsdocAsString);
+      if (!node.isCast()) {
+        cc.endLine();
+      }
+    }
+  }
+
+  private void printNonJSDocComment(Node node, NonJSDocComment nonJSDocComment) {
+    String nonJSDocCommentString = nonJSDocComment.getCommentString();
+    if (!nonJSDocCommentString.isEmpty()) {
+      addNonJsDoc_nonTrailing(node, nonJSDocComment);
+    }
+  }
+
+  /**
+   * Print Leading JSDocComments or NonJSDocComments for the given node in order, depending on their
+   * source location.
+   */
+  private void printLeadingCommentsInOrder(Node node) {
+    JSDocInfo jsDocInfo = node.getJSDocInfo();
+    NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
+
+    boolean printJSDoc = preserveTypeAnnotations && jsDocInfo != null;
+    boolean printNonJSDoc =
+        printNonJSDocComments && nonJSDocComment != null && !nonJSDocComment.isTrailing();
+    if (printJSDoc && printNonJSDoc) {
+      if (jsDocInfo.getOriginalCommentPosition() < nonJSDocComment.getStartPosition().getOffset()) {
+        printJSDocComment(node, jsDocInfo);
+        printNonJSDocComment(node, nonJSDocComment);
+      } else {
+        printNonJSDocComment(node, nonJSDocComment);
+        printJSDocComment(node, jsDocInfo);
+      }
+      return;
+    }
+
+    if (printJSDoc) {
+      printJSDocComment(node, jsDocInfo);
+      return;
+    }
+
+    if (printNonJSDoc) {
+      printNonJSDocComment(node, nonJSDocComment);
+      return;
+    }
+  }
+
   protected void add(String str) {
     cc.add(str);
   }
@@ -105,27 +157,7 @@ public class CodeGenerator {
       return;
     }
 
-    if (preserveTypeAnnotations && node.getJSDocInfo() != null) {
-      String jsdocAsString = jsDocInfoPrinter.print(node.getJSDocInfo());
-      // Don't print an empty jsdoc
-      if (!jsdocAsString.equals("/** */ ")) {
-        add(jsdocAsString);
-        if (!node.isCast()) {
-          cc.endLine();
-        }
-      }
-    }
-
-    // print any non-trailing non-JSDoc comment attached to this node
-    if (printNonJSDocComments) {
-      NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
-      if (nonJSDocComment != null && !nonJSDocComment.isTrailing()) {
-        String nonJSDocCommentString = node.getNonJSDocCommentString();
-        if (!nonJSDocCommentString.isEmpty()) {
-          addNonJsDoc_nonTrailing(node, nonJSDocComment);
-        }
-      }
-    }
+    printLeadingCommentsInOrder(node);
 
     Token type = node.getToken();
     String opstr = NodeUtil.opToStr(type);
@@ -1664,7 +1696,9 @@ public class CodeGenerator {
     return Double.NaN;
   }
 
-  /** @return Whether the name is an indirect eval. */
+  /**
+   * @return Whether the name is an indirect eval.
+   */
   private static boolean isIndirectEval(Node n) {
     return n.isName() && "eval".equals(n.getString()) && !n.getBooleanProp(Node.DIRECT_EVAL);
   }
@@ -1803,7 +1837,7 @@ public class CodeGenerator {
     Node parent = n.getParent();
     return parent != null && parent.getToken() == Token.EXPONENT && parent.getFirstChild() == n;
   }
-  
+
   void addList(Node firstInList) {
     addList(firstInList, true, Context.OTHER, ",");
   }
