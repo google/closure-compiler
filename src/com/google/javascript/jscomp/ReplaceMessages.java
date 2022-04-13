@@ -142,7 +142,7 @@ public final class ReplaceMessages {
       final Node originalMessageString = checkNotNull(googGetMsg.getNext());
       final Node placeholdersNode = originalMessageString.getNext();
       final Node optionsNode = placeholdersNode == null ? null : placeholdersNode.getNext();
-      final MsgOptions msgOptions = getOptions(optionsNode);
+      final MsgOptions msgOptions = getOptions(message, optionsNode);
 
       // Construct
       // `__jscomp_define_msg__({<msg properties>}, {<substitutions>})`
@@ -728,7 +728,7 @@ public final class ReplaceMessages {
       // optional `{ key1: value, key2: value2 }` replacements
       Node objLitNode = stringExprNode.getNext();
       // optional replacement options, e.g. `{ html: true }`
-      MsgOptions options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
+      MsgOptions options = getOptions(message, objLitNode != null ? objLitNode.getNext() : null);
 
       Map<String, Node> placeholderMap = createPlaceholderNodeMap(objLitNode);
       final ImmutableSet<String> placeholderNames = message.placeholders();
@@ -820,7 +820,8 @@ public final class ReplaceMessages {
     return partNode;
   }
 
-  private static MsgOptions getOptions(@Nullable Node optionsNode) throws MalformedException {
+  private static MsgOptions getOptions(JsMessage message, @Nullable Node optionsNode)
+      throws MalformedException {
     MsgOptions options = new MsgOptions();
     if (optionsNode == null) {
       return options;
@@ -834,16 +835,59 @@ public final class ReplaceMessages {
       }
       String optName = aNode.getString();
       Node value = aNode.getFirstChild();
-      if (!value.isTrue() && !value.isFalse()) {
-        throw new MalformedException("Literal true or false expected", value);
-      }
       switch (optName) {
         case "html":
           options.escapeLessThan = value.isTrue();
+          if (!value.isTrue() && !value.isFalse()) {
+            throw new MalformedException("html: Literal true or false expected", value);
+          }
           break;
         case "unescapeHtmlEntities":
           options.unescapeHtmlEntities = value.isTrue();
+          if (!value.isTrue() && !value.isFalse()) {
+            throw new MalformedException(
+                "unescapeHtmlEntities: Literal true or false expected", value);
+          }
           break;
+        case "example":
+        case "original_code":
+          {
+            // Verify this format to inform users ASAP if they're supplying something unexpected.
+            // These options are only used when generating the XMB file, but normal compilations
+            // happen much more frequently than that, so we want to report these errors now.
+            // ```
+            // {
+            //    example: {
+            //      'name': 'George'
+            //    },
+            //    original_code: {
+            //      'name': 'getName()'
+            //    }
+            // }
+            // ```
+            if (!value.isObjectLit()) {
+              throw new MalformedException(optName + ": object literal required", value);
+            }
+            final ImmutableSet<String> placeholders = message.placeholders();
+            Node stringKeyNode;
+            for (stringKeyNode = value.getFirstChild();
+                stringKeyNode != null;
+                stringKeyNode = stringKeyNode.getNext()) {
+              if (!stringKeyNode.isStringKey()) {
+                throw new MalformedException("placeholder name required", stringKeyNode);
+              }
+              String placeholderName = stringKeyNode.getString();
+              if (!placeholders.contains(placeholderName)) {
+                throw new MalformedException("unknown placeholder name", stringKeyNode);
+              }
+              Node placeholderValue = stringKeyNode.getOnlyChild();
+              if (!placeholderValue.isStringLit()) {
+                throw new MalformedException("string literal required", placeholderValue);
+              }
+            }
+            break;
+          }
+
         default:
           throw new MalformedException("Unexpected option", aNode);
       }

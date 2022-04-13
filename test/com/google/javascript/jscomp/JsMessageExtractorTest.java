@@ -104,7 +104,7 @@ public final class JsMessageExtractorTest {
                     "interpolation_1", "bar.getProductName()"))
             .setPlaceholderNameToExampleMap(
                 ImmutableMap.of(
-                    "interpolation_0", "Jenny Weasley",
+                    "interpolation_0", "Ginny Weasley",
                     "interpolation_1", "Google Muggle Finder"))
             .setDesc("The welcome message.")
             .build(),
@@ -122,7 +122,7 @@ public final class JsMessageExtractorTest {
             "            'interpolation_1': 'bar.getProductName()',",
             "        },",
             "        example: {",
-            "            'interpolation_0': 'Jenny Weasley',",
+            "            'interpolation_0': 'Ginny Weasley',",
             "            'interpolation_1': 'Google Muggle Finder',",
             "        },",
             "    },",

@@ -611,6 +611,53 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNameReplacementWithFullOptionsBag() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
+
+    multiPhaseTest(
+        lines(
+            "/** @desc d */",
+            "var MSG_B =",
+            "    goog.getMsg(",
+            "        'asdf {$measly}',",
+            "        {measly: x},",
+            "        {",
+            // use all allowed options
+            "          html: true,",
+            "          unescapeHtmlEntities: true,",
+            // original_code and example get dropped, because they're only used
+            // when generating the XMB file.
+            "          original_code: {",
+            "            'measly': 'getMeasley()'",
+            "          },",
+            "          example: {",
+            "            'measly': 'very little'",
+            "          },",
+            "        });"),
+        lines(
+            "/**",
+            " * @desc d",
+            " */",
+            "var MSG_B =",
+            "    __jscomp_define_msg__(",
+            "        {",
+            "          \"key\":\"MSG_B\",",
+            "          \"msg_text\":\"asdf {$measly}\",",
+            "          \"escapeLessThan\":\"\",",
+            "          \"unescapeHtmlEntities\":\"\"",
+            "        },",
+            "        {'measly': x});"),
+        lines(
+            "/** @desc d */", //
+            "var MSG_B = 'One ' + x + ' ph';"));
+  }
+
+  @Test
   public void testGetPropReplacement() {
     registerMessage(new JsMessage.Builder("MSG_C").appendPlaceholderReference("amount").build());
 
@@ -1165,6 +1212,105 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     multiPhaseTestPreLookupError("var MSG_A = goog.getMsg('{$a}');", MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedBadBooleanOptionValue() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        // used an object when a boolean is required
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { html: {} });",
+        MESSAGE_TREE_MALFORMED);
+    multiPhaseTestPreLookupError(
+        // used an object when a boolean is required
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { unescapeHtmlEntities: {} });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedMisspelledExamples() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        // mistakenly used "examples" instead of "example"
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { examples: { 'a': 'example a' } });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedMisspelledOriginalCode() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        // mistakenly used "original" instead of "original_code"
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { original: { 'a': 'code' } });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedExampleWithUnknownPlaceholder() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { example: { 'b': 'example a' } });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedExampleWithNonStringPlaceholderValue() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { example: { 'a': 1 } });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedExampleWithBadValue() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { example: 'bad value' });",
+        MESSAGE_TREE_MALFORMED);
+  }
+
+  @Test
+  public void testTranslatedExampleWithComputedProperty() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
+
+    multiPhaseTestPreLookupError(
+        // computed property is not allowed for examples
+        "var MSG_A = goog.getMsg('{$a}', {'a': 'something'}, { example: { ['a']: 'wrong' } });",
+        MESSAGE_TREE_MALFORMED);
   }
 
   @Test
