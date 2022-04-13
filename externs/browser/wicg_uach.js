@@ -59,6 +59,12 @@ UADataValues.prototype.uaFullVersion;
 /** @type {string} */
 UADataValues.prototype.bitness;
 
+/** @type {boolean|undefined} */
+UADataValues.prototype.wow64;
+
+/** @type {!Array<!NavigatorUABrandVersion>|undefined} */
+UADataValues.prototype.fullVersionList;
+
 /**
  * @see https://wicg.github.io/ua-client-hints/#navigatoruadata
  * @record
