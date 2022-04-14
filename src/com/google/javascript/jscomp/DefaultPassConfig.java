@@ -976,6 +976,11 @@ public final class DefaultPassConfig extends PassConfig {
       loopPasses.add(optimizeCalls);
     }
 
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clConstantHoisterPass);
+      passes.add(j2clClinitPass);
+    }
+
     // It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
     // because inlineFunctions relies on them to clean up patterns it introduces. This affects our
     // size-based loop-termination heuristic.
