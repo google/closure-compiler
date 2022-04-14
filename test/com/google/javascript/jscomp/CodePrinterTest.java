@@ -2638,6 +2638,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testIjsWithProvideAlreadyProvided() {
+    assertPrettyPrintSame("/** @provideAlreadyProvided */ \ngoog.provide(\"a.b.c\");\n");
+  }
+
+  @Test
   public void testArrayLiteral() {
     assertPrint("var x = [,];", "var x=[,]");
     assertPrint("var x = [,,];", "var x=[,,]");

@@ -146,6 +146,10 @@ public final class JSDocInfoPrinter {
       parts.add("@noinline");
     }
 
+    if (info.isProvideAlreadyProvided()) {
+      parts.add("@provideAlreadyProvided");
+    }
+
     if (info.isIdGenerator()) {
       parts.add("@idGenerator {unique}");
     }
