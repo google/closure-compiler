@@ -153,7 +153,6 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 maven_install(
     artifacts = [
         "com.google.protobuf:protobuf-java:3.19.3",
-        "com.google.protobuf:protobuf-java-util:3.19.3",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
