@@ -83,7 +83,7 @@ java_binary(
 
 # Produce an unshaded export jar based on :compiler_lib
 load("@rules_jvm_external//:defs.bzl", "java_export")
-version = ctx.var.get("COMPILER_VERSION", "1.0-SNAPSHOT")
+version = "$(COMPILER_VERSION)" or "1.0-SNAPSHOT"
 java_export(
     name = "compiler_unshaded",
     maven_coordinates = "com.google.javascript:closure-compiler-unshaded:{0}".format(version),
