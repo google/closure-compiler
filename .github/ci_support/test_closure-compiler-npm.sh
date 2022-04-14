@@ -20,7 +20,7 @@
 #   - PWD = closure-compiler-npm repo root
 #
 # Params:
-#   1. File name of compiler_unshaded_deploy.jar
+#   1. File name of compiler_shaded.jar
 function main() {
   local compiler_jar="$1"
 
