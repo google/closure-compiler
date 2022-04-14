@@ -138,7 +138,7 @@ filegroup(
     ),
 )
 
-java_binary(# also a lie, as this is a java_binary, the _deploy.jar contains all deps
+java_binary(
     name = "compiler_unshaded_no_runtime_libs",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
     runtime_deps = [":compiler_lib_no_runtime_libs"],
