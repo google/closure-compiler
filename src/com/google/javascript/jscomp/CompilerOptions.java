@@ -925,11 +925,6 @@ public class CompilerOptions implements Serializable {
     this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
   }
 
-  @Deprecated
-  public void setModulesToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
-    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
-  }
-
   public void setQnameUsesToPrintAfterEachPassList(List<String> qnameRegexList) {
     this.qnameUsesToPrintAfterEachPassList = qnameRegexList;
   }
@@ -1377,12 +1372,16 @@ public class CompilerOptions implements Serializable {
     strictMessageReplacement = false;
   }
 
-  /** @return Whether to attempt to remove unused class properties */
+  /**
+   * @return Whether to attempt to remove unused class properties
+   */
   public boolean isRemoveUnusedClassProperties() {
     return removeUnusedClassProperties;
   }
 
-  /** @param removeUnusedClassProperties Whether to attempt to remove unused class properties */
+  /**
+   * @param removeUnusedClassProperties Whether to attempt to remove unused class properties
+   */
   public void setRemoveUnusedClassProperties(boolean removeUnusedClassProperties) {
     this.removeUnusedClassProperties = removeUnusedClassProperties;
   }
@@ -1470,7 +1469,9 @@ public class CompilerOptions implements Serializable {
     this.propertyRenaming = newPropertyPolicy;
   }
 
-  /** @param replaceIdGenerators the replaceIdGenerators to set */
+  /**
+   * @param replaceIdGenerators the replaceIdGenerators to set
+   */
   public void setReplaceIdGenerators(boolean replaceIdGenerators) {
     this.replaceIdGenerators = replaceIdGenerators;
   }
@@ -1860,7 +1861,9 @@ public class CompilerOptions implements Serializable {
     return inferTypes;
   }
 
-  /** @deprecated This is a no-op. */
+  /**
+   * @deprecated This is a no-op.
+   */
   @Deprecated
   public void setNewTypeInference(boolean enable) {}
 
@@ -1879,12 +1882,16 @@ public class CompilerOptions implements Serializable {
     return this.checksOnly || this.allowZoneJsWithAsyncFunctionsInOutput;
   }
 
-  /** @return true if either typechecker is ON. */
+  /**
+   * @return true if either typechecker is ON.
+   */
   public boolean isTypecheckingEnabled() {
     return this.checkTypes;
   }
 
-  /** @return Whether assumeStrictThis is set. */
+  /**
+   * @return Whether assumeStrictThis is set.
+   */
   public boolean assumeStrictThis() {
     return assumeStrictThis;
   }
@@ -1894,7 +1901,9 @@ public class CompilerOptions implements Serializable {
     this.assumeStrictThis = enable;
   }
 
-  /** @return Whether assumeClosuresOnlyCaptureReferences is set. */
+  /**
+   * @return Whether assumeClosuresOnlyCaptureReferences is set.
+   */
   public boolean assumeClosuresOnlyCaptureReferences() {
     return assumeClosuresOnlyCaptureReferences;
   }
@@ -2300,25 +2309,33 @@ public class CompilerOptions implements Serializable {
     this.gatherCssNames = gatherCssNames;
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripTypes(Set<String> stripTypes) {
     this.stripTypes = ImmutableSet.copyOf(stripTypes);
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public ImmutableSet<String> getStripTypes() {
     return this.stripTypes;
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripNameSuffixes(Set<String> stripNameSuffixes) {
     this.stripNameSuffixes = ImmutableSet.copyOf(stripNameSuffixes);
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
     this.stripNamePrefixes = ImmutableSet.copyOf(stripNamePrefixes);
