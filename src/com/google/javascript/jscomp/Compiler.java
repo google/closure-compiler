@@ -1292,11 +1292,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.resetAndIntitializeSourceMap();
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
+    List<String> chunkNameRegexList = options.chunksToPrintAfterEachPassRegexList;
     final Set<String> qnameSet = new LinkedHashSet<>(options.qnameUsesToPrintAfterEachPassList);
     StringBuilder builder = new StringBuilder();
 
-    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty() && qnameSet.isEmpty()) {
+    if (fileNameRegexList.isEmpty() && chunkNameRegexList.isEmpty() && qnameSet.isEmpty()) {
       return toSource();
     }
     if (!fileNameRegexList.isEmpty()) {
@@ -1318,18 +1318,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         builder.append("// No files matched any of: ").append(fileNameRegexList);
       }
     }
-    if (!moduleNameRegexList.isEmpty()) {
-      for (JSChunk jsModule : getModules()) {
-        for (String regex : moduleNameRegexList) {
-          if (jsModule.getName().matches(regex)) {
-            String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
+    if (!chunkNameRegexList.isEmpty()) {
+      final Iterable<JSChunk> chunks = checkNotNull(getModules());
+      final List<String> unmatchedChunkNames = new ArrayList<>();
+      for (JSChunk jsChunk : chunks) {
+        final String chunkName = jsChunk.getName();
+        for (String regex : chunkNameRegexList) {
+          if (chunkName.matches(regex)) {
+            String source = "// module '" + chunkName + "'\n" + toSource(jsChunk);
             builder.append(source);
             break;
           }
         }
+        unmatchedChunkNames.add(chunkName);
       }
       if (builder.length() == 0) {
-        throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
+        builder.append("// No chunks were matched:\n");
+        for (String chunkName : unmatchedChunkNames) {
+          builder.append("// " + chunkName + "\n");
+        }
       }
     }
     if (!qnameSet.isEmpty()) {
