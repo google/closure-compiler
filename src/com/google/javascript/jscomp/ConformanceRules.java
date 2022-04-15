@@ -43,6 +43,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -2183,7 +2184,10 @@ public final class ConformanceRules {
       Node attr = node.getSecondChild();
       String attrName = inferStringValue(traversal.getScope(), attr);
       if (attrName == null) {
-        return ConformanceResult.VIOLATION;
+        // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
+        return isXid(attr.getJSType())
+            ? ConformanceResult.CONFORMANCE
+            : ConformanceResult.VIOLATION;
       }
 
       attrName = attrName.toLowerCase(Locale.ROOT);
@@ -2225,7 +2229,7 @@ public final class ConformanceRules {
         }
       } else if (hasElementType(node)) { // key is not a string literal.
         JSType keyType = key.getJSType();
-        if (keyType == null) {
+        if (keyType == null || isXid(keyType)) {
           return ConformanceResult.CONFORMANCE;
         }
 
@@ -2264,6 +2268,18 @@ public final class ConformanceRules {
       }
 
       return true;
+    }
+
+    private boolean isXid(JSType type) {
+      if (type == null) {
+        return false;
+      }
+      EnumElementType enumElTy = type.toMaybeEnumElementType();
+      if (enumElTy != null
+          && enumElTy.getEnumType().getReferenceName().equals("enum{xid.String}")) {
+        return true;
+      }
+      return false;
     }
 
     @Nullable
