@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 public class IllegalFormatConversionException extends RuntimeException {
 
   public IllegalFormatConversionException(char conversionType, Class<? extends Object> class1) {
-    super("ConvertionType = " + conversionType + " class = " + class1);
+    super("ConversionType = " + conversionType + " class = " + class1);
   }
 
 }
