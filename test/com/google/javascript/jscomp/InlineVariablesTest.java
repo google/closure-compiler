@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class InlineVariablesTest extends CompilerTestCase {
 
-  private boolean inlineAllStrings = false;
   private boolean inlineLocalsOnly = false;
 
   @Override
@@ -45,15 +44,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
-        compiler,
-        inlineLocalsOnly ? InlineVariables.Mode.LOCALS_ONLY : InlineVariables.Mode.ALL,
-        inlineAllStrings);
+        compiler, inlineLocalsOnly ? InlineVariables.Mode.LOCALS_ONLY : InlineVariables.Mode.ALL);
   }
 
   @Override
   @After
   public void tearDown() {
-    inlineAllStrings = false;
     inlineLocalsOnly = false;
   }
 
@@ -872,16 +868,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoInlineStringMultipleTimesIfNotWorthwhile() {
-    test(
-        "var x = 'a'; use(  x); use(  x);", //
-        "             use('a'); use('a');");
-    testSame("var x = 'abcdefghijklmnopqrstuvwxyz'; use(x); use(x);");
-  }
-
-  @Test
-  public void testInlineStringMultipleTimesWhenAliasingAllStrings() {
-    inlineAllStrings = true;
+  public void testInlineStringMultipleTimesAllStrings() {
     test(
         lines(
             "", //

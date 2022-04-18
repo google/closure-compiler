@@ -1711,7 +1711,7 @@ public final class DefaultPassConfig extends PassConfig {
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
                 }
-                return new InlineVariables(compiler, mode, true);
+                return new InlineVariables(compiler, mode);
               })
           .setFeatureSetForOptimizations()
           .build();
@@ -2345,7 +2345,7 @@ public final class DefaultPassConfig extends PassConfig {
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
                 }
-                return new InlineVariables(compiler, mode, true);
+                return new InlineVariables(compiler, mode);
               })
           .setFeatureSetForOptimizations()
           .build();
@@ -2356,8 +2356,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("inlineConstants")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
-              (compiler) ->
-                  new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY, true))
+              (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY))
           .setFeatureSetForOptimizations()
           .build();
 
