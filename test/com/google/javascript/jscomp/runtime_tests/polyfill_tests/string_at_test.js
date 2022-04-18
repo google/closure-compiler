@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2022 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 TypedArray polyfills.
- * @suppress {uselessCode}
- */
-'require es6/typedarray/at';
-'require es6/typedarray/copywithin';
-'require es6/typedarray/fill';
+goog.module('jscomp.runtime_tests.polyfill_tests.string_at_test');
+goog.setTestOnly();
+
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testAt() {
+    assertEquals('123'.at(-1), '3');
+  }
+});

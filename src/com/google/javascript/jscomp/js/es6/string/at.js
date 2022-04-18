@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2022 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,14 @@
  */
 
 /**
- * @fileoverview Brings in all ES6 String polyfills.
+ * @fileoverview String.prototype.at polyfill.
  * @suppress {uselessCode}
  */
-'require es6/string/at';
-'require es6/string/codepointat';
-'require es6/string/endswith';
-'require es6/string/fromcodepoint';
-'require es6/string/includes';
-'require es6/string/matchall';
-'require es6/string/padend';
-'require es6/string/padstart';
-'require es6/string/raw';
-'require es6/string/repeat';
-'require es6/string/replaceall';
-'require es6/string/startswith';
-'require es6/string/trimend';
-'require es6/string/trimstart';
+'require es6/util/atmethod';
+'require util/polyfill';
+
+$jscomp.polyfill('String.prototype.at', function(orig) {
+  if (orig) return orig;
+
+  return $jscomp.atMethod;
+}, 'es_next', 'es5');

@@ -18,32 +18,11 @@
  * @fileoverview Array.prototype.at polyfill.
  * @suppress {uselessCode}
  */
+'require es6/util/atmethod';
 'require util/polyfill';
 
 $jscomp.polyfill('Array.prototype.at', function(orig) {
   if (orig) return orig;
 
-  /**
-   * Polyfills Array.prototype.at.
-   *
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at
-   *
-   * @this {!IArrayLike<T>}
-   * @param {number} index
-   * @return {T}
-   * @template T
-   */
-  var at = function(index) {
-    var array = this;
-
-    var indexValue = Math.trunc(index) || 0;
-    // Allow negative indexing from the end
-    if (indexValue < 0) indexValue += array.length;
-    // OOB access is guaranteed to return undefined
-    if (indexValue < 0 || indexValue >= array.length) return undefined;
-    // Otherwise, this is just normal property access
-    return array[indexValue];
-  };
-
-  return at;
-}, 'es_next', 'es3');
+  return $jscomp.atMethod;
+}, 'es_next', 'es5');
