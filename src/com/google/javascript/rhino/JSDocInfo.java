@@ -340,7 +340,9 @@ public class JSDocInfo implements Serializable {
 
     // `@provideGoog` only appears in base.js
     PROVIDE_GOOG,
-    PROVIDE_ALREADY_PROVIDED;
+    PROVIDE_ALREADY_PROVIDED,
+
+    WIZ_CALLBACK;
 
     final String name;
     final long mask;
@@ -1167,6 +1169,11 @@ public class JSDocInfo implements Serializable {
   /** Returns whether JSDoc is annotated with {@code @wizaction} annotation. */
   public boolean isWizaction() {
     return checkBit(Bit.WIZ_ACTION);
+  }
+
+  /** Returns if JSDoc is annotated with {@code @wizcallback} annotation. */
+  public boolean isWizcallback() {
+    return checkBit(Bit.WIZ_CALLBACK);
   }
 
   /** Returns whether JSDoc is annotated with {@code @polymerBehavior} annotation. */
@@ -2501,6 +2508,16 @@ public class JSDocInfo implements Serializable {
     /** Records that this method is to be exposed as a wizaction. */
     public boolean recordWizaction() {
       return populateBit(Bit.WIZ_ACTION, true);
+    }
+
+    /** Returns if current JSDoc is annotated with {@code @wizcallback}. */
+    public boolean isWizcallbackRecorded() {
+      return checkBit(Bit.WIZ_CALLBACK);
+    }
+
+    /** Records that this method is to be exposed as a wizcallback. */
+    public boolean recordWizcallback() {
+      return populateBit(Bit.WIZ_CALLBACK, true);
     }
 
     /** Returns whether current JSDoc is annotated with {@code @polymerBehavior}. */

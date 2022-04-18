@@ -5165,6 +5165,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + "* @static \n"
             + "* @supported\n"
             + "* @wizaction \n"
+            + "* @wizcallback \n"
             + "*/");
   }
 
@@ -5280,6 +5281,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseProvideAlreadyProvidedExtra() {
     parse(
         "@provideAlreadyProvided \n@provideAlreadyProvided*/", "extra @provideAlreadyProvided tag");
+  }
+
+  @Test
+  public void testParseWizcallback() {
+    assertThat(parse("@wizcallback*/").isWizcallback()).isTrue();
+  }
+
+  @Test
+  public void testParseWizcallbackExpectDuplicateError() {
+    parse("@wizcallback \n@wizcallback*/", "extra @wizcallback tag");
   }
 
   @Test

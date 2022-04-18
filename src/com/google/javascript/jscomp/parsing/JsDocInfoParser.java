@@ -1025,6 +1025,11 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_WIZACTION);
           }
           return eatUntilEOLIfNotAnnotation();
+        case WIZCALLBACK:
+          if (!jsdocBuilder.recordWizcallback()) {
+            addParserWarning(Msg.JSDOC_WIZCALLBACK);
+          }
+          return eatUntilEOLIfNotAnnotation();
 
         case VERSION:
           ExtractionInfo versionInfo = extractSingleLineBlock();
