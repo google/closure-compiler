@@ -104,7 +104,7 @@ public class RecoverableJsAstTest {
   }
 
   private void setSourceCode(String code) throws IOException {
-    Files.write(tempFile, code.getBytes(UTF_8));
+    Files.writeString(tempFile, code);
   }
 
   private SourceAst createRealAst() {
