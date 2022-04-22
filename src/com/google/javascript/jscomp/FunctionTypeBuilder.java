@@ -184,23 +184,52 @@ final class FunctionTypeBuilder {
           THIS_TYPE_NON_OBJECT,
           TypeCheck.SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
 
-  private class ExtendedTypeValidator implements Predicate<JSType> {
+  private abstract static class ValidatorBase implements Predicate<JSType> {
+    private final AbstractCompiler compiler;
+    private final Node errorRoot;
+
+    ValidatorBase(Node errorRoot, AbstractCompiler compiler) {
+      this.errorRoot = errorRoot;
+      this.compiler = compiler;
+    }
+
+    void reportWarning(DiagnosticType warning, String... args) {
+      compiler.report(JSError.make(errorRoot, warning, args));
+    }
+
+    void reportError(DiagnosticType error, String... args) {
+      compiler.report(JSError.make(errorRoot, error, args));
+    }
+  }
+
+  private ExtendedTypeValidator createExtendedTypeValidator() {
+    return new ExtendedTypeValidator(errorRoot, compiler, formatFnName());
+  }
+
+  private static class ExtendedTypeValidator extends ValidatorBase {
+    private final String formattedFnName;
+
+    ExtendedTypeValidator(Node errorRoot, AbstractCompiler compiler, String formattedFnName) {
+      super(errorRoot, compiler);
+      this.formattedFnName = formattedFnName;
+    }
+
     @Override
     public boolean apply(JSType type) {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
-        reportWarning(EXTENDS_NON_OBJECT, formatFnName(), type.toString());
+        reportWarning(EXTENDS_NON_OBJECT, formattedFnName, type.toString());
         return false;
       }
       if (objectType.isEmptyType()) {
-        reportWarning(RESOLVED_TAG_EMPTY, "@extends", formatFnName());
+        reportWarning(RESOLVED_TAG_EMPTY, "@extends", formattedFnName);
         return false;
       }
       if (objectType.isUnknownType()) {
         if (hasMoreTagsToResolve(objectType) || type.isTemplateType()) {
           return true;
         } else {
-          reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
+          reportWarning(RESOLVED_TAG_EMPTY, "@extends", formattedFnName);
           return false;
         }
       }
@@ -208,21 +237,32 @@ final class FunctionTypeBuilder {
     }
   }
 
-  private class ImplementedTypeValidator implements Predicate<JSType> {
+  private ImplementedTypeValidator createImplementedTypeValidator() {
+    return new ImplementedTypeValidator(errorRoot, compiler, formatFnName());
+  }
+
+  private static class ImplementedTypeValidator extends ValidatorBase {
+    private final String formattedFnName;
+
+    ImplementedTypeValidator(Node errorRoot, AbstractCompiler compiler, String formattedFnName) {
+      super(errorRoot, compiler);
+      this.formattedFnName = formattedFnName;
+    }
+
     @Override
     public boolean apply(JSType type) {
       ObjectType objectType = ObjectType.cast(type);
       if (objectType == null) {
-        reportError(BAD_IMPLEMENTED_TYPE, fnName);
+        reportError(BAD_IMPLEMENTED_TYPE, formattedFnName);
         return false;
       } else if (objectType.isEmptyType()) {
-        reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
+        reportWarning(RESOLVED_TAG_EMPTY, "@implements", formattedFnName);
         return false;
       } else if (objectType.isUnknownType()) {
         if (hasMoreTagsToResolve(objectType)) {
           return true;
         } else {
-          reportWarning(RESOLVED_TAG_EMPTY, "@implements", fnName);
+          reportWarning(RESOLVED_TAG_EMPTY, "@implements", formattedFnName);
           return false;
         }
       } else {
@@ -443,7 +483,7 @@ final class FunctionTypeBuilder {
         if (!areCompatibleExtendsTypes(infoBaseType.toMaybeObjectType(), classExtendsType)) {
           this.isKnownAmbiguous = true;
         }
-        if (infoBaseType.setValidator(new ExtendedTypeValidator())) {
+        if (infoBaseType.setValidator(createExtendedTypeValidator())) {
           baseType = infoBaseType.toObjectType();
         }
       } else {
@@ -477,7 +517,7 @@ final class FunctionTypeBuilder {
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
           JSType maybeInterType = t.evaluate(templateScope, typeRegistry);
 
-          if (maybeInterType.setValidator(new ImplementedTypeValidator())) {
+          if (maybeInterType.setValidator(createImplementedTypeValidator())) {
             implementedInterfaces.add((ObjectType) maybeInterType);
           }
         }
@@ -500,7 +540,7 @@ final class FunctionTypeBuilder {
             // for not-yet resolved named types, where validation is delayed).
             // This code must run even for non-object types (which we know are invalid) to generate
             // and record the user error message.
-            boolean isValid = maybeInterfaceType.setValidator(new ExtendedTypeValidator());
+            boolean isValid = maybeInterfaceType.setValidator(createExtendedTypeValidator());
             // ExtendedTypeValidator guarantees that maybeInterfaceType is an object type, but
             // setValidator might not (e.g. due to delayed execution).
             if (isValid && maybeInterfaceType.toMaybeObjectType() != null) {
@@ -513,7 +553,8 @@ final class FunctionTypeBuilder {
           }
         }
       }
-      if (classExtendsType != null && classExtendsType.setValidator(new ExtendedTypeValidator())) {
+      if (classExtendsType != null
+          && classExtendsType.setValidator(createExtendedTypeValidator())) {
         // case is:
         // /**
         //  * @interface
