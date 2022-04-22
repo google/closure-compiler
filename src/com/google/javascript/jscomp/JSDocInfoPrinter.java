@@ -317,7 +317,8 @@ public final class JSDocInfoPrinter {
     }
 
     if (info.isDeprecated()) {
-      parts.add("@deprecated " + info.getDeprecationReason());
+      String deprecationReason = info.getDeprecationReason();
+      parts.add("@deprecated" + (deprecationReason != null ? " " + deprecationReason : ""));
       multiline = true;
     }
 

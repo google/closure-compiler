@@ -620,6 +620,16 @@ public final class JSDocInfoPrinterTest {
                 ""));
   }
 
+  @Test
+  public void testDeprecated_noReason() {
+    builder.recordDeprecated();
+    builder.recordType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), "<testDeprecated>"));
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info))
+        .isEqualTo(LINE_JOINER.join("/**", " * @type {string}", " * @deprecated", " */", ""));
+  }
+
   // Tests that a {@code @see} is sufficient to populate a JSDocInfo.
   @Test
   public void testJSDocIsPopulated_withSeeReferenceAlone() {
