@@ -3836,7 +3836,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // A bug in Es6RewriteClasses meant we were putting the wrong `originalName` on some nodes.
     CompilerOptions options = createCompilerOptions();
     // force SourceInformationAnnotator to run
-    options.setExternExports(true);
+    options.setExternExportsPath("exports.js");
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
 

@@ -1916,11 +1916,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
 
-        // TODO(johnlenz): we shouldn't need to check both isExternExportsEnabled and
-        // externExportsPath.
         if (options.sourceMapOutputPath != null
-            || options.isExternExportsEnabled()
-            || options.externExportsPath != null
+            || options.getExternExportsPath() != null
             || !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
           // Annotate the nodes in the tree with information from the

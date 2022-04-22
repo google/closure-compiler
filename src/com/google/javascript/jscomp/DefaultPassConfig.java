@@ -461,7 +461,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Create extern exports after the normalize because externExports depends on unique names.
-    if (options.isExternExportsEnabled() || options.externExportsPath != null) {
+    if (options.getExternExportsPath() != null) {
       checks.add(externExports);
     }
 

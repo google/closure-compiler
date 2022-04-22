@@ -49,7 +49,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   @Override
   public CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.externExportsPath = "externs.js";
+    options.setExternExportsPath("exports.js");
     // Check types so we can make sure our exported externs have type information.
     options.setCheckSymbols(true);
     return options;

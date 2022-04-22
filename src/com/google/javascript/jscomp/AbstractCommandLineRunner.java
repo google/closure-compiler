@@ -1592,7 +1592,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
 
       // Output the externs if required.
-      if (options.externExportsPath != null) {
+      if (options.getExternExportsPath() != null) {
         try (Writer eeOut = openExternExportsStream(options, config.jsOutputFile)) {
           eeOut.append(result.externExport);
         }
@@ -1850,11 +1850,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @GwtIncompatible("Unnecessary")
   private Writer openExternExportsStream(B options, String path) throws IOException {
-    if (options.externExportsPath == null) {
+    final String externExportsPath = options.getExternExportsPath();
+    if (externExportsPath == null) {
       return null;
     }
 
-    String exPath = options.externExportsPath;
+    String exPath = externExportsPath;
 
     if (!exPath.contains(File.separator)) {
       File outputFile = new File(path);

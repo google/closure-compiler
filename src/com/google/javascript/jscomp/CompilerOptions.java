@@ -970,14 +970,8 @@ public class CompilerOptions implements Serializable {
   // Special Output Options
   // --------------------------------
 
-  /**
-   * Whether the exports should be made available via {@link Result} after compilation. This is
-   * implicitly true if {@link #externExportsPath} is set.
-   */
-  private boolean externExports;
-
   /** The output path for the created externs file. */
-  String externExportsPath;
+  @Nullable private String externExportsPath;
 
   private final List<SortingErrorManager.ErrorReportGenerator> extraReportGenerators =
       new ArrayList<>();
@@ -1362,7 +1356,6 @@ public class CompilerOptions implements Serializable {
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.FULL;
-    externExports = false;
     chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
@@ -1705,10 +1698,6 @@ public class CompilerOptions implements Serializable {
 
   public void setExtraAnnotationNames(Iterable<String> extraAnnotationNames) {
     this.extraAnnotationNames = ImmutableSet.copyOf(extraAnnotationNames);
-  }
-
-  public boolean isExternExportsEnabled() {
-    return externExports;
   }
 
   /** Sets the output charset. */
@@ -2461,12 +2450,13 @@ public class CompilerOptions implements Serializable {
     return this.useOriginalNamesInOutput;
   }
 
-  public void setExternExports(boolean externExports) {
-    this.externExports = externExports;
+  public void setExternExportsPath(@Nullable String externExportsPath) {
+    this.externExportsPath = externExportsPath;
   }
 
-  public void setExternExportsPath(String externExportsPath) {
-    this.externExportsPath = externExportsPath;
+  @Nullable
+  public String getExternExportsPath() {
+    return this.externExportsPath;
   }
 
   public void setSourceMapOutputPath(String sourceMapOutputPath) {
@@ -2770,7 +2760,6 @@ public class CompilerOptions implements Serializable {
         .add("es6ModuleTranspilation", es6ModuleTranspilation)
         .add("exportLocalPropertyDefinitions", exportLocalPropertyDefinitions)
         .add("exportTestFunctions", exportTestFunctions)
-        .add("externExports", isExternExportsEnabled())
         .add("externExportsPath", externExportsPath)
         .add("extraAnnotationNames", extraAnnotationNames)
         .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
