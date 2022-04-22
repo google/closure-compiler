@@ -422,6 +422,9 @@ CanvasDrawingStyles.prototype.textAlign;
 /** @type {string} */
 CanvasDrawingStyles.prototype.textBaseline;
 
+/** @type {string} */
+CanvasDrawingStyles.prototype.letterSpacing;
+
 // TODO(dramaix): replace this with @record.
 /**
  * @constructor
@@ -893,6 +896,9 @@ BaseRenderingContext2D.prototype.textAlign;
 
 /** @type {string} */
 BaseRenderingContext2D.prototype.textBaseline;
+
+/** @type {string} */
+BaseRenderingContext2D.prototype.letterSpacing;
 
 /** @type {number} */
 BaseRenderingContext2D.prototype.lineDashOffset;
