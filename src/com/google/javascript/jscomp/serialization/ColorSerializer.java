@@ -196,7 +196,9 @@ class ColorSerializer {
         if (!compositeTypename.isEmpty()) {
           // Color objects always have a DebugInfo field, but it will have an empty type
           // name when we don't actually have a type name to store.
-          objectTypeProtoBuilder.getDebugInfoBuilder().addTypename(compositeTypename);
+          objectTypeProtoBuilder
+              .getDebugInfoBuilder()
+              .addTypenamePointer(getStringPoolIndexFn.apply(compositeTypename));
         }
       }
     }

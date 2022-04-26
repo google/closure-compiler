@@ -76,7 +76,8 @@ message ObjectTypeProto {
   // Optional, doesn't contribute to type equality
   DebugInfo debug_info = 15;
   message DebugInfo {
-    repeated string typename = 1;
+    // offsets into the associated StringPool
+    repeated int32 typename_pointer = 1;
   }
 }
 

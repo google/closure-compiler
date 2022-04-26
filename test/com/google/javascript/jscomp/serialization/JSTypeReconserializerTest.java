@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
@@ -58,11 +59,13 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
       ObjectTypeProto.getDescriptor().findFieldByName("uuid");
   private static final FieldDescriptor OBJECT_PROPERTIES =
       ObjectTypeProto.getDescriptor().findFieldByName("own_property");
+  private static final FieldDescriptor OBJECT_TYPENAME =
+      ObjectTypeProto.DebugInfo.getDescriptor().findFieldByName("typename_pointer");
   private static final FieldDescriptor IS_INVALIDATING =
       ObjectTypeProto.getDescriptor().findFieldByName("is_invalidating");
 
   private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
-      ImmutableList.of(OBJECT_UUID, OBJECT_PROPERTIES);
+      ImmutableList.of(OBJECT_UUID, OBJECT_PROPERTIES, OBJECT_TYPENAME);
 
   @Override
   @Before
@@ -665,11 +668,15 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
                 .build());
   }
 
-  private ObjectTypeProto.Builder namedObjectBuilder(String... className) {
+  private ObjectTypeProto.Builder namedObjectBuilder(String... classNames) {
+    ImmutableList.Builder<Integer> typeNamePointers = ImmutableList.builder();
+    for (String className : classNames) {
+      typeNamePointers.add(this.stringPoolBuilder.put(className));
+    }
     return ObjectTypeProto.newBuilder()
         .setDebugInfo(
             ObjectTypeProto.DebugInfo.newBuilder()
-                .addAllTypename(ImmutableList.copyOf(className))
+                .addAllTypenamePointer(typeNamePointers.build())
                 .build());
   }
 
@@ -696,8 +703,13 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   private int pointerForType(String className) {
     List<TypeProto> types = this.typePool.getTypeList();
+    StringPool stringPool = this.stringPoolBuilder.build();
     for (int i = 0; i < types.size(); i++) {
-      if (types.get(i).getObject().getDebugInfo().getTypenameList().contains(className)) {
+      ImmutableSet<String> typeNames =
+          types.get(i).getObject().getDebugInfo().getTypenamePointerList().stream()
+              .map(stringPool::get)
+              .collect(toImmutableSet());
+      if (typeNames.contains(className)) {
         return untrimOffset(i);
       }
     }
@@ -709,15 +721,20 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     return ImmutableList.copyOf(compileToTypes(""));
   }
 
-  private static List<TypeProto> getNonPrimitiveSupertypesFor(TypePool typePool, String className) {
+  private List<TypeProto> getNonPrimitiveSupertypesFor(TypePool typePool, String className) {
     ArrayList<TypeProto> supertypes = new ArrayList<>();
+    StringPool stringPool = this.stringPoolBuilder.build();
     for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
       TypeProto subtype = typePool.getType(trimOffset(edge.getSubtype()));
       if (!subtype.hasObject()) {
         continue;
       }
       ObjectTypeProto objectSubtype = subtype.getObject();
-      if (!objectSubtype.getDebugInfo().getTypename(0).equals(className)) {
+      ImmutableList<String> typeNames =
+          objectSubtype.getDebugInfo().getTypenamePointerList().stream()
+              .map(stringPool::get)
+              .collect(toImmutableList());
+      if (!typeNames.get(0).equals(className)) {
         continue;
       }
       if (isAxiomatic(edge.getSupertype())) {

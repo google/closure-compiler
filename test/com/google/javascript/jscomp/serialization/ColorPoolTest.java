@@ -64,6 +64,7 @@ public class ColorPoolTest {
 
   @Test
   public void deserializesNativeObjectTableIntoNativeColor() {
+    StringPool.Builder stringPool = StringPool.builder();
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
@@ -72,7 +73,8 @@ public class ColorPoolTest {
                         ObjectTypeProto.newBuilder()
                             .setUuid(StandardColors.NUMBER_OBJECT_ID.asByteString())
                             .setDebugInfo(
-                                ObjectTypeProto.DebugInfo.newBuilder().addTypename("Number"))
+                                ObjectTypeProto.DebugInfo.newBuilder()
+                                    .addTypenamePointer(stringPool.put("Number")))
                             .setIsInvalidating(true))
                     .build())
             .addType(
@@ -85,7 +87,7 @@ public class ColorPoolTest {
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
             .build();
 
-    ColorPool colorPool = ColorPool.fromOnlyShard(typePool, StringPool.empty());
+    ColorPool colorPool = ColorPool.fromOnlyShard(typePool, stringPool.build());
     ColorPool.ShardView view = colorPool.getOnlyShard();
 
     Color numberObject = colorPool.getColor(StandardColors.NUMBER_OBJECT_ID);
@@ -94,6 +96,7 @@ public class ColorPoolTest {
         .hasDisambiguationSupertypesThat(colorPool.getRegistry())
         .containsExactly(view.getColor(poolPointer(1)));
     assertThat(numberObject).isSameInstanceAs(view.getColor(poolPointer(0)));
+    assertThat(numberObject.getDebugInfo().getCompositeTypename()).isEqualTo("Number");
   }
 
   @Test
@@ -792,26 +795,32 @@ public class ColorPoolTest {
 
   @Test
   public void reconcile_debugNames() {
+    StringPool.Builder stringPool0 = StringPool.builder();
+    StringPool.Builder stringPool1 = StringPool.builder();
     // Given
     TypePool typePool0 =
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
                 .setDebugInfo(
-                    ObjectTypeProto.DebugInfo.newBuilder().addTypename("A").addTypename("C")));
+                    ObjectTypeProto.DebugInfo.newBuilder()
+                        .addTypenamePointer(stringPool0.put("A"))
+                        .addTypenamePointer(stringPool0.put("C"))));
 
     TypePool typePool1 =
         singleObjectPool(
             ObjectTypeProto.newBuilder()
                 .setUuid(TEST_ID.asByteString())
                 .setDebugInfo(
-                    ObjectTypeProto.DebugInfo.newBuilder().addTypename("B").addTypename("A")));
+                    ObjectTypeProto.DebugInfo.newBuilder()
+                        .addTypenamePointer(stringPool1.put("B"))
+                        .addTypenamePointer(stringPool1.put("A"))));
 
     // When
     ColorPool colorPool =
         ColorPool.builder()
-            .addShardAnd(typePool0, StringPool.empty())
-            .addShardAnd(typePool1, StringPool.empty())
+            .addShardAnd(typePool0, stringPool0.build())
+            .addShardAnd(typePool1, stringPool1.build())
             .build();
 
     // Then
