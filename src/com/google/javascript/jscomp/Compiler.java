@@ -1931,6 +1931,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         if (NodeUtil.isFromTypeSummary(n)) {
           input.setIsExtern();
+          // We should ~never access source for type summaries, we can release some RAM in this
+          // case. In the rare case that we do need to generate a snippet for an error message, the
+          // performance hit is worth the ram savings in the common case.
+          input.getSourceFile().clearCachedSource();
           externsRoot.addChildToBack(n);
         } else {
           jsRoot.addChildToBack(n);
