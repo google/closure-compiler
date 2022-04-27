@@ -47,6 +47,7 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
+import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -459,6 +460,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       JsonErrorReportGenerator errorGenerator =
           new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
       compiler.setErrorManager(new SortingErrorManager(ImmutableSet.of(errorGenerator)));
+    }
+    if (config.printAst) {
+      options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
   }
 
