@@ -111,7 +111,6 @@ google.maps.CameraOptions.prototype.tilt;
 google.maps.CameraOptions.prototype.zoom;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Used for retrieving camera parameters, such as that of the GL camera used for
  * the {@link google.maps.WebGLOverlayView}.
  * @extends {google.maps.CameraOptions}
@@ -463,7 +462,6 @@ google.maps.ControlPosition = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * This interface provides convenience methods for generating matrices to use
  * for rendering WebGL scenes on top of the Google base map. <br><br>Note: A
  * reference to this object should <b>not</b> be held outside of the scope of
@@ -3889,7 +3887,6 @@ google.maps.LatLng.prototype.toString = function() {};
 google.maps.LatLng.prototype.toUrlValue = function(precision) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A <code>LatLngAltitude</code> is a 3D point in geographical coordinates:
  * latitude, longitude, and altitude.<br> <ul> <li>Latitude ranges between -90
  * and 90 degrees, inclusive. Values above or below this range will be clamped
@@ -3909,28 +3906,24 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
 google.maps.LatLngAltitude = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns the altitude.
  * @type {number}
  */
 google.maps.LatLngAltitude.prototype.altitude;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns the latitude.
  * @type {number}
  */
 google.maps.LatLngAltitude.prototype.lat;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Returns the longitude.
  * @type {number}
  */
 google.maps.LatLngAltitude.prototype.lng;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Comparison function.
  * @param {?google.maps.LatLngAltitude} other Another LatLngAltitude object.
  * @return {boolean} Whether the two objects are equal.
@@ -3938,7 +3931,6 @@ google.maps.LatLngAltitude.prototype.lng;
 google.maps.LatLngAltitude.prototype.equals = function(other) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @return {!google.maps.LatLngAltitudeLiteral} A JSON representation of this
  *     object.
  * @override
@@ -3946,7 +3938,6 @@ google.maps.LatLngAltitude.prototype.equals = function(other) {};
 google.maps.LatLngAltitude.prototype.toJSON = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Object literals are accepted in place of <code>LatLngAltitude</code> objects,
  * as a convenience, in many places. These are converted to
  * <code>LatLngAltitude</code> objects when the Maps API encounters them.
@@ -3956,7 +3947,6 @@ google.maps.LatLngAltitude.prototype.toJSON = function() {};
 google.maps.LatLngAltitudeLiteral = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Distance (in meters) above the ground surface. Negative value means
  * underneath the ground surface. Defaults to 0.
  * @type {number}
@@ -3964,7 +3954,6 @@ google.maps.LatLngAltitudeLiteral = function() {};
 google.maps.LatLngAltitudeLiteral.prototype.altitude;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Latitude in degrees. Values will be clamped to the range [-90, 90]. This
  * means that if the value specified is less than -90, it will be set to -90.
  * And if the value is greater than 90, it will be set to 90.
@@ -3973,7 +3962,6 @@ google.maps.LatLngAltitudeLiteral.prototype.altitude;
 google.maps.LatLngAltitudeLiteral.prototype.lat;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Longitude in degrees. Values outside the range [-180, 180] will be wrapped so
  * that they fall within the range. For example, a value of -190 will be
  * converted to 170. A value of 190 will be converted to -170. This reflects the
@@ -4492,7 +4480,6 @@ google.maps.Map.prototype.getTilt = function() {};
 google.maps.Map.prototype.getZoom = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Immediately sets the map&#39;s camera to the target camera options, without
  * animation.
  * @param {!google.maps.CameraOptions} cameraOptions
@@ -4656,7 +4643,6 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
     latLng) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The visible region of the map. Returns <code>null</code> if the map has no
  * size. Returns <code>null</code> if the OverlayView is on a
  * StreetViewPanorama.
@@ -8322,7 +8308,6 @@ google.maps.VehicleType = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Contains the four points defining the four-sided polygon that is the visible
  * region of the map. On a vector map this polygon can be a trapezoid instead of
  * a rectangle, when a vector map has tilt.
@@ -8357,7 +8342,6 @@ google.maps.VisibleRegion.prototype.nearLeft;
 google.maps.VisibleRegion.prototype.nearRight;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * Drawing options.
  * @record
  */
@@ -8377,7 +8361,6 @@ google.maps.WebGLDrawOptions.prototype.gl;
 google.maps.WebGLDrawOptions.prototype.transformer;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * The WebGL Overlay View provides direct access to the same WebGL rendering
  * context Google Maps Platform uses to render the vector basemap. This use of a
  * shared rendering context provides benefits such as depth occlusion with 3D
@@ -8483,7 +8466,6 @@ google.maps.WebGLOverlayView.prototype.requestStateUpdate = function() {};
 google.maps.WebGLOverlayView.prototype.setMap = function(map) {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * GL state options.
  * @record
  */
