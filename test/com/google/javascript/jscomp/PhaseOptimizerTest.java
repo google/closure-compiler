@@ -182,31 +182,6 @@ public final class PhaseOptimizerTest {
   }
 
   @Test
-  public void testProgress() {
-    final List<Double> progressList = new ArrayList<>();
-    compiler =
-        new Compiler() {
-          @Override
-          void setProgress(double p, String name) {
-            progressList.add(p);
-          }
-        };
-    compiler.initCompilerOptionsIfTesting();
-    optimizer =
-        new PhaseOptimizer(compiler, null).withProgress(new PhaseOptimizer.ProgressRange(0, 100));
-    addOneTimePass("x1");
-    addOneTimePass("x2");
-    addOneTimePass("x3");
-    addOneTimePass("x4");
-    optimizer.process(null, dummyRoot);
-    assertThat(progressList).hasSize(4);
-    assertThat(Math.round(progressList.get(0))).isEqualTo(25);
-    assertThat(Math.round(progressList.get(1))).isEqualTo(50);
-    assertThat(Math.round(progressList.get(2))).isEqualTo(75);
-    assertThat(Math.round(progressList.get(3))).isEqualTo(100);
-  }
-
-  @Test
   public void testSetSkipUnsupportedPasses() {
     compiler.getOptions().setSkipUnsupportedPasses(true);
     addUnsupportedPass("testPassFactory");

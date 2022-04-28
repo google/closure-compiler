@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -275,7 +274,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final PrintStream outStream;
 
-  private volatile double progress = 0.0;
   private String lastPassName;
 
   private ImmutableSet<String> externProperties = null;
@@ -1030,7 +1028,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.devMode == DevMode.START_AND_END) {
       runValidityCheck();
     }
-    setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
       if (options.getTracerOutput() == null) {
@@ -1106,12 +1103,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>TODO(bradfordcsmith): Rename this to parse()
    */
   private void parseForCompilationInternal() {
-    setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
     maybeSetTracker();
     parseInputs();
-    // Guesstimate.
-    setProgress(0.15, "parse");
   }
 
   /**
@@ -1201,10 +1195,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void check() {
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
-    // We are currently only interested in check-passes for progress reporting
-    // as it is used for IDEs, that's why the maximum progress is set to 1.0.
-    phaseOptimizer =
-        createPhaseOptimizer().withProgress(new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
+    phaseOptimizer = createPhaseOptimizer();
     phaseOptimizer.consume(getPassConfig().getChecks());
     phaseOptimizer.process(externsRoot, jsRoot);
     if (hasErrors()) {
@@ -3386,19 +3377,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public double getProgress() {
-    return progress;
-  }
-
-  @Override
   String getLastPassName() {
     return lastPassName;
-  }
-
-  @Override
-  void setProgress(double newProgress, String passName) {
-    this.lastPassName = passName;
-    progress = min(newProgress, 1.0);
   }
 
   @Override

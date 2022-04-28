@@ -479,23 +479,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract CompilerInput getSynthesizedExternsInput();
 
-  /**
-   * @return a number in [0,1] range indicating an approximate progress of the last compile. Note
-   *     this should only be used as a hint and no assumptions should be made on accuracy, even a
-   *     completed compile may choose not to set this to 1.0 at the end.
-   */
-  public abstract double getProgress();
-
   /** Gets the last pass name set by setProgress. */
   abstract String getLastPassName();
-
-  /**
-   * Sets the progress percentage as well as the name of the last pass that ran (if available).
-   *
-   * @param progress A percentage expressed as a double in the range [0, 1]. Use -1 if you just want
-   *     to set the last pass name.
-   */
-  abstract void setProgress(double progress, @Nullable String lastPassName);
 
   static final String RUNTIME_LIB_DIR =
   "src/com/google/javascript/jscomp/js/";
