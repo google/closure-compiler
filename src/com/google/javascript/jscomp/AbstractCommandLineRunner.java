@@ -431,7 +431,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       for (String filename : config.outputManifests) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
-              "output_manifest flags specify " + "duplicate file names: " + filename);
+              "output_manifest flags specify duplicate file names: " + filename);
         }
       }
     }
@@ -441,7 +441,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       for (String filename : config.outputBundles) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
-              "output_bundle flags specify " + "duplicate file names: " + filename);
+              "output_bundle flags specify duplicate file names: " + filename);
         }
       }
     }
