@@ -255,15 +255,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
   private final ErrorReporter oldErrorReporter = RhinoErrorReporter.forOldRhino(this);
 
-  /** Error strings used for reporting JSErrors */
-  public static final DiagnosticType OPTIMIZE_LOOP_ERROR =
-      DiagnosticType.error(
-          "JSC_OPTIMIZE_LOOP_ERROR", "Exceeded max number of optimization iterations: {0}");
-
-  public static final DiagnosticType MOTION_ITERATIONS_ERROR =
-      DiagnosticType.error(
-          "JSC_MOTION_ITERATIONS_ERROR", "Exceeded max number of code motion iterations: {0}");
-
   private final CompilerExecutor compilerExecutor = createCompilerExecutor();
 
   /**
