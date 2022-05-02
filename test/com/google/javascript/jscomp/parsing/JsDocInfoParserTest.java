@@ -3148,14 +3148,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testSingleTags() {
     JSDocInfo jsdoc =
         parse(
-            "@version Some old version"
-                + "\n* @deprecated In favor of the new one!"
+            "@deprecated In favor of the new one!"
                 + "\n* @return {SomeType} The most important object :-)*/",
             true);
 
     assertThat(jsdoc.isDeprecated()).isTrue();
     assertThat(jsdoc.getDeprecationReason()).isEqualTo("In favor of the new one!");
-    assertThat(jsdoc.getVersion()).isEqualTo("Some old version");
     assertThat(jsdoc.getReturnDescription()).isEqualTo("The most important object :-)");
   }
 
@@ -3171,27 +3169,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo jsdoc =
         parse(
             "@deprecated In favor of the new one!"
-                + "\n * @return {SomeType} The most important object :-)"
-                + "\n * @version Some old version*/",
+                + "\n * @return {SomeType} The most important object :-)*/",
             true);
 
     assertThat(jsdoc.isDeprecated()).isTrue();
     assertThat(jsdoc.getDeprecationReason()).isEqualTo("In favor of the new one!");
-    assertThat(jsdoc.getVersion()).isEqualTo("Some old version");
     assertThat(jsdoc.getReturnDescription()).isEqualTo("The most important object :-)");
-  }
-
-  @Test
-  public void testVersionDuplication() {
-    parse(
-        "* @version Some old version" + "\n* @version Another version*/",
-        true,
-        "conflicting @version tag");
-  }
-
-  @Test
-  public void testVersionMissing() {
-    parse("* @version */", true, "@version tag missing version information");
   }
 
   @Test

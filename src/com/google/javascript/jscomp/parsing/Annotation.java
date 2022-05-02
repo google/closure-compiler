@@ -86,7 +86,6 @@ enum Annotation {
   TYPEDEF,
   TYPE_SUMMARY,
   UNRESTRICTED,
-  VERSION,
   WIZACTION,
   TS_TYPE,
   WIZCALLBACK;
@@ -160,7 +159,6 @@ enum Annotation {
           .put("typedef", Annotation.TYPEDEF)
           .put("typeSummary", Annotation.TYPE_SUMMARY)
           .put("unrestricted", Annotation.UNRESTRICTED)
-          .put("version", Annotation.VERSION)
           .put("wizaction", Annotation.WIZACTION)
           .put("tsType", Annotation.TS_TYPE)
           .put("wizcallback", Annotation.WIZCALLBACK)

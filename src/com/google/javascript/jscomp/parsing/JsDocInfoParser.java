@@ -1031,21 +1031,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case VERSION:
-          ExtractionInfo versionInfo = extractSingleLineBlock();
-          String version = versionInfo.string;
-
-          if (version.isEmpty()) {
-            addParserWarning(Msg.JSDOC_VERSIONMISSING);
-          } else {
-            if (!jsdocBuilder.recordVersion(version)) {
-              addParserWarning(Msg.JSDOC_EXTRAVERSION);
-            }
-          }
-
-          token = versionInfo.token;
-          return token;
-
         case CONSTANT:
         case FINAL:
         case DEFINE:

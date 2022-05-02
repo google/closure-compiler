@@ -471,7 +471,6 @@ public class JSDocInfo implements Serializable {
   private static final Property<String> FILEOVERVIEW_DESCRIPTION =
       new Property<>("fileoverviewDescription");
   private static final Property<String> RETURN_DESCRIPTION = new Property<>("returnDescription");
-  private static final Property<String> VERSION = new Property<>("version");
   private static final Property<String> ENHANCED_NAMESPACE = new Property<>("enhance");
   private static final Property<List<String>> TS_TYPES = new Property<>("tsType");
 
@@ -1325,11 +1324,6 @@ public class JSDocInfo implements Serializable {
     return SEES.get(this);
   }
 
-  /** Returns the version or null if none. */
-  public String getVersion() {
-    return VERSION.get(this);
-  }
-
   /** Returns the description of the returned object or null if none specified. */
   public String getReturnDescription() {
     return RETURN_DESCRIPTION.get(this);
@@ -1906,14 +1900,6 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordIdGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.UNIQUE);
-    }
-
-    /** Records the version. */
-    public boolean recordVersion(String version) {
-      if (!shouldParseDocumentation()) {
-        return true;
-      }
-      return populateProp(VERSION, version);
     }
 
     /** Records the deprecation reason. */
