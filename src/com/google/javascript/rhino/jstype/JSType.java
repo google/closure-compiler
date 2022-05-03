@@ -80,8 +80,9 @@ public abstract class JSType {
   private boolean hashCodeInProgress = false;
 
   private boolean inTemplatedCheckVisit = false;
-  private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
-      new CanCastToVisitor();
+  // Use "Boolean" as a 3-state value where not set is `null`.
+  private Boolean templateCheckResult = null;
+  private static final CanCastToVisitor CAN_CAST_TO_VISITOR = new CanCastToVisitor();
 
   final JSTypeRegistry registry;
 
@@ -507,15 +508,25 @@ public abstract class JSType {
   }
 
   public boolean hasAnyTemplateTypes() {
-    if (!this.inTemplatedCheckVisit) {
-      this.inTemplatedCheckVisit = true;
-      boolean result = hasAnyTemplateTypesInternal();
-      this.inTemplatedCheckVisit = false;
-      return result;
-    } else {
+    // If the result has been cached use that.
+    if (this.templateCheckResult != null) {
+      return templateCheckResult;
+    }
+
+    if (this.inTemplatedCheckVisit) {
       // prevent infinite recursion, this is "not yet".
       return false;
     }
+
+    this.inTemplatedCheckVisit = true;
+    boolean result = hasAnyTemplateTypesInternal();
+    this.inTemplatedCheckVisit = false;
+
+    // Cache the result if the type has been resolved.
+    if (this.isResolved()) {
+      templateCheckResult = result;
+    }
+    return result;
   }
 
   boolean hasAnyTemplateTypesInternal() {
@@ -1455,7 +1466,6 @@ public abstract class JSType {
         .setSubtypingMode(SubtypingMode.NORMAL)
         .check();
   }
-
 
   public final boolean isSubtypeOf(JSType supertype, SubtypingMode mode) {
     return new SubtypeChecker(this.registry)
