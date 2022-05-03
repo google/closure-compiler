@@ -342,6 +342,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   protected void setRunOptions(CompilerOptions options) throws IOException {
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
+    if (config.shouldSaveAfterStage1() || config.shouldContinueCompilation()) {
+      if (options.checksOnly) {
+        throw new FlagUsageException(
+            "checks_only mode is incompatible with multi-stage compilation");
+      }
+      if (options.getExternExportsPath() != null) {
+        throw new FlagUsageException(
+            "generating externs from exports is incompatible with multi-stage compilation");
+      }
+    }
+
     setWarningGuardOptions(options, config.warningGuards, diagnosticGroups);
 
     if (!config.warningsAllowFile.isEmpty()) {
