@@ -1785,7 +1785,8 @@ public class JSDocInfo implements Serializable {
      *     with the same name was already defined
      */
     public boolean recordParameter(String parameterName, JSTypeExpression type) {
-      return !hasAnySingletonTypeTags() && populatePropEntry(PARAMETERS, parameterName, type);
+      return !hasAnySingletonTypeTags()
+          && populatePropEntry(PARAMETERS, RhinoStringPool.addOrGet(parameterName), type);
     }
 
     /**
@@ -1798,7 +1799,8 @@ public class JSDocInfo implements Serializable {
       if (!shouldParseDocumentation()) {
         return true;
       }
-      return populatePropEntry(PARAMETER_DESCRIPTIONS, parameterName, description);
+      return populatePropEntry(
+          PARAMETER_DESCRIPTIONS, RhinoStringPool.addOrGet(parameterName), description);
     }
 
     /**
@@ -1820,7 +1822,7 @@ public class JSDocInfo implements Serializable {
           || props.containsKey(TYPEDEF_TYPE)) {
         return false;
       }
-      return populatePropEntry(TEMPLATE_TYPE_NAMES, name, bound);
+      return populatePropEntry(TEMPLATE_TYPE_NAMES, RhinoStringPool.addOrGet(name), bound);
     }
 
     /** Records a type transformation expression together with its template type name. */
@@ -1829,7 +1831,7 @@ public class JSDocInfo implements Serializable {
       if (names != null && names.containsKey(name)) {
         return false;
       }
-      return populatePropEntry(TYPE_TRANSFORMATIONS, name, expr);
+      return populatePropEntry(TYPE_TRANSFORMATIONS, RhinoStringPool.addOrGet(name), expr);
     }
 
     /**
@@ -1954,7 +1956,7 @@ public class JSDocInfo implements Serializable {
         }
         mapBuilder.putAll(current);
       }
-      mapBuilder.put(suppressions, description);
+      mapBuilder.put(internSet(suppressions), description);
       ImmutableMap<ImmutableSet<String>, String> suppressionsMap = mapBuilder.buildOrThrow();
       setProp(SUPPRESSIONS, suppressionsMap);
     }
@@ -1973,8 +1975,7 @@ public class JSDocInfo implements Serializable {
 
     /** Records the list of modifies warnings. */
     public boolean recordModifies(Set<String> modifies) {
-      return !hasAnySingletonSideEffectTags()
-          && populateProp(MODIFIES, ImmutableSet.copyOf(modifies));
+      return !hasAnySingletonSideEffectTags() && populateProp(MODIFIES, internSet(modifies));
     }
 
     /**
@@ -2164,7 +2165,7 @@ public class JSDocInfo implements Serializable {
      * @return {@code true} If the id was successfully updated.
      */
     public boolean recordClosurePrimitiveId(String closurePrimitiveId) {
-      return populateProp(CLOSURE_PRIMITIVE_ID, closurePrimitiveId);
+      return populateProp(CLOSURE_PRIMITIVE_ID, RhinoStringPool.addOrGet(closurePrimitiveId));
     }
 
     /**
@@ -2194,7 +2195,7 @@ public class JSDocInfo implements Serializable {
     }
 
     public boolean recordLicense(String license) {
-      setProp(LICENSE, license);
+      setProp(LICENSE, RhinoStringPool.addOrGet(license));
       populated = true;
       return true;
     }
@@ -2213,7 +2214,7 @@ public class JSDocInfo implements Serializable {
       }
 
       String txt = getProp(LICENSE);
-      return recordLicense(nullToEmpty(txt) + license);
+      return recordLicense(RhinoStringPool.addOrGet(nullToEmpty(txt) + license));
     }
 
     /**
@@ -2695,5 +2696,13 @@ public class JSDocInfo implements Serializable {
       }
       return false;
     }
+  }
+
+  private static ImmutableSet<String> internSet(Set<String> strings) {
+    ImmutableSet.Builder<String> interned = ImmutableSet.builderWithExpectedSize(strings.size());
+    for (String s : strings) {
+      interned.add(RhinoStringPool.addOrGet(s));
+    }
+    return interned.build();
   }
 }
