@@ -1182,7 +1182,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     List<SourceFile> externs = createExterns(options);
     List<JSChunk> modules = null;
-    Result result = null;
 
     rootRelativePathsMap = constructRootRelativePathsMap();
 
@@ -1277,14 +1276,23 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    // Release temporary data structures now that the compiler has
+    // been initialized
+    jsChunkSpecs = null;
+    jsonFiles = null;
+    externs = null;
+    sources = null;
+
     if (options.printConfig) {
       compiler.printConfig();
     }
 
+    Result result;
     if (config.skipNormalOutputs) {
       metricsRecorder.recordActionName("skip normal outputs");
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
       compiler.orderInputsWithLargeStack();
+      result = null;
     } else if (compiler.hasErrors()) {
       metricsRecorder.recordActionName("initialization errors occurred");
       // init() or initModules() encountered an error.
