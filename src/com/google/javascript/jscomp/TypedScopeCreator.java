@@ -173,37 +173,37 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final ModuleMetadataMap metadataMap;
   private final ModuleImportResolver moduleImportResolver;
   private final boolean processClosurePrimitives;
-  private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
-  private final Map<String, String> delegateCallingConventions = new HashMap<>();
+  private List<FunctionType> delegateProxyCtors;
+  private Map<String, String> delegateCallingConventions;
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
+
   // Maps from scope root to declared variable names. Populated by FirstOrderFunctionAnalyzer to
   // reserve names before the TypedScope is populated.
-  private final ListMultimap<Node, String> reservedNamesForScope =
-      MultimapBuilder.hashKeys().arrayListValues().build();
+  private ListMultimap<Node, String> reservedNamesForScope;
 
   // Set of functions with non-empty returns, for passing to FunctionTypeBuilder.
-  private final Set<Node> functionsWithNonEmptyReturns = new HashSet<>();
+  private Set<Node> functionsWithNonEmptyReturns;
   // Includes both simple and qualified names.
-  private final Set<ScopedName> escapedVarNames = new HashSet<>();
+  private Set<ScopedName> escapedVarNames;
   // Count of how many times each variable is assigned, for marking effectively final.
-  private final Multiset<ScopedName> assignedVarNames = HashMultiset.create();
+  private Multiset<ScopedName> assignedVarNames;
 
   // For convenience
   private final ObjectType unknownType;
 
   // All names imported through goog.requireType. Resolve these after all scopes are created.
-  private final List<WeakModuleImport> weakImports = new ArrayList<>();
+  private List<WeakModuleImport> weakImports;
 
-  private final List<Node> unresolvedNodes = new ArrayList<>();
+  private List<Node> unresolvedNodes;
 
   // Set of NAME, GETPROP, and STRING_KEY lvalues which should be treated as const declarations when
   // assigned. Treat simple names in this list as if they were declared `const`. E.g. treat `exports
   // = class {};` as `const exports = class {};`. Treat GETPROP and STRING_KEY nodes as if they were
   // annotated @const.
-  private final Set<Node> undeclaredNamesForClosure = new HashSet<>();
+  private Set<Node> undeclaredNamesForClosure;
 
   // Maps EXPR_RESULT nodes from goog.provides to all implicitly provided names from the call
-  private final Multimap<Node, ProvidedName> providedNamesFromCall = LinkedHashMultimap.create();
+  private Multimap<Node, ProvidedName> providedNamesFromCall;
 
   private enum Stage {
     BUILDING,
@@ -279,6 +279,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.moduleImportResolver =
         new ModuleImportResolver(this.moduleMap, getNodeToScopeMapper(), typeRegistry);
     this.processClosurePrimitives = !this.metadataMap.getModulesByGoogNamespace().isEmpty();
+
+    // Reset state to empty collections.
+    clearCommonState();
   }
 
   private void report(JSError error) {
@@ -621,19 +624,23 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     // free up memory. we no longer need this state now that all scopes have been visited
-    delegateProxyCtors.clear();
-    delegateCallingConventions.clear();
-    reservedNamesForScope.clear();
-    functionsWithNonEmptyReturns.clear();
-    escapedVarNames.clear();
-    assignedVarNames.clear();
-    weakImports.clear();
-    unresolvedNodes.clear();
-    undeclaredNamesForClosure.clear();
-    providedNamesFromCall.clear();
+    clearCommonState();
     this.stage = Stage.FROZEN;
 
     // we must keep the 'memoized' set of TypedScopes around, since later passes will use it.
+  }
+
+  private void clearCommonState() {
+    this.delegateProxyCtors = new ArrayList<>();
+    this.delegateCallingConventions = new HashMap<>();
+    this.reservedNamesForScope = MultimapBuilder.hashKeys().arrayListValues().build();
+    this.functionsWithNonEmptyReturns = new HashSet<>();
+    this.escapedVarNames = new HashSet<>();
+    this.assignedVarNames = HashMultiset.create();
+    this.weakImports = new ArrayList<>();
+    this.unresolvedNodes = new ArrayList<>();
+    this.undeclaredNamesForClosure = new HashSet<>();
+    this.providedNamesFromCall = LinkedHashMultimap.create();
   }
 
   /** Adds all enums and typedefs to the registry's list of non-nullable types. */
