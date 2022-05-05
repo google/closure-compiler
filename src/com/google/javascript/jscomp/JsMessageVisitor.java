@@ -89,6 +89,14 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   static final String MSG_PREFIX = "MSG_";
 
   /**
+   * ScopedAliases pass transforms the goog.scope declarations to have a unique id as prefix.
+   *
+   * <p>After '$jscomp$scope$' expect some sequence of digits and dollar signs ending in '$MSG_
+   */
+  private static final Pattern SCOPED_ALIASES_PREFIX_PATTERN =
+      Pattern.compile("\\$jscomp\\$scope\\$\\S+\\$MSG_");
+
+  /**
    * Pattern for unnamed messages.
    *
    * <p>All JS messages in JS code should have unique name but messages in generated code (i.e. from
@@ -237,6 +245,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
     // Is this a message name?
     boolean isNewStyleMessage = msgNode != null && msgNode.isCall();
+
     if (!isMessageName(messageKey, isNewStyleMessage)) {
       return;
     }
@@ -968,7 +977,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   /** Returns whether the given JS identifier is a valid JS message name. */
   boolean isMessageName(String identifier, boolean isNewStyleMessage) {
-    return identifier.startsWith(MSG_PREFIX)
+    return (identifier.startsWith(MSG_PREFIX) || isScopedAliasesPrefix(identifier))
         && (style == JsMessage.Style.CLOSURE
             || isNewStyleMessage
             || !identifier.endsWith(DESC_SUFFIX));
@@ -1088,5 +1097,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       this.message = message;
       this.messageNode = messageNode;
     }
+  }
+
+  public static boolean isScopedAliasesPrefix(String name) {
+    return SCOPED_ALIASES_PREFIX_PATTERN.matcher(name).lookingAt();
+  }
+
+  public static String removeScopedAliasesPrefix(String name) {
+    return SCOPED_ALIASES_PREFIX_PATTERN.matcher(name).replaceFirst("MSG_");
   }
 }

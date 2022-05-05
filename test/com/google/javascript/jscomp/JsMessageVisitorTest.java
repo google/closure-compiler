@@ -1021,6 +1021,22 @@ public final class JsMessageVisitorTest {
     assertThat(msg.getDesc()).isEqualTo("Hello");
   }
 
+  @Test
+  public void testGetMsgWithGoogScope() {
+    extractMessagesSafely(
+        lines(
+            "/** @desc Suggestion Code found outside of <head> tag. */",
+            "var $jscomp$scope$12345$0$MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG =",
+            "goog.getMsg('Code should be added to <body> tag.');"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getId()).isEqualTo("MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG");
+    assertThat(msg.getKey())
+        .isEqualTo("$jscomp$scope$12345$0$MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG");
+  }
+
   private void assertNoErrors() {
     assertThat(compiler.getErrors()).isEmpty();
   }
