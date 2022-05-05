@@ -22,7 +22,7 @@
     "build": "clean && mvn -DskipTests",
     "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
     "clean": "yarn runtime_tests:clean && mvn clean",
-    "compile": "java -jar bazel-bin/compiler_shaded.jar",
+    "compile": "java -jar bazel-bin/compiler_uberjar_deploy.jar",
     "runtime_tests:build": "$npm_package_config_runtime_tests_dir/utils/build.sh",
     "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests_dir/**/build/*",
     "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests_dir/utils/test/* --verbose=true",

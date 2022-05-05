@@ -59,7 +59,7 @@ jobs:
         # upload-artifact doesn't support paths with symlinks
         run: |
           mkdir -p ${{ env.UNSYMLINK_DIR }}
-          cp -t ${{ env.UNSYMLINK_DIR }} bazel-bin/compiler_shaded.jar
+          cp -t ${{ env.UNSYMLINK_DIR }} bazel-bin/compiler_uberjar_deploy.jar
           cp -t ${{ env.UNSYMLINK_DIR }} bazel-bin/*_bundle.jar
 
         # Share the following files with other jobs in this workflow. They can be grabbed using ID
@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: unshaded_compiler
-          path: ${{ env.UNSYMLINK_DIR }}/compiler_shaded.jar
+          path: ${{ env.UNSYMLINK_DIR }}/compiler_uberjar_deploy.jar
           if-no-files-found: error
 
         # If this build will be uploadaded as a SNAPSHOT, share the Sonatype bundles with the other
@@ -124,7 +124,7 @@ jobs:
           path: compiler/bazel-bin
 
       - name: Test closure-compiler-npm
-        run: compiler/.github/ci_support/test_closure-compiler-npm.sh compiler/bazel-bin/compiler_shaded.jar
+        run: compiler/.github/ci_support/test_closure-compiler-npm.sh compiler/bazel-bin/compiler_uberjar_deploy.jar
 
   deploy-snapshots:
     name: Deploy Snapshot Bundles to Sonatype
