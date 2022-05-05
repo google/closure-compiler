@@ -940,7 +940,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk("var f = {'hi': 'mom', 'bye': goog.nullFunction};")
+                .addChunk("var f = {'hi': 'mom', 'bye': shared};")
                 .addChunk("var h = f;")
                 .build()));
   }
@@ -967,7 +967,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk("var f = ['hi', goog.nullFunction];")
+                .addChunk("var f = ['hi', shared];")
                 .addChunk("var h = f;")
                 .build()));
   }
@@ -994,7 +994,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     testSame(
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk("var f = `hi ${goog.nullFunction()}`;")
+                .addChunk("var f = `hi ${shared()}`;")
                 .addChunk("var h = f;")
                 .build()));
   }

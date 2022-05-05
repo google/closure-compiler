@@ -649,8 +649,7 @@ abstract class PotentialDeclaration {
     return rhs.isFunction()
         || rhs.isClass()
         || NodeUtil.isCallTo(rhs, "goog.defineClass")
-        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
-        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"));
+        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"));
   }
 
   private static boolean isExportLhs(Node lhs) {
