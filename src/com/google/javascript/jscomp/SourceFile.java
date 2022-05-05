@@ -39,8 +39,8 @@ import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,24 +125,27 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return;
     }
 
-    if (this.code == null) {
+    String localCode = this.code;
+    if (localCode == null) {
       try {
-        // Loading the code calls `findLineOffsets`.
-        // It's possible to have lineOffsets without code after deserialization.
-        this.getCode();
+        localCode = this.getCode();
       } catch (IOException e) {
-        this.lineOffsets = new int[1];
+        localCode = "";
       }
-
-      checkNotNull(this.lineOffsets);
-      return;
     }
 
-    String[] sourceLines = this.code.split("\n", -1);
-    this.lineOffsets = new int[sourceLines.length];
-    for (int ii = 1; ii < sourceLines.length; ++ii) {
-      this.lineOffsets[ii] = this.lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
+    int[] offsets = new int[256]; // default is arbitrary. Assume most files are around 200 lines
+    int index = 1; // start at 1 since the offset for line 0 is always at byte 0
+    int offset = 0;
+    while ((offset = localCode.indexOf('\n', offset)) != -1) {
+      // +1 because this is the offset of the next line which is one past the newline
+      offset++;
+      offsets[index++] = offset;
+      if (index == offsets.length) {
+        offsets = Arrays.copyOf(offsets, offsets.length * 2);
+      }
     }
+    this.lineOffsets = index == offsets.length ? offsets : Arrays.copyOf(offsets, index);
   }
 
   /** Gets all the code in this source file. */
@@ -196,8 +199,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
 
       this.code = sourceCode;
-
-      this.findLineOffsets();
     }
   }
 
@@ -714,9 +715,9 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       @Override
       @GwtIncompatible
       String loadUncachedCode() throws IOException {
-        try (Reader r = this.openUncachedReader()) {
-          return CharStreams.toString(r);
-        } catch (MalformedInputException e) {
+        try {
+          return Files.readString(this.relativePath, this.getCharset());
+        } catch (CharacterCodingException e) {
           throw new IOException(
               "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
         }
