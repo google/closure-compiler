@@ -16,10 +16,16 @@
 
 package com.google.javascript.jscomp.graph;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
+import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizEdge;
+import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizNode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -361,10 +367,17 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
    */
   public static class LinkedDiGraphNode<N, E> implements DiGraphNode<N, E>, GraphvizNode {
 
-    List<LinkedDiGraphEdge<N, E>> inEdgeList = new ArrayList<>();
-    List<LinkedDiGraphEdge<N, E>> outEdgeList = new ArrayList<>();
+    // The overwhelming majority of nodes have in/out degree == 1. Initialize our lists to account
+    // for that.
+    private final List<LinkedDiGraphEdge<N, E>> inEdgeList =
+        new ArrayList<>(/* initialCapacity= */ 1);
+
+    private final List<LinkedDiGraphEdge<N, E>> outEdgeList =
+        new ArrayList<>(/* initialCapacity= */ 1);
 
     protected final N value;
+
+    private int priority = -1;
 
     /**
      * Constructor
@@ -420,6 +433,23 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
     @Override
     public List<LinkedDiGraphEdge<N, E>> getOutEdges() {
       return outEdgeList;
+    }
+
+    @Override
+    public boolean hasPriority() {
+      return this.priority >= 0;
+    }
+
+    @Override
+    public int getPriority() {
+      checkState(this.priority >= 0, "priority not set");
+      return this.priority;
+    }
+
+    @Override
+    public void setPriority(int priority) {
+      checkArgument(priority >= 0, "priorities must be non-negative");
+      this.priority = priority;
     }
   }
 
