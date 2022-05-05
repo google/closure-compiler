@@ -2346,13 +2346,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintNumber("1E3", 1000);
     assertPrintNumber("1E4", 10000);
     assertPrintNumber("1E5", 100000);
-    assertPrintNumber("1E18", 1000000000000000000L);
+    assertPrintNumber("1E18", 1000000000000000000d);
     assertPrintNumber("1E5", 100000.0);
     assertPrintNumber("100000.1", 100000.1);
 
     assertPrintNumber("1E-6", 0.000001);
-    assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001L);
-    assertPrintNumber("0x7fffffffffffffff", 0x7fffffffffffffffL);
+    assertPrintNumber("0x38d7ea4c68001", 0x38d7ea4c68001p0d);
+    assertPrintNumber("0x7fffffffffffffff", 0x7fffffffffffffffp0d);
 
     assertPrintNumber(".01", 0.01);
     assertPrintNumber("1.01", 1.01);
@@ -3831,14 +3831,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             + "/**\n"
             + " * @param {ScopedType} obj\n"
             + " */\n"
-            + "var fn = /**\n"
+            + "var $jscomp$scope$3556498$1$fn = /**\n"
             + " * @param {ScopedType} obj\n"
             + " */\n"
             + "function(obj) {\n"
             + "  alert(STR);\n"
             + "  alert(Quux.someProperty);\n"
             + "};\n"
-            + "var STR = '3';\n";
+            + "var $jscomp$scope$3556498$0$STR = '3';\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setChecksOnly(true);
