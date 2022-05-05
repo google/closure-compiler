@@ -803,12 +803,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-  public void restoreFrom(SourceFile other) {
-    // TODO(b/181147184): determine if this method is necessary after moving to TypedAST
-    this.code = other.code;
-    this.lineOffsets = other.lineOffsets;
-  }
-
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(ObjectOutputStream os) throws Exception {
     checkState(
