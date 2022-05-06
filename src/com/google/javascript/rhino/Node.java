@@ -3368,4 +3368,8 @@ public class Node {
   public final boolean isYield() {
     return this.token == Token.YIELD;
   }
+
+  public final boolean isDeclare() {
+    return this.token == Token.DECLARE;
+  }
 }
