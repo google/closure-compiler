@@ -19,14 +19,6 @@
     "jsdom": "^16.3.0"
   },
   "scripts": {
-    "build": "clean && mvn -DskipTests",
-    "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
-    "clean": "yarn runtime_tests:clean && mvn clean",
-    "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar",
-    "runtime_tests:build": "$npm_package_config_runtime_tests_dir/utils/build.sh",
-    "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests_dir/**/build/*",
-    "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests_dir/utils/test/* --verbose=true",
-    "runtime_tests": "yarn runtime_tests:clean && yarn run --silent runtime_tests:build && yarn run --silent runtime_tests:run",
-    "test": "mvn test"
+    "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar"
   }
 }
