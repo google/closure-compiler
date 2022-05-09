@@ -5114,7 +5114,12 @@ public final class NodeUtil {
         return null;
       }
 
-      if (parent.isName()) {
+      if (parent.isName()
+          || parent.isExport()
+          || parent.isVar()
+          || parent.isLet()
+          || parent.isConst()
+          || parent.isDeclare()) {
         return getBestJSDocInfoNode(parent);
       } else if (parent.isAssign()) {
         return getBestJSDocInfoNode(parent);
