@@ -47,8 +47,8 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -129,7 +129,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract void setStringMap(VariableMap stringMap);
 
   /** Sets the css names found during compilation. */
-  public abstract void setCssNames(Map<String, Integer> newCssNames);
+  public abstract void setCssNames(LinkedHashMap<String, Integer> newCssNames);
 
   /** Sets the mapping for instrumentation parameter encoding. */
   public abstract void setInstrumentationMapping(VariableMap instrumentationMapping);

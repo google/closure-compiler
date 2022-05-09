@@ -76,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1653,9 +1654,9 @@ public final class DefaultPassConfig extends PassConfig {
                   new CompilerPass() {
                     @Override
                     public void process(Node externs, Node jsRoot) {
-                      Map<String, Integer> newCssNames = null;
+                      LinkedHashMap<String, Integer> newCssNames = null;
                       if (options.gatherCssNames) {
-                        newCssNames = new HashMap<>();
+                        newCssNames = new LinkedHashMap<>();
                       }
                       ReplaceCssNames pass =
                           new ReplaceCssNames(compiler, newCssNames, options.cssRenamingSkiplist);

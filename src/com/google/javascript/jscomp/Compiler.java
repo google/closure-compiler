@@ -3103,7 +3103,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Keys are arguments passed to getCssName() found during compilation; values are the number of
    * times the key appeared as an argument to getCssName().
    */
-  private Map<String, Integer> cssNames = null;
+  private LinkedHashMap<String, Integer> cssNames = null;
 
   /** The variable renaming map */
   private VariableMap variableMap = null;
@@ -3121,7 +3121,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String idGeneratorMap = null;
 
   /** Names exported by goog.exportSymbol. */
-  private final Set<String> exportedNames = new LinkedHashSet<>();
+  private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();
 
   @Override
   public void setVariableMap(VariableMap variableMap) {
@@ -3147,7 +3147,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public void setCssNames(Map<String, Integer> cssNames) {
+  public void setCssNames(LinkedHashMap<String, Integer> cssNames) {
     this.cssNames = cssNames;
   }
 
@@ -3524,8 +3524,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final JSChunkGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
-    private final Set<String> exportedNames;
-    private final Map<String, Integer> cssNames;
+    private final LinkedHashSet<String> exportedNames;
+    private final LinkedHashMap<String, Integer> cssNames;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
