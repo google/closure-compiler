@@ -2522,6 +2522,25 @@ MediaQueryList.prototype.dispatchEvent = function(evt) {};
 var MediaQueryListListener;
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryListEvent
+ * @constructor
+ * @extends {Event}
+ */
+function MediaQueryListEvent() {}
+
+/**
+ * A boolean value; returns true if the document currently matches the media query list, false if not.
+ * @const {boolean}
+ */
+MediaQueryListEvent.prototype.matches;
+
+/**
+ * A String representing a serialized media query.
+ * @const {string}
+ */
+MediaQueryListEvent.prototype.media;
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/cssom-view/#screen
  */
