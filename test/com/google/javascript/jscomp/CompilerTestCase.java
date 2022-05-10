@@ -52,9 +52,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -223,9 +222,9 @@ public abstract class CompilerTestCase {
    */
   private boolean scriptFeatureValidationEnabled;
 
-  private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
+  private final Set<DiagnosticType> ignoredWarnings = new LinkedHashSet<>();
 
-  private final Map<String, String> webpackModulesById = new HashMap<>();
+  private final Map<String, String> webpackModulesById = new LinkedHashMap<>();
 
   /** Whether {@link #setUp} has run. */
   private boolean setUpRan = false;
@@ -602,7 +601,7 @@ public abstract class CompilerTestCase {
   protected CompilerTestCase(String externs) {
     this.defaultExternsInputs =
         ImmutableList.of(SourceFile.fromCode(GENERATED_EXTERNS_NAME, externs));
-    librariesToInject = new HashSet<>();
+    librariesToInject = new LinkedHashSet<>();
   }
 
   /** Constructs a test. Uses AST comparison and no externs. */
