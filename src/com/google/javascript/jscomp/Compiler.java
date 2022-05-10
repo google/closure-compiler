@@ -105,6 +105,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -3529,7 +3530,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
-    private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
+    private final ImmutableMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
@@ -3551,7 +3552,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
-      this.inputSourceMaps = compiler.inputSourceMaps;
+      this.inputSourceMaps = ImmutableMap.copyOf(new TreeMap<>(compiler.inputSourceMaps));
       this.changeStamp = compiler.changeStamp;
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
@@ -3671,7 +3672,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
-    inputSourceMaps = compilerState.inputSourceMaps;
+    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
     changeStamp = compilerState.changeStamp;
     accessorSummary = compilerState.accessorSummary;
 
