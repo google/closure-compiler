@@ -2764,15 +2764,23 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           declarePropertyIfNamespaceType(ownerType, ownerNode, propName, valueType, n);
         }
 
-        // If the property is already declared, the error will be
-        // caught when we try to declare it in the current scope.
-        new SlotDefiner()
-            .forDeclarationNode(n)
-            .forVariableName(qName)
-            .inScope(getLValueRootScope(n))
-            .withType(valueType)
-            .allowLaterTypeInference(inferred)
-            .defineSlot();
+        // this is a memory optimization: we don't need to declare .prototype props in the scope.
+        // NOTE: in theory we could possibly extend this to more kinds of declarations and only
+        // declare simple (non-qualified) names in the scope, but that seems to cause a lot more
+        // issues with older code.
+        boolean declareInScope = ownerType == null || !ownerType.isFunctionPrototypeType();
+
+        // If the property is already declared, the error will be caught when we try to declare it
+        // in the current scope.
+        if (declareInScope) {
+          new SlotDefiner()
+              .forDeclarationNode(n)
+              .forVariableName(qName)
+              .inScope(getLValueRootScope(n))
+              .withType(valueType)
+              .allowLaterTypeInference(inferred)
+              .defineSlot();
+        }
       }
     }
 

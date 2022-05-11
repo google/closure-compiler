@@ -594,10 +594,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "externObj5.prototype.propWithAnnotatedStubAfter;");
 
     enableTypeCheck();
-    testSame(
-        externs(externs),
-        srcs("o.prototype.propWithAnnotatedStubAfter"),
-        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
+    testSame(externs(externs), srcs("o.prototype.propWithAnnotatedStubAfter"));
     assertThat(noSideEffectCalls).isEmpty();
   }
 
@@ -621,10 +618,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "externObj5.prototype.propWithAnnotatedStubAfter;");
 
     enableTypeCheck();
-    testSame(
-        externs(externs),
-        srcs("o.prototype.propWithAnnotatedStubAfter"),
-        warning(TypeValidator.DUP_VAR_DECLARATION));
+    testSame(externs(externs), srcs("o.prototype.propWithAnnotatedStubAfter"));
     assertThat(noSideEffectCalls).isEmpty();
   }
 
