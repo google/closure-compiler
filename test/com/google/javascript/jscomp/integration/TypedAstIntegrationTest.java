@@ -355,6 +355,31 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         .isEqualTo(expectedRoot);
   }
 
+  @Test
+  public void testAngularPass() throws IOException {
+    precompileLibrary(
+        extern(new TestExternsBuilder().build()),
+        code(
+            lines(
+                "/** @ngInject */ function f() {} ",
+                "/** @ngInject */ function g(a){} ",
+                "/** @ngInject */ var b = function f(a, b, c) {} ")));
+
+    CompilerOptions options = new CompilerOptions();
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot =
+        parseExpectedCode(
+            lines(
+                "function f() {} ",
+                "function g(a) {} g['$inject']=['a'];",
+                "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']"));
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
@@ -416,6 +441,7 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
+    options.setAngularPass(true);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProtectHiddenSideEffects(true);
     options.setTypedAstOutputFile(typedAstPath);
