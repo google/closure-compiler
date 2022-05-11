@@ -48,6 +48,7 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.mockito.Mockito.verify;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -4737,6 +4738,29 @@ public final class NodeUtilTest {
     }
   }
 
+  @RunWith(JUnit4.class)
+  public static final class NodeMetricsTest {
+    @Test
+    public void testEstimateNumLines() {
+      assertThat(NodeUtil.estimateNumLines(parse(""))).isEqualTo(2);
+      assertThat(NodeUtil.estimateNumLines(parse("const x = 1;\nconst y = 2;\n"))).isEqualTo(3);
+      assertThat(
+              NodeUtil.estimateNumLines(
+                  parse(
+                      lines(
+                          "/* some",
+                          "long",
+                          "multi",
+                          "line",
+                          "comment",
+                          "*/",
+                          "const x = 1;",
+                          "const y = 2;",
+                          ""))))
+          .isEqualTo(9);
+    }
+  }
+
   private static Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
     return getNameNode(ast, name);
@@ -4849,5 +4873,9 @@ public final class NodeUtilTest {
 
   private static boolean isValidQualifiedName(String s) {
     return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
+  }
+
+  private static String lines(String... lines) {
+    return Joiner.on('\n').join(lines);
   }
 }

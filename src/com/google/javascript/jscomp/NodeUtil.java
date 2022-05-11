@@ -5979,4 +5979,24 @@ public final class NodeUtil {
     }
     return null;
   }
+
+  /**
+   * Estimates the number of lines in the file of this script node.
+   *
+   * <p>This method returns the line number of the last node in the script +1. This is not strictly
+   * the number of lines in the file (consider trailing comments or whitespace), but should be
+   * strongly correlated with it. If perfect accuracy is desired the original source file will have
+   * to be read.
+   */
+  public static int estimateNumLines(Node scriptNode) {
+    checkArgument(scriptNode.getToken() == Token.SCRIPT);
+    Node current = scriptNode;
+    while (current.hasChildren()) {
+      current = current.getLastChild();
+    }
+
+    // +1 since this is the start line of the last AST node and we can expect at least one
+    // trailing newline
+    return current.getLineno() + 1;
+  }
 }

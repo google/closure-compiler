@@ -265,7 +265,9 @@ public class Parser {
   // 14 Program
   public ProgramTree parseProgram() {
     try {
-      SourcePosition start = getTreeStartLocation();
+      // Set the start location at the beginning of the file rather than the beginning of the first
+      // token.  This ensures that it accounts for leading comments.
+      SourcePosition start = lastSourcePosition;
       ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
       eat(TokenType.END_OF_FILE);
       return new ProgramTree(getTreeLocation(start), sourceElements, commentRecorder.getComments());

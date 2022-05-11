@@ -114,12 +114,6 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return lineOffsets[lineno - 1];
   }
 
-  /** @return The number of lines in this source file. */
-  int getNumLines() {
-    findLineOffsets();
-    return lineOffsets.length;
-  }
-
   private void findLineOffsets() {
     if (this.lineOffsets != null) {
       return;
