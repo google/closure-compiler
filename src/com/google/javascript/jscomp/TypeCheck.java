@@ -1947,7 +1947,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               iterableType,
               "Can only async iterate over a (non-null) Iterable or AsyncIterable type");
 
-      if (!maybeType.isPresent()) {
+      if (maybeType.isEmpty()) {
         // Not iterable or async iterable, error reported by
         // expectAutoboxesToIterableOrAsyncIterable.
         return;
@@ -2910,7 +2910,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         Optional<JSType> maybeActualYieldType =
             validator.expectAutoboxesToIterableOrAsyncIterable(
                 n, actualYieldType, "Expression yield* expects an iterable or async iterable");
-        if (!maybeActualYieldType.isPresent()) {
+        if (maybeActualYieldType.isEmpty()) {
           // don't do any further typechecking of the yield* type.
           return;
         }

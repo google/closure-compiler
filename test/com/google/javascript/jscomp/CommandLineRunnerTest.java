@@ -263,8 +263,7 @@ public final class CommandLineRunnerTest {
 
     // During stage 3 the message is actually replaced and the output written to the compiled
     // output file.
-    final String compiledJs =
-        new String(java.nio.file.Files.readAllBytes(compiledFile.toPath()), UTF_8);
+    final String compiledJs = java.nio.file.Files.readString(compiledFile.toPath());
     assertThat(compiledJs).isEqualTo("console.log(\"hola\");\n");
   }
 
@@ -278,7 +277,7 @@ public final class CommandLineRunnerTest {
     final ImmutableList<String> combinedFlags =
         ImmutableList.<String>builder().addAll(flags).add(additionalFlag).build();
     CommandLineRunner checksOnlyRunner = new CommandLineRunner(stringListToArray(combinedFlags));
-    assertThrows(FlagUsageException.class, () -> checksOnlyRunner.doRun());
+    assertThrows(FlagUsageException.class, checksOnlyRunner::doRun);
   }
 
   private String[] stringListToArray(ImmutableList<String> stringList) {

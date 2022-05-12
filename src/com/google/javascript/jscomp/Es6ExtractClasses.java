@@ -77,8 +77,8 @@ public final class Es6ExtractClasses extends NodeTraversal.AbstractPostOrderCall
 
   private class SelfReferenceRewriter implements NodeTraversal.Callback {
     private class ClassDescription {
-      Node nameNode;
-      String outerName;
+      final Node nameNode;
+      final String outerName;
 
       ClassDescription(Node nameNode, String outerName) {
         this.nameNode = nameNode;

@@ -99,7 +99,7 @@ final class StaticSuperPropReplacer implements NodeTraversal.Callback {
   private void tryReplaceSuper(Node superNode) {
     checkState(!superclasses.isEmpty(), "`super` cannot appear outside a function");
     Optional<Node> currentSuperclass = superclasses.peek();
-    if (!currentSuperclass.isPresent() || !currentSuperclass.get().isQualifiedName()) {
+    if (currentSuperclass.isEmpty() || !currentSuperclass.get().isQualifiedName()) {
       // either if a) we're in a static class fn without an 'extends' clause or b) we're not in
       // a static class function
       return;

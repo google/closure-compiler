@@ -1329,7 +1329,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (builder.length() == 0) {
         builder.append("// No chunks were matched:\n");
         for (String chunkName : unmatchedChunkNames) {
-          builder.append("// " + chunkName + "\n");
+          builder.append("// ").append(chunkName).append("\n");
         }
       }
     }

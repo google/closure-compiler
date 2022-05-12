@@ -234,7 +234,7 @@ public class OptionalChainTypeCheckTest {
     @Test
     public void test() {
       String js = createTestString(testCase);
-      if (!testCase.mustReport().isPresent()) {
+      if (testCase.mustReport().isEmpty()) {
         newTest().addSource(js).run();
       } else {
         newTest().addSource(js).addDiagnostic(testCase.mustReport().get()).run();
@@ -319,7 +319,7 @@ public class OptionalChainTypeCheckTest {
     @Test
     public void test() {
       String js = createTestString(testCase);
-      if (!testCase.mustReport().isPresent()) {
+      if (testCase.mustReport().isEmpty()) {
         newTest().addSource(js).run();
       } else {
         newTest().addSource(js).addDiagnostic(testCase.mustReport().get()).run();
@@ -538,7 +538,7 @@ public class OptionalChainTypeCheckTest {
     @Test
     public void testOptChainCallExpressions() {
       String js = createOptChainCallTestString(testCase);
-      if (!testCase.mustReport().isPresent()) {
+      if (testCase.mustReport().isEmpty()) {
         newTest().addSource(js).run();
       } else {
         newTest().addSource(js).addDiagnostic(testCase.mustReport().get()).run();
