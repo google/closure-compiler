@@ -3355,6 +3355,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
                   "const attr = Attribute.SAFE;",
                   "(new HTMLScriptElement).setAttribute(attr, 'xxx');")
             }));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "goog.provide('xid');",
+                "goog.provide('xid.String');",
+                "/** @enum {string} */ xid.String = {DO_NOT_USE: ''};",
+                "/**",
+                " * @param {string} id",
+                " * @return {xid.String}",
+                " */",
+                "xid = function(id) {return /** @type {xid.String} */ (id);};",
+                "const attr = xid('src');",
+                "(new HTMLScriptElement).setAttribute(attr, 'xxx');",
+                "(new HTMLScriptElement)[attr] = 'xxx';")));
   }
 
   @Test

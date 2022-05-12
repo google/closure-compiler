@@ -495,7 +495,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     private boolean shouldRemove(String name, PotentialDeclaration decl) {
-      if ("$jscomp".equals(rootName(name))) {
+      if (rootName(name).startsWith("$jscomp")) {
         if (decl.isDetached()) {
           return true;
         }

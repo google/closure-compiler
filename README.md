@@ -231,15 +231,10 @@ you're most comfortable with.
 
 ### Building from a terminal
 
-You can trigger the build process easily with package.json scripts or by calling
-Bazel manually.
-
 ```bash
-# bazelisk build //:compiler_uberjar_deploy.jar
-yarn build
-
-# bazelisk build :all
-yarn build:all
+$ bazelisk build //:compiler_uberjar_deploy.jar
+# OR to build everything
+$ bazelisk build //:all
 ```
 
 ### Testing from a terminal
@@ -248,7 +243,7 @@ Tests can be executed in a similar way. The following command will run all tests
 in the repo.
 
 ```bash
-# bazelisk test //:all
+$ bazelisk test //:all
 ```
 
 There are hundreds of individual test targets, so it will take a few

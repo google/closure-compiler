@@ -100,8 +100,8 @@ public final class JSTypeResolver {
    */
   private final ArrayDeque<JSType> captureStack = new ArrayDeque<>();
 
-  /** The sequence of types to resolve then the resolver is closed. */
-  private final ArrayDeque<JSType> resolutionQueue = new ArrayDeque<>();
+  /** The sequence of types to resolve when the resolver is closed. */
+  private ArrayDeque<JSType> resolutionQueue = new ArrayDeque<>();
 
   private State state = State.CLOSED;
 
@@ -182,6 +182,9 @@ public final class JSTypeResolver {
     while (!this.resolutionQueue.isEmpty()) {
       this.doResolve(this.resolutionQueue.removeFirst());
     }
+
+    // resolutionQueue scales with the size of the application, so it needs to be GC'd.
+    this.resolutionQueue = new ArrayDeque<>();
 
     this.state = State.CLOSED;
 

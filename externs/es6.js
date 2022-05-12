@@ -216,6 +216,15 @@ Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
  */
 Number.prototype.valueOf = function() {};
 
+/**
+ * NOTE: this is an ES2022 extern.
+ * @param {number} index
+ * @return {string}
+ * @this {String|string}
+ * @nosideeffects
+ * @see https://tc39.github.io/ecma262/#sec-string.prototype.at
+ */
+String.prototype.at = function(index) {};
 
 /**
  * Pads the end of the string so that it reaches the given length.
@@ -447,6 +456,16 @@ function TypedArray() {};
 
 /** @const {number} */
 TypedArray.prototype.BYTES_PER_ELEMENT;
+
+/**
+ * NOTE: this is an ES2022 extern.
+ * @param {number} index
+ * @return {(number|undefined)}
+ * @this {THIS}
+ * @template THIS
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/at
+ */
+TypedArray.prototype.at = function(index) {};
 
 /**
  * @param {number} target

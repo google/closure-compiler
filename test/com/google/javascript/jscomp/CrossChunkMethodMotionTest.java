@@ -863,7 +863,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk(
                     lines(
                         "function Foo() {}", //
-                        "Foo.prototype.baz = goog.nullFunction;"))
+                        "Foo.prototype.baz = shared;"))
                 .addChunk("(new Foo).baz()")
                 .build()));
 
@@ -873,7 +873,7 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
                 .addChunk(
                     lines(
                         "class Foo {}", //
-                        "Foo.prototype.baz = goog.nullFunction;"))
+                        "Foo.prototype.baz = shared;"))
                 .addChunk("(new Foo).baz()")
                 .build()));
   }

@@ -108,11 +108,6 @@ public abstract class PassConfig {
     factoryList.add(findPassIndexByName(factoryList, passName), factory);
   }
 
-  /** Find a pass factory with the same name as the given one, and replace it. */
-  static final void replacePassFactory(List<PassFactory> factoryList, PassFactory factory) {
-    factoryList.set(findPassIndexByName(factoryList, factory.getName()), factory);
-  }
-
   /** Throws an exception if no pass with the given name exists. */
   static int findPassIndexByName(List<PassFactory> factoryList, String name) {
     for (int i = 0; i < factoryList.size(); i++) {

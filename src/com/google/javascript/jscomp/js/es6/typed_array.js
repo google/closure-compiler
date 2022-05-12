@@ -18,5 +18,6 @@
  * @fileoverview Brings in all ES6 TypedArray polyfills.
  * @suppress {uselessCode}
  */
+'require es6/typedarray/at';
 'require es6/typedarray/copywithin';
 'require es6/typedarray/fill';

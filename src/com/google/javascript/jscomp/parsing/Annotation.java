@@ -86,9 +86,9 @@ enum Annotation {
   TYPEDEF,
   TYPE_SUMMARY,
   UNRESTRICTED,
-  VERSION,
   WIZACTION,
-  TS_TYPE;
+  TS_TYPE,
+  WIZCALLBACK;
 
   static final Map<String, Annotation> recognizedAnnotations =
       new ImmutableMap.Builder<String, Annotation>()
@@ -159,8 +159,8 @@ enum Annotation {
           .put("typedef", Annotation.TYPEDEF)
           .put("typeSummary", Annotation.TYPE_SUMMARY)
           .put("unrestricted", Annotation.UNRESTRICTED)
-          .put("version", Annotation.VERSION)
           .put("wizaction", Annotation.WIZACTION)
           .put("tsType", Annotation.TS_TYPE)
+          .put("wizcallback", Annotation.WIZCALLBACK)
           .buildOrThrow();
 }

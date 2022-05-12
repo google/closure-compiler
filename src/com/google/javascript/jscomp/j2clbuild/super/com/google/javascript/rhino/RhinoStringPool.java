@@ -28,7 +28,7 @@ public final class RhinoStringPool {
     return a == b;
   }
 
-  static String addOrGet(String s) {
+  public static String addOrGet(String s) {
     return s;
   }
 

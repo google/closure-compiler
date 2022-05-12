@@ -69,7 +69,10 @@ public final class SerializeTypesToPointersTest {
                 .getType(TypePointers.trimOffset(fooCtorPointer))
                 .getObject()
                 .getDebugInfo())
-        .isEqualTo(ObjectTypeProto.DebugInfo.newBuilder().addTypename("(typeof Foo)").build());
+        .isEqualTo(
+            ObjectTypeProto.DebugInfo.newBuilder()
+                .addTypenamePointer(stringPoolBuilder.put("(typeof Foo)"))
+                .build());
   }
 
   @Test

@@ -541,11 +541,6 @@ public class CompilerInput extends DependencyInfo.Base {
     return ast.getSourceFile().getLineOffset(lineno);
   }
 
-  /** @return The number of lines in this input. */
-  public int getNumLines() {
-    return ast.getSourceFile().getNumLines();
-  }
-
   @Override
   public String toString() {
     return getName();

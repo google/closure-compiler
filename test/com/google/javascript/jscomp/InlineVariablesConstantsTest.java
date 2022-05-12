@@ -29,12 +29,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class InlineVariablesConstantsTest extends CompilerTestCase {
 
-  private boolean inlineAllStrings = false;
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new InlineVariables(
-        compiler, InlineVariables.Mode.CONSTANTS_ONLY, inlineAllStrings);
+    return new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY);
   }
 
   @Override
@@ -42,7 +39,6 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    inlineAllStrings = false;
   }
 
   @Test
@@ -58,11 +54,16 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
     // Make sure that nothing explodes if there are undeclared variables.
     testSame("var x = AA;");
 
-    // Don't inline if it will make the output larger.
-    testSame("var AA = '1234567890'; foo(AA); foo(AA); foo(AA);");
+    // Inline even if it will make the output larger,
+    // because we expect on average to get more gains from the logic we can pre-compute
+    // than we lose from redundant strings.
+    // However, see also AliasStrings, which attempts to reduce this redundancy after we
+    // have already pre-computed all of the logic we can.
+    test(
+        "var AA = '1234567890'; foo(          AA); foo(          AA); foo(          AA);",
+        "                       foo('1234567890'); foo('1234567890'); foo('1234567890');");
 
-    test("var AA = '123456789012345';AA;",
-         "'123456789012345'");
+    test("var AA = '123456789012345';AA;", "'123456789012345'");
   }
 
   @Test
@@ -82,11 +83,30 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
     test("/** @const */var aa; aa=1;", "1");
     testSame("/** @const */var aa;(function () {var y; aa=y})(); var z=aa");
 
-    // Don't inline if it will make the output larger.
-    testSame("/** @const */var aa = '1234567890'; foo(aa); foo(aa); foo(aa);");
+    // Inline even if it will make the output larger,
+    // because we expect on average to get more gains from the logic we can pre-compute
+    // than we lose from redundant strings.
+    // However, see also AliasStrings, which attempts to reduce this redundancy after we
+    // have already pre-computed all of the logic we can.
+    test(
+        lines(
+            "", //
+            "/** @const */",
+            "var aa = '1234567890';",
+            "foo(aa);",
+            "foo(aa);",
+            "foo(aa);",
+            ""),
+        lines(
+            "", //
+            "",
+            "",
+            "foo('1234567890');",
+            "foo('1234567890');",
+            "foo('1234567890');",
+            ""));
 
-    test("/** @const */var aa = '123456789012345';aa;",
-         "'123456789012345'");
+    test("/** @const */var aa = '123456789012345';aa;", "'123456789012345'");
   }
 
   @Test
@@ -95,46 +115,43 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
     // run-time behavior of code (e.g. when y is true and x is false in the
     // example below). We inline them anyway because if the code author didn't
     // want one inlined, they could define it as a non-const variable instead.
-    test("if (x) var ABC = 2; if (y) f(ABC);",
-         "if (x); if (y) f(2);");
+    test("if (x) var ABC = 2; if (y) f(ABC);", "if (x); if (y) f(2);");
   }
 
   @Test
   public void testInlineConditionallyDefinedConstant2() {
-    test("if (x); else var ABC = 2; if (y) f(ABC);",
-         "if (x); else; if (y) f(2);");
+    test("if (x); else var ABC = 2; if (y) f(ABC);", "if (x); else; if (y) f(2);");
   }
 
   @Test
   public void testInlineConditionallyDefinedConstant3() {
-    test("if (x) { var ABC = 2; } if (y) { f(ABC); }",
-         "if (x) {} if (y) { f(2); }");
+    test("if (x) { var ABC = 2; } if (y) { f(ABC); }", "if (x) {} if (y) { f(2); }");
   }
 
   @Test
   public void testInlineDefinedConstant() {
     test(
-        "/**\n" +
-        " * @define {string}\n" +
-        " */\n" +
-        "var aa = '1234567890';\n" +
-        "foo(aa); foo(aa); foo(aa);",
+        "/**\n"
+            + " * @define {string}\n"
+            + " */\n"
+            + "var aa = '1234567890';\n"
+            + "foo(aa); foo(aa); foo(aa);",
         "foo('1234567890');foo('1234567890');foo('1234567890')");
 
     test(
-        "/**\n" +
-        " * @define {string}\n" +
-        " */\n" +
-        "var ABC = '1234567890';\n" +
-        "foo(ABC); foo(ABC); foo(ABC);",
+        "/**\n"
+            + " * @define {string}\n"
+            + " */\n"
+            + "var ABC = '1234567890';\n"
+            + "foo(ABC); foo(ABC); foo(ABC);",
         "foo('1234567890');foo('1234567890');foo('1234567890')");
   }
 
   @Test
   public void testInlineVariablesConstantsWithInlineAllStringsOn() {
-    inlineAllStrings = true;
-    test("var AA = '1234567890'; foo(AA); foo(AA); foo(AA);",
-         "foo('1234567890'); foo('1234567890'); foo('1234567890')");
+    test(
+        "var AA = '1234567890'; foo(AA); foo(AA); foo(AA);",
+        "foo('1234567890'); foo('1234567890'); foo('1234567890')");
   }
 
   @Test

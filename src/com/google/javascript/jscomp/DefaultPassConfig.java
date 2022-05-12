@@ -76,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -461,7 +462,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Create extern exports after the normalize because externExports depends on unique names.
-    if (options.isExternExportsEnabled() || options.externExportsPath != null) {
+    if (options.getExternExportsPath() != null) {
       checks.add(externExports);
     }
 
@@ -974,6 +975,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.optimizeCalls) {
       loopPasses.add(optimizeCalls);
+    }
+
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clConstantHoisterPass);
+      passes.add(j2clClinitPass);
     }
 
     // It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
@@ -1648,9 +1654,9 @@ public final class DefaultPassConfig extends PassConfig {
                   new CompilerPass() {
                     @Override
                     public void process(Node externs, Node jsRoot) {
-                      Map<String, Integer> newCssNames = null;
+                      LinkedHashMap<String, Integer> newCssNames = null;
                       if (options.gatherCssNames) {
-                        newCssNames = new HashMap<>();
+                        newCssNames = new LinkedHashMap<>();
                       }
                       ReplaceCssNames pass =
                           new ReplaceCssNames(compiler, newCssNames, options.cssRenamingSkiplist);
@@ -1706,7 +1712,7 @@ public final class DefaultPassConfig extends PassConfig {
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
                 }
-                return new InlineVariables(compiler, mode, true);
+                return new InlineVariables(compiler, mode);
               })
           .setFeatureSetForOptimizations()
           .build();
@@ -2340,7 +2346,7 @@ public final class DefaultPassConfig extends PassConfig {
                 } else {
                   throw new IllegalStateException("No variable inlining option set.");
                 }
-                return new InlineVariables(compiler, mode, true);
+                return new InlineVariables(compiler, mode);
               })
           .setFeatureSetForOptimizations()
           .build();
@@ -2351,8 +2357,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("inlineConstants")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
-              (compiler) ->
-                  new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY, true))
+              (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY))
           .setFeatureSetForOptimizations()
           .build();
 

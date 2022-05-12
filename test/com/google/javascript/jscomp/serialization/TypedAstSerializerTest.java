@@ -196,7 +196,8 @@ public class TypedAstSerializerTest extends CompilerTestCase {
         final TypeProto typeProto = typeProtos.get(i);
         // none of our test cases use unions, so we know it's an object type
         final ObjectTypeProto typeProtoObject = typeProto.getObject();
-        final String typeName = typeProtoObject.getDebugInfo().getTypename(0);
+        final String typeName =
+            stringPool.get(typeProtoObject.getDebugInfo().getTypenamePointer(0));
         typeNameToTrimmedPoolOffset.put(typeName, i);
 
         // check actual property names against the expected ones

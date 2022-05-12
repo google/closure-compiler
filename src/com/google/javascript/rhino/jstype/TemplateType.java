@@ -156,4 +156,11 @@ public final class TemplateType extends ProxyObjectType {
     ContainsUpperBoundSuperTypeVisitor typeVisitor = new ContainsUpperBoundSuperTypeVisitor(null);
     return this.visit(typeVisitor) == ContainsUpperBoundSuperTypeVisitor.Result.CYCLE;
   }
+
+  @Override
+  int recursionUnsafeHashCode() {
+    // Since TemplateType has identity semantics for equality (see EqualityChecker),
+    // use identity hash code to avoid spurious hash conflicts
+    return System.identityHashCode(this);
+  }
 }

@@ -87,13 +87,9 @@ class InlineVariables implements CompilerPass {
 
   private final Mode mode;
 
-  // Inlines all strings, even if they increase the size of the gzipped binary.
-  private final boolean inlineAllStrings;
-
-  InlineVariables(AbstractCompiler compiler, Mode mode, boolean inlineAllStrings) {
+  InlineVariables(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;
     this.mode = mode;
-    this.inlineAllStrings = inlineAllStrings;
   }
 
   @Override
@@ -452,7 +448,7 @@ class InlineVariables implements CompilerPass {
         final InitialValueAnalysis initialValueAnalysis = new InitialValueAnalysis(initValue);
 
         if (isDeclaredOrInferredConstant
-            && initialValueAnalysis.isImmutableValueWorthInlining()
+            && initialValueAnalysis.isImmutableValue()
             // isAssignedOnceInLifetime() is much more expensive than the other checks
             && isAssignedOnceInLifetime()) {
           return createInlineWellDefinedVarAnalysis(initValue);
@@ -493,7 +489,7 @@ class InlineVariables implements CompilerPass {
                 });
           }
           if (isWellDefined()
-              && (initialValueAnalysis.isImmutableValueWorthInlining()
+              && (initialValueAnalysis.isImmutableValue()
                   || (initValue.isThis() && !referenceInfo.isEscaped()))) {
             // if the variable is referenced more than once, we can only
             // inline it if it's immutable and never defined before referenced.
@@ -558,7 +554,7 @@ class InlineVariables implements CompilerPass {
         final InitialValueAnalysis initialValueAnalysis = new InitialValueAnalysis(initValue);
 
         if (isDeclaredOrInferredConstant
-            && initialValueAnalysis.isImmutableValueWorthInlining()
+            && initialValueAnalysis.isImmutableValue()
             // isAssignedOnceInLifetime() is much more expensive than the other checks
             && isAssignedOnceInLifetime()) {
           return createInlineWellDefinedVarAnalysis(initValue);
@@ -583,18 +579,14 @@ class InlineVariables implements CompilerPass {
           this.value = value;
         }
 
-        private final InitiallyUnknown<Boolean> isImmutableValueWorthInlining =
-            new InitiallyUnknown<>();
+        private final InitiallyUnknown<Boolean> isImmutableValue = new InitiallyUnknown<>();
 
-        boolean isImmutableValueWorthInlining() {
-          if (isImmutableValueWorthInlining.isKnown()) {
-            return isImmutableValueWorthInlining.getKnownValue();
+        boolean isImmutableValue() {
+          if (isImmutableValue.isKnown()) {
+            return isImmutableValue.getKnownValue();
           } else {
-            return isImmutableValueWorthInlining.setKnownValueOnce(
-                value != null
-                    && NodeUtil.isImmutableValue(value)
-                    && (!value.isStringLit()
-                        || isStringWorthInlining(v, referenceInfo.references)));
+            return isImmutableValue.setKnownValueOnce(
+                value != null && NodeUtil.isImmutableValue(value));
           }
         }
 
@@ -842,31 +834,6 @@ class InlineVariables implements CompilerPass {
       }
       toRemove.replaceWith(toInsert);
       NodeUtil.markFunctionsDeleted(toRemove, compiler);
-    }
-
-    /** Compute whether the given string is worth inlining. */
-    private boolean isStringWorthInlining(Var var, List<Reference> refs) {
-      if (!inlineAllStrings && !var.isDefine()) {
-        int len = var.getInitialValue().getString().length() + "''".length();
-
-        // if not inlined: var xx="value"; .. xx .. xx ..
-        // The 4 bytes per reference is just a heuristic:
-        // 2 bytes per var name plus maybe 2 bytes if we don't inline, e.g.
-        // in the case of "foo " + CONST + " bar"
-        int noInlineBytes = "var xx=;".length() + len + 4 * (refs.size() - 1);
-
-        // if inlined:
-        // I'm going to assume that half of the quotes will be eliminated
-        // thanks to constant folding, therefore I subtract 1 (2/2=1) from
-        // the string length.
-        int inlineBytes = (len - 1) * (refs.size() - 1);
-
-        // Not inlining if doing so uses more bytes, or this constant is being
-        // defined.
-        return noInlineBytes >= inlineBytes;
-      }
-
-      return true;
     }
 
     /**

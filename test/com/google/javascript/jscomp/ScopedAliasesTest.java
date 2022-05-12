@@ -47,9 +47,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   private static final String GOOG_SCOPE_START_BLOCK = "goog.scope(function() {";
   private static final String GOOG_SCOPE_END_BLOCK = "});";
 
-  private static final String SCOPE_NAMESPACE =
-      "/** @const */ var $jscomp = $jscomp || {}; /** @const */ $jscomp.scope = {};";
-
   private static final String EXTERNS = lines(MINIMAL_EXTERNS, "var window;");
 
   private InvalidModuleGetHandling invalidModuleGetHandling;
@@ -286,35 +283,73 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testIconImage2() {
+    testScoped(
+        lines(
+            "var getIconImage = (function(){",
+            " let _iconsImage;", //
+            " function getIconImage(){",
+            "   _iconsImage = 3;",
+            "   return _iconsImage;",
+            " }",
+            "})"),
+        lines(
+            "var $jscomp$scope$m1146332801$0$getIconImage = (function(){",
+            " let _iconsImage;", //
+            " function getIconImage(){",
+            "   _iconsImage = 3;",
+            "   return _iconsImage;",
+            " }",
+            "})"));
+  }
+
+  @Test
+  public void testIconImage() {
+    testScoped(
+        lines(
+            "let _iconsImage;", //
+            "function getIconImage(){",
+            "  _iconsImage = 3;",
+            "  return _iconsImage;",
+            "}"),
+        lines(
+            "var $jscomp$scope$m1146332801$1$getIconImage = function() {",
+            "  $jscomp$scope$m1146332801$0$_iconsImage = 3;",
+            "  return $jscomp$scope$m1146332801$0$_iconsImage;",
+            "};",
+            "var $jscomp$scope$m1146332801$0$_iconsImage;"));
+  }
+
+  @Test
   public void testFunctionDeclarationInScope() {
-    testScoped("var foo = function() {};", SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {};");
+    testScoped("var foo = function() {};", "var $jscomp$scope$m1146332801$0$foo = function() {};");
   }
 
   @Test
   public void testFunctionDeclarationInScope_letConst() {
     testScoped(
         "var baz = goog.bar; let foo = function() {return baz;};",
-        SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {return goog.bar;};");
+        "var $jscomp$scope$m1146332801$0$foo = function() {return goog.bar;};");
     testScoped(
         "var baz = goog.bar; const foo = function() {return baz;};",
-        SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {return goog.bar;};");
+        "var $jscomp$scope$m1146332801$0$foo = function() {return goog.bar;};");
   }
 
   @Test
   public void testLetConstShadowing() {
     testScoped(
         "var foo = goog.bar; var f = function() {" + "let foo = baz; return foo;};",
-        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {" + "let foo = baz; return foo;};");
+        "var $jscomp$scope$m1146332801$0$f = function() {" + "let foo = baz; return foo;};");
     testScoped(
         "var foo = goog.bar; var f = function() {" + "const foo = baz; return foo;};",
-        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {" + "const foo = baz; return foo;};");
+        "var $jscomp$scope$m1146332801$0$f = function() {" + "const foo = baz; return foo;};");
   }
 
   @Test
   public void testYieldExpression() {
     testScoped(
         "var foo = goog.bar; var f = function*() {yield foo;};",
-        SCOPE_NAMESPACE + "$jscomp.scope.f = function*() {yield goog.bar;};");
+        "var $jscomp$scope$m1146332801$0$f = function*() {yield goog.bar;};");
   }
 
   @Test
@@ -336,50 +371,53 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testNonTopLevelDestructuring() {
     testScoped(
         "var f = function() {var [x, y] = [1, 2];};",
-        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {var [x, y] = [1, 2];};");
+        "var $jscomp$scope$m1146332801$0$f = function() {var [x, y] = [1, 2];};");
   }
 
   @Test
   public void testArrowFunction() {
     testScoped(
         "var foo = goog.bar; var v = (x => x + foo);",
-        SCOPE_NAMESPACE + "$jscomp.scope.v = (x => x + goog.bar)");
+        "var $jscomp$scope$m1146332801$0$v = (x => x + goog.bar)");
   }
 
   @Test
   public void testClassDefinition1() {
-    testScoped("class Foo {}", SCOPE_NAMESPACE + "$jscomp.scope.Foo=class{}");
+    testScoped("class Foo {}", "var $jscomp$scope$m1146332801$0$Foo=class{}");
   }
 
   @Test
   public void testClassDefinition2() {
     testScoped(
         "var bar = goog.bar;" + "class Foo { constructor() { this.x = bar; }}",
-        SCOPE_NAMESPACE + "$jscomp.scope.Foo = class { constructor() { this.x = goog.bar; } }");
+        "var $jscomp$scope$m1146332801$0$Foo = class { constructor() { this.x = goog.bar; } }");
   }
 
   @Test
   public void testClassDefinition3() {
     testScoped(
         "var bar = {};" + "bar.Foo = class {};",
-        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}");
+        "var $jscomp$scope$m1146332801$0$bar = {}; $jscomp$scope$m1146332801$0$bar.Foo = class"
+            + " {}");
   }
 
   @Test
   public void testClassDefinition_letConst() {
     testScoped(
         "let bar = {};" + "bar.Foo = class {};",
-        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}");
+        "var $jscomp$scope$m1146332801$0$bar = {}; $jscomp$scope$m1146332801$0$bar.Foo = class"
+            + " {}");
     testScoped(
         "const bar = {};" + "bar.Foo = class {};",
-        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}");
+        "var $jscomp$scope$m1146332801$0$bar = {}; $jscomp$scope$m1146332801$0$bar.Foo = class"
+            + " {}");
   }
 
   @Test
   public void testDefaultParameter() {
     testScoped(
         "var foo = goog.bar; var f = function(y=foo) {};",
-        SCOPE_NAMESPACE + "$jscomp.scope.f = function(y=goog.bar) {};");
+        "var $jscomp$scope$m1146332801$0$f = function(y=goog.bar) {};");
   }
 
   /**
@@ -419,24 +457,24 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testObjectLiteralShorthand() {
     testScoped(
         "var bar = goog.bar; var Foo = {bar};",
-        SCOPE_NAMESPACE + "$jscomp.scope.Foo={bar: goog.bar};");
+        "var $jscomp$scope$m1146332801$0$Foo={bar: goog.bar};");
   }
 
   @Test
   public void testObjectLiteralMethods() {
     testScoped(
         "var foo = goog.bar; var obj = {toString() {return foo}};",
-        SCOPE_NAMESPACE + "$jscomp.scope.obj = {toString() {return goog.bar}};");
+        "var $jscomp$scope$m1146332801$0$obj = {toString() {return goog.bar}};");
   }
 
   @Test
   public void testObjectLiteralComputedPropertyNames() {
     testScoped(
         "var foo = goog.bar; var obj = {[(() => foo)()]: baz};",
-        SCOPE_NAMESPACE + "$jscomp.scope.obj = {[(() => goog.bar)()]:baz};");
+        "var $jscomp$scope$m1146332801$0$obj = {[(() => goog.bar)()]:baz};");
     testScoped(
         "var foo = goog.bar; var obj = {[x => x + foo]: baz};",
-        SCOPE_NAMESPACE + "$jscomp.scope.obj = {[x => x + goog.bar]:baz};");
+        "var $jscomp$scope$m1146332801$0$obj = {[x => x + goog.bar]:baz};");
   }
 
   @Test
@@ -600,16 +638,14 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testScoped(
         lines("/** @typedef {string} */ var s;", "/** @type {s} */ var t;"),
         lines(
-            SCOPE_NAMESPACE,
-            "/** @typedef {string} */ $jscomp.scope.s;",
-            "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"));
+            "/** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;",
+            "/** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;"));
 
     testScoped(
         lines("/** @typedef {string} */ let s;", "/** @type {s} */ var t;"),
         lines(
-            SCOPE_NAMESPACE,
-            "/** @typedef {string} */ $jscomp.scope.s;",
-            "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"));
+            "/** @typedef {string} */ var $jscomp$scope$m1146332801$0$s;",
+            "/** @type {$jscomp$scope$m1146332801$0$s} */ var $jscomp$scope$m1146332801$1$t;"));
   }
 
   @Test
@@ -729,14 +765,14 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testJSDocCopiedForFunctions() {
     testScoped(
         "/** @export */ function Foo() {}",
-        SCOPE_NAMESPACE + "/** @export */ $jscomp.scope.Foo =/** @export */ function() {}");
+        "/** @export */ var $jscomp$scope$m1146332801$0$Foo =/** @export */ function() {}");
   }
 
   @Test
   public void testJSDocCopiedForClasses() {
     testScoped(
         "/** @export */ class Foo {}",
-        SCOPE_NAMESPACE + "/** @export */ $jscomp.scope.Foo = /** @export */ class {}");
+        "/** @export */ var $jscomp$scope$m1146332801$0$Foo = /** @export */ class {}");
   }
 
   @Test
@@ -757,15 +793,13 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                 "/** @constructor */ ns.A = function() {};",
                 "goog.scope(function() {",
                 "  /** @const */ var A = ns.A;",
-                "  var /** ?A */ b = null;",
+                "  var /** @type {?A} */ b = null;",
                 "});")),
         expected(
             lines(
-                "/** @const */ var $jscomp = $jscomp || {};",
-                "/** @const */ $jscomp.scope = {};",
                 "/** @const */ var ns = {};",
                 "/** @constructor */ ns.A = function() {};",
-                "/** @type {?ns.A} */ $jscomp.scope.b = null;")),
+                "/** @type {?ns.A} */ var $jscomp$scope$m1146332801$0$b = null;")),
         VERIFY_TYPES);
   }
 
@@ -783,12 +817,10 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                 "});")),
         expected(
             lines(
-                "/** @const */ var $jscomp = $jscomp || {};",
-                "/** @const */ $jscomp.scope = {};",
                 "/** @const */ var ns = {};",
                 "/** @constructor */ ns.A = function() {};",
                 // TODO(moz): See if we can avoid generating duplicate @return's
-                "/** @return {?ns.A} */ $jscomp.scope.b = ",
+                "/** @return {?ns.A} */ var $jscomp$scope$m1146332801$0$b = ",
                 "    /** @return {?ns.A} */ function() { return null; };")),
         VERIFY_TYPES);
   }
@@ -807,11 +839,9 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                 "});")),
         expected(
             lines(
-                "/** @const */ var $jscomp = $jscomp || {};",
-                "/** @const */ $jscomp.scope = {};",
                 "/** @const */ var ns = {};",
                 "/** @constructor */ ns.A = function() {};",
-                "$jscomp.scope.b = function(/** ?ns.A */ bee) {};")),
+                "var $jscomp$scope$m1146332801$0$b = function(/** ?ns.A */ bee) {};")),
         VERIFY_TYPES);
   }
 
@@ -921,14 +951,14 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testWithCatch1() {
     testScoped(
         "var x = foo(); try { } catch (e) {}",
-        SCOPE_NAMESPACE + "$jscomp.scope.x = foo(); try { } catch (e) {}");
+        "var $jscomp$scope$m1146332801$0$x = foo(); try { } catch (e) {}");
   }
 
   @Test
   public void testWithCatch2() {
     testScoped(
         "try { } catch (e) {var x = foo();}",
-        SCOPE_NAMESPACE + "try { } catch (e) {$jscomp.scope.x = foo();}");
+        "try { } catch (e) {var $jscomp$scope$m1146332801$0$x = foo();}");
   }
 
   @Test
@@ -952,29 +982,30 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   @Test
   public void testOkAliasLocal() {
-    testScoped("var x = 10;", SCOPE_NAMESPACE + "$jscomp.scope.x = 10");
-    testScoped("var x = goog['dom'];", SCOPE_NAMESPACE + "$jscomp.scope.x = goog['dom']");
+    testScoped("var x = 10;", "var $jscomp$scope$m1146332801$0$x = 10");
+    testScoped("var x = goog['dom'];", "var $jscomp$scope$m1146332801$0$x = goog['dom']");
     testScoped(
-        "var x = 10, y = 9;", SCOPE_NAMESPACE + "$jscomp.scope.x = 10; $jscomp.scope.y = 9;");
+        "var x = 10, y = 9;",
+        "var $jscomp$scope$m1146332801$0$x = 10; var $jscomp$scope$m1146332801$1$y = 9;");
     testScoped(
         "var x = 10, y = 9; goog.getX = function () { return x + y; }",
-        SCOPE_NAMESPACE
-            + "$jscomp.scope.x = 10; $jscomp.scope.y = 9;"
+        "var $jscomp$scope$m1146332801$0$x = 10; var $jscomp$scope$m1146332801$1$y = 9;"
             + "goog.getX = function () { "
-            + "    return $jscomp.scope.x + $jscomp.scope.y; }");
+            + "    return $jscomp$scope$m1146332801$0$x + $jscomp$scope$m1146332801$1$y; }");
   }
 
   @Test
   public void testOkAliasLocal_letConst() {
-    testScoped("let x = 10;", SCOPE_NAMESPACE + "$jscomp.scope.x = 10");
-    testScoped("const x = 10;", SCOPE_NAMESPACE + "$jscomp.scope.x = 10");
+    testScoped("let x = 10;", "var $jscomp$scope$m1146332801$0$x = 10");
+    testScoped("const x = 10;", "var $jscomp$scope$m1146332801$0$x = 10");
   }
 
   @Test
   public void testHoistedFunctionDeclaration() {
     testScoped(
         " g(f); function f() {} ",
-        SCOPE_NAMESPACE + " $jscomp.scope.f = function () {}; " + "g($jscomp.scope.f); ");
+        " var $jscomp$scope$m1146332801$0$f = function () {}; "
+            + "g($jscomp$scope$m1146332801$0$f); ");
   }
 
   @Test
@@ -986,28 +1017,29 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testMultipleLocals() {
     test(
         "goog.scope(function () { var x = 3; });" + "goog.scope(function () { var x = 4; });",
-        SCOPE_NAMESPACE + "$jscomp.scope.x = 3; $jscomp.scope.x$jscomp$1 = 4");
+        "var $jscomp$scope$m1146332801$0$x = 3; var $jscomp$scope$m1146332801$1$x = 4");
   }
 
   @Test
   public void testIssue1103a() {
     test(
         "goog.scope(function () {" + "  var a;" + "  foo.bar = function () { a = 1; };" + "});",
-        SCOPE_NAMESPACE + "foo.bar = function () { $jscomp.scope.a = 1; }");
+        "var $jscomp$scope$m1146332801$0$a; foo.bar = function () { $jscomp$scope$m1146332801$0$a ="
+            + " 1; }");
   }
 
   @Test
   public void testIssue1103b() {
     test(
         "goog.scope(function () {" + "  var a = foo, b, c = 1;" + "});",
-        SCOPE_NAMESPACE + "$jscomp.scope.c=1");
+        "var $jscomp$scope$m1146332801$0$b; var $jscomp$scope$m1146332801$1$c=1");
   }
 
   @Test
   public void testIssue1103c() {
     test(
         "goog.scope(function () {" + "  /** @type {number} */ var a;" + "});",
-        SCOPE_NAMESPACE + "/** @type {number} */ $jscomp.scope.a;");
+        "/** @type {number} */ var $jscomp$scope$m1146332801$0$a;");
   }
 
   @Test
@@ -1021,12 +1053,11 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             + "  /** @type {sub.C} */"
             + "  var x = null;"
             + "});",
-        SCOPE_NAMESPACE
-            + "var ns = {};"
+        "var ns = {};"
             + "ns.sub = {};"
             + "/** @constructor */ ns.sub.C = function () {};"
             + "/** @type {ns.sub.C} */"
-            + "$jscomp.scope.x = null;");
+            + "var $jscomp$scope$m1146332801$0$x = null;");
   }
 
   // https://github.com/google/closure-compiler/issues/2211
@@ -1063,10 +1094,9 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "  };",
             "});"),
         lines(
-            SCOPE_NAMESPACE,
             "var ns = {};",
             "var y = 1;",
-            "$jscomp.scope.x = function (y) {};",
+            "var $jscomp$scope$m1146332801$0$x = function (y) {};",
             "ns.fact = function y$jscomp$scopedAliases$0(n) {",
             "  return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);",
             "};"));
@@ -1304,10 +1334,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "  /** @return {F} */ function createFoo() { return 1; }",
             "});"),
         lines(
-            SCOPE_NAMESPACE,
-            "/** @return {$jscomp.scope.F} */",
-            "$jscomp.scope.createFoo = /** @return {$jscomp.scope.F} */ function() { return 1; };",
-            "/** @constructor */ $jscomp.scope.F = /** @constructor */ function() { };"),
+            "/** @return {$jscomp$scope$m1146332801$0$F} */",
+            "var $jscomp$scope$m1146332801$1$createFoo = ",
+            "/** @return {$jscomp$scope$m1146332801$0$F} */",
+            "function() { return 1; };",
+            "/** @constructor */ var $jscomp$scope$m1146332801$0$F =",
+            "/** @constructor */ function() { };"),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 

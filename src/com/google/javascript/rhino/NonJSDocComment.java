@@ -125,4 +125,9 @@ public class NonJSDocComment implements Serializable {
     this.contents = this.contents + trailingComment.contents;
     this.endPosition = trailingComment.endPosition;
   }
+
+  @Override
+  public String toString() {
+    return "NonJSDocComment : " + getCommentString();
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2022 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.parsing.parser.util.format;
+goog.module('jscomp.runtime_tests.polyfill_tests.string_at_test');
+goog.setTestOnly();
 
-public class IllegalFormatConversionException extends RuntimeException {
+const testSuite = goog.require('goog.testing.testSuite');
 
-  public IllegalFormatConversionException(char conversionType, Class<? extends Object> class1) {
-    super("ConversionType = " + conversionType + " class = " + class1);
+testSuite({
+  testAt() {
+    assertEquals('123'.at(-1), '3');
   }
-
-}
+});

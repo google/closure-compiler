@@ -85,25 +85,6 @@ public final class SourceFileTest {
         (code) -> serializeRoundTrip(SourceFile.fromCode("test.js", code, SourceKind.NON_CODE)));
   }
 
-  @Test
-  public void testLineOffset_serialization_noReloadingSource() {
-    testLineOffsetHelper(
-        (code) -> {
-          SourceFile inMemory = SourceFile.fromCode("test.js", code, SourceKind.NON_CODE);
-          assertThat(inMemory.getLineOfOffset(0)).isEqualTo(1); // Trigger line offset generation
-          SourceFile fakeOnDisk =
-              SourceFile.builder()
-                  .withPath("fake_on_disk.js")
-                  .withKind(SourceKind.NON_CODE)
-                  .build();
-
-          fakeOnDisk.restoreFrom(inMemory);
-          assertThat(fakeOnDisk.getLineOfOffset(0)).isEqualTo(1);
-
-          return serializeRoundTrip(fakeOnDisk);
-        });
-  }
-
   private void testLineOffsetHelper(Function<String, SourceFile> factory) {
     SourceFile f0 = factory.apply("");
     assertThat(f0.getLineOfOffset(0)).isEqualTo(1);
@@ -138,6 +119,11 @@ public final class SourceFileTest {
     // TODO(nickreid): This seems like a bug.
     assertThat(f3.getLineOfOffset(-1)).isEqualTo(0);
     assertThrows(Exception.class, () -> f3.getColumnOfOffset(-1));
+
+    SourceFile startsWithNewline = factory.apply("\n'a'\n'b'");
+    assertThat(startsWithNewline.getLineOffset(1)).isEqualTo(0);
+    assertThat(startsWithNewline.getLineOffset(2)).isEqualTo(1);
+    assertThat(startsWithNewline.getLineOffset(3)).isEqualTo(5);
   }
 
   @Test

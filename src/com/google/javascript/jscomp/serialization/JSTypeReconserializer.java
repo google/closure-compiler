@@ -50,6 +50,14 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
+/**
+ * Takes {@link JSType}s produced by JSCompiler's typechecker and deduplicates and serializes them
+ * into the TypedAST colors format.
+ *
+ * <p>The deduplication phase is called "reconciliation". It's necessary because the the TypedAST
+ * colors format is simpler than the {@link JSType} format, and so there is a many-to-one
+ * relationship between {@link JSType}s and TypedAST colors.
+ */
 final class JSTypeReconserializer {
 
   private final JSTypeRegistry registry;
@@ -285,7 +293,7 @@ final class JSTypeReconserializer {
   }
 
   private TypeProto reconcileObjectTypes(SeenTypeRecord seen) {
-    TreeSet<String> debugTypenames = new TreeSet<>();
+    TreeSet<Integer> debugTypenames = new TreeSet<>();
     LinkedHashSet<Integer> instancePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> prototypePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> ownProperties = new LinkedHashSet<>();
@@ -298,7 +306,7 @@ final class JSTypeReconserializer {
       ObjectType objType = checkNotNull(type.toMaybeObjectType(), type);
 
       if (this.serializationMode.includeDebugInfo()) {
-        debugTypenames.add(debugNameOf(type));
+        debugTypenames.add(this.stringPoolBuilder.put(debugNameOf(type)));
       }
 
       if (objType.isFunctionType()) {
@@ -344,7 +352,7 @@ final class JSTypeReconserializer {
             .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
             .setUuid(seen.colorId.asByteString());
     if (!debugTypenames.isEmpty()) {
-      objectProto.getDebugInfoBuilder().addAllTypename(debugTypenames);
+      objectProto.getDebugInfoBuilder().addAllTypenamePointer(debugTypenames);
     }
     return TypeProto.newBuilder().setObject(objectProto).build();
   }

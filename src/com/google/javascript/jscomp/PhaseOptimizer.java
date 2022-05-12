@@ -48,10 +48,6 @@ class PhaseOptimizer implements CompilerPass {
   private PassFactory validityCheck;
   private boolean printAstHashcodes = false;
 
-  private double progress = 0.0;
-  private double progressStep = 0.0;
-  private ProgressRange progressRange;
-
   // These fields are used during optimization loops.
   // They are declared here for two reasons:
   // 1) Loop and ScopedChangeHandler can communicate via shared state
@@ -110,11 +106,6 @@ class PhaseOptimizer implements CompilerPass {
     } else {
       this.optimizationLoopMaxIterations = MAX_LOOPS;
     }
-  }
-
-  PhaseOptimizer withProgress(ProgressRange range) {
-    this.progressRange = range;
-    return this;
   }
 
   /**
@@ -181,13 +172,6 @@ class PhaseOptimizer implements CompilerPass {
   /** Run all the passes in the optimizer. */
   @Override
   public void process(Node externs, Node root) {
-    progress = 0.0;
-    progressStep = 0.0;
-    if (progressRange != null) {
-      progressStep = (progressRange.maxValue - progressRange.initialValue) / passes.size();
-      progress = progressRange.initialValue;
-    }
-
     // When looking at this code, one can mistakenly think that the instance of
     // PhaseOptimizer keeps all compiler passes live. This would be undesirable. A pass can
     // create large data structures that are only useful to the pass, and we shouldn't
@@ -285,12 +269,6 @@ class PhaseOptimizer implements CompilerPass {
       compiler.afterPass(name);
 
       try {
-        if (progressRange == null) {
-          compiler.setProgress(-1, name);
-        } else {
-          progress += progressStep;
-          compiler.setProgress(progress, name);
-        }
         // Don't move this line in the IF. We create a Tracer even when the tracker
         // is null; so we must also stop the tracer when the tracker is null.
         // Otherwise, Tracer.ThreadTrace#events can become too big.

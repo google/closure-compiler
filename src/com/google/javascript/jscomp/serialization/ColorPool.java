@@ -260,7 +260,9 @@ public final class ColorPool {
         ObjectTypeProto objProto = proto.getObject();
 
         if (objProto.hasDebugInfo()) {
-          debugTypenames.addAll(objProto.getDebugInfo().getTypenameList());
+          for (Integer typenamePointer : objProto.getDebugInfo().getTypenamePointerList()) {
+            debugTypenames.add(shard.stringPool.get(typenamePointer));
+          }
         }
         for (Integer p : objProto.getInstanceTypeList()) {
           instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));

@@ -409,6 +409,10 @@ public abstract class JsMessage {
 
       if (!isExternal) {
         String defactoMeaning = meaning != null ? meaning : key;
+        // handle prefix from ScopedAliases pass
+        if (JsMessageVisitor.isScopedAliasesPrefix(defactoMeaning)) {
+          defactoMeaning = JsMessageVisitor.removeScopedAliasesPrefix(defactoMeaning);
+        }
         id = idGenerator == null ? defactoMeaning : idGenerator.generateId(defactoMeaning, parts);
       }
 

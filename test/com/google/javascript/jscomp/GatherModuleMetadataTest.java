@@ -533,7 +533,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testUsesGlobalClosureNoFunctionCall() {
-    testSame("var b = goog.nullFunction;");
+    testSame("var b = goog.isArray;");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isTrue();
   }

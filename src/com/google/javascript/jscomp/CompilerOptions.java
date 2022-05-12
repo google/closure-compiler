@@ -925,11 +925,6 @@ public class CompilerOptions implements Serializable {
     this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
   }
 
-  @Deprecated
-  public void setModulesToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
-    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
-  }
-
   public void setQnameUsesToPrintAfterEachPassList(List<String> qnameRegexList) {
     this.qnameUsesToPrintAfterEachPassList = qnameRegexList;
   }
@@ -975,14 +970,8 @@ public class CompilerOptions implements Serializable {
   // Special Output Options
   // --------------------------------
 
-  /**
-   * Whether the exports should be made available via {@link Result} after compilation. This is
-   * implicitly true if {@link #externExportsPath} is set.
-   */
-  private boolean externExports;
-
   /** The output path for the created externs file. */
-  String externExportsPath;
+  @Nullable private String externExportsPath;
 
   private final List<SortingErrorManager.ErrorReportGenerator> extraReportGenerators =
       new ArrayList<>();
@@ -1367,7 +1356,6 @@ public class CompilerOptions implements Serializable {
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.FULL;
-    externExports = false;
     chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
@@ -1377,12 +1365,16 @@ public class CompilerOptions implements Serializable {
     strictMessageReplacement = false;
   }
 
-  /** @return Whether to attempt to remove unused class properties */
+  /**
+   * @return Whether to attempt to remove unused class properties
+   */
   public boolean isRemoveUnusedClassProperties() {
     return removeUnusedClassProperties;
   }
 
-  /** @param removeUnusedClassProperties Whether to attempt to remove unused class properties */
+  /**
+   * @param removeUnusedClassProperties Whether to attempt to remove unused class properties
+   */
   public void setRemoveUnusedClassProperties(boolean removeUnusedClassProperties) {
     this.removeUnusedClassProperties = removeUnusedClassProperties;
   }
@@ -1470,7 +1462,9 @@ public class CompilerOptions implements Serializable {
     this.propertyRenaming = newPropertyPolicy;
   }
 
-  /** @param replaceIdGenerators the replaceIdGenerators to set */
+  /**
+   * @param replaceIdGenerators the replaceIdGenerators to set
+   */
   public void setReplaceIdGenerators(boolean replaceIdGenerators) {
     this.replaceIdGenerators = replaceIdGenerators;
   }
@@ -1706,10 +1700,6 @@ public class CompilerOptions implements Serializable {
     this.extraAnnotationNames = ImmutableSet.copyOf(extraAnnotationNames);
   }
 
-  public boolean isExternExportsEnabled() {
-    return externExports;
-  }
-
   /** Sets the output charset. */
   public void setOutputCharset(Charset charset) {
     this.outputCharset = charset;
@@ -1860,7 +1850,9 @@ public class CompilerOptions implements Serializable {
     return inferTypes;
   }
 
-  /** @deprecated This is a no-op. */
+  /**
+   * @deprecated This is a no-op.
+   */
   @Deprecated
   public void setNewTypeInference(boolean enable) {}
 
@@ -1879,12 +1871,16 @@ public class CompilerOptions implements Serializable {
     return this.checksOnly || this.allowZoneJsWithAsyncFunctionsInOutput;
   }
 
-  /** @return true if either typechecker is ON. */
+  /**
+   * @return true if either typechecker is ON.
+   */
   public boolean isTypecheckingEnabled() {
     return this.checkTypes;
   }
 
-  /** @return Whether assumeStrictThis is set. */
+  /**
+   * @return Whether assumeStrictThis is set.
+   */
   public boolean assumeStrictThis() {
     return assumeStrictThis;
   }
@@ -1894,7 +1890,9 @@ public class CompilerOptions implements Serializable {
     this.assumeStrictThis = enable;
   }
 
-  /** @return Whether assumeClosuresOnlyCaptureReferences is set. */
+  /**
+   * @return Whether assumeClosuresOnlyCaptureReferences is set.
+   */
   public boolean assumeClosuresOnlyCaptureReferences() {
     return assumeClosuresOnlyCaptureReferences;
   }
@@ -2300,25 +2298,33 @@ public class CompilerOptions implements Serializable {
     this.gatherCssNames = gatherCssNames;
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripTypes(Set<String> stripTypes) {
     this.stripTypes = ImmutableSet.copyOf(stripTypes);
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public ImmutableSet<String> getStripTypes() {
     return this.stripTypes;
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripNameSuffixes(Set<String> stripNameSuffixes) {
     this.stripNameSuffixes = ImmutableSet.copyOf(stripNameSuffixes);
   }
 
-  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  /**
+   * @deprecated StripCode is deprecated. Code should be designed to be removed by other means.
+   */
   @Deprecated
   public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
     this.stripNamePrefixes = ImmutableSet.copyOf(stripNamePrefixes);
@@ -2444,12 +2450,13 @@ public class CompilerOptions implements Serializable {
     return this.useOriginalNamesInOutput;
   }
 
-  public void setExternExports(boolean externExports) {
-    this.externExports = externExports;
+  public void setExternExportsPath(@Nullable String externExportsPath) {
+    this.externExportsPath = externExportsPath;
   }
 
-  public void setExternExportsPath(String externExportsPath) {
-    this.externExportsPath = externExportsPath;
+  @Nullable
+  public String getExternExportsPath() {
+    return this.externExportsPath;
   }
 
   public void setSourceMapOutputPath(String sourceMapOutputPath) {
@@ -2753,7 +2760,6 @@ public class CompilerOptions implements Serializable {
         .add("es6ModuleTranspilation", es6ModuleTranspilation)
         .add("exportLocalPropertyDefinitions", exportLocalPropertyDefinitions)
         .add("exportTestFunctions", exportTestFunctions)
-        .add("externExports", isExternExportsEnabled())
         .add("externExportsPath", externExportsPath)
         .add("extraAnnotationNames", extraAnnotationNames)
         .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)

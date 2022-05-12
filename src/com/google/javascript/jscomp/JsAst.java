@@ -63,7 +63,8 @@ public class JsAst implements SourceAst {
     }
     checkState(identical(this.root.getStaticSourceFile(), this.sourceFile));
     this.root.setInputId(this.inputId);
-
+    // Clear the cached source after parsing.  It will be re-read for snippet generation if needed.
+    sourceFile.clearCachedSource();
     return this.root;
   }
 

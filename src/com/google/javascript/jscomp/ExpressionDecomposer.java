@@ -1210,7 +1210,7 @@ class ExpressionDecomposer {
         // simple names as constants.
         return false;
       }
-      // This is a superset of "NodeUtil.mayHaveSideEffects".
+      // This is a superset of "AstAnalyzer.mayHaveSideEffects".
       return NodeUtil.canBeSideEffected(tree, this.knownConstantFunctions, scope);
     } else {
       // The function called doesn't have side-effects but check to see if there

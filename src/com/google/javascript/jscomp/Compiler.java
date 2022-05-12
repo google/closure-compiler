@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -106,6 +105,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -256,15 +256,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
   private final ErrorReporter oldErrorReporter = RhinoErrorReporter.forOldRhino(this);
 
-  /** Error strings used for reporting JSErrors */
-  public static final DiagnosticType OPTIMIZE_LOOP_ERROR =
-      DiagnosticType.error(
-          "JSC_OPTIMIZE_LOOP_ERROR", "Exceeded max number of optimization iterations: {0}");
-
-  public static final DiagnosticType MOTION_ITERATIONS_ERROR =
-      DiagnosticType.error(
-          "JSC_MOTION_ITERATIONS_ERROR", "Exceeded max number of code motion iterations: {0}");
-
   private final CompilerExecutor compilerExecutor = createCompilerExecutor();
 
   /**
@@ -275,7 +266,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final PrintStream outStream;
 
-  private volatile double progress = 0.0;
   private String lastPassName;
 
   private ImmutableSet<String> externProperties = null;
@@ -1030,7 +1020,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.devMode == DevMode.START_AND_END) {
       runValidityCheck();
     }
-    setProgress(1.0, "recordFunctionInformation");
 
     if (tracker != null) {
       if (options.getTracerOutput() == null) {
@@ -1106,12 +1095,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>TODO(bradfordcsmith): Rename this to parse()
    */
   private void parseForCompilationInternal() {
-    setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
     maybeSetTracker();
     parseInputs();
-    // Guesstimate.
-    setProgress(0.15, "parse");
   }
 
   /**
@@ -1201,10 +1187,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void check() {
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
-    // We are currently only interested in check-passes for progress reporting
-    // as it is used for IDEs, that's why the maximum progress is set to 1.0.
-    phaseOptimizer =
-        createPhaseOptimizer().withProgress(new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
+    phaseOptimizer = createPhaseOptimizer();
     phaseOptimizer.consume(getPassConfig().getChecks());
     phaseOptimizer.process(externsRoot, jsRoot);
     if (hasErrors()) {
@@ -1292,11 +1275,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.resetAndIntitializeSourceMap();
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
+    List<String> chunkNameRegexList = options.chunksToPrintAfterEachPassRegexList;
     final Set<String> qnameSet = new LinkedHashSet<>(options.qnameUsesToPrintAfterEachPassList);
     StringBuilder builder = new StringBuilder();
 
-    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty() && qnameSet.isEmpty()) {
+    if (fileNameRegexList.isEmpty() && chunkNameRegexList.isEmpty() && qnameSet.isEmpty()) {
       return toSource();
     }
     if (!fileNameRegexList.isEmpty()) {
@@ -1318,18 +1301,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         builder.append("// No files matched any of: ").append(fileNameRegexList);
       }
     }
-    if (!moduleNameRegexList.isEmpty()) {
-      for (JSChunk jsModule : getModules()) {
-        for (String regex : moduleNameRegexList) {
-          if (jsModule.getName().matches(regex)) {
-            String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
+    if (!chunkNameRegexList.isEmpty()) {
+      final Iterable<JSChunk> chunks = checkNotNull(getModules());
+      final List<String> unmatchedChunkNames = new ArrayList<>();
+      for (JSChunk jsChunk : chunks) {
+        final String chunkName = jsChunk.getName();
+        for (String regex : chunkNameRegexList) {
+          if (chunkName.matches(regex)) {
+            String source = "// module '" + chunkName + "'\n" + toSource(jsChunk);
             builder.append(source);
             break;
           }
         }
+        unmatchedChunkNames.add(chunkName);
       }
       if (builder.length() == 0) {
-        throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
+        builder.append("// No chunks were matched:\n");
+        for (String chunkName : unmatchedChunkNames) {
+          builder.append("// " + chunkName + "\n");
+        }
       }
     }
     if (!qnameSet.isEmpty()) {
@@ -1909,11 +1899,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
 
-        // TODO(johnlenz): we shouldn't need to check both isExternExportsEnabled and
-        // externExportsPath.
         if (options.sourceMapOutputPath != null
-            || options.isExternExportsEnabled()
-            || options.externExportsPath != null
+            || options.getExternExportsPath() != null
             || !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
           // Annotate the nodes in the tree with information from the
@@ -3117,7 +3104,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Keys are arguments passed to getCssName() found during compilation; values are the number of
    * times the key appeared as an argument to getCssName().
    */
-  private Map<String, Integer> cssNames = null;
+  private LinkedHashMap<String, Integer> cssNames = null;
 
   /** The variable renaming map */
   private VariableMap variableMap = null;
@@ -3135,7 +3122,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String idGeneratorMap = null;
 
   /** Names exported by goog.exportSymbol. */
-  private final Set<String> exportedNames = new LinkedHashSet<>();
+  private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();
 
   @Override
   public void setVariableMap(VariableMap variableMap) {
@@ -3161,7 +3148,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public void setCssNames(Map<String, Integer> cssNames) {
+  public void setCssNames(LinkedHashMap<String, Integer> cssNames) {
     this.cssNames = cssNames;
   }
 
@@ -3378,19 +3365,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public double getProgress() {
-    return progress;
-  }
-
-  @Override
   String getLastPassName() {
     return lastPassName;
-  }
-
-  @Override
-  void setProgress(double newProgress, String passName) {
-    this.lastPassName = passName;
-    progress = min(newProgress, 1.0);
   }
 
   @Override
@@ -3549,12 +3525,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final JSChunkGraph moduleGraph;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
-    private final Set<String> exportedNames;
-    private final Map<String, Integer> cssNames;
+    private final LinkedHashSet<String> exportedNames;
+    private final LinkedHashMap<String, Integer> cssNames;
     private final String idGeneratorMap;
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
-    private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
+    private final ImmutableMap<String, SourceMapInput> inputSourceMaps;
     private final int changeStamp;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
@@ -3576,7 +3552,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.idGeneratorMap = compiler.idGeneratorMap;
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
-      this.inputSourceMaps = compiler.inputSourceMaps;
+      this.inputSourceMaps = ImmutableMap.copyOf(new TreeMap<>(compiler.inputSourceMaps));
       this.changeStamp = compiler.changeStamp;
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
@@ -3696,7 +3672,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
-    inputSourceMaps = compilerState.inputSourceMaps;
+    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
     changeStamp = compilerState.changeStamp;
     accessorSummary = compilerState.accessorSummary;
 

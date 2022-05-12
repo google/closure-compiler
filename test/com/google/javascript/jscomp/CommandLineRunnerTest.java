@@ -209,9 +209,11 @@ public final class CommandLineRunnerTest {
             srcFile.toString());
 
     // Run the compiler to generate the stage 1 save file
-    CommandLineRunner runner =
-        new CommandLineRunner(
-            createStringArray(commonFlags, "--save_stage1_to_file", stage1Save.toString()));
+    final ImmutableList<String> stage1Flags =
+        createStringList(
+            commonFlags, new String[] {"--save_stage1_to_file", stage1Save.toString()});
+    verifyFlagsAreIncompatibleWithChecksOnly(stage1Flags);
+    CommandLineRunner runner = new CommandLineRunner(stringListToArray(stage1Flags));
     assertThat(runner.doRun()).isEqualTo(0);
 
     assertThat(runner.getCompiler().toSource())
@@ -220,14 +222,17 @@ public final class CommandLineRunnerTest {
     // Create a path for the stage 2 output
     File stage2Save = new File(testDir, "stage2.save");
     // run the compiler to generate the stage 2 save file
-    runner =
-        new CommandLineRunner(
-            createStringArray(
-                commonFlags,
-                "--restore_stage1_from_file",
-                stage1Save.toString(),
-                "--save_stage2_to_file",
-                stage2Save.toString()));
+    final ImmutableList<String> stage2Flags =
+        createStringList(
+            commonFlags,
+            new String[] {
+              "--restore_stage1_from_file",
+              stage1Save.toString(),
+              "--save_stage2_to_file",
+              stage2Save.toString()
+            });
+    verifyFlagsAreIncompatibleWithChecksOnly(stage2Flags);
+    runner = new CommandLineRunner(stringListToArray(stage2Flags));
     assertThat(runner.doRun()).isEqualTo(0);
 
     // During stage 2 the message is wrapped in a function call to protect it from mangling by
@@ -243,14 +248,17 @@ public final class CommandLineRunnerTest {
     File compiledFile = new File(testDir, "compiled.js");
 
     // run the compiler to generate the final output
-    runner =
-        new CommandLineRunner(
-            createStringArray(
-                commonFlags,
-                "--restore_stage2_from_file",
-                stage2Save.toString(),
-                "--js_output_file",
-                compiledFile.toString()));
+    final ImmutableList<String> stage3Flags =
+        createStringList(
+            commonFlags,
+            new String[] {
+              "--restore_stage2_from_file",
+              stage2Save.toString(),
+              "--js_output_file",
+              compiledFile.toString()
+            });
+    verifyFlagsAreIncompatibleWithChecksOnly(stage3Flags);
+    runner = new CommandLineRunner(stringListToArray(stage3Flags));
     assertThat(runner.doRun()).isEqualTo(0);
 
     // During stage 3 the message is actually replaced and the output written to the compiled
@@ -260,11 +268,26 @@ public final class CommandLineRunnerTest {
     assertThat(compiledJs).isEqualTo("console.log(\"hola\");\n");
   }
 
-  private String[] createStringArray(Iterable<String> someStrings, String... additionalStrings) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(someStrings);
-    builder.add(additionalStrings);
-    return builder.build().toArray(new String[] {});
+  /** The given flags should be incompatible with `--checks_only`. */
+  private void verifyFlagsAreIncompatibleWithChecksOnly(ImmutableList<String> flags) {
+    final String additionalFlag = "--checks_only";
+    verifyFlagConflictIsReported(flags, additionalFlag);
+  }
+
+  private void verifyFlagConflictIsReported(ImmutableList<String> flags, String additionalFlag) {
+    final ImmutableList<String> combinedFlags =
+        ImmutableList.<String>builder().addAll(flags).add(additionalFlag).build();
+    CommandLineRunner checksOnlyRunner = new CommandLineRunner(stringListToArray(combinedFlags));
+    assertThrows(FlagUsageException.class, () -> checksOnlyRunner.doRun());
+  }
+
+  private String[] stringListToArray(ImmutableList<String> stringList) {
+    return stringList.toArray(new String[] {});
+  }
+
+  private ImmutableList<String> createStringList(
+      Iterable<String> someStrings, String[] additionalStrings) {
+    return (ImmutableList.<String>builder().addAll(someStrings).add(additionalStrings)).build();
   }
 
   private void writeLinesToFile(File file, String... lines) throws IOException {

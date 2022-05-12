@@ -100,6 +100,29 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void disambiguatesGoogScopeAcrossLibraries() throws IOException {
+
+    SourceFile lib1 = code("goog.scope(function () { var x = 3; });");
+    SourceFile lib2 = code("goog.scope(function () { var x = 4; });");
+    SourceFile externs = extern(new TestExternsBuilder().addClosureExterns().build());
+
+    precompileLibrary(externs);
+    precompileLibrary(typeSummary(externs), lib1);
+    precompileLibrary(typeSummary(externs), lib2);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+
+    Compiler compiler = compileTypedAstShards(options);
+    Node expectedRoot =
+        parseExpectedCode(
+            "var $jscomp$scope$1954846972$0$x=3;", "var $jscomp$scope$1954846973$0$x=4");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
   public void disambiguatesAndDeletesMethodsAcrossLibraries() throws IOException {
     SourceFile lib1 = code("class Lib1 { m() { return 'lib1'; } n() { return 'delete me'; } }");
     SourceFile lib2 = code("class Lib2 { m() { return 'delete me'; } n() { return 'lib2'; } }");
@@ -332,6 +355,31 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         .isEqualTo(expectedRoot);
   }
 
+  @Test
+  public void testAngularPass() throws IOException {
+    precompileLibrary(
+        extern(new TestExternsBuilder().build()),
+        code(
+            lines(
+                "/** @ngInject */ function f() {} ",
+                "/** @ngInject */ function g(a){} ",
+                "/** @ngInject */ var b = function f(a, b, c) {} ")));
+
+    CompilerOptions options = new CompilerOptions();
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot =
+        parseExpectedCode(
+            lines(
+                "function f() {} ",
+                "function g(a) {} g['$inject']=['a'];",
+                "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']"));
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)
@@ -393,9 +441,11 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
+    options.setAngularPass(true);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProtectHiddenSideEffects(true);
     options.setTypedAstOutputFile(typedAstPath);
+    options.setClosurePass(true);
 
     ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();

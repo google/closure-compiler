@@ -109,6 +109,19 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
     public List<? extends DiGraphEdge<N, E>> getOutEdges();
 
     public List<? extends DiGraphEdge<N, E>> getInEdges();
+
+    /** Returns whether a priority has been set. */
+    boolean hasPriority();
+
+    /**
+     * Returns a nonnegative integer priority which can be used to order nodes.
+     *
+     * <p>Throws if a priority has not been set.
+     */
+    int getPriority();
+
+    /** Sets a node priority, must be non-negative. */
+    void setPriority(int priority);
   }
 
   /**

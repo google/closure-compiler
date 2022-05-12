@@ -140,7 +140,8 @@ public enum Msg {
   JSDOC_WIZACTION("extra @wizaction tag"),
   MISSING_VARIABLE_NAME("expecting a variable name in a @param tag."),
   NO_TYPE_NAME("expecting a type name."),
-  UNEXPECTED_EOF("Unexpected end of file");
+  UNEXPECTED_EOF("Unexpected end of file"),
+  JSDOC_WIZCALLBACK("extra @wizcallback tag");
 
   final String text;
 

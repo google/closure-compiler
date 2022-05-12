@@ -246,7 +246,7 @@ final class EqualityChecker {
     /**
      * Unwrap proxies.
      *
-     * <p>Remember that `TemplateType` has identity semantics ans shouldn't be unwrapped.
+     * <p>Remember that `TemplateType` has identity semantics and shouldn't be unwrapped.
      */
     if (left instanceof ProxyObjectType && !(left instanceof TemplateType)) {
       return this.areEqualCaching(((ProxyObjectType) left).getReferencedTypeInternal(), right);

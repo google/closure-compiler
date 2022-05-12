@@ -22,7 +22,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author anatol@google.com (Anatol Pomazau) */
+/**
+ * @author anatol@google.com (Anatol Pomazau)
+ */
 @RunWith(JUnit4.class)
 public final class JsMessageTest {
 
@@ -39,10 +41,8 @@ public final class JsMessageTest {
 
   @Test
   public void testMeaningChangesId() {
-    String id1 = new JsMessage.Builder()
-        .appendStringPart("foo").build().getId();
-    String id2 = new JsMessage.Builder()
-        .appendStringPart("foo").setMeaning("bar").build().getId();
+    String id1 = new JsMessage.Builder().appendStringPart("foo").build().getId();
+    String id2 = new JsMessage.Builder().appendStringPart("foo").setMeaning("bar").build().getId();
     assertThat(id1.equals(id2)).isFalse();
   }
 
@@ -70,6 +70,19 @@ public final class JsMessageTest {
     assertThat(msg.getDesc()).isEqualTo("Hello.");
     assertThat(msg.getId()).isEqualTo("MSG_12MI20AMYO9T6");
     assertThat(msg.getAlternateId()).isNull();
+  }
+
+  @Test
+  public void testGenerateIdWithGoogScope() {
+    JsMessage msg1 =
+        new JsMessage.Builder().setDesc("Hello.").setKey("$jscomp$scope$12345$0$MSG_HELLO").build();
+    assertThat(msg1.getDesc()).isEqualTo("Hello.");
+    assertThat(msg1.getId()).isEqualTo("MSG_HELLO");
+
+    JsMessage msg2 =
+        new JsMessage.Builder().setDesc("Test.").setKey("$jscomp$scope$m12345$0$MSG_TEST").build();
+    assertThat(msg2.getDesc()).isEqualTo("Test.");
+    assertThat(msg2.getId()).isEqualTo("MSG_TEST");
   }
 
   @Test

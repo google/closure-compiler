@@ -66,7 +66,8 @@ public class TestExternsBuilder {
           "goog.exportSymbol = function() {};",
           "goog.inherits = function(childCtor, parentCtor) {",
           "  childCtor.superClass_ = parentCtor.prototype;",
-          "};");
+          "};",
+          "goog.getMsg = function(str) {};");
 
   /**
    * There are some rare cases where we want to use the closure externs defined above as if they

@@ -422,6 +422,9 @@ CanvasDrawingStyles.prototype.textAlign;
 /** @type {string} */
 CanvasDrawingStyles.prototype.textBaseline;
 
+/** @type {string} */
+CanvasDrawingStyles.prototype.letterSpacing;
+
 // TODO(dramaix): replace this with @record.
 /**
  * @constructor
@@ -894,6 +897,9 @@ BaseRenderingContext2D.prototype.textAlign;
 /** @type {string} */
 BaseRenderingContext2D.prototype.textBaseline;
 
+/** @type {string} */
+BaseRenderingContext2D.prototype.letterSpacing;
+
 /** @type {number} */
 BaseRenderingContext2D.prototype.lineDashOffset;
 
@@ -1258,26 +1264,52 @@ HTMLImageElement.prototype.decoding;
  */
 HTMLImageElement.prototype.decode;
 
+/**
+ * @record
+ * @see https://html.spec.whatwg.org/multipage/web-messaging.html#structuredserializeoptions
+ */
+function StructuredSerializeOptions() {}
+
+/**
+ * @type {!Array<!Transferable>|undefined}
+ * @see https://html.spec.whatwg.org/multipage/web-messaging.html#dom-structuredserializeoptions-transfer
+ */
+StructuredSerializeOptions.prototype.transfer;
+
+/**
+ * @record
+ * @extends {StructuredSerializeOptions}
+ * @see https://html.spec.whatwg.org/multipage/window-object.html#windowpostmessageoptions
+ */
+function WindowPostMessageOptions() {}
+
+/**
+ * @type {string|undefined}
+ * @see https://html.spec.whatwg.org/multipage/window-object.html#dom-windowpostmessageoptions-targetorigin
+ */
+WindowPostMessageOptions.prototype.targetOrigin;
 
 /**
  * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
- * @param {(string|!Array<!Transferable>)=} opt_targetOriginOrTransfer
+ * @param {(string|!StructuredSerializeOptions|!WindowPostMessageOptions|!Array<!Transferable>)=}
+ *     targetOriginOrOptionsOrTransfer
  * @param {(string|!Array<!MessagePort>|!Array<!Transferable>)=}
- *     opt_targetOriginOrPortsOrTransfer
+ *     targetOriginOrPortsOrTransfer
  * @return {void}
  */
-function postMessage(message, opt_targetOriginOrTransfer,
-    opt_targetOriginOrPortsOrTransfer) {}
+function postMessage(
+    message, targetOriginOrOptionsOrTransfer, targetOriginOrPortsOrTransfer) {}
 
 /**
  * @param {*} message
- * @param {string=} targetOrigin
+ * @param {(string|!WindowPostMessageOptions)=} targetOriginOrOptions
  * @param {(!Array<!Transferable>)=} transfer
  * @return {void}
- * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage
+ * @see https://html.spec.whatwg.org/multipage/web-messaging.html#posting-messages
  */
-Window.prototype.postMessage = function(message, targetOrigin, transfer) {};
+Window.prototype.postMessage = function(
+    message, targetOriginOrOptions, transfer) {};
 
 /**
  * The postMessage method (as implemented in Opera).
@@ -1523,19 +1555,22 @@ Worker.prototype.terminate = function() {};
 
 /**
  * Posts a message to the worker thread.
+ * @see https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {(Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     transferOrOptions
  * @return {undefined}
  */
-Worker.prototype.postMessage = function(message, opt_transfer) {};
+Worker.prototype.postMessage = function(message, transferOrOptions) {};
 
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {(Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     transferOrOptions
  * @return {undefined}
  */
-Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
+Worker.prototype.webkitPostMessage = function(message, transferOrOptions) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
@@ -1700,11 +1735,14 @@ WorkerGlobalScope.prototype.navigator;
 
 /**
  * Worker postMessage method.
+ * @see https://html.spec.whatwg.org/multipage/workers.html#dom-dedicatedworkerglobalscope-postmessage
  * @param {*} message
- * @param {(!Array<!Transferable>)=} transfer
+ * @param {(!Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     transferOrOptions
  * @return {void}
  */
-WorkerGlobalScope.prototype.postMessage = function(message, transfer) {};
+WorkerGlobalScope.prototype.postMessage = function(
+    message, transferOrOptions) {};
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1715,21 +1753,24 @@ function DedicatedWorkerGlobalScope() {}
 
 /**
  * Posts a message to creator of this worker.
+ * @see https://html.spec.whatwg.org/multipage/workers.html#dom-dedicatedworkerglobalscope-postmessage
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {(Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     transferOrOptions
  * @return {undefined}
  */
-DedicatedWorkerGlobalScope.prototype.postMessage =
-    function(message, opt_transfer) {};
+DedicatedWorkerGlobalScope.prototype.postMessage = function(
+    message, transferOrOptions) {};
 
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {(Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     transferOrOptions
  * @return {undefined}
  */
 DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
-    function(message, opt_transfer) {};
+    function(message, transferOrOptions) {};
 
 /**
  * Sent when the creator posts a message to this worker.

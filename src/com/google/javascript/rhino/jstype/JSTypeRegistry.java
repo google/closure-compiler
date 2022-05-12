@@ -2002,13 +2002,9 @@ public final class JSTypeRegistry {
             return nominalType;
           }
 
-          if (templateArgs == null
-              || !nominalType.isRawTypeOfTemplatizedType()
-              || nominalType.isUnknownType()) {
+          if (templateArgs == null || !nominalType.isRawTypeOfTemplatizedType()) {
             // TODO(nickreid): This case leaves template parameters unbound if users fail to
             // specify any arguments, allowing raw types to leak into programs.
-            // TODO(lharker): delete the check isUnknownType - it seems like it should be redundant
-            // given isRawTypeOfTemplatizedType, but in some contexts is not.
             return addNullabilityBasedOnParseContext(n, nominalType, scope);
           }
 

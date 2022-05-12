@@ -3340,11 +3340,10 @@ public final class IntegrationTest extends IntegrationTestCase {
             "",
             "}); // goog.scope"),
         lines(
-            "var $jscomp = $jscomp || {};",
-            "$jscomp.scope = {};",
             "var foo = {};",
-            "/** @const */ $jscomp.scope.RESULT = 5;",
-            "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"));
+            "/** @const */ var $jscomp$scope$98447280$0$RESULT = 5;",
+            "/** @return {number} */ foo.baz = function() { return $jscomp$scope$98447280$0$RESULT;"
+                + " }"));
   }
 
   @Test
@@ -3836,7 +3835,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // A bug in Es6RewriteClasses meant we were putting the wrong `originalName` on some nodes.
     CompilerOptions options = createCompilerOptions();
     // force SourceInformationAnnotator to run
-    options.setExternExports(true);
+    options.setExternExportsPath("exports.js");
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
 
@@ -4317,5 +4316,20 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  console.log(foo());",
             "}",
             ""));
+  }
+
+  @Test
+  public void testGoogScopeWithAngular() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setAngularPass(true);
+
+    test(
+        options,
+        lines("goog.scope(function() {", "/** @ngInject */", "function fn(a, b) {}", "});"),
+        lines(
+            "var $jscomp$scope$98447280$0$fn = function(a, b) {};",
+            "$jscomp$scope$98447280$0$fn[\"$inject\"] = [\"a\", \"b\"];"));
   }
 }

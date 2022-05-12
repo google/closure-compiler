@@ -2066,6 +2066,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(proto2.hasProperty("m1")).isFalse();
     assertThat(proto2.hasProperty("m2")).isFalse();
     assertThat(proto2.hasProperty("m3")).isFalse();
+
+    // Note: it's not necessary for correctness reasons to declare m1 and m2,  but it's trickier to
+    // avoid it without extra string maniuplation
+    assertScope(globalScope).declares("A.prototype.m1");
+    assertScope(globalScope).declares("A.prototype.m2");
+    assertScope(globalScope).doesNotDeclare("A.prototype.m3");
   }
 
   @Test
@@ -2184,10 +2190,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             + "/** @type {number} */ I.prototype.bar;"
             + "/** @record */ I.prototype.baz = function() {};");
 
-    TypedVar baz = globalScope.getVar("I.prototype.baz");
-    assertThat(baz.getType().isInterface()).isTrue();
-    assertThat(baz.getType().isFunctionType()).isTrue();
-    assertThat(baz.getType().toMaybeFunctionType().isStructuralInterface()).isTrue();
+    TypedVar iPrototype = globalScope.getVar("I.prototype");
+    JSType baz = iPrototype.getType().findPropertyType("baz");
+    assertThat(baz.isInterface()).isTrue();
+    assertThat(baz.isFunctionType()).isTrue();
+    assertThat(baz.toMaybeFunctionType().isStructuralInterface()).isTrue();
   }
 
   @Test
@@ -2197,10 +2204,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             + "/** @type {number} */ I.prototype.bar;"
             + "/** @interface */ I.prototype.baz = function() {};");
 
-    TypedVar baz = globalScope.getVar("I.prototype.baz");
-    assertThat(baz.getType().isInterface()).isTrue();
-    assertThat(baz.getType().isFunctionType()).isTrue();
-    assertThat(baz.getType().toMaybeFunctionType().isStructuralInterface()).isFalse();
+    TypedVar iPrototype = globalScope.getVar("I.prototype");
+    JSType baz = iPrototype.getType().findPropertyType("baz");
+    assertThat(baz.isInterface()).isTrue();
+    assertThat(baz.isFunctionType()).isTrue();
+    assertThat(baz.toMaybeFunctionType().isStructuralInterface()).isFalse();
   }
 
   @Test

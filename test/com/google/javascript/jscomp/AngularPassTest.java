@@ -516,7 +516,6 @@ public final class AngularPassTest extends CompilerTestCase {
 
   @Test
   public void testInGoogScope() {
-    enableRewriteClosureCode();
     test(
         lines("goog.scope(function() {", "/** @ngInject */", "function fn(a, b) {}", "});"),
         lines(

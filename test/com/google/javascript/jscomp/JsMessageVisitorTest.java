@@ -43,10 +43,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test for {@link JsMessageVisitor}.
- *
- */
+/** Test for {@link JsMessageVisitor}. */
 @RunWith(JUnit4.class)
 public final class JsMessageVisitorTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
@@ -86,8 +83,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testJsMessageOnVar() {
-    extractMessagesSafely(
-        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
+    extractMessagesSafely("/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -100,8 +96,7 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessageOnLet() {
     compilerOptions = new CompilerOptions();
-    extractMessagesSafely(
-        "/** @desc Hello */ let MSG_HELLO = goog.getMsg('a')");
+    extractMessagesSafely("/** @desc Hello */ let MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -114,8 +109,7 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessageOnConst() {
     compilerOptions = new CompilerOptions();
-    extractMessagesSafely(
-        "/** @desc Hello */ const MSG_HELLO = goog.getMsg('a')");
+    extractMessagesSafely("/** @desc Hello */ const MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -128,21 +122,30 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessagesWithSrcMap() throws Exception {
     SourceMapGeneratorV3 sourceMap = new SourceMapGeneratorV3();
-    sourceMap.addMapping("source1.html", null, new FilePosition(10, 0),
-        new FilePosition(0, 0), new FilePosition(0, 100));
-    sourceMap.addMapping("source2.html", null, new FilePosition(10, 0),
-        new FilePosition(1, 0), new FilePosition(1, 100));
+    sourceMap.addMapping(
+        "source1.html",
+        null,
+        new FilePosition(10, 0),
+        new FilePosition(0, 0),
+        new FilePosition(0, 100));
+    sourceMap.addMapping(
+        "source2.html",
+        null,
+        new FilePosition(10, 0),
+        new FilePosition(1, 0),
+        new FilePosition(1, 100));
     StringBuilder output = new StringBuilder();
     sourceMap.appendTo(output, "unused.js");
 
     compilerOptions = new CompilerOptions();
-    compilerOptions.inputSourceMaps = ImmutableMap.of(
-       "[testcode]", new SourceMapInput(
-           SourceFile.fromCode("example.srcmap", output.toString())));
+    compilerOptions.inputSourceMaps =
+        ImmutableMap.of(
+            "[testcode]",
+            new SourceMapInput(SourceFile.fromCode("example.srcmap", output.toString())));
 
     extractMessagesSafely(
         "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a');\n"
-        + "/** @desc Hi */ var MSG_HI = goog.getMsg('b');\n");
+            + "/** @desc Hi */ var MSG_HI = goog.getMsg('b');\n");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(2);
 
@@ -159,8 +162,8 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testJsMessageOnProperty() {
-    extractMessagesSafely("/** @desc a */ " +
-        "pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
+    extractMessagesSafely(
+        "/** @desc a */ " + "pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -192,12 +195,7 @@ public final class JsMessageVisitorTest {
   public void testMsgInEnum() {
     extractMessages(
         LINE_JOINER.join(
-            "/**",
-            " * @enum {number}",
-            " */",
-            "var MyEnum = {",
-            "  MSG_ONE: 0",
-            "};"));
+            "/**", " * @enum {number}", " */", "var MyEnum = {", "  MSG_ONE: 0", "};"));
     assertThat(compiler.getErrors()).hasSize(1);
     assertError(compiler.getErrors().get(0)).hasType(MESSAGE_TREE_MALFORMED);
   }
@@ -221,9 +219,8 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testJsMessageOnObjLit() {
-    extractMessagesSafely("" +
-        "pint.sub = {" +
-        "/** @desc a */ MSG_MENU_MARK_AS_UNREAD: goog.getMsg('a')}");
+    extractMessagesSafely(
+        "" + "pint.sub = {" + "/** @desc a */ MSG_MENU_MARK_AS_UNREAD: goog.getMsg('a')}");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -234,20 +231,19 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testInvalidJsMessageOnObjLit() {
-    extractMessages(""
-        + "pint.sub = {"
-        + "  /** @desc a */ MSG_MENU_MARK_AS_UNREAD: undefined"
-        + "}");
+    extractMessages(
+        "" + "pint.sub = {" + "  /** @desc a */ MSG_MENU_MARK_AS_UNREAD: undefined" + "}");
     assertThat(compiler.getErrors()).hasSize(1);
     assertError(compiler.getErrors().get(0)).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testJsMessageAliasOnObjLit() {
-    extractMessagesSafely(""
-        + "pint.sub = {"
-        + "  MSG_MENU_MARK_AS_UNREAD: another.namespace.MSG_MENU_MARK_AS_UNREAD"
-        + "}");
+    extractMessagesSafely(
+        ""
+            + "pint.sub = {"
+            + "  MSG_MENU_MARK_AS_UNREAD: another.namespace.MSG_MENU_MARK_AS_UNREAD"
+            + "}");
   }
 
   @Test
@@ -289,11 +285,12 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testMessageDefinedInExportsIsNotOrphaned() {
-    extractMessagesSafely(""
-        + "exports = {"
-        + "  /** @desc Description. */"
-        + "  MSG_FOO: goog.getMsg('Foo'),"
-        + "};");
+    extractMessagesSafely(
+        ""
+            + "exports = {"
+            + "  /** @desc Description. */"
+            + "  MSG_FOO: goog.getMsg('Foo'),"
+            + "};");
     assertThat(compiler.getWarnings()).isEmpty();
   }
 
@@ -410,8 +407,8 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testLegacyFormatDescription() {
-    extractMessagesSafely("var MSG_SILLY = 'silly test message';\n"
-        + "var MSG_SILLY_HELP = 'help text';");
+    extractMessagesSafely(
+        "var MSG_SILLY = 'silly test message';\n" + "var MSG_SILLY_HELP = 'help text';");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -422,9 +419,10 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testLegacyFormatParametizedFunction() {
-    extractMessagesSafely("var MSG_SILLY = function(one, two) {"
-        + "  return one + ', ' + two + ', buckle my shoe';"
-        + "};");
+    extractMessagesSafely(
+        "var MSG_SILLY = function(one, two) {"
+            + "  return one + ', ' + two + ', buckle my shoe';"
+            + "};");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -437,8 +435,7 @@ public final class JsMessageVisitorTest {
   public void testLegacyMessageWithDescAnnotation() {
     // Well, is was better do not allow legacy messages with @desc annotations,
     // but people love to mix styles so we need to check @desc also.
-    extractMessagesSafely(
-        "/** @desc The description */ var MSG_A = 'The Message';");
+    extractMessagesSafely("/** @desc The description */ var MSG_A = 'The Message';");
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).isEmpty();
@@ -455,8 +452,8 @@ public final class JsMessageVisitorTest {
     // Well, is was better do not allow legacy messages with @desc annotations,
     // but people love to mix styles so we need to check @desc also.
     extractMessagesSafely(
-        "var MSG_A_HELP = 'This is a help var';\n" +
-        "/** @desc The description in @desc*/ var MSG_A = 'The Message';");
+        "var MSG_A_HELP = 'This is a help var';\n"
+            + "/** @desc The description in @desc*/ var MSG_A = 'The Message';");
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).hasSize(1);
@@ -468,8 +465,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testClosureMessageWithHelpPostfix() {
-    extractMessagesSafely("/** @desc help text */\n"
-        + "var MSG_FOO_HELP = goog.getMsg('Help!');");
+    extractMessagesSafely("/** @desc help text */\n" + "var MSG_FOO_HELP = goog.getMsg('Help!');");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -533,9 +529,10 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testClosureFormatParametizedFunction() {
-    extractMessagesSafely("/** @desc help text */"
-        + "var MSG_SILLY = goog.getMsg('{$adjective} ' + 'message', "
-        + "{'adjective': 'silly'});");
+    extractMessagesSafely(
+        "/** @desc help text */"
+            + "var MSG_SILLY = goog.getMsg('{$adjective} ' + 'message', "
+            + "{'adjective': 'silly'});");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -546,26 +543,27 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testHugeMessage() {
-    extractMessagesSafely("/**" +
-        " * @desc A message with lots of stuff.\n" +
-        " * @hidden\n" +
-        " */" +
-        "var MSG_HUGE = goog.getMsg(" +
-        "    '{$startLink_1}Google{$endLink}' +" +
-        "    '{$startLink_2}blah{$endLink}{$boo}{$foo_001}{$boo}' +" +
-        "    '{$foo_002}{$xxx_001}{$image}{$image_001}{$xxx_002}'," +
-        "    {'startLink_1': '<a href=http://www.google.com/>'," +
-        "     'endLink': '</a>'," +
-        "     'startLink_2': '<a href=\"' + opt_data.url + '\">'," +
-        "     'boo': opt_data.boo," +
-        "     'foo_001': opt_data.foo," +
-        "     'foo_002': opt_data.boo.foo," +
-        "     'xxx_001': opt_data.boo + opt_data.foo," +
-        "     'image': htmlTag7," +
-        "     'image_001': opt_data.image," +
-        "     'xxx_002': foo.callWithOnlyTopLevelKeys(" +
-        "         bogusFn, opt_data, null, 'bogusKey1'," +
-        "         opt_data.moo, 'bogusKey2', param10)});");
+    extractMessagesSafely(
+        "/**"
+            + " * @desc A message with lots of stuff.\n"
+            + " * @hidden\n"
+            + " */"
+            + "var MSG_HUGE = goog.getMsg("
+            + "    '{$startLink_1}Google{$endLink}' +"
+            + "    '{$startLink_2}blah{$endLink}{$boo}{$foo_001}{$boo}' +"
+            + "    '{$foo_002}{$xxx_001}{$image}{$image_001}{$xxx_002}',"
+            + "    {'startLink_1': '<a href=http://www.google.com/>',"
+            + "     'endLink': '</a>',"
+            + "     'startLink_2': '<a href=\"' + opt_data.url + '\">',"
+            + "     'boo': opt_data.boo,"
+            + "     'foo_001': opt_data.foo,"
+            + "     'foo_002': opt_data.boo.foo,"
+            + "     'xxx_001': opt_data.boo + opt_data.foo,"
+            + "     'image': htmlTag7,"
+            + "     'image_001': opt_data.image,"
+            + "     'xxx_002': foo.callWithOnlyTopLevelKeys("
+            + "         bogusFn, opt_data, null, 'bogusKey1',"
+            + "         opt_data.moo, 'bogusKey2', param10)});");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -603,8 +601,8 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testEmptyTextComplexMessage() {
-    extractMessagesSafely("/** @desc text */ var MSG_BAR = goog.getMsg("
-        + "'' + '' + ''     + ''\n+'');");
+    extractMessagesSafely(
+        "/** @desc text */ var MSG_BAR = goog.getMsg(" + "'' + '' + ''     + ''\n+'');");
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings())
@@ -676,13 +674,14 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testExtractPropertyMessage() {
-    extractMessagesSafely("/**"
-        + " * @desc A message that demonstrates placeholders\n"
-        + " * @hidden\n"
-        + " */"
-        + "a.b.MSG_SILLY = goog.getMsg(\n"
-        + "    '{$adjective} ' + '{$someNoun}',\n"
-        + "    {'adjective': adj, 'someNoun': noun});");
+    extractMessagesSafely(
+        "/**"
+            + " * @desc A message that demonstrates placeholders\n"
+            + " * @hidden\n"
+            + " */"
+            + "a.b.MSG_SILLY = goog.getMsg(\n"
+            + "    '{$adjective} ' + '{$someNoun}',\n"
+            + "    {'adjective': adj, 'someNoun': noun});");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -694,16 +693,17 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testExtractPropertyMessageInFunction() {
-    extractMessagesSafely(""
-        + "function f() {\n"
-        + "  /**\n"
-        + "   * @desc A message that demonstrates placeholders\n"
-        + "   * @hidden\n"
-        + "   */\n"
-        + "  a.b.MSG_SILLY = goog.getMsg(\n"
-        + "      '{$adjective} ' + '{$someNoun}',\n"
-        + "      {'adjective': adj, 'someNoun': noun});\n"
-        + "}");
+    extractMessagesSafely(
+        ""
+            + "function f() {\n"
+            + "  /**\n"
+            + "   * @desc A message that demonstrates placeholders\n"
+            + "   * @hidden\n"
+            + "   */\n"
+            + "  a.b.MSG_SILLY = goog.getMsg(\n"
+            + "      '{$adjective} ' + '{$someNoun}',\n"
+            + "      {'adjective': adj, 'someNoun': noun});\n"
+            + "}");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -715,8 +715,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testAlmostButNotExternalMessage() {
-    extractMessagesSafely(
-        "/** @desc External */ var MSG_EXTERNAL = goog.getMsg('External');");
+    extractMessagesSafely("/** @desc External */ var MSG_EXTERNAL = goog.getMsg('External');");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
     assertThat(messages.get(0).isExternal()).isFalse();
@@ -794,8 +793,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testUnusedReferenesAreNotOK() {
-    extractMessages("/** @desc AA */ "
-        + "var MSG_FOO = goog.getMsg('lalala:', {foo:1});");
+    extractMessages("/** @desc AA */ " + "var MSG_FOO = goog.getMsg('lalala:', {foo:1});");
     assertThat(messages).isEmpty();
     ImmutableList<JSError> errors = compiler.getErrors();
     assertThat(errors).hasSize(1);
@@ -807,8 +805,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testDuplicatePlaceHoldersAreBad() {
-    extractMessages("var MSG_FOO = goog.getMsg("
-        + "'{$foo}:', {'foo': 1, 'foo' : 2});");
+    extractMessages("var MSG_FOO = goog.getMsg(" + "'{$foo}:', {'foo': 1, 'foo' : 2});");
 
     assertThat(messages).isEmpty();
     ImmutableList<JSError> errors = compiler.getErrors();
@@ -821,8 +818,7 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testDuplicatePlaceholderReferencesAreOk() {
-    extractMessagesSafely("var MSG_FOO = goog.getMsg("
-        + "'{$foo}:, {$foo}', {'foo': 1});");
+    extractMessagesSafely("var MSG_FOO = goog.getMsg(" + "'{$foo}:, {$foo}', {'foo': 1});");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -831,8 +827,9 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testCamelcasePlaceholderNamesAreOk() {
-    extractMessagesSafely("var MSG_WITH_CAMELCASE = goog.getMsg("
-        + "'Slide {$slideNumber}:', {'slideNumber': opt_index + 1});");
+    extractMessagesSafely(
+        "var MSG_WITH_CAMELCASE = goog.getMsg("
+            + "'Slide {$slideNumber}:', {'slideNumber': opt_index + 1});");
 
     assertThat(messages).hasSize(1);
     JsMessage msg = messages.get(0);
@@ -845,8 +842,9 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testWithNonCamelcasePlaceholderNamesAreNotOk() {
-    extractMessages("var MSG_WITH_CAMELCASE = goog.getMsg("
-        + "'Slide {$slide_number}:', {'slide_number': opt_index + 1});");
+    extractMessages(
+        "var MSG_WITH_CAMELCASE = goog.getMsg("
+            + "'Slide {$slide_number}:', {'slide_number': opt_index + 1});");
 
     assertThat(messages).isEmpty();
     ImmutableList<JSError> errors = compiler.getErrors();
@@ -861,8 +859,8 @@ public final class JsMessageVisitorTest {
 
   @Test
   public void testUnquotedPlaceholdersAreOk() {
-    extractMessagesSafely("/** @desc Hello */ "
-        + "var MSG_FOO = goog.getMsg('foo {$unquoted}:', {unquoted: 12});");
+    extractMessagesSafely(
+        "/** @desc Hello */ " + "var MSG_FOO = goog.getMsg('foo {$unquoted}:', {unquoted: 12});");
 
     assertThat(messages).hasSize(1);
     assertThat(compiler.getWarnings()).isEmpty();
@@ -894,8 +892,8 @@ public final class JsMessageVisitorTest {
   @Test
   public void testDuplicateMessageError() {
     extractMessages(
-        "(function () {/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')})" +
-        "(function () {/** @desc Hello2 */ var MSG_HELLO = goog.getMsg('a')})");
+        "(function () {/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')})"
+            + "(function () {/** @desc Hello2 */ var MSG_HELLO = goog.getMsg('a')})");
 
     assertThat(compiler.getWarnings()).isEmpty();
     assertOneError(JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
@@ -904,21 +902,21 @@ public final class JsMessageVisitorTest {
   @Test
   public void testNoDuplicateErrorOnExternMessage() {
     extractMessagesSafely(
-        "(function () {/** @desc Hello */ " +
-        "var MSG_EXTERNAL_2 = goog.getMsg('a')})" +
-        "(function () {/** @desc Hello2 */ " +
-        "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
+        "(function () {/** @desc Hello */ "
+            + "var MSG_EXTERNAL_2 = goog.getMsg('a')})"
+            + "(function () {/** @desc Hello2 */ "
+            + "var MSG_EXTERNAL_2 = goog.getMsg('a')})");
   }
 
   @Test
   public void testUsingMsgPrefixWithFallback() {
     extractMessages(
-        "function f() {\n" +
-        "/** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');\n" +
-        "/** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');\n" +
-        "var x = goog.getMsgWithFallback(\n" +
-        "    MSG_UNNAMED_1, MSG_UNNAMED_2);\n" +
-        "}\n");
+        "function f() {\n"
+            + "/** @desc Hello */ var MSG_UNNAMED_1 = goog.getMsg('hello');\n"
+            + "/** @desc Hello */ var MSG_UNNAMED_2 = goog.getMsg('hello');\n"
+            + "var x = goog.getMsgWithFallback(\n"
+            + "    MSG_UNNAMED_1, MSG_UNNAMED_2);\n"
+            + "}\n");
     assertNoErrors();
   }
 
@@ -978,10 +976,10 @@ public final class JsMessageVisitorTest {
   @Test
   public void testErrorWhenUsingMsgPrefixWithFallback() {
     extractMessages(
-        "/** @desc Hello */ var MSG_HELLO_1 = goog.getMsg('hello');\n" +
-        "/** @desc Hello */ var MSG_HELLO_2 = goog.getMsg('hello');\n" +
-        "/** @desc Hello */ " +
-        "var MSG_HELLO_3 = goog.getMsgWithFallback(MSG_HELLO_1, MSG_HELLO_2);");
+        "/** @desc Hello */ var MSG_HELLO_1 = goog.getMsg('hello');\n"
+            + "/** @desc Hello */ var MSG_HELLO_2 = goog.getMsg('hello');\n"
+            + "/** @desc Hello */ "
+            + "var MSG_HELLO_3 = goog.getMsgWithFallback(MSG_HELLO_1, MSG_HELLO_2);");
     assertOneError(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
@@ -989,8 +987,7 @@ public final class JsMessageVisitorTest {
   public void testRenamedMessages_var() {
     renameMessages = true;
 
-    extractMessagesSafely(
-        "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
+    extractMessagesSafely("/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
     assertThat(messages).hasSize(1);
 
@@ -1022,6 +1019,22 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
+  }
+
+  @Test
+  public void testGetMsgWithGoogScope() {
+    extractMessagesSafely(
+        lines(
+            "/** @desc Suggestion Code found outside of <head> tag. */",
+            "var $jscomp$scope$12345$0$MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG =",
+            "goog.getMsg('Code should be added to <body> tag.');"));
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getId()).isEqualTo("MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG");
+    assertThat(msg.getKey())
+        .isEqualTo("$jscomp$scope$12345$0$MSG_CONSUMER_SURVEY_CODE_OUTSIDE_BODY_TAG");
   }
 
   private void assertNoErrors() {
@@ -1060,8 +1073,7 @@ public final class JsMessageVisitorTest {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message,
-        JsMessageDefinition definition) {
+    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       messages.add(message);
     }
   }
@@ -1073,8 +1085,7 @@ public final class JsMessageVisitorTest {
     }
 
     @Override
-    protected void processJsMessage(JsMessage message,
-        JsMessageDefinition definition) {
+    protected void processJsMessage(JsMessage message, JsMessageDefinition definition) {
       // no-op
     }
   }

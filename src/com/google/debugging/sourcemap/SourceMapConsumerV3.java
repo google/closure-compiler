@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -459,21 +458,19 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
    * OriginalMappings.
    */
   private void createReverseMapping() {
-    reverseSourceMapping = new HashMap<>();
+    reverseSourceMapping = new LinkedHashMap<>();
 
     for (int targetLine = 0; targetLine < lines.size(); targetLine++) {
       ArrayList<Entry> entries = lines.get(targetLine);
 
       if (entries != null) {
         for (Entry entry : entries) {
-          if (entry.getSourceFileId() != UNMAPPED
-              && entry.getSourceLine() != UNMAPPED) {
+          if (entry.getSourceFileId() != UNMAPPED && entry.getSourceLine() != UNMAPPED) {
             String originalFile = sources[entry.getSourceFileId()];
 
-            if (!reverseSourceMapping.containsKey(originalFile)) {
-              reverseSourceMapping.put(originalFile,
-                  new HashMap<Integer, Collection<OriginalMapping>>());
-            }
+            reverseSourceMapping.computeIfAbsent(
+                originalFile,
+                (String k) -> new LinkedHashMap<Integer, Collection<OriginalMapping>>());
 
             Map<Integer, Collection<OriginalMapping>> lineToCollectionMap =
                 reverseSourceMapping.get(originalFile);

@@ -4372,8 +4372,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function F() {}"
                 + "/** jsdoc */ F.prototype.bar = function() {};"
                 + "/** jsdoc */ F.prototype.bar = function() {};")
-        .addDiagnostic(
-            "variable F.prototype.bar redefined, " + "original definition at [testcode]:1")
         .run();
   }
 
@@ -4384,8 +4382,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function F() {}"
                 + "F.prototype.bar = function() {};"
                 + "/** jsdoc */ F.prototype.bar = function() {};")
-        .addDiagnostic(
-            "variable F.prototype.bar redefined, " + "original definition at [testcode]:1")
         .run();
   }
 

@@ -146,6 +146,10 @@ public final class JSDocInfoPrinter {
       parts.add("@noinline");
     }
 
+    if (info.isProvideAlreadyProvided()) {
+      parts.add("@provideAlreadyProvided");
+    }
+
     if (info.isIdGenerator()) {
       parts.add("@idGenerator {unique}");
     }
@@ -313,7 +317,8 @@ public final class JSDocInfoPrinter {
     }
 
     if (info.isDeprecated()) {
-      parts.add("@deprecated " + info.getDeprecationReason());
+      String deprecationReason = info.getDeprecationReason();
+      parts.add("@deprecated" + (deprecationReason != null ? " " + deprecationReason : ""));
       multiline = true;
     }
 

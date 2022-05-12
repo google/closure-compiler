@@ -85,6 +85,7 @@ class ScopedAliases implements CompilerPass {
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final AliasTransformationHandler transformationHandler;
+  private CompilerInput uniqueIdInput;
 
   // Errors
   static final DiagnosticType GOOG_SCOPE_MUST_BE_ALONE =
@@ -373,7 +374,7 @@ class ScopedAliases implements CompilerPass {
       Node aliasDefinition = aliasVar.getInitialValue();
       String aliasName = aliasVar.getName();
       String typeName = aliasReference.getString();
-      if (typeName.startsWith("$jscomp.scope.")) {
+      if (typeName.startsWith("$jscomp$scope$")) {
         // Already visited.
         return;
       }
@@ -576,15 +577,10 @@ class ScopedAliases implements CompilerPass {
           JSDocInfo varDocInfo = v.getJSDocInfo();
 
           String name = n.getString();
-          int nameCount = scopedAliasNames.count(name);
           scopedAliasNames.add(name);
-          String globalName =
-              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$jscomp$" + nameCount));
+          String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(uniqueIdInput);
 
-          Node lastInjectedNode = compiler.ensureLibraryInjected("base", false);
-          if (lastInjectedNode != null) {
-            compiler.reportChangeToEnclosingScope(lastInjectedNode);
-          }
+          String globalName = "$jscomp$scope$" + uniqueId + "$" + name;
 
           // First, we need to free up the function expression (EXPR)
           // to be used in another expression.
@@ -620,27 +616,27 @@ class ScopedAliases implements CompilerPass {
             varNode = parent;
           }
 
-          // Add $jscomp.scope.name = EXPR;
-          // Make sure we copy over all the jsdoc and debug info.
-          if (value != null || varDocInfo != null) {
-            Node newDecl =
-                NodeUtil.newQNameDeclaration(compiler, globalName, value, varDocInfo)
-                    .srcrefTreeIfMissing(n);
-            newDecl.getFirstFirstChild().srcref(n);
-            newDecl.getFirstFirstChild().setOriginalName(name);
+          // Add var declarations for name
+          // var $jscomp$scope$uniqueId$name = EXPR; or var $jscomp$scope$uniqueId$name;
+          Node newDecl =
+              NodeUtil.newVarNode(globalName, value)
+                  .setJSDocInfo(varDocInfo)
+                  .srcrefTreeIfMissing(n);
 
-            if (isHoisted) {
-              grandparent.addChildToFront(newDecl);
-            } else {
-              newDecl.insertBefore(varNode);
-            }
-            compiler.reportChangeToEnclosingScope(newDecl);
-            injectedDecls.add(newDecl.getFirstChild());
+          newDecl.srcref(n);
+          newDecl.setOriginalName(name);
+          if (isHoisted) {
+            grandparent.addChildToFront(newDecl);
+          } else {
+            newDecl.insertBefore(varNode);
           }
+          if (value != null) {
+            compiler.reportChangeToEnclosingScope(newDecl);
+          }
+          injectedDecls.add(newDecl);
 
-          // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
-          v.getNameNode().addChildToFront(NodeUtil.newQName(compiler, globalName, n, name));
-
+          // Rewrite "var name = EXPR;" to "var name = $jscomp$scope$uniqueId$name;"
+          v.getNameNode().addChildToFront(NodeUtil.newName(compiler, globalName, n, name));
           recordAlias(v);
         } else {
           // Do not other kinds of local symbols, like catch params.
@@ -774,6 +770,8 @@ class ScopedAliases implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // grab the source file path to generate the unique id
+      uniqueIdInput = t.getInput();
       if (isCallToScopeMethod(n)) {
         validateScopeCall(t, n, n.getParent());
       }

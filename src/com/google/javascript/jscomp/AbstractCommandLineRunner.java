@@ -47,6 +47,7 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
+import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -341,6 +342,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   protected void setRunOptions(CompilerOptions options) throws IOException {
     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
 
+    if (config.shouldSaveAfterStage1() || config.shouldContinueCompilation()) {
+      if (options.checksOnly) {
+        throw new FlagUsageException(
+            "checks_only mode is incompatible with multi-stage compilation");
+      }
+      if (options.getExternExportsPath() != null) {
+        throw new FlagUsageException(
+            "generating externs from exports is incompatible with multi-stage compilation");
+      }
+    }
+
     setWarningGuardOptions(options, config.warningGuards, diagnosticGroups);
 
     if (!config.warningsAllowFile.isEmpty()) {
@@ -430,7 +442,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       for (String filename : config.outputManifests) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
-              "output_manifest flags specify " + "duplicate file names: " + filename);
+              "output_manifest flags specify duplicate file names: " + filename);
         }
       }
     }
@@ -440,7 +452,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       for (String filename : config.outputBundles) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException(
-              "output_bundle flags specify " + "duplicate file names: " + filename);
+              "output_bundle flags specify duplicate file names: " + filename);
         }
       }
     }
@@ -459,6 +471,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       JsonErrorReportGenerator errorGenerator =
           new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
       compiler.setErrorManager(new SortingErrorManager(ImmutableSet.of(errorGenerator)));
+    }
+    if (config.printAst) {
+      options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
   }
 
@@ -1167,7 +1182,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     List<SourceFile> externs = createExterns(options);
     List<JSChunk> modules = null;
-    Result result = null;
 
     rootRelativePathsMap = constructRootRelativePathsMap();
 
@@ -1262,14 +1276,23 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    // Release temporary data structures now that the compiler has
+    // been initialized
+    jsChunkSpecs = null;
+    jsonFiles = null;
+    externs = null;
+    sources = null;
+
     if (options.printConfig) {
       compiler.printConfig();
     }
 
+    Result result;
     if (config.skipNormalOutputs) {
       metricsRecorder.recordActionName("skip normal outputs");
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
       compiler.orderInputsWithLargeStack();
+      result = null;
     } else if (compiler.hasErrors()) {
       metricsRecorder.recordActionName("initialization errors occurred");
       // init() or initModules() encountered an error.
@@ -1592,7 +1615,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
 
       // Output the externs if required.
-      if (options.externExportsPath != null) {
+      if (options.getExternExportsPath() != null) {
         try (Writer eeOut = openExternExportsStream(options, config.jsOutputFile)) {
           eeOut.append(result.externExport);
         }
@@ -1850,11 +1873,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @GwtIncompatible("Unnecessary")
   private Writer openExternExportsStream(B options, String path) throws IOException {
-    if (options.externExportsPath == null) {
+    final String externExportsPath = options.getExternExportsPath();
+    if (externExportsPath == null) {
       return null;
     }
 
-    String exPath = options.externExportsPath;
+    String exPath = externExportsPath;
 
     if (!exPath.contains(File.separator)) {
       File outputFile = new File(path);

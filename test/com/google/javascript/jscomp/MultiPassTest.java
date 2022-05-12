@@ -420,7 +420,7 @@ public final class MultiPassTest extends CompilerTestCase {
             .setName("inlineVariables")
             .setRunInFixedPointLoop(true)
             .setInternalFactory(
-                (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.ALL, true))
+                (compiler) -> new InlineVariables(compiler, InlineVariables.Mode.ALL))
             .setFeatureSet(ES2017_MODULES)
             .build());
   }

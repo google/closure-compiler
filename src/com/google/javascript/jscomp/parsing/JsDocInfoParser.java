@@ -1025,21 +1025,11 @@ public final class JsDocInfoParser {
             addParserWarning(Msg.JSDOC_WIZACTION);
           }
           return eatUntilEOLIfNotAnnotation();
-
-        case VERSION:
-          ExtractionInfo versionInfo = extractSingleLineBlock();
-          String version = versionInfo.string;
-
-          if (version.isEmpty()) {
-            addParserWarning(Msg.JSDOC_VERSIONMISSING);
-          } else {
-            if (!jsdocBuilder.recordVersion(version)) {
-              addParserWarning(Msg.JSDOC_EXTRAVERSION);
-            }
+        case WIZCALLBACK:
+          if (!jsdocBuilder.recordWizcallback()) {
+            addParserWarning(Msg.JSDOC_WIZCALLBACK);
           }
-
-          token = versionInfo.token;
-          return token;
+          return eatUntilEOLIfNotAnnotation();
 
         case CONSTANT:
         case FINAL:

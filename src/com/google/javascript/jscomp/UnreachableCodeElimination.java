@@ -92,8 +92,8 @@ class UnreachableCodeElimination implements CompilerPass {
         return true;
       } else if (n.isExport()) {
         // TODO(b/129564961): We should be exploring EXPORTs. We don't because their descendants
-        // have side-effects that `NodeUtil::mayHaveSideEffects` doesn't recognize. Since this pass
-        // currently runs after exports are removed anyway, this isn't yet an issue.
+        // have side-effects that `AstAnalyzer.mayHaveSideEffects` doesn't recognize. Since this
+        // pass currently runs after exports are removed anyway, this isn't yet an issue.
         return false;
       } else if (parent.isFunction()) {
         // We only want to traverse the name of a function.
