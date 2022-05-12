@@ -108,6 +108,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1151,7 +1152,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     Tracer t = newTracer("runWhitespaceOnlyPasses");
     try {
-      for (PassFactory pf : getPassConfig().getWhitespaceOnlyPasses()) {
+      for (PassFactory pf : getPassConfig().getWhitespaceOnlyPasses().build()) {
         pf.create(this).process(externsRoot, jsRoot);
       }
     } finally {
@@ -1162,7 +1163,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void transpileAndDontCheck() {
     Tracer t = newTracer("runTranspileOnlyPasses");
     try {
-      for (PassFactory pf : getPassConfig().getTranspileOnlyPasses()) {
+      for (PassFactory pf : getPassConfig().getTranspileOnlyPasses().build()) {
         if (hasErrors()) {
           return;
         }
@@ -1188,7 +1189,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
     phaseOptimizer = createPhaseOptimizer();
-    phaseOptimizer.consume(getPassConfig().getChecks());
+    phaseOptimizer.consume(getPassConfig().getChecks().build());
     phaseOptimizer.process(externsRoot, jsRoot);
     if (hasErrors()) {
       return;
@@ -1214,6 +1215,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           .setRunInFixedPointLoop(true)
           .setInternalFactory(ValidityCheck::new)
           .setFeatureSetForChecks()
+          .setCondition(
+              new Function<CompilerOptions, Boolean>() {
+                @Override
+                public Boolean apply(CompilerOptions o) {
+                  throw new IllegalStateException("Unexpected");
+                }
+              }) // not used
+          // o -> {
+
+          // }) // not used.
           .build();
 
   private void runValidityCheck() {
@@ -2559,7 +2570,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void performTranspilationAndOptimizations() {
     checkState(options.shouldOptimize());
     // getOptimizations() also includes transpilation passes
-    List<PassFactory> optimizations = getPassConfig().getOptimizations();
+    ImmutableList<PassFactory> optimizations = getPassConfig().getOptimizations().build();
     if (optimizations.isEmpty()) {
       return;
     }
@@ -2571,7 +2582,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void performFinalizations() {
-    List<PassFactory> finalizations = getPassConfig().getFinalizations();
+    List<PassFactory> finalizations = getPassConfig().getFinalizations().build();
     if (finalizations.isEmpty()) {
       return;
     }

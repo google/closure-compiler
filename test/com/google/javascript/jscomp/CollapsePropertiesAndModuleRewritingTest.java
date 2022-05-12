@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -44,17 +43,17 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
 
       @Override
       public void process(Node externs, Node root) {
-        List<PassFactory> factories = new ArrayList<>();
+        PassListBuilder factories = new PassListBuilder(options);
         GatherModuleMetadata gatherModuleMetadata =
             new GatherModuleMetadata(compiler, false, options.getModuleResolutionMode());
-        factories.add(
+        factories.maybeAdd(
             PassFactory.builder()
                 .setName(PassNames.GATHER_MODULE_METADATA)
                 .setRunInFixedPointLoop(true)
                 .setInternalFactory((x) -> gatherModuleMetadata)
                 .setFeatureSetForChecks()
                 .build());
-        factories.add(
+        factories.maybeAdd(
             PassFactory.builder()
                 .setName(PassNames.CREATE_MODULE_MAP)
                 .setRunInFixedPointLoop(true)
@@ -64,14 +63,14 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .build());
         TranspilationPasses.addEs6ModulePass(
             factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-        factories.add(
+        factories.maybeAdd(
             PassFactory.builder()
                 .setName("REWRITE_DYNAMIC_IMPORT")
                 .setFeatureSetForChecks()
                 .setInternalFactory(
                     (x) -> new RewriteDynamicImports(compiler, null, ChunkOutputType.ES_MODULES))
                 .build());
-        factories.add(
+        factories.maybeAdd(
             PassFactory.builder()
                 .setName(PassNames.COLLAPSE_PROPERTIES)
                 .setRunInFixedPointLoop(true)
@@ -86,7 +85,7 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .setFeatureSetForChecks()
                 .build());
 
-        for (PassFactory factory : factories) {
+        for (PassFactory factory : factories.build()) {
           factory.create(compiler).process(externs, root);
         }
       }

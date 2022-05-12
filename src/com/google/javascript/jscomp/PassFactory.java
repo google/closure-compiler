@@ -35,6 +35,8 @@ public abstract class PassFactory {
   /** The name of the pass as it will appear in logs. */
   public abstract String getName();
 
+  public abstract Function<CompilerOptions, Boolean> getCondition();
+
   /** Whether this factory must or must not appear in a {@link PhaseOptimizer} loop. */
   public abstract boolean isRunInFixedPointLoop();
 
@@ -49,14 +51,14 @@ public abstract class PassFactory {
   /**
    * A simple factory function for creating actual pass instances.
    *
-   * <p>Users should call {@link #create()} rather than use this object directly.
+   * <p>Users should call {@link #create(AbstractCompiler)} rather than use this object directly.
    */
   abstract Function<AbstractCompiler, ? extends CompilerPass> getInternalFactory();
 
   public abstract Builder toBuilder();
 
   PassFactory() {
-    // Sublasses in this package only.
+    // Subclasses in this package only.
   }
 
   /** A builder for a {@link PassFactory}. */
@@ -65,6 +67,8 @@ public abstract class PassFactory {
     public abstract Builder setName(String x);
 
     public abstract Builder setRunInFixedPointLoop(boolean b);
+
+    public abstract Builder setCondition(Function<CompilerOptions, Boolean> cond);
 
     /**
      * Set the features that are allowed to be in the AST when this pass runs.
@@ -81,15 +85,15 @@ public abstract class PassFactory {
     @ForOverride
     abstract PassFactory autoBuild();
 
-    /** Record that the pass will support all of the features required for checks passes. */
+    /** Record that the pass will support all the features required for checks passes. */
     public final Builder setFeatureSetForChecks() {
       // ES_UNSTABLE is the set of features the compiler supports in checks passes
       return this.setFeatureSet(FeatureSet.ES_UNSTABLE);
     }
 
-    /** Record that the pass will support all of the features required for optimization passes. */
+    /** Record that the pass will support all the features required for optimization passes. */
     public final Builder setFeatureSetForOptimizations() {
-      // ES_NEXT is the set of features the compiler supports thoughout the compiler.
+      // ES_NEXT is the set of features the compiler supports throughout the compiler.
       return this.setFeatureSet(FeatureSet.ES_NEXT);
     }
 
@@ -101,7 +105,9 @@ public abstract class PassFactory {
   }
 
   public static Builder builder() {
-    return new AutoValue_PassFactory.Builder().setRunInFixedPointLoop(false);
+    return new AutoValue_PassFactory.Builder()
+        .setRunInFixedPointLoop(false)
+        .setCondition((o) -> true);
   }
 
   /** Create a no-op pass that can only run once. Used to break up loops. */
@@ -109,7 +115,7 @@ public abstract class PassFactory {
     return builder()
         .setName(name)
         .setFeatureSet(FeatureSet.all())
-        .setInternalFactory((c) -> (CompilerPass) (externs, root) -> {})
+        .setInternalFactory((c) -> (externs, root) -> {})
         .build();
   }
 

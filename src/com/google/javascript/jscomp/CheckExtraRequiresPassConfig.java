@@ -30,8 +30,10 @@ public final class CheckExtraRequiresPassConfig extends PassConfig.PassConfigDel
   }
 
   @Override
-  protected ImmutableList<PassFactory> getChecks() {
-    return ImmutableList.of(
+  protected PassListBuilder getChecks() {
+    PassListBuilder passes = new PassListBuilder(options);
+
+    passes.maybeAdd(
         PassFactory.builder()
             .setName("removeUnusedImport")
             .setInternalFactory(
@@ -42,10 +44,11 @@ public final class CheckExtraRequiresPassConfig extends PassConfig.PassConfigDel
                             new CheckExtraRequires(compiler, options.getUnusedImportsToRemove()))))
             .setFeatureSet(FeatureSet.latest())
             .build());
+    return passes;
   }
 
   @Override
-  protected ImmutableList<PassFactory> getOptimizations() {
-    return ImmutableList.of();
+  protected PassListBuilder getOptimizations() {
+    return new PassListBuilder(options);
   }
 }

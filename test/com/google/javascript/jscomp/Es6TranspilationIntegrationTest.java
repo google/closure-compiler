@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,16 +65,16 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
 
-    ArrayList<PassFactory> passes = new ArrayList<>();
+    PassListBuilder passes = new PassListBuilder(compiler.getOptions());
 
-    passes.add(
+    passes.maybeAdd(
         PassFactory.builder()
             .setName("es6InjectRuntimeLibraries")
             .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
             .setFeatureSet(ES2016_MODULES)
             .build());
 
-    passes.add(
+    passes.maybeAdd(
         PassFactory.builder()
             .setName("convertTypesToColors")
             .setInternalFactory(
@@ -84,7 +83,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .build());
 
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compiler.getOptions());
-    optimizer.consume(passes);
+    optimizer.consume(passes.build());
 
     return optimizer;
   }

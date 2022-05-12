@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.lint.CheckUnusedPrivateProperties;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import java.util.List;
 
 /**
  * A PassConfig for the standalone linter, which runs on a single file at a time. This runs a
@@ -51,23 +50,24 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
   }
 
   @Override
-  protected List<PassFactory> getChecks() {
-    return ImmutableList.of(
-        gatherModuleMetadataPass,
-        earlyLintChecks,
-        variableReferenceCheck,
-        closureRewriteClass,
-        lateLintChecks);
+  protected PassListBuilder getChecks() {
+    PassListBuilder passes = new PassListBuilder(options);
+    passes.maybeAdd(gatherModuleMetadataPass);
+    passes.maybeAdd(earlyLintChecks);
+    passes.maybeAdd(variableReferenceCheck);
+    passes.maybeAdd(closureRewriteClass);
+    passes.maybeAdd(lateLintChecks);
+    return passes;
   }
 
   @Override
-  protected List<PassFactory> getOptimizations() {
-    return ImmutableList.of();
+  protected PassListBuilder getOptimizations() {
+    return new PassListBuilder(options);
   }
 
   @Override
-  protected List<PassFactory> getFinalizations() {
-    return ImmutableList.of();
+  protected PassListBuilder getFinalizations() {
+    return new PassListBuilder(options);
   }
 
   private final PassFactory gatherModuleMetadataPass =

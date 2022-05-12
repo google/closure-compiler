@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 
 /**
  * Runs only the user-supplied conformance checks and any earlier passes required by conformance.
@@ -32,24 +30,20 @@ public class ConformancePassConfig extends PassConfig.PassConfigDelegate {
   }
 
   @Override
-  protected List<PassFactory> getChecks() {
-    List<PassFactory> fromDelegate = delegate.getChecks();
-    int conformanceIndex = -1;
-    for (int i = 0; i < fromDelegate.size(); i++) {
-      if (PassNames.CHECK_CONFORMANCE.equals(fromDelegate.get(i).getName())) {
-        conformanceIndex = i;
-        break;
-      }
-    }
+  protected PassListBuilder getChecks() {
+    PassListBuilder fromDelegate = delegate.getChecks();
+
     // Return every check up to and including the "checkConformance" check. Return empty list if
     // "checkConformance" not found. This list may include some unnecessary checks that run before
     // conformance. However, there's no other reliable way to find a list of all the passes
     // that conformance depends on.
-    return fromDelegate.subList(0, conformanceIndex + 1);
+    PassListBuilder passes = new PassListBuilder(options);
+    passes.addAllUpTo(fromDelegate, PassNames.CHECK_CONFORMANCE);
+    return passes;
   }
 
   @Override
-  protected List<PassFactory> getOptimizations() {
-    return ImmutableList.of();
+  protected PassListBuilder getOptimizations() {
+    return new PassListBuilder(options);
   }
 }

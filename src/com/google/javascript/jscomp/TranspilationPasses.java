@@ -22,16 +22,15 @@ import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringR
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import java.util.List;
 
 /** Provides a single place to manage transpilation passes. */
 public class TranspilationPasses {
   private TranspilationPasses() {}
 
   public static void addEs6ModulePass(
-      List<PassFactory> passes,
+      PassListBuilder passes,
       final PreprocessorSymbolTable.CachedInstanceFactory preprocessorTableFactory) {
-    passes.add(
+    passes.maybeAdd(
         PassFactory.builder()
             .setName("es6RewriteModule")
             .setInternalFactory(
@@ -49,24 +48,23 @@ public class TranspilationPasses {
             .build());
   }
 
-  public static void addTranspilationRuntimeLibraries(
-      List<PassFactory> passes, CompilerOptions options) {
+  public static void addTranspilationRuntimeLibraries(PassListBuilder passes) {
     // Inject runtime libraries needed for the transpilation we will have to do. Should run before
     // typechecking.
-    passes.add(injectTranspilationRuntimeLibraries);
+    passes.maybeAdd(injectTranspilationRuntimeLibraries);
   }
 
-  public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
-    passes.add(es6RewriteModuleToCjs);
+  public static void addEs6ModuleToCjsPass(PassListBuilder passes) {
+    passes.maybeAdd(es6RewriteModuleToCjs);
   }
 
-  public static void addEs6RewriteImportPathPass(List<PassFactory> passes) {
-    passes.add(es6RelativizeImportPaths);
+  public static void addEs6RewriteImportPathPass(PassListBuilder passes) {
+    passes.maybeAdd(es6RelativizeImportPaths);
   }
 
   /** Adds transpilation passes that should run at the beginning of the optimization phase */
   public static void addEarlyOptimizationTranspilationPasses(
-      List<PassFactory> passes, CompilerOptions options) {
+      PassListBuilder passes, CompilerOptions options) {
 
     // Note that, for features >ES2017 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
@@ -75,67 +73,68 @@ public class TranspilationPasses {
     // This greatly simplifies testing and the requirements for the transpilation passes.
 
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
-      passes.add(rewriteClassFields);
+      passes.maybeAdd(rewriteClassFields);
     }
 
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
       // Numeric separators are flagged as present by the parser,
       // but never actually represented in the AST.
       // The only thing we need to do is mark them as not present in the AST.
-      passes.add(
+      passes.maybeAdd(
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
     }
 
     if (options.needsTranspilationOf(Feature.LOGICAL_ASSIGNMENT)) {
-      passes.add(rewriteLogicalAssignmentOperatorsPass);
+      passes.maybeAdd(rewriteLogicalAssignmentOperatorsPass);
     }
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
-      passes.add(rewriteOptionalChainingOperator);
+      passes.maybeAdd(rewriteOptionalChainingOperator);
     }
 
     if (options.needsTranspilationOf(Feature.BIGINT)) {
-      passes.add(reportBigIntLiteralTranspilationUnsupported);
+      passes.maybeAdd(reportBigIntLiteralTranspilationUnsupported);
     }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
-      passes.add(rewriteNullishCoalesceOperator);
+      passes.maybeAdd(rewriteNullishCoalesceOperator);
     }
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
-      passes.add(rewriteCatchWithNoBinding);
+      passes.maybeAdd(rewriteCatchWithNoBinding);
     }
 
     if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
         || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
-      passes.add(rewriteAsyncIteration);
+      passes.maybeAdd(rewriteAsyncIteration);
     }
 
     if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
         || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-      passes.add(rewriteObjectSpread);
+      passes.maybeAdd(rewriteObjectSpread);
       if (!options.needsTranspilationFrom(ES2015)
           && options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
         // We only need to transpile away object destructuring that uses `...`, rather than
         // all destructuring.
         // For this to work correctly for object destructuring in parameter lists and variable
         // declarations, we need to normalize them a bit first.
-        passes.add(es6RenameVariablesInParamLists);
-        passes.add(es6SplitVariableDeclarations);
-        passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
+        passes.maybeAdd(es6RenameVariablesInParamLists);
+        passes.maybeAdd(es6SplitVariableDeclarations);
+        passes.maybeAdd(
+            getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
       }
     }
 
     if (options.needsTranspilationOf(Feature.TRAILING_COMMA_IN_PARAM_LIST)) {
-      passes.add(removeTrailingCommaFromParamList);
+      passes.maybeAdd(removeTrailingCommaFromParamList);
     }
 
     if (options.needsTranspilationOf(Feature.ASYNC_FUNCTIONS)) {
-      passes.add(rewriteAsyncFunctions);
+      passes.maybeAdd(rewriteAsyncFunctions);
     }
 
     if (options.needsTranspilationOf(Feature.EXPONENT_OP)) {
-      passes.add(rewriteExponentialOperator);
+      passes.maybeAdd(rewriteExponentialOperator);
     }
 
     // TODO(lharker): break up this if block into individual Feature conditions
@@ -143,7 +142,7 @@ public class TranspilationPasses {
     if (options.needsTranspilationFrom(ES2015)) {
       // Binary and octal literals are effectively transpiled by the parser.
       // There's no transpilation we can do for the new regexp flags.
-      passes.add(
+      passes.maybeAdd(
           createFeatureRemovalPass(
               "markEs6FeaturesNotRequiringTranspilationAsRemoved",
               Feature.BINARY_LITERALS,
@@ -151,29 +150,29 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
 
-      passes.add(es6NormalizeShorthandProperties);
-      passes.add(es6RewriteClassExtends);
-      passes.add(es6ConvertSuper);
-      passes.add(es6RenameVariablesInParamLists);
-      passes.add(es6SplitVariableDeclarations);
-      passes.add(
+      passes.maybeAdd(es6NormalizeShorthandProperties);
+      passes.maybeAdd(es6RewriteClassExtends);
+      passes.maybeAdd(es6ConvertSuper);
+      passes.maybeAdd(es6RenameVariablesInParamLists);
+      passes.maybeAdd(es6SplitVariableDeclarations);
+      passes.maybeAdd(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
-      passes.add(rewriteNewDotTarget);
-      passes.add(es6RewriteArrowFunction);
-      passes.add(es6ExtractClasses);
-      passes.add(es6RewriteClass);
-      passes.add(es6RewriteRestAndSpread);
-      passes.add(lateConvertEs6ToEs3);
-      passes.add(es6ForOf);
-      passes.add(rewriteBlockScopedFunctionDeclaration);
-      passes.add(rewriteBlockScopedDeclaration);
-      passes.add(rewriteGenerators);
+      passes.maybeAdd(rewriteNewDotTarget);
+      passes.maybeAdd(es6RewriteArrowFunction);
+      passes.maybeAdd(es6ExtractClasses);
+      passes.maybeAdd(es6RewriteClass);
+      passes.maybeAdd(es6RewriteRestAndSpread);
+      passes.maybeAdd(lateConvertEs6ToEs3);
+      passes.maybeAdd(es6ForOf);
+      passes.maybeAdd(rewriteBlockScopedFunctionDeclaration);
+      passes.maybeAdd(rewriteBlockScopedDeclaration);
+      passes.maybeAdd(rewriteGenerators);
     }
   }
 
   /** Adds the pass to inject ES2015 polyfills, which goes after the late ES2015 passes. */
-  public static void addRewritePolyfillPass(List<PassFactory> passes) {
-    passes.add(rewritePolyfills);
+  public static void addRewritePolyfillPass(PassListBuilder passes) {
+    passes.maybeAdd(rewritePolyfills);
   }
 
   /** Rewrites ES6 modules */

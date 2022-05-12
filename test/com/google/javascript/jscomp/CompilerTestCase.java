@@ -1731,20 +1731,20 @@ public abstract class CompilerTestCase {
   }
 
   private static void rewriteEsModules(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
-    List<PassFactory> factories = new ArrayList<>();
     CompilerOptions options = compiler.getOptions();
+    PassListBuilder factories = new PassListBuilder(options);
 
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
-    factories.add(
+    factories.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.GATHER_MODULE_METADATA)
             .setRunInFixedPointLoop(true)
-            .setInternalFactory((x) -> gatherModuleMetadata)
+            .setInternalFactory((x1) -> gatherModuleMetadata)
             .setFeatureSetForChecks()
             .build());
-    factories.add(
+    factories.maybeAdd(
         PassFactory.builder()
             .setName(PassNames.CREATE_MODULE_MAP)
             .setRunInFixedPointLoop(true)
@@ -1754,7 +1754,7 @@ public abstract class CompilerTestCase {
             .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-    for (PassFactory factory : factories) {
+    for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
   }
@@ -1762,15 +1762,15 @@ public abstract class CompilerTestCase {
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     rewriteEsModules(compiler, externsRoot, codeRoot);
 
-    List<PassFactory> factories = new ArrayList<>();
     CompilerOptions options = compiler.getOptions();
+    PassListBuilder factories = new PassListBuilder(options);
 
     options.setLanguageIn(LanguageMode.UNSUPPORTED);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
+    TranspilationPasses.addTranspilationRuntimeLibraries(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(factories, options);
-    for (PassFactory factory : factories) {
+    for (PassFactory factory : factories.build()) {
       factory.create(compiler).process(externsRoot, codeRoot);
     }
   }
