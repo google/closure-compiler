@@ -47,7 +47,7 @@ WorkletOptions.prototype.credentials;
 function Worklet() {}
 
 /**
- * @param {string} moduleURL
+ * @param {!URL|string} moduleURL
  * @param {!WorkletOptions=} options
  * @return {!Promise<void>}
  */

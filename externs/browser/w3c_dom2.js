@@ -2964,7 +2964,7 @@ Window.prototype.stop = function() {};
 var BoolOrAttributionSourceParams;
 
 /**
- * @param {*=} url
+ * @param {!URL|string=} url
  * @param {string=} windowName
  * @param {string=} windowFeatures
  * @param {!BoolOrAttributionSourceParams=} replaceOrAttributionParams

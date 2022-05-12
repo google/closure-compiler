@@ -1499,10 +1499,10 @@ Window.prototype.applicationCache;
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...!TrustedScriptURL|string} var_args
+ * @param {...!TrustedScriptURL|!URL|string} urls
  * @return {undefined}
  */
-Window.prototype.importScripts = function(var_args) {};
+Window.prototype.importScripts = function(urls) {};
 
 /**
  * Decodes a string of data which has been encoded using base-64 encoding.
@@ -1524,14 +1524,14 @@ function btoa(stringToEncode) {}
 
 /**
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
- * @param {...!TrustedScriptURL|string} var_args
+ * @param {...!TrustedScriptURL|!URL|string} urls
  * @return {undefined}
  */
-function importScripts(var_args) {}
+function importScripts(urls) {}
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!TrustedScriptURL|string} scriptURL
+ * @param {!TrustedScriptURL|!URL|string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
@@ -1610,7 +1610,7 @@ WorkerOptions.prototype.type;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {!TrustedScriptURL|string} scriptURL The URL of the script to run in
+ * @param {!TrustedScriptURL|!URL|string} scriptURL The URL of the script to run in
  *     the SharedWorker.
  * @param {(string|!WorkerOptions)=} options A name that can
  *     later be used to obtain a reference to the same SharedWorker or a
@@ -3399,7 +3399,7 @@ TimeRanges.prototype.end = function(index) { return 0; };
 /**
  * @see https://html.spec.whatwg.org/multipage/web-sockets.html
  * @constructor
- * @param {string} url
+ * @param {!URL|string} url
  * @param {(string|!Array<string>)=} opt_protocol
  * @implements {EventTarget}
  */
@@ -3572,20 +3572,20 @@ History.prototype.go = function(delta) {};
  * @see http://www.w3.org/TR/html5/history.html#the-history-interface
  * @param {*} data New state.
  * @param {string} title The title for a new session history entry.
- * @param {string=} opt_url The URL for a new session history entry.
+ * @param {!URL|string=} url The URL for a new session history entry.
  * @return {undefined}
  */
-History.prototype.pushState = function(data, title, opt_url) {};
+History.prototype.pushState = function(data, title, url) {};
 
 /**
  * Replaces the current state in the session history.
  * @see http://www.w3.org/TR/html5/history.html#the-history-interface
  * @param {*} data New state.
  * @param {string} title The title for a session history entry.
- * @param {string=} opt_url The URL for a new session history entry.
+ * @param {!URL|string=} url The URL for a new session history entry.
  * @return {undefined}
  */
-History.prototype.replaceState = function(data, title, opt_url) {};
+History.prototype.replaceState = function(data, title, url) {};
 
 /**
  * Pending state object.
@@ -3695,7 +3695,7 @@ Location.prototype.hash;
 
 /**
  * Navigates to the given page.
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-assign
  */
@@ -3704,7 +3704,7 @@ Location.prototype.assign = function(url) {};
 /**
  * Removes the current page from the session history and navigates to the given
  * page.
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
  */
@@ -5412,7 +5412,7 @@ Navigator.prototype.cookieEnabled;
 
 /**
  * @param {string} scheme
- * @param {string} url
+ * @param {!URL|string} url
  * @param {string} title
  * @return {undefined}
  */
@@ -5428,7 +5428,7 @@ Navigator.prototype.registerContentHandler = function(mimeType, url, title) {}
 
 /**
  * @param {string} scheme
- * @param {string} url
+ * @param {!URL|string} url
  * @return {undefined}
  */
 Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {}

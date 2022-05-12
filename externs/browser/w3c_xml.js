@@ -307,7 +307,7 @@ XMLHttpRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @param {string} method
- * @param {string} url
+ * @param {!URL|string} url
  * @param {?boolean=} opt_async
  * @param {?string=} opt_user
  * @param {?string=} opt_password
