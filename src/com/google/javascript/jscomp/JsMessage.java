@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -241,7 +241,7 @@ public abstract class JsMessage {
     private String alternateId;
 
     private final List<CharSequence> parts = new ArrayList<>();
-    private final Set<String> placeholders = new HashSet<>();
+    private final Set<String> placeholders = new LinkedHashSet<>();
     private ImmutableMap<String, String> placeholderNameToExampleMap = ImmutableMap.of();
     private ImmutableMap<String, String> placeholderNameToOriginalCodeMap = ImmutableMap.of();
 
@@ -532,7 +532,6 @@ public abstract class JsMessage {
      * @param seed the seed
      * @return 64 bit hash value
      */
-    @SuppressWarnings("fallthrough")
     private static long hash64(byte[] value, int offset, int length, long seed) {
       long a = CONSTANT64;
       long b = a;

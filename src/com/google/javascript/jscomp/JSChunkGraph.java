@@ -43,10 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -181,7 +180,7 @@ public final class JSChunkGraph implements Serializable {
     for (JSChunk chunk : chunksInDepOrder) {
       if (chunk.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
         hasWeakChunk = true;
-        Set<JSChunk> allOtherChunks = new HashSet<>(chunksInDepOrder);
+        Set<JSChunk> allOtherChunks = new LinkedHashSet<>(chunksInDepOrder);
         allOtherChunks.remove(chunk);
         checkState(
             chunk.getAllDependencies().containsAll(allOtherChunks),
@@ -298,7 +297,7 @@ public final class JSChunkGraph implements Serializable {
 
   /** Gets all chunks indexed by name. */
   Map<String, JSChunk> getChunksByName() {
-    Map<String, JSChunk> result = new HashMap<>();
+    Map<String, JSChunk> result = new LinkedHashMap<>();
     for (JSChunk m : chunks) {
       result.put(m.getName(), m);
     }
@@ -524,7 +523,7 @@ public final class JSChunkGraph implements Serializable {
 
     // Build a map of symbols to their source file(s). While having multiple source files is invalid
     // we leave that up to typechecking so that we avoid arbitarily picking a file.
-    HashMap<String, Set<CompilerInput>> inputsByProvide = new HashMap<>();
+    LinkedHashMap<String, Set<CompilerInput>> inputsByProvide = new LinkedHashMap<>();
     for (CompilerInput input : originalInputs) {
       for (String provide : input.getKnownProvides()) {
         inputsByProvide.computeIfAbsent(provide, (String k) -> new LinkedHashSet<>());
@@ -566,7 +565,7 @@ public final class JSChunkGraph implements Serializable {
     // Figure out which sources *must* be in each chunk, or in one
     // of that chunk's dependencies.
     List<CompilerInput> orderedInputs = new ArrayList<>();
-    Set<CompilerInput> reachedInputs = new HashSet<>();
+    Set<CompilerInput> reachedInputs = new LinkedHashSet<>();
 
     for (JSChunk chunk : chunks) {
       List<CompilerInput> transitiveClosure;
@@ -576,7 +575,7 @@ public final class JSChunkGraph implements Serializable {
       if (dependencyOptions.shouldSort() && dependencyOptions.shouldPrune()) {
         transitiveClosure = new ArrayList<>();
         // We need the ful set of dependencies for each chunk, so start with the full input set
-        Set<CompilerInput> inputsNotYetReached = new HashSet<>(originalInputs);
+        Set<CompilerInput> inputsNotYetReached = new LinkedHashSet<>(originalInputs);
         for (CompilerInput entryPoint : entryPointInputsPerChunk.get(chunk)) {
           transitiveClosure.addAll(
               getDepthFirstDependenciesOf(entryPoint, inputsNotYetReached, inputsByProvide));

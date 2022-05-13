@@ -25,8 +25,8 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
 import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
@@ -67,7 +67,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
 
   private final CollectorCallback callback = new CollectorCallback();
 
-  private final HashSet<Node> collectedHoistedFunctions = new HashSet<>();
+  private final LinkedHashSet<Node> collectedHoistedFunctions = new LinkedHashSet<>();
 
   private Scope narrowScope;
 

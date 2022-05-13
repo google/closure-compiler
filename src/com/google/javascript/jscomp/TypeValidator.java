@@ -64,8 +64,8 @@ import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.UnknownType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -624,8 +624,8 @@ class TypeValidator implements Serializable {
             "assignment to property " + propName + " of " + typeNameSupplier.get(),
             rightType,
             leftType,
-            new HashSet<>(),
-            new HashSet<>());
+            new LinkedHashSet<>(),
+            new LinkedHashSet<>());
         return false;
       }
     }
@@ -672,7 +672,13 @@ class TypeValidator implements Serializable {
         return true;
       } else {
         registerMismatchAndReport(
-            n, TYPE_MISMATCH_WARNING, msg, rightType, leftType, new HashSet<>(), new HashSet<>());
+            n,
+            TYPE_MISMATCH_WARNING,
+            msg,
+            rightType,
+            leftType,
+            new LinkedHashSet<>(),
+            new LinkedHashSet<>());
         return false;
       }
     }

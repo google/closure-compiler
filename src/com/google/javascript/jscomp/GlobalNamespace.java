@@ -44,7 +44,6 @@ import com.google.javascript.rhino.StaticSymbolTable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -117,7 +116,7 @@ class GlobalNamespace
   private final List<Name> globalNames = new ArrayList<>();
 
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
-  private final Map<String, Name> nameMap = new HashMap<>();
+  private final Map<String, Name> nameMap = new LinkedHashMap<>();
 
   /** Maps names (e.g. "a.b.c") and MODULE_BODY nodes to Names in that module */
   private final Table<ModuleMetadata, String, Name> nameMapByModule = HashBasedTable.create();
@@ -1262,7 +1261,7 @@ class GlobalNamespace
     private final LinkedHashSet<Ref> refs = new LinkedHashSet<>();
 
     /** Keep track of which Nodes are Refs for this Name */
-    private final Map<Node, ImmutableList<Ref>> refsForNodeMap = new HashMap<>();
+    private final Map<Node, ImmutableList<Ref>> refsForNodeMap = new LinkedHashMap<>();
 
     private NameType type; // not final to handle forward references to names
     private DeclaredTypeKind declaredType = DeclaredTypeKind.NOT_A_TYPE;

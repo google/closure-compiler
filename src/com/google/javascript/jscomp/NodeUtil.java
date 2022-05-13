@@ -60,7 +60,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -5827,7 +5826,7 @@ public final class NodeUtil {
       AbstractCompiler compiler, ScopeCreator scopeCreator, final Scope scope) {
     checkState(scope.isFunctionScope(), scope);
 
-    final Map<String, Var> nameVarMap = new HashMap<>();
+    final Map<String, Var> nameVarMap = new LinkedHashMap<>();
     final List<Var> orderedVars = new ArrayList<>();
 
     ScopedCallback finder =

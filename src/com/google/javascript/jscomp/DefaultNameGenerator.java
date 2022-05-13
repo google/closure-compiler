@@ -73,7 +73,7 @@ public final class DefaultNameGenerator implements NameGenerator {
     }
   }
 
-  // TODO(user): Maybe we don't need a HashMap to look up.
+  // TODO(user): Maybe we don't need a LinkedHashMap to look up.
   // I started writing a skip-list like data-structure that would let us
   // have O(1) favors() and O(1) reset() but the code got very messy.
   // Lets start with a logical implementation first until performance becomes
@@ -111,7 +111,7 @@ public final class DefaultNameGenerator implements NameGenerator {
 
   public DefaultNameGenerator() {
     buildPriorityLookupMap();
-    Set<String> reservedNames = Sets.newHashSetWithExpectedSize(0);
+    Set<String> reservedNames = Sets.newLinkedHashSetWithExpectedSize(0);
     reset(reservedNames, "", null);
   }
 
@@ -146,8 +146,7 @@ public final class DefaultNameGenerator implements NameGenerator {
       Map<Character, CharPriority> priorityLookupMap) {
     // Clone the priorityLookupMap to preserve information about how often
     // characters are used.
-    this.priorityLookupMap = Maps.newHashMapWithExpectedSize(
-        NONFIRST_CHAR.length);
+    this.priorityLookupMap = Maps.newLinkedHashMapWithExpectedSize(NONFIRST_CHAR.length);
     for (Map.Entry<Character, CharPriority> entry :
       priorityLookupMap.entrySet()) {
       this.priorityLookupMap.put(entry.getKey(), entry.getValue().clone());
@@ -157,7 +156,7 @@ public final class DefaultNameGenerator implements NameGenerator {
   }
 
   private void buildPriorityLookupMap() {
-    priorityLookupMap = Maps.newHashMapWithExpectedSize(NONFIRST_CHAR.length);
+    priorityLookupMap = Maps.newLinkedHashMapWithExpectedSize(NONFIRST_CHAR.length);
     int order = 0;
     for (char c : NONFIRST_CHAR) {
       priorityLookupMap.put(c, new CharPriority(c, order));

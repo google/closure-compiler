@@ -31,8 +31,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -254,7 +254,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       }
 
       referenceStack.push(referencedNames);
-      referencedNames = new HashSet<>();
+      referencedNames = new LinkedHashSet<>();
     }
 
     /**
@@ -384,7 +384,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
     // By contrast, this is a different map for each ContextualRenamer because it's just keeping
     // track of the names used by this renamer.
-    private final Map<String, String> declarations = new HashMap<>();
+    private final Map<String, String> declarations = new LinkedHashMap<>();
     private final boolean global;
 
     private final Renamer hoistRenamer;
@@ -504,7 +504,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
    * @see FunctionInjector
    */
   static class InlineRenamer implements Renamer {
-    private final Map<String, String> declarations = new HashMap<>();
+    private final Map<String, String> declarations = new LinkedHashMap<>();
     private final Supplier<String> uniqueIdSupplier;
     private final String idPrefix;
     private final boolean removeConstness;

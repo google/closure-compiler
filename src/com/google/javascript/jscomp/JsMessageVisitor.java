@@ -28,9 +28,8 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -123,10 +122,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * The names encountered associated with their defining node and source. We use it for tracking
    * duplicated message ids in the source code.
    */
-  private final Map<String, MessageLocation> messageNames = new HashMap<>();
+  private final Map<String, MessageLocation> messageNames = new LinkedHashMap<>();
 
   /** Track unnamed messages by Var, not string, as they are not guaranteed to be globally unique */
-  private final Map<Var, JsMessage> unnamedMessages = new HashMap<>();
+  private final Map<Var, JsMessage> unnamedMessages = new LinkedHashMap<>();
 
   /**
    * List of found goog.getMsg call nodes.
@@ -135,7 +134,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * All nodes that are left at the end of traversing are orphaned nodes. It means have no
    * corresponding var or property node.
    */
-  private final Set<Node> googMsgNodes = new HashSet<>();
+  private final Set<Node> googMsgNodes = new LinkedHashSet<>();
 
   private final CheckLevel checkLevel;
 
@@ -643,7 +642,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    */
   private void extractFromFunctionNode(JsMessage.Builder builder, Node node)
       throws MalformedException {
-    Set<String> phNames = new HashSet<>();
+    Set<String> phNames = new LinkedHashSet<>();
 
     for (Node fnChild = node.getFirstChild(); fnChild != null; fnChild = fnChild.getNext()) {
       switch (fnChild.getToken()) {
@@ -783,7 +782,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     parseMessageTextNode(builder, stringLiteralNode);
 
     Node valuesObjLit = stringLiteralNode.getNext();
-    Set<String> phNames = new HashSet<>();
+    Set<String> phNames = new LinkedHashSet<>();
     if (valuesObjLit != null) {
       // Register the placeholder names
       if (!valuesObjLit.isObjectLit()) {

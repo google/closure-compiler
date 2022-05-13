@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -67,7 +67,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
   // We haven't added it here because it's unused by the passes that need typed scopes.
 
   TypedScope(TypedScope parent, Node rootNode) {
-    this(parent, rootNode, new HashSet<>(), null);
+    this(parent, rootNode, new LinkedHashSet<>(), null);
   }
 
   /**
@@ -83,7 +83,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     this.parent = parent;
     this.depth = parent.depth + 1;
     this.isBottom = false;
-    this.reservedNames = reservedNames.isEmpty() ? ImmutableSet.of() : new HashSet<>(reservedNames);
+    this.reservedNames =
+        reservedNames.isEmpty() ? ImmutableSet.of() : new LinkedHashSet<>(reservedNames);
     this.module = module;
   }
 

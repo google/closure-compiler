@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -34,7 +34,7 @@ import java.util.Map;
  */
 class MemoizedScopeCreator implements ScopeCreator {
 
-  private final Map<Node, AbstractScope<?, ?>> scopesByScopeRoot = new HashMap<>();
+  private final Map<Node, AbstractScope<?, ?>> scopesByScopeRoot = new LinkedHashMap<>();
   private final ScopeCreator delegate;
 
   /**

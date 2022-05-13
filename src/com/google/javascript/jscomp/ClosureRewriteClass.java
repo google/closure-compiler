@@ -28,7 +28,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -606,7 +606,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
     }
 
     // merge suppressions
-    Set<String> suppressions = new HashSet<>();
+    Set<String> suppressions = new LinkedHashSet<>();
     suppressions.addAll(classInfo.getSuppressions());
     suppressions.addAll(ctorInfo.getSuppressions());
     if (!suppressions.isEmpty()) {

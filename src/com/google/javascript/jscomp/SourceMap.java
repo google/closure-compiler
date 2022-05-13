@@ -26,7 +26,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -139,7 +139,7 @@ public final class SourceMap {
 
   private final SourceMapGenerator generator;
   private List<? extends LocationMapping> prefixMappings = ImmutableList.of();
-  private final Map<String, String> sourceLocationFixupCache = new HashMap<>();
+  private final Map<String, String> sourceLocationFixupCache = new LinkedHashMap<>();
   /**
    * A mapping derived from input source maps. Maps back to input sources that inputs to this
    * compilation job have been generated from, and used to create a source map that maps all the way
