@@ -41,14 +41,6 @@ public abstract class PassFactory {
   public abstract boolean isRunInFixedPointLoop();
 
   /**
-   * The set of features that this pass understands.
-   *
-   * <p>Passes that can handle any code (no-op passes, extremely simple passes that are unlikely to
-   * be broken by new features, etc.) should return {@link FeatureSet#latest()}.
-   */
-  public abstract FeatureSet getFeatureSet();
-
-  /**
    * A simple factory function for creating actual pass instances.
    *
    * <p>Users should call {@link #create(AbstractCompiler)} rather than use this object directly.
@@ -71,13 +63,12 @@ public abstract class PassFactory {
     public abstract Builder setCondition(Function<CompilerOptions, Boolean> cond);
 
     /**
-     * Set the features that are allowed to be in the AST when this pass runs.
-     *
-     * <p>In general client code should call either {@link #setFeatureSetForChecks()} or {@link
-     * #setFeatureSetForOptimizations()} instead. This method exists only to support those methods
-     * and special cases such as transpilation passes and tests.
+     * @deprecated Does nothing
      */
-    public abstract Builder setFeatureSet(FeatureSet x);
+    @Deprecated
+    public final Builder setFeatureSet(FeatureSet x) {
+      return this;
+    }
 
     public abstract Builder setInternalFactory(
         Function<AbstractCompiler, ? extends CompilerPass> x);
@@ -85,16 +76,20 @@ public abstract class PassFactory {
     @ForOverride
     abstract PassFactory autoBuild();
 
-    /** Record that the pass will support all the features required for checks passes. */
+    /**
+     * @deprecated Does nothing.
+     */
+    @Deprecated
     public final Builder setFeatureSetForChecks() {
-      // ES_UNSTABLE is the set of features the compiler supports in checks passes
-      return this.setFeatureSet(FeatureSet.ES_UNSTABLE);
+      return this;
     }
 
-    /** Record that the pass will support all the features required for optimization passes. */
+    /**
+     * @deprecated Does nothing.
+     */
+    @Deprecated
     public final Builder setFeatureSetForOptimizations() {
-      // ES_NEXT is the set of features the compiler supports throughout the compiler.
-      return this.setFeatureSet(FeatureSet.ES_NEXT);
+      return this;
     }
 
     public final PassFactory build() {
@@ -112,11 +107,7 @@ public abstract class PassFactory {
 
   /** Create a no-op pass that can only run once. Used to break up loops. */
   public static PassFactory createEmptyPass(String name) {
-    return builder()
-        .setName(name)
-        .setFeatureSet(FeatureSet.all())
-        .setInternalFactory((c) -> (externs, root) -> {})
-        .build();
+    return builder().setName(name).setInternalFactory((c) -> (externs, root) -> {}).build();
   }
 
   /** Creates a new compiler pass to be run. */

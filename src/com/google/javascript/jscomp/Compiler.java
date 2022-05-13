@@ -453,11 +453,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         .add(new J2clSuppressWarningsGuard())
         .add(new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()))
         .add(warningsGuard);
-    if (this.options != null && this.options.shouldSkipUnsupportedPasses()) {
-      guards.add(
-          new DiagnosticGroupWarningsGuard(
-              DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.WARNING));
-    }
 
     this.warningsGuard = new ComposeWarningsGuard(guards.build());
   }

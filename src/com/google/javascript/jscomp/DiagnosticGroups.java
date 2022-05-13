@@ -176,8 +176,7 @@ public class DiagnosticGroups {
           MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT);
 
   public static final DiagnosticGroup FEATURES_NOT_SUPPORTED_BY_PASS =
-      DiagnosticGroups.registerGroup(
-          "featuresNotSupportedByPass", PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS);
+      DiagnosticGroups.registerDeprecatedGroup("featuresNotSupportedByPass");
 
   public static final DiagnosticGroup MODULE_LOAD =
       DiagnosticGroups.registerGroup(

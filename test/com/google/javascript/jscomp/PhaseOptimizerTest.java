@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS;
-import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
@@ -181,31 +179,6 @@ public final class PhaseOptimizerTest {
     }
   }
 
-  @Test
-  public void testSetSkipUnsupportedPasses() {
-    compiler.getOptions().setSkipUnsupportedPasses(true);
-    addUnsupportedPass("testPassFactory");
-
-    assertPasses();
-
-    // Error will be converted to warning by a `WarningsGuard`.
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
-  }
-
-  @Test
-  public void testSetDontSkipUnsupportedPasses() {
-    compiler.getOptions().setSkipUnsupportedPasses(false);
-    addUnsupportedPass("testPassFactory");
-
-    assertPasses("testPassFactory");
-
-    assertThat(compiler.getErrors())
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
-  }
-
   public void assertPasses(String... names) {
     optimizer.process(null, dummyRoot);
     assertThat(passesRun).isEqualTo(ImmutableList.copyOf(names));
@@ -217,13 +190,6 @@ public final class PhaseOptimizerTest {
 
   private void addLoopedPass(Loop loop, String name, int numChanges) {
     loop.addLoopedPass(createPassFactory(name, numChanges, false));
-  }
-
-  /** Adds a pass with the given name that does not support some of the features used in the AST. */
-  private void addUnsupportedPass(String name) {
-    compiler.setFeatureSet(FeatureSet.latest());
-    optimizer.addOneTimePass(
-        createPassFactory(name, createPass(name, 0), true, FeatureSet.BARE_MINIMUM));
   }
 
   private PassFactory createPassFactory(String name, int numChanges, boolean isOneTime) {
