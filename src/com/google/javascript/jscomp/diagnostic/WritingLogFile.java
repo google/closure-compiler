@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.errorprone.annotations.MustBeClosed;
+import com.google.gson.stream.JsonWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -100,6 +101,16 @@ final class WritingLogFile extends LogFile {
   @Override
   public LogFile logJson(Supplier<Object> value) {
     return logInternal(LogsGson.toJson(value.get()));
+  }
+
+  @Override
+  public LogFile logJson(StreamedJsonProducer producer) {
+    try (JsonWriter writer = new JsonWriter(this.writer)) {
+      producer.writeJson(writer);
+    } catch (IOException ex) {
+      throw new AssertionError(ex);
+    }
+    return this;
   }
 
   private LogFile logInternal(String value) {

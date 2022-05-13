@@ -52,5 +52,10 @@ final class NoOpLogFile extends LogFile {
   }
 
   @Override
+  public LogFile logJson(StreamedJsonProducer producer) {
+    return this;
+  }
+
+  @Override
   public void close() {}
 }

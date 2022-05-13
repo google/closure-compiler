@@ -19,6 +19,8 @@ package com.google.javascript.jscomp.diagnostic;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.errorprone.annotations.MustBeClosed;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
@@ -30,6 +32,15 @@ import java.util.function.Supplier;
  * writing, Flogger was not J2CL compatible.
  */
 public abstract class LogFile implements AutoCloseable {
+
+  /**
+   * An interface allowing streaming JSON to a LogFile via a {@link JsonWriter}
+   *
+   * <p>Use with {@link #logJson(StreamedJsonProducer)}
+   */
+  public interface StreamedJsonProducer {
+    public void writeJson(JsonWriter jsonWriter) throws IOException;
+  }
 
   @MustBeClosed
   public static LogFile createOrReopen(Path file) {
@@ -55,6 +66,8 @@ public abstract class LogFile implements AutoCloseable {
   public abstract LogFile logJson(Object value);
 
   public abstract LogFile logJson(Supplier<Object> value);
+
+  public abstract LogFile logJson(StreamedJsonProducer producer);
 
   @Override
   public abstract void close();

@@ -24,9 +24,12 @@ import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomati
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
 import static java.util.Comparator.naturalOrder;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -36,13 +39,19 @@ import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * Grab an integer TypePool pointer for each JSType on the AST and log information about the
  * pointers.
  */
+@GwtIncompatible
 final class SerializeTypesToPointers {
 
   private final AbstractCompiler compiler;
@@ -160,7 +169,11 @@ final class SerializeTypesToPointers {
     // Log information about how the JSTypes correspond to the colors. This may be useful later on
     // in optimizations.
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
-      log.log(() -> GSON.toJson(serializer.getColorIdToJSTypeMapForDebugging().asMap()));
+      ImmutableMap<String, Collection<JSType>> allSerializedTypes =
+          serializer.getColorIdToJSTypeMapForDebugging().asMap();
+      // Stream json writing here rather than building up the entire json representation at once
+      // because the latter used to cause OOMs.
+      log.logJson(new StreamObjectUuidsJson(allSerializedTypes));
     }
 
     // Log type mismatches, which contribute to the definition of an "invalidating" type
@@ -181,6 +194,39 @@ final class SerializeTypesToPointers {
     return stream(typeMismatches)
         .map(mismatch -> TypeMismatchJson.create(mismatch, serializer, typePool))
         .collect(toImmutableSortedSet(naturalOrder()));
+  }
+
+  /**
+   * Writes a JSON object whose keys are color ids and values are arrays of JSType strings.
+   *
+   * <p>Example: `{0: ['*', '?', 'None'], 10f34lksdf: ['SomeProtoCtor']}`
+   */
+  private static class StreamObjectUuidsJson implements LogFile.StreamedJsonProducer {
+    private final ImmutableMap<String, Collection<JSType>> allSerializedTypes;
+
+    StreamObjectUuidsJson(ImmutableMap<String, Collection<JSType>> allSerializedTypes) {
+      this.allSerializedTypes = allSerializedTypes;
+    }
+
+    @Override
+    public void writeJson(JsonWriter jsonWriter) throws IOException {
+      jsonWriter.beginObject();
+      for (Map.Entry<String, Collection<JSType>> entry : allSerializedTypes.entrySet()) {
+        jsonWriter.name(entry.getKey()); // color id
+        jsonWriter.beginArray();
+        // sort JSTypes by string representation
+        ArrayList<String> jstypes = new ArrayList<>();
+        for (JSType jstype : entry.getValue()) {
+          jstypes.add(jstype.toString());
+        }
+        Collections.sort(jstypes);
+        for (String typeName : jstypes) { // all corresponding JSTypes
+          jsonWriter.value(typeName);
+        }
+        jsonWriter.endArray();
+      }
+      jsonWriter.endObject();
+    }
   }
 
   private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {

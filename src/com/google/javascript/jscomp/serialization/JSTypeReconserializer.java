@@ -487,13 +487,14 @@ final class JSTypeReconserializer {
    *
    * <p>Only intended to be used for debug logging.
    */
-  ImmutableMultimap<String, String> getColorIdToJSTypeMapForDebugging() {
-    ImmutableMultimap.Builder<String, String> colorIdToTypes =
-        ImmutableMultimap.<String, String>builder()
-            .orderKeysBy(naturalOrder())
-            .orderValuesBy(naturalOrder());
+  ImmutableMultimap<String, JSType> getColorIdToJSTypeMapForDebugging() {
+    // note: returns JSType values instead of String values, even though all that's needed for
+    // debugging are the strings, to avoid the memory overhead of calculating all string
+    // representations at once
+    ImmutableMultimap.Builder<String, JSType> colorIdToTypes =
+        ImmutableMultimap.<String, JSType>builder().orderKeysBy(naturalOrder());
     this.typeToRecordCache.forEach(
-        (jstype, record) -> colorIdToTypes.put(record.colorId.toString(), jstype.toString()));
+        (jstype, record) -> colorIdToTypes.put(record.colorId.toString(), jstype));
     return colorIdToTypes.build();
   }
 
