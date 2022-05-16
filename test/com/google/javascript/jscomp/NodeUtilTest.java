@@ -1509,6 +1509,11 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x&&y"))).isFalse();
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("1&&y"))).isFalse();
 
+      // Logical assignments are always treated as non-local
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x||=1"))).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x&&=1"))).isFalse();
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x??=1"))).isFalse();
+
       // Only the results of HOOK matter
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?1:2"))).isTrue();
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?x:2"))).isFalse();

@@ -4918,7 +4918,12 @@ public final class NodeUtil {
         // we could return true here.
         return false;
       default:
-        // Other op force a local value:
+        // A logical assignment could evaluate to either the assignment target or the
+        // right-hand side, and we generally have no information about the locality of the lhs.
+        if (isLogicalAssignmentOp(value)) {
+          return false;
+        }
+        // Other non-logical assignment ops force a local value:
         //  '' + g (a local string)
         //  x -= g (x is now an local number)
         if (isAssignmentOp(value) || isSimpleOperator(value) || isImmutableValue(value)) {

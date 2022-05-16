@@ -377,6 +377,19 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
+  public void testGithubIssue3940_logicalOrAssignCallee() {
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(
+        options,
+        "window['bug'] = function() { var arr; (arr || (arr = [])).push(0); return arr; }",
+        "window.bug = function() { var a; (a ||= []).push(0); return a; }");
+  }
+
+  @Test
   public void testBigInt() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
