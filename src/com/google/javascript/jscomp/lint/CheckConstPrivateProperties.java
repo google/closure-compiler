@@ -158,15 +158,6 @@ public class CheckConstPrivateProperties extends AbstractPostOrderCallback imple
    *     'delete' property).
    */
   private boolean isModificationOp(Node n) {
-    Node parent = n.getParent();
-
-    if (n != parent.getFirstChild()) {
-      return false;
-    }
-
-    return NodeUtil.isAssignmentOp(parent)
-        || parent.isInc()
-        || parent.isDec()
-        || parent.isDelProp();
+    return NodeUtil.isLValue(n) || n.getParent().isDelProp();
   }
 }

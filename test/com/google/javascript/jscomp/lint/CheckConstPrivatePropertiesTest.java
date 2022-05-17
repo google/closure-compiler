@@ -251,6 +251,14 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassPropModified_destructuring() {
+    testSame("class C { constructor() { /** @private */ this.a = 2; [this.a] = []; } }");
+    testSame("class C { constructor() { /** @private */ this.a = 2; ({a: this.a} = {}); } }");
+    testSame("class C { constructor() { /** @private */ this.a = 2; [{a: this.a}] = [{}]; } }");
+    testSame("class C { constructor() { /** @private */ this.a = 2; [this.a = 0] = []; } }");
+  }
+
+  @Test
   public void testPrototype_Property() {
     testSame("/** @constructor */ function C() {} /** @private */ C.prototype.prop = 1;");
     testSame(
