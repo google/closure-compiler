@@ -239,8 +239,8 @@ public final class FeatureSet implements Serializable {
     // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
     // fully supported
 
-    // Checks and optimizations are supported, but not transpilation
-    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_NEXT), // Part of ES2022
+    // ES_UNSTABLE: Features fully supported in checks, but not fully supported everywhere else
+    PUBLIC_CLASS_FIELDS("Public class fields", LangVersion.ES_UNSTABLE), // Part of ES2022
 
     // ES_UNSUPORTED: Features that we can parse, but not yet supported in all checks
 
@@ -489,6 +489,6 @@ public final class FeatureSet implements Serializable {
   }
 
   public static FeatureSet latest() {
-    return ES_NEXT;
+    return ES_UNSUPPORTED;
   }
 }

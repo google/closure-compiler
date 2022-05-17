@@ -39,7 +39,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   /** Creates a CompilerOptions object with google coding conventions. */
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguage(LanguageMode.UNSUPPORTED);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     return options;
@@ -47,7 +47,6 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   private CompilerOptions checksOnlyCompilerOptions() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setChecksOnly(true);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
@@ -58,8 +57,6 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
-
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
     return options;
