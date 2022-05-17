@@ -1189,6 +1189,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
             type == AssignmentType.DECLARATION
+                && var != null
                 && !var.isTypeInferred()
                 && var.getNameNode() != null; // implicit vars (like arguments) have no nameNode
 

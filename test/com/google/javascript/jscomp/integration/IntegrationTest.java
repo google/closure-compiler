@@ -1103,6 +1103,17 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.ERROR);
     test(options, code, DiagnosticGroups.CHECK_USELESS_CODE);
+
+    // http://b/194615750
+    test(
+        options,
+        lines(
+            "function foo() {", //
+            "  return;",
+            "  for (const n of [1, 2]) {",
+            "  }",
+            "}"),
+        DiagnosticGroups.CHECK_USELESS_CODE);
   }
 
   @Test
