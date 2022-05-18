@@ -223,6 +223,20 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstantConditionWithSideEffect_coalesce() {
+    fold("b = null; b ?? (x = 1)", "b = null; void 0 ?? (x = 1)");
+    fold("b = undefined; b ?? (x = 1)", "b = undefined; void 0 ?? (x = 1)");
+    fold("b = (fn(), null); b ?? (x = 1)", "b = (fn(), null); void 0 ?? (x = 1)");
+
+    fold("b = 34; b ?? (x = 1)", "b = 34; 0 ?? (x = 1)");
+    fold("b = 'test'; b ?? (x = 1)", "b = 'test'; 0 ?? (x = 1)");
+    fold("b = []; b ?? (x = 1)", "b = []; 0 ?? (x = 1)");
+    fold("b = (fn(), 0); b ?? (x = 1)", " b= (fn(), 0); 0 ?? (x = 1)");
+
+    foldSame("b = fn(); b ?? (x = 1)");
+  }
+
+  @Test
   public void testVarLifting() {
     fold("if(true)var a", "var a");
     fold("if(false)var a", "var a");

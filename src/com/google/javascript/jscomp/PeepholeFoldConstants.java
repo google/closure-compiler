@@ -649,24 +649,33 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldCoalesce(Node n, Node left, Node right) {
 
     Node result = null;
-    Node dropped = null;
 
-    Tri leftVal = NodeUtil.getBooleanValue(left);
+    NodeUtil.ValueType leftVal = NodeUtil.getKnownValueType(left);
 
-    if (leftVal != Tri.UNKNOWN) {
-      if (NodeUtil.isNullOrUndefined(left)) {
-        result = right;
-        dropped = left;
-      } else {
+    switch (leftVal) {
+      case NULL:
+      case VOID:
+        // nullish condition => this expression evaluates to the right side.
         if (!mayHaveSideEffects(left)) {
-          result = left;
-          dropped = right;
+          result = right;
+          markFunctionsDeleted(left);
         } else {
+          // e.g. `(a(), null) ?? 1` => `(a(), null, 1)`
           n.detachChildren();
           result = IR.comma(left, right);
-          dropped = null;
         }
-      }
+        break;
+      case NUMBER:
+      case BIGINT:
+      case STRING:
+      case BOOLEAN:
+      case OBJECT:
+        // non-nullish condition => this expression evaluates to the left side.
+        result = left;
+        markFunctionsDeleted(right);
+        break;
+      case UNDETERMINED:
+        break;
     }
 
     if (result != null) {
@@ -674,9 +683,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       n.detachChildren();
       n.replaceWith(result);
       reportChangeToEnclosingScope(result);
-      if (dropped != null) {
-        markFunctionsDeleted(dropped);
-      }
       return result;
     } else {
       return n;

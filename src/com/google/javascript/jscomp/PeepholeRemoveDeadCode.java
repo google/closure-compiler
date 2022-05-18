@@ -828,7 +828,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // or
     //   a = 0;
     //   a && foo(a)
-    //
+    // or
+    //   a = 0;
+    //   a ?? foo(a)
     // TODO(johnlenz): This would be better handled by control-flow sensitive
     // constant propagation. As the other case that I want to handle is:
     //   i=0; for(;i<0;i++){}
@@ -836,21 +838,57 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     // This is here simply to remove the cruft left behind goog.userAgent and
     // similar cases.
 
-    if (isSimpleAssignment(n) && isConditionalStatement(next)) {
-      Node lhsAssign = getSimpleAssignmentName(n);
+    if (!isSimpleAssignment(n)) {
+      return;
+    }
+    Node conditionalRoot = getConditionalRoot(next);
+    if (conditionalRoot == null) {
+      return;
+    }
+    Node lhsAssign = getSimpleAssignmentName(n);
 
-      Node condition = getConditionalStatementCondition(next);
-      if (lhsAssign.isName() && condition.isName()
-          && lhsAssign.getString().equals(condition.getString())) {
-        Node rhsAssign = getSimpleAssignmentValue(n);
+    Node condition = getConditionalStatementCondition(next);
+    if (!lhsAssign.matchesName(condition)) {
+      return;
+    }
+    Node rhsAssign = getSimpleAssignmentValue(n);
+    switch (conditionalRoot.getToken()) {
+      case AND:
+      case OR:
+      case IF:
+      case HOOK:
+        // conditionals that coerce their condition to a boolean
         Tri value = NodeUtil.getBooleanValue(rhsAssign);
         if (value != Tri.UNKNOWN) {
-          Node replacementConditionNode =
-              NodeUtil.booleanNode(value.toBoolean(true));
+          Node replacementConditionNode = NodeUtil.booleanNode(value.toBoolean(true));
           condition.replaceWith(replacementConditionNode);
           reportChangeToEnclosingScope(replacementConditionNode);
         }
-      }
+        return;
+      case COALESCE:
+        // conditional that checks whether its operand is nullish
+        NodeUtil.ValueType valueType = NodeUtil.getKnownValueType(rhsAssign);
+        switch (valueType) {
+          case NULL:
+          case VOID:
+            condition.replaceWith(NodeUtil.newUndefinedNode(condition));
+            reportChangeToEnclosingScope(conditionalRoot);
+            break;
+          case NUMBER:
+          case BIGINT:
+          case STRING:
+          case BOOLEAN:
+          case OBJECT:
+            // semi-arbitrarily use '0' as a short non-nullish conditional
+            condition.replaceWith(IR.number(0).srcref(condition));
+            reportChangeToEnclosingScope(conditionalRoot);
+            break;
+          case UNDETERMINED:
+            break;
+        }
+        return;
+      default:
+        throw new AssertionError("Unhandled condition " + conditionalRoot);
     }
   }
 
@@ -893,12 +931,20 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return Whether the node is a conditional statement.
+   * @return the root node if a conditional statement or else null
    */
-  private boolean isConditionalStatement(Node n) {
+  private Node getConditionalRoot(Node n) {
     // We defined a conditional statement to be a IF or EXPR_RESULT rooted with
     // a HOOK, AND, or OR node.
-    return n != null && (n.isIf() || isExprConditional(n));
+    if (n == null) {
+      return null;
+    }
+    if (n.isIf()) {
+      return n;
+    } else if (isExprConditional(n)) {
+      return n.getFirstChild();
+    }
+    return null;
   }
 
   /** @return Whether the node is a rooted with a HOOK, AND, OR, or COALESCE node. */

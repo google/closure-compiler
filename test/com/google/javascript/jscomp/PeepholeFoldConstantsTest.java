@@ -685,8 +685,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // fold if left is null/undefined
     test("null ?? 1", "1");
     test("undefined ?? false", "false");
+    test("(a(), null) ?? 1", "(a(), null, 1)");
 
-    test("x = [foo()] ?? x", "x = ([foo()],x)");
+    test("x = [foo()] ?? x", "x = [foo()]");
 
     // short circuit on all non nullish LHS
     test("x = false ?? x", "x = false");
