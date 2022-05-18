@@ -1302,6 +1302,19 @@ function postMessage(
     message, targetOriginOrOptionsOrTransfer, targetOriginOrPortsOrTransfer) {}
 
 /**
+ * Takes the input value and returns a deep copy by performing the structured
+ * clone algorithm. Transferable objects listed in the transfer array are
+ * transferred, not just cloned, meaning that they are no longer usable in the
+ * input value.
+ * @see https://html.spec.whatwg.org/multipage/structured-data.html#structured-cloning
+ * @param {*} value
+ * @param {!StructuredSerializeOptions=} options
+ * @throws {DOMException}
+ * @return {*}
+ */
+function structuredClone(value, options) {}
+
+/**
  * @param {*} message
  * @param {(string|!WindowPostMessageOptions)=} targetOriginOrOptions
  * @param {(!Array<!Transferable>)=} transfer
