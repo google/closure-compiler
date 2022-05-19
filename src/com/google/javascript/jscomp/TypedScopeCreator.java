@@ -491,6 +491,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .collectProvidedNames(externs, js);
 
     for (ProvidedName name : providedNames.values()) {
+      if (name.hasImplicitInitialization()) {
+        continue;
+      }
       if (name.getCandidateDefinition() != null) {
         // This name will be defined eventually in the source code.
         Node firstDefinitionNode = name.getCandidateDefinition();

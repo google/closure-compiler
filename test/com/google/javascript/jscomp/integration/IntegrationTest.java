@@ -461,6 +461,160 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCheckProvideAlias() {
+    CompilerOptions options = createCompilerOptions();
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setChecksOnly(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setClosurePass(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("externs", lines("var arguments;", "arguments.callee;")));
+
+    String base = TestExternsBuilder.getClosureExternsAsSource();
+
+    String code =
+        lines(
+            "goog.provide('cycle.a.Widget');",
+            "goog.provide('cycle.a.Widget.Item');",
+            "",
+            "cycle.a.Widget = class {};",
+            "cycle.a.Widget.Item = class {};",
+            "",
+            "goog.provide('a.Widget');",
+            "/** @provideAlreadyProvided */",
+            "goog.provide('a.Widget.Item');",
+            "",
+            "/** @const */",
+            "a.Widget = cycle.a.Widget;",
+            "",
+            "(() => {",
+            "  const Item = goog.module.get('a.Widget.Item');",
+            "",
+            "  /** @const {typeof cycle.a.Widget.Item} */",
+            "  const x = a.Widget.Item;",
+            "})();",
+            "");
+
+    String result =
+        lines(
+            "goog.provide('cycle.a.Widget');",
+            "goog.provide('cycle.a.Widget.Item');",
+            "",
+            "cycle.a.Widget = class {};",
+            "cycle.a.Widget.Item = class {};",
+            "",
+            "goog.provide('a.Widget');",
+            "/** @provideAlreadyProvided */",
+            "goog.provide('a.Widget.Item');",
+            "",
+            "a.Widget = cycle.a.Widget;",
+            "",
+            "(() => {",
+            "  const Item = a.Widget.Item;",
+            "  const x = a.Widget.Item;",
+            "})();",
+            "");
+
+    test(options, new String[] {base, code}, new String[] {base, result});
+  }
+
+  @Test
+  public void testCheckProvideAlias2() {
+    CompilerOptions options = createCompilerOptions();
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setChecksOnly(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setClosurePass(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("externs", lines("var arguments;", "arguments.callee;")));
+
+    String base = TestExternsBuilder.getClosureExternsAsSource();
+    String code =
+        lines(
+            "goog.provide('cycle.a.Widget');",
+            "goog.provide('cycle.a.Widget.Item');",
+            "",
+            "cycle.a.Widget = class {};",
+            "cycle.a.Widget.Item = class {};",
+            "",
+            "goog.provide('a.Widget');",
+            "/** @provideAlreadyProvided */",
+            "goog.provide('a.Widget.Item');",
+            "",
+            "/** @const */",
+            "a.Widget = cycle.a.Widget;",
+            "",
+            "/** @param {!null} a */ function fn(a) {}",
+            "fn(goog.module.get('a.Widget.Item'));",
+            "");
+
+    // Expect:
+    // JSC_TYPE_MISMATCH. actual parameter 1 of fn does not match formal parameter
+    // found   : (typeof cycle.a.Widget.Item)
+    // required: None
+    test(options, new String[] {base, code}, DiagnosticGroups.CHECK_TYPES);
+  }
+
+  @Test
+  public void testCheckProvideAlias3() {
+    CompilerOptions options = createCompilerOptions();
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setChecksOnly(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setClosurePass(true);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("externs", lines("var arguments;", "arguments.callee;")));
+
+    String base = TestExternsBuilder.getClosureExternsAsSource();
+    String code1 =
+        lines(
+            "goog.provide('cycle.a.Widget');",
+            "goog.provide('cycle.a.Widget.Item');",
+            "",
+            "cycle.a.Widget = class {};",
+            "cycle.a.Widget.Item = class {};",
+            "",
+            "");
+    String code2 =
+        lines(
+            "goog.provide('a.Widget');",
+            "/** @provideAlreadyProvided */",
+            "goog.provide('a.Widget.Item');",
+            "",
+            "/** @const */",
+            "a.Widget = cycle.a.Widget;",
+            "");
+    String code3 =
+        lines(
+            "goog.module('usage');",
+            "const Item = goog.require('a.Widget.Item');",
+            "",
+            "/** @param {!null} a */ function fn(a) {}",
+            "fn(Item);",
+            "");
+
+    // Expect:
+    // JSC_TYPE_MISMATCH. actual parameter 1 of fn does not match formal parameter
+    // found   : (typeof cycle.a.Widget.Item)
+    // required: None
+    // test(options, new String[] {base, code1, code2}, DiagnosticGroups.CHECK_TYPES);
+
+    test(options, new String[] {base, code1, code2, code3}, DiagnosticGroups.CHECK_TYPES);
+  }
+
+  @Test
   public void testExportedNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

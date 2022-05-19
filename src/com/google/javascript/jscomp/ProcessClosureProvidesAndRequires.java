@@ -578,6 +578,10 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       return explicitNode != null;
     }
 
+    boolean hasImplicitInitialization() {
+      return hasImplicitInitialization;
+    }
+
     boolean isFromLegacyModule() {
       return this.fromLegacyModule;
     }

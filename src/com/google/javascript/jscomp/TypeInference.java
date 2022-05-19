@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1916,16 +1917,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     if (n.isCall()
         && !n.getParent().isExprResult() // Don't bother typing calls if the result is unused.
         && ModuleImportResolver.isGoogModuleDependencyCall(n)) {
-      ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(n);
-      if (name != null) {
-        TypedScope otherModuleScope =
-            scopeCreator.getNodeToScopeMapper().apply(name.getScopeRoot());
-        TypedVar otherVar =
-            otherModuleScope != null ? otherModuleScope.getSlot(name.getName()) : null;
-        n.setJSType(otherVar != null ? otherVar.getType() : unknownType);
-      } else {
-        n.setJSType(unknownType);
-      }
+      n.setJSType(getGoogModuleDependencyCallResultType(n));
       return scopeAfterChildren;
     }
 
@@ -1946,6 +1938,49 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       n.setJSType(unknownType);
     }
     return scopeAfterChildren;
+  }
+
+  private JSType getGoogModuleDependencyCallResultType(Node callNode) {
+    String moduleId = callNode.getSecondChild().getString();
+    Module module = compiler.getModuleMap().getClosureModule(moduleId);
+    // Only declared module ids.
+    if (module == null) {
+      return null;
+    }
+
+    ScopedName name = moduleImportResolver.getClosureNamespaceTypeFromCall(callNode);
+    if (name != null) {
+      TypedScope otherModuleScope = scopeCreator.getNodeToScopeMapper().apply(name.getScopeRoot());
+      TypedVar otherVar =
+          otherModuleScope != null ? otherModuleScope.getSlot(name.getName()) : null;
+      if (otherVar != null) {
+        return otherVar.getType();
+      }
+
+      if (otherModuleScope != null && module.metadata().moduleType() == ModuleType.GOOG_PROVIDE) {
+        // A "provideAlreadyProvided" is type through the properties of the containing namespace
+        // since it is a provided name it is rooted in the global scope.
+
+        // We validated that this is a valid "provided name" above so it is ok to look it up by
+        // properties.
+        return getTypeThroughNamespace(otherModuleScope, moduleId);
+      }
+    }
+
+    return unknownType;
+  }
+
+  private JSType getTypeThroughNamespace(TypedScope globalScope, String moduleId) {
+    int split = moduleId.lastIndexOf('.');
+    if (split >= 0) {
+      String parentName = moduleId.substring(0, split);
+      String prop = moduleId.substring(split + 1);
+      return getTypeThroughNamespace(globalScope, parentName)
+          .assertObjectType()
+          .getPropertyType(prop);
+    } else {
+      return globalScope.getSlot(moduleId).getType();
+    }
   }
 
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {
