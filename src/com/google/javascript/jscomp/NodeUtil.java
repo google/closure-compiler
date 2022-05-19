@@ -4145,13 +4145,16 @@ public final class NodeUtil {
         && isKnownGlobalObjectReference(getprop.getFirstChild());
   }
 
+  private static final QualifiedName GLOBAL_OBJECT = QualifiedName.of("$jscomp.global.Object");
+  private static final QualifiedName GLOBAL_OBJECT_MANGLED =
+      QualifiedName.of("$jscomp$global.Object");
+
   private static boolean isKnownGlobalObjectReference(Node n) {
     switch (n.getToken()) {
       case NAME:
         return n.getString().equals("Object");
       case GETPROP:
-        return n.matchesQualifiedName("$jscomp.global.Object")
-            || n.matchesQualifiedName("$jscomp$global.Object");
+        return GLOBAL_OBJECT.matches(n) || GLOBAL_OBJECT_MANGLED.matches(n);
       default:
         return false;
     }
@@ -5496,12 +5499,12 @@ public final class NodeUtil {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
 
+  private static final QualifiedName GOOG_LOADMODULE = QualifiedName.of("goog.loadModule");
+
   static boolean isBundledGoogModuleCall(Node n) {
     // TODO(lharker): take an EXPR_RESULT to align with NodeUtil.isGoogModuleCall and
     // NodeUtil.isGoogProvideCall.
-    if (!(n.isCall()
-        && n.hasTwoChildren()
-        && n.getFirstChild().matchesQualifiedName("goog.loadModule"))) {
+    if (!(n.isCall() && n.hasTwoChildren() && GOOG_LOADMODULE.matches(n.getFirstChild()))) {
       return false;
     }
     return n.hasParent()
@@ -5524,7 +5527,7 @@ public final class NodeUtil {
     Node call = function.getParent();
     if (!call.isCall()
         || !call.hasTwoChildren()
-        || !call.getFirstChild().matchesQualifiedName("goog.loadModule")) {
+        || !GOOG_LOADMODULE.matches(call.getFirstChild())) {
       return false;
     }
     return call.getParent().isExprResult() && call.getGrandparent().isScript();

@@ -26,6 +26,7 @@ import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.List;
 
@@ -135,9 +136,11 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return null;
   }
 
+  private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
+
   @Override
   public boolean isClassFactoryCall(Node callNode) {
-    return callNode.getFirstChild().matchesQualifiedName("goog.defineClass");
+    return GOOG_DEFINECLASS.matches(callNode.getFirstChild());
   }
 
   /**
@@ -251,11 +254,13 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return "goog.exportSymbol";
   }
 
+  private static final QualifiedName GOOG_FORWARDDECLARE = QualifiedName.of("goog.forwardDeclare");
+
   @Override
   public List<String> identifyTypeDeclarationCall(Node n) {
     Node callName = n.getFirstChild();
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
-    if (callName.matchesQualifiedName("goog.forwardDeclare") && n.hasTwoChildren()) {
+    if (GOOG_FORWARDDECLARE.matches(callName) && n.hasTwoChildren()) {
       Node typeDeclaration = n.getSecondChild();
       if (typeDeclaration.isStringLit()) {
         return ImmutableList.of(typeDeclaration.getString());
@@ -270,13 +275,18 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return "goog.abstractMethod";
   }
 
+  private static final QualifiedName GOOG_ADDSINGLETONGETTER =
+      QualifiedName.of("goog.addSingletonGetter");
+  private static final QualifiedName GOOG_ADDSINGLETONGETTER_MANGLED =
+      QualifiedName.of("goog$addSingletonGetter");
+
   @Override
   public String getSingletonGetterClassName(Node callNode) {
     Node callArg = callNode.getFirstChild();
     // Use both the original name and the post-CollapseProperties name.
     if (callNode.hasTwoChildren()
-        && (callArg.matchesQualifiedName("goog.addSingletonGetter")
-            || callArg.matchesQualifiedName("goog$addSingletonGetter"))) {
+        && (GOOG_ADDSINGLETONGETTER.matches(callArg)
+            || GOOG_ADDSINGLETONGETTER_MANGLED.matches(callArg))) {
       return callArg.getNext().getQualifiedName();
     }
     return super.getSingletonGetterClassName(callNode);
@@ -308,13 +318,18 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return super.isPropertyTestFunction(call);
   }
 
+  private static final QualifiedName GOOG_REFLECT_OBJECTPROPERTY =
+      QualifiedName.of("goog.reflect.objectProperty");
+  private static final QualifiedName GOOG_REFLECT_OBJECTPROPERTY_MANGLED =
+      QualifiedName.of("goog$reflect$objectProperty");
+
   @Override
   public boolean isPropertyRenameFunction(Node nameNode) {
     if (super.isPropertyRenameFunction(nameNode)) {
       return true;
     }
-    return nameNode.matchesQualifiedName("goog.reflect.objectProperty")
-        || nameNode.matchesName("goog$reflect$objectProperty");
+    return GOOG_REFLECT_OBJECTPROPERTY.matches(nameNode)
+        || GOOG_REFLECT_OBJECTPROPERTY_MANGLED.matches(nameNode);
   }
 
   @Override
@@ -322,6 +337,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return super.isFunctionCallThatAlwaysThrows(n)
         || CodingConventions.defaultIsFunctionCallThatAlwaysThrows(n, "goog.asserts.fail");
   }
+
+  private static final QualifiedName GOOG_REFLECT_OBJECT = QualifiedName.of("goog.reflect.object");
+  private static final QualifiedName JSCOMP_REFLECTOBJECT =
+      QualifiedName.of("$jscomp.reflectObject");
 
   @Override
   public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
@@ -332,8 +351,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
 
     Node callName = callNode.getFirstChild();
-    if (!(callName.matchesQualifiedName("goog.reflect.object")
-            || callName.matchesQualifiedName("$jscomp.reflectObject"))
+    if (!(GOOG_REFLECT_OBJECT.matches(callName) || JSCOMP_REFLECTOBJECT.matches(callName))
         || !callNode.hasXChildren(3)) {
       return null;
     }
@@ -375,6 +393,9 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         .build();
   }
 
+  private static final QualifiedName GOOG_BIND = QualifiedName.of("goog.bind");
+  private static final QualifiedName GOOG_PARTIAL = QualifiedName.of("goog.partial");
+
   @Override
   public Bind describeFunctionBind(
       Node n, boolean callerChecksTypes, boolean iCheckTypes) {
@@ -383,8 +404,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     }
     Node callTarget = n.getFirstChild();
     if (callTarget.isQualifiedName()) {
-      if (callTarget.matchesQualifiedName("goog.bind")
-          || callTarget.matchesQualifiedName("goog$bind")) {
+      if (GOOG_BIND.matches(callTarget) || callTarget.matchesName("goog$bind")) {
         // goog.bind(fn, self, args...);
         Node fn = callTarget.getNext();
         if (fn == null) {
@@ -395,8 +415,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         return new Bind(fn, thisValue, parameters);
       }
 
-      if (callTarget.matchesQualifiedName("goog.partial") ||
-          callTarget.matchesQualifiedName("goog$partial")) {
+      if (GOOG_PARTIAL.matches(callTarget) || callTarget.matchesName("goog$partial")) {
         // goog.partial(fn, args...);
         Node fn = callTarget.getNext();
         if (fn == null) {

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -299,6 +300,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return false;
   }
 
+  private static final QualifiedName PROMISE_ALL = QualifiedName.of("Promise.all");
+
   /**
    * Recognizes __webpack_require__ calls that are the .then callback of a __webpack_require__.e
    * call. Example:
@@ -330,7 +333,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (callParentTarget.matchesQualifiedName(WEBPACK_REQUIRE + ".e")
         && callParent.getFirstChild().getString().equals("then")) {
       return true;
-    } else if (callParentTarget.matchesQualifiedName("Promise.all")
+    } else if (PROMISE_ALL.matches(callParentTarget)
         && callParentTarget.getNext() != null
         && callParentTarget.getNext().isArrayLit()) {
       boolean allElementsAreDynamicImports = false;
@@ -547,6 +550,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
   }
 
+  private static final QualifiedName DEFINE_AMD = QualifiedName.of("define.amd");
+  private static final QualifiedName WINDOW_DEFINE = QualifiedName.of("window.define");
+  private static final QualifiedName WINDOW_DEFINE_AMD = QualifiedName.of("window.define.amd");
+  private static final QualifiedName REQUIRE_ENSURE = QualifiedName.of("require.ensure");
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+  private static final QualifiedName MODULE_EXPORTS = QualifiedName.of("module.exports");
+
   /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
    * export statements. Rewrites any require calls to reference the rewritten module name.
@@ -595,15 +606,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
-              && (maybeGetProp.matchesQualifiedName("goog.provide")
-                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
+              && (GOOG_PROVIDE.matches(maybeGetProp) || GOOG_MODULE.matches(maybeGetProp))) {
             hasGoogProvideOrModule = true;
           }
         }
       }
 
       // Find require.ensure calls
-      if (n.isCall() && n.getFirstChild().matchesQualifiedName("require.ensure")) {
+      if (n.isCall() && REQUIRE_ENSURE.matches(n.getFirstChild())) {
         visitRequireEnsureCall(t, n);
       }
 
@@ -627,8 +637,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
           }
         }
-      } else if (n.matchesQualifiedName("define.amd")
-          || n.matchesQualifiedName("window.define.amd")) {
+      } else if (DEFINE_AMD.matches(n) || WINDOW_DEFINE_AMD.matches(n)) {
         // If a define.amd statement is in the test of an if statement,
         // and the statement has no "else" block, we simply want to remove
         // the entire if statement.
@@ -987,7 +996,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                     }
                     return;
                   case GETPROP:
-                    if (node.matchesQualifiedName("window.define")) {
+                    if (WINDOW_DEFINE.matches(node)) {
                       break;
                     }
                     return;
@@ -1464,7 +1473,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       //
       //     module.exports = {};
       //     module.exports.foo = bar;
-      if (root.matchesQualifiedName("module.exports")) {
+      if (MODULE_EXPORTS.matches(root)) {
         if (rValue != null
             && rValue.isObjectLit()
             && root.getParent().isAssign()
@@ -1514,7 +1523,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       Node changeScope = null;
 
-      if (root.matchesQualifiedName("module.exports")
+      if (MODULE_EXPORTS.matches(root)
           && rValue != null
           && export.scope.getVar("module.exports") == null
           && root.getParent().isAssign()

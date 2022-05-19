@@ -2602,6 +2602,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     return name != null ? name : "<anonymous@" + n.getSourceFileName() + ":" + n.getLineno() + ">";
   }
 
+  private static final QualifiedName GOOG_INHERITS = QualifiedName.of("goog.inherits");
+
   /**
    * Validate class-defining calls. Because JS has no 'native' syntax for defining classes, we need
    * to do this manually.
@@ -2620,7 +2622,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           && subClassInstance != null
           && !subClassInstance.isEmptyType()) {
         if (n.getFirstChild().isQualifiedName()
-            && n.getFirstChild().matchesQualifiedName("goog.inherits")
+            && GOOG_INHERITS.matches(n.getFirstChild())
             && subClass.toMaybeFunctionType() != null
             && subClass.toMaybeFunctionType().getSource() != null
             && subClass.toMaybeFunctionType().getSource().isClass()) {

@@ -29,6 +29,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import javax.annotation.Nullable;
@@ -151,6 +152,8 @@ public class CodeGenerator {
   protected void add(Node n) {
     add(n, Context.OTHER);
   }
+
+  private static final QualifiedName JSCOMP_SCOPE = QualifiedName.of("$jscomp.scope");
 
   protected void add(Node node, Context context) {
     if (!cc.continueProcessing()) {
@@ -852,8 +855,7 @@ public class CodeGenerator {
             // The ScopedAliases pass will convert variable assignments and function declarations
             // to assignments to GETPROP nodes, like $jscomp.scope.SOME_VAR = 3;. This attempts to
             // rewrite it back to the original code.
-            if (node.getFirstChild().matchesQualifiedName("$jscomp.scope")
-                && node.getParent().isAssign()) {
+            if (JSCOMP_SCOPE.matches(node.getFirstChild()) && node.getParent().isAssign()) {
               add("var ");
             }
             addGetpropIdentifier(node);

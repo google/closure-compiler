@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Comparator;
 import java.util.List;
@@ -146,6 +147,8 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private static class RemoveNonDeclarations implements NodeTraversal.Callback {
 
+    private static final QualifiedName GOOG_SCOPE = QualifiedName.of("goog.scope");
+
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -164,7 +167,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           switch (expr.getToken()) {
             case CALL:
               Node callee = expr.getFirstChild();
-              checkState(!callee.matchesQualifiedName("goog.scope"));
+              checkState(!GOOG_SCOPE.matches(callee));
               if (CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
                 return true;
               }

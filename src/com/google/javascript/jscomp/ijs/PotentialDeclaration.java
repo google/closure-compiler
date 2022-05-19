@@ -25,6 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
@@ -645,17 +646,23 @@ abstract class PotentialDeclaration {
     return isConst && !JsdocUtil.hasAnnotatedType(jsdoc) && !NodeUtil.isNamespaceDecl(nameNode);
   }
 
+  private static final QualifiedName GOOG_ABSTRACTMETHOD = QualifiedName.of("goog.abstractMethod");
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName GOOG_REQUIRETYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_FORWARDDECLARE = QualifiedName.of("goog.forwardDeclare");
+  private static final QualifiedName MODULE_EXPORTS = QualifiedName.of("module.exports");
+
   private static boolean isTypedRhs(Node rhs) {
     return rhs.isFunction()
         || rhs.isClass()
         || NodeUtil.isCallTo(rhs, "goog.defineClass")
-        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"));
+        || (rhs.isQualifiedName() && GOOG_ABSTRACTMETHOD.matches(rhs));
   }
 
   private static boolean isExportLhs(Node lhs) {
     return (lhs.isName() && lhs.matchesName("exports"))
         || (lhs.isGetProp() && lhs.getFirstChild().matchesName("exports"))
-        || lhs.matchesQualifiedName("module.exports");
+        || MODULE_EXPORTS.matches(lhs);
   }
 
   static boolean isImportRhs(@Nullable Node rhs) {
@@ -663,9 +670,9 @@ abstract class PotentialDeclaration {
       return false;
     }
     Node callee = rhs.getFirstChild();
-    return callee.matchesQualifiedName("goog.require")
-        || callee.matchesQualifiedName("goog.requireType")
-        || callee.matchesQualifiedName("goog.forwardDeclare")
+    return GOOG_REQUIRE.matches(callee)
+        || GOOG_REQUIRETYPE.matches(callee)
+        || GOOG_FORWARDDECLARE.matches(callee)
         || callee.matchesName("require");
   }
 

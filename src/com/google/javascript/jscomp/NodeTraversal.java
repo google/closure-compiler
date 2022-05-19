@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -237,6 +238,8 @@ public class NodeTraversal {
      */
     protected void exitModule(ModuleMetadata oldModule, Node moduleScopeRoot) {}
 
+    private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -254,7 +257,7 @@ public class NodeTraversal {
           }
           break;
         case CALL:
-          if (inLoadModule && n.getFirstChild().matchesQualifiedName("goog.module")) {
+          if (inLoadModule && GOOG_MODULE.matches(n.getFirstChild())) {
             ModuleMetadata newModule =
                 moduleMetadataMap.getModulesByGoogNamespace().get(n.getLastChild().getString());
             checkNotNull(newModule);

@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.parser.Identifiers;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -199,6 +200,8 @@ public final class GatherModuleMetadata implements CompilerPass {
     }
   }
 
+  private static final QualifiedName GOOG_LOADMODULE = QualifiedName.of("goog.loadModule");
+
   /** Traverses the AST and build a sets of {@link ModuleMetadata}s. */
   private final class Finder implements NodeTraversal.Callback {
     @Override
@@ -212,7 +215,7 @@ public final class GatherModuleMetadata implements CompilerPass {
           visitImportOrExport(t, n);
           break;
         case CALL:
-          if (n.isCall() && n.getFirstChild().matchesQualifiedName("goog.loadModule")) {
+          if (n.isCall() && GOOG_LOADMODULE.matches(n.getFirstChild())) {
             loadModuleCall = n;
             enterModule(t, n, null);
           }

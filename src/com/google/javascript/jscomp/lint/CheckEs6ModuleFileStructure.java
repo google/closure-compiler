@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -95,13 +96,17 @@ public final class CheckEs6ModuleFileStructure extends AbstractPreOrderCallback
     }
   }
 
+  private static final QualifiedName GOOG_DECLAREMODULEID =
+      QualifiedName.of("goog.declareModuleId");
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+
   private boolean visitExprResult(NodeTraversal t, Node exprResult, Node parent) {
     if (parent.isModuleBody() && exprResult.getFirstChild().isCall()) {
       Node call = exprResult.getFirstChild();
-      if (call.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
+      if (GOOG_DECLAREMODULEID.matches(call.getFirstChild())) {
         checkOrder(t, call, OrderedStatement.DECLARE_MODULE_ID);
         return false;
-      } else if (call.getFirstChild().matchesQualifiedName("goog.require")) {
+      } else if (GOOG_REQUIRE.matches(call.getFirstChild())) {
         checkOrder(t, call, OrderedStatement.GOOG_REQUIRE);
         return false;
       }
@@ -117,7 +122,7 @@ public final class CheckEs6ModuleFileStructure extends AbstractPreOrderCallback
         && declaration.getFirstChild().hasOneChild()
         && declaration.getFirstFirstChild().isCall()) {
       Node call = declaration.getFirstFirstChild();
-      if (call.getFirstChild().matchesQualifiedName("goog.require")) {
+      if (GOOG_REQUIRE.matches(call.getFirstChild())) {
         checkOrder(t, call, OrderedStatement.GOOG_REQUIRE);
         return false;
       }

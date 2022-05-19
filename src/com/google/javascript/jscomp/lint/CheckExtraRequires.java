@@ -224,6 +224,8 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     }
   }
 
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+
   private void visitCallNode(Node call, Node parent) {
     String required = extractNamespaceIfRequire(call);
     if (required != null) {
@@ -236,7 +238,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
     Node callee = call.getFirstChild();
-    if (callee.matchesQualifiedName("goog.module.get") && call.getSecondChild().isStringLit()) {
+    if (GOOG_MODULE_GET.matches(callee) && call.getSecondChild().isStringLit()) {
       usages.add(call.getSecondChild().getString());
     }
   }

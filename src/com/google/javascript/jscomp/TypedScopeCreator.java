@@ -457,7 +457,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         continue;
       }
       Node lhs = statement.getFirstFirstChild();
-      if (lhs.matchesQualifiedName("exports")) {
+      if (lhs.matchesName("exports")) {
         undeclaredNamesForClosure.add(lhs);
         // If this is full of named exports, add all the string key nodes.
         if (NodeUtil.isNamedExportsLiteral(lhs.getNext())) {
@@ -465,7 +465,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             undeclaredNamesForClosure.add(key);
           }
         }
-      } else if (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports")) {
+      } else if (lhs.isGetProp() && lhs.getFirstChild().matchesName("exports")) {
         undeclaredNamesForClosure.add(lhs);
       }
     }

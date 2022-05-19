@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -1809,6 +1810,9 @@ public final class ConformanceRules {
     }
   }
 
+  private static final QualifiedName GOOG_DOM = QualifiedName.of("goog.dom");
+  private static final QualifiedName GOOG_DOM_TAGNAME = QualifiedName.of("goog.dom.TagName");
+
   /**
    * Bans {@code document.createElement} and similar methods with string literal parameter specified
    * in {@code value}, e.g. {@code value: 'script'}. The purpose of banning these is that they don't
@@ -1858,7 +1862,7 @@ public final class ConformanceRules {
       }
 
       Node srcObj = target.getFirstChild();
-      if (srcObj.matchesQualifiedName("goog.dom")) {
+      if (GOOG_DOM.matches(srcObj)) {
         return ConformanceResult.VIOLATION;
       }
       JSType type = srcObj.getJSType();
@@ -1994,7 +1998,7 @@ public final class ConformanceRules {
     private ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isStringLit()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
-      } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
+      } else if (tag.isGetProp() && GOOG_DOM_TAGNAME.matches(tag.getFirstChild())) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
@@ -2104,7 +2108,7 @@ public final class ConformanceRules {
       }
 
       Node srcObj = target.getFirstChild();
-      if (srcObj.matchesQualifiedName("goog.dom")) {
+      if (GOOG_DOM.matches(srcObj)) {
         return true;
       }
       JSType type = srcObj.getJSType();

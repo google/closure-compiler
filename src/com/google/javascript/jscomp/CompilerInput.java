@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -376,6 +377,9 @@ public class CompilerInput extends DependencyInfo.Base {
       }
     }
 
+    private static final QualifiedName GOOG_DECLAREMODULEID =
+        QualifiedName.of("goog.declareModuleId");
+
     void visitSubtree(Node n, Node parent) {
       switch (n.getToken()) {
         case CALL:
@@ -424,7 +428,7 @@ public class CompilerInput extends DependencyInfo.Base {
             }
           } else if (parent.isGetProp()
               // TODO(johnplaisted): Consolidate on declareModuleId
-              && parent.matchesQualifiedName("goog.declareModuleId")
+              && GOOG_DECLAREMODULEID.matches(parent)
               && parent.getParent().isCall()) {
             Node argument = parent.getParent().getSecondChild();
             if (!argument.isStringLit()) {

@@ -354,11 +354,12 @@ public final class CodingConventions {
       return CodingConvention.super.isExported(name);
     }
 
+    private static final QualifiedName JSCOMP_INHERITS = QualifiedName.of("$jscomp.inherits");
+
     @Override
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
       Node callName = callNode.getFirstChild();
-      if ((callName.matchesQualifiedName("$jscomp.inherits")
-              || callName.matchesName("$jscomp$inherits"))
+      if ((JSCOMP_INHERITS.matches(callName) || callName.matchesName("$jscomp$inherits"))
           && callNode.hasXChildren(3)) {
         Node subclass = callName.getNext();
         Node superclass = subclass.getNext();
@@ -523,6 +524,9 @@ public final class CodingConventions {
       return describeFunctionBind(n, false, false);
     }
 
+    private static final QualifiedName FUNCTION_PROTOTYPE_BIND_CALL =
+        QualifiedName.of("Function.prototype.bind.call");
+
     @Override
     public Bind describeFunctionBind(
         Node n, boolean callerChecksTypes, boolean iCheckTypes) {
@@ -532,7 +536,7 @@ public final class CodingConventions {
 
       Node callTarget = n.getFirstChild();
       if (callTarget.isQualifiedName()) {
-        if (callTarget.matchesQualifiedName("Function.prototype.bind.call")) {
+        if (FUNCTION_PROTOTYPE_BIND_CALL.matches(callTarget)) {
           // goog.bind(fn, self, args...);
           Node fn = callTarget.getNext();
           if (fn == null) {

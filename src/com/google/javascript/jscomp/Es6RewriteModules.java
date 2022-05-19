@@ -200,6 +200,13 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     this.namesToInlineByAlias = new HashMap<>();
   }
 
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName GOOG_REQUIRETYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+  private static final QualifiedName GOOG_FORWARDDECLARE = QualifiedName.of("goog.forwardDeclare");
+  private static final QualifiedName GOOG_DECLAREMODULEID =
+      QualifiedName.of("goog.declareModuleId");
+
   /**
    * Checks for goog.require, goog.requireType, goog.module.get and goog.forwardDeclare calls that
    * are meant to import ES6 modules and rewrites them.
@@ -237,10 +244,10 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         return;
       }
 
-      boolean isRequire = callTarget.matchesQualifiedName("goog.require");
-      boolean isRequireType = callTarget.matchesQualifiedName("goog.requireType");
-      boolean isGet = callTarget.matchesQualifiedName("goog.module.get");
-      boolean isForwardDeclare = callTarget.matchesQualifiedName("goog.forwardDeclare");
+      boolean isRequire = GOOG_REQUIRE.matches(callTarget);
+      boolean isRequireType = GOOG_REQUIRETYPE.matches(callTarget);
+      boolean isGet = GOOG_MODULE_GET.matches(callTarget);
+      boolean isForwardDeclare = GOOG_FORWARDDECLARE.matches(callTarget);
 
       if (!isRequire && !isRequireType && !isGet && !isForwardDeclare) {
         return;
@@ -408,8 +415,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
     } else if (n.isScript()) {
       visitScript(t, n);
     } else if (n.isCall()) {
-      // TODO(johnplaisted): Consolidate on declareModuleId.
-      if (n.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
+      if (GOOG_DECLAREMODULEID.matches(n.getFirstChild())) {
         n.getParent().detach();
       }
     } else if (n.isImportMeta()) {
@@ -724,14 +730,13 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
             (NodeTraversal t, Node n, Node parent) -> {
               if (n.isCall()) {
                 Node fn = n.getFirstChild();
-                if (fn.matchesQualifiedName("goog.require")
-                    || fn.matchesQualifiedName("goog.requireType")) {
+                if (GOOG_REQUIRE.matches(fn) || GOOG_REQUIRETYPE.matches(fn)) {
                   // TODO(tjgq): This will rewrite both type references and code references. For
                   // goog.requireType, the latter are potentially broken because the symbols aren't
                   // guaranteed to be available at run time. A separate pass needs to be added to
                   // detect these incorrect uses of goog.requireType.
                   visitRequireOrGet(t, n, parent, /* isRequire= */ true);
-                } else if (fn.matchesQualifiedName("goog.module.get")) {
+                } else if (GOOG_MODULE_GET.matches(fn)) {
                   visitGoogModuleGet(t, n, parent);
                 }
               }

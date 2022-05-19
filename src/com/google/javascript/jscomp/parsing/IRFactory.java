@@ -127,6 +127,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -935,6 +936,8 @@ class IRFactory {
     node.setLength(ref.getLength());
   }
 
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+
   private class TransformDispatcher {
 
     /**
@@ -1194,7 +1197,7 @@ class IRFactory {
       if (!call.isCall()) {
         return false;
       }
-      return call.getFirstChild().matchesQualifiedName("goog.module");
+      return GOOG_MODULE.matches(call.getFirstChild());
     }
 
     /**
