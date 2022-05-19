@@ -161,6 +161,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private Integer browserFeaturesetYear = 0;
 
     @Option(
+        name = "--emit_async_functions_with_zonejs",
+        handler = BooleanOptionHandler.class,
+        usage = "Relax the restriction on disallowing --language_out=ES_2017 together with Zone.js")
+    private boolean emitAsyncFunctionsWithZonejs = false;
+
+    @Option(
         name = "--help",
         handler = BooleanOptionHandler.class,
         usage = "Displays this message on stdout and exit")
@@ -1748,6 +1754,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setWarningGuards(Flags.guardLevels)
           .setDefine(flags.define)
           .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
+          .setEmitAsyncFunctionsWithZonejs(flags.emitAsyncFunctionsWithZonejs)
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
