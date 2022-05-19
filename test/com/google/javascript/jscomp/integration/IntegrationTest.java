@@ -4497,4 +4497,18 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var $jscomp$scope$98447280$0$fn = function(a, b) {};",
             "$jscomp$scope$98447280$0$fn[\"$inject\"] = [\"a\", \"b\"];"));
   }
+
+  @Test
+  public void testGitHubIssue3861() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+
+    test(
+        options,
+        lines(
+            "(function () {", //
+            "  arguments (628);",
+            "})"),
+        DiagnosticGroups.CHECK_TYPES);
+  }
 }

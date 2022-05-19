@@ -180,7 +180,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   }
 
   public final Node getInitialValue() {
-    return NodeUtil.getRValueOfLValue(this.getNode());
+    return this.getNode() == null ? null : NodeUtil.getRValueOfLValue(this.getNode());
   }
 
   public final Node getNameNode() {
