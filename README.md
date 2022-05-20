@@ -215,7 +215,7 @@ Prerequisite                                                               | Des
 -------------------------------------------------------------------------- | -----------
 [Java 8 or later](https://java.com)                                        | Used to compile the compiler's source code.
 [Git](https://git-scm.com/)                                                | Used by Bazel to download dependencies.
-[Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html) | Used to build the various compiler targets.
+[Bazelisk](https://bazel.build/install/bazelisk) | Used to build the various compiler targets.
 
 ### Installing Bazelisk
 
@@ -227,7 +227,7 @@ makes it easy to use different Bazel versions for other projects.
 Bazelisk is available through many package managers. Feel free to use whichever
 you're most comfortable with.
 
-[Instructions for installing Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
+[Instructions for installing Bazelisk](https://bazel.build/install/bazelisk).
 
 ### Building from a terminal
 
