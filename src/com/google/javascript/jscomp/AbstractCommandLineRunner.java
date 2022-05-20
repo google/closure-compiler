@@ -1555,18 +1555,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   /** Processes the results of the compile job, and returns an error code. */
   @GwtIncompatible("Unnecessary")
   int processResults(Result result, List<JSChunk> modules, B options) throws IOException {
-    if (config.printPassGraph) {
-      if (compiler.getRoot() == null) {
-        return 1;
-      } else {
-        Appendable jsOutput = createDefaultOutput();
-        jsOutput.append(DotFormatter.toDot(compiler.getPassConfig().getPassGraph()));
-        jsOutput.append('\n');
-        closeAppendable(jsOutput);
-        return 0;
-      }
-    }
-
     if (config.printAst) {
       if (compiler.getRoot() == null) {
         return 1;
@@ -2413,14 +2401,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     /** Prints a dot file describing the internal abstract syntax tree and exits */
     public CommandLineConfig setPrintAst(boolean printAst) {
       this.printAst = printAst;
-      return this;
-    }
-
-    private boolean printPassGraph = false;
-
-    /** Prints a dot file describing the passes that will get run and exits */
-    public CommandLineConfig setPrintPassGraph(boolean printPassGraph) {
-      this.printPassGraph = printPassGraph;
       return this;
     }
 

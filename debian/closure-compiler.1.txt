@@ -254,10 +254,6 @@ OPTIONS
 
     Print a dot file describing the internal abstract syntax tree and exit.
 
-**--print_pass_graph**
-
-    Print a dot file describing the passes that will get run and exit.
-
 **--print_tree**
 
     Print out the parse tree and exit.

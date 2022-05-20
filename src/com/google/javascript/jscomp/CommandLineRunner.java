@@ -187,13 +187,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean printAst = false;
 
     @Option(
-        name = "--print_pass_graph",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Prints a dot file describing the passes that will get run" + " and exits")
-    private boolean printPassGraph = false;
-
-    @Option(
         name = "--emit_use_strict",
         handler = BooleanOptionHandler.class,
         usage = "Start output with \"'use strict';\".")
@@ -1728,7 +1721,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setPrintVersion(flags.version)
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
-          .setPrintPassGraph(flags.printPassGraph)
           .setJscompDevMode(flags.jscompDevMode)
           .setLoggingLevel(flags.loggingLevel)
           .setExterns(flags.externs)
@@ -2225,12 +2217,16 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         });
   }
 
-  /** @return Whether the configuration is valid and specifies to run the compiler. */
+  /**
+   * @return Whether the configuration is valid and specifies to run the compiler.
+   */
   public boolean shouldRunCompiler() {
     return this.runCompiler;
   }
 
-  /** @return Whether the configuration has errors. */
+  /**
+   * @return Whether the configuration has errors.
+   */
   public boolean hasErrors() {
     return this.errors;
   }
