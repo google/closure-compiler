@@ -22,10 +22,10 @@ http_archive(
 http_archive(
     name = "google_bazel_common",
     # output from `sha256sum` on the downloaded zip file
-    sha256 = "cb37c4977b01311f72157897b1b180b6caf2fc88336ee64b39152af61f8708a9",
-    strip_prefix = "bazel-common-82a7dd0f4cd8593fdaa40d65a1fa820b14ff3493",
+    sha256 = "b54410b99dd34e17dc02fc6186d478828b0d34be3876769dba338c6ccec2cea9",
+    strip_prefix = "bazel-common-221ecf2922e8ebdf8e002130e9772045cfa2f464",
     urls = [
-      "https://github.com/google/bazel-common/archive/82a7dd0f4cd8593fdaa40d65a1fa820b14ff3493.zip",
+      "https://github.com/google/bazel-common/archive/221ecf2922e8ebdf8e002130e9772045cfa2f464.zip",
     ],
 )
 
@@ -120,14 +120,16 @@ load("@protobuf_proto_rules//proto:repositories.bzl", "rules_proto_dependencies"
 rules_proto_dependencies()
 rules_proto_toolchains()
 
+# From https://github.com/bazelbuild/rules_java/releases/
 http_archive(
-    name = "protobuf_java_rules",
-    url = "https://github.com/bazelbuild/rules_java/releases/download/4.0.0/rules_java-4.0.0.tar.gz",
-    # output from `sha256sum` on the downloaded tar.gz file
-    sha256 = "34b41ec683e67253043ab1a3d1e8b7c61e4e8edefbcad485381328c934d072fe",
+    name = "rules_java",
+    urls = [
+      "https://mirror.bazel.build/github.com/bazelbuild/rules_java/releases/download/5.0.0/rules_java-5.0.0.tar.gz",
+      "https://github.com/bazelbuild/rules_java/releases/download/5.0.0/rules_java-5.0.0.tar.gz",
+    ],
+    sha256 = "8c376f1e4ab7d7d8b1880e4ef8fc170862be91b7c683af97ca2768df546bb073",
 )
-
-load("@protobuf_java_rules//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
 rules_java_dependencies()
 rules_java_toolchains()
 
