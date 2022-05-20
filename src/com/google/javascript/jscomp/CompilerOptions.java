@@ -519,6 +519,9 @@ public class CompilerOptions implements Serializable {
   /** Controls which properties get renamed. */
   PropertyRenamingPolicy propertyRenaming;
 
+  /** Controls if property renaming only compilation mode is needed. */
+  private boolean propertyRenamingOnlyCompilationMode;
+
   /** Controls label renaming. */
   public boolean labelRenaming;
 
@@ -1290,6 +1293,7 @@ public class CompilerOptions implements Serializable {
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
     propertyRenaming = PropertyRenamingPolicy.OFF;
+    propertyRenamingOnlyCompilationMode = false;
     labelRenaming = false;
     generatePseudoNames = false;
     preferStableNames = false;
@@ -2151,6 +2155,14 @@ public class CompilerOptions implements Serializable {
     this.generatePseudoNames = generatePseudoNames;
   }
 
+  public void setPropertyRenamingOnlyCompilationMode(boolean propertyRenamingOnlyCompilationMode) {
+    this.propertyRenamingOnlyCompilationMode = propertyRenamingOnlyCompilationMode;
+  }
+
+  public boolean isPropertyRenamingOnlyCompilationMode() {
+    return this.propertyRenamingOnlyCompilationMode;
+  }
+
   public void setRenamePrefix(String renamePrefix) {
     this.renamePrefix = renamePrefix;
   }
@@ -2820,6 +2832,7 @@ public class CompilerOptions implements Serializable {
         .add("processCommonJSModules", processCommonJSModules)
         .add("propertiesThatMustDisambiguate", propertiesThatMustDisambiguate)
         .add("propertyRenaming", propertyRenaming)
+        .add("propertyRenamingOnlyCompilationMode", propertyRenamingOnlyCompilationMode)
         .add("protectHiddenSideEffects", protectHiddenSideEffects)
         .add("quoteKeywordProperties", quoteKeywordProperties)
         .add("removeAbstractMethods", removeAbstractMethods)

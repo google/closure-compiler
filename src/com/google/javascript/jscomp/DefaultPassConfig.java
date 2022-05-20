@@ -212,6 +212,29 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.maybeAdd(syncCompilerFeatures);
 
+    if (options.isPropertyRenamingOnlyCompilationMode()) {
+      checks.maybeAdd(addSyntheticScript);
+      checks.maybeAdd(gatherGettersAndSetters);
+      checks.maybeAdd(gatherModuleMetadataPass);
+      checks.maybeAdd(createModuleMapPass);
+      checks.maybeAdd(declaredGlobalExternsOnWindow);
+      checks.maybeAdd(closureRewriteClass);
+      checks.maybeAdd(checkSideEffects);
+      checks.maybeAdd(angularPass);
+      checks.maybeAdd(closureGoogScopeAliases);
+      addModuleRewritingPasses(checks, options);
+      checks.maybeAdd(closurePrimitives);
+      checks.maybeAdd(injectRuntimeLibrariesForChecks);
+      checks.maybeAdd(clearTypedScopeCreatorPass);
+      checks.maybeAdd(clearTopTypedScopePass);
+      checks.maybeAdd(generateExports);
+      checks.maybeAdd(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
+      checks.maybeAdd(mergeSyntheticScript);
+      checks.maybeAdd(gatherExternPropertiesCheck);
+      checks.maybeAdd(createEmptyPass(PassNames.BEFORE_SERIALIZATION));
+      return checks;
+    }
+
     if (options.shouldGenerateTypedExterns()) {
       checks.maybeAdd(addSyntheticScript);
       checks.maybeAdd(closureGoogScopeAliasesForIjs);
@@ -500,6 +523,19 @@ public final class DefaultPassConfig extends PassConfig {
   protected PassListBuilder getOptimizations() {
     PassListBuilder passes = new PassListBuilder(options);
 
+    if (options.isPropertyRenamingOnlyCompilationMode()) {
+      TranspilationPasses.addTranspilationRuntimeLibraries(passes);
+      passes.maybeAdd(closureProvidesRequires);
+      passes.maybeAdd(processDefinesOptimize);
+      TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, options);
+      passes.maybeAdd(normalize);
+      passes.maybeAdd(gatherExternPropertiesOptimize);
+      passes.maybeAdd(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
+      passes.maybeAdd(inlineAndCollapseProperties);
+      passes.maybeAdd(closureOptimizePrimitives);
+      return passes;
+    }
+
     if (options.skipNonTranspilationPasses) {
       // Reaching this if-condition means the 'getChecks()' phase has been skipped in favor of
       // 'getTranspileOnlyPasses'.
@@ -732,6 +768,26 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected PassListBuilder getFinalizations() {
     PassListBuilder passes = new PassListBuilder(options);
+
+    if (options.isPropertyRenamingOnlyCompilationMode()) {
+      if (options.rewriteGlobalDeclarationsForTryCatchWrapping
+          || options.renamePrefixNamespace != null) {
+        passes.maybeAdd(rewriteGlobalDeclarationsForTryCatchWrapping);
+      }
+
+      passes.maybeAdd(renameProperties);
+
+      if (options.renamePrefixNamespace != null
+          && options.chunkOutputType == ChunkOutputType.GLOBAL_NAMESPACE) {
+        if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.renamePrefixNamespace).matches()) {
+          throw new IllegalArgumentException(
+              "Illegal character in renamePrefixNamespace name: " + options.renamePrefixNamespace);
+        }
+        passes.maybeAdd(rescopeGlobalSymbols);
+      }
+
+      return passes;
+    }
 
     if (options.doLateLocalization()) {
       if (options.shouldRunReplaceMessagesPass()) {
