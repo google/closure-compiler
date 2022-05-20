@@ -877,6 +877,15 @@ public class CompilerOptions implements Serializable {
    */
   @Nullable private Path debugLogDirectory;
 
+  /**
+   * A comma separated list of strings used to filter which debug logs are written. If a filter is
+   * specified, only log files with a path name that contains at least one of the filter Strings are
+   * written.
+   *
+   * <p>{@code null} indicates that no such files should be written.
+   */
+  private String debugLogFilter;
+
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
   private boolean quoteKeywordProperties;
 
@@ -2402,6 +2411,14 @@ public class CompilerOptions implements Serializable {
   @Nullable
   public Path getDebugLogDirectory() {
     return debugLogDirectory;
+  }
+
+  public void setDebugLogFilter(String filter) {
+    this.debugLogFilter = filter;
+  }
+
+  public String getDebugLogFilter() {
+    return debugLogFilter;
   }
 
   public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {
