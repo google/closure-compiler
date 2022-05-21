@@ -3721,7 +3721,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     for (JSChunk deserializedModule : getModules()) {
       for (InputId inputId : compilerState.moduleToInputList.get(deserializedModule)) {
-        SourceFile src = checkNotNull(codeFiles.get(inputId.getIdName()), "Missing %s", inputId);
+        SourceFile src = codeFiles.get(inputId.getIdName());
+        if (src == null) {
+          // The auto-generated empty fill files used to facilitate CCCM for
+          // empty chunks may not have gotten serialized, but all the others
+          // should have.
+          checkState(isFillFileName(inputId.getIdName()), "Missing %s", inputId);
+          continue;
+        }
         CompilerInput input = new CompilerInput(src);
         Node script = input.getAstRoot(this); // accesses this.typedAstFilesystem
 

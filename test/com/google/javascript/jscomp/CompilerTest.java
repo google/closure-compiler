@@ -1293,6 +1293,48 @@ public final class CompilerTest {
     assertThat(source).isEqualTo("console.log(Error(\"a\"),\"hello\");");
   }
 
+  @Test
+  public void testCheckSaveRestore3StagesNoInputFiles() throws Exception {
+    // There's an edge case where a chunk may be empty.
+    // The compiler covers this weird case by adding a special "fillFile" into empty chunks.
+    // This makes the logic in passes like CrossChunkCodeMotion easier.
+    // However, we also need to drop the phony "fillFiles" in several cases.
+    // One of those cases is serialization.
+    // This can lead to an odd situation where deserialization doesn't see a SourceFile
+    // for one of these "fillFiles".
+    // This led to a NullPointerException in the past.
+    // This test case exists to test the fix for that.
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    // Late localization happens in stage 3, so this forces stage 3 to actually have some
+    // effect on the AST.
+    options.setDoLateLocalization(true);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    List<SourceFile> externs = ImmutableList.of();
+    List<SourceFile> srcs = ImmutableList.of();
+    compiler.init(externs, srcs, options);
+
+    compiler.parse();
+    compiler.check();
+    final CompilerInput onlyInputBeforeSave =
+        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+    // this is the special name used for a single fill file when there are no inputs
+    assertThat(onlyInputBeforeSave.getName()).isEqualTo("$strong$$fillFile");
+
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterChecks);
+
+    // The fillFile is still listed as the only input
+    final CompilerInput onlyInputAfterRestore =
+        getOnlyElement(compiler.getModuleGraph().getAllInputs());
+    assertThat(onlyInputAfterRestore.getName()).isEqualTo("$strong$$fillFile");
+  }
+
   private String concatStrings(String... strings) {
     return stream(strings).collect(joining());
   }
