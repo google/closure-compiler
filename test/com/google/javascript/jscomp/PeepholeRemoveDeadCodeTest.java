@@ -265,6 +265,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Make sure it plays nice with minimizing
     fold("for(;false;) { foo(); continue }", "");
+
+    fold("l1:for(;false;) {  }", "");
   }
 
   @Test

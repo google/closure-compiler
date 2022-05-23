@@ -1169,8 +1169,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     Node parent = n.getParent();
     NodeUtil.redeclareVarsInsideBranch(n);
+
     if (!mayHaveSideEffects(cond)) {
-      NodeUtil.removeChild(parent, n);
+      // Remove the entire loop and any associated labels.
+      while (parent.isLabel()) {
+        n = parent;
+        parent = parent.getParent();
+      }
+      n.detach();
     } else {
       Node statement = IR.exprResult(cond.detach()).srcrefIfMissing(cond);
       if (parent.isLabel()) {
@@ -1182,6 +1188,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       n.replaceWith(statement);
     }
     reportChangeToEnclosingScope(parent);
+
     return null;
   }
 
