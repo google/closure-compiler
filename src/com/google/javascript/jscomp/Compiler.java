@@ -3522,7 +3522,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Only contains state that does not make sense in 'multilevel' binary builds (where
    * library-level TypedASTs are the input). Such state belongs in the jscomp.TypedAst proto.
    */
-  private static class CompilerState implements Serializable {
+  protected static class CompilerState implements Serializable {
 
     private final FeatureSet featureSet;
     private final boolean typeCheckingHasRun;
@@ -3573,6 +3573,38 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  /** Restore the portions of the compiler state that don't require access to the serialized AST. */
+  protected void restoreFromState(CompilerState compilerState) {
+    featureSet = compilerState.featureSet;
+    scriptNodeByFilename.clear();
+    typeCheckingHasRun = compilerState.typeCheckingHasRun;
+    injectedLibraries.clear();
+    injectedLibraries.addAll(compilerState.injectedLibraries);
+    hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
+    // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
+    // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
+    LifeCycleStage stage =
+        compilerState.lifeCycleStage == LifeCycleStage.RAW
+            ? LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC
+            : compilerState.lifeCycleStage;
+    setLifeCycleStage(stage);
+    moduleGraph = compilerState.moduleGraph;
+    uniqueNameId = compilerState.uniqueNameId;
+    uniqueIdSupplier = compilerState.uniqueIdSupplier;
+    exportedNames.clear();
+    exportedNames.addAll(compilerState.exportedNames);
+    cssNames = compilerState.cssNames;
+    variableMap = null;
+    propertyMap = null;
+    stringMap = compilerState.stringMap;
+    idGeneratorMap = compilerState.idGeneratorMap;
+    crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
+    runJ2clPasses = compilerState.runJ2clPasses;
+    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
+    changeStamp = compilerState.changeStamp;
+    accessorSummary = compilerState.accessorSummary;
+  }
+
   private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(
       Iterable<JSChunk> jsModules) {
     ImmutableListMultimap.Builder<JSChunk, InputId> jsmoduleToInputId =
@@ -3591,7 +3623,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
-          new ObjectOutputStream(outputStream).writeObject(new CompilerState(this));
+          new ObjectOutputStream(outputStream).writeObject(getCompilerState());
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
           SerializeTypedAstPass.createFromOutputStream(this, outputStream)
@@ -3599,6 +3631,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           stopTracer(tracer, "serializeTypedAst");
           return null;
         });
+  }
+
+  protected CompilerState getCompilerState() {
+    return new CompilerState(this);
   }
 
   @GwtIncompatible("ClassNotFoundException")
@@ -3653,34 +3689,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             inputStream,
             compilerState.typeCheckingHasRun);
 
-    featureSet = compilerState.featureSet;
-    scriptNodeByFilename.clear();
-    typeCheckingHasRun = compilerState.typeCheckingHasRun;
-    injectedLibraries.clear();
-    injectedLibraries.addAll(compilerState.injectedLibraries);
-    hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
-    // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
-    // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
-    LifeCycleStage stage =
-        compilerState.lifeCycleStage == LifeCycleStage.RAW
-            ? LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC
-            : compilerState.lifeCycleStage;
-    setLifeCycleStage(stage);
-    moduleGraph = compilerState.moduleGraph;
-    uniqueNameId = compilerState.uniqueNameId;
-    uniqueIdSupplier = compilerState.uniqueIdSupplier;
-    exportedNames.clear();
-    exportedNames.addAll(compilerState.exportedNames);
-    cssNames = compilerState.cssNames;
-    variableMap = null;
-    propertyMap = null;
-    stringMap = compilerState.stringMap;
-    idGeneratorMap = compilerState.idGeneratorMap;
-    crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
-    runJ2clPasses = compilerState.runJ2clPasses;
-    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
-    changeStamp = compilerState.changeStamp;
-    accessorSummary = compilerState.accessorSummary;
+    restoreFromState(compilerState);
 
     // Restore TypedAST and related fields
     externProperties = deserializedAst.getExternProperties();
