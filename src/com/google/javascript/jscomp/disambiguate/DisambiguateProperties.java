@@ -31,6 +31,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -47,6 +49,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -59,6 +62,8 @@ public final class DisambiguateProperties implements CompilerPass {
           "JSC_DISAMBIGUATE2_PROPERTY_INVALIDATION",
           "Property ''{0}'' was required to be disambiguated but was invalidated."
               + "{1}");
+
+  private static final Gson GSON = new Gson();
 
   private final AbstractCompiler compiler;
   private final ImmutableSet<String> propertiesThatMustDisambiguate;
@@ -92,10 +97,23 @@ public final class DisambiguateProperties implements CompilerPass {
     invalidateWellKnownProperties(propIndex);
     this.logForDiagnostics(
         "prop_refs",
-        () ->
-            propIndex.values().stream()
-                .map(PropertyReferenceIndexJson::new)
-                .collect(toImmutableSortedMap(naturalOrder(), (x) -> x.name, (x) -> x)));
+        // use a StreamedJsonProducer instead of building up the entire json string at once to
+        // prevent OOMs for very large projects.
+        new LogFile.StreamedJsonProducer() {
+          @Override
+          public void writeJson(JsonWriter writer) throws IOException {
+            ImmutableSortedSet<PropertyReferenceIndexJson> propRefsJson =
+                propIndex.values().stream()
+                    .map(PropertyReferenceIndexJson::new)
+                    .collect(toImmutableSortedSet(naturalOrder()));
+
+            writer.beginObject();
+            for (PropertyReferenceIndexJson propRef : propRefsJson) {
+              propRef.writeJson(writer);
+            }
+            writer.endObject();
+          }
+        });
 
     graphBuilder.addAll(flattener.getAllKnownTypes());
     DiGraph<ColorGraphNode, Object> graph = graphBuilder.build();
@@ -281,7 +299,14 @@ public final class DisambiguateProperties implements CompilerPass {
     }
   }
 
-  private static final class PropertyReferenceIndexJson {
+  private void logForDiagnostics(String name, LogFile.StreamedJsonProducer data) {
+    try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), name + ".log")) {
+      log.logJson(data);
+    }
+  }
+
+  private static final class PropertyReferenceIndexJson
+      implements Comparable<PropertyReferenceIndexJson> {
     final String name;
     final ImmutableSortedSet<PropertyReferenceJson> refs;
 
@@ -295,6 +320,26 @@ public final class DisambiguateProperties implements CompilerPass {
                 .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
                 .collect(toImmutableSortedSet(naturalOrder()));
       }
+    }
+
+    @Override
+    public int compareTo(PropertyReferenceIndexJson x) {
+      return this.name.compareTo(x.name);
+    }
+
+    private void writeJson(JsonWriter writer) throws IOException {
+      // creates an entry such as:
+      //   foo: {name: 'foo', refs: [{location: 'bar.js:3:4', receiverIndex: 2}]}
+      writer.name(this.name);
+
+      writer.beginObject();
+      writer.name("name").value(this.name);
+      writer.name("refs").beginArray();
+      for (PropertyReferenceJson ref : this.refs) {
+        GSON.toJson(ref, PropertyReferenceJson.class, writer);
+      }
+      writer.endArray();
+      writer.endObject();
     }
   }
 

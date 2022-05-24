@@ -16,6 +16,9 @@
 
 package com.google.gson;
 
+import com.google.gson.stream.JsonWriter;
+import java.lang.reflect.Type;
+
 /**
  * A minimal supersource API for the real `Gson` class.
  *
@@ -26,6 +29,10 @@ public final class Gson {
   public Gson() {}
 
   public String toJson(Object x) {
+    throw new UnsupportedOperationException();
+  }
+
+  public String toJson(Object x, Type typeOfSrc, JsonWriter writer) {
     throw new UnsupportedOperationException();
   }
 }

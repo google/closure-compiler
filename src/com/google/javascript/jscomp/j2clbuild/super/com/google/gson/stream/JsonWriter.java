@@ -16,14 +16,46 @@
 
 package com.google.gson.stream;
 
-import java.io.Writer;
+import java.io.IOException;
 
 /**
  * A minimal supersource API for the real `JsonWriter` class.
  *
  * <p>This class is not intended to really work. Methods are added as needed.
  */
-public final class JsonWriter {
+public abstract class JsonWriter {
 
-  public JsonWriter(Writer writer) {}
+  /**
+   * Begins encoding a new array. Each call to this method must be paired with a call to {@link
+   * #endArray}.
+   */
+  public abstract JsonWriter beginArray() throws IOException;
+
+  /** Ends encoding the current array. */
+  public abstract JsonWriter endArray() throws IOException;
+
+  /**
+   * Begins encoding a new object. Each call to this method must be paired with a call to {@link
+   * #endObject}.
+   */
+  public abstract JsonWriter beginObject() throws IOException;
+
+  /** Ends encoding the current object. */
+  public abstract JsonWriter endObject() throws IOException;
+
+  /**
+   * Encodes the property name.
+   *
+   * @param name the name of the forthcoming value. May not be null.
+   */
+  public abstract JsonWriter name(String name) throws IOException;
+
+  /** Encodes a number. */
+  public abstract JsonWriter value(Number n) throws IOException;
+
+  /**
+   * Encodes a string, escaping it according to RFC 4627 as well as for HTML ({@code <} and {@code
+   * >} for example).
+   */
+  public abstract JsonWriter value(String s) throws IOException;
 }
