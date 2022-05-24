@@ -476,7 +476,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
       compiler.setErrorManager(new SortingErrorManager(ImmutableSet.of(errorGenerator)));
     }
-    if (config.printAst) {
+    if (config.printTree) {
       options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_ALL_COMMENTS);
     }
   }
