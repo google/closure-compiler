@@ -475,15 +475,23 @@ public final class GatherModuleMetadata implements CompilerPass {
           case ES6_MODULE:
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
-            t.report(n, ClosurePrimitiveErrors.DUPLICATE_MODULE, namespace, existingFileSource);
-            return;
+            {
+              DiagnosticType diagnostic =
+                  moduleType.equals(ModuleType.GOOG_PROVIDE)
+                      ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE
+                      : ClosurePrimitiveErrors.DUPLICATE_MODULE;
+              t.report(n, diagnostic, namespace, existingFileSource);
+              return;
+            }
           case GOOG_PROVIDE:
-            DiagnosticType diagnostic =
-                moduleType.equals(ModuleType.GOOG_PROVIDE)
-                    ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
-                    : ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
-            t.report(n, diagnostic, namespace, existingFileSource);
-            return;
+            {
+              DiagnosticType diagnostic =
+                  moduleType.equals(ModuleType.GOOG_PROVIDE)
+                      ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
+                      : ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
+              t.report(n, diagnostic, namespace, existingFileSource);
+              return;
+            }
           case COMMON_JS:
           case SCRIPT:
             // Fall through, error

@@ -463,7 +463,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
     testError(
         srcs("goog.module('duplciated');", "goog.provide('duplciated');"),
-        ClosurePrimitiveErrors.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
   }
 
   @Test
@@ -473,7 +473,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
     testError(
         srcs("export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"),
-        ClosurePrimitiveErrors.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE);
   }
 
   @Test
