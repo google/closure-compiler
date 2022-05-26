@@ -123,9 +123,21 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private Node tryFoldLabel(Node n) {
     String labelName = n.getFirstChild().getString();
     Node stmt = n.getLastChild();
-    if (stmt.isEmpty() || (stmt.isBlock() && !stmt.hasChildren())) {
+    if (stmt.isEmpty()) {
       reportChangeToEnclosingScope(n);
       n.detach();
+      return null;
+    }
+
+    if (stmt.isBlock() && !stmt.hasChildren()) {
+      reportChangeToEnclosingScope(n);
+      if (n.getParent().isLabel()) {
+        // If the parent is itself a label, replace this label
+        // with its contained block to keep the AST in a valid state.
+        n.replaceWith(stmt.detach());
+      } else {
+        n.detach();
+      }
       return null;
     }
 
@@ -183,23 +195,27 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // Removes TRYs that had its CATCH removed and/or empty FINALLY.
     if (!catchBlock.hasChildren() && (finallyBlock == null || !finallyBlock.hasChildren())) {
+      checkState(!n.getParent().isLabel());
       body.detach();
       n.replaceWith(body);
       reportChangeToEnclosingScope(body);
       return body;
     }
 
-    // Only leave FINALLYs if TRYs are empty
+    // Only leave FINALLYs if TRYs are not empty
     if (!body.hasChildren()) {
       NodeUtil.redeclareVarsInsideBranch(catchBlock);
       reportChangeToEnclosingScope(n);
       if (finallyBlock != null) {
         finallyBlock.detach();
+        checkState(!n.getParent().isLabel());
         n.replaceWith(finallyBlock);
+        return finallyBlock;
       } else {
+        checkState(!n.getParent().isLabel());
         n.detach();
+        return null;
       }
-      return finallyBlock;
     }
 
     return n;

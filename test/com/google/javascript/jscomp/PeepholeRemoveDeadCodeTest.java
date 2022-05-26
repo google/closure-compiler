@@ -1402,6 +1402,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("try {} catch (e) {}", "");
     fold("try {} finally {}", "");
     fold("try {} catch (e) {} finally {}", "");
+    fold("L1:try {} catch (e) {} finally {}", "");
+    fold("L2:L1:try {} catch (e) {} finally {}", "");
   }
 
   @Test
