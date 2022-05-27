@@ -213,8 +213,11 @@ public final class CommandLineRunnerTest {
         createStringList(
             commonFlags, new String[] {"--save_stage1_to_file", stage1Save.toString()});
     verifyFlagsAreIncompatibleWithChecksOnly(stage1Flags);
-    CommandLineRunner runner = new CommandLineRunner(stringListToArray(stage1Flags));
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            stringListToArray(stage1Flags), new PrintStream(outReader), new PrintStream(errReader));
     assertThat(runner.doRun()).isEqualTo(0);
+    assertThat(new String(outReader.toByteArray(), UTF_8)).isEqualTo("");
 
     assertThat(runner.getCompiler().toSource())
         .isEqualTo("const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");

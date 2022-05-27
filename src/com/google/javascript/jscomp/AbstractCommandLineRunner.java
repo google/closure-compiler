@@ -1292,6 +1292,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     Result result;
+    // We won't want to process results for cases where compilation is only partially done.
+    boolean shouldProcessResults = true;
     if (config.skipNormalOutputs) {
       metricsRecorder.recordActionName("skip normal outputs");
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
@@ -1306,6 +1308,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       result = instrumentForCoverage(metricsRecorder);
     } else if (config.shouldSaveAfterStage1()) {
       result = performStage1andSave(config.getSaveCompilationStateToFilename(), metricsRecorder);
+      // Don't output any results, since compilation isn't done yet.
+      shouldProcessResults = false;
     } else if (typedAstListInputFilename != null) {
       result = parseAndPerformStages2and3(metricsRecorder);
     } else if (config.shouldRestoreAndPerformStage2AndSave()) {
@@ -1314,6 +1318,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
               config.getContinueSavedCompilationFileName(),
               config.getSaveCompilationStateToFilename(),
               metricsRecorder);
+      // Don't output any results, since compilation isn't done yet.
+      shouldProcessResults = false;
     } else if (config.shouldRestoreAndPerformStages2And3()) {
       result =
           restoreAndPerformStages2and3(
@@ -1346,7 +1352,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    int exitStatus = processResults(result, modules, options);
+    int exitStatus = shouldProcessResults ? processResults(result, modules, options) : 0;
     metricsRecorder.recordResultMetrics(compiler, result);
     return exitStatus;
   }
