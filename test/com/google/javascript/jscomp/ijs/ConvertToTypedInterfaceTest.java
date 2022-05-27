@@ -2058,4 +2058,29 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "  properties: 0",
             "};"));
   }
+
+  @Test
+  public void testGoogModuleGet() {
+    test(
+        lines(
+            "goog.provide('a.b.c');",
+            "goog.provide('a.b.c.d');",
+            "goog.require('x.y.z');",
+            "",
+            "/** @const */",
+            "a.b.c = {};",
+            "/** @const */",
+            "a.b.c.d = goog.module.get('x.y.z').d;",
+            ""),
+        lines(
+            "goog.provide('a.b.c');",
+            "goog.provide('a.b.c.d');",
+            "goog.require('x.y.z');",
+            "",
+            "/** @const */",
+            "a.b.c = {};",
+            "/** @const */",
+            "a.b.c.d = goog.module.get('x.y.z').d;",
+            ""));
+  }
 }

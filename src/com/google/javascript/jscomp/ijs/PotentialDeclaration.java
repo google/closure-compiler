@@ -680,7 +680,35 @@ abstract class PotentialDeclaration {
     return !ClassUtil.isThisProp(lhs)
         && isConstToBeInferred(lhs)
         && rhs != null
-        && rhs.isQualifiedName();
+        && isQualifiedAliasExpression(rhs);
+  }
+
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+
+  /**
+   * Returns whether a node corresponds to a simple or a qualified name, such as <code>x</code> or
+   * <code>a.b.c</code> or <code>this.a</code>.
+   */
+  public static final boolean isQualifiedAliasExpression(Node n) {
+    switch (n.getToken()) {
+      case NAME:
+        return !n.getString().isEmpty();
+      case THIS:
+      case SUPER:
+        return true;
+      case GETPROP:
+        return isQualifiedAliasExpression(n.getFirstChild());
+      case CALL:
+        if (GOOG_MODULE_GET.matches(n.getFirstChild())) {
+          return true;
+        }
+        return false;
+
+      case MEMBER_FUNCTION_DEF:
+        // These are explicitly *not* qualified name components.
+      default:
+        return false;
+    }
   }
 
   private static void removeStringKeyValue(Node stringKey) {
