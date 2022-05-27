@@ -150,6 +150,12 @@ final class SerializeTypesToPointers {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isRoot()) {
+        // the ROOT node is given the 'global this' type for use during typechecking, but this is
+        // not needed for optimizations. (The 'global this' type will still be serialized if
+        // referenced in actual code though.)
+        return;
+      }
       JSType type = n.getJSType();
       if (type != null) {
         typePointersByJstype.computeIfAbsent(type, jstypeReconserializer::serializeType);

@@ -126,27 +126,16 @@ public class TypedAstSerializerTest extends CompilerTestCase {
   @Test
   public void emptySourcesWithTypeChecking() {
     enableTypeCheck();
-    // When serializing from an AST which has *not* been converted to Colors, the "global this"
-    // and "?.prototype" types are automatically included in the proto.
-    new Tester()
-        .expectTypeNamed("global this")
-        .expectTypeNamed("global this.prototype")
-        .expectTypeNamed("?.prototype")
-        .expectTypeNamed("Console")
-        .expectTypeWithProperties("Console.prototype", "log")
-        .expectTypeNamed("Console.prototype.log")
-        .test("console.log(1);");
+
+    // No code, so no types referenced to be serialized.
+    new Tester().test("");
   }
 
   @Test
   public void consoleDotLogWithTypeChecking() {
     enableTypeCheck();
-    // When serializing from an AST which has *not* been converted to Colors, the "global this"
-    // and "?.prototype" types are automatically included in the proto.
+
     new Tester()
-        .expectTypeNamed("global this")
-        .expectTypeNamed("global this.prototype")
-        .expectTypeNamed("?.prototype")
         .expectTypeNamed("Console")
         .expectTypeWithProperties("Console.prototype", "log")
         .expectTypeNamed("Console.prototype.log")

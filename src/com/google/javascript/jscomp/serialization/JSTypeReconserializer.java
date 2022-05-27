@@ -96,6 +96,7 @@ final class JSTypeReconserializer {
           // Smoosh top-like objects into a single type.
           .put(JSTypeNative.FUNCTION_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.FUNCTION_PROTOTYPE, StandardColors.TOP_OBJECT)
+          .put(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_PROTOTYPE, StandardColors.TOP_OBJECT)
