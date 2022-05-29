@@ -79,6 +79,7 @@ public class Node {
     IS_PARENTHESIZED,
     // Contains non-JSDoc comment
     NON_JSDOC_COMMENT,
+    TRAILING_NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
     JSDOC_INFO,
     // Whether incrdecr is pre (false) or post (true)
@@ -227,9 +228,25 @@ public class Node {
     return (NonJSDocComment) getProp(Prop.NON_JSDOC_COMMENT);
   }
 
+  public final String getTrailingNonJSDocCommentString() {
+    if (getProp(Prop.TRAILING_NON_JSDOC_COMMENT) == null) {
+      return "";
+    }
+    return ((NonJSDocComment) getProp(Prop.TRAILING_NON_JSDOC_COMMENT)).getCommentString();
+  }
+
+  public final NonJSDocComment getTrailingNonJSDocComment() {
+    return (NonJSDocComment) getProp(Prop.TRAILING_NON_JSDOC_COMMENT);
+  }
+
   /** Sets the NonJSDoc comment attached to this node. */
   public final Node setNonJSDocComment(NonJSDocComment comment) {
     putProp(Prop.NON_JSDOC_COMMENT, comment);
+    return this;
+  }
+
+  public final Node setTrailingNonJSDocComment(NonJSDocComment comment) {
+    putProp(Prop.TRAILING_NON_JSDOC_COMMENT, comment);
     return this;
   }
 

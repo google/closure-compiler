@@ -332,8 +332,7 @@ class IRFactory {
             irFactory.parseNonJSDocCommentAt(endOfFilePos, /* isInline= */ false);
         if (nonJSDocComment != null) {
           // pending end-of-file comment exists && parsing mode is set to INCLUDE_ALL_COMMENTS
-          nonJSDocComment.setIsTrailing(true);
-          n.setNonJSDocComment(nonJSDocComment);
+          n.setTrailingNonJSDocComment(nonJSDocComment);
         }
       }
     }
@@ -1478,15 +1477,7 @@ class IRFactory {
       if (trailingComment == null) {
         return;
       }
-
-      NonJSDocComment nonTrailingComment = paramNode.getNonJSDocComment();
-      if (nonTrailingComment != null) {
-        // This node has both trailing and non-trailing comment
-        nonTrailingComment.appendTrailingCommentToNonTrailing(trailingComment);
-      } else {
-        trailingComment.setIsTrailing(true);
-        paramNode.setNonJSDocComment(trailingComment);
-      }
+      paramNode.setTrailingNonJSDocComment(trailingComment);
     }
 
     Node processOptChainFunctionCall(OptChainCallExpressionTree callNode) {

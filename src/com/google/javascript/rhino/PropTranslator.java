@@ -154,6 +154,7 @@ final class PropTranslator {
       case FEATURE_SET:
       case TYPE_BEFORE_CAST:
       case NON_JSDOC_COMMENT:
+      case TRAILING_NON_JSDOC_COMMENT:
       case JSDOC_INFO:
       case INCRDECR:
       case QUOTED:

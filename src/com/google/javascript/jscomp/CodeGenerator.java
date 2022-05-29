@@ -121,8 +121,7 @@ public class CodeGenerator {
     NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
 
     boolean printJSDoc = preserveTypeAnnotations && jsDocInfo != null;
-    boolean printNonJSDoc =
-        printNonJSDocComments && nonJSDocComment != null && !nonJSDocComment.isTrailing();
+    boolean printNonJSDoc = printNonJSDocComments && nonJSDocComment != null;
     if (printJSDoc && printNonJSDoc) {
       if (jsDocInfo.getOriginalCommentPosition() < nonJSDocComment.getStartPosition().getOffset()) {
         printJSDocComment(node, jsDocInfo);
@@ -1438,9 +1437,9 @@ public class CodeGenerator {
 
     // print any trailing nonJSDoc comment attached to this node
     if (printNonJSDocComments) {
-      NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
-      if (nonJSDocComment != null && nonJSDocComment.isTrailing()) {
-        String nonJSDocCommentString = node.getNonJSDocCommentString();
+      NonJSDocComment nonJSDocComment = node.getTrailingNonJSDocComment();
+      if (nonJSDocComment != null) {
+        String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
         if (!nonJSDocCommentString.isEmpty()) {
           addNonJsDoctrailing(nonJSDocComment);
         }

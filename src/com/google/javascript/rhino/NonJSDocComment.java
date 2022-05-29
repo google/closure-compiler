@@ -54,7 +54,6 @@ public class NonJSDocComment implements Serializable {
   // ```
   private SourcePosition endPosition;
   private String contents;
-  private boolean isTrailing;
   private boolean endsAsLineComment;
   private boolean isInline;
 
@@ -62,7 +61,6 @@ public class NonJSDocComment implements Serializable {
     startPosition = start;
     endPosition = end;
     contents = s;
-    this.isTrailing = false;
     this.endsAsLineComment = false;
     this.isInline = false;
   }
@@ -82,10 +80,6 @@ public class NonJSDocComment implements Serializable {
     return this.endPosition;
   }
 
-  public void setIsTrailing(boolean isTrailing) {
-    this.isTrailing = isTrailing;
-  }
-
   public void setEndsAsLineComment(boolean endsAsLineComment) {
     this.endsAsLineComment = endsAsLineComment;
   }
@@ -94,36 +88,12 @@ public class NonJSDocComment implements Serializable {
     this.isInline = isInline;
   }
 
-  /**
-   * Indicates whether this comment is placed after the source node it is attached to. Currently,
-   * this field is set only for comments associated with formal parameters and arguments.
-   */
-  public boolean isTrailing() {
-    return this.isTrailing;
-  }
-
   public boolean isEndingAsLineComment() {
     return this.endsAsLineComment;
   }
 
   public boolean isInline() {
     return isInline;
-  }
-
-  /*
-   * In presence of both non-trailing and trailing comment associated with a node, such as : //
-   *   ```
-   *   function foo( // first
-   *                    x // second
-   *                  ) {}
-   *   ```
-   * We create a single NonJSDocComment `//first //second` and attach it to Node x.
-   * The beginOffset of this single comment is the begin offset of the `// first` comment, the end
-   * offset of this single comment is the end offset of the `// second` comment.
-   */
-  public void appendTrailingCommentToNonTrailing(NonJSDocComment trailingComment) {
-    this.contents = this.contents + trailingComment.contents;
-    this.endPosition = trailingComment.endPosition;
   }
 
   @Override

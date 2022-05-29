@@ -1855,7 +1855,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("/* blah */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -1866,7 +1865,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("// blah");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -1880,10 +1878,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = paramListNode.getFirstChild();
     Node yNode = paramListNode.getSecondChild();
 
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/* first */");
     assertThat(yNode.getNonJSDocCommentString()).isEqualTo("/* second */");
-    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -1897,8 +1893,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = paramListNode.getFirstChild();
     Node yNode = xNode.getNext();
 
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/* first */");
+    ;
     assertThat(yNode.getNonJSDocCommentString()).isEmpty();
   }
 
@@ -1912,8 +1908,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node paramListNode = fn.getSecondChild();
     Node xNode = paramListNode.getFirstChild();
     assertNode(xNode).hasType(Token.NAME);
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/* first */");
   }
 
   // Tests that same-line trailing comments attach to the same line param
@@ -1938,11 +1933,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = paramListNode.getFirstChild();
     Node yNode = paramListNode.getSecondChild();
 
-    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("// first");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).isEqualTo("// first");
 
-    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// second");
-    assertThat(yNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(yNode.getTrailingNonJSDocCommentString()).isEqualTo("// second");
   }
 
   // Tests that same-line trailing comments attach to the same line param
@@ -1967,11 +1960,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = paramListNode.getFirstChild();
     Node yNode = paramListNode.getSecondChild();
 
-    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("/* first */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).isEqualTo("/* first */");
 
-    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("/* second */");
-    assertThat(yNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(yNode.getTrailingNonJSDocCommentString()).isEqualTo("/* second */");
   }
 
   // Tests that same-line trailing comments attach to the same line param
@@ -1995,8 +1986,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = paramListNode.getFirstChild();
     Node yNode = paramListNode.getSecondChild();
 
-    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("/* first */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(xNode.getTrailingNonJSDocCommentString()).isEqualTo("/* first */");
 
     assertThat(yNode.getNonJSDocComment()).isNull();
   }
@@ -2022,11 +2012,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("// blah1");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
 
     Node yNode = fn.getSecondChild().getSecondChild();
     assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// blah2");
-    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   // function f( /* blah1 */ x,
@@ -2049,11 +2037,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */");
-    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
 
     Node yNode = fn.getSecondChild().getSecondChild();
     assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// blah2");
-    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -2082,7 +2068,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node xNode = fn.getSecondChild().getFirstChild();
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */// blah");
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */");
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("// blah");
   }
 
   @Test
@@ -2102,8 +2089,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node exprNode = scriptNode.getLastChild();
     assertNode(exprNode).hasType(Token.EXPR_RESULT);
 
-    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("// second");
-    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(scriptNode.getTrailingNonJSDocCommentString()).isEqualTo("// second");
   }
 
   @Test
@@ -2123,8 +2109,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node exprNode = scriptNode.getLastChild();
     assertNode(exprNode).hasType(Token.EXPR_RESULT);
 
-    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("/* second */");
-    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(scriptNode.getTrailingNonJSDocCommentString()).isEqualTo("/* second */");
   }
 
   @Test
@@ -2146,9 +2131,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node exprNode = scriptNode.getLastChild();
     assertNode(exprNode).hasType(Token.EXPR_RESULT);
 
-    assertThat(scriptNode.getNonJSDocCommentString())
+    assertThat(scriptNode.getTrailingNonJSDocCommentString())
         .isEqualTo("// second\n/* third */\n// fourth");
-    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
   }
 
   @Test
@@ -2171,13 +2155,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(exprNode).hasType(Token.EXPR_RESULT);
     // Ideally, exprNode contains "// first\n// second".
     assertThat(exprNode.getNonJSDocCommentString()).isEqualTo("// first");
-    assertThat(exprNode.getNonJSDocComment().isTrailing()).isFalse();
 
     // TODO(rishipal): the comments `// second` and `// third` do not have an AST node to attach to
     // that "starts" after them (the `if(true) {..}` block starts before the comments).
     // Hence both comments get attached to the SCRIPT node as a trailing comment.
-    assertThat(scriptNode.getNonJSDocCommentString()).isEqualTo("// second\n\n// third");
-    assertThat(scriptNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(scriptNode.getTrailingNonJSDocCommentString()).isEqualTo("// second\n\n// third");
   }
 
   @Test
@@ -2193,7 +2175,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node xNode = fn.getSecondChild().getFirstChild();
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */// blah");
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */");
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/ blah");
   }
 
   @Test
@@ -2236,7 +2219,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node xNode = fn.getSecondChild().getOnlyChild();
     Node yNode = fn.getLastChild().getFirstChild();
 
-    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(xNode.getTrailingNonJSDocCommentString()).contains("/* first */");
     assertThat(yNode.getNonJSDocCommentString()).contains("/* second */");
   }
 
@@ -2268,7 +2251,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node oneArgNode = call.getSecondChild();
     Node twoArgNode = oneArgNode.getNext();
 
-    assertThat(oneArgNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(oneArgNode.getTrailingNonJSDocCommentString()).contains("/* first */");
     assertThat(twoArgNode.getNonJSDocCommentString()).isEmpty();
   }
 
@@ -2284,7 +2267,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node call = exprRes.getFirstChild();
     Node oneArgNode = call.getSecondChild();
 
-    assertThat(oneArgNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(oneArgNode.getTrailingNonJSDocCommentString()).contains("/* first */");
   }
 
   @Test
