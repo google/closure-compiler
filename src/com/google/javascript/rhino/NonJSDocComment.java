@@ -45,15 +45,8 @@ import java.io.Serializable;
 /** Minimal class holding information about a nonJSDoc comment's source location and contents */
 public class NonJSDocComment implements Serializable {
   private final SourcePosition startPosition;
-  // Ideally the `endPosition` should be final, but it needs to get updated during
-  // parsing for nodes in which there is both a trailing and a non-trailing comment. E.g.
-  // ```
-  // function foo( // first
-  //                 x // second
-  // ) {}
-  // ```
-  private SourcePosition endPosition;
-  private String contents;
+  private final SourcePosition endPosition;
+  private final String contents;
   private boolean endsAsLineComment;
   private boolean isInline;
 
