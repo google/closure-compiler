@@ -51,7 +51,6 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .setName(PassNames.GATHER_MODULE_METADATA)
                 .setRunInFixedPointLoop(true)
                 .setInternalFactory((x) -> gatherModuleMetadata)
-                .setFeatureSetForChecks()
                 .build());
         factories.maybeAdd(
             PassFactory.builder()
@@ -59,14 +58,12 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .setRunInFixedPointLoop(true)
                 .setInternalFactory(
                     (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
-                .setFeatureSetForChecks()
                 .build());
         TranspilationPasses.addEs6ModulePass(
             factories, new PreprocessorSymbolTable.CachedInstanceFactory());
         factories.maybeAdd(
             PassFactory.builder()
                 .setName("REWRITE_DYNAMIC_IMPORT")
-                .setFeatureSetForChecks()
                 .setInternalFactory(
                     (x) -> new RewriteDynamicImports(compiler, null, ChunkOutputType.ES_MODULES))
                 .build());
@@ -82,7 +79,6 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                             .setHaveModulesBeenRewritten(true)
                             .setModuleResolutionMode(options.getModuleResolutionMode())
                             .build())
-                .setFeatureSetForChecks()
                 .build());
 
         for (PassFactory factory : factories.build()) {

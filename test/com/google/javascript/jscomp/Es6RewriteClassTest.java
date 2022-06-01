@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2015_MODULES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -68,11 +67,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   private static PassFactory makePassFactory(
       String name, Function<AbstractCompiler, CompilerPass> pass) {
-    return PassFactory.builder()
-        .setName(name)
-        .setInternalFactory(pass)
-        .setFeatureSet(ES2015_MODULES)
-        .build();
+    return PassFactory.builder().setName(name).setInternalFactory(pass).build();
   }
 
   @Override

@@ -79,7 +79,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                       compiler,
                       compiler.getOptions().getProcessCommonJSModules(),
                       compiler.getOptions().getModuleResolutionMode()))
-          .setFeatureSet(FeatureSet.latest())
           .build();
 
   private final PassFactory earlyLintChecks =
@@ -122,14 +121,12 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
           .setName("variableReferenceCheck")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(VariableReferenceCheck::new)
-          .setFeatureSet(FeatureSet.latest())
           .build();
 
   private final PassFactory closureRewriteClass =
       PassFactory.builder()
           .setName(PassNames.CLOSURE_REWRITE_CLASS)
           .setInternalFactory(ClosureRewriteClass::new)
-          .setFeatureSet(FeatureSet.latest())
           .build();
 
   private final PassFactory lateLintChecks =
@@ -141,6 +138,5 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                       compiler,
                       ImmutableList.of(
                           new CheckInterfaces(compiler), new CheckPrototypeProperties(compiler))))
-          .setFeatureSet(FeatureSet.latest())
           .build();
 }

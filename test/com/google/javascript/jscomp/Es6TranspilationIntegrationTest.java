@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2016_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
@@ -71,7 +70,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         PassFactory.builder()
             .setName("es6InjectRuntimeLibraries")
             .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
-            .setFeatureSet(ES2016_MODULES)
             .build());
 
     passes.maybeAdd(
@@ -79,7 +77,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .setName("convertTypesToColors")
             .setInternalFactory(
                 (c) -> new ConvertTypesToColors(c, SerializationOptions.INCLUDE_DEBUG_INFO))
-            .setFeatureSet(ES2016_MODULES)
             .build());
 
     TranspilationPasses.addEarlyOptimizationTranspilationPasses(passes, compiler.getOptions());

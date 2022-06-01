@@ -1209,7 +1209,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           .setName("validityCheck")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(ValidityCheck::new)
-          .setFeatureSetForChecks()
           .setCondition(
               new Function<CompilerOptions, Boolean>() {
                 @Override

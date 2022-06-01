@@ -206,7 +206,6 @@ public final class PhaseOptimizerTest {
         .setName(name)
         .setRunInFixedPointLoop(!isOneTime)
         .setInternalFactory((compiler) -> pass)
-        .setFeatureSet(featureSet)
         .build();
   }
 

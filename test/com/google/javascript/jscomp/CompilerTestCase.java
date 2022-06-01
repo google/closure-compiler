@@ -1742,7 +1742,6 @@ public abstract class CompilerTestCase {
             .setName(PassNames.GATHER_MODULE_METADATA)
             .setRunInFixedPointLoop(true)
             .setInternalFactory((x1) -> gatherModuleMetadata)
-            .setFeatureSetForChecks()
             .build());
     factories.maybeAdd(
         PassFactory.builder()
@@ -1750,7 +1749,6 @@ public abstract class CompilerTestCase {
             .setRunInFixedPointLoop(true)
             .setInternalFactory(
                 (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
-            .setFeatureSetForChecks()
             .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
