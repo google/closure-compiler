@@ -532,9 +532,11 @@ public final class CodePrinter {
     }
 
     @Override
-    void endStatement(boolean needsSemicolon) {
+    void endStatement(boolean needsSemicolon, boolean hasTrailingCommentOnSameLine) {
       add(";");
-      endLine();
+      if (!hasTrailingCommentOnSameLine) {
+        endLine();
+      }
       statementNeedsEnded = false;
     }
 

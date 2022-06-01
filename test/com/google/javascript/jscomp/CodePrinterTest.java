@@ -1973,7 +1973,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "  // first",
             "  f1();",
             "}",
-            " // second\n"));
+            " // second"));
   }
 
   @Test
@@ -2034,8 +2034,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "function f1() {\n}", //
             "if (true) {",
             "  // first",
-            "  f1();",
-            "   // second",
+            "  f1(); // second",
             "}\n"));
   }
 

@@ -195,19 +195,20 @@ public abstract class CodeConsumer {
   void optionalListSeparator() {}
 
   /**
-   * Indicates the end of a statement and a ';' may need to be added.
-   * But we don't add it now, in case we're at the end of a block (in which
-   * case we don't have to add the ';').
-   * See maybeEndStatement()
+   * Indicates the end of a statement and a ';' may need to be added. But we don't add it now, in
+   * case we're at the end of a block (in which case we don't have to add the ';'). See
+   * maybeEndStatement()
    */
-  void endStatement() {
-    endStatement(false);
+  void endStatement(boolean hasTrailingCommentOnSameLine) {
+    endStatement(false, hasTrailingCommentOnSameLine);
   }
 
-  void endStatement(boolean needSemiColon) {
+  void endStatement(boolean needSemiColon, boolean hasTrailingCommentOnSameLine) {
     if (needSemiColon) {
       append(";");
-      maybeLineBreak();
+      if (!hasTrailingCommentOnSameLine) {
+        maybeLineBreak();
+      }
       statementNeedsEnded = false;
     } else if (statementStarted) {
       statementNeedsEnded = true;

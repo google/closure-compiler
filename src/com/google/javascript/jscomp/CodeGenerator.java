@@ -144,6 +144,26 @@ public class CodeGenerator {
     }
   }
 
+  /**
+   * Returns true when a node has a trailing comment, and that comment is on the same line of the
+   * beginning line of that node.
+   *
+   * <p>The better detection for nodes that span multiple lines would be to check if a comments
+   * starts on the same line as the node 'ends', but JSC only stores the node's "start" line number,
+   * not the end, thus we cannot check against that at the moment.
+   */
+  private boolean hasTrailingCommentOnSameLine(Node node) {
+    if (!printNonJSDocComments) {
+      return false;
+    }
+    String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
+    if (nonJSDocCommentString.isEmpty()) {
+      return false;
+    }
+    // getLineno() is 1-indexed but getStartPosition().line is 0-indexed.
+    return node.getLineno() == node.getTrailingNonJSDocComment().getStartPosition().line + 1;
+  }
+
   protected void printTrailingComment(Node node) {
     // print any trailing nonJSDoc comment attached to this node
     if (!printNonJSDocComments) {
@@ -153,7 +173,7 @@ public class CodeGenerator {
     if (nonJSDocComment != null) {
       String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
       if (!nonJSDocCommentString.isEmpty()) {
-        addNonJsDoctrailing(nonJSDocComment);
+        addNonJsDoctrailing(nonJSDocComment, hasTrailingCommentOnSameLine(node));
       }
     }
   }
@@ -266,7 +286,7 @@ public class CodeGenerator {
 
         // Must have a ';' after a throw statement, otherwise safari can't
         // parse this.
-        cc.endStatement(true);
+        cc.endStatement(/*needSemiColon=*/ true, hasTrailingCommentOnSameLine(node));
         break;
 
       case RETURN:
@@ -283,14 +303,14 @@ public class CodeGenerator {
         } else {
           checkState(childCount == 0, node);
         }
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case VAR:
         add("var ");
         addList(first, false, getContextForNoInOperator(context), ",");
         if (node.getParent() == null || NodeUtil.isStatement(node)) {
-          cc.endStatement();
+          cc.endStatement(hasTrailingCommentOnSameLine(node));
         }
         break;
 
@@ -298,7 +318,7 @@ public class CodeGenerator {
         add("const ");
         addList(first, false, getContextForNoInOperator(context), ",");
         if (node.getParent() == null || NodeUtil.isStatement(node)) {
-          cc.endStatement();
+          cc.endStatement(hasTrailingCommentOnSameLine(node));
         }
         break;
 
@@ -306,7 +326,7 @@ public class CodeGenerator {
         add("let ");
         addList(first, false, getContextForNoInOperator(context), ",");
         if (node.getParent() == null || NodeUtil.isStatement(node)) {
-          cc.endStatement();
+          cc.endStatement(hasTrailingCommentOnSameLine(node));
         }
         break;
 
@@ -494,7 +514,7 @@ public class CodeGenerator {
           add("from");
         }
         add(last);
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case EXPORT_SPECS:
@@ -833,7 +853,7 @@ public class CodeGenerator {
         add("(");
         add(last);
         add(")");
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case WHILE:
@@ -1084,13 +1104,13 @@ public class CodeGenerator {
           add(" ");
           add(first);
         }
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case DEBUGGER:
         Preconditions.checkState(childCount == 0, node);
         add("debugger");
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case BREAK:
@@ -1103,13 +1123,13 @@ public class CodeGenerator {
           add(" ");
           add(first);
         }
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case EXPR_RESULT:
         Preconditions.checkState(childCount == 1, node);
         add(first, Context.START_OF_EXPR);
-        cc.endStatement();
+        cc.endStatement(hasTrailingCommentOnSameLine(node));
         break;
 
       case NEW:
@@ -1422,7 +1442,7 @@ public class CodeGenerator {
         add(node.getString());
         cc.addOp("=", true);
         add(last);
-        cc.endStatement(true);
+        cc.endStatement(/* needSemiColon= */ true, hasTrailingCommentOnSameLine(node));
         break;
       case DECLARE:
         add("declare");
@@ -1434,7 +1454,7 @@ public class CodeGenerator {
         add(first);
         add("]");
         maybeAddTypeDecl(node);
-        cc.endStatement(true);
+        cc.endStatement(/* needSemiColon= */ true, hasTrailingCommentOnSameLine(node));
         break;
       case CALL_SIGNATURE:
         if (node.getBooleanProp(Node.CONSTRUCT_SIGNATURE)) {
@@ -1443,7 +1463,7 @@ public class CodeGenerator {
         maybeAddGenericTypes(node);
         add(first);
         maybeAddTypeDecl(node);
-        cc.endStatement(true);
+        cc.endStatement(/* needSemiColon= */ true, hasTrailingCommentOnSameLine(node));
         break;
       default:
         throw new IllegalStateException("Unknown token " + type + "\n" + node.toStringTree());
@@ -1733,7 +1753,7 @@ public class CodeGenerator {
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         } else {
           printTrailingComment(n);
-          cc.endStatement(true);
+          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
         }
         return;
       }
@@ -1760,7 +1780,7 @@ public class CodeGenerator {
 
     if (nodeToProcess.isEmpty()) {
       printTrailingComment(n);
-      cc.endStatement(true);
+      cc.endStatement(/*needSemicolon=*/ true, /*hasTrailingCommentOnSameLine=*/ false);
     } else {
       add(nodeToProcess, context);
       printTrailingComment(n);
@@ -1991,18 +2011,24 @@ public class CodeGenerator {
     }
   }
 
-  private void addNonJsDoctrailing(NonJSDocComment nonJSDocComment) {
+  private void addNonJsDoctrailing(NonJSDocComment nonJSDocComment, boolean sameLine) {
     String content = nonJSDocComment.getCommentString();
     if (nonJSDocComment.isEndingAsLineComment()) {
       // Trailing line comments *must* end with a `\n`. E.g.. `let x; //comment\n`
-      add(" " + content + "\n");
+      add(" " + content);
+      if (sameLine) {
+        cc.startNewLine();
+      }
     } else {
       if (nonJSDocComment.isInline()) {
         // e.g. `foo(x /*comment*/);` is inline
         add(" " + content);
       } else {
         // e.g. `let x; /*comment*/` is non-inline
-        add(" " + content + "\n");
+        add(" " + content);
+        if (sameLine) {
+          cc.startNewLine();
+        }
       }
     }
   }
@@ -2386,7 +2412,7 @@ public class CodeGenerator {
         break;
       case FUNCTION:
         if (n.getLastChild().isEmpty()) {
-          cc.endStatement(true);
+          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
         } else {
           cc.endFunction(context == Context.STATEMENT);
         }
@@ -2404,22 +2430,22 @@ public class CodeGenerator {
         break;
       case COMPUTED_PROP:
         if (n.hasOneChild()) {
-          cc.endStatement(true);
+          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
         }
         break;
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
         if (n.getFirstChild().getLastChild().isEmpty()) {
-          cc.endStatement(true);
+          cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
         }
         break;
       case MEMBER_VARIABLE_DEF:
-        cc.endStatement(true);
+        cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
         break;
       default:
         if (context == Context.STATEMENT) {
-          cc.endStatement();
+          cc.endStatement(/*hasTrailingCommentOnSameLine=*/ false);
         }
     }
   }
