@@ -1234,6 +1234,16 @@ class IRFactory {
       for (ParseTree child : blockNode.statements) {
         node.addChildToBack(transform(child));
       }
+
+      NonJSDocComment comment = parseNonJSDocCommentAt(blockNode.getEnd(), false);
+      if (comment != null) {
+        if (node.hasChildren()) {
+          node.getLastChild().setTrailingNonJSDocComment(comment);
+        } else {
+          node.setTrailingNonJSDocComment(comment);
+        }
+      }
+
       return node;
     }
 

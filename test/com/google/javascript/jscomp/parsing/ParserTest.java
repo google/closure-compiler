@@ -2153,13 +2153,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node exprNode = scriptNode.getLastChild().getLastChild().getFirstChild();
     assertNode(exprNode).hasType(Token.EXPR_RESULT);
-    // Ideally, exprNode contains "// first\n// second".
     assertThat(exprNode.getNonJSDocCommentString()).isEqualTo("// first");
 
-    // TODO(rishipal): the comments `// second` and `// third` do not have an AST node to attach to
-    // that "starts" after them (the `if(true) {..}` block starts before the comments).
-    // Hence both comments get attached to the SCRIPT node as a trailing comment.
-    assertThat(scriptNode.getTrailingNonJSDocCommentString()).isEqualTo("// second\n\n// third");
+    Node callNode = scriptNode.getLastChild().getLastChild().getLastChild();
+    assertThat(callNode.getTrailingNonJSDocCommentString()).isEqualTo("// second");
+
+    assertThat(scriptNode.getTrailingNonJSDocCommentString()).isEqualTo("// third");
   }
 
   @Test

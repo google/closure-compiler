@@ -1977,7 +1977,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testNonJSDocCommentsPrinted_endOfFile_blockComment() {
+  public void testNonJSDocCommentsPrinted_endOfBlockComment() {
     preserveNonJSDocComments = true;
     assertPrettyPrint(
         lines(
@@ -1992,16 +1992,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "if (true) {",
             "  // first",
             "  f1();",
-            "}",
-            // The comment `/* second */` does not have an AST node to attach to
-            // that "starts" after it (the `if(true) {..}` block starts before the comment).
-            // Hence the comment gets attached to the SCRIPT node as a trailing comment and gets
-            // printed at the end.
-            " /* second */\n"));
+            "   /* second */",
+            "}\n"));
   }
 
   @Test
-  public void testNonJSDocCommentsPrinted_endOfFile_manyMixedComments() {
+  public void testNonJSDocCommentsPrinted_endOfBlock_manyMixedComments() {
     preserveNonJSDocComments = true;
     assertPrettyPrint(
         lines(
@@ -2018,10 +2014,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "if (true) {",
             "  // first",
             "  f1();",
-            "}",
-            " // second",
-            "/* third */",
-            "// fourth\n"));
+            "   // second",
+            "  /* third */",
+            "  // fourth",
+            "}\n"));
   }
 
   @Test
@@ -2039,10 +2035,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "if (true) {",
             "  // first",
             "  f1();",
-            "}",
-            // This is not ideal. Ideally the last comment `// second` attaches as a trailing
-            // comment of the `f1()` call.
-            " // second\n"));
+            "   // second",
+            "}\n"));
   }
 
   @Test

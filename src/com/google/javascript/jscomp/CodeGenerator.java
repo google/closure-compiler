@@ -144,6 +144,20 @@ public class CodeGenerator {
     }
   }
 
+  protected void printTrailingComment(Node node) {
+    // print any trailing nonJSDoc comment attached to this node
+    if (!printNonJSDocComments) {
+      return;
+    }
+    NonJSDocComment nonJSDocComment = node.getTrailingNonJSDocComment();
+    if (nonJSDocComment != null) {
+      String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
+      if (!nonJSDocCommentString.isEmpty()) {
+        addNonJsDoctrailing(nonJSDocComment);
+      }
+    }
+  }
+
   protected void add(String str) {
     cc.add(str);
   }
@@ -1434,17 +1448,7 @@ public class CodeGenerator {
       default:
         throw new IllegalStateException("Unknown token " + type + "\n" + node.toStringTree());
     }
-
-    // print any trailing nonJSDoc comment attached to this node
-    if (printNonJSDocComments) {
-      NonJSDocComment nonJSDocComment = node.getTrailingNonJSDocComment();
-      if (nonJSDocComment != null) {
-        String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
-        if (!nonJSDocCommentString.isEmpty()) {
-          addNonJsDoctrailing(nonJSDocComment);
-        }
-      }
-    }
+    printTrailingComment(node);
 
     cc.endSourceMapping(node);
   }
@@ -1725,8 +1729,10 @@ public class CodeGenerator {
       if (count == 0) {
         if (cc.shouldPreserveExtras(n)) {
           cc.beginBlock();
+          printTrailingComment(n);
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
         } else {
+          printTrailingComment(n);
           cc.endStatement(true);
         }
         return;
@@ -1741,6 +1747,7 @@ public class CodeGenerator {
         if (alwaysWrapInBlock || isBlockDeclOrDo(firstAndOnlyChild)) {
           cc.beginBlock();
           add(firstAndOnlyChild, Context.STATEMENT);
+          printTrailingComment(n);
           cc.maybeLineBreak();
           cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
           return;
@@ -1752,9 +1759,11 @@ public class CodeGenerator {
     }
 
     if (nodeToProcess.isEmpty()) {
+      printTrailingComment(n);
       cc.endStatement(true);
     } else {
       add(nodeToProcess, context);
+      printTrailingComment(n);
     }
   }
 
