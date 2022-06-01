@@ -217,7 +217,7 @@ public final class CommandLineRunnerTest {
         new CommandLineRunner(
             stringListToArray(stage1Flags), new PrintStream(outReader), new PrintStream(errReader));
     assertThat(runner.doRun()).isEqualTo(0);
-    assertThat(new String(outReader.toByteArray(), UTF_8)).isEqualTo("");
+    assertThat(new String(outReader.toByteArray(), UTF_8)).isEmpty();
 
     assertThat(runner.getCompiler().toSource())
         .isEqualTo("const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
