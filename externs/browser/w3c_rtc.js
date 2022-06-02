@@ -423,14 +423,14 @@ function MediaStream(streamOrTracks) {}
 /**
  * @override
  */
-MediaStream.prototype.addEventListener = function(type, listener,
-    opt_useCapture) {};
+MediaStream.prototype.addEventListener = function(
+    type, listener, opt_useCapture) {};
 
 /**
  * @override
  */
-MediaStream.prototype.removeEventListener = function(type, listener,
-    opt_useCapture) {};
+MediaStream.prototype.removeEventListener = function(
+    type, listener, opt_useCapture) {};
 
 /**
  * @override
@@ -566,8 +566,8 @@ function RTCDTMFSender() {}
  * @param {number=} opt_duration
  * @param {number=} opt_interToneGap
  */
-RTCDTMFSender.prototype.insertDTMF =
-    function(tones, opt_duration, opt_interToneGap) {};
+RTCDTMFSender.prototype.insertDTMF = function(
+    tones, opt_duration, opt_interToneGap) {};
 
 /**
  * @type {?boolean}
@@ -725,9 +725,17 @@ RTCRtpContributingSource.prototype.rtpTimestamp;
  * This is a relatively new field and browsers may not yet be compliant to the
  * spec.
  * @type {number|undefined}
- * @see https://w3c.github.io/webrtc-extensions/#dictionary-rtcrtpcontributingsource-members
+ * @see https://w3c.github.io/webrtc-extensions/#dom-rtcrtpcontributingsource-capturetimestamp
  */
 RTCRtpContributingSource.prototype.captureTimestamp;
+
+/**
+ * This is a relatively new field and browsers may not yet be compliant to the
+ * spec.
+ * @type {number|undefined}
+ * @see https://w3c.github.io/webrtc-extensions/#dom-rtcrtpcontributingsource-sendercapturetimeoffset
+ */
+RTCRtpContributingSource.prototype.senderCaptureTimeOffset;
 
 /**
  * @constructor
@@ -1225,14 +1233,14 @@ function MediaRecorder(stream, options) {}
 /**
  * @override
  */
-MediaRecorder.prototype.addEventListener = function(type, listener,
-    opt_useCapture) {};
+MediaRecorder.prototype.addEventListener = function(
+    type, listener, opt_useCapture) {};
 
 /**
  * @override
  */
-MediaRecorder.prototype.removeEventListener = function(type, listener,
-    opt_useCapture) {};
+MediaRecorder.prototype.removeEventListener = function(
+    type, listener, opt_useCapture) {};
 
 /**
  * @override
@@ -1513,8 +1521,7 @@ MediaDeviceInfo.prototype.groupId;
  * @extends {MediaDeviceInfo}
  * @see https://www.w3.org/TR/mediacapture-streams/#input-specific-device-info
  */
-function InputDeviceInfo() {
-}
+function InputDeviceInfo() {}
 
 /** @return {!MediaTrackCapabilities} */
 InputDeviceInfo.prototype.getCapabilities = function() {};
@@ -1536,23 +1543,26 @@ MediaDevices.prototype.enumerateDevices = function() {};
  * @param {!MediaStreamConstraints} constraints
  * @return {!Promise<!MediaStream>}
  */
-MediaDevices.prototype.getUserMedia = function(constraints) {}
+MediaDevices.prototype.getUserMedia =
+    function(constraints) {}
 
-/**
- * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
- * @param {!MediaStreamConstraints=} constraints
- * @return {!Promise<!MediaStream>}
- */
-MediaDevices.prototype.getDisplayMedia = function(constraints) {}
+    /**
+     * @see https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia
+     * @param {!MediaStreamConstraints=} constraints
+     * @return {!Promise<!MediaStream>}
+     */
+    MediaDevices.prototype.getDisplayMedia =
+        function(constraints) {}
 
-/**
- * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
- * @return {!MediaTrackSupportedConstraints}
- */
-MediaDevices.prototype.getSupportedConstraints = function()  {}
+        /**
+         * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
+         * @return {!MediaTrackSupportedConstraints}
+         */
+        MediaDevices.prototype.getSupportedConstraints =
+            function() {}
 
-/** @const {!MediaDevices} */
-Navigator.prototype.mediaDevices;
+            /** @const {!MediaDevices} */
+            Navigator.prototype.mediaDevices;
 
 /**
  * @typedef {string}
@@ -1619,7 +1629,8 @@ RTCIceCandidateInit.prototype.sdpMLineIndex;
 RTCIceCandidateInit.prototype.usernameFragment;
 
 /**
- * @param {!RTCIceCandidateInit=} candidateInitDict  The RTCIceCandidateInit dictionary.
+ * @param {!RTCIceCandidateInit=} candidateInitDict  The RTCIceCandidateInit
+ *     dictionary.
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcicecandidate-interface
  */
@@ -2632,7 +2643,7 @@ function RTCPeerConnection(configuration, constraints) {}
  * @param {Object} keygenAlgorithm
  * @return {Promise<RTCCertificate>}
  */
-RTCPeerConnection.generateCertificate = function (keygenAlgorithm) {};
+RTCPeerConnection.generateCertificate = function(keygenAlgorithm) {};
 
 /**
  * @override
@@ -2666,8 +2677,8 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>}
  */
-RTCPeerConnection.prototype.createOffer = function(successCallbackOrConstraints,
-    errorCallback, constraints) {};
+RTCPeerConnection.prototype.createOffer = function(
+    successCallbackOrConstraints, errorCallback, constraints) {};
 
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
@@ -2676,8 +2687,8 @@ RTCPeerConnection.prototype.createOffer = function(successCallbackOrConstraints,
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
-RTCPeerConnection.prototype.createAnswer =
-    function(successCallbackOrConstraints, errorCallback, constraints) {};
+RTCPeerConnection.prototype.createAnswer = function(
+    successCallbackOrConstraints, errorCallback, constraints) {};
 
 /**
  * @param {!RTCSessionDescription=} description
@@ -2685,8 +2696,8 @@ RTCPeerConnection.prototype.createAnswer =
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>}
  */
-RTCPeerConnection.prototype.setLocalDescription = function(description,
-    successCallback, errorCallback) {};
+RTCPeerConnection.prototype.setLocalDescription = function(
+    description, successCallback, errorCallback) {};
 
 /**
  * @param {!RTCSessionDescription} description
@@ -2694,8 +2705,8 @@ RTCPeerConnection.prototype.setLocalDescription = function(description,
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>}
  */
-RTCPeerConnection.prototype.setRemoteDescription = function(description,
-    successCallback, errorCallback) {};
+RTCPeerConnection.prototype.setRemoteDescription = function(
+    description, successCallback, errorCallback) {};
 
 /**
  * @type {?RTCSessionDescription}
@@ -2729,7 +2740,8 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
  * @param {function(DOMException)=} errorCallback
  * @return {!Promise|undefined}
  */
-RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, errorCallback) {};
+RTCPeerConnection.prototype.addIceCandidate = function(
+    candidate, successCallback, errorCallback) {};
 
 /**
  * @type {!RTCIceGatheringState}
@@ -2780,8 +2792,8 @@ RTCPeerConnection.prototype.getReceivers = function() {};
  * @param {RTCDataChannelInit=} dataChannelDict
  * @return {!RTCDataChannel}
  */
-RTCPeerConnection.prototype.createDataChannel =
-    function(label, dataChannelDict) {};
+RTCPeerConnection.prototype.createDataChannel = function(
+    label, dataChannelDict) {};
 /**
  * @param {!MediaStream} stream
  * @param {!MediaConstraints=} constraints
