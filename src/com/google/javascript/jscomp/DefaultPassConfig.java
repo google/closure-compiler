@@ -128,6 +128,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Certain errors in block-scoped variable declarations will prevent correct transpilation
     passes.maybeAdd(checkVariableReferences);
+    passes.maybeAdd(checkVars);
 
     passes.maybeAdd(gatherModuleMetadataPass);
     passes.maybeAdd(createModuleMapPass);
@@ -303,12 +304,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.maybeAdd(checkMissingRequires);
     }
 
-    checks.maybeAdd(checkVariableReferences);
-
     checks.maybeAdd(declaredGlobalExternsOnWindow);
 
     if (!options.getProcessCommonJSModules()) {
       // TODO(ChadKillingsworth): move CommonJS module rewriting after VarCheck
+      checks.maybeAdd(checkVariableReferences);
       checks.maybeAdd(checkVars);
     }
 
@@ -360,6 +360,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getProcessCommonJSModules()) {
       // TODO(ChadKillingsworth): remove this branch.
+      checks.maybeAdd(checkVariableReferences);
       checks.maybeAdd(checkVars);
     }
 
@@ -1257,10 +1258,11 @@ public final class DefaultPassConfig extends PassConfig {
           checks.contains(checkVariableReferences),
           "goog.scope processing requires variable checking");
     }
-    checks.assertPassOrder(
-        checkVariableReferences,
-        closureGoogScopeAliases,
-        "Variable checking must happen before goog.scope processing.");
+    // TODO(lharker): add this back once fixing the ProcessCommonJSModules VarCheck branch
+    // checks.assertPassOrder(
+    //     checkVariableReferences,
+    //     closureGoogScopeAliases,
+    //     "Variable checking must happen before goog.scope processing.");
 
     checks.assertPassOrder(
         gatherModuleMetadataPass,
