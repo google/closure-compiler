@@ -135,6 +135,10 @@ java_binary(
 oss_java_library(
     name = "compiler_lib_no_runtime_libs",
     java_attrs = dict(
+        javacopts = [
+          "-source 11",
+          "-target 11",
+        ],
         resources = [
             ":externs_zip",
         ] + glob([

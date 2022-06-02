@@ -1043,7 +1043,7 @@ class TypeValidator implements Serializable {
     }
 
     ObjectType instance = ctorType.getInstanceType();
-    for (Map.Entry<String, ObjectType> entry : abstractMethodSuperTypeMap.entrySet()) {
+    for (var entry : abstractMethodSuperTypeMap.entrySet()) {
       String method = entry.getKey();
       ObjectType superType = entry.getValue();
       FunctionType abstractMethod = instance.findPropertyType(method).toMaybeFunctionType();
