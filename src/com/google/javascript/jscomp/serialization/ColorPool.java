@@ -36,13 +36,11 @@ import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.StandardColors;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.TreeSet;
 
 /**
  * A set of {@link Color}s reconstructed from possibly many {@link TypePool} protos.
@@ -243,7 +241,6 @@ public final class ColorPool {
     }
 
     private Color reconcileObjectProtos(ColorId id, Map<ShardView, TypeProto> viewToProto) {
-      TreeSet<String> debugTypenames = new TreeSet<>();
       ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
       ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
       ImmutableSet.Builder<String> ownProperties = ImmutableSet.builder();
@@ -259,11 +256,6 @@ public final class ColorPool {
         checkState(proto.hasObject());
         ObjectTypeProto objProto = proto.getObject();
 
-        if (objProto.hasDebugInfo()) {
-          for (Integer typenamePointer : objProto.getDebugInfo().getTypenamePointerList()) {
-            debugTypenames.add(shard.stringPool.get(typenamePointer));
-          }
-        }
         for (Integer p : objProto.getInstanceTypeList()) {
           instanceColors.add(this.lookupOrReconcileColor(shard.getId(p)));
         }
@@ -286,15 +278,8 @@ public final class ColorPool {
         }
       }
 
-      DebugInfo debugInfo = DebugInfo.EMPTY;
-      if (!debugTypenames.isEmpty()) {
-        debugInfo =
-            DebugInfo.builder().setCompositeTypename(String.join("/", debugTypenames)).build();
-      }
-
       return Color.singleBuilder()
           .setId(id)
-          .setDebugInfo(debugInfo)
           .setInstanceColors(instanceColors.build())
           .setPrototypes(prototypes.build())
           .setOwnProperties(ownProperties.build())

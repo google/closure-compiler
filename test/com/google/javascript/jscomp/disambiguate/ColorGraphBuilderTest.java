@@ -23,6 +23,8 @@ import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeRe
 import static com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason.CAN_HOLD;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.truth.Correspondence;
@@ -35,7 +37,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.DebugInfo;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -72,6 +74,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
 
   private CompilerPass processor;
   private DiGraph<ColorGraphNode, Object> result;
+  private LinkedHashMap<String, ColorId> labelToId;
 
   @Override
   protected Compiler createCompiler() {
@@ -101,9 +104,12 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   }
 
   private ColorGraphBuilder createBuilderIncludingCode(
-      @Nullable StubLcaFinder optLcaFinder, String src) {
+      // takes a Supplier<StubLcaFinder> so that callers may lazily create this StubLcaFinder after
+      // the labelToId map has been populated.
+      @Nullable Supplier<StubLcaFinder> optLcaFinder, String src) {
     ColorGraphNodeFactory graphNodeFactory = this.graphNodeFactory;
     LinkedHashMap<String, ColorGraphNode> testTypes = new LinkedHashMap<>();
+    this.labelToId = new LinkedHashMap<>();
 
     /** Flatten and collect the types of all NAMEs that start with "test". */
     this.processor =
@@ -117,13 +123,24 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                     if (n.isName() && n.getString().startsWith("test")) {
                       testTypes.put(n.getString(), graphNodeFactory.createNode(n.getColor()));
                     }
+
+                    if (n.isLabel()) {
+                      String labelName = n.getFirstChild().getString();
+                      Node labeledExpr =
+                          n.getSecondChild().isExprResult()
+                              ? n.getSecondChild().getOnlyChild()
+                              : n.getSecondChild();
+                      labelToId.put(labelName, labeledExpr.getColor().getId());
+                    }
                   }
                 });
     this.testSame(srcs(src));
+
     this.processor = null;
 
     ColorGraphBuilder graphBuilder =
-        this.createBuilder(optLcaFinder, this.compiler.getColorRegistry());
+        this.createBuilder(
+            optLcaFinder != null ? optLcaFinder.get() : null, this.compiler.getColorRegistry());
     graphBuilder.addAll(testTypes.values());
     return graphBuilder;
   }
@@ -138,14 +155,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "/** @interface */", //
                 "class IFoo { }",
                 "",
-                "let /** !IFoo */ test;"));
+                "let /** !IFoo */ test;",
+                "",
+                "IFOO_PROTOTYPE: IFoo.prototype",
+                "IFOO: test;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("top_object", "IFoo.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
+    this.assertThatResultAsTable()
+        .containsCell(StandardColors.TOP_OBJECT.getId(), id("IFOO_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("IFOO_PROTOTYPE"), id("IFOO"), CAN_HOLD);
   }
 
   @Test
@@ -157,14 +178,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
             lines(
                 "class Foo { }", //
                 "",
-                "const test = new Foo();"));
+                "const test = new Foo();",
+                "",
+                "FOO_PROTOTYPE: Foo.prototype;",
+                "FOO: new Foo();"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
+    this.assertThatResultAsTable()
+        .containsCell(StandardColors.TOP_OBJECT.getId(), id("FOO_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO_PROTOTYPE"), id("FOO"), CAN_HOLD);
   }
 
   @Test
@@ -177,15 +202,21 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Foo { }", //
                 "class Bar extends Foo { }",
                 "",
-                "const test = new Bar();"));
+                "const test = new Bar();",
+                "",
+                "FOO_PROTOTYPE: Foo.prototype;",
+                "FOO: new Foo();",
+                "BAR_PROTOTYPE: Bar.prototype;",
+                "FOO_PROTOTYPE: Foo.prototype;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
+    this.assertThatResultAsTable()
+        .containsCell(StandardColors.TOP_OBJECT.getId(), id("FOO_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO_PROTOTYPE"), id("FOO"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO"), id("BAR_PROTOTYPE"), CAN_HOLD);
   }
 
   @Test
@@ -200,17 +231,24 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Qux extends Foo { }", //
                 "",
                 "const testBar = new Bar();",
-                "const testQux = new Qux();"));
+                "const testQux = new Qux();",
+                "",
+                "FOO_PROTOTYPE: Foo.prototype;",
+                "FOO: new Foo();",
+                "BAR_PROTOTYPE: Bar.prototype;",
+                "BAR: new Bar();",
+                "QUX_PROTOTYPE: Qux.prototype;",
+                "QUX: new Qux();"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Bar.prototype", "Bar", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo", "Qux.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Qux.prototype", "Qux", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO_PROTOTYPE"), id("FOO"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO"), id("BAR_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("BAR_PROTOTYPE"), id("BAR"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO"), id("QUX_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("QUX_PROTOTYPE"), id("QUX"), CAN_HOLD);
   }
 
   @Test
@@ -222,14 +260,19 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
             lines(
                 "class Foo { }", //
                 "",
-                "const test = Foo;"));
+                "const test = Foo;",
+                "",
+                "FOO_PROTOTYPE: Foo.prototype;",
+                "FOO: new Foo();",
+                "BAR_PROTOTYPE: Bar.prototype;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("top_object", "Foo.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
+    this.assertThatResultAsTable()
+        .containsCell(StandardColors.TOP_OBJECT.getId(), id("FOO_PROTOTYPE"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO_PROTOTYPE"), id("FOO"), CAN_HOLD);
   }
 
   @Test
@@ -242,13 +285,16 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "/** @interface */", //
                 "class IFoo { }",
                 "",
-                "let /** !IFoo */ test;"));
+                "let /** !IFoo */ test;",
+                "",
+                "IFOO: test;",
+                "IFOO_PROTOTYPE: IFoo.prototype;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("IFOO_PROTOTYPE"), id("IFOO"), CAN_HOLD);
   }
 
   @Test
@@ -262,22 +308,26 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Foo1 extends Foo0 { }", //
                 "class Foo2 extends Foo1 { }",
                 "",
-                "let /** !(typeof Foo2) */ test;"));
+                "let /** !(typeof Foo2) */ test;",
+                "FOO0_CTOR: Foo0;",
+                "FOO1_CTOR: Foo1;",
+                "FOO2_CTOR: Foo2;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("top_object", "(typeof Foo0)", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("(typeof Foo0)", "(typeof Foo1)", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("(typeof Foo1)", "(typeof Foo2)", CAN_HOLD);
+    this.assertThatResultAsTable()
+        .containsCell(StandardColors.TOP_OBJECT.getId(), id("FOO0_CTOR"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO0_CTOR"), id("FOO1_CTOR"), CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(id("FOO1_CTOR"), id("FOO2_CTOR"), CAN_HOLD);
   }
 
   @Test
   public void disambiguationSupertypes_createConnection() {
     // Given
-    Color parent = colorWithName("Parent").build();
-    Color child = colorWithName("Child").build();
+    Color parent = colorWithId(ColorId.fromUnsigned(100)).build();
+    Color child = colorWithId(ColorId.fromUnsigned(101)).build();
 
     ColorGraphBuilder builder =
         this.createBuilder(
@@ -293,16 +343,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Parent", "Child", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell(parent.getId(), child.getId(), CAN_HOLD);
   }
 
   @Test
   public void unions_connectedAboveMembers() {
     // Given
-    StubLcaFinder stubFinder =
-        new StubLcaFinder()
-            .addStub(
-                ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "unknown"));
+    Supplier<StubLcaFinder> stubFinder =
+        () ->
+            new StubLcaFinder()
+                .addStub(
+                    ImmutableSet.of(id("FOO"), id("BAR"), id("QUX")),
+                    ImmutableSet.of(id("FOO", "BAR", "QUX"), StandardColors.UNKNOWN.getId()));
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
@@ -311,23 +363,31 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Bar { }",
                 "class Qux { }",
                 "",
-                "let /** (!Foo|!Bar|!Qux) */ test;"));
+                "let /** (!Foo|!Bar|!Qux) */ test;",
+                "",
+                "FOO: new Foo();",
+                "BAR: new Bar();",
+                "QUX: new Qux();"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Bar", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Foo", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Qux", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(id("FOO", "BAR", "QUX"), id("BAR"), ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(id("FOO", "BAR", "QUX"), id("FOO"), ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(id("FOO", "BAR", "QUX"), id("QUX"), ALGEBRAIC);
   }
 
   @Test
   public void unions_connectBelowLca() {
     // Given
-    StubLcaFinder stubFinder =
-        new StubLcaFinder()
-            .addStub(ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "Kif"));
+    ColorId kifId = ColorId.fromUnsigned(100);
+    Supplier<StubLcaFinder> stubFinder =
+        () ->
+            new StubLcaFinder()
+                .addStub(
+                    ImmutableSet.of(id("FOO"), id("BAR"), id("QUX")),
+                    ImmutableSet.of(id("FOO", "BAR", "QUX"), kifId));
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
@@ -336,24 +396,31 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Bar { }",
                 "class Qux { }",
                 "",
-                "let /** (!Foo|!Bar|!Qux) */ test;"));
-    builder.add(this.graphNodeFactory.createNode(colorWithName("Kif").build()));
+                "let /** (!Foo|!Bar|!Qux) */ test;",
+                "",
+                "FOO: new Foo();",
+                "BAR: new Bar();",
+                "QUX: new Qux();"));
+    builder.add(this.graphNodeFactory.createNode(colorWithId(kifId).build()));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(kifId, id("FOO", "BAR", "QUX"), ALGEBRAIC);
   }
 
   @Test
   public void unions_connectBelowLca_withMultipleLcas() {
     // Given
-    StubLcaFinder stubFinder =
-        new StubLcaFinder()
-            .addStub(
-                ImmutableSet.of("Foo", "Bar", "Qux"),
-                ImmutableSet.of("(Bar|Foo|Qux)", "Kif", "Lop"));
+    ColorId kixId = ColorId.fromUnsigned(100);
+    ColorId lopId = ColorId.fromUnsigned(101);
+    Supplier<StubLcaFinder> stubFinder =
+        () ->
+            new StubLcaFinder()
+                .addStub(
+                    ImmutableSet.of(id("FOO"), id("BAR"), id("QUX")),
+                    ImmutableSet.of(id("FOO", "BAR", "QUX"), kixId, lopId));
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
@@ -362,26 +429,35 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Bar { }",
                 "class Qux { }",
                 "",
-                "let /** (!Foo|!Bar|!Qux) */ test;"));
-    builder.add(this.graphNodeFactory.createNode(colorWithName("Kif").build()));
-    builder.add(this.graphNodeFactory.createNode(colorWithName("Lop").build()));
+                "let /** (!Foo|!Bar|!Qux) */ test;",
+                "",
+                "FOO: new Foo();",
+                "BAR: new Bar();",
+                "QUX: new Qux();"));
+    builder.add(this.graphNodeFactory.createNode(colorWithId(kixId).build()));
+    builder.add(this.graphNodeFactory.createNode(colorWithId(lopId).build()));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
-    // this.assertThatResultAsTable().containsCell("Lop", "(Bar|Foo|Qux
-    // )", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(kixId, id("BAR", "FOO", "QUX"), ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(lopId, id("BAR", "FOO", "QUX"), ALGEBRAIC);
   }
 
   @Test
   public void unions_connectBelowLca_whichIsAlsoUnion() {
     // Given
-    StubLcaFinder stubFinder =
-        new StubLcaFinder()
-            .addStub(ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "Kif"))
-            .addStub(ImmutableSet.of("Foo", "Bar"), ImmutableSet.of("(Bar|Foo)", "(Bar|Foo|Qux)"));
+    ColorId kifId = ColorId.fromUnsigned(100);
+    Supplier<StubLcaFinder> stubFinder =
+        () ->
+            new StubLcaFinder()
+                .addStub(
+                    ImmutableSet.of(id("FOO"), id("BAR"), id("QUX")),
+                    ImmutableSet.of(id("FOO", "BAR", "QUX"), kifId))
+                .addStub(
+                    ImmutableSet.of(id("FOO"), id("BAR")),
+                    ImmutableSet.of(id("FOO", "BAR"), id("FOO", "BAR", "QUX")));
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
@@ -391,25 +467,31 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Qux { }",
                 "",
                 "let /** (!Foo|!Bar|!Qux) */ testA;",
-                "let /** (!Foo|!Bar) */ testB;"));
-    builder.add(this.graphNodeFactory.createNode(colorWithName("Kif").build()));
+                "let /** (!Foo|!Bar) */ testB;",
+                "",
+                "FOO: new Foo();",
+                "BAR: new Bar();",
+                "QUX: new Qux();"));
+    builder.add(this.graphNodeFactory.createNode(colorWithId(kifId).build()));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "(Bar|Foo)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell(kifId, id("FOO", "BAR", "QUX"), ALGEBRAIC);
+    this.assertThatResultAsTable()
+        .containsCell(id("FOO", "BAR", "QUX"), id("FOO", "BAR"), ALGEBRAIC);
   }
 
   @Test
   public void unions_connectBelowLac_whichHasSameDescendantCount() {
     // Given
-    StubLcaFinder stubFinder =
-        new StubLcaFinder()
-            .addStub(
-                ImmutableSet.of("Foo.prototype", "Bar.prototype"),
-                ImmutableSet.of("(Bar.prototype|Foo.prototype)", "Kif"));
+    Supplier<StubLcaFinder> stubFinder =
+        () ->
+            new StubLcaFinder()
+                .addStub(
+                    ImmutableSet.of(id("FOO_PROTOTYPE"), id("BAR_PROTOTYPE")),
+                    ImmutableSet.of(id("FOO_PROTOTYPE", "BAR_PROTOTYPE"), id("KIF")));
     ColorGraphBuilder builder =
         this.createBuilderIncludingCode(
             stubFinder,
@@ -418,13 +500,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
                 "class Foo extends Kif { }",
                 "class Bar extends Kif { }",
                 "",
-                "let /** ((typeof Foo.prototype)|(typeof Bar.prototype)) */ test;"));
+                "let /** ((typeof Foo.prototype)|(typeof Bar.prototype)) */ test;",
+                "",
+                "KIF: new Kif();",
+                "FOO_PROTOTYPE: Foo.prototype;",
+                "BAR_PROTOTYPE: Bar.prototype;"));
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Kif", "(Bar.prototype|Foo.prototype)", ALGEBRAIC);
+    this.assertThatResultAsTable()
+        .containsCell(id("KIF"), id("FOO_PROTOTYPE", "BAR_PROTOTYPE"), ALGEBRAIC);
 
     // Also check post-conditions.
   }
@@ -435,8 +522,8 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
             this.result.getNodes().stream()
                 .filter((n) -> n.getInEdges().isEmpty())
                 .collect(toImmutableSet()))
-        .comparingElementsUsing(NODE_HAS_TYPENAME)
-        .containsExactly("unknown");
+        .comparingElementsUsing(NODE_HAS_ID)
+        .containsExactly(StandardColors.UNKNOWN.getId());
   }
 
   @After
@@ -468,7 +555,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   }
 
   private TableSubject assertThatResultAsTable() {
-    ImmutableTable.Builder<String, String, EdgeReason> table = ImmutableTable.builder();
+    ImmutableTable.Builder<ColorId, ColorId, EdgeReason> table = ImmutableTable.builder();
     for (DiGraphEdge<ColorGraphNode, Object> edge : this.result.getEdges()) {
       table.put(
           nameOf(edge.getSource()), nameOf(edge.getDestination()), (EdgeReason) edge.getValue());
@@ -485,7 +572,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   private static final class StubLcaFinder
       extends LowestCommonAncestorFinder<ColorGraphNode, Object> {
     private DiGraph<ColorGraphNode, Object> graph;
-    private final LinkedHashMap<ImmutableSet<String>, ImmutableSet<String>> stubs =
+    private final LinkedHashMap<ImmutableSet<ColorId>, ImmutableSet<ColorId>> stubs =
         new LinkedHashMap<>();
     private final LinkedHashMap<Runnable, Integer> preconditions = new LinkedHashMap<>();
 
@@ -498,7 +585,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
       return this;
     }
 
-    StubLcaFinder addStub(ImmutableSet<String> from, ImmutableSet<String> to) {
+    StubLcaFinder addStub(ImmutableSet<ColorId> from, ImmutableSet<ColorId> to) {
       this.stubs.put(from, to);
       return this;
     }
@@ -510,10 +597,10 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
         entry.setValue(entry.getValue() - 1);
       }
 
-      ImmutableSet<String> rootNames =
+      ImmutableSet<ColorId> rootIds =
           roots.stream().map(ColorGraphBuilderTest::nameOf).collect(toImmutableSet());
-      assertThat(this.stubs).containsKey(rootNames);
-      ImmutableSet<String> resultNames = this.stubs.get(rootNames);
+      assertThat(this.stubs).containsKey(rootIds);
+      ImmutableSet<ColorId> resultNames = this.stubs.get(rootIds);
 
       ImmutableSet<ColorGraphNode> results =
           this.graph.getNodes().stream()
@@ -526,25 +613,31 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     }
   }
 
-  private static String nameOf(DiGraphNode<ColorGraphNode, Object> node) {
+  private static ColorId nameOf(DiGraphNode<ColorGraphNode, Object> node) {
     return nameOf(node.getValue());
   }
 
-  private static String nameOf(ColorGraphNode flat) {
-    return nameOf(flat.getColor());
+  private static ColorId nameOf(ColorGraphNode flat) {
+    return flat.getColor().getId();
   }
 
-  private static String nameOf(Color color) {
-    return color.getDebugInfo().getCompositeTypename();
+  private static Color.Builder colorWithId(ColorId id) {
+    return Color.singleBuilder().setId(id);
   }
 
-  private static Color.Builder colorWithName(String name) {
-    return Color.singleBuilder()
-        .setId(ColorId.fromAscii(name))
-        .setDebugInfo(DebugInfo.builder().setCompositeTypename(name).build());
+  private static final Correspondence<DiGraphNode<ColorGraphNode, Object>, ColorId> NODE_HAS_ID =
+      Correspondence.transforming(ColorGraphBuilderTest::nameOf, "in a node with type");
+
+  private ColorId id(String labelName) {
+    return Preconditions.checkNotNull(
+        this.labelToId.get(labelName), "Could not find label %s", labelName);
   }
 
-  private static final Correspondence<DiGraphNode<ColorGraphNode, Object>, String>
-      NODE_HAS_TYPENAME =
-          Correspondence.transforming(ColorGraphBuilderTest::nameOf, "in a node with type");
+  private ColorId id(String... idSources) {
+    ImmutableSet.Builder<ColorId> ids = ImmutableSet.builder();
+    for (String idSource : idSources) {
+      ids.add(id(idSource));
+    }
+    return ColorId.union(ids.build());
+  }
 }

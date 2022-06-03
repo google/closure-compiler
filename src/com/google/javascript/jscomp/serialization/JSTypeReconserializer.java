@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.ClosurePrimitive;
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.TreeSet;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
@@ -294,7 +292,6 @@ final class JSTypeReconserializer {
   }
 
   private TypeProto reconcileObjectTypes(SeenTypeRecord seen) {
-    TreeSet<Integer> debugTypenames = new TreeSet<>();
     LinkedHashSet<Integer> instancePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> prototypePointers = new LinkedHashSet<>();
     LinkedHashSet<Integer> ownProperties = new LinkedHashSet<>();
@@ -305,10 +302,6 @@ final class JSTypeReconserializer {
 
     for (JSType type : seen.jstypes) {
       ObjectType objType = checkNotNull(type.toMaybeObjectType(), type);
-
-      if (this.serializationMode.includeDebugInfo()) {
-        debugTypenames.add(this.stringPoolBuilder.put(debugNameOf(type)));
-      }
 
       if (objType.isFunctionType()) {
         FunctionType fnType = objType.toMaybeFunctionType();
@@ -328,7 +321,7 @@ final class JSTypeReconserializer {
         // TODO(b/169899789): consider omitting common, well-known properties like "prototype" to
         // save space.
         if (shouldPropagatePropertyName.test(ownProperty)) {
-        ownProperties.add(this.stringPoolBuilder.put(ownProperty));
+          ownProperties.add(this.stringPoolBuilder.put(ownProperty));
         }
       }
 
@@ -352,9 +345,6 @@ final class JSTypeReconserializer {
             .setMarkedConstructor(isConstructor)
             .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
             .setUuid(seen.colorId.asByteString());
-    if (!debugTypenames.isEmpty()) {
-      objectProto.getDebugInfoBuilder().addAllTypenamePointer(debugTypenames);
-    }
     return TypeProto.newBuilder().setObject(objectProto).build();
   }
 
@@ -536,26 +526,5 @@ final class JSTypeReconserializer {
         return false;
     }
     throw new AssertionError();
-  }
-
-  private static String debugNameOf(JSType type) {
-    ObjectType oType = type.toMaybeObjectType();
-    if (oType == null) {
-      return type.toString();
-    }
-
-    String className = oType.getReferenceName();
-    if (oType.isFunctionType()) {
-      FunctionType fnType = oType.toMaybeFunctionType();
-      Node source = fnType.getSource();
-      if (fnType.hasInstanceType() && source != null) {
-        // Render function types known to be type definitions as "(typeof Foo)". This includes types
-        // defined like "/** @constructor */ function Foo() { }" but not to those defined like
-        // "@param
-        // {function(new:Foo)}". Only the former will have a source node.
-        className = "(typeof " + className + ")";
-      }
-    }
-    return (className == null) ? type.toString() : className;
   }
 }

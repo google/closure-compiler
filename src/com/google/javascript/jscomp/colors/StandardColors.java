@@ -52,7 +52,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0x234eb61a))
           .setBoxId(BIGINT_OBJECT_ID)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("bigint").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -60,7 +59,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0x126812ee))
           .setBoxId(BOOLEAN_OBJECT_ID)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("boolean").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -68,7 +66,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setBoxId(null)
           .setId(ColorId.fromUnsigned(0x22b49f69))
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("null_or_void").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -76,7 +73,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0xd081722c))
           .setBoxId(NUMBER_OBJECT_ID)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("number").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -84,7 +80,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0x8c4d8f65))
           .setBoxId(STRING_OBJECT_ID)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("string").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -92,7 +87,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0x759f2066))
           .setBoxId(SYMBOL_OBJECT_ID)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("symbol").build())
           .setInvalidating(false)
           .buildAxiomatic();
 
@@ -106,7 +100,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setId(ColorId.fromUnsigned(0x889b6838))
           .setBoxId(null)
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("top_object").build())
           .setInvalidating(true)
           .buildAxiomatic();
 
@@ -115,7 +108,6 @@ public final class StandardColors {
       Color.singleBuilder()
           .setBoxId(null)
           .setId(ColorId.fromUnsigned(0)) // Make UNKNOWN the "default" numerical value.
-          .setDebugInfo(DebugInfo.builder().setCompositeTypename("unknown").build())
           .setInvalidating(true)
           .buildAxiomatic();
 

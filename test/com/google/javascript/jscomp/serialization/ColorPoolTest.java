@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.ColorRegistry;
-import com.google.javascript.jscomp.colors.DebugInfo;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
@@ -72,9 +71,6 @@ public class ColorPoolTest {
                     .setObject(
                         ObjectTypeProto.newBuilder()
                             .setUuid(StandardColors.NUMBER_OBJECT_ID.asByteString())
-                            .setDebugInfo(
-                                ObjectTypeProto.DebugInfo.newBuilder()
-                                    .addTypenamePointer(stringPool.put("Number")))
                             .setIsInvalidating(true))
                     .build())
             .addType(
@@ -96,7 +92,7 @@ public class ColorPoolTest {
         .hasDisambiguationSupertypesThat(colorPool.getRegistry())
         .containsExactly(view.getColor(poolPointer(1)));
     assertThat(numberObject).isSameInstanceAs(view.getColor(poolPointer(0)));
-    assertThat(numberObject.getDebugInfo().getCompositeTypename()).isEqualTo("Number");
+    assertThat(numberObject.getId()).isEqualTo(StandardColors.NUMBER_OBJECT_ID);
   }
 
   @Test
@@ -486,7 +482,6 @@ public class ColorPoolTest {
         () -> ColorPool.fromOnlyShard(typePool, StringPool.empty()));
   }
 
-
   @Test
   public void uuid_mustBeSet() {
     // Given
@@ -529,7 +524,6 @@ public class ColorPoolTest {
     assertThat(defaultColor.isConstructor()).isFalse();
     assertThat(defaultColor.isInvalidating()).isFalse();
     assertThat(defaultColor.getPropertiesKeepOriginalName()).isFalse();
-    assertThat(defaultColor.getDebugInfo()).isSameInstanceAs(DebugInfo.EMPTY);
   }
 
   @Test
@@ -791,41 +785,6 @@ public class ColorPoolTest {
 
     // Then
     assertThat(colorPool.getColor(TEST_ID)).propertiesKeepOriginalName();
-  }
-
-  @Test
-  public void reconcile_debugNames() {
-    StringPool.Builder stringPool0 = StringPool.builder();
-    StringPool.Builder stringPool1 = StringPool.builder();
-    // Given
-    TypePool typePool0 =
-        singleObjectPool(
-            ObjectTypeProto.newBuilder()
-                .setUuid(TEST_ID.asByteString())
-                .setDebugInfo(
-                    ObjectTypeProto.DebugInfo.newBuilder()
-                        .addTypenamePointer(stringPool0.put("A"))
-                        .addTypenamePointer(stringPool0.put("C"))));
-
-    TypePool typePool1 =
-        singleObjectPool(
-            ObjectTypeProto.newBuilder()
-                .setUuid(TEST_ID.asByteString())
-                .setDebugInfo(
-                    ObjectTypeProto.DebugInfo.newBuilder()
-                        .addTypenamePointer(stringPool1.put("B"))
-                        .addTypenamePointer(stringPool1.put("A"))));
-
-    // When
-    ColorPool colorPool =
-        ColorPool.builder()
-            .addShardAnd(typePool0, stringPool0.build())
-            .addShardAnd(typePool1, stringPool1.build())
-            .build();
-
-    // Then
-    assertThat(colorPool.getColor(TEST_ID).getDebugInfo().getCompositeTypename())
-        .isEqualTo("A/B/C");
   }
 
   @Test

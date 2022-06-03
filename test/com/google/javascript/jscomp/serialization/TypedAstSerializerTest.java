@@ -16,18 +16,20 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.rhino.Node;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,6 +75,13 @@ public class TypedAstSerializerTest extends CompilerTestCase {
               "/** @const {!Console} */",
               "var console;",
               ""));
+
+  // Proto fields commonly ignored in tests because hardcoding their values is brittle
+  private static final FieldDescriptor OBJECT_UUID =
+      ObjectTypeProto.getDescriptor().findFieldByName("uuid");
+
+  private static final ImmutableList<FieldDescriptor> BRITTLE_TYPE_FIELDS =
+      ImmutableList.of(OBJECT_UUID);
 
   /** Holds the serialized AST created by the last executed test method. */
   private TypedAst testResult = null;
@@ -136,9 +145,9 @@ public class TypedAstSerializerTest extends CompilerTestCase {
     enableTypeCheck();
 
     new Tester()
-        .expectTypeNamed("Console")
-        .expectTypeWithProperties("Console.prototype", "log")
-        .expectTypeNamed("Console.prototype.log")
+        .expectType(ObjectTypeProto.newBuilder()) // Console
+        .expectTypeWithProperties(ObjectTypeProto.newBuilder(), "log") // Console.prototype
+        .expectType(ObjectTypeProto.newBuilder().setIsInvalidating(true)) // Console.prototype.log
         .test("console.log(1);");
   }
 
@@ -155,54 +164,55 @@ public class TypedAstSerializerTest extends CompilerTestCase {
   public void consoleDotLogWithColorizedAst() {
     enableTypeCheck();
     replaceTypesWithColors();
+
     new Tester()
-        .expectTypeNamed("Console")
-        .expectTypeWithProperties("Console.prototype", "log")
-        .expectTypeNamed("Console.prototype.log")
+        .expectType(ObjectTypeProto.newBuilder()) // Console
+        .expectTypeWithProperties(ObjectTypeProto.newBuilder(), "log") // Console.prototype
+        .expectType(ObjectTypeProto.newBuilder().setIsInvalidating(true)) // Console.prototype.log
         .test("console.log(1);");
   }
 
   private class Tester {
-    final Map<String, ImmutableSet<String>> expectedTypeNameToPropertyNamesMap = new HashMap<>();
+    final Map<ObjectTypeProto.Builder, ImmutableSet<String>> expectedTypeToPropertyNamesMap =
+        new HashMap<>();
 
-    Tester expectTypeNamed(String typeName) {
-      expectedTypeNameToPropertyNamesMap.put(typeName, ImmutableSet.of());
+    Tester expectType(ObjectTypeProto.Builder type) {
+      this.expectedTypeToPropertyNamesMap.put(type, ImmutableSet.of());
       return this;
     }
 
-    Tester expectTypeWithProperties(String typeName, String... propertyNames) {
-      expectedTypeNameToPropertyNamesMap.put(typeName, ImmutableSet.copyOf(propertyNames));
+    // pass 'ownPropertyNames' here rather than using the ObjectTypeProto.Builder to avoid needing
+    // to go through the StringPool
+    Tester expectTypeWithProperties(ObjectTypeProto.Builder type, String... propertyNames) {
+      this.expectedTypeToPropertyNamesMap.put(type, ImmutableSet.copyOf(propertyNames));
       return this;
     }
 
     void test(String code) {
       testSame(CONSOLE_EXTERNS, srcs(code));
 
-      final StringPool stringPool = StringPool.fromProto(testResult.getStringPool());
-      final List<TypeProto> typeProtos = testResult.getTypePool().getTypeList();
-      final Map<String, Integer> typeNameToTrimmedPoolOffset = new HashMap<>();
-      for (int i = 0; i < typeProtos.size(); ++i) {
-        final TypeProto typeProto = typeProtos.get(i);
-        // none of our test cases use unions, so we know it's an object type
-        final ObjectTypeProto typeProtoObject = typeProto.getObject();
-        final String typeName =
-            stringPool.get(typeProtoObject.getDebugInfo().getTypenamePointer(0));
-        typeNameToTrimmedPoolOffset.put(typeName, i);
-
-        // check actual property names against the expected ones
-        final Set<String> actualPropertyNames =
-            typeProtoObject.getOwnPropertyList().stream()
-                .map(stringPool::get)
-                .collect(Collectors.toSet());
-        final ImmutableSet<String> expectedPropertyNames =
-            expectedTypeNameToPropertyNamesMap.getOrDefault(typeName, ImmutableSet.of());
-        assertWithMessage("property names for type \"%s\"", typeName)
-            .that(actualPropertyNames)
-            .containsExactlyElementsIn(expectedPropertyNames);
+      final HashMap<String, Integer> stringPoolOffsets = new HashMap<>();
+      StringPool stringPool = StringPool.fromProto(testResult.getStringPool());
+      for (int i = 0; i < testResult.getStringPool().getStringsCount(); ++i) {
+        stringPoolOffsets.put(stringPool.get(i), i);
       }
-      assertWithMessage("Serialized type names")
-          .that(typeNameToTrimmedPoolOffset.keySet())
-          .containsExactlyElementsIn(expectedTypeNameToPropertyNamesMap.keySet());
+      final List<TypeProto> expectedTypes = new ArrayList<>();
+      for (Map.Entry<ObjectTypeProto.Builder, ImmutableSet<String>> expectedTypeWithProperties :
+          expectedTypeToPropertyNamesMap.entrySet()) {
+        ObjectTypeProto.Builder ex = expectedTypeWithProperties.getKey();
+        for (String propertyName : expectedTypeWithProperties.getValue()) {
+          Preconditions.checkState(
+              stringPoolOffsets.containsKey(propertyName),
+              "Missing property '%s' in string pool",
+              propertyName);
+          ex.addOwnProperty(stringPoolOffsets.get(propertyName));
+        }
+        expectedTypes.add(TypeProto.newBuilder().setObject(ex).build());
+      }
+      final List<TypeProto> actualTypes = testResult.getTypePool().getTypeList();
+      assertThat(actualTypes)
+          .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
+          .containsExactlyElementsIn(expectedTypes);
     }
   }
 }

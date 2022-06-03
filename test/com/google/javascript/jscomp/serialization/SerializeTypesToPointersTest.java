@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static java.util.Arrays.stream;
 
@@ -68,11 +67,8 @@ public final class SerializeTypesToPointersTest {
                 .getTypePool()
                 .getType(TypePointers.trimOffset(fooCtorPointer))
                 .getObject()
-                .getDebugInfo())
-        .isEqualTo(
-            ObjectTypeProto.DebugInfo.newBuilder()
-                .addTypenamePointer(stringPoolBuilder.put("(typeof Foo)"))
-                .build());
+                .getMarkedConstructor())
+        .isTrue();
   }
 
   @Test

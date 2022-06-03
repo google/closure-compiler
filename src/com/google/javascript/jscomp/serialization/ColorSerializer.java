@@ -191,16 +191,6 @@ class ColorSerializer {
           .setMarkedConstructor(color.isConstructor())
           .addAllOwnProperty(getOwnPropertyStringPoolOffsets(color))
           .setClosureAssert(color.isClosureAssert());
-      if (serializationMode != SerializationOptions.SKIP_DEBUG_INFO) {
-        final String compositeTypename = color.getDebugInfo().getCompositeTypename();
-        if (!compositeTypename.isEmpty()) {
-          // Color objects always have a DebugInfo field, but it will have an empty type
-          // name when we don't actually have a type name to store.
-          objectTypeProtoBuilder
-              .getDebugInfoBuilder()
-              .addTypenamePointer(getStringPoolIndexFn.apply(compositeTypename));
-        }
-      }
     }
     return typeProtoBuilder.build();
   }

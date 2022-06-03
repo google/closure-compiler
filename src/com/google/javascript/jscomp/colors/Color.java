@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
@@ -32,8 +31,6 @@ import javax.annotation.Nullable;
 public abstract class Color {
 
   public abstract ColorId getId();
-
-  public abstract DebugInfo getDebugInfo();
 
   /** Given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise. */
   public abstract ImmutableSet<Color> getPrototypes();
@@ -67,7 +64,6 @@ public abstract class Color {
     return new AutoValue_Color.Builder()
         .setClosureAssert(false)
         .setConstructor(false)
-        .setDebugInfo(DebugInfo.EMPTY)
         .setInstanceColors(ImmutableSet.of())
         .setInvalidating(false)
         .setOwnProperties(ImmutableSet.of())
@@ -86,7 +82,6 @@ public abstract class Color {
         break;
     }
 
-    TreeSet<String> debugTypenames = new TreeSet<>();
     ImmutableSet.Builder<Color> instanceColors = ImmutableSet.builder();
     ImmutableSet.Builder<Color> prototypes = ImmutableSet.builder();
     ImmutableSet.Builder<Color> newElements = ImmutableSet.builder();
@@ -102,35 +97,24 @@ public abstract class Color {
         for (Color nestedElement : element.getUnionElements()) {
           newElements.add(nestedElement);
           ids.add(nestedElement.getId());
-          debugTypenames.add(nestedElement.getDebugInfo().getCompositeTypename());
         }
       } else {
         newElements.add(element);
         ids.add(element.getId());
-        debugTypenames.add(element.getDebugInfo().getCompositeTypename());
       }
 
       instanceColors.addAll(element.getInstanceColors());
       isClosureAssert &= element.isClosureAssert();
       isConstructor &= element.isConstructor();
       isInvalidating |= element.isInvalidating();
-      ownProperties.addAll(element.getOwnProperties()); // Are these actually the "own props"?
+      ownProperties.addAll(element.getOwnProperties());
       propertiesKeepOriginalName |= element.getPropertiesKeepOriginalName();
       prototypes.addAll(element.getPrototypes());
     }
 
-    debugTypenames.remove("");
-    DebugInfo debugInfo =
-        debugTypenames.isEmpty()
-            ? DebugInfo.EMPTY
-            : DebugInfo.builder()
-                .setCompositeTypename("(" + String.join("|", debugTypenames) + ")")
-                .build();
-
     return new AutoValue_Color.Builder()
         .setClosureAssert(isClosureAssert)
         .setConstructor(isConstructor)
-        .setDebugInfo(debugInfo)
         .setId(ColorId.union(ids.build()))
         .setInstanceColors(instanceColors.build())
         .setInvalidating(isInvalidating)
@@ -196,8 +180,6 @@ public abstract class Color {
 
     public abstract Builder setOwnProperties(ImmutableSet<String> x);
 
-    public abstract Builder setDebugInfo(DebugInfo x);
-
     public abstract Builder setClosureAssert(boolean x);
 
     public abstract Builder setInstanceColors(ImmutableSet<Color> x);
@@ -238,7 +220,6 @@ public abstract class Color {
 
       Color result = this.buildInternal();
       checkState(result.getUnionElements().isEmpty(), result);
-      checkState(!result.getDebugInfo().getCompositeTypename().isEmpty(), result);
       return result;
     }
   }

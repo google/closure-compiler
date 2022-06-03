@@ -74,6 +74,7 @@ message ObjectTypeProto {
   bool closure_assert = 9;
 
   // Optional, doesn't contribute to type equality
+  // TODO(b/232106136): remove the DebugInfo field & message
   DebugInfo debug_info = 15;
   message DebugInfo {
     // offsets into the associated StringPool

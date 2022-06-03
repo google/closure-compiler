@@ -31,7 +31,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.truth.extensions.proto.ProtoSubject;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorId;
-import com.google.javascript.jscomp.colors.DebugInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -185,7 +184,6 @@ public class ColorSerializerTest {
             // 1 => explicitly added child class constructor
             // Then this instance color gets added implicitly
             .setTrimmedPoolOffset(2)
-            .setTypeName(basePooledString)
             .addOwnProperty(baseFieldPooledString)
             .build();
     final TestColor baseClassPrototypeTestColor =
@@ -193,7 +191,6 @@ public class ColorSerializerTest {
             .setColorId("Base.pro")
             // This is implicitly added after the instance color above.
             .setTrimmedPoolOffset(3)
-            .setTypeName(typeofBasePrototypePooledString)
             .build();
     final PooledString baseStaticFieldPooledString = PooledString.create("baseStaticField", 0);
     final TestColor baseClassConstructorTestColor =
@@ -201,7 +198,6 @@ public class ColorSerializerTest {
             .setColorId("Base.con")
             // This is the first explicitly-added type.
             .setTrimmedPoolOffset(0)
-            .setTypeName(typeofBasePooledString)
             .setConstructor(true)
             .addPrototypeTestColor(baseClassPrototypeTestColor)
             .addInstanceTestColor(baseClassInstanceTestColor)
@@ -229,7 +225,6 @@ public class ColorSerializerTest {
             // 3 => implicitly added base class prototype color
             // Then this instance color gets added implicitly
             .setTrimmedPoolOffset(4)
-            .setTypeName(childPooledString)
             .addOwnProperty(childFieldPooledString)
             .build();
     final TestColor childClassPrototypeTestColor =
@@ -237,7 +232,6 @@ public class ColorSerializerTest {
             .setColorId("Child.pr")
             // This is implicitly added after the instance color above.
             .setTrimmedPoolOffset(5)
-            .setTypeName(typeofChildPrototypePooledString)
             .build();
     final PooledString childStaticFieldPooledString = PooledString.create("childStaticField", 2);
     final TestColor childClassConstructorTestColor =
@@ -245,7 +239,6 @@ public class ColorSerializerTest {
             .setColorId("Child.co")
             // This is the second explicitly-added type
             .setTrimmedPoolOffset(1)
-            .setTypeName(typeofChildPooledString)
             .setConstructor(true)
             .addPrototypeTestColor(childClassPrototypeTestColor)
             .addInstanceTestColor(childClassInstanceTestColor)
@@ -303,37 +296,17 @@ public class ColorSerializerTest {
   }
 
   @Test
-  public void includeMismatchesAndTypenames() {
-    PooledString typeName1 = PooledString.create("typeName1", 1);
-    PooledString typeName2 = PooledString.create("typeName2", 2);
-    PooledString typeName3 = PooledString.create("typeName3", 3);
-    PooledString typeName4 = PooledString.create("typeName4", 4);
+  public void includeMismatches() {
     TestColor testColor1 =
-        new TestObjectColorBuilder()
-            .setColorId("color001")
-            .setTrimmedPoolOffset(0)
-            .setTypeName(typeName1)
-            .build();
+        new TestObjectColorBuilder().setColorId("color001").setTrimmedPoolOffset(0).build();
     TestColor testColor2 =
-        new TestObjectColorBuilder()
-            .setColorId("color002")
-            .setTrimmedPoolOffset(1)
-            .setTypeName(typeName2)
-            .build();
+        new TestObjectColorBuilder().setColorId("color002").setTrimmedPoolOffset(1).build();
     TestMismatch testMismatch1 = TestMismatch.create("location1", testColor1, testColor2);
 
     TestColor testColor3 =
-        new TestObjectColorBuilder()
-            .setColorId("color003")
-            .setTrimmedPoolOffset(2)
-            .setTypeName(typeName3)
-            .build();
+        new TestObjectColorBuilder().setColorId("color003").setTrimmedPoolOffset(2).build();
     TestColor testColor4 =
-        new TestObjectColorBuilder()
-            .setColorId("color004")
-            .setTrimmedPoolOffset(3)
-            .setTypeName(typeName4)
-            .build();
+        new TestObjectColorBuilder().setColorId("color004").setTrimmedPoolOffset(3).build();
     TestMismatch testMismatch2 = TestMismatch.create("location2", testColor3, testColor4);
 
     final TypePool expectedTypePool =
@@ -354,34 +327,22 @@ public class ColorSerializerTest {
         .addColors(testColor1, testColor2, testColor3, testColor4)
         .addMismatch(testMismatch1)
         .addMismatch(testMismatch2)
-        .addPooledString(typeName1)
-        .addPooledString(typeName2)
-        .addPooledString(typeName3)
-        .addPooledString(typeName4)
         .generateTypePool()
         .assertThatTypePool()
         .isEqualTo(expectedTypePool);
   }
 
   @Test
-  public void skipMismatchesAndTypenames() {
-    PooledString typeName1 = PooledString.create("typeName1", 1);
-    PooledString typeName2 = PooledString.create("typeName2", 2);
-    PooledString typeName3 = PooledString.create("typeName3", 3);
-    PooledString typeName4 = PooledString.create("typeName4", 4);
+  public void skipMismatches() {
     TestColor testColor1 =
         new TestObjectColorBuilder()
             .setColorId("color001")
             .setTrimmedPoolOffset(0)
-            .setTypeName(typeName1)
-            .setIncludeDebugInfoInProto(false)
             .build();
     TestColor testColor2 =
         new TestObjectColorBuilder()
             .setColorId("color002")
             .setTrimmedPoolOffset(1)
-            .setTypeName(typeName2)
-            .setIncludeDebugInfoInProto(false)
             .build();
     TestMismatch testMismatch1 = TestMismatch.create("location1", testColor1, testColor2);
 
@@ -389,15 +350,11 @@ public class ColorSerializerTest {
         new TestObjectColorBuilder()
             .setColorId("color003")
             .setTrimmedPoolOffset(2)
-            .setTypeName(typeName3)
-            .setIncludeDebugInfoInProto(false)
             .build();
     TestColor testColor4 =
         new TestObjectColorBuilder()
             .setColorId("color004")
             .setTrimmedPoolOffset(3)
-            .setTypeName(typeName4)
-            .setIncludeDebugInfoInProto(false)
             .build();
     TestMismatch testMismatch2 = TestMismatch.create("location2", testColor3, testColor4);
 
@@ -455,21 +412,14 @@ public class ColorSerializerTest {
 
   @Test
   public void addUnionImplicitlyAddsMembers() {
-    PooledString testTypeName1 = PooledString.create("testColor1", 1);
-    PooledString testTypeName2 = PooledString.create("testColor2", 2);
     final TestColor testColor1 =
         new TestObjectColorBuilder()
             .setColorId("color001")
             // We will explicitly add this color first
             .setTrimmedPoolOffset(1)
-            .setTypeName(testTypeName1)
             .build();
     final TestColor testColor2 =
-        new TestObjectColorBuilder()
-            .setColorId("color002")
-            .setTrimmedPoolOffset(2)
-            .setTypeName(testTypeName2)
-            .build();
+        new TestObjectColorBuilder().setColorId("color002").setTrimmedPoolOffset(2).build();
     final TestColor unionTestColor =
         new TestUnionColorBuilder()
             .setTrimmedPoolOffset(0)
@@ -489,8 +439,6 @@ public class ColorSerializerTest {
     new Tester()
         .init()
         .addColor(unionTestColor)
-        .addPooledString(testTypeName1)
-        .addPooledString(testTypeName2)
         .generateTypePool()
         .assertThatTypePool()
         .isEqualTo(expectedTypePool);
@@ -498,21 +446,14 @@ public class ColorSerializerTest {
 
   @Test
   public void avoidAddingDuplicateUnions() {
-    PooledString testTypeName1 = PooledString.create("testColor1", 1);
-    PooledString testTypeName2 = PooledString.create("testColor2", 2);
     final TestColor testColor1 =
         new TestObjectColorBuilder()
             .setColorId("color001")
             // We will explicitly add this color first
             .setTrimmedPoolOffset(1)
-            .setTypeName(testTypeName1)
             .build();
     final TestColor testColor2 =
-        new TestObjectColorBuilder()
-            .setColorId("color002")
-            .setTrimmedPoolOffset(2)
-            .setTypeName(testTypeName2)
-            .build();
+        new TestObjectColorBuilder().setColorId("color002").setTrimmedPoolOffset(2).build();
     final TestColor unionTestColor =
         new TestUnionColorBuilder()
             .setTrimmedPoolOffset(0)
@@ -543,8 +484,6 @@ public class ColorSerializerTest {
         .addColor(unionTestColor)
         // Try to add the duplicate union color. It should be ignored.
         .addColor(duplicateUnionTestColor)
-        .addPooledString(testTypeName1)
-        .addPooledString(testTypeName2)
         .generateTypePool()
         .assertThatTypePool()
         .isEqualTo(expectedTypePool);
@@ -575,10 +514,7 @@ public class ColorSerializerTest {
 
     private ColorId colorId;
     private int trimmedPoolOffset = -1;
-    // An empty string indicates that the type has no name.
-    private PooledString typeName = PooledString.create("", 0);
     private boolean isConstructor = false;
-    private boolean includeDebugInfoInProto = true;
 
     public TestObjectColorBuilder setColorId(String colorIdString) {
       checkArgument(colorIdString.length() <= 8, "color ID string too long: %s", colorIdString);
@@ -601,11 +537,6 @@ public class ColorSerializerTest {
       return this;
     }
 
-    public TestObjectColorBuilder setTypeName(PooledString typeName) {
-      this.typeName = typeName;
-      return this;
-    }
-
     public TestObjectColorBuilder addInstanceTestColor(TestColor instanceTestColor) {
       this.instanceTestColors.add(instanceTestColor);
       return this;
@@ -618,11 +549,6 @@ public class ColorSerializerTest {
 
     public TestObjectColorBuilder addOwnProperty(PooledString ownProperty) {
       ownProperties.add(ownProperty);
-      return this;
-    }
-
-    public TestObjectColorBuilder setIncludeDebugInfoInProto(boolean includeDebugInfoInProto) {
-      this.includeDebugInfoInProto = includeDebugInfoInProto;
       return this;
     }
 
@@ -665,13 +591,6 @@ public class ColorSerializerTest {
                   .collect(Collectors.toList()))
           .addAllOwnProperty(
               ownProperties.stream().map(PooledString::getPoolOffset).collect(Collectors.toList()));
-      if (!typeName.getValue().isEmpty()) {
-        colorBuilder.setDebugInfo(
-            DebugInfo.builder().setCompositeTypename(typeName.getValue()).build());
-        if (includeDebugInfoInProto) {
-          objectTypeProtoBuilder.getDebugInfoBuilder().addTypenamePointer(typeName.getPoolOffset());
-        }
-      }
       return TestColor.create(colorBuilder.build(), typeProtoBuilder.build(), typePointer);
     }
   }
