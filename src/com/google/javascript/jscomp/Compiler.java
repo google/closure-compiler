@@ -3599,9 +3599,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
-    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
     changeStamp = compilerState.changeStamp;
     accessorSummary = compilerState.accessorSummary;
+    inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
+    if (options.sourceMapIncludeSourcesContent) {
+      for (SourceMapInput sourceMapInput : compilerState.inputSourceMaps.values()) {
+        // In a single-stage compilation the parser ends up invoking this when it
+        // finds an inline sourcemap in an input file.
+        // When restoring, we need to make sure the virtual source files defined in
+        // the inlined input source maps we saved get added back into the source files data.
+        addSourceMapSourceFiles(sourceMapInput);
+      }
+    }
   }
 
   private static final ImmutableListMultimap<JSChunk, InputId> mapJSModulesToInputIds(

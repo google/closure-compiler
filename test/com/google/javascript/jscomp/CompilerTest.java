@@ -1293,6 +1293,158 @@ public final class CompilerTest {
     assertThat(source).isEqualTo("console.log(Error(\"a\"),\"hello\");");
   }
 
+  private static final String RESULT_SOURCE_MAP_WITH_CONTENT =
+      lines(
+          "{",
+          "\"version\":3,",
+          "\"file\":\"output.js\",",
+          "\"lineCount\":1,",
+          "\"mappings\":\"AAQAA,OAAQC,CAAAA,GAAR,CAAY,IALVC,QAAA,EAAyB,EAKf,CAAM,CAAN,CAAZ;\",",
+          "\"sources\":[\"../test/foo.ts\"],",
+          "\"sourcesContent\":[\"var A = (function () {\\n"
+              + "    function A(input) {\\n"
+              + "        this.a = input;\\n"
+              + "    }\\n"
+              + "    return A;\\n"
+              + "}());\\n"
+              + "console.log(new A(1));\"],",
+          "\"names\":[\"console\",\"log\",\"X\"]",
+          "}\n");
+
+  @Test
+  public void testCheckSaveRestore3StagesSourceMaps() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setEmitUseStrict(false);
+    options.setPreserveDetailedSourceInfo(true);
+    // 3-stage builds require late localization
+    options.setDoLateLocalization(true);
+    // The name passed here doesn't matter, because the compiler itself only stores it and enables
+    // tracking of source map information when it is non-null.
+    // In real usage AbstractCommandLineRunner is responsible for actually writing the file whose
+    // path is stored in this field.
+    options.setSourceMapOutputPath("dummy");
+    options.applyInputSourceMaps = true;
+    options.setSourceMapIncludeSourcesContent(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    List<SourceFile> externs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    "")));
+    List<SourceFile> srcs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "input.js",
+                SOURCE_MAP_TEST_CODE
+                    + "\n//# sourceMappingURL="
+                    + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT));
+
+    // Stage 1
+    compiler.init(externs, srcs, options);
+    compiler.parse();
+    compiler.check();
+    final byte[] stateAfterChecks = getSavedCompilerState(compiler);
+
+    // Stage 2
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterChecks);
+    compiler.performTranspilationAndOptimizations();
+
+    String source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(new function(){}(1));");
+
+    final byte[] stateAfterOptimizations = getSavedCompilerState(compiler);
+
+    // Stage 3
+    compiler = new Compiler(new TestErrorManager());
+    compiler.init(externs, srcs, options);
+    restoreCompilerState(compiler, stateAfterOptimizations);
+    compiler.performFinalizations();
+    final Result result = compiler.getResult();
+
+    source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(new function(){}(1));");
+
+    final SourceMap sourceMap = result.sourceMap;
+    assertThat(sourceMap).isNotNull();
+
+    // Check sourcemap output
+    final StringBuilder sourceMapStringBuilder = new StringBuilder();
+    final String outputJSFile = "output.js";
+    sourceMap.appendTo(sourceMapStringBuilder, outputJSFile);
+    final String sourceMapString = sourceMapStringBuilder.toString();
+    assertThat(sourceMapString).isEqualTo(RESULT_SOURCE_MAP_WITH_CONTENT);
+  }
+
+  @Test
+  public void testSingleStageCompileSourceMaps() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setEmitUseStrict(false);
+    options.setPreserveDetailedSourceInfo(true);
+    // The name passed here doesn't matter, because the compiler itself only stores it and enables
+    // tracking of source map information when it is non-null.
+    // In real usage AbstractCommandLineRunner is responsible for actually writing the file whose
+    // path is stored in this field.
+    options.setSourceMapOutputPath("dummy");
+    options.applyInputSourceMaps = true;
+    options.setSourceMapIncludeSourcesContent(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    List<SourceFile> externs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "externs.js",
+                lines(
+                    "var console = {};", //
+                    " console.log = function() {};",
+                    "")));
+    List<SourceFile> srcs =
+        Collections.singletonList(
+            SourceFile.fromCode(
+                "input.js",
+                SOURCE_MAP_TEST_CODE
+                    + "\n//# sourceMappingURL="
+                    + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT));
+    compiler.init(externs, srcs, options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performTranspilationAndOptimizations();
+    compiler.performFinalizations();
+
+    final Result result = compiler.getResult();
+
+    String source = compiler.toSource();
+    assertThat(source).isEqualTo("console.log(new function(){}(1));");
+
+    final SourceMap sourceMap = result.sourceMap;
+    assertThat(sourceMap).isNotNull();
+
+    // Check sourcemap output
+    final StringBuilder sourceMapStringBuilder = new StringBuilder();
+    final String outputJSFile = "output.js";
+    sourceMap.appendTo(sourceMapStringBuilder, outputJSFile);
+    final String sourceMapString = sourceMapStringBuilder.toString();
+    assertThat(sourceMapString).isEqualTo(RESULT_SOURCE_MAP_WITH_CONTENT);
+  }
+
   @Test
   public void testCheckSaveRestore3StagesNoInputFiles() throws Exception {
     // There's an edge case where a chunk may be empty.
