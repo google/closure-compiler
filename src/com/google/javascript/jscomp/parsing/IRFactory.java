@@ -2186,6 +2186,9 @@ class IRFactory {
           case 's':
             maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
             break;
+          case 'd':
+            maybeWarnForFeature(tree, Feature.REGEXP_FLAG_D);
+            break;
           default:
             errorReporter.error(
                 "Invalid RegExp flag '" + flag + "'", sourceName, lineno(tree), charno(tree));

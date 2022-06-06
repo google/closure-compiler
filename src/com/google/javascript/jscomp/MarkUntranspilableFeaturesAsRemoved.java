@@ -62,10 +62,14 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
           // transpiled below.
           Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
+  private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D);
+
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM
           .union(UNTRANSPILABLE_2018_FEATURES)
-          .union(UNTRANSPILABLE_2019_FEATURES);
+          .union(UNTRANSPILABLE_2019_FEATURES)
+          .union(UNTRANSPILABLE_2022_FEATURES);
 
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
@@ -125,6 +129,9 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
           if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
             checkForUnicodePropertyEscape(n, reg);
           }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
+            checkForRegExpDFlag(n);
+          }
           break;
         }
 
@@ -159,6 +166,14 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
     checkArgument(regexpNode != null);
     if (anySubtreeMeetsPredicate(tree, t -> t instanceof UnicodePropertyEscape)) {
       reportUntranspilable(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE, regexpNode);
+    }
+  }
+
+  private void checkForRegExpDFlag(Node regexpNode) {
+    checkArgument(regexpNode.isRegExp());
+    String flags = regexpNode.hasTwoChildren() ? regexpNode.getLastChild().getString() : "";
+    if (flags.contains("d")) {
+      reportUntranspilable(Feature.REGEXP_FLAG_D, regexpNode);
     }
   }
 

@@ -71,6 +71,12 @@ public class TranspilationPasses {
     // selection of features to transpile.  They still must be done in chronological order based on.
     // This greatly simplifies testing and the requirements for the transpilation passes.
 
+    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
+      passes.maybeAdd(
+          createFeatureRemovalPass(
+              "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
+    }
+
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
       passes.maybeAdd(rewriteClassFields);
     }

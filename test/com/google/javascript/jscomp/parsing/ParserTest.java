@@ -5128,6 +5128,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
         requiresLanguageModeMessage(Feature.REGEXP_FLAG_S));
   }
 
+  /** New RegExp flag 'd' added in ES2022. */
+  @Test
+  public void testES2022RegExpFlagD() {
+    expectFeatures(Feature.REGEXP_FLAG_D);
+    parse("/a/d");
+
+    mode = LanguageMode.ECMASCRIPT_2015;
+    expectFeatures(Feature.REGEXP_FLAG_D);
+    parseWarning("/a/d", requiresLanguageModeMessage(Feature.REGEXP_FLAG_D));
+    parseWarning(
+        "/a/ud", // 'u' added in es6
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_D));
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "/a/ud", // 'u' added in es6
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_U),
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_D));
+  }
+
   @Test
   public void testDefaultParameters() {
     strictMode = SLOPPY;

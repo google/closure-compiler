@@ -102,7 +102,7 @@ public final class FeatureSetTest {
     // `version()` will return the lowest equivalent version that contains features.
     // This could be es_XXX, es_next, etc. and will change as new features are added and removed
     // from these `FeatureSet`s.
-    assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_2021");
+    assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
     assertThat(FeatureSet.ES_UNSTABLE.version()).isEqualTo("es_unstable");
     assertThat(FeatureSet.ES_UNSUPPORTED.version())
         .isEqualTo("es_unstable"); // as ES_UNSUPPORTED is currently empty.
