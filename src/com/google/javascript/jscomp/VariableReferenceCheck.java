@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.List;
@@ -82,6 +83,8 @@ class VariableReferenceCheck implements CompilerPass {
   private static final ImmutableSet<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
       Sets.immutableEnumSet(
           Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.FOR_AWAIT_OF, Token.WHILE);
+
+  private static final QualifiedName GOOG_SCOPE = QualifiedName.of("goog.scope");
 
   public VariableReferenceCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -303,59 +306,67 @@ class VariableReferenceCheck implements CompilerPass {
       Var v, Reference reference, Node referenceNode, Reference hoistedFn, BasicBlock basicBlock) {
     boolean allowDupe =
         VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode());
+
     boolean letConstShadowsVar = v.getParentNode().isVar()
         && (reference.isLetDeclaration() || reference.isConstDeclaration());
     boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
     // We disallow redeclaration of caught exceptions
     boolean shadowCatchVar = v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
-    boolean shadowParam = v.isParam() && NodeUtil.isBlockScopedDeclaration(referenceNode)
-        && v.getScope() == reference.getScope().getParent();
-    boolean shadowDetected = false;
-    if (!allowDupe) {
-      // Look through all the declarations we've found so far, and
-      // check if any of them are before this block.
-      for (BasicBlock declaredBlock : blocksWithDeclarations) {
-        if (declaredBlock.provablyExecutesBefore(basicBlock)) {
-          shadowDetected = true;
-          DiagnosticType diagnosticType;
-          Node warningNode = referenceNode;
-          if (v.isLet()
-              || v.isConst()
-              || v.isClass()
-              || letConstShadowsVar
-              || shadowCatchVar
-              || shadowParam
-              || v.isImport()) {
-            // These cases are all hard errors that violate ES6 semantics
-            diagnosticType = REDECLARED_VARIABLE_ERROR;
-          } else if (reference.getNode().getParent().isCatch() || allowDupe) {
-            return false;
-          } else {
-            // These diagnostics are for valid, but suspicious, code, and are suppressible.
-            // For vars defined in the global scope, give the same error as VarCheck
-            diagnosticType =
-                v.getScope().isGlobal()
-                    ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR
-                    : REDECLARED_VARIABLE;
-            // Since we skip hoisted functions, we would have the wrong warning node in cases
-            // where the redeclaration is a function declaration. Check for that case.
-            if (isVarNodeSameAsReferenceNode
-                && hoistedFn != null
-                && v.getName().equals(hoistedFn.getNode().getString())) {
-              warningNode = hoistedFn.getNode();
-            }
-          }
-          compiler.report(
-              JSError.make(warningNode, diagnosticType, v.getName(), locationOf(v.getNode())));
-          return true;
+
+    if (!allowDupe && isRedeclaration(basicBlock)) {
+      final DiagnosticType diagnosticType;
+      Node warningNode = referenceNode;
+      boolean shadowParam =
+          v.isParam()
+              && NodeUtil.isBlockScopedDeclaration(referenceNode)
+              && v.getScope() == reference.getScope().getParent();
+
+      if (v.isLet()
+          || v.isConst()
+          || v.isClass()
+          || letConstShadowsVar
+          || shadowCatchVar
+          || shadowParam
+          || v.isImport()) {
+        // These cases are all hard errors that violate ES6 semantics
+        diagnosticType = REDECLARED_VARIABLE_ERROR;
+      } else if (reference.getNode().getParent().isCatch()) {
+        return false;
+      } else {
+        // These diagnostics are for valid, but suspicious, code, and are suppressible.
+        // For vars defined in the global scope, give the same error as VarCheck
+        diagnosticType =
+            v.getScope().isGlobal() ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR : REDECLARED_VARIABLE;
+        // Since we skip hoisted functions, we would have the wrong warning node in cases
+        // where the redeclaration is a function declaration. Check for that case.
+        if (isVarNodeSameAsReferenceNode
+            && hoistedFn != null
+            && v.getName().equals(hoistedFn.getNode().getString())) {
+          warningNode = hoistedFn.getNode();
         }
       }
+      compiler.report(
+          JSError.make(warningNode, diagnosticType, v.getName(), locationOf(v.getNode())));
+      return true;
     }
 
-    if (!shadowDetected && (letConstShadowsVar || shadowCatchVar)
-        && v.getScope() == reference.getScope()) {
+    if ((letConstShadowsVar || shadowCatchVar) && v.getScope() == reference.getScope()) {
       compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.getName()));
       return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns whether the given block executes after any known declarations of the variable being
+   * visited.
+   */
+  private boolean isRedeclaration(BasicBlock newDeclaration) {
+    for (BasicBlock previousDeclaration : blocksWithDeclarations) {
+      if (previousDeclaration.provablyExecutesBefore(newDeclaration)) {
+        return true;
+      }
     }
     return false;
   }
@@ -424,7 +435,7 @@ class VariableReferenceCheck implements CompilerPass {
     if (s.isFunctionBlockScope()) {
       Node function = s.getRootNode().getParent();
       Node callee = function.getPrevious();
-      inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
+      inGoogScope = callee != null && GOOG_SCOPE.matches(callee);
     }
 
     if (inGoogScope) {
