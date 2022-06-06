@@ -40,6 +40,9 @@ class RhinoErrorReporter {
   static final DiagnosticType UNRECOGNIZED_TYPEOF_ERROR =
       DiagnosticType.warning("JSC_UNRECOGNIZED_TYPEOF_ERROR", "{0}");
 
+  static final DiagnosticType CYCLIC_INHERITANCE_ERROR =
+      DiagnosticType.warning("JSC_CYCLIC_INHERITANCE_ERROR", "{0}");
+
   // This is separate from TYPE_PARSE_ERROR because there are many instances of this warning
   // and it is unfeasible to fix them all right away.
   static final DiagnosticType JSDOC_MISSING_BRACES_WARNING =
@@ -60,11 +63,12 @@ class RhinoErrorReporter {
   // Special-cased errors, so that they can be configured via the
   // warnings API.
   static final DiagnosticType TRAILING_COMMA =
-      DiagnosticType.error("JSC_TRAILING_COMMA",
-          "Parse error. IE8 (and below) will parse trailing commas in " +
-          "array and object literals incorrectly. " +
-          "If you are targeting newer versions of JS, " +
-          "set the appropriate language_in option.");
+      DiagnosticType.error(
+          "JSC_TRAILING_COMMA",
+          "Parse error. IE8 (and below) will parse trailing commas in "
+              + "array and object literals incorrectly. "
+              + "If you are targeting newer versions of JS, "
+              + "set the appropriate language_in option.");
 
   static final DiagnosticType DUPLICATE_PARAM =
       DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
@@ -81,12 +85,13 @@ class RhinoErrorReporter {
   static final DiagnosticType BAD_JSDOC_ANNOTATION =
       DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
-  static final DiagnosticType INVALID_ES3_PROP_NAME = DiagnosticType.warning(
-      "JSC_INVALID_ES3_PROP_NAME",
-      "Keywords and reserved words are not allowed as unquoted property " +
-      "names in older versions of JavaScript. " +
-      "If you are targeting newer versions of JavaScript, " +
-      "set the appropriate language_in option.");
+  static final DiagnosticType INVALID_ES3_PROP_NAME =
+      DiagnosticType.warning(
+          "JSC_INVALID_ES3_PROP_NAME",
+          "Keywords and reserved words are not allowed as unquoted property "
+              + "names in older versions of JavaScript. "
+              + "If you are targeting newer versions of JavaScript, "
+              + "set the appropriate language_in option.");
 
   static final DiagnosticType PARSE_TREE_TOO_DEEP =
       DiagnosticType.error("JSC_PARSE_TREE_TOO_DEEP", "Parse tree too deep.");
@@ -146,6 +151,10 @@ class RhinoErrorReporter {
           .put(Pattern.compile(".*Unknown type.*\n.*"), UNRECOGNIZED_TYPE_ERROR)
           // Unrecognized `typeof some.prop` errors
           .put(Pattern.compile("^Missing type for `typeof` value.*"), UNRECOGNIZED_TYPEOF_ERROR)
+          // Cyclic inheritance errors
+          .put(
+              Pattern.compile("^Cycle detected in inheritance chain of type .*"),
+              CYCLIC_INHERITANCE_ERROR)
           // Import annotation errors.
           .put(
               Pattern.compile("^Bad type annotation. Import in typedef.*"),

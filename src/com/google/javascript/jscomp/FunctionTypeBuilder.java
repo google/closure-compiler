@@ -870,7 +870,7 @@ final class FunctionTypeBuilder {
     for (TemplateType template : builtTemplates) {
       if (template.containsCycle()) {
         reportError(
-            RhinoErrorReporter.PARSE_ERROR,
+            RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
             "Cycle detected in inheritance chain of type " + template.getReferenceName());
       }
     }

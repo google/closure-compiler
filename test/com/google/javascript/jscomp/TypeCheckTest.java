@@ -5014,7 +5014,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             "/** @enum {MyEnum} */ var MyEnum = {};" + "/** @param {MyEnum} x */ function f(x) {}")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain " + "of type MyEnum")
+        .addDiagnostic("Cycle detected in inheritance chain of type MyEnum")
         .run();
   }
 
@@ -6930,10 +6930,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {U} S",
             " */",
             "class Foo { }")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type S")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type T")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type U")
-        .diagnosticsAreErrors()
+        .addDiagnostic("Cycle detected in inheritance chain of type S")
+        .addDiagnostic("Cycle detected in inheritance chain of type T")
+        .addDiagnostic("Cycle detected in inheritance chain of type U")
         .run();
   }
 
@@ -6947,8 +6946,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {T} T",
             " */",
             "class Foo { }")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type T")
-        .diagnosticsAreErrors()
+        .addDiagnostic("Cycle detected in inheritance chain of type T")
         .run();
   }
 
@@ -6963,9 +6961,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {T} U",
             " */",
             "class Foo { }")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type T")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type U")
-        .diagnosticsAreErrors()
+        .addDiagnostic("Cycle detected in inheritance chain of type T")
+        .addDiagnostic("Cycle detected in inheritance chain of type U")
         .run();
   }
 
@@ -15999,7 +15996,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + "/** @constructor \n * @extends {T} */var T = function() {};"
             + "alert((new T).foo);",
         ImmutableList.of(
-            "Parse error. Cycle detected in inheritance chain of type T",
+            "Cycle detected in inheritance chain of type T",
             "Could not resolve type in @extends tag of T"));
   }
 
@@ -16010,7 +16007,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor \n * @implements {T} */var T = function() {};",
             suppressMissingPropertyFor("T", "foo"),
             "alert((new T).foo);"),
-        ImmutableList.of("Parse error. Cycle detected in inheritance chain of type T"));
+        ImmutableList.of("Cycle detected in inheritance chain of type T"));
   }
 
   @Test
@@ -16022,7 +16019,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + "/** @constructor \n * @implements {F} */var G = function() {};"
             + "/** @constructor \n * @extends {G} */var F = function() {};"
             + "alert((new F).foo);",
-        ImmutableList.of("Parse error. Cycle detected in inheritance chain of type F"));
+        ImmutableList.of("Cycle detected in inheritance chain of type F"));
   }
 
   // TODO(johnlenz): This test causes an infinite loop,
@@ -16050,7 +16047,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor \n * @implements {F} */var H = function() {};",
             suppressMissingPropertyFor("H", "foo"),
             "alert((new H).foo);"),
-        "Parse error. Cycle detected in inheritance chain of type F");
+        "Cycle detected in inheritance chain of type F");
   }
 
   @Test
@@ -16211,7 +16208,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + "/** @type {MyType} */\n"
             + "var x = /** @type {!OtherType} */ (new Object());",
         ImmutableList.of(
-            "Parse error. Cycle detected in inheritance chain of type MyType",
+            "Cycle detected in inheritance chain of type MyType",
             "initializing variable\n" + "found   : OtherType\n" + "required: (MyType|null)"));
   }
 

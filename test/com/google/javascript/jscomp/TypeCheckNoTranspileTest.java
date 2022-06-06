@@ -5173,7 +5173,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassExtendsItself() {
     newTest()
         .addSource("class Foo extends Foo {}")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type Foo")
+        .addDiagnostic("Cycle detected in inheritance chain of type Foo")
         .run();
   }
 
@@ -5183,7 +5183,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         .addSource(
             "class Foo extends Bar {}", //
             "class Bar extends Foo {}")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type Bar")
+        .addDiagnostic("Cycle detected in inheritance chain of type Bar")
         .run();
   }
 
@@ -5194,7 +5194,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Bar {}", //
             "/** @extends {Foo} */",
             "class Foo extends Bar {}")
-        .addDiagnostic("Parse error. Cycle detected in inheritance chain of type Foo")
+        .addDiagnostic("Cycle detected in inheritance chain of type Foo")
         .addDiagnostic("Could not resolve type in @extends tag of Foo")
         .run();
   }

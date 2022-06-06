@@ -363,6 +363,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR,
+          RhinoErrorReporter.CYCLIC_INHERITANCE_ERROR,
           TypedScopeCreator.UNKNOWN_LENDS,
           TypedScopeCreator.LENDS_ON_NON_OBJECT,
           TypedScopeCreator.CTOR_INITIALIZER,
