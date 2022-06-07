@@ -479,6 +479,42 @@ public final class ExpressionDecomposerTest {
         DecompositionType.UNDECOMPOSABLE,
         "[{ [foo()]: a } = goo()] = arr;",
         exprMatchesStr("foo()"));
+
+    helperExposeExpression(
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), [getObj().propName] = CN();",
+            "  }",
+            "  function CN() {",
+            "    let t;",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"),
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    var temp_const$jscomp$1 = JSCOMPILER_PRESERVE(e);",
+            "    var temp_const$jscomp$0 = getObj().propName;",
+            "    temp_const$jscomp$1, [temp_const$jscomp$0] = CN();",
+            "  }",
+            "  function CN() {",
+            "    let t;",
+            "  }",
+            "});"));
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE,
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), [f] = CN();",
+            "  }",
+            "  function CN() {",
+            "    let t;",
+            "  }",
+            "});"),
+        exprMatchesStr("CN()"));
   }
 
   @Test

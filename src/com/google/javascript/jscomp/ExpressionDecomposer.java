@@ -220,14 +220,14 @@ class ExpressionDecomposer {
 
           Node left = expressionParent.getFirstChild();
           switch (left.getToken()) {
+            case ARRAY_PATTERN:
             case GETELEM:
-              decomposeSubExpressions(left.getLastChild(), null, state);
-              // Fall through.
             case GETPROP:
               decomposeSubExpressions(left.getFirstChild(), null, state);
               break;
             default:
-              throw new IllegalStateException("Expected a property access: " + left.toStringTree());
+              throw new IllegalStateException(
+                  "Expected a property access or array pattern: " + left.toStringTree());
           }
         }
       } else if (expressionParent.isCall()

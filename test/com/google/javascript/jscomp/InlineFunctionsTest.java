@@ -887,6 +887,21 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDestructuringAssignInFunction_withArrayPattern_doesNotCrash() {
+    test(
+        lines(
+            "var Di = I(() => {",
+            "  function zv() {",
+            "    JSCOMPILER_PRESERVE(e), [f] = CN();",
+            "  }",
+            "  function CN() {",
+            "    let t;",
+            "  }",
+            "});"),
+        "var Di = I(() => {});");
+  }
+
+  @Test
   public void testNoInlineIfParametersModified1() {
     // Assignment
     test(
