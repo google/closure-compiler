@@ -2533,14 +2533,14 @@ RegExp.prototype.unicode;
 
 /**
  * @constructor
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!Error}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
  */
-function Error(opt_message, opt_file, opt_line) {}
+function Error(message, fileNameOrOptions, line) {}
 
 
 /**
@@ -2563,6 +2563,13 @@ Error.stackTraceLimit;
  * @return {undefined}
  */
 Error.captureStackTrace = function(error, opt_constructor){};
+
+/**
+ * New in ES 2022, adds a cause to the error which is useful for chaining errors
+ * @type {?Error}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
+ */
+Error.prototype.cause;
 
 
 /**
@@ -2611,74 +2618,74 @@ Error.prototype.stack;
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!EvalError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError
  */
-function EvalError(opt_message, opt_file, opt_line) {}
+function EvalError(message, fileNameOrOptions, line) {}
 
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!RangeError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError
  */
-function RangeError(opt_message, opt_file, opt_line) {}
+function RangeError(message, fileNameOrOptions, line) {}
 
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!ReferenceError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError
  */
-function ReferenceError(opt_message, opt_file, opt_line) {}
+function ReferenceError(message, fileNameOrOptions, line) {}
 
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!SyntaxError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError
  */
-function SyntaxError(opt_message, opt_file, opt_line) {}
+function SyntaxError(message, fileNameOrOptions, line) {}
 
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!TypeError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError
  */
-function TypeError(opt_message, opt_file, opt_line) {}
+function TypeError(message, fileNameOrOptions, line) {}
 
 /**
  * @constructor
  * @extends {Error}
- * @param {*=} opt_message
- * @param {*=} opt_file
- * @param {*=} opt_line
+ * @param {*=} message
+ * @param {*=} fileNameOrOptions
+ * @param {*=} line
  * @return {!URIError}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError
  */
-function URIError(opt_message, opt_file, opt_line) {}
+function URIError(message, fileNameOrOptions, line) {}
 
 // JScript extensions.
 // @see http://msdn.microsoft.com/en-us/library/894hfyb4(VS.80).aspx
