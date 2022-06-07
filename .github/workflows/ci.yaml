@@ -40,6 +40,7 @@ jobs:
         # https://github.com/marketplace/actions/setup-java-jdk
         uses: actions/setup-java@v3
         with:
+          distribution: zulu
           java-version: '11'
           java-package: jdk
           architecture: x64
@@ -140,6 +141,7 @@ jobs:
         # https://github.com/marketplace/actions/setup-java-jdk
         uses: actions/setup-java@v3
         with:
+          distribution: zulu
           java-version: '11'
           java-package: jdk
           architecture: x64
