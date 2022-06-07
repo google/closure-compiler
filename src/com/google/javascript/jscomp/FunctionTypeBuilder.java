@@ -454,9 +454,8 @@ final class FunctionTypeBuilder {
 
   /** Clobber the templateTypeNames from the JSDoc with builtin ones for native types. */
   private boolean maybeUseNativeClassTemplateNames(JSDocInfo info) {
-    // TODO(b/74253232): maybeGetNativeTypesOfBuiltin should also handle cases where a local type
-    // declaration shadows a templatized native type.
-    ImmutableList<TemplateType> nativeKeys = typeRegistry.maybeGetTemplateTypesOfBuiltin(fnName);
+    ImmutableList<TemplateType> nativeKeys =
+        typeRegistry.maybeGetTemplateTypesOfBuiltin(declarationScope, fnName);
     // TODO(b/73386087): Make infoTemplateTypeNames.size() == nativeKeys.size() a
     // Preconditions check. It currently fails for "var symbol" in the externs.
     if (nativeKeys != null && info.getTemplateTypeNames().size() == nativeKeys.size()) {

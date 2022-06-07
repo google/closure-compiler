@@ -3957,6 +3957,29 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTemplateType_shadowingNativeType() {
+    // Verify that some special handling of externs for types built-in to JSTypeRegistry, like
+    // Array, does not incorrectly run for local types shadowing native types.
+    testSame(
+        lines(
+            "function local() {",
+            "  /** @template U @constructor @param {U} e*/",
+            "  function Array(e) { this.e = e; }",
+            "  /** @return {U} */ Array.prototype.first = function() { return this.e; };",
+            "  /** @type {!Array<string>} */ let arr = new Array();",
+            "",
+            "  const first = arr.first();",
+            "  LOCAL: local;",
+            "}"));
+
+    assertType(findNameType("arr", lastLocalScope)).toStringIsEqualTo("Array<string>");
+    assertType(findNameType("first", lastLocalScope)).isString();
+
+    assertType(findNameType("Array", lastLocalScope))
+        .isNotEqualTo(registry.getNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE));
+  }
+
+  @Test
   public void testTemplatedThis_inClassInstanceMethod_isInferredToBe_receiverType() {
     testSame(
         lines(

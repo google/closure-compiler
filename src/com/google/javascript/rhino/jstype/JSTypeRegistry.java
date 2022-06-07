@@ -299,9 +299,11 @@ public final class JSTypeRegistry {
     return checkNotNull(iThenableTemplateKey);
   }
 
-  /** @return return an immutable list of template types of the given builtin. */
-  public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(String fnName) {
-    JSType type = getType(null, fnName);
+  /** Returns an immutable list of template types of the given builtin. */
+  @Nullable
+  public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(
+      StaticScope scope, String fnName) {
+    JSType type = getType(scope, fnName);
     ObjectType objType = type == null ? null : type.toObjectType();
     if (objType != null && objType.isNativeObjectType()) {
       return objType.getTypeParameters();
