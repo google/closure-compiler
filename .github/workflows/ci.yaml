@@ -94,7 +94,7 @@ jobs:
     steps:
       - name: Setup Node.js
         # https://github.com/marketplace/actions/setup-node-js-environment
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.VERSION_NODEJS }}
 
@@ -152,7 +152,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.VERSION_NODEJS }}
 
