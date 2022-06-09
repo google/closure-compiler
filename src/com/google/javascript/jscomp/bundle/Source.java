@@ -199,6 +199,7 @@ public abstract class Source {
     }
 
     /** Returns a Lazy that always returns the same instance. */
+    @SuppressWarnings("Immutable") // T is not known to be immutable.
     static <T> Lazy<T> ofInstance(T instance) {
       return new Lazy<T>() {
         @Override
@@ -209,6 +210,7 @@ public abstract class Source {
     }
 
     /** Returns a Lazy from a memoized supplier. */
+    @SuppressWarnings("Immutable") // Supplier is not intrinsically immutable.
     static <T> Lazy<T> memoize(Supplier<T> supplier) {
       Supplier<T> memoized = Suppliers.memoize(supplier);
       return new Lazy<T>() {
