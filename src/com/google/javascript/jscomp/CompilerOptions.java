@@ -855,6 +855,13 @@ public class CompilerOptions implements Serializable {
   /** Do not strip closure-style type annotations from code. */
   public boolean preserveTypeAnnotations;
 
+  /**
+   * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
+   * the source location of comments, and also provide a different mode for comment printing between
+   * those two.
+   */
+  public boolean gentsMode;
+
   /** Output in pretty indented format */
   private boolean prettyPrint;
 
@@ -1356,6 +1363,7 @@ public class CompilerOptions implements Serializable {
 
     // Output
     preserveTypeAnnotations = false;
+    gentsMode = false;
     printInputDelimiter = false;
     prettyPrint = false;
     lineBreak = false;
@@ -2295,6 +2303,10 @@ public class CompilerOptions implements Serializable {
 
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
     this.preserveTypeAnnotations = preserveTypeAnnotations;
+  }
+
+  public void setGentsMode(boolean gentsMode) {
+    this.gentsMode = gentsMode;
   }
 
   public void setGatherCssNames(boolean gatherCssNames) {

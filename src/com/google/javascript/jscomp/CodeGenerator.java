@@ -46,6 +46,13 @@ public class CodeGenerator {
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;
   private final boolean printNonJSDocComments;
+  /**
+   * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
+   * the source location of comments, and also provide a different mode for comment printing between
+   * those two.
+   */
+  private final boolean gentsMode;
+
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
   private final boolean useOriginalName;
@@ -59,6 +66,7 @@ public class CodeGenerator {
     trustedStrings = true;
     preserveTypeAnnotations = false;
     printNonJSDocComments = false;
+    gentsMode = false;
     quoteKeywordProperties = false;
     useOriginalName = false;
     this.outputFeatureSet = FeatureSet.BARE_MINIMUM;
@@ -73,6 +81,7 @@ public class CodeGenerator {
     this.trustedStrings = options.trustedStrings;
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
     this.printNonJSDocComments = options.getPreserveNonJSDocComments();
+    this.gentsMode = options.gentsMode;
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.outputFeatureSet = options.getOutputFeatureSet();
@@ -95,9 +104,16 @@ public class CodeGenerator {
   }
 
   private void printJSDocComment(Node node, JSDocInfo jsDocInfo) {
-    String jsdocAsString = jsDocInfoPrinter.print(jsDocInfo);
+    String jsdocAsString;
+    // In gents mode, we print NonJSDocInfo without special handling, as we already have
+    // pre-filtered the comments properly.
+    if (gentsMode) {
+      jsdocAsString = jsDocInfo.getOriginalCommentString();
+    } else {
+      jsdocAsString = jsDocInfoPrinter.print(jsDocInfo);
+    }
     // Don't print an empty jsdoc
-    if (!jsdocAsString.equals("/** */ ")) {
+    if (jsdocAsString != null && !jsdocAsString.equals("/** */ ")) {
       add(jsdocAsString);
       if (!node.isCast()) {
         cc.endLine();
@@ -116,7 +132,7 @@ public class CodeGenerator {
    * Print Leading JSDocComments or NonJSDocComments for the given node in order, depending on their
    * source location.
    */
-  private void printLeadingCommentsInOrder(Node node) {
+  protected void printLeadingCommentsInOrder(Node node) {
     JSDocInfo jsDocInfo = node.getJSDocInfo();
     NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
 
@@ -189,11 +205,17 @@ public class CodeGenerator {
   private static final QualifiedName JSCOMP_SCOPE = QualifiedName.of("$jscomp.scope");
 
   protected void add(Node node, Context context) {
+    add(node, context, true);
+  }
+
+  /** Generate the current node */
+  protected void add(Node node, Context context, boolean printComments) {
     if (!cc.continueProcessing()) {
       return;
     }
-
-    printLeadingCommentsInOrder(node);
+    if (printComments) {
+      printLeadingCommentsInOrder(node);
+    }
 
     Token type = node.getToken();
     String opstr = NodeUtil.opToStr(type);
@@ -1780,7 +1802,7 @@ public class CodeGenerator {
 
     if (nodeToProcess.isEmpty()) {
       printTrailingComment(n);
-      cc.endStatement(/*needSemicolon=*/ true, /*hasTrailingCommentOnSameLine=*/ false);
+      cc.endStatement(/* needSemiColon= */ true, /*hasTrailingCommentOnSameLine=*/ false);
     } else {
       add(nodeToProcess, context);
       printTrailingComment(n);
@@ -1993,7 +2015,7 @@ public class CodeGenerator {
     if (nonJSDocComment.isEndingAsLineComment()) {
       // Non trailing line comments can not be on the same line as the node.
       checkState(
-          commentEndPosition.line < nodeLineNumber,
+          gentsMode || commentEndPosition.line < nodeLineNumber,
           "Non trailing line comments can not be on the same line as the node.");
       add(content + "\n");
     } else {
