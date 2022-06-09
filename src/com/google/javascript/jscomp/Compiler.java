@@ -581,6 +581,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.typedAstFilesystem = astData.getFilesystem();
     this.externProperties = astData.getExternProperties();
     this.colorRegistry = astData.getColorRegistry().orNull();
+    this.setTypeCheckingHasRun(deserializeTypes);
   }
 
   @Override

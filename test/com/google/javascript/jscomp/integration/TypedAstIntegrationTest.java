@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -137,6 +138,31 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setDisambiguateProperties(true);
+
+    Compiler compiler = compileTypedAstShards(options);
+
+    Node expectedRoot = parseExpectedCode("", "", "alert('lib1'); alert('lib2')");
+    assertNode(compiler.getRoot().getSecondChild())
+        .usingSerializer(compiler::toSource)
+        .isEqualTo(expectedRoot);
+  }
+
+  @Test
+  public void disambiguatesAndDeletesMethodsAcrossLibraries_withTranspilation() throws IOException {
+    SourceFile lib1 = code("class Lib1 { m() { return 'lib1'; } n() { return 'delete me'; } }");
+    SourceFile lib2 = code("class Lib2 { m() { return 'delete me'; } n() { return 'lib2'; } }");
+    precompileLibrary(lib1);
+    precompileLibrary(lib2);
+    precompileLibrary(
+        extern(new TestExternsBuilder().addAlert().build()),
+        typeSummary(lib1),
+        typeSummary(lib2),
+        code("alert(new Lib1().m()); alert(new Lib2().n());"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDisambiguateProperties(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     Compiler compiler = compileTypedAstShards(options);
 
