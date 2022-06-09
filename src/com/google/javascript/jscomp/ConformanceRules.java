@@ -1005,6 +1005,68 @@ public final class ConformanceRules {
       }
       return specName.substring(index + 1);
     }
+
+    @Nullable
+    private static String inferStringValue(Scope scope, Node node) {
+      if (node == null) {
+        return null;
+      }
+
+      switch (node.getToken()) {
+        case STRING_KEY:
+        case STRINGLIT:
+        case TEMPLATELIT:
+        case TEMPLATELIT_STRING:
+          return NodeUtil.getStringValue(node);
+        case NAME:
+          if (scope == null) {
+            return null;
+          }
+          String name = node.getString();
+          Var var = scope.getVar(name);
+          if (var == null || !var.isConst()) {
+            return null;
+          }
+          Node initialValue = var.getInitialValue();
+          return inferStringValue(var.getScope(), initialValue);
+        case GETPROP:
+          JSType type = node.getJSType();
+          if (type == null || !type.isEnumElementType()) {
+            // For simplicity, only support enums. The JS style guide requires enums to be
+            // effectively immutable and all enum items should be statically known.
+            // See go/js-style#features-objects-enums.
+            return null;
+          }
+
+          Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
+          if (enumSource == null) {
+            return null;
+          }
+          if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
+            return null;
+          }
+          return inferStringValue(
+              null, NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()));
+        default:
+          return null;
+      }
+    }
+
+    private static boolean isXid(JSType type) {
+      if (type == null) {
+        return false;
+      }
+      EnumElementType enumElTy = type.toMaybeEnumElementType();
+      if (enumElTy != null
+          && enumElTy.getEnumType().getReferenceName().equals("enum{xid.String}")) {
+        return true;
+      }
+      return false;
+    }
+
+    private static boolean isEventHandlerAttrName(String attr) {
+      return !attr.equals("on") && attr.startsWith("on");
+    }
   }
 
   /** Restricted name call rule */
@@ -2123,6 +2185,32 @@ public final class ConformanceRules {
   }
 
   /**
+   * Checks nodes for conformance with banning the setting of attributes that are on the blocklist.
+   */
+  public static final class SecuritySensitiveAttributes {
+    public static ConformanceResult checkConformanceForAttributeName(
+        NodeTraversal traversal, Node attrName, ImmutableList<String> bannedAttrs) {
+      String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
+      if (literalName == null) {
+        // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
+        return ConformanceUtil.isXid(attrName.getJSType())
+            ? ConformanceResult.CONFORMANCE
+            : ConformanceResult.VIOLATION;
+      }
+
+      literalName = literalName.toLowerCase(Locale.ROOT);
+
+      if (bannedAttrs.contains(literalName)
+          || ConformanceUtil.isEventHandlerAttrName(literalName)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private SecuritySensitiveAttributes() {}
+  }
+
+  /**
    * Ban {@code Element#setAttribute} with attribute names specified in {@code value} or any dynamic
    * string.
    *
@@ -2155,10 +2243,6 @@ public final class ConformanceRules {
               .collect(toImmutableList());
     }
 
-    private static boolean isEventHandlerAttrName(String attr) {
-      return !attr.equals("on") && attr.startsWith("on");
-    }
-
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
       if (node.isCall()) {
@@ -2185,21 +2269,8 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      Node attr = node.getSecondChild();
-      String attrName = inferStringValue(traversal.getScope(), attr);
-      if (attrName == null) {
-        // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
-        return isXid(attr.getJSType())
-            ? ConformanceResult.CONFORMANCE
-            : ConformanceResult.VIOLATION;
-      }
-
-      attrName = attrName.toLowerCase(Locale.ROOT);
-
-      if (bannedAttrs.contains(attrName) || isEventHandlerAttrName(attrName)) {
-        return ConformanceResult.VIOLATION;
-      }
-      return ConformanceResult.CONFORMANCE;
+      return SecuritySensitiveAttributes.checkConformanceForAttributeName(
+          traversal, node.getSecondChild(), bannedAttrs);
     }
 
     private Optional<String> getBannedPropertyName(Node node) {
@@ -2226,14 +2297,14 @@ public final class ConformanceRules {
       Node key = node.getSecondChild();
       if (key.isStringLit()) {
         String keyName = key.getString().toLowerCase(Locale.ROOT);
-        if (!bannedAttrs.contains(keyName) && !isEventHandlerAttrName(keyName)) {
+        if (!bannedAttrs.contains(keyName) && !ConformanceUtil.isEventHandlerAttrName(keyName)) {
           return ConformanceResult.CONFORMANCE;
         } else if (hasElementType(node)) {
           return ConformanceResult.VIOLATION;
         }
       } else if (hasElementType(node)) { // key is not a string literal.
         JSType keyType = key.getJSType();
-        if (keyType == null || isXid(keyType)) {
+        if (keyType == null || ConformanceUtil.isXid(keyType)) {
           return ConformanceResult.CONFORMANCE;
         }
 
@@ -2272,64 +2343,6 @@ public final class ConformanceRules {
       }
 
       return true;
-    }
-
-    private boolean isXid(JSType type) {
-      if (type == null) {
-        return false;
-      }
-      EnumElementType enumElTy = type.toMaybeEnumElementType();
-      if (enumElTy != null
-          && enumElTy.getEnumType().getReferenceName().equals("enum{xid.String}")) {
-        return true;
-      }
-      return false;
-    }
-
-    @Nullable
-    private String inferStringValue(Scope scope, Node node) {
-      if (node == null) {
-        return null;
-      }
-
-      switch (node.getToken()) {
-        case STRING_KEY:
-        case STRINGLIT:
-        case TEMPLATELIT:
-        case TEMPLATELIT_STRING:
-          return NodeUtil.getStringValue(node);
-        case NAME:
-          if (scope == null) {
-            return null;
-          }
-          String name = node.getString();
-          Var var = scope.getVar(name);
-          if (var == null || !var.isConst()) {
-            return null;
-          }
-          Node initialValue = var.getInitialValue();
-          return inferStringValue(var.getScope(), initialValue);
-        case GETPROP:
-          JSType type = node.getJSType();
-          if (type == null || !type.isEnumElementType()) {
-            // For simplicity, only support enums. The JS style guide requires enums to be
-            // effectively immutable and all enum items should be statically known.
-            // See go/js-style#features-objects-enums.
-            return null;
-          }
-
-          Node enumSource = type.toMaybeEnumElementType().getEnumType().getSource();
-          if (enumSource == null) {
-            return null;
-          }
-          if (!enumSource.isObjectLit() && !enumSource.isClassMembers()) {
-            return null;
-          }
-          return inferStringValue(
-              null, NodeUtil.getFirstPropMatchingKey(enumSource, node.getString()));
-        default:
-          return null;
-      }
     }
   }
 
