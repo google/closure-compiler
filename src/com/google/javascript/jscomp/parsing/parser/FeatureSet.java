@@ -123,17 +123,6 @@ public final class FeatureSet implements Serializable {
           // we need to change the way that is done to avoid incorrect inclusion of polyfills.
           Feature.REGEXP_LOOKBEHIND);
 
-  public static final FeatureSet BROWSER_2023 =
-      ES_NEXT.without(
-          // https://kangax.github.io/compat-table/es2016plus/
-          // Regexp 'd' flag is partially missing in all Chrome and Edge browsers.
-          // Regexp lookbehind is still missing in Safari 15.
-          // IMPORTANT: There is special casing for lookbehind feature and the ones excluded for
-          // BROWSER_2020 above in RewritePolyfills.
-          // If future Browser FeatureSet Year definitions have to remove any other features, then
-          // we need to change the way that is done to avoid incorrect inclusion of polyfills.
-          Feature.REGEXP_FLAG_D, Feature.REGEXP_LOOKBEHIND);
-
   public static final FeatureSet ALL = ES_UNSUPPORTED.with(LangVersion.TYPESCRIPT.features());
 
   private enum LangVersion {
