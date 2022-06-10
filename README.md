@@ -14,6 +14,9 @@ pitfalls.
 
 ## Getting Started
 
+Running Closure Compiler requires [Java 11](https://java.com). Ensure that
+you have Java 11 or newer installed.
+
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
 [Yarn](https://yarnpkg.com):
 
@@ -213,7 +216,7 @@ To build the compiler yourself, you will need the following:
 
 Prerequisite                                                               | Description
 -------------------------------------------------------------------------- | -----------
-[Java 8 or later](https://java.com)                                        | Used to compile the compiler's source code.
+[Java 11 or later](https://java.com)                                       | Used to compile the compiler's source code.
 [Git](https://git-scm.com/)                                                | Used by Bazel to download dependencies.
 [Bazelisk](https://bazel.build/install/bazelisk) | Used to build the various compiler targets.
 
