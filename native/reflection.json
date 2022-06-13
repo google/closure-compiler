@@ -1,0 +1,185 @@
+[
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags",
+    "queryAllDeclaredMethods" : true,
+    "allDeclaredClasses": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicFields": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$BooleanOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allDeclaredClasses": true,
+    "allPublicMethods": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$WarningGuardErrorOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$WarningGuardWarningOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$WarningGuardOffOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$JsOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name" : "com.google.javascript.jscomp.CommandLineRunner$Flags$JsZipOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.BooleanOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.FileOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.URLOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.URIOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.IntOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.DoubleOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.StringOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.ByteOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.CharOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.EnumOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.ExplicitBooleanOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.FloatOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.LongOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.MapOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.MultiFileOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.MultiPathOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.ShortOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.SubCommandHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.StringArrayOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.InetAddressOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.PathOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.MacAddressOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.javascript.jscomp.jarjar.org.kohsuke.args4j.spi.PatternOptionHandler",
+    "queryAllDeclaredConstructors" : true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  }
+]

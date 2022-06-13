@@ -18,6 +18,7 @@ load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
 load("//:bazel/typedast.bzl", "typedast")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
+load("@rules_graal//graal:graal.bzl", "graal_binary")
 
 package(licenses = ["notice"])
 
@@ -79,6 +80,14 @@ java_binary(
     name = "compiler_unshaded",
     main_class = "com.google.javascript.jscomp.CommandLineRunner",
     runtime_deps = [":compiler_lib"],
+)
+
+graal_binary(
+    name = "compiler_native",
+    deps = [":compiler_shaded"],
+    main_class = "com.google.javascript.jscomp.CommandLineRunner",
+    reflection_configuration = "@//native:reflection.json",
+    include_resources = ".*",
 )
 
 java_binary(

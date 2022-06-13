@@ -149,3 +149,23 @@ http_archive(
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
 
 jar_jar_repositories()
+
+# GraalVM is a tool from Oracle (https://graalvm.org) which includes support for
+# building native binaries from Java applications. Closure Compiler can be build with
+# the bundled `native-image` tool and installed on a target system to execute natively.
+http_archive(
+    name = "rules_graal",
+    sha256 = "8fa2a40ef37704a6cd2d2ca5c8e2b845f9b207e77141014877dceac6cd40f321",
+    strip_prefix = "rules_graal-9fd38761df4ac293f952d10379c0c3520dd9ceed",
+    urls = [
+        "https://github.com/andyscott/rules_graal/archive/9fd38761df4ac293f952d10379c0c3520dd9ceed.tar.gz",
+    ],
+)
+
+load("@rules_graal//graal:graal_bindist.bzl", "graal_bindist_repository")
+
+graal_bindist_repository(
+    name = "graal",
+    java_version = "11",
+    version = "22.1.0",
+)
