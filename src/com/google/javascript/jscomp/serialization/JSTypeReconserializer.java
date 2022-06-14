@@ -335,7 +335,7 @@ final class JSTypeReconserializer {
       propertiesKeepOriginalName |= objType.isEnumType();
     }
 
-    ObjectTypeProto.Builder objectProto =
+    ObjectTypeProto objectProto =
         ObjectTypeProto.newBuilder()
             .addAllInstanceType(instancePointers)
             .addAllOwnProperty(ownProperties)
@@ -344,7 +344,8 @@ final class JSTypeReconserializer {
             .setIsInvalidating(isInvalidating)
             .setMarkedConstructor(isConstructor)
             .setPropertiesKeepOriginalName(propertiesKeepOriginalName)
-            .setUuid(seen.colorId.asByteString());
+            .setUuid(seen.colorId.asByteString())
+            .build();
     return TypeProto.newBuilder().setObject(objectProto).build();
   }
 
