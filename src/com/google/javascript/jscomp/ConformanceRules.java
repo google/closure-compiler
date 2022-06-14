@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
@@ -2189,7 +2190,7 @@ public final class ConformanceRules {
    */
   public static final class SecuritySensitiveAttributes {
     public static ConformanceResult checkConformanceForAttributeName(
-        NodeTraversal traversal, Node attrName, ImmutableList<String> bannedAttrs) {
+        NodeTraversal traversal, Node attrName, ImmutableSet<String> bannedAttrs) {
       String literalName = ConformanceUtil.inferStringValue(traversal.getScope(), attrName);
       if (literalName == null) {
         // xid() obfuscates attribute names, thus never clashing with security-sensitive attributes.
@@ -2220,7 +2221,7 @@ public final class ConformanceRules {
    * Element}.
    */
   public static final class BanSetAttribute extends AbstractRule {
-    private final ImmutableList<String> bannedAttrs;
+    private final ImmutableSet<String> bannedAttrs;
 
     private static final String SET_ATTRIBUTE = "setAttribute";
     private static final String SET_ATTRIBUTE_NS = "setAttributeNS";
@@ -2240,7 +2241,7 @@ public final class ConformanceRules {
       bannedAttrs =
           requirement.getValueList().stream()
               .map(v -> v.toLowerCase(Locale.ROOT))
-              .collect(toImmutableList());
+              .collect(toImmutableSet());
     }
 
     @Override
@@ -2343,6 +2344,120 @@ public final class ConformanceRules {
       }
 
       return true;
+    }
+  }
+
+  /**
+   * Can be used to ban any function like {@code Element#setAttribute} which takes two parameters,
+   * an attribute name and a value.
+   *
+   * <p>The specific attribute names that are banned are specified in {@code BANNED_ATTRS} below.
+   */
+  public static final class BanSettingAttributes extends AbstractRule {
+    private static class AttributeSettingRestriction {
+      final JSType type;
+      final String property;
+
+      AttributeSettingRestriction(JSType type, String property) {
+        this.type = type;
+        this.property = property;
+      }
+    }
+
+    private final ImmutableList<AttributeSettingRestriction> restrictions;
+
+    /**
+     * Security-sensitive attributes that are banned from being set.
+     *
+     * <p>Making updates to these attributes requires a new JSCompiler release. You must test the
+     * change using a global presubmit "at head" and update any affected allowlists. See
+     * go/jscompiler-global-presubmit and go/tsjs-conformance-team-docs.
+     */
+    public static final ImmutableSet<String> BANNED_ATTRS =
+        ImmutableSet.of(
+            "href",
+            "rel",
+            "src",
+            "srcdoc",
+            "action",
+            "formaction",
+            "sandbox",
+            "cite",
+            "poster",
+            "icon",
+            "style");
+
+    /**
+     * Create a custom checker to ban a function like {@code Element#setAttribute} based on a
+     * conformance requirement spec.
+     *
+     * <p>Names in {@code value} fields indicate the functions that should be blocked. Throws {@link
+     * InvalidRequirementSpec} if the requirement is malformed.
+     */
+    public BanSettingAttributes(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+
+      if (requirement.getValueList().isEmpty()) {
+        throw new InvalidRequirementSpec("missing value");
+      }
+
+      JSTypeRegistry registry = compiler.getTypeRegistry();
+      ImmutableList.Builder<AttributeSettingRestriction> builder = ImmutableList.builder();
+      for (String value : requirement.getValueList()) {
+        String type = ConformanceUtil.getClassFromDeclarationName(value);
+        String property = ConformanceUtil.getPropertyFromDeclarationName(value);
+        if (type == null || property == null) {
+          throw new InvalidRequirementSpec("bad prop value");
+        }
+        builder.add(new AttributeSettingRestriction(registry.getGlobalType(type), property));
+      }
+
+      restrictions = builder.build();
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
+      if (node.isCall()) {
+        return checkConformanceOnPropertyCall(traversal, node);
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private ConformanceResult checkConformanceOnPropertyCall(NodeTraversal traversal, Node node) {
+      Optional<String> calledProperty = getBannedPropertyName(node);
+      if (!calledProperty.isPresent()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      // This node is conformant if it has less than three children (the function and two
+      // arguments). It's either reading the attribute, a false positive, or uncompilable code.
+      if (node.getChildCount() < 3) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      return SecuritySensitiveAttributes.checkConformanceForAttributeName(
+          traversal, node.getSecondChild(), BANNED_ATTRS);
+    }
+
+    private Optional<String> getBannedPropertyName(Node node) {
+      Node target = node.getFirstChild();
+      if (!target.isGetProp()) {
+        return Optional.absent();
+      }
+      JSType type = target.getFirstChild().getJSType();
+      if (type == null) {
+        return Optional.absent();
+      }
+      String propertyName = target.getString();
+      for (AttributeSettingRestriction restricted : restrictions) {
+        if (propertyName.equals(restricted.property)
+            && restricted.type != null
+            && type.isSubtypeOf(restricted.type)) {
+          return Optional.of(propertyName);
+        }
+      }
+      return Optional.absent();
     }
   }
 

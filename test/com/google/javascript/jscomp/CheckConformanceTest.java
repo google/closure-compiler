@@ -3374,6 +3374,98 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBanSettingAttributes() {
+    configuration =
+        lines(
+            "requirement: {\n",
+            "  type: CUSTOM\n",
+            "  value: 'Element.prototype.attr'\n",
+            "  value: 'Foo.prototype.attrib'\n",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanSettingAttributes'\n",
+            "  error_message: 'BanSettingAttributes Message'\n",
+            "}");
+
+    String externs =
+        lines(
+            DEFAULT_EXTERNS,
+            "/** @constructor */ function Foo() {}\n",
+            "/** @constructor */ function Bar() {}\n",
+            "/** @constructor */ function Element() {}\n",
+            "/** @constructor @extends {Element} */ function HTMLScriptElement() {}\n");
+
+    testWarning(
+        externs(externs),
+        srcs("(new Foo).attrib('SRc', 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSettingAttributes Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new HTMLScriptElement).attr('href', 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSettingAttributes Message");
+
+    testNoWarning(externs(externs), srcs("(new Bar).attr('src', 'xxx')"));
+
+    testNoWarning(externs(externs), srcs("(new Foo).attrib('src')"));
+
+    testNoWarning(externs(externs), srcs("(new HTMLScriptElement).attrib('src', 'xxx')"));
+
+    testNoWarning(externs(externs), srcs("(new HTMLScriptElement).attr('data-random', 'xxx')"));
+
+    testWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "const foo = 'safe';",
+                "var bar = foo;",
+                "(new HTMLScriptElement).attr(bar, 'xxx');")),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSettingAttributes Message");
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "const foo = 'safe';",
+                "const bar = foo;",
+                "(new HTMLScriptElement).attr(bar, 'xxx');")));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            new String[] {
+              lines(
+                  "goog.provide('test.Attribute');",
+                  "",
+                  "/** @enum {string} */",
+                  "test.Attribute = {SRC: 'src', HREF: 'href', SAFE: 'safe'};"),
+              lines(
+                  "goog.module('test.attr');",
+                  "",
+                  "const Attribute = goog.require('test.Attribute');",
+                  "",
+                  "const attr = Attribute.SAFE;",
+                  "(new HTMLScriptElement).attr(attr, 'xxx');")
+            }));
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            lines(
+                "goog.provide('xid');",
+                "goog.provide('xid.String');",
+                "/** @enum {string} */ xid.String = {DO_NOT_USE: ''};",
+                "/**",
+                " * @param {string} id",
+                " * @return {xid.String}",
+                " */",
+                "xid = function(id) {return /** @type {xid.String} */ (id);};",
+                "const attr = xid('src');",
+                "(new HTMLScriptElement).attr(attr, 'xxx');")));
+  }
+
+  @Test
   public void testBanExecCommand() {
     configuration =
         lines(
