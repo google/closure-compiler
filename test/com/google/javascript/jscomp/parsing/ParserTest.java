@@ -5671,6 +5671,129 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEmptyClassStaticBlock() {
+    parse("class C { static { } }");
+    parse("let a = class { static { } };");
+  }
+
+  @Test
+  public void testClassStaticBlock_this() {
+    // multiple fields
+    parse(
+        lines(
+            "class C { ",
+            "static field1 = 1; static field2 = 2; static field3 = 3;",
+            "static { ",
+            "let x = this.field1; let y = this.field2; let z = this.field3;",
+            "}",
+            "}"));
+    parse("class C { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } }");
+    parse(
+        lines(
+            "let a = class { ",
+            "static field1 = 1; static field2 = 2; static field3 = 3;",
+            "static {",
+            "let x = this.field1; let y = this.field2; let z = this.field3;",
+            "}",
+            "};"));
+    parse("let a = class { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } };");
+    // functions
+    parse(
+        lines(
+            "class C {",
+            "static field1 = 1;",
+            "static {",
+            "function incr() { return ++A.field1; }",
+            "console.log(incr());",
+            "if(incr()) {",
+            "this.field2 = 2;",
+            "}",
+            "}",
+            "}"));
+    // try catch
+    parse(
+        lines(
+            "class C {",
+            "static field1 = 1;",
+            "static {",
+            "try {",
+            "this.field1 = 1;",
+            "}",
+            "catch {",
+            "}",
+            "}",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticBlock_inheritance() {
+    // It is a syntax error to call super() in a class static initialization block.
+    // Must get reported in CheckSuper.java.
+    parse("class Base {} class C extends Base { static { super(); } }");
+    // allow accessing static properties of the base class
+    parse("class Base { static y; } class C extends Base { static { super.y; } }");
+    // allow accessing non-static properties of the base class
+    parse("class Base { y; } class C extends Base { static { super.y; } }");
+  }
+
+  @Test
+  public void testMultipleClassStaticBlocks() {
+    // empty
+    parse("class C { static { } static { } }");
+    parse("let a = class { static { } static { } };");
+    // multiple fields
+    parse(
+        lines(
+            "class C {",
+            "static field1 = 1; static field2 = 2; static field3 = 3;",
+            "static { ",
+            "let x =this.field1; let y = this.field2; ",
+            "} ",
+            "static {",
+            "let z = this.field3;",
+            "} ",
+            "}"));
+    parse("class C { static { this.field1 = 1; this.field2 = 2; } static { this.field3 = 3; } }");
+    parse(
+        lines(
+            "let a = class { ",
+            "static field1 = 1; static field2 = 2; static field3 = 3;",
+            "static {",
+            "let x = this.field1; let y = this.field2; let z = this.field3;",
+            "}",
+            "};"));
+    parse(
+        "let a = class { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } static {"
+            + " this.field3 = 3; } };");
+  }
+
+  @Test
+  public void testClassStaticBlock_linenocharno() {
+    Node n = parse("class C {\n static {}\n }").getFirstChild();
+
+    assertNode(n).hasType(Token.CLASS);
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(0);
+
+    Node members = NodeUtil.getClassMembers(n);
+    assertNode(members).hasType(Token.CLASS_MEMBERS);
+
+    Node staticBlock = members.getFirstChild();
+
+    assertNode(staticBlock).hasType(Token.BLOCK);
+    assertNode(staticBlock).hasLineno(2);
+    assertNode(staticBlock).hasCharno(8);
+    assertNode(staticBlock).hasLength(2);
+  }
+
+  @Test
+  public void testClassStaticBlock_invalid() {
+    parseError("class { {} }", "'identifier' expected");
+    parseError("class { static { static { } } }", "'identifier' expected");
+    parseError("var o = { static {} };", "Cannot use keyword in short object literal");
+  }
+
+  @Test
   public void testSuper1() {
     expectFeatures(Feature.SUPER);
     strictMode = SLOPPY;

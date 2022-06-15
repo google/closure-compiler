@@ -655,6 +655,8 @@ public class Parser {
       return parseSetAccessor(partialElement);
     } else if (peekAsyncMethod()) {
       return parseAsyncMethod(partialElement);
+    } else if (peekClassStaticInitializerBlock()) {
+      return parseClassStaticInitializerBlock();
     } else {
       return parseClassMemberDeclaration(partialElement);
     }
@@ -665,6 +667,10 @@ public class Parser {
         && !peekImplicitSemiColon(1)
         && (peekPropertyNameOrComputedProp(1)
             || (peek(1, TokenType.STAR) && peekPropertyNameOrComputedProp(2)));
+  }
+
+  private boolean peekClassStaticInitializerBlock() {
+    return peek(TokenType.STATIC) && peek(1, TokenType.OPEN_CURLY);
   }
 
   private PartialClassElement parseClassElementName(PartialClassElement partial) {
@@ -743,7 +749,6 @@ public class Parser {
   private ParseTree parseClassMemberDeclaration(PartialClassElement partial) {
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
     partial = parseClassElementName(partial);
-
     if (peekType(0) == TokenType.OPEN_PAREN) {
       return parseMethodDefinition(partial, isGenerator);
     } else {
@@ -808,6 +813,11 @@ public class Parser {
       return new ComputedPropertyMethodTree(
           getTreeLocation(nameExpr.getStart()), nameExpr, function);
     }
+  }
+
+  private ParseTree parseClassStaticInitializerBlock() {
+    eat(TokenType.STATIC);
+    return parseBlock();
   }
 
   private void parseFunctionTail(
