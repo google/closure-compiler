@@ -758,6 +758,16 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
     test(
         lines(
+            "var CLOSURE_DEFINES = CLOSURE_DEFINES || {};",
+            "CLOSURE_DEFINES['FOO'] = 'closureDefault';",
+            "/** @define {string} */ const FOO = 'original';"),
+        lines(
+            "var CLOSURE_DEFINES = CLOSURE_DEFINES || {};",
+            "CLOSURE_DEFINES['FOO'] = 'closureDefault';",
+            "/** @define {string} */ const FOO = 'closureDefault';"));
+
+    test(
+        lines(
             "var CLOSURE_DEFINES = {'FOO': true};", "/** @define {boolean} */ const FOO = false;"),
         lines(
             "var CLOSURE_DEFINES = {'FOO': true};", //
@@ -781,6 +791,27 @@ public final class ProcessDefinesTest extends CompilerTestCase {
         lines(
             "var CLOSURE_DEFINES = {'FOO': 0xABCD};", //
             "/** @define {number} */ const FOO = 0xABCD;"));
+  }
+
+  @Test
+  public void testClosureDefineValues_duplicateKey() {
+    mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
+    test(
+        srcs(
+            lines(
+                "var CLOSURE_DEFINES = CLOSURE_DEFINES || {};",
+                "CLOSURE_DEFINES['FOO'] = 'firstVersionIgnored';",
+                "CLOSURE_DEFINES['FOO'] = 'closureDefault';",
+                "/** @define {string} */ const FOO = 'original';")),
+        error(ProcessDefines.CLOSURE_DEFINES_MULTIPLE));
+
+    test(
+        srcs(
+            lines(
+                "var CLOSURE_DEFINES = {'FOO': 'firstVersionIgnored'};",
+                "CLOSURE_DEFINES['FOO'] = 'closureDefault';",
+                "/** @define {string} */ const FOO = 'original';")),
+        error(ProcessDefines.CLOSURE_DEFINES_MULTIPLE));
   }
 
   @Test
@@ -810,6 +841,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testClosureDefineValues_replacementWithOverriddenDefine() {
+    // Command-line flag takes precedence over CLOSURE_DEFINES.
     mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
     overrides.put("FOO", IR.string("override"));
     test(
@@ -834,6 +866,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testClosureDefines_unknownDefineErrors() {
     mode = ProcessDefines.Mode.OPTIMIZE;
     test(srcs("var CLOSURE_DEFINES = {'FOO': 0};"), warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
+    test(srcs("CLOSURE_DEFINES['FOO'] = 0;"), warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
 
   @Test
@@ -851,6 +884,15 @@ public final class ProcessDefinesTest extends CompilerTestCase {
             lines(
                 "if (cond) {",
                 "  var CLOSURE_DEFINES = {'FOO': 0};",
+                "}",
+                "/** @define {number} */ const FOO = 1;")),
+        error(ProcessDefines.NON_GLOBAL_CLOSURE_DEFINES_ERROR));
+
+    test(
+        srcs(
+            lines(
+                "if (cond) {",
+                "  CLOSURE_DEFINES['FOO'] = 0;",
                 "}",
                 "/** @define {number} */ const FOO = 1;")),
         error(ProcessDefines.NON_GLOBAL_CLOSURE_DEFINES_ERROR));
@@ -872,6 +914,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     testError(
         "var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};",
         ProcessDefines.CLOSURE_DEFINES_ERROR);
+
+    testError("CLOSURE_DEFINES[notStringLiteral] = 42;", ProcessDefines.CLOSURE_DEFINES_ERROR);
+    testError("CLOSURE_DEFINES['FOO'] = a;", ProcessDefines.CLOSURE_DEFINES_ERROR);
   }
 
   @Test
