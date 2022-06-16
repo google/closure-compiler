@@ -1310,8 +1310,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       result = performStage1andSave(config.getSaveCompilationStateToFilename(), metricsRecorder);
       // Don't output any results, since compilation isn't done yet.
       shouldProcessResults = false;
-    } else if (typedAstListInputFilename != null) {
-      result = parseAndPerformStages2and3(metricsRecorder);
+    } else if (config.shouldRestoreTypedAstsPerformStage2AndSave()) {
+      result =
+          restoreTypedAstsPerformStage2AndSave(
+              config.getSaveCompilationStateToFilename(), metricsRecorder);
+      // Don't output any results, since compilation isn't done yet.
+      shouldProcessResults = false;
+    } else if (config.shouldRestoreTypedAstsPerformStages2And3()) {
+      result = restoreTypedAstsPerformStages2and3(metricsRecorder);
     } else if (config.shouldRestoreAndPerformStage2AndSave()) {
       result =
           restoreAndPerformStage2AndSave(
@@ -1416,7 +1422,35 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  private Result parseAndPerformStages2and3(CompileMetricsRecorderInterface metricsRecorder) {
+  private Result restoreTypedAstsPerformStage2AndSave(
+      String outputFilename, CompileMetricsRecorderInterface metricsRecorder) {
+    metricsRecorder.recordActionName("parse & optimize");
+    try {
+      compiler.parseForCompilation();
+      if (!compiler.hasErrors()) {
+        metricsRecorder.recordStartState(compiler);
+        compiler.stage2Passes();
+        if (!compiler.hasErrors()) {
+          try (BufferedOutputStream serializedOutputStream =
+              new BufferedOutputStream(new FileOutputStream(outputFilename))) {
+            compiler.saveState(serializedOutputStream);
+          } catch (IOException e) {
+            compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, outputFilename));
+          }
+          compiler.performPostCompilationTasks();
+        }
+      }
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    return compiler.getResult();
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private Result restoreTypedAstsPerformStages2and3(
+      CompileMetricsRecorderInterface metricsRecorder) {
     metricsRecorder.recordActionName("skip-checks compile");
     try {
       compiler.parseForCompilation();
@@ -2538,6 +2572,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    boolean shouldRestoreTypedAstsPerformStage2AndSave() {
+      // We have a typed ast input list to parse
+      return typedAstListInputFilename != null
+          // we want to stop and save after optimizations
+          && saveAfterCompilationStage == 2;
+    }
+
+    boolean shouldRestoreTypedAstsPerformStages2And3() {
+      // We have a typed ast input list to parse
+      return typedAstListInputFilename != null
+          // we do not want to stop and save after optimizations
+          && saveAfterCompilationStage == -1;
+    }
+
     boolean shouldRestoreAndPerformStage2AndSave() {
       // We have a saved compilations state to restore
       return shouldContinueCompilation()
@@ -2561,12 +2609,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     boolean shouldDoLateLocalization() {
-      // The point of doing a 3-stage compilation is to save localization work for last, so
-      // we avoid doing checks and optimizations separately for every locale.
-      // If we aren't doing a 3-stage compilation, then late localization is just doing more work
-      // for a possibly-bigger compiled output (because code gets added after optimizations have
-      // already executed).
-      return shouldRestoreAndPerformStage2AndSave() || shouldRestoreAndPerformStage3();
+      // The point of dividing checks, optimizations, and finalizations into different stages is to
+      // localization work for last, so we avoid doing checks and optimizations separately for every
+      // locale.
+      // If we aren't doing finalizations as a separate final stage, then late localization is just
+      // doing more work for a possibly-bigger compiled output (because code gets added after
+      // optimizations have already executed).
+      return shouldRestoreAndPerformStage2AndSave()
+          || shouldRestoreAndPerformStage3()
+          || shouldRestoreTypedAstsPerformStage2AndSave();
     }
 
     @Nullable private String typedAstListInputFilename;
