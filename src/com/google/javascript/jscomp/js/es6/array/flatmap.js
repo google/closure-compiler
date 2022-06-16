@@ -34,7 +34,8 @@ $jscomp.polyfill('Array.prototype.flatMap', function(orig) {
    */
   var flatMap = function(callback, thisArg) {
     var mapped = [];
-    for (var i = 0; i < this.length; i++) {
+    var length = this.length;
+    for (var i = 0; i < length; i++) {
       var result = callback.call(thisArg, this[i], i, this);
       if (Array.isArray(result)) {
         mapped.push.apply(mapped, result);

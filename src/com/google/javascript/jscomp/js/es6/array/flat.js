@@ -35,7 +35,8 @@ $jscomp.polyfill('Array.prototype.flat', function(orig) {
     // TODO(sdh): Consider respecting Symbol.species (b/121061255).
     depth = depth === undefined ? 1 : depth;
     var flattened = [];
-    for (var i = 0; i < this.length; i++) {
+    var length = this.length;
+    for (var i = 0; i < length; i++) {
       var element = this[i];
       if (Array.isArray(element) && depth > 0) {
         var inner = Array.prototype.flat.call(element, depth - 1);
