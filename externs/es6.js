@@ -1801,6 +1801,18 @@ Object.values = function(obj) {};
 Object.entries = function(obj) {};
 
 /**
+ * NOTE: this is an ES2022 extern.
+ * Returns whether the specified object has indicated property as its own
+ * property.
+ * @param {!Object} obj
+ * @param {string|symbol} propertyName
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn
+ */
+Object.hasOwn = function(obj, propertyName) {};
+
+/**
  * @param {!Iterable<*>} iter
  * @return {!Object}
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
