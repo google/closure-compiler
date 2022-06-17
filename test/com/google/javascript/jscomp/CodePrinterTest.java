@@ -3481,6 +3481,112 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testEmptyClassStaticBlock() {
+    assertPrettyPrintSame("class C {\n  static {\n  }\n}\n");
+    assertPrettyPrintSame("let a = class {\n  static {\n  }\n};\n");
+  }
+
+  @Test
+  public void testClassStaticBlock() {
+    assertPrettyPrintSame(
+        lines(
+            "class C {",
+            "  static field1=1;",
+            "  static field2=2;",
+            "  static {",
+            "    let x = this.field1;",
+            "    let y = this.field2;",
+            "  }",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    this.field1 = 1;",
+            "    this.field2 = 2;",
+            "  }",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "let a = class {",
+            "  static field1=1;",
+            "  static field2=2;",
+            "  static {",
+            "    let x = this.field1;",
+            "    let y = this.field2;",
+            "  }",
+            "};",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "let a = class {",
+            "  static {",
+            "    this.field1 = 1;",
+            "    this.field2 = 2;",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void testMultipleClassStaticBlocks() {
+    // empty
+    assertPrettyPrintSame("class C {\n  static {\n  }\n  static {\n  }\n}\n");
+    assertPrettyPrintSame("let a = class {\n  static {\n  }\n  static {\n  }\n};\n");
+    // multiple fields
+    assertPrettyPrintSame(
+        lines(
+            "class C {",
+            "  static field1=1;",
+            "  static field2=2;",
+            "  static {",
+            "    let x = this.field1;",
+            "  }",
+            "  static {",
+            "    let y = this.field2;",
+            "  }",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    this.field1 = 1;",
+            "  }",
+            "  static {",
+            "    this.field2 = 2;",
+            "  }",
+            "}",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "let a = class {",
+            "  static field1=1;",
+            "  static field2=2;",
+            "  static {",
+            "    let x = this.field1;",
+            "  }",
+            "  static {",
+            "    let y = this.field2;",
+            "  }",
+            "};",
+            ""));
+    assertPrettyPrintSame(
+        lines(
+            "let a = class {",
+            "  static {",
+            "    this.field1 = 1;",
+            "  }",
+            "  static {",
+            "    this.field2 = 2;",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
   public void testDeclarations() {
     assertPrintSame("let x");
     assertPrintSame("let x,y");

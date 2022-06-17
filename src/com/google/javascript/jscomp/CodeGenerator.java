@@ -772,6 +772,12 @@ public class CodeGenerator {
           if (node.getClass() != Node.class) {
             throw new Error("Unexpected Node subclass.");
           }
+          if (node.hasParent()) {
+            boolean staticBlock = node.isBlock() && node.getParent().isClassMembers();
+            if (staticBlock) {
+              add("static ");
+            }
+          }
           boolean preserveBlock = node.isBlock() && !node.isSyntheticBlock();
           if (preserveBlock) {
             cc.beginBlock();
