@@ -1,0 +1,11 @@
+package com.google.javascript.jscomp;
+
+/**
+ * Version information to be filled in at build time.
+ *
+ * <p>The fields in this class should be filled with correct information by a build rule.
+ */
+class JSCompilerRunnerVersion {
+  static final String JSC_VERSION = "inlineDefine_JSC_VERSION";
+  static final int JSC_ROLLUP_CL = Integer.parseInt("inlineDefine_JSC_ROLLUP_CL");
+}

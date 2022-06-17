@@ -136,8 +136,8 @@ oss_java_library(
     name = "compiler_lib_no_runtime_libs",
     java_attrs = dict(
         javacopts = [
-          "-source 11",
-          "-target 11",
+            "-source 11",
+            "-target 11",
         ],
         resources = [
             ":externs_zip",
@@ -149,7 +149,7 @@ oss_java_library(
     ),
     shared_attrs = dict(
         srcs = [
-            ":CommandLineRunner_with_version",
+            ":CommandLineRunnerVersion",
         ] + glob(
             [
                 "src/com/google/**/*.java",
@@ -161,9 +161,6 @@ oss_java_library(
                 "**/super*/**/*.java",
                 "**/testing/**/*.java",
                 "**/webservice/**/*.java",
-            ] + [
-                # Used as a template.
-                "src/com/google/javascript/jscomp/CommandLineRunner.java",
             ],
         ),
         deps = [
@@ -197,15 +194,15 @@ genrule(
 # tell us during build if something is wrong. By contrast, a resource lookup
 # will fail at runtime.
 expand_template_with_defines(
-    name = "CommandLineRunner_with_version",
-    out = "withversion/CommandLineRunner.java",
+    name = "CommandLineRunnerVersion",
+    out = "CommandLineRunnerVersion.java",
     defines = {
         "COMPILER_VERSION": "unspecified",
     },
     substitutions = {
-        "inlineDefine_COMPILER_VERSION": '"{COMPILER_VERSION}"',
+        "inlineDefine_COMPILER_VERSION": "{COMPILER_VERSION}",
     },
-    template = "src/com/google/javascript/jscomp/CommandLineRunner.java",
+    template = "src/com/google/javascript/jscomp/CommandLineRunnerVersion.template",
 )
 
 # To run all tests:           `blaze test //:compiler_tests`

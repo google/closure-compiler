@@ -1604,7 +1604,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     return String.join(
         "\n", //
         "Closure Compiler (http://github.com/google/closure-compiler)",
-        "Version: " + ((String) inlineDefine_COMPILER_VERSION));
+        // CommandLineRunnerVersion refers to class created from CommandLineRunnerVersion.template
+        // with its static field COMPILER_VERSION substituted at build time.
+        "Version: " + CommandLineRunnerVersion.COMPILER_VERSION);
   }
 
   private void initConfigFromFlags(String[] args, PrintStream out, PrintStream err) {
