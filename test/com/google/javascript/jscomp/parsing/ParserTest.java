@@ -5717,7 +5717,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "static field1 = 1;",
             "static {",
             "try {",
-            "this.field1 = 1;",
+            "this.field1 = 2;",
             "}",
             "catch {",
             "}",
@@ -5747,7 +5747,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "class C {",
             "static field1 = 1; static field2 = 2; static field3 = 3;",
             "static { ",
-            "let x =this.field1; let y = this.field2; ",
+            "let x = this.field1; let y = this.field2; ",
             "} ",
             "static {",
             "let z = this.field3;",
@@ -5759,12 +5759,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "let a = class { ",
             "static field1 = 1; static field2 = 2; static field3 = 3;",
             "static {",
-            "let x = this.field1; let y = this.field2; let z = this.field3;",
+            "let x = this.field1; let y = this.field2;",
+            "}",
+            "static {",
+            "let z = this.field3;",
             "}",
             "};"));
     parse(
-        "let a = class { static { this.field1 = 1; this.field2 = 2; this.field3 = 3; } static {"
-            + " this.field3 = 3; } };");
+        lines(
+            "let a = class {",
+            "static {",
+            "this.field1 = 1; this.field2 = 2;",
+            "}",
+            "static {",
+            " this.field3 = 3;",
+            "}",
+            "};"));
   }
 
   @Test
