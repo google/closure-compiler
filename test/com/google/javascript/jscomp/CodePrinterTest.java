@@ -3483,6 +3483,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   @Test
   public void testEmptyClassStaticBlock() {
     assertPrettyPrintSame("class C {\n  static {\n  }\n}\n");
+    assertPrint("class C {\n  static {\n  }\n}\n", "class C{static{}}");
     assertPrettyPrintSame("let a = class {\n  static {\n  }\n};\n");
   }
 

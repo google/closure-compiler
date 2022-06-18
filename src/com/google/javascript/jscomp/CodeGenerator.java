@@ -775,7 +775,7 @@ public class CodeGenerator {
           if (node.hasParent()) {
             boolean staticBlock = node.isBlock() && node.getParent().isClassMembers();
             if (staticBlock) {
-              add("static ");
+              add("static");
             }
           }
           boolean preserveBlock = node.isBlock() && !node.isSyntheticBlock();
