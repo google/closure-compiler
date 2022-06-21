@@ -2380,6 +2380,24 @@ RegExpResult.prototype.length;
 RegExpResult.prototype.groups;
 
 
+/**
+ * Not actually part of ES3; was added in 2022.
+ * https://github.com/tc39/proposal-regexp-match-indices
+ *
+ * @constructor
+ * @extends {Array<!Array<number>|undefined>}
+ */
+var RegExpResultIndices = function() {};
+
+
+/** @type {!Object<string, !Array<number>|undefined>} */
+RegExpResultIndices.prototype.groups;
+
+
+/** @type {!RegExpResultIndices} */
+RegExpResult.prototype.indices;
+
+
 // Constructor properties:
 
 /**
