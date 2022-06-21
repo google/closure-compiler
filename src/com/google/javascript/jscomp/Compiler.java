@@ -3413,7 +3413,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           this.runtimeLibraryTypedAsts,
           "Must call initRuntimeLibraryTypedAsts before calling ensureLibraryInjected during"
               + " optimizations");
-      ast = this.runtimeLibraryTypedAsts.get(path).get();
+
+      Supplier<Node> typedAstSupplier =
+          checkNotNull(
+              this.runtimeLibraryTypedAsts.get(path),
+              String.join(
+                  "",
+                  "Missing precompiled .typedast for '%s'. If this file is newly added, ",
+                  "you may need to regenerate runtime_libs.typedast.textproto",
+                  ""),
+              path);
+      ast = typedAstSupplier.get();
     } else {
       checkState(
           !this.hasTypeCheckingRun(),
