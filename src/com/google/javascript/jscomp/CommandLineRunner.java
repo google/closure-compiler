@@ -958,7 +958,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     /** Parse the given args list. */
     private void parse(List<String> args) throws CmdLineException {
-      parser.parseArgument(args.toArray(new String[] {}));
+      parser.parseArgument(args);
 
       compilationLevelParsed = CompilationLevel.fromString(Ascii.toUpperCase(compilationLevel));
       if (compilationLevelParsed == null) {
