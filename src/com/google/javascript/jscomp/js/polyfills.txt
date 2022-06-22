@@ -59,6 +59,7 @@ Object.entries es8 es3 es6/object/entries
 Object.fromEntries es_2019 es3 es6/object/fromentries
 Object.getOwnPropertyDescriptors es8 es5 es6/object/getownpropertydescriptors
 Object.getOwnPropertySymbols es6 es5 es6/object/getownpropertysymbols
+Object.hasOwn es_next es3 es6/object/hasOwn
 Object.is es6 es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
 Object.values es8 es3 es6/object/values

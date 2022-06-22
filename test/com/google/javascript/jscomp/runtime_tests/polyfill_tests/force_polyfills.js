@@ -67,6 +67,7 @@ delete Object.fromEntries;
 delete Object.is;
 delete Object.setPrototypeOf;
 delete Object.values;
+delete Object.hasOwn;
 
 delete Promise;
 delete Reflect;
