@@ -941,6 +941,10 @@ public final class AstValidator implements CompilerPass {
         validateProperties(n);
         validateChildCount(n);
         break;
+      case BLOCK:
+        validateFeature(Feature.CLASS_STATIC_BLOCK, n);
+        validateBlock(n);
+        break;
       case EMPTY: // Empty is allowed too.
         break;
       default:

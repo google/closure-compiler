@@ -2518,6 +2518,9 @@ class IRFactory {
           case SET_ACCESSOR:
             features = features.with(Feature.CLASS_GETTER_SETTER);
             break;
+          case BLOCK:
+            features = features.with(Feature.CLASS_STATIC_BLOCK);
+            break;
           default:
             break;
         }

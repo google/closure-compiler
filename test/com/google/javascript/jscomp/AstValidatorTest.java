@@ -246,6 +246,45 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlock() {
+
+    valid(
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassStaticBlock_this() {
+    // TODO (user): re-enable TypeInfoValidation and TypeCheck
+    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    disableTypeCheck();
+    valid(
+        lines(
+            "class C {", //
+            "  static {",
+            "    this.prop = 4;",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testFeatureValidation_classStaticBlock() {
+    testFeatureValidation(
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}",
+            ""),
+        Feature.CLASS_STATIC_BLOCK);
+  }
+
+  @Test
   public void testFor() {
     valid("for(var a;;);");
     valid("for(let a;;);");

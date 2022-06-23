@@ -1711,6 +1711,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         return scope;
       case MEMBER_FUNCTION_DEF:
       case COMPUTED_PROP:
+      case BLOCK:
       case GETTER_DEF:
       case SETTER_DEF:
         return scope;
