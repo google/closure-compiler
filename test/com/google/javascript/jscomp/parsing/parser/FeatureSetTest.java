@@ -104,12 +104,10 @@ public final class FeatureSetTest {
     // from these `FeatureSet`s.
     assertThat(FeatureSet.ES_NEXT.version()).isEqualTo("es_next");
     assertThat(FeatureSet.ES_UNSTABLE.version()).isEqualTo("es_unstable");
-    assertThat(FeatureSet.ES_UNSUPPORTED.version())
-        .isEqualTo("es_unstable"); // as ES_UNSUPPORTED is currently empty.
+    assertThat(FeatureSet.ES_UNSUPPORTED.version()).isEqualTo("es_unsupported");
   }
 
   @Test
-
   public void testValueOf() {
     assertFS(FeatureSet.valueOf("es3")).equals(FeatureSet.ES3);
     assertFS(FeatureSet.valueOf("es5")).equals(FeatureSet.ES5);
