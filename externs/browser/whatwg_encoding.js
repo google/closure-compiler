@@ -59,3 +59,41 @@ TextEncoder.prototype.encode = function(input) {};
  * @return {{read: number, written: number}}
  */
 TextEncoder.prototype.encodeInto = function(input, uint8Array) {};
+
+/**
+ * @constructor
+ * @param {string=} encoding
+ * @param {Object=} options
+ */
+function TextDecoderStream(encoding, options) {}
+
+/** @type {string} **/ TextDecoderStream.prototype.encoding;
+/** @type {boolean} **/ TextDecoderStream.prototype.fatal;
+/** @type {boolean} **/ TextDecoderStream.prototype.ignoreBOM;
+
+/**
+ * @type {ReadableStream<string>}
+ */
+TextDecoderStream.prototype.readable;
+
+/**
+ * @type {WritableStream<BufferSource>}
+ */
+TextDecoderStream.prototype.writable;
+
+/**
+ * @constructor
+ */
+function TextEncoderStream() {}
+
+/** @type {string} **/ TextEncoderStream.prototype.encoding;
+
+/**
+ * @type {ReadableStream<Uint8Array>}
+ */
+TextEncoderStream.prototype.readable;
+
+/**
+ * @type {WritableStream<string>}
+ */
+TextEncoderStream.prototype.writable;
