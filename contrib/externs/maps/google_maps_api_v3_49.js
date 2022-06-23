@@ -2644,6 +2644,202 @@ google.maps.ErrorEvent = function() {};
 google.maps.ErrorEvent.prototype.error;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a vector map tile feature. These are inputs to the
+ * <code>FeatureStyleFunction</code>. Do not save a reference to a particular
+ * <code>Feature</code> object because the reference will not be stable.
+ * @record
+ */
+google.maps.Feature = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * <code>FeatureType</code> of this <code>Feature</code>.
+ * @type {!google.maps.FeatureType}
+ */
+google.maps.Feature.prototype.featureType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a map layer containing features of a
+ * specific {@link google.maps.FeatureType} whose style can be overridden
+ * client-side, or have events attached.
+ * @record
+ */
+google.maps.FeatureLayer = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The <code>FeatureType</code> associated with this <code>FeatureLayer</code>.
+ * @type {!google.maps.FeatureType}
+ */
+google.maps.FeatureLayer.prototype.featureType;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Whether this <code>FeatureLayer</code> is available, meaning whether
+ * Data-driven styling is available for this map (there is a map ID using vector
+ * tiles with this <code>FeatureLayer</code> enabled in the Google Cloud Console
+ * map style.) If this is false (or becomes false), styling on this
+ * <code>FeatureLayer</code> returns to default and events are not triggered.
+ * @type {boolean}
+ */
+google.maps.FeatureLayer.prototype.isAvailable;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The style of <code>Feature</code>s in the <code>FeatureLayer</code>. The
+ * style is applied when style is set. If your style function updates, you must
+ * set the style property again. A <code>FeatureStyleFunction</code> must return
+ * consistent results when it is applied over the map tiles, and should be
+ * optimized for performance. If you use a <code>FeatureStyleOptions</code>, all
+ * features of that layer will be styled with the same
+ * <code>FeatureStyleOptions</code>. Set the style to <code>null</code> to
+ * remove the previously set style. If this <code>FeatureLayer</code> is not
+ * available, setting style does nothing and logs an error.
+ * @type {?google.maps.FeatureStyleOptions|?google.maps.FeatureStyleFunction|undefined}
+ */
+google.maps.FeatureLayer.prototype.style;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Adds the given listener function to the given event name. Returns an
+ * identifier for this listener that can be used with {@link
+ * google.maps.event.removeListener}.
+ * @param {string} eventName Observed event.
+ * @param {!Function} handler Function to handle events.
+ * @return {!google.maps.MapsEventListener} Resulting event listener.
+ */
+google.maps.FeatureLayer.prototype.addListener = function(
+    eventName, handler) {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * This object is returned from a mouse event on a <code>FeatureLayer</code>.
+ * @extends {google.maps.MapMouseEvent}
+ * @record
+ */
+google.maps.FeatureMouseEvent = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The <code>Feature</code>s at this mouse event.
+ * @type {!Array<!google.maps.Feature>}
+ */
+google.maps.FeatureMouseEvent.prototype.features;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @typedef {function(!google.maps.FeatureStyleFunctionOptions):
+ * (?google.maps.FeatureStyleOptions|undefined)}
+ */
+google.maps.FeatureStyleFunction;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Options passed to a <code>FeatureStyleFunction</code>.
+ * @record
+ */
+google.maps.FeatureStyleFunctionOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * <code>Feature</code> passed into the <code>FeatureStyleFunction</code> for
+ * styling.
+ * @type {!google.maps.Feature}
+ */
+google.maps.FeatureStyleFunctionOptions.prototype.feature;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * These options specify the way the style of a <code>Feature</code> should be
+ * modified on a map.
+ * @record
+ */
+google.maps.FeatureStyleOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Hex RGB string (like &quot;#00FF00&quot; for green). Only applies to polygon
+ * geometries.
+ * @type {string|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.fillColor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The fill opacity between 0.0 and 1.0. Only applies to polygon geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.fillOpacity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Hex RGB string (like &quot;#00FF00&quot; for green).
+ * @type {string|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeColor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The stroke opacity between 0.0 and 1.0. Only applies to line and polygon
+ * geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeOpacity;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The stroke width in pixels. Only applies to line and polygon geometries.
+ * @type {number|undefined}
+ */
+google.maps.FeatureStyleOptions.prototype.strokeWeight;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Identifiers for feature types.
+ * @enum {string}
+ */
+google.maps.FeatureType = {
+  /**
+   * Indicates a first-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_1: 'ADMINISTRATIVE_AREA_LEVEL_1',
+  /**
+   * Indicates a second-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_2: 'ADMINISTRATIVE_AREA_LEVEL_2',
+  /**
+   * Indicates a third-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_3: 'ADMINISTRATIVE_AREA_LEVEL_3',
+  /**
+   * Indicates a fourth-order civil entity below the country level.
+   */
+  ADMINISTRATIVE_AREA_LEVEL_4: 'ADMINISTRATIVE_AREA_LEVEL_4',
+  /**
+   * Indicates the national political entity.
+   */
+  COUNTRY: 'COUNTRY',
+  /**
+   * Indicates an incorporated city or town political entity.
+   */
+  LOCALITY: 'LOCALITY',
+  /**
+   * Indicates a named neighborhood.
+   */
+  NEIGHBORHOOD: 'NEIGHBORHOOD',
+  /**
+   * Indicates a postal code as used to address postal mail within the country.
+   */
+  POSTAL_CODE: 'POSTAL_CODE',
+  /**
+   * Indicates a first-order civil entity below a locality.
+   */
+  SUBLOCALITY_LEVEL_1: 'SUBLOCALITY_LEVEL_1',
+};
+
+/**
  * Options for the rendering of the fullscreen control.
  * @record
  */
@@ -4432,6 +4628,20 @@ google.maps.Map.prototype.getClickableIcons = function() {};
 google.maps.Map.prototype.getDiv = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Returns the <code>FeatureLayer</code> of the specific
+ * <code>FeatureType</code>. A <code>FeatureLayer</code> must be enabled in the
+ * Google Cloud Console. If a <code>FeatureLayer</code> of the specified
+ * <code>FeatureType</code> does not exist on this map, or if Data-driven
+ * styling is not available (no map ID, no vector tiles, and no
+ * <code>FeatureLayer</code> enabled in the map style), this logs an error, and
+ * the resulting <code>FeatureLayer.isAvailable</code> will be false.
+ * @param {!google.maps.FeatureType} featureType
+ * @return {!google.maps.FeatureLayer}
+ */
+google.maps.Map.prototype.getFeatureLayer = function(featureType) {};
+
+/**
  * Returns the compass heading of the map. The heading value is measured in
  * degrees (clockwise) from cardinal direction North. If the map is not yet
  * initialized then the result is <code>undefined</code>.
@@ -6188,6 +6398,37 @@ google.maps.Place.prototype.placeId;
  * @type {string|undefined}
  */
 google.maps.Place.prototype.query;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * An interface representing a feature with a place ID which includes features
+ * of type {@link google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_3}, {@link
+ * google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_4}, {@link
+ * google.maps.FeatureType.COUNTRY}, {@link
+ * google.maps.FeatureType.LOCALITY}, {@link
+ * google.maps.FeatureType.NEIGHBORHOOD}, {@link
+ * google.maps.FeatureType.POSTAL_CODE}, and {@link
+ * google.maps.FeatureType.SUBLOCALITY_LEVEL_1}.
+ * @extends {google.maps.Feature}
+ * @record
+ */
+google.maps.PlaceFeature = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The display name.
+ * @type {string}
+ */
+google.maps.PlaceFeature.prototype.displayName;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The {@link google.maps.places.PlaceResult.place_id}.
+ * @type {string}
+ */
+google.maps.PlaceFeature.prototype.placeId;
 
 /**
  * @param {number} x
