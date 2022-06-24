@@ -8624,6 +8624,12 @@ SVGElement.prototype.viewportElement;
  */
 SVGElement.prototype.className;
 
+/**
+ * @type {number}
+ * @see https://svgwg.org/svg2-draft/struct.html#tabindexattribute
+ */
+SVGElement.prototype.tabIndex;
+
 
 /**
  * @constructor
