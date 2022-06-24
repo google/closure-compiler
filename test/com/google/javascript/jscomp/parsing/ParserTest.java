@@ -5677,6 +5677,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testReturnInClassStaticBlock() {
+    parseError("function f() {class C { static { return; } }}", "return must be inside function");
+    parseError("class C { static { return; } }", "return must be inside function");
+    parse("class C {static {function f() {return;}}}");
+  }
+
+  @Test
   public void testClassStaticBlock_this() {
     // multiple fields
     parse(

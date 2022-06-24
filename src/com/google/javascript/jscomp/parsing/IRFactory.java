@@ -389,6 +389,12 @@ class IRFactory {
     if (n.isReturn()) {
       Node parent = n;
       while ((parent = parent.getParent()) != null) {
+        // The return is in a class static block.
+        // e.g. `class C { static { return; } }`
+        if (parent.isClassMembers()) {
+          errorReporter.error(UNEXPECTED_RETURN, sourceName, n.getLineno(), n.getCharno());
+          return;
+        }
         if (parent.isFunction()) {
           return;
         }
