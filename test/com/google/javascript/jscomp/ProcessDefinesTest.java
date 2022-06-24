@@ -497,6 +497,13 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDeclareInClassStaticBlock() {
+    testError(
+        "class C {static {/** @define {boolean} */ const DEF=true;}}",
+        ProcessDefines.INVALID_DEFINE_LOCATION);
+  }
+
+  @Test
   public void testDefineAssignmentInLoop() {
     testError(
         "/** @define {boolean} */var DEF=true;var x=0;while (x) {DEF=false;}",
