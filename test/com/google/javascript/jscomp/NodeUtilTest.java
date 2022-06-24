@@ -126,6 +126,10 @@ public final class NodeUtilTest {
       checkState(rootNode.isScript(), rootNode);
       return token.equals(SCRIPT) ? rootNode : getNode(rootNode, token);
     }
+
+    private Node parseSecond(Token token, String js) {
+      return getNode(parseFirst(token, js), token);
+    }
   }
 
   private static Node parse(String js) {
@@ -140,6 +144,16 @@ public final class NodeUtilTest {
    */
   private static Node parseFirst(Token token, String js) {
     return new ParseHelper().parseFirst(token, js);
+  }
+
+  /**
+   * Parses {@code js} into an AST and then returns the second Node in pre-traversal order with the
+   * given token.
+   *
+   * <p>TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
+   */
+  private static Node parseSecond(Token token, String js) {
+    return new ParseHelper().parseSecond(token, js);
   }
 
   /** Returns the parsed expression (e.g. returns a NAME given 'a') */
@@ -710,6 +724,29 @@ public final class NodeUtilTest {
               NodeUtil.isFunctionDeclaration(
                   parseFirst(FUNCTION, "export default (foo) => { alert(foo); }")))
           .isFalse();
+    }
+
+    @Test
+    public void testisBlockScopedFunctionDeclaration() {
+      assertThat(
+              NodeUtil.isBlockScopedFunctionDeclaration(parseFirst(FUNCTION, "function foo(){}")))
+          .isFalse();
+      assertThat(
+              NodeUtil.isBlockScopedFunctionDeclaration(
+                  parseFirst(FUNCTION, "var x = function(){}")))
+          .isFalse();
+      assertThat(
+              NodeUtil.isBlockScopedFunctionDeclaration(
+                  parseFirst(FUNCTION, "{ function foo(){} }")))
+          .isTrue();
+      assertThat(
+              NodeUtil.isBlockScopedFunctionDeclaration(
+                  parseFirst(FUNCTION, "class C { static { function foo(){} } }")))
+          .isTrue();
+      assertThat(
+              NodeUtil.isBlockScopedFunctionDeclaration(
+                  parseSecond(FUNCTION, "function foo(){ class C { static { function a(){} } } }")))
+          .isTrue();
     }
 
     @Test
