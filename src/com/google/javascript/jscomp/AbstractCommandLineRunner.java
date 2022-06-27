@@ -1358,7 +1358,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
-    int exitStatus = shouldProcessResults ? processResults(result, modules, options) : 0;
+    int exitStatus =
+        shouldProcessResults
+            ? processResults(result, modules, options)
+            : getExitStatusForResult(result);
     metricsRecorder.recordResultMetrics(compiler, result);
     return exitStatus;
   }
@@ -1671,6 +1674,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
 
+    return getExitStatusForResult(result);
+  }
+
+  private static int getExitStatusForResult(Result result) {
     // return 0 if no errors, the error count otherwise
     return min(result.errors.size(), 0x7f);
   }

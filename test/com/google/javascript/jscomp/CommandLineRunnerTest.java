@@ -68,6 +68,7 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link CommandLineRunner}. */
 @RunWith(JUnit4.class)
 public final class CommandLineRunnerTest {
+  @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   private Compiler lastCompiler = null;
@@ -150,6 +151,34 @@ public final class CommandLineRunnerTest {
     useModules = ModulePattern.NONE;
     args.clear();
     exitCodes = new ArrayList<>();
+  }
+
+  @Test
+  public void testStage1ErrorExitStatus() throws Exception {
+    // Create an input file
+    File srcFile = temporaryFolder.newFile("input.js");
+    writeLinesToFile(
+        srcFile,
+        // Intentionally incorrect type to generate a compiler error
+        "/** @type {undefined} */",
+        "const x = 1;");
+
+    // Create a path for the stage 1 output
+    File stage1Save = temporaryFolder.newFile("stage1.save");
+
+    ImmutableList<String> commonFlags =
+        ImmutableList.of("--jscomp_error=checkTypes", "--js", srcFile.toString());
+
+    // Run the compiler to generate the stage 1 save file
+    final ImmutableList<String> stage1Flags =
+        createStringList(
+            commonFlags, new String[] {"--save_stage1_to_file", stage1Save.toString()});
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            stringListToArray(stage1Flags), new PrintStream(outReader), new PrintStream(errReader));
+    // Expect an exit status of 1 because there is one error.
+    assertThat(runner.doRun()).isEqualTo(1);
+    assertThat(new String(outReader.toByteArray(), UTF_8)).isEmpty();
   }
 
   @Test
