@@ -19,6 +19,7 @@
  * @suppress {uselessCode}
  */
 'require base';
+'require es6/math/trunc';
 
 /**
  * Polyfills (Array|String|TypedArray).prototype.at.

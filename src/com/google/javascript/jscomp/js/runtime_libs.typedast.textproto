@@ -105087,6 +105087,15 @@ typed_asts {
       child {
         kind: EXPRESSION_STATEMENT
         child {
+          kind: STRING_LITERAL
+          string_value_pointer: 921
+          type: 2
+        }
+        relative_line: 1
+      }
+      child {
+        kind: EXPRESSION_STATEMENT
+        child {
           kind: ASSIGNMENT
           child {
             kind: PROPERTY_ACCESS
