@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.Token.ASSIGN_OR;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.BIGINT;
 import static com.google.javascript.rhino.Token.BITOR;
+import static com.google.javascript.rhino.Token.BLOCK;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
 import static com.google.javascript.rhino.Token.COALESCE;
@@ -605,6 +606,17 @@ public final class AstAnalyzerTest {
           kase().expect(false).token(COMPUTED_FIELD_DEF).js("class C { ['x'] = alert(1); }"),
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static ['x'] = alert(1); }"),
           kase().expect(true).token(COMPUTED_FIELD_DEF).js("class C { static [alert(1)] = 2; }"),
+
+          // CLASS_STATIC_BLOCK
+          kase().expect(false).token(BLOCK).js("class C { static {} }"),
+          kase().expect(false).token(BLOCK).js("class C { static { [1]; } }"),
+          kase().expect(true).token(BLOCK).js("class C { static { let x; } }"),
+          kase().expect(true).token(BLOCK).js("class C { static { const x =1 ; } }"),
+          kase().expect(true).token(BLOCK).js("class C { static { var x; } }"),
+          kase().expect(true).token(BLOCK).js("class C { static { this.x = 1; } }"),
+          kase().expect(true).token(BLOCK).js("class C { static { function f() { } } }"),
+          kase().expect(false).token(BLOCK).js("class C { static { (function () {} )} }"),
+          kase().expect(false).token(BLOCK).js("class C { static { ()=>{} } }"),
 
           // SUPER calls
           kase().expect(false).token(SUPER).js("super()"),
