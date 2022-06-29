@@ -201,6 +201,68 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUslessCodeInClassStaticBlock() {
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    function f(x) { if(x) return; }",
+            "  }",
+            "}"));
+    testWarning(
+        lines(
+            "class C {", //
+            "  static {",
+            "    function f(x) { if(x); }",
+            "  }",
+            "}"),
+        e);
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    var f = x=>x;",
+            "  }",
+            "}"));
+    testWarning(
+        lines(
+            "class C {", //
+            "  static {",
+            "    var f = (x)=>{ if(x); }",
+            "  }",
+            "}"),
+        e);
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    x = 3;",
+            "  }",
+            "}"));
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    x == 3;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  static {",
+            "    JSCOMPILER_PRESERVE(x == 3);",
+            "  }",
+            "}"),
+        warning(e));
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "     foo();;;;bar();;;;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testTypeAnnotations() {
     test("x;", "JSCOMPILER_PRESERVE(x);", warning(e));
     test("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", warning(e));
