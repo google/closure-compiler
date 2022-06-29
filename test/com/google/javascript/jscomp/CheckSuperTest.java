@@ -65,12 +65,13 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Test
   public void testMissingSuper_nestedClass() {
     // Note that super is only called for anonymous class "E", not C.
-    testError(lines(
-        "class C extends D {",
-        "  constructor() { ",
-        "    const E = class extends D { constructor() { super(); } };",
-        "  }",
-        "}"),
+    testError(
+        lines(
+            "class C extends D {",
+            "  constructor() { ",
+            "    const E = class extends D { constructor() { super(); } };",
+            "  }",
+            "}"),
         MISSING_CALL_TO_SUPER);
   }
 
@@ -352,9 +353,16 @@ public final class CheckSuperTest extends CompilerTestCase {
         srcs("class C extends D { foo() { super(1); }}"),
         error(INVALID_SUPER_CALL_WITH_SUGGESTION)
             .withMessage("super() not allowed here. Did you mean super.foo?"));
+    test(
+        srcs("class C extends D { static foo() { super(1); }}"),
+        error(INVALID_SUPER_CALL_WITH_SUGGESTION)
+            .withMessage("super() not allowed here. Did you mean super.foo?"));
     testError("class C { static foo() { super(); }}", INVALID_SUPER_CALL_WITH_SUGGESTION);
     testError(
         "class C extends D { foo() { (()=>{ super(); })(); }}", INVALID_SUPER_CALL_WITH_SUGGESTION);
+    testError(
+        "class C extends D { static foo() { (()=>{ super(); })(); }}",
+        INVALID_SUPER_CALL_WITH_SUGGESTION);
   }
 
   @Test
@@ -365,7 +373,26 @@ public final class CheckSuperTest extends CompilerTestCase {
     // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
     testSame("class C extends D { foo() { var x = super.bar; }}");
     testSame("class C extends D { foo() { var x = super[y]; }}");
-    testSame("class C extends D { foo() { super.bar(); }}");
+    testSame("class C extends D { foo() { var x = super.bar(); }}");
+
+    testSame("class C extends D { foo() { this[super.x] = super.bar; }}");
+    testSame("class C extends D { foo() { this[super.x] = super[y]; }}");
+    testSame("class C extends D { foo() { this[super.x] = super.bar(); }}");
+  }
+
+  @Test
+  public void testPropertyInStaticMethod() {
+    testSame("class C extends D { static foo() { super.foo(); }}");
+    testSame("class C extends D { static foo() { super.foo(1); }}");
+
+    // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
+    testSame("class C extends D { static foo() { var x = super.bar; }}");
+    testSame("class C extends D { static foo() { var x = super[y]; }}");
+    testSame("class C extends D { static foo() { var x = super.bar(); }}");
+
+    testSame("class C extends D { static foo() { this[super.x] = super.bar; }}");
+    testSame("class C extends D { static foo() { this[super.x] = super[y]; }}");
+    testSame("class C extends D { static foo() { this[super.x] = super.bar(); }}");
   }
 
   @Test
