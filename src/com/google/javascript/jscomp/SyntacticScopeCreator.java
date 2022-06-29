@@ -143,7 +143,7 @@ public final class SyntacticScopeCreator implements ScopeCreator {
           return;
 
         case BLOCK:
-          if (NodeUtil.isFunctionBlock(n)) {
+          if (NodeUtil.isFunctionBlock(n) || NodeUtil.isClassStaticBlock(n)) {
             scanVars(n, scope, scope);
           } else {
             scanVars(n, null, scope);

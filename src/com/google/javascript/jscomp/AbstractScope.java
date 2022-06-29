@@ -323,6 +323,10 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     return NodeUtil.createsBlockScope(rootNode);
   }
 
+  public final boolean isStaticBlockScope() {
+    return NodeUtil.isClassStaticBlock(getRootNode());
+  }
+
   public final boolean isFunctionBlockScope() {
     return NodeUtil.isFunctionBlock(getRootNode());
   }
@@ -350,7 +354,11 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    * the function parameters, it would be hoisted somewhere else.
    */
   final boolean isHoistScope() {
-    return isFunctionScope() || isFunctionBlockScope() || isGlobal() || isModuleScope();
+    return isFunctionScope()
+        || isFunctionBlockScope()
+        || isGlobal()
+        || isModuleScope()
+        || isStaticBlockScope();
   }
 
   /**

@@ -2953,6 +2953,10 @@ public final class NodeUtil {
     return n.isBlock() && n.hasParent() && n.getParent().isFunction();
   }
 
+  static boolean isClassStaticBlock(Node n) {
+    return n.isBlock() && n.hasParent() && n.getParent().isClassMembers();
+  }
+
   /**
    * Is a FUNCTION node a function expression?
    *

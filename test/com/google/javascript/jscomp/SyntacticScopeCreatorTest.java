@@ -702,6 +702,190 @@ public final class SyntacticScopeCreatorTest {
   }
 
   @Test
+  public void testStaticBlockScope() {
+    String js = "class C {static {}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).declares("C").directly();
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("C").onSomeParent();
+    assertThat(staticBlockScope.isBlockScope()).isTrue();
+    assertThat(staticBlockScope.getClosestHoistScope()).isEqualTo(staticBlockScope);
+    assertThat(staticBlockScope.isHoistScope()).isTrue();
+  }
+
+  @Test
+  public void testStaticBlockScopeClassExpr() {
+    String js = "let c = class C {static {}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).declares("c").directly();
+    assertScope(globalScope).doesNotDeclare("C");
+    assertScope(classScope).declares("c").onSomeParent();
+    assertScope(classScope).declares("C").directly();
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("C").onSomeParent();
+    assertScope(staticBlockScope).declares("c").onSomeParent();
+    assertThat(staticBlockScope.isBlockScope()).isTrue();
+    assertThat(staticBlockScope.getClosestHoistScope()).isEqualTo(staticBlockScope);
+    assertThat(staticBlockScope.isHoistScope()).isTrue();
+  }
+
+  @Test
+  public void testStaticBlockScopeWithLet() {
+    String js = "class C {static {let x;}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeClassExprWithLet() {
+    String js = "let c = class C {static {let x;}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeWithVar() {
+    String js = "class C {static {var x;}} var y; ";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeClassExprWithVar() {
+    String js = "let c = class C {static {var x;}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeWithLetInnerBlock() {
+    String js = "class C {static {if (true) {let x;}}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).doesNotDeclare("x");
+
+    Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
+    Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
+    assertScope(ifBodyScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeClassExprWithLetInnerBlock() {
+    String js = "let c = class C {static {if (true) {let x;}}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).doesNotDeclare("x");
+
+    Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
+    Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
+    assertScope(ifBodyScope).declares("x").directly();
+  }
+
+  @Test
+  public void testStaticBlockScopeWithVarInnerBlock() {
+    String js = "class C {static {if (true) {var x;}}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+
+    Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
+    Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
+    assertScope(ifBodyScope).declares("x").onSomeParent();
+  }
+
+  @Test
+  public void testStaticBlockScopeClassExprWithVarInnerBlock() {
+    String js = "let c = class C {static {if (true) {var x;}}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+    assertScope(staticBlockScope).declares("x").directly();
+
+    Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
+    Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
+    assertScope(ifBodyScope).declares("x").onSomeParent();
+  }
+
+  @Test
   public void testSwitchScope() {
     String js =
         "switch (b) { "
