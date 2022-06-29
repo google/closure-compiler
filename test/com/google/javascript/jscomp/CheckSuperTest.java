@@ -366,6 +366,28 @@ public final class CheckSuperTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuperCallInStaticBlock() {
+    testError("class C extends D {static {super();}}", INVALID_SUPER_CALL);
+    testError("class C extends D {static {super(1);}}", INVALID_SUPER_CALL);
+    testError("class C extends D { static { (()=>{ super(); })(); }}", INVALID_SUPER_CALL);
+  }
+
+  @Test
+  public void testPropertyInStaticBlock() {
+    testSame("class C extends D { static { super.foo(); }}");
+    testSame("class C extends D { static { super.foo(1); }}");
+
+    // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
+    testSame("class C extends D { static { var x = super.bar; }}");
+    testSame("class C extends D { static { var x = super[y]; }}");
+    testSame("class C extends D { static { var x = super.bar(); }}");
+
+    testSame("class C extends D { static { this[super.x] = super.bar; }}");
+    testSame("class C extends D { static { this[super.x] = super[y]; }}");
+    testSame("class C extends D { static { this[super.x] = super.bar(); }}");
+  }
+
+  @Test
   public void testPropertyInMethod() {
     testSame("class C extends D { foo() { super.foo(); }}");
     testSame("class C extends D { foo() { super.foo(1); }}");
@@ -440,6 +462,8 @@ public final class CheckSuperTest extends CompilerTestCase {
   public void testNestedProperty() {
     testSame("class C extends D { constructor() { super(); (()=>{ super.foo(); })(); }}");
     testSame("class C extends D { foo() { (()=>{ super.foo(); })(); }}");
+    testSame("class C extends D { static foo() { (()=>{ super.foo(); })(); }}");
+    testSame("class C extends D { static { (()=>{ super.foo(); })(); }}");
   }
 
   @Test
