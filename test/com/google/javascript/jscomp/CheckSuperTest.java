@@ -475,6 +475,4 @@ public final class CheckSuperTest extends CompilerTestCase {
     testSame("class C { foo() { super.baz; }}");
     testSame("class C { foo() { super[x](); }}");
   }
-
-  // TODO(sdh): test super.prop access from static methods - this will need runtime tests, too!
 }
