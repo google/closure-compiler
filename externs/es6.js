@@ -1960,7 +1960,7 @@ Reflect.setPrototypeOf = function(target, proto) {};
 var Atomics = {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -1968,7 +1968,7 @@ var Atomics = {};
 Atomics.add = function(typedArray, index, value) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -1976,7 +1976,7 @@ Atomics.add = function(typedArray, index, value) {};
 Atomics.and = function(typedArray, index, value) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} expectedValue
  * @param {number} replacementValue
@@ -1986,7 +1986,7 @@ Atomics.compareExchange = function(
     typedArray, index, expectedValue, replacementValue) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -2015,7 +2015,7 @@ Atomics.load = function(typedArray, index) {};
 Atomics.notify = function(typedArray, index, count) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -2023,7 +2023,7 @@ Atomics.notify = function(typedArray, index, count) {};
 Atomics.or = function(typedArray, index, value) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -2031,7 +2031,7 @@ Atomics.or = function(typedArray, index, value) {};
 Atomics.store = function(typedArray, index, value) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
@@ -2056,7 +2056,7 @@ Atomics.wait = function(typedArray, index, value, timeout) {};
 Atomics.wake = function(typedArray, index, count) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array} typedArray
  * @param {number} index
  * @param {number} value
  * @return {number}
