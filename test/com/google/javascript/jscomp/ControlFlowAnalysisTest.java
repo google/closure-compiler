@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -68,7 +69,8 @@ public final class ControlFlowAnalysisTest {
       throws IOException {
     Compiler compiler = new Compiler();
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, shouldTraverseFunctions, true);
-
+    compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
@@ -175,6 +177,17 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
+   * Assert that there exists a control flow edge of the given type from some node with the first
+   * token to some node with the second token.
+   */
+  private static void assertEdge(
+      ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
+    assertWithMessage("No up edge found.")
+        .that(getAllEdges(cfg, /*startToken=*/ startToken, /*endToken=*/ endToken, type))
+        .isNotEmpty();
+  }
+
+  /**
    * Assert that there exists a control flow edge of the given type
    * from some node with the first token to some node with the second token.
    * This edge must flow from a node to one of its ancestors.
@@ -249,7 +262,8 @@ public final class ControlFlowAnalysisTest {
       boolean runSynBlockPass) {
     Compiler compiler = new Compiler();
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true, true);
-
+    compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     if (runSynBlockPass) {
       CreateSyntheticBlocks pass = new CreateSyntheticBlocks(
@@ -970,6 +984,16 @@ public final class ControlFlowAnalysisTest {
             + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
             + "}\n";
     testCfg(src, expected);
+  }
+
+  @Test
+  public void testClass_withPublicFieldsAndMethod() throws IOException {
+    String src = "class C{ x; y; foo() {}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertEdge(cfg, Token.MEMBER_FIELD_DEF, Token.MEMBER_FIELD_DEF, Branch.UNCOND);
+    assertEdge(cfg, Token.MEMBER_FIELD_DEF, Token.MEMBER_FUNCTION_DEF, Branch.UNCOND);
+    assertEdge(cfg, Token.FUNCTION, Token.BLOCK, Branch.UNCOND);
+    assertReturnEdge(cfg, Token.BLOCK);
   }
 
   @Test
