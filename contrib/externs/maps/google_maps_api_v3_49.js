@@ -33,11 +33,10 @@ var google = {};
 google.maps = {};
 
 /**
- * Google Maps JavaScript API version loaded by the browser.
- * @see https://developers.google.com/maps/documentation/javascript/versions
- *
- * @type {string}
+ * Google Maps JavaScript API version loaded by the browser. See <a
+ * href="https://developers.google.com/maps/documentation/javascript/versions">https://developers.google.com/maps/documentation/javascript/versions</a>
  * @const
+ * @type {string}
  */
 google.maps.version;
 
