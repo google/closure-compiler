@@ -2135,6 +2135,11 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassInstantiation_literal_implicitCtor_noSuperclass_isPure() {
+    assertPureCallsMarked("new class C {}", ImmutableList.of("class C {}"));
+  }
+
+  @Test
   public void testClassInstantiation_pureCtor_noSuperclass_isPure() {
     assertPureCallsMarked(
         lines(
@@ -2144,6 +2149,12 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "",
             "new C()"),
         ImmutableList.of("C"));
+  }
+
+  @Test
+  public void testClassInstantiation_literal_pureCtor_noSuperclass_isPure() {
+    assertPureCallsMarked(
+        "new class C { constructor() {} }", ImmutableList.of("class C { constructor() {} }"));
   }
 
   @Test
@@ -2169,6 +2180,15 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassInstantiation_literal_implictCtor_pureSuperclassCtor_isPure() {
+    assertPureCallsMarked(
+        lines(
+            "class A { }", // Implicit ctor is pure.
+            "new class C extends A { }"),
+        ImmutableList.of("class C extends A { }"));
+  }
+
+  @Test
   public void testClassInstantiation_implictCtor_impureSuperclassCtor_isImpure() {
     assertNoPureCalls(
         lines(
@@ -2178,6 +2198,16 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "class C extends A { }",
             "",
             "new C()"));
+  }
+
+  @Test
+  public void testClassInstantiation_literal_implictCtor_impureSuperclassCtor_isImpure() {
+    assertNoPureCalls(
+        lines(
+            "class A {",
+            "  constructor() { throw 0; }",
+            "}", //
+            "new class C extends A { }"));
   }
 
   @Test

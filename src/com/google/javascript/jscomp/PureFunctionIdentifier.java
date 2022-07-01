@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -137,6 +138,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>")
           .setMutatesGlobalStateAndAllOtherFlags();
 
+  /**
+   * A function node representing a function implicit in the AST that is known to be pure
+   *
+   * <p>For example: `class C {}` would get this node.
+   */
+  private static final Node IMPLICIT_PURE_FN = IR.function(IR.name(""), IR.paramList(), IR.block());
+
   private final boolean assumeGettersArePure;
 
   private boolean hasProcessed = false;
@@ -195,10 +203,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * representing the final callee to this method.
    *
    * <p>If a node that isn't understood is detected, false is returned and the caller is expected to
-   * invalidate the entire collection.
+   * invalidate the entire collection. If true is returned, this method is guaranteed to have added
+   * at least one result to the collection.
    *
    * @see {@link #collectCallableLeaves}
-   * @param exp A possibly complicated expression.
+   * @param expr A possibly complicated expression.
    * @param results The collection of qualified names and functions.
    * @return {@code true} iff only understood results were discovered.
    */
@@ -225,6 +234,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           if (ctorDef != null) {
             return collectCallableLeavesInternal(ctorDef.getOnlyChild(), results);
           } else if (expr.getSecondChild().isEmpty()) {
+            results.add(IMPLICIT_PURE_FN);
             return true; // A class an implicit ctor is pure when there is no superclass.
           } else {
             return collectCallableLeavesInternal(expr.getSecondChild(), results);
@@ -350,6 +360,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       return ImmutableList.of(unknownFunctionSummary);
     }
 
+    checkState(!callees.isEmpty(), "Unexpected empty callees for valid result");
     ImmutableList.Builder<AmbiguatedFunctionSummary> results = ImmutableList.builder();
     for (Node callee : callees) {
       if (callee.isFunction()) {
@@ -397,6 +408,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     Multimaps.asMap(referencesByName).forEach(this::populateFunctionDefinitions);
+    this.summariesForAllNamesOfFunctionByNode.put(
+        IMPLICIT_PURE_FN,
+        AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<implicit pure class ctor"));
   }
 
   /**

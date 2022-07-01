@@ -692,14 +692,25 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
               "use(new Foo().method());",
               "")
         },
-        new String[] {
-          "",
-          "",
-          lines(
-              // TODO(bradfordcsmith): Why is `new class {};` left behind?
-              "new class {};", //
-              "use(1)"),
-        });
+        new String[] {"", "", "use(1)"});
+  }
+
+  @Test
+  public void testClassExpressionExtendingSuperclassSideEffectingConstructor() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("function use(x) {}").buildExternsFile("externs"));
+
+    test(
+        options,
+        "class Parent { constructor() { use(42); } } new class extends Parent {}",
+        // we could do better simplifying this code, but at least the output is correct.
+        "class a { constructor() { use(42); } } new class extends a {}");
   }
 
   @Test
