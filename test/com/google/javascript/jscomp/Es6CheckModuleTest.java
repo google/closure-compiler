@@ -62,6 +62,66 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
             "exports = Foo;"));
   }
 
+  @Test
+  public void testThisWithStaticMethod() {
+    testSame("class Foo { static h() {var x = this.y;} }; exports = Foo;");
+    testSame("class Foo {static h() {this.x = 2; }}; exports = Foo;");
+    testSame("class Foo {static h() {this[this.x] = 3;}}; exports = Foo;");
+    testSame(
+        lines(
+            "class Foo {",
+            "  static h() {",
+            "    function g() {",
+            "      return this.f() + 1;",
+            "    }",
+            "    var y = g() + 1;",
+            "  }",
+            "  static f() {return 1;}",
+            "}",
+            "exports = Foo;"));
+    testSame(
+        lines(
+            "class Foo {",
+            "  static h() {",
+            "    button.addEventListener('click', function () {",
+            "      this.click();",
+            "    });",
+            "  }",
+            "  static click() {}",
+            "};",
+            "exports = Foo;"));
+  }
+
+  @Test
+  public void testThisWithStaticBlock() {
+    testSame("class Foo { static {var x = this.y;} }; exports = Foo;");
+    testSame("class Foo {static {this.x = 2; }}; exports = Foo;");
+    testSame("class Foo {static {this[this.x] = 3;}}; exports = Foo;");
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    function g() {",
+            "      return this.f() + 1;",
+            "    }",
+            "    var y = g() + 1;",
+            "  }",
+            "  static f() {return 1;}",
+            "}",
+            "exports = Foo;"));
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    button.addEventListener('click', function () {",
+            "      this.click();",
+            "    });",
+            "  }",
+            "  static click() {}",
+            "};",
+            "exports = Foo;"));
+  }
+
   // just here to make sure import.meta doesn't break anything
   @Test
   public void testImportMeta() {

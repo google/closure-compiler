@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Token;
  * property access, and not inside one of the following:
  *
  * <ol>
+ *   <li>a class static initialization block
  *   <li>a prototype method
  *   <li>a function annotated with {@code @constructor}
  *   <li>a function annotated with {@code @this}.
@@ -145,6 +146,11 @@ final class CheckGlobalThis implements NodeTraversal.Callback {
           return false;
         }
       }
+    }
+
+    // Don't traverse class static blocks, 'this' is never the global 'this'
+    if (NodeUtil.isClassStaticBlock(n)) {
+      return false;
     }
 
     if (parent != null && parent.isAssign()) {
