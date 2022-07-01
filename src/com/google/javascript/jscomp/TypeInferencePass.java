@@ -202,10 +202,10 @@ class TypeInferencePass {
   }
 
   private ControlFlowGraph<Node> computeCfg(Node n) {
-    ControlFlowAnalysis cfa =
-        new ControlFlowAnalysis(
-            compiler, /* shouldTraverseFunctions= */ false, /* edgeAnnotations= */ true);
-    cfa.process(null, n);
-    return cfa.getCfg();
+    return ControlFlowAnalysis.builder()
+        .setCompiler(compiler)
+        .setCfgRoot(n)
+        .setIncludeEdgeAnnotations(true)
+        .computeCfg();
   }
 }

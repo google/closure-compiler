@@ -2602,10 +2602,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   ControlFlowGraph<Node> computeCFG() {
     logger.fine("Computing Control Flow Graph");
     Tracer tracer = newTracer("computeCFG");
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true, false);
-    process(cfa);
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(this)
+            .setCfgRoot(jsRoot)
+            .setTraverseFunctions(true)
+            .computeCfg();
     stopTracer(tracer, "computeCFG");
-    return cfa.getCfg();
+    return cfg;
   }
 
   private static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(" [synthetic:input] ");
@@ -3209,9 +3213,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Gets the DOT graph of the AST generated at the end of compilation. */
   public String getAstDotGraph() throws IOException {
     if (jsRoot != null) {
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(this, true, false);
-      cfa.process(null, jsRoot);
-      return DotFormatter.toDot(jsRoot, cfa.getCfg());
+      ControlFlowGraph<Node> cfg =
+          ControlFlowAnalysis.builder()
+              .setCompiler(this)
+              .setCfgRoot(jsRoot)
+              .setTraverseFunctions(true)
+              .computeCfg();
+      return DotFormatter.toDot(jsRoot, cfg);
     } else {
       return "";
     }

@@ -744,9 +744,12 @@ public final class DataFlowAnalysisTest {
     }
 
     // Control flow graph
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, script);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(script)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
 
     // All variables declared in function
     AllVarsDeclaredInFunction allVarsDeclaredInFunction =

@@ -1156,9 +1156,12 @@ public class NodeTraversal {
     Object o = cfgs.peek();
     if (o instanceof Node) {
       Node cfgRoot = (Node) o;
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-      cfa.process(null, cfgRoot);
-      result = cfa.getCfg();
+      result =
+          ControlFlowAnalysis.builder()
+              .setCompiler(compiler)
+              .setCfgRoot(cfgRoot)
+              .setIncludeEdgeAnnotations(true)
+              .computeCfg();
       cfgs.pop();
       cfgs.push(result);
     } else {

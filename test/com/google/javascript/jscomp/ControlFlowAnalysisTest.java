@@ -62,18 +62,25 @@ public final class ControlFlowAnalysisTest {
    *
    * @param input Input JavaScript.
    * @param expected Expected Graphviz Dot file.
-   * @param shouldTraverseFunctions Whether to traverse functions when constructing the CFG (true by
-   *     default). Passed in to the constructor of {@link ControlFlowAnalysis}.
+   * @param shouldTraverseFunctions Whether to traverse functions when constructing the CFG. Passed
+   *     in to the builder for {@link ControlFlowAnalysis}. Defaults to true for the two-arg {@link
+   *     #testCfg(String, String)}
    */
   private void testCfg(String input, String expected, boolean shouldTraverseFunctions)
       throws IOException {
     Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, shouldTraverseFunctions, true);
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     Node root = compiler.parseSyntheticCode("cfgtest", input);
-    cfa.process(null, root);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(root)
+            .setTraverseFunctions(shouldTraverseFunctions)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
+
     assertThat(DotFormatter.toDot(root, cfg)).isEqualTo(expected);
   }
 
@@ -261,17 +268,19 @@ public final class ControlFlowAnalysisTest {
   private ControlFlowGraph<Node> createCfg(String input,
       boolean runSynBlockPass) {
     Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true, true);
-    compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     if (runSynBlockPass) {
       CreateSyntheticBlocks pass = new CreateSyntheticBlocks(
           compiler, "START", "END");
       pass.process(null, root);
     }
-    cfa.process(null, root);
-    return cfa.getCfg();
+    return ControlFlowAnalysis.builder()
+        .setCompiler(compiler)
+        .setCfgRoot(root)
+        .setTraverseFunctions(true)
+        .setIncludeEdgeAnnotations(true)
+        .computeCfg();
   }
 
   private ControlFlowGraph<Node> createCfg(String input) {
@@ -1559,15 +1568,19 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testPartialTraversalOfScope() throws IOException {
     Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, true, true);
 
     Node script1 = compiler.parseSyntheticCode("cfgtest", "var foo;");
     Node script2 = compiler.parseSyntheticCode("cfgtest2", "var bar;");
     // Create a parent node for the scripts
     new Node(Token.BLOCK, script1, script2);
 
-    cfa.process(null, script1);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(script1)
+            .setTraverseFunctions(true)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
 
     assertThat(cfg.getNode(script1)).isNotNull();
     assertThat(cfg.getNode(script2)).isNull();

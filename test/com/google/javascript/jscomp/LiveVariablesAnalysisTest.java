@@ -673,9 +673,12 @@ public final class LiveVariablesAnalysisTest {
     Scope childScope = scopeCreator.createScope(NodeUtil.getFunctionBody(n), scope);
 
     // Control flow graph
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, n);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(n)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
 
     // All variables declared in function
     AllVarsDeclaredInFunction allVarsDeclaredInFunction =

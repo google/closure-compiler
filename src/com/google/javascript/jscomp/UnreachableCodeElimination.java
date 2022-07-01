@@ -65,9 +65,8 @@ class UnreachableCodeElimination implements CompilerPass {
     @Override
     public void enterChangedScopeRoot(AbstractCompiler compiler, Node root) {
       // Computes the control flow graph.
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
-      cfa.process(null, root);
-      ControlFlowGraph<Node> cfg = cfa.getCfg();
+      ControlFlowGraph<Node> cfg =
+          ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(root).computeCfg();
       new GraphReachability<>(cfg).compute(cfg.getEntry().getValue());
       if (root.isFunction()) {
         root = root.getLastChild();

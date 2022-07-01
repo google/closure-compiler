@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
@@ -35,10 +34,19 @@ import java.util.PriorityQueue;
 import javax.annotation.Nullable;
 
 /**
- * This is a compiler pass that computes a control flow graph. Note that this is only a CompilerPass
- * because the Compiler invokes it via Compiler#process. It is never included in a PassConfig.
+ * This class computes a {@link ControlFlowGraph} for a given AST
+ *
+ * <p>Example usage:
+ *
+ * <pre>{@code
+ * ControlFlowGraph<Node> cfg = ControlFlowAnalysis.builder()
+ *                                  .setCompiler(compiler)
+ *                                  .setCfgRoot(functionRoot)
+ *                                  .setShouldIncludeEdgeAnnotations(true)
+ *                                  .computeCfg())
+ * }</pre>
  */
-public final class ControlFlowAnalysis implements NodeTraversal.Callback, CompilerPass {
+public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
   /**
    * Based roughly on the first few pages of
@@ -114,32 +122,69 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback, Compil
   private final SetMultimap<Node, Node> finallyMap = HashMultimap.create();
 
   /**
-   * Constructor.
+   * Constructor. Should only be called from within the {@link Builder}
    *
    * @param compiler Compiler instance.
    * @param shouldTraverseFunctions Whether functions should be traversed
    * @param edgeAnnotations Whether to allow edge annotations.
    */
-  ControlFlowAnalysis(
+  private ControlFlowAnalysis(
       AbstractCompiler compiler, boolean shouldTraverseFunctions, boolean edgeAnnotations) {
     this.compiler = compiler;
     this.shouldTraverseFunctions = shouldTraverseFunctions;
     this.edgeAnnotations = edgeAnnotations;
   }
 
-  public static ControlFlowGraph<Node> getCfg(AbstractCompiler compiler, Node cfgRoot) {
-    checkArgument(NodeUtil.isValidCfgRoot(cfgRoot));
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, cfgRoot);
-    return cfa.getCfg();
+  /**
+   * Configures a {@link ControlFlowAnalysis} instance then computes the {@link ControlFlowGraph}
+   */
+  public static final class Builder {
+    private AbstractCompiler compiler;
+    private Node cfgRoot;
+    private boolean shouldTraverseFunctions = false;
+    private boolean edgeAnnotations = false;
+
+    private Builder() {}
+
+    public Builder setCompiler(AbstractCompiler compiler) {
+      this.compiler = compiler;
+      return this;
+    }
+
+    public Builder setCfgRoot(Node cfgRoot) {
+      this.cfgRoot = cfgRoot;
+      return this;
+    }
+
+    public Builder setTraverseFunctions(boolean shouldTraverseFunctions) {
+      this.shouldTraverseFunctions = shouldTraverseFunctions;
+      return this;
+    }
+
+    public Builder setIncludeEdgeAnnotations(boolean includeEdgeAnnotations) {
+      this.edgeAnnotations = includeEdgeAnnotations;
+      return this;
+    }
+
+    public ControlFlowGraph<Node> computeCfg() {
+      Preconditions.checkNotNull(compiler, "Need to call setCompiler()");
+      Preconditions.checkNotNull(cfgRoot, "Need to call setCfgRoot()");
+      ControlFlowAnalysis cfa =
+          new ControlFlowAnalysis(compiler, shouldTraverseFunctions, edgeAnnotations);
+      cfa.computeCfg(this.cfgRoot);
+      return cfa.cfg;
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   ControlFlowGraph<Node> getCfg() {
     return cfg;
   }
 
-  @Override
-  public void process(Node externs, Node root) {
+  private void computeCfg(Node root) {
     Preconditions.checkArgument(
         NodeUtil.isValidCfgRoot(root), "Unexpected control flow graph root %s", root);
     this.root = root;

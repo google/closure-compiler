@@ -245,9 +245,13 @@ public final class TypeInferenceTest {
     }
     scopeCreator.finishAndFreeze();
     // Create the control graph.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, cfgRoot);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(cfgRoot)
+            .setTraverseFunctions(true)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
     // Create a simple reverse abstract interpreter.
     ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
     // Do the type inference by data-flow analysis.

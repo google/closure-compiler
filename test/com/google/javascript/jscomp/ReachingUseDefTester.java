@@ -117,9 +117,11 @@ final class ReachingUseDefTester {
   }
 
   private ControlFlowGraph<Node> computeCfg(Node fn) {
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, fn);
-    return cfa.getCfg();
+    return ControlFlowAnalysis.builder()
+        .setCompiler(compiler)
+        .setCfgRoot(fn)
+        .setIncludeEdgeAnnotations(true)
+        .computeCfg();
   }
 
   /**

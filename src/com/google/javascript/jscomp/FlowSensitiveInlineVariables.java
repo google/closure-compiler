@@ -178,11 +178,12 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     SyntacticScopeCreator scopeCreator = (SyntacticScopeCreator) t.getScopeCreator();
 
     // Compute the forward reaching definition.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-
-    // Process the body of the function.
-    cfa.process(null, functionScopeRoot);
-    cfg = cfa.getCfg();
+    cfg =
+        ControlFlowAnalysis.builder()
+            .setCompiler(compiler)
+            .setCfgRoot(functionScopeRoot)
+            .setIncludeEdgeAnnotations(true)
+            .computeCfg();
 
     HashSet<Var> escaped = new HashSet<>();
     Scope scope = t.getScope();
