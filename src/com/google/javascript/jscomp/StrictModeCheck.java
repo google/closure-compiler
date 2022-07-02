@@ -23,18 +23,18 @@ import java.util.HashSet;
 
 /**
  * Checks that the code obeys the static restrictions of strict mode:
+ *
  * <ol>
- * <li> No use of "with".
- * <li> No deleting variables, functions, or arguments.
- * <li> No re-declarations or assignments of "eval" or arguments.
- * <li> No use of arguments.callee
- * <li> No use of arguments.caller
- * <li> Class: Always under strict mode
- * <li>   In addition, no duplicate class method names
+ *   <li>No use of "with".
+ *   <li>No deleting variables, functions, or arguments.
+ *   <li>No re-declarations or assignments of "eval" or arguments.
+ *   <li>No use of arguments.callee
+ *   <li>No use of arguments.caller
+ *   <li>Class: Always under strict mode
+ *   <li>In addition, no duplicate class method names
  * </ol>
  */
-class StrictModeCheck extends AbstractPostOrderCallback
-    implements CompilerPass {
+class StrictModeCheck extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType USE_OF_WITH =
       DiagnosticType.error(
@@ -124,8 +124,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   /**
-   * Determines if the given name is a declaration, which can be a declaration
-   * of a variable, function, or argument.
+   * Determines if the given name is a declaration, which can be a declaration of a variable,
+   * function, or argument.
    */
   private static boolean isDeclaration(Node n) {
     switch (n.getParent().getToken()) {
@@ -180,7 +180,15 @@ class StrictModeCheck extends AbstractPostOrderCallback
      * code. The earlier duplicates are the ones that should be removed.
      */
     for (Node key = n.getLastChild(); key != null; key = key.getPrevious()) {
-      if (key.isEmpty() || key.isComputedProp() || key.isSpread() || key.isComputedFieldDef()) {
+      if (key.isEmpty()
+          || key.isComputedProp()
+          || key.isSpread()
+          || key.isComputedFieldDef()
+          // Computed properties cannot be computed at compile time
+          || NodeUtil.isClassStaticBlock(key)
+      // Will not check since whether duplicates are declared/assigned cannot be determined at
+      // compile time since we do not know which code will be run
+      ) {
         continue;
       }
 

@@ -52,23 +52,21 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testUseOfWith2() {
-    testSame("var a;\n" +
-             "/** @suppress {with} */" +
-             "with(a){}");
+    testSame("var a;\n" + "/** @suppress {with} */" + "with(a){}");
   }
 
   @Test
   public void testUseOfWith3() {
     testSame(
-        "function f(expr, context) {\n" +
-        "  try {\n" +
-        "    /** @suppress{with} */ with (context) {\n" +
-        "      return eval('[' + expr + '][0]');\n" +
-        "    }\n" +
-        "  } catch (e) {\n" +
-        "    return null;\n" +
-        "  }\n" +
-        "};\n");
+        "function f(expr, context) {\n"
+            + "  try {\n"
+            + "    /** @suppress{with} */ with (context) {\n"
+            + "      return eval('[' + expr + '][0]');\n"
+            + "    }\n"
+            + "  } catch (e) {\n"
+            + "    return null;\n"
+            + "  }\n"
+            + "};\n");
   }
 
   @Test
@@ -264,12 +262,7 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testClass() {
-    testSame(
-        lines(
-            "class A {",
-            "  method1() {}",
-            "  method2() {}",
-            "}"));
+    testSame(lines("class A {", "  method1() {}", "  method2() {}", "}"));
 
     // Duplicate class methods test
     testWarning(
@@ -280,16 +273,8 @@ public final class StrictModeCheckTest extends CompilerTestCase {
     // The two following tests should have reported FUNCTION_CALLER_FORBIDDEN and
     // FUNCTION_ARGUMENTS_PROP_FORBIDDEN. Typecheck needed for them to work.
     // TODO(user): Add tests for these after typecheck supports class.
-    testSame(
-        lines(
-            "class A {",
-            "  method() {this.method.caller}",
-            "}"));
-    testSame(
-        lines(
-            "class A {",
-            "  method() {this.method.arguments}",
-            "}"));
+    testSame(lines("class A {", "  method() {this.method.caller}", "}"));
+    testSame(lines("class A {", "  method() {this.method.arguments}", "}"));
 
     // Duplicate obj literal key in classes
     testWarning(
@@ -297,11 +282,7 @@ public final class StrictModeCheckTest extends CompilerTestCase {
         StrictModeCheck.DUPLICATE_MEMBER);
 
     // Delete test. Class methods are configurable, thus deletable.
-    testSame(lines(
-        "class A {",
-        "  methodA() {}",
-        "  methodB() {delete this.methodA}",
-        "}"));
+    testSame(lines("class A {", "  methodA() {}", "  methodB() {delete this.methodA}", "}"));
 
     // Use of with test
     testWarning(
@@ -339,42 +320,22 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   @Test
   public void testComputedPropInClass() {
-    testSame(
-        lines(
-            "class Example {",
-            "  [computed()]() {}",
-            "  [computed()]() {}",
-            "}"));
+    testSame(lines("class Example {", "  [computed()]() {}", "  [computed()]() {}", "}"));
   }
 
   @Test
   public void testStaticAndNonstaticMethodWithSameName() {
-    testSame(
-        lines(
-            "class Example {",
-            "  foo() {}",
-            "  static foo() {}",
-            "}"));
+    testSame(lines("class Example {", "  foo() {}", "  static foo() {}", "}"));
   }
 
   @Test
   public void testStaticAndNonstaticGetterWithSameName() {
-    testSame(
-        lines(
-            "class Example {",
-            "  get foo() {}",
-            "  static get foo() {}",
-            "}"));
+    testSame(lines("class Example {", "  get foo() {}", "  static get foo() {}", "}"));
   }
 
   @Test
   public void testStaticAndNonstaticSetterWithSameName() {
-    testSame(
-        lines(
-            "class Example {",
-            "  set foo(x) {}",
-            "  static set foo(x) {}",
-            "}"));
+    testSame(lines("class Example {", "  set foo(x) {}", "  static set foo(x) {}", "}"));
   }
 
   @Test
@@ -391,10 +352,24 @@ public final class StrictModeCheckTest extends CompilerTestCase {
             "  a;",
             "}"),
         StrictModeCheck.DUPLICATE_MEMBER);
+    testWarning(
+        lines(
+            "class Example {", //
+            "  static a = 2;",
+            "  static a = 3;",
+            "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
   }
 
   @Test
   public void testClassDuplicateStaticFieldError() {
+    testWarning(
+        lines(
+            "class Example {", //
+            "  static a = 2;",
+            "  static a = 3;",
+            "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
     testWarning(
         lines(
             "class Example {", //
@@ -412,6 +387,66 @@ public final class StrictModeCheckTest extends CompilerTestCase {
             "  a;",
             "  static a;",
             "}"));
+  }
+
+  @Test
+  public void testClassStaticBlocksDuplicates() {
+    // testing that duplicates are ok in class static blocks
+    testSame("class Foo {static {this.a; this.a;}}");
+
+    // even if they are in 2 different static blocks
+    testSame("class Foo {static {this.a} static {this.a}}");
+
+    // testing that duplicates between class static blocks and public fields are ok
+    testSame("class Foo {static x; static {this.x}}");
+
+    // duplicate functions are also okay
+    testSame("class Foo {static f() {}; static{this.f = function g() {}}}");
+
+    // testing that duplicates in obj literals are still invalid
+    testWarning("class Foo {static {var obj = {a : 1, a : 2};}}", StrictModeCheck.DUPLICATE_MEMBER);
+  }
+
+  @Test
+  public void testClassStaticBlocksWith() {
+    testWarning(
+        lines("class A {", "  static x;", "  static {", "    with (this.x) {}", "  }", "}"),
+        StrictModeCheck.USE_OF_WITH);
+  }
+
+  @Test
+  public void testClassStaticBlocksEval() {
+    testWarning("class A { static {var eval;}}", StrictModeCheck.EVAL_DECLARATION);
+    testWarning("class A { static {function eval() {};}}", StrictModeCheck.EVAL_DECLARATION);
+    testWarning(
+        "class A { static {this.e = function eval() {};}}", StrictModeCheck.EVAL_DECLARATION);
+    testWarning("class A { static {eval = 3;}}", StrictModeCheck.EVAL_ASSIGNMENT);
+
+    // eval as a field is okay
+    testSame("class A { static {this.eval;}}");
+  }
+
+  @Test
+  public void testClassStaticBlocksArguments() {
+    testWarning(
+        lines("class A {", "  static {var arguments = 1;}", "}"),
+        StrictModeCheck.ARGUMENTS_DECLARATION);
+    testWarning(
+        lines("class A {", "  static {arguments = 1}", "}"), StrictModeCheck.ARGUMENTS_ASSIGNMENT);
+    testWarning(
+        lines("class A {", "  static {arguments.callee}", "}"),
+        StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+    testWarning(
+        lines("class A {", "  static {arguments.caller}", "}"),
+        StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
+  }
+
+  @Test
+  public void testClassStaticBlockDelete() {
+    testSame("class A {static{this.a; delete this.a;}}");
+    testSame("class A {static a; static{delete this.a;}}");
+    testWarning("class A {static a; static{var a; delete a;}}", StrictModeCheck.DELETE_VARIABLE);
+    testSame("class A {static f() {}; static{delete this.f;}}");
   }
 
   private static String inFn(String body) {
