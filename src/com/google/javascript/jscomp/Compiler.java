@@ -2251,6 +2251,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // initialization for tests that don't initialize the compiler
       // by the normal mechanisms.
       initOptions(newCompilerOptions());
+      // allow tests to use unsupported features.
+      options.setLanguage(CompilerOptions.LanguageMode.UNSUPPORTED);
     }
   }
 

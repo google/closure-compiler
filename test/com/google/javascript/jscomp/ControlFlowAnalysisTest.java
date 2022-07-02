@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -69,8 +68,6 @@ public final class ControlFlowAnalysisTest {
   private void testCfg(String input, String expected, boolean shouldTraverseFunctions)
       throws IOException {
     Compiler compiler = new Compiler();
-    compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     Node root = compiler.parseSyntheticCode("cfgtest", input);
 
     ControlFlowGraph<Node> cfg =
@@ -84,11 +81,8 @@ public final class ControlFlowAnalysisTest {
     assertThat(DotFormatter.toDot(root, cfg)).isEqualTo(expected);
   }
 
-  /**
-   * Gets all the edges of the graph.
-   */
-  private static List<DiGraphEdge<Node, Branch>> getAllEdges(
-      ControlFlowGraph<Node> cfg) {
+  /** Gets all the edges of the graph. */
+  private static List<DiGraphEdge<Node, Branch>> getAllEdges(ControlFlowGraph<Node> cfg) {
     List<DiGraphEdge<Node, Branch>> edges = new ArrayList<>();
     for (DiGraphNode<Node, Branch> n : cfg.getNodes()) {
       edges.addAll(cfg.getOutEdges(n.getValue()));
@@ -97,8 +91,8 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Gets all the control flow edges from some node with the first token to
-   * some node with the second token.
+   * Gets all the control flow edges from some node with the first token to some node with the
+   * second token.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken) {
@@ -119,20 +113,18 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Gets all the control flow edges of the given type from some node with the
-   * first token to some node with the second token.
+   * Gets all the control flow edges of the given type from some node with the first token to some
+   * node with the second token.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
-    List<DiGraphEdge<Node, Branch>> edges =
-        getAllEdges(cfg, startToken, endToken);
+    List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg, startToken, endToken);
     edges.removeIf(elem -> type != elem.getValue());
     return edges;
   }
 
   private static boolean isAncestor(Node n, Node maybeDescendant) {
-    for (Node current = n.getFirstChild(); current != null;
-         current = current.getNext()) {
+    for (Node current = n.getFirstChild(); current != null; current = current.getNext()) {
       if (current == maybeDescendant || isAncestor(current, maybeDescendant)) {
         return true;
       }
@@ -142,14 +134,12 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Gets all the control flow edges of the given type from some node with
-   * the first token to some node with the second token.
-   * This edge must flow from a parent to one of its descendants.
+   * Gets all the control flow edges of the given type from some node with the first token to some
+   * node with the second token. This edge must flow from a parent to one of its descendants.
    */
   private static List<DiGraphEdge<Node, Branch>> getAllDownEdges(
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
-    List<DiGraphEdge<Node, Branch>> edges =
-        getAllEdges(cfg, startToken, endToken, type);
+    List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg, startToken, endToken, type);
     Iterator<DiGraphEdge<Node, Branch>> it = edges.iterator();
     while (it.hasNext()) {
       DiGraphEdge<Node, Branch> edge = it.next();
@@ -172,12 +162,12 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Assert that there exists a control flow edge of the given type
-   * from some node with the first token to some node with the second token.
-   * This edge must flow from a parent to one of its descendants.
+   * Assert that there exists a control flow edge of the given type from some node with the first
+   * token to some node with the second token. This edge must flow from a parent to one of its
+   * descendants.
    */
-  private static void assertDownEdge(ControlFlowGraph<Node> cfg,
-      Token startToken, Token endToken, Branch type) {
+  private static void assertDownEdge(
+      ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     assertWithMessage("No down edge found")
         .that(getAllDownEdges(cfg, startToken, endToken, type))
         .isNotEmpty();
@@ -195,24 +185,24 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Assert that there exists a control flow edge of the given type
-   * from some node with the first token to some node with the second token.
-   * This edge must flow from a node to one of its ancestors.
+   * Assert that there exists a control flow edge of the given type from some node with the first
+   * token to some node with the second token. This edge must flow from a node to one of its
+   * ancestors.
    */
-  private static void assertUpEdge(ControlFlowGraph<Node> cfg,
-      Token startToken, Token endToken, Branch type) {
+  private static void assertUpEdge(
+      ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     assertWithMessage("No up edge found.")
         .that(getAllDownEdges(cfg, /*startToken=*/ endToken, /*endToken=*/ startToken, type))
         .isNotEmpty();
   }
 
   /**
-   * Assert that there exists a control flow edge of the given type
-   * from some node with the first token to some node with the second token.
-   * This edge must flow between two nodes that are not in the same subtree.
+   * Assert that there exists a control flow edge of the given type from some node with the first
+   * token to some node with the second token. This edge must flow between two nodes that are not in
+   * the same subtree.
    */
-  private static void assertCrossEdge(ControlFlowGraph<Node> cfg,
-      Token startToken, Token endToken, Branch type) {
+  private static void assertCrossEdge(
+      ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     int numDownEdges = getAllDownEdges(cfg, startToken, endToken, type).size();
     int numUpEdges = getAllDownEdges(cfg, endToken, startToken, type).size();
     int numEdges = getAllEdges(cfg, startToken, endToken, type).size();
@@ -220,11 +210,10 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Assert that there exists a control flow edge of the given type
-   * from some node with the first token to the return node.
+   * Assert that there exists a control flow edge of the given type from some node with the first
+   * token to the return node.
    */
-  private static void assertReturnEdge(ControlFlowGraph<Node> cfg,
-      Token startToken) {
+  private static void assertReturnEdge(ControlFlowGraph<Node> cfg, Token startToken) {
     List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg);
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
@@ -238,11 +227,10 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Assert that there exists no control flow edge of the given type
-   * from some node with the first token to the return node.
+   * Assert that there exists no control flow edge of the given type from some node with the first
+   * token to the return node.
    */
-  private static void assertNoReturnEdge(ControlFlowGraph<Node> cfg,
-      Token startToken) {
+  private static void assertNoReturnEdge(ControlFlowGraph<Node> cfg, Token startToken) {
     List<DiGraphEdge<Node, Branch>> edges = getAllEdges(cfg);
     for (DiGraphEdge<Node, Branch> edge : edges) {
       Node source = edge.getSource().getValue();
@@ -265,10 +253,8 @@ public final class ControlFlowAnalysisTest {
    *
    * @param input Input JavaScript.
    */
-  private ControlFlowGraph<Node> createCfg(String input,
-      boolean runSynBlockPass) {
+  private ControlFlowGraph<Node> createCfg(String input, boolean runSynBlockPass) {
     Compiler compiler = new Compiler();
-
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     if (runSynBlockPass) {
       CreateSyntheticBlocks pass = new CreateSyntheticBlocks(
