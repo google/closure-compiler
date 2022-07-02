@@ -676,44 +676,39 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMisplacedNocollapseAnnotationOnPrototypeMethod() {
-    testWarning(
+  public void testAllowedNocollapseAnnotationOnPrototypeMethod() {
+    testSame(
         lines(
             "/** @constructor */",
             "function Foo() {};",
             "/** @nocollapse */",
-            "Foo.prototype.bar = function() {};"),
-        MISPLACED_ANNOTATION);
+            "Foo.prototype.bar = function() {};"));
 
-    testWarning(
+    testSame(
         lines(
             "class Foo {}", //
             "/** @nocollapse */",
-            "Foo.prototype.bar = function() {};"),
-        MISPLACED_ANNOTATION);
+            "Foo.prototype.bar = function() {};"));
 
-    testWarning(
+    testSame(
         lines(
             "class Foo {", //
             "  /** @nocollapse */ bar() {}",
-            "}"),
-        MISPLACED_ANNOTATION);
+            "}"));
 
-    testWarning(
+    testSame(
         lines(
             "class Foo {", //
             "  /** @nocollapse */ get bar() {}",
-            "}"),
-        MISPLACED_ANNOTATION);
+            "}"));
   }
 
   @Test
-  public void testMisplacedNocollapseAnnotation_withES6Modules() {
-    testWarning(
+  public void testAllowedNocollapseAnnotationOnPrototypeMethod_withES6Modules() {
+    testSame(
         lines(
             "export /** @constructor */ function foo() {};",
-            "/** @nocollapse */ foo.prototype.bar = function() {};"),
-        MISPLACED_ANNOTATION);
+            "/** @nocollapse */ foo.prototype.bar = function() {};"));
   }
 
   @Test

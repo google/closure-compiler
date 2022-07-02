@@ -1350,6 +1350,54 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             "console.log(new Foo().a);"));
   }
 
+  @Test
+  public void testNoCollapsePrototype() {
+    testSame(
+      lines(
+          "class Foo {",
+          "  constructor() {",
+          "    this.a();",
+          "  }",
+          "  /** @nocollapse */",
+          "  a() {",
+          "    console.log('2');",
+          "  }",
+          "}"));
+  }
+
+  @Test
+  public void testNoCollapsePrototypeChained() {
+    test(
+      srcs(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.a();",
+            "  }",
+            "  a() {",
+            "    this.b()",
+            "  }",
+            "  /** @nocollapse */",
+            "  b() {",
+            "    console.log('2');",
+            "  }",
+            "}")),
+      expected(
+        lines(
+            "var JSCompiler_StaticMethods_a = function(JSCompiler_StaticMethods_a$self) {",
+            "  JSCompiler_StaticMethods_a$self.b();",
+            "};",
+            "class Foo {",
+            "  constructor() {",
+            "    JSCompiler_StaticMethods_a(this);",
+            "  }",
+            "  /** @nocollapse */",
+            "  b() {",
+            "    console.log('2');",
+            "  }",
+            "}")));
+  }
+
   private static class ModuleTestInput {
     static final String DEFINITION = "a.prototype.foo = function() {}";
     static final String USE = "x.foo()";

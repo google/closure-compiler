@@ -266,6 +266,11 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       return false;
     }
 
+    JSDocInfo jsdoc = definitionSite.getJSDocInfo();
+    if (jsdoc != null && jsdoc.isNoCollapse()) {
+      return false;
+    }
+
     return true;
   }
 

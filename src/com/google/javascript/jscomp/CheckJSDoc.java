@@ -443,10 +443,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       reportMisplaced(n, "nocollapse", "This JSDoc has no effect in externs.");
       return;
     }
-    if (NodeUtil.isPrototypePropertyDeclaration(n.getParent())
-        || (n.getParent().isClassMembers() && !n.isStaticMember())) {
-      reportMisplaced(n, "nocollapse", "This JSDoc has no effect on prototype properties.");
-    }
   }
 
   /**
