@@ -2127,7 +2127,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccess(
       JSType childType, Node propNode, JSType propType, @Nullable Node objNode) {
     final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
-    final String propName = isGetprop ? propNode.getString() : propNode.getString();
+    final String propName = propNode.getString();
 
     if (propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
       childType = childType.autobox();
