@@ -16,6 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.testing.CodeSubTree;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Node.SideEffectFlags;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1882,5 +1888,27 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   @Test
   public void testTrailingUndefinedLiterals_afterAllFormalParameters_sideEffects() {
     testSame("function foo(a, b) { use(a)}; foo('used', undefined, sideEffects()); foo(2);");
+  }
+
+  @Test
+  public void testInliningSideEffectfulArg_updatesInvocationSideEffects() {
+    enableComputeSideEffects();
+    test(
+        externs("function sideEffects() {}"),
+        srcs("function foo() {} foo(sideEffects()); foo(sideEffects());"),
+        expected("function foo() { sideEffects(); } foo(); foo();"));
+
+    // Inspect the AST to verify both calls to `foo()` are marked as mutating global state
+    Node jsRoot = getLastCompiler().getJsRoot();
+    ImmutableList<Node> calls =
+        CodeSubTree.findNodesNonEmpty(
+            jsRoot, n -> (n.isCall() && n.getFirstChild().matchesName("foo")));
+    for (Node call : calls) {
+      assertThat(call.getSideEffectFlags())
+          .isEqualTo(
+              new Node.SideEffectFlags(SideEffectFlags.NO_SIDE_EFFECTS)
+                  .setMutatesGlobalState()
+                  .valueOf());
+    }
   }
 }

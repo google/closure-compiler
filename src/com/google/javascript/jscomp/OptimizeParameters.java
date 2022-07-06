@@ -785,6 +785,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * @return A list of Parameter objects, in the declaration order, which represent potentially
    *     movable values fixed values from all call sites or null if there are no candidate values.
    */
+  @Nullable
   private List<Parameter> findFixedArguments(ArrayList<Node> refs) {
     List<Parameter> parameters = new ArrayList<>();
     boolean firstCall = true;
@@ -1073,21 +1074,25 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private void optimizeCallSite(List<Parameter> parameters, Node target) {
     Node call = ReferenceMap.getCallOrNewNodeForTarget(target);
-    boolean mayMutateArgs = call.mayMutateArguments();
-    boolean mayMutateGlobalsOrThrow = call.mayMutateGlobalStateOrThrow();
+    boolean callMayMutateArgs = call.mayMutateArguments();
+    boolean callMayMutateGlobalsOrThrow = call.mayMutateGlobalStateOrThrow();
+
     for (int index = parameters.size() - 1; index >= 0; index--) {
       Parameter p = parameters.get(index);
       if (p.shouldRemove()) {
         eliminateCallTargetArgAt(target, index);
 
-        if (mayMutateArgs
-            && !mayMutateGlobalsOrThrow
-            // We want to cover both global-state arguments, and
-            // expressions that might throw exceptions.
-            // We're deliberately conservative here b/c it's
-            // difficult to test all the edge cases.
-            && !NodeUtil.isImmutableValue(p.getArg())) {
-          mayMutateGlobalsOrThrow = true;
+        // Inlining parameters into a function may cause the function call to newly mutate global
+        // state if either
+        //  1) the parameter itself mutates global state
+        //  2) the function may mutate its arguments, and the argument being inlined is mutable.
+        //     We're deliberately conservative here - possibly the argument being inlined is
+        //     not global state or not mutated in practice - because it's difficult to test all
+        //     the edge cases.
+        if (!callMayMutateGlobalsOrThrow
+            && (p.hasSideEffects() // case (1)
+                || (callMayMutateArgs && !NodeUtil.isImmutableValue(p.getArg())))) { // case (2)
+          callMayMutateGlobalsOrThrow = true;
           call.setSideEffectFlags(
               new Node.SideEffectFlags(call.getSideEffectFlags()).setMutatesGlobalState());
         }

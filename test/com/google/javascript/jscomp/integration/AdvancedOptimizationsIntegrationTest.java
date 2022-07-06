@@ -2690,4 +2690,49 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  return c(a) + b(a) + c(e);",
             "};"));
   }
+
+  @Test
+  public void testRetainSideeffectCallInBuilder() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addClosureExterns()
+                .addExtra("/** @type {function(): string} */", "var retrieveElementRef;")
+                .buildExternsFile("externs.js"));
+
+    // regression test for bad dead code elimination:
+    // compiler used to keep the first 'retrieveElementRef();' call but then delete the second
+    // one called via `Selector.create().build();`
+    test(
+        options,
+        lines(
+            "goog.module('main');",
+            "",
+            "retrieveElementRef();",
+            "class SelectorBuilder {",
+            "    /** @return {!Selector} */",
+            "    build() {",
+            "        return new Selector(retrieveElementRef());",
+            "    }",
+            "}",
+            "class Selector {",
+            "    /** @param {string} s */",
+            "    constructor(s) {",
+            "        /** @type {string} */",
+            "        this.s = s;",
+            "    }",
+            "    /** @return {!SelectorBuilder} */",
+            "    static create() {",
+            "        return new SelectorBuilder();",
+            "    }",
+            "}",
+            "Selector.create().build();",
+            ""),
+        "retrieveElementRef(); class a { constructor() { retrieveElementRef(); } } new a();");
+  }
 }
