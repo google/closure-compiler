@@ -16,15 +16,19 @@
 
 package com.google.common.hash;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.nio.charset.Charset;
 
 /** No-op J2CL impl */
 public abstract class Hasher {
 
+  @CanIgnoreReturnValue
   public abstract Hasher putInt(int i);
 
+  @CanIgnoreReturnValue
   public abstract Hasher putLong(long x);
 
+  @CanIgnoreReturnValue
   public abstract Hasher putString(CharSequence charSequence, Charset charset);
 
   public abstract HashCode hash();
