@@ -36,17 +36,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests {@link ControlFlowAnalysis}.
- *
- */
+/** Tests {@link ControlFlowAnalysis}. */
 @RunWith(JUnit4.class)
 public final class ControlFlowAnalysisTest {
 
   /**
-   * Given an input in JavaScript, test if the control flow analysis
-   * creates the proper control flow graph by comparing the expected
-   * Dot file output.
+   * Given an input in JavaScript, test if the control flow analysis creates the proper control flow
+   * graph by comparing the expected Dot file output.
    *
    * @param input Input JavaScript.
    * @param expected Expected Graphviz Dot file.
@@ -257,8 +253,7 @@ public final class ControlFlowAnalysisTest {
     Compiler compiler = new Compiler();
     Node root = compiler.parseSyntheticCode("cfgtest", input);
     if (runSynBlockPass) {
-      CreateSyntheticBlocks pass = new CreateSyntheticBlocks(
-          compiler, "START", "END");
+      CreateSyntheticBlocks pass = new CreateSyntheticBlocks(compiler, "START", "END");
       pass.process(null, root);
     }
     return ControlFlowAnalysis.builder()
@@ -464,8 +459,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testSimpleSwitch() throws IOException {
-    String src = "var x; switch(x){ case(1): x(); case('x'): x(); break" +
-        "; default: x();}";
+    String src = "var x; switch(x){ case(1): x(); case('x'): x(); break" + "; default: x();}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.VAR, Token.SWITCH, Branch.UNCOND);
     assertNoEdge(cfg, Token.SWITCH, Token.NAME);
@@ -499,8 +493,7 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testSwitchDefaultInMiddle() throws IOException {
     // DEFAULT appears in the middle. But it is should evaluated last.
-    String src = "var x; switch(x){ case 1: break; default: break; " +
-        "case 2: break; }";
+    String src = "var x; switch(x){ case 1: break; default: break; " + "case 2: break; }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.SWITCH, Token.CASE, Branch.UNCOND);
     assertCrossEdge(cfg, Token.CASE, Token.CASE, Branch.ON_FALSE);
@@ -654,8 +647,7 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testNestedFor() throws IOException {
     // This is tricky as the inner FOR branches to "x++" ON_FALSE.
-    String src = "var a,b;a();for(var x=0;x<100;x++){for(var y=0;y<100;y++){" +
-      "continue;b();}}";
+    String src = "var a,b;a();for(var x=0;x<100;x++){for(var y=0;y<100;y++){" + "continue;b();}}";
     String expected =
         "digraph AST {\n"
             + "  node [color=lightblue2, style=filled];\n"
@@ -1388,9 +1380,10 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testComplicatedFinally2() throws IOException {
     // Now the most nasty case.....
-    String src = "while(1){try{" +
-      "if(a){a;continue;}else if(b){b;break;} else if(c) throw 1; else a}" +
-      "catch(e){}finally{c()}bar}foo";
+    String src =
+        "while(1){try{"
+            + "if(a){a;continue;}else if(b){b;break;} else if(c) throw 1; else a}"
+            + "catch(e){}finally{c()}bar}foo";
 
     ControlFlowGraph<Node> cfg = createCfg(src);
     // Focus only on the ON_EX edges.
@@ -1401,8 +1394,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testDeepNestedBreakwithFinally() throws IOException {
-    String src = "X:while(1){try{while(2){try{var a;break X;}" +
-        "finally{}}}finally{}}";
+    String src = "X:while(1){try{while(2){try{var a;break X;}" + "finally{}}}finally{}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertDownEdge(cfg, Token.WHILE, Token.BLOCK, Branch.ON_TRUE);
     assertDownEdge(cfg, Token.BLOCK, Token.TRY, Branch.UNCOND);
@@ -1417,8 +1409,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testDeepNestedFinally() throws IOException {
-    String src = "try{try{try{throw 1}" +
-        "finally{1;var a}}finally{2;if(a);}}finally{3;a()}";
+    String src = "try{try{try{throw 1}" + "finally{1;var a}}finally{2;if(a);}}finally{3;a()}";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.THROW, Token.BLOCK, Branch.ON_EX);
     assertCrossEdge(cfg, Token.VAR, Token.BLOCK, Branch.UNCOND);
@@ -1441,8 +1432,7 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testReturnInFinally2() throws IOException {
-    String src = "function f(x){" +
-      " try{ try{}finally{var dummy; return x;} } finally {} }";
+    String src = "function f(x){" + " try{ try{}finally{var dummy; return x;} } finally {} }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.VAR, Token.RETURN, Branch.UNCOND);
     assertCrossEdge(cfg, Token.RETURN, Token.BLOCK, Branch.UNCOND);
@@ -1577,9 +1567,14 @@ public final class ControlFlowAnalysisTest {
     assertNodeOrder(
         createCfg("for (var i = 0; i < 5; i++) { var x = 3; } if (true) {}"),
         ImmutableList.of(
-            Token.SCRIPT, Token.VAR, Token.FOR, Token.BLOCK, Token.VAR,
+            Token.SCRIPT,
+            Token.VAR,
+            Token.FOR,
+            Token.BLOCK,
+            Token.VAR,
             Token.INC /* i++ */,
-            Token.IF, Token.BLOCK));
+            Token.IF,
+            Token.BLOCK));
   }
 
   @Test
@@ -1622,23 +1617,24 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testLocalFunctionOrder() throws IOException {
-    ControlFlowGraph<Node> cfg =
-        createCfg("function f() { while (x) { x++; } } var x = 3;");
+    ControlFlowGraph<Node> cfg = createCfg("function f() { while (x) { x++; } } var x = 3;");
     assertNodeOrder(
         cfg,
         ImmutableList.of(
-            Token.SCRIPT, Token.VAR,
-
-            Token.FUNCTION, Token.BLOCK,
-            Token.WHILE, Token.BLOCK, Token.EXPR_RESULT));
+            Token.SCRIPT,
+            Token.VAR,
+            Token.FUNCTION,
+            Token.BLOCK,
+            Token.WHILE,
+            Token.BLOCK,
+            Token.EXPR_RESULT));
   }
 
   @Test
   public void testDoWhileOrder() throws IOException {
     assertNodeOrder(
         createCfg("do { var x = 3; } while (true); void x;"),
-        ImmutableList.of(
-            Token.SCRIPT, Token.BLOCK, Token.VAR, Token.DO, Token.EXPR_RESULT));
+        ImmutableList.of(Token.SCRIPT, Token.BLOCK, Token.VAR, Token.DO, Token.EXPR_RESULT));
   }
 
   @Test
@@ -1740,19 +1736,21 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testBreakInFinally1() throws IOException {
     String src =
-        "f = function() {\n" +
-        "  var action;\n" +
-        "  a: {\n" +
-        "    var proto = null;\n" +
-        "    try {\n" +
-        "      proto = new Proto\n" +
-        "    } finally {\n" +
-        "      action = proto;\n" +
-        "      break a\n" +  // Remove this...
-        "    }\n" +
-        "  }\n" +
-        "  alert(action)\n" + // but not this.
-        "};";
+        "f = function() {\n"
+            + "  var action;\n"
+            + "  a: {\n"
+            + "    var proto = null;\n"
+            + "    try {\n"
+            + "      proto = new Proto\n"
+            + "    } finally {\n"
+            + "      action = proto;\n"
+            + "      break a\n"
+            + // Remove this...
+            "    }\n"
+            + "  }\n"
+            + "  alert(action)\n"
+            + // but not this.
+            "};";
     String expected =
         "digraph AST {\n"
             + "  node [color=lightblue2, style=filled];\n"
@@ -1836,36 +1834,33 @@ public final class ControlFlowAnalysisTest {
   @Test
   public void testBreakInFinally2() throws IOException {
     String src =
-      "var action;\n" +
-      "a: {\n" +
-      "  var proto = null;\n" +
-      "  try {\n" +
-      "    proto = new Proto\n" +
-      "  } finally {\n" +
-      "    action = proto;\n" +
-      "    break a\n" +
-      "  }\n" +
-      "}\n" +
-      "alert(action)\n";
+        "var action;\n"
+            + "a: {\n"
+            + "  var proto = null;\n"
+            + "  try {\n"
+            + "    proto = new Proto\n"
+            + "  } finally {\n"
+            + "    action = proto;\n"
+            + "    break a\n"
+            + "  }\n"
+            + "}\n"
+            + "alert(action)\n";
 
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
     assertNoEdge(cfg, Token.BREAK, Token.BLOCK);
   }
 
-
   /**
    * Asserts the priority order of CFG nodes.
    *
-   * Checks that the node type of the highest-priority node matches the
-   * first element of the list, the type of the second node matches the
-   * second element of the list, and so on.
+   * <p>Checks that the node type of the highest-priority node matches the first element of the
+   * list, the type of the second node matches the second element of the list, and so on.
    *
    * @param cfg The control flow graph.
    * @param nodeTypes The expected node types, in order.
    */
-  private void assertNodeOrder(ControlFlowGraph<Node> cfg,
-      List<Token> nodeTypes) {
+  private void assertNodeOrder(ControlFlowGraph<Node> cfg, List<Token> nodeTypes) {
     List<? extends DiGraphNode<Node, Branch>> cfgNodes =
         Ordering.from(cfg.getOptionalNodeComparator(true)).sortedCopy(cfg.getNodes());
 
