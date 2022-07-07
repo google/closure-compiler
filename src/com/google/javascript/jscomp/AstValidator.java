@@ -1204,11 +1204,17 @@ public final class AstValidator implements CompilerPass {
     validateTypeInformation(superNode);
     Node superParent = superNode.getParent();
     Node methodNode = NodeUtil.getEnclosingNonArrowFunction(superParent);
+    Node blockNode = NodeUtil.getEnclosingBlock(superParent);
+
+    boolean notInMethod = methodNode == null || !NodeUtil.isMethodDeclaration(methodNode);
+    boolean notInStaticBlock = blockNode == null || !blockNode.getParent().isClassMembers();
 
     if (NodeUtil.isNormalGet(superParent) && superNode.isFirstChildOf(superParent)) {
       // `super.prop` or `super['prop']`
-      if (methodNode == null || !NodeUtil.isMethodDeclaration(methodNode)) {
-        violation("super property references are only allowed in methods", superNode);
+      if (notInMethod && notInStaticBlock) {
+        violation(
+            "super property references are only allowed in methods and class static blocks",
+            superNode);
       }
     } else if (superParent.isCall() && superNode.isFirstChildOf(superParent)) {
       // super() constructor call
@@ -1288,7 +1294,9 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  /** @param statement the enclosing statement. Will not always match the declaration Token. */
+  /**
+   * @param statement the enclosing statement. Will not always match the declaration Token.
+   */
   private void validateNameDeclarationHelper(Node statement, Token declaration, Node n) {
     validateProperties(n);
     validateMinimumChildCount(n, 1);

@@ -273,6 +273,40 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlock_superProperty() {
+    // TODO (user): re-enable TypeInfoValidation and TypeCheck
+    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    disableTypeCheck();
+    valid(
+        lines(
+            "class D {",
+            "  static field;",
+            "}",
+            "class C extends D {",
+            "  static {",
+            "    super.field = 'hello';",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testClassStaticBlock_invalidSuperConstructorCall() {
+    // TODO (user): re-enable TypeInfoValidation and TypeCheck
+    typeInfoValidationMode = AstValidator.TypeInfoValidation.NONE;
+    disableTypeCheck();
+    invalid(
+        lines(
+            "class D {}", //
+            "class C extends D {",
+            "  static {",
+            "    super();",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testFeatureValidation_classStaticBlock() {
     testFeatureValidation(
         lines(
