@@ -172,7 +172,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
 
     // The statments in the static block are unreachable,but the code in ControlFlowAnalysis doesn't
     // recognize class bodies yet.
-    // TODO(b/235871861): Update ControlFlowAnalysis so tests are unreachable.
+    // TODO(b/238252385): Update ControlFlowAnalysis so tests are unreachable.
     testSame("class C{ static{ if(false) { var x; } } }");
     testSame("class C{ static{ while(false){ let x; } } }");
   }
