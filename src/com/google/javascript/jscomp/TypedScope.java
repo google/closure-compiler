@@ -149,9 +149,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     return parent;
   }
 
-  /**
-   * Gets the type of {@code this} in the current scope.
-   */
+  /** Gets the type of {@code this} in the current scope. */
+  @Nullable
   @Override
   public JSType getTypeOfThis() {
     Node root = getRootNode();
@@ -183,6 +182,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     return var;
   }
 
+  @Nullable
   @Override
   TypedVar makeImplicitVar(ImplicitVar var) {
     if (this.isGlobal()) {
@@ -202,6 +202,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     return name != null && !name.equals(ImplicitVar.EXPORTS) && name.isMadeByScope(this);
   }
 
+  @Nullable
   private JSType getImplicitVarType(ImplicitVar var) {
     switch (var) {
       case ARGUMENTS:
@@ -276,6 +277,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
    * function scope contains "a". When looking up "a.b" in the function scope, AbstractScope::getVar
    * returns "a.b". This method returns null because the global "a" is shadowed.
    */
+  @Nullable
   @Override
   public final TypedVar getVar(String name) {
     TypedVar ownSlot = getOwnSlot(name);
@@ -302,6 +304,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
     }
   }
 
+  @Nullable
   @Override
   public StaticScope getTopmostScopeOfEventualDeclaration(String name) {
     if (getOwnSlot(name) != null || reservedNames.contains(name)) {

@@ -488,6 +488,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
       return NodeUtil.isNonArrowFunction(scope.getRootNode());
     }
 
+    @Nullable
     static ImplicitVar of(String name) {
       switch (name) {
         case "arguments":

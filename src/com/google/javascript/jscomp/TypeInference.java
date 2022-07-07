@@ -1941,6 +1941,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     return scopeAfterChildren;
   }
 
+  @Nullable
   private JSType getGoogModuleDependencyCallResultType(Node callNode) {
     String moduleId = callNode.getSecondChild().getString();
     Module module = compiler.getModuleMap().getClosureModule(moduleId);
