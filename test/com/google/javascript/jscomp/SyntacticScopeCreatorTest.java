@@ -886,6 +886,26 @@ public final class SyntacticScopeCreatorTest {
   }
 
   @Test
+  public void testClassStaticBlockWithLoop() {
+    String js = "let f = class Foo { static { for (;;) { var x; }}}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node classDecl = root.getFirstChild().getFirstFirstChild();
+    Scope classScope = scopeCreator.createScope(classDecl, globalScope);
+
+    Node classStaticBlockNode = classDecl.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+
+    Node forBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
+    Scope forBodyScope = scopeCreator.createScope(forBodyNode, staticBlockScope);
+
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+    assertScope(forBodyScope).declares("x").onClosestContainerScope();
+  }
+
+  @Test
   public void testSwitchScope() {
     String js =
         "switch (b) { "

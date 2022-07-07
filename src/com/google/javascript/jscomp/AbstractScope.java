@@ -385,9 +385,9 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    */
   public final S getClosestContainerScope() {
     S scope = getClosestHoistScope();
-    if (scope.isBlockScope()) {
+    if (scope.isFunctionBlockScope()) {
       scope = scope.getParent();
-      checkState(!scope.isBlockScope());
+      checkState(!scope.isBlockScope(), scope);
     }
     return scope;
   }
