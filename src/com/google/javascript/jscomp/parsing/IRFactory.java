@@ -182,9 +182,11 @@ class IRFactory {
   static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
 
   static final String UNEXPECTED_LABELLED_CONTINUE =
-      "continue can only use labeles of iteration statements";
+      "continue can only use labels of iteration statements";
 
   static final String UNEXPECTED_RETURN = "return must be inside function";
+  static final String UNEXPECTED_YIELD = "yield must be inside generator function";
+  static final String UNEXPECTED_AWAIT = "await must be inside asynchronous function";
   static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
@@ -277,6 +279,7 @@ class IRFactory {
       this.advance();
     }
 
+    @Nullable
     Comment current() {
       return (this.index >= this.source.size()) ? null : this.source.get(this.index);
     }
@@ -380,9 +383,46 @@ class IRFactory {
     validateParameters(n);
     validateBreakContinue(n);
     validateReturn(n);
+    validateYield(n);
+    validateAwait(n);
     validateNewDotTarget(n);
     validateLabel(n);
     validateBlockScopedFunctions(n);
+  }
+
+  private void validateAwait(Node n) {
+    if (n.isAwait()) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        // The await is in a class static block.
+        // e.g. `class C { static { await; } }`
+        if (parent.isClassMembers()) {
+          errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+          return;
+        }
+        if (parent.isAsyncFunction()) {
+          return;
+        }
+      }
+      errorReporter.error(UNEXPECTED_AWAIT, sourceName, n.getLineno(), n.getCharno());
+    }
+  }
+
+  private void validateYield(Node n) {
+    if (n.isYield()) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        // The yield is in a class static block.
+        // e.g. `class C { static { yield; } }`
+        if (parent.isClassMembers()) {
+          errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
+          return;
+        }
+        if (parent.isGeneratorFunction()) {
+          return;
+        }
+      }
+    }
   }
 
   private void validateReturn(Node n) {
@@ -421,7 +461,7 @@ class IRFactory {
       if (labelName != null) {
         Node parent = n.getParent();
         while (!parent.isLabel() || !labelsMatch(parent, labelName)) {
-          if (parent.isFunction() || parent.isScript()) {
+          if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
             // report missing label
             errorReporter.error(
                 SimpleFormat.format(UNDEFINED_LABEL, labelName.getString()),
@@ -443,7 +483,7 @@ class IRFactory {
         if (n.isContinue()) {
           Node parent = n.getParent();
           while (!isContinueTarget(parent)) {
-            if (parent.isFunction() || parent.isScript()) {
+            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
               // report invalid continue
               errorReporter.error(UNEXPECTED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
               break;
@@ -453,7 +493,7 @@ class IRFactory {
         } else {
           Node parent = n.getParent();
           while (!isBreakTarget(parent)) {
-            if (parent.isFunction() || parent.isScript()) {
+            if (parent.isFunction() || parent.isScript() || parent.isClassMembers()) {
               // report invalid break
               errorReporter.error(UNLABELED_BREAK, sourceName, n.getLineno(), n.getCharno());
               break;
@@ -566,7 +606,9 @@ class IRFactory {
     return newBlock;
   }
 
-  /** @return true if the jsDocParser represents a fileoverview. */
+  /**
+   * @return true if the jsDocParser represents a fileoverview.
+   */
   private boolean handlePossibleFileOverviewJsDoc(JsDocInfoParser jsDocParser) {
     if (jsDocParser.getLicenseText() != null) {
       this.licenseBuilder.add(jsDocParser.getLicenseText());
@@ -611,6 +653,7 @@ class IRFactory {
     return closestPreviousComment;
   }
 
+  @Nullable
   private JSDocInfo parseJSDocInfoFrom(Comment comment) {
     if (comment != null) {
       JsDocInfoParser jsDocParser = createJsDocInfoParser(comment);
@@ -622,6 +665,7 @@ class IRFactory {
     return null;
   }
 
+  @Nullable
   private JSDocInfo parseJSDocInfoOnTree(ParseTree tree) {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
@@ -1306,7 +1350,9 @@ class IRFactory {
       return getElem;
     }
 
-    /** @param exprNode unused */
+    /**
+     * @param exprNode unused
+     */
     Node processEmptyStatement(EmptyStatementTree exprNode) {
       return newNode(Token.EMPTY);
     }
@@ -1801,12 +1847,16 @@ class IRFactory {
       return root;
     }
 
-    /** @param node unused. */
+    /**
+     * @param node unused.
+     */
     Node processDebuggerStatement(DebuggerStatementTree node) {
       return newNode(Token.DEBUGGER);
     }
 
-    /** @param node unused. */
+    /**
+     * @param node unused.
+     */
     Node processThisExpression(ThisExpressionTree node) {
       return newNode(Token.THIS);
     }
@@ -2427,7 +2477,9 @@ class IRFactory {
       return newNode(Token.WITH, transform(stmt.expression), transformBlock(stmt.body));
     }
 
-    /** @param tree unused */
+    /**
+     * @param tree unused
+     */
     Node processMissingExpression(MissingPrimaryExpressionTree tree) {
       // This will already have been reported as an error by the parser.
       // Try to create something valid that ide mode might be able to
@@ -2472,12 +2524,16 @@ class IRFactory {
       return newNode(transformBooleanTokenType(literal.literalToken.type));
     }
 
-    /** @param literal unused */
+    /**
+     * @param literal unused
+     */
     Node processNullLiteral(LiteralExpressionTree literal) {
       return newNode(Token.NULL);
     }
 
-    /** @param literal unused */
+    /**
+     * @param literal unused
+     */
     Node processNull(NullTree literal) {
       // NOTE: This is not a NULL literal but a placeholder node such as in
       // an array with "holes".
@@ -2959,8 +3015,6 @@ class IRFactory {
         case OBJECT_SPREAD:
           return processObjectSpread(node.asObjectSpread());
 
-
-
           // ES2022
         case FIELD_DECLARATION:
           return processField(node.asFieldDeclaration());
@@ -3002,6 +3056,7 @@ class IRFactory {
    * in pre-order traversal or `null` if none found. Will not traverse into function or class
    * expressions.
    */
+  @Nullable
   private static Node findNodeTypeInExpression(Node expressionNode, Token token) {
     Deque<Node> worklist = new ArrayDeque<>();
     worklist.add(expressionNode);

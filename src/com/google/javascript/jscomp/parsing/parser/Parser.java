@@ -263,6 +263,7 @@ public class Parser {
   }
 
   // 14 Program
+  @Nullable
   public ProgramTree parseProgram() {
     try {
       // Set the start location at the beginning of the file rather than the beginning of the first
@@ -1196,6 +1197,7 @@ public class Parser {
     return parseVariableDeclarationList(Expression.NO_IN);
   }
 
+  @Nullable
   private VariableDeclarationListTree parseVariableDeclarationList(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     TokenType token = peekType();
@@ -2080,6 +2082,7 @@ public class Parser {
     return peekPredefinedString(0, string);
   }
 
+  @Nullable
   private Token eatPredefinedString(String string) {
     Token token = eatId();
     if (token == null || !token.asIdentifier().value.equals(string)) {
@@ -2890,9 +2893,6 @@ public class Parser {
 
   private ParseTree parseAwaitExpression() {
     SourcePosition start = getTreeStartLocation();
-    if (functionContextStack.isEmpty() || !functionContextStack.peekLast().isAsynchronous) {
-      reportError("'await' used in a non-async function context");
-    }
     eatPredefinedString(AWAIT);
     ParseTree expression = parseUnaryExpression();
     return new AwaitExpressionTree(getTreeLocation(start), expression);
@@ -3521,6 +3521,7 @@ public class Parser {
    * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
+  @Nullable
   private Token eatOpt(TokenType expectedTokenType) {
     if (peek(expectedTokenType)) {
       return eat(expectedTokenType);
@@ -3557,6 +3558,7 @@ public class Parser {
   }
 
   /** Shorthand for eatOpt(TokenType.IDENTIFIER) */
+  @Nullable
   private IdentifierToken eatIdOpt() {
     return (peekId()) ? eatIdOrKeywordAsId() : null;
   }
@@ -3566,6 +3568,7 @@ public class Parser {
    *
    * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
+  @Nullable
   private IdentifierToken eatId() {
     if (peekId()) {
       return eatIdOrKeywordAsId();
@@ -3598,6 +3601,7 @@ public class Parser {
    *
    * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
+  @Nullable
   private IdentifierToken eatIdOrKeywordAsId() {
     Token token = nextToken();
     if (token.type == TokenType.IDENTIFIER) {
@@ -3617,6 +3621,7 @@ public class Parser {
    * @param expectedTokenType
    * @return The consumed token, or null if the next token is not of the expected type.
    */
+  @Nullable
   private Token eat(TokenType expectedTokenType) {
     Token token = nextToken();
     if (token.type != expectedTokenType) {

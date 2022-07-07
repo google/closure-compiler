@@ -74,7 +74,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String UNEXPECTED_RETURN = "return must be inside function";
 
   private static final String UNEXPECTED_LABELLED_CONTINUE =
-      "continue can only use labeles of iteration statements";
+      "continue can only use labels of iteration statements";
+
+  private static final String UNEXPECTED_YIELD = "yield must be inside generator function";
+
+  private static final String UNEXPECTED_AWAIT = "await must be inside asynchronous function";
 
   private static final String UNDEFINED_LABEL = "undefined label";
 
@@ -5684,6 +5688,57 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testContinueInClassStaticBlock() {
+    parseError("class C {static {continue;}}", UNEXPECTED_CONTINUE);
+    parseError("for (let i = 1; i < 2; i++) {class C {static {continue;}}}", UNEXPECTED_CONTINUE);
+    parseError("while (true) {class C {static {continue;}}}", UNEXPECTED_CONTINUE);
+    parse("class C {static {while (true) {continue;}}}");
+    parse("class C {static {for (let i = 1; i < 2; i++) {continue;}}}");
+    parseError(
+        "x: for (let i = 1; i < 2; i++) {class C {static {continue x;}}}",
+        UNDEFINED_LABEL + " \"x\"");
+    parseError("x: while (true) {class C {static {continue x;}}}", UNDEFINED_LABEL + " \"x\"");
+    parse("class C {static {x: while (true) {continue x;}}}");
+    parse("class C {static {x: for (let i = 1; i < 2; i++) {continue x;}}}");
+    parseError("class C {static {x: { while (true) {continue x;}}}}", UNEXPECTED_LABELLED_CONTINUE);
+    parseError(
+        "class C {static {x: {for (let i = 1; i < 2; i++) {continue x;}}}}",
+        UNEXPECTED_LABELLED_CONTINUE);
+  }
+
+  @Test
+  public void testBreakInClassStaticBlock() {
+    parseError("class C {static {break;}}", UNLABELED_BREAK);
+    parseError("for (let i = 1; i < 2; i++) {class C {static {break;}}}", UNLABELED_BREAK);
+    parseError("while (true) {class C {static {break;}}}", UNLABELED_BREAK);
+    parse("class C {static {while (true) {break;}}}");
+    parse("class C {static {for (let i = 1; i < 2; i++) {break;}}}");
+    parseError(
+        "x: for (let i = 1; i < 2; i++) {class C {static {break x;}}}", UNDEFINED_LABEL + " \"x\"");
+    parseError("x: while (true) {class C {static {break x;}}}", UNDEFINED_LABEL + " \"x\"");
+    parse("class C {static {x: while (true) {break x;}}}");
+    parse("class C {static {x: for (let i = 1; i < 2; i++) {break x;}}}");
+    parse("class C {static {x: { while (true) {break x;}}}}");
+    parse("class C {static {x: {for (let i = 1; i < 2; i++) {break x;}}}}");
+  }
+
+  @Test
+  public void testYieldInClassStaticBlock() {
+    parseError("class C {static {var ind; yield;}}", "primary expression expected");
+    parseError("function* f(ind) {class C{ static {yield ind; ind++;}}}", UNEXPECTED_YIELD);
+    parse("class C{ static {function* f(ind) {yield ind; ind++;}}}");
+  }
+
+  @Test
+  public void testAwaitInClassStaticBlock() {
+    parseError("class C {static {await 1;}}", UNEXPECTED_AWAIT);
+    parseError("async function f() {class C{ static {await 1;}}}", UNEXPECTED_AWAIT);
+    parse("class C{ static {async function f() {await 1;}}}");
+    parseError("async () => {class C{ static {await 1;}}}", UNEXPECTED_AWAIT);
+    parse("class C{ static {async ()=>{await 1;}}}");
+  }
+
+  @Test
   public void testClassStaticBlock_this() {
     // multiple fields
     parse(
@@ -6143,8 +6198,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInvalidAwait() {
-    parseError("await 15;", "'await' used in a non-async function context");
-    parseError("function f() { return await 5; }", "'await' used in a non-async function context");
+    parseError("await 15;", UNEXPECTED_AWAIT);
+    parseError("function f() { return await 5; }", UNEXPECTED_AWAIT);
     parseError(
         "async function f(x = await 15) { return x; }",
         "`await` is illegal in parameter default value.");
