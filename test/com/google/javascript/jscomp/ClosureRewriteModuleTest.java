@@ -2561,8 +2561,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "class module$contents$client_Foo {}",
             "{",
             "  class Foo {}",
-            // TODO(b/135536377): this should remain `Foo`.
-            "  let /** !module$contents$client_Foo */ x;",
+            "  let /** !Foo */ x;",
             "}"));
   }
 

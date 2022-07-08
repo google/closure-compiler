@@ -481,7 +481,7 @@ final class ClosureRewriteModule implements CompilerPass {
       }
 
       if (n.getJSDocInfo() != null) {
-        rewriteJsdoc(n.getJSDocInfo());
+        rewriteJsdoc(n.getJSDocInfo(), t.getScope());
       }
 
       return true;
@@ -517,9 +517,10 @@ final class ClosureRewriteModule implements CompilerPass {
    * module content renaming of top level constructor functions and classes, and module renaming
    * from fully qualified legacy namespace to its binary name.
    */
-  private void rewriteJsdoc(JSDocInfo info) {
+  private void rewriteJsdoc(JSDocInfo info, Scope scope) {
+    ReplaceJsDocRefs replacer = new ReplaceJsDocRefs(scope);
     for (Node typeNode : info.getTypeNodes()) {
-      NodeUtil.visitPreOrder(typeNode, replaceJsDocRefs);
+      NodeUtil.visitPreOrder(typeNode, replacer);
     }
   }
 
@@ -528,29 +529,42 @@ final class ClosureRewriteModule implements CompilerPass {
    * module content renaming of top level constructor functions and classes, and module renaming
    * from fully qualified legacy namespace to its binary name.
    */
-  private final NodeUtil.Visitor replaceJsDocRefs =
-      new NodeUtil.Visitor() {
-        @Override
-        public void visit(Node typeRefNode) {
-          if (!typeRefNode.isStringLit()) {
-            return;
-          }
-          // A type name that might be simple like "Foo" or qualified like "foo.Bar".
-          final String typeName = typeRefNode.getString();
-          int dot = typeName.indexOf('.');
-          String rootOfType = dot == -1 ? typeName : typeName.substring(0, dot);
+  private final class ReplaceJsDocRefs implements NodeUtil.Visitor {
+    private final Scope scope;
 
-          // Rewrite the type node if any of the following hold, in priority order:
-          //  - the root of the type name is in our set of aliases to inline
-          //  - the root of the type name is a name defined in the module scope
-          //  - a prefix of the type name matches a Closure namespace
-          // TODO(b/135536377): skip rewriting if the root name is from an inner scope in the module
+    ReplaceJsDocRefs(Scope scope) {
+      this.scope = scope;
+    }
 
-          // If the name is an alias for an imported namespace rewrite from
-          // "{Foo}" to
-          // "{module$exports$bar$Foo}" or
-          // "{bar.Foo}"
-          if (currentScript.namesToInlineByAlias.containsKey(rootOfType)) {
+    @Override
+    public void visit(Node typeRefNode) {
+      if (!typeRefNode.isStringLit()) {
+        return;
+      }
+      // A type name that might be simple like "Foo" or qualified like "foo.Bar".
+      final String typeName = typeRefNode.getString();
+      int dot = typeName.indexOf('.');
+      String rootOfType = dot == -1 ? typeName : typeName.substring(0, dot);
+
+      Var rootVar = this.scope.getVar(rootOfType);
+      if (rootVar != null
+          && !rootVar.getScope().getClosestHoistScope().isGlobal()
+          && !rootVar.getScope().isModuleScope()) {
+        // this is a variable inside a local scope, not a module local or imported alias.
+        return;
+      }
+      // Rewrite the type node if any of the following hold, in priority order:
+      //  - the root of the type name is in our set of aliases to inline
+      //  - the root of the type name is a name defined in the module scope
+      //  - a prefix of the type name matches a Closure namespace
+      // AND the following is false:
+      //  - the root of the type name is defined in an inner scope
+
+      // If the name is an alias for an imported namespace rewrite from
+      // "{Foo}" to
+      // "{module$exports$bar$Foo}" or
+      // "{bar.Foo}"
+      if (currentScript.namesToInlineByAlias.containsKey(rootOfType)) {
             if (preprocessorSymbolTable != null) {
               // Jsdoc type node is a single STRING node that spans the whole type. For example
               // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
