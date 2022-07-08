@@ -1530,6 +1530,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return;
     }
 
+    if (key.isBlock()) {
+      return;
+    }
+
     if (key.isQuotedString()) {
       // NB: this case will never be triggered for member functions, since we store quoted
       // member functions as computed properties. This case does apply to regular string key

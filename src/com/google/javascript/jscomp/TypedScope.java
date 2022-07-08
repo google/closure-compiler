@@ -164,6 +164,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
         // Executed when the current scope has not been typechecked.
         return null;
       }
+    } else if (this.isStaticBlockScope()) {
+      return getParent().getRootNode().getJSType();
     } else {
       return getParent().getTypeOfThis();
     }

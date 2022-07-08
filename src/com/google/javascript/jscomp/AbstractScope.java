@@ -481,11 +481,17 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
     /** Whether this kind of implicit variable is created/owned by the given scope. */
     boolean isMadeByScope(AbstractScope<?, ?> scope) {
-      if (this.equals(EXPORTS)) {
-        return scope.isModuleScope()
-            && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
+      switch (this) {
+        case EXPORTS:
+          return scope.isModuleScope()
+              && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
+        case SUPER:
+        case THIS:
+          return scope.isStaticBlockScope() || NodeUtil.isNonArrowFunction(scope.getRootNode());
+        case ARGUMENTS:
+          return NodeUtil.isNonArrowFunction(scope.getRootNode());
       }
-      return NodeUtil.isNonArrowFunction(scope.getRootNode());
+      throw new AssertionError();
     }
 
     @Nullable

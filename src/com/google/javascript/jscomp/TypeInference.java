@@ -826,6 +826,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       case WITH:
       case DEBUGGER:
       case EXPORT_SPECS:
+      case LABEL:
         // These don't need to be typed here, since they only affect control flow.
         isTypeable = false;
         break;

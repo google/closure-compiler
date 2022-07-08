@@ -3479,6 +3479,199 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlockAndVariableDeclarations() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    STATIC:;",
+            "    let /** string */ x;",
+            "    const /** number */ y = 5;",
+            "    var /** boolean */ z;",
+            "  }",
+            "};"));
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classScope = staticScope.getParentScope();
+    assertScope(globalScope)
+        .declares("Foo")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("(typeof Foo)");
+    assertScope(staticScope).declares("x").directly().withTypeThat().isString();
+    assertScope(classScope).doesNotDeclare("x");
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(staticScope).declares("y").directly().withTypeThat().isNumber();
+    assertScope(classScope).doesNotDeclare("y");
+    assertScope(globalScope).doesNotDeclare("y");
+    assertScope(staticScope).declares("z").directly().withTypeThat().isBoolean();
+    assertScope(classScope).doesNotDeclare("z");
+    assertScope(globalScope).doesNotDeclare("z");
+  }
+
+  @Test
+  public void testMultipleClassStaticBlocks() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    STATIC1:;",
+            "    var /** number */ x;",
+            "  }",
+            "  static {",
+            "    STATIC2:;",
+            "    var /** string */ y;",
+            "  }",
+            "};"));
+    TypedScope staticScope1 = getLabeledStatement("STATIC1").enclosingScope;
+    TypedScope staticScope2 = getLabeledStatement("STATIC2").enclosingScope;
+    TypedScope classScope = staticScope1.getParentScope();
+    assertScope(globalScope)
+        .declares("Foo")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("(typeof Foo)");
+    assertThat(staticScope2.getParentScope()).isEqualTo(classScope);
+    assertScope(staticScope1).declares("x").directly().withTypeThat().isNumber();
+    assertScope(staticScope2).declares("y").directly().withTypeThat().isString();
+    assertScope(staticScope1).doesNotDeclare("y");
+    assertScope(staticScope2).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("y");
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(globalScope).doesNotDeclare("y");
+  }
+
+  @Test
+  public void testClassStaticBlockWithIf() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    STATIC:;",
+            "    if(true) {",
+            "      IF:;",
+            "      let /** boolean */ x;",
+            "      var /** string */ y;",
+            "      const /** number */ z = 1;",
+            "    }",
+            "  }",
+            "};"));
+    TypedScope ifScope = getLabeledStatement("IF").enclosingScope;
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classScope = staticScope.getParentScope();
+    assertScope(globalScope)
+        .declares("Foo")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("(typeof Foo)");
+    assertScope(ifScope).declares("x").directly().withTypeThat().isBoolean();
+    assertScope(staticScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(ifScope).declares("y").onSomeParent().withTypeThat().isString();
+    assertScope(staticScope).declares("y").directly().withTypeThat().isString();
+    assertScope(classScope).doesNotDeclare("y");
+    assertScope(globalScope).doesNotDeclare("y");
+    assertScope(ifScope).declares("z").directly().withTypeThat().isNumber();
+    assertScope(staticScope).doesNotDeclare("z");
+    assertScope(classScope).doesNotDeclare("z");
+    assertScope(globalScope).doesNotDeclare("z");
+  }
+
+  @Test
+  public void testClassStaticBlockWithFunction() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    STATIC:;",
+            "    function bar() {",
+            "      FUNCTION:;",
+            "    }",
+            "  }",
+            "};"));
+    TypedScope functionScope = getLabeledStatement("FUNCTION").enclosingScope;
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classScope = staticScope.getParentScope();
+    assertThat(functionScope.getParentScope().getParentScope()).isEqualTo(staticScope);
+    assertScope(globalScope)
+        .declares("Foo")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("(typeof Foo)");
+    assertScope(staticScope)
+        .declares("bar")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("function(): undefined");
+    assertScope(classScope).doesNotDeclare("bar");
+    assertScope(globalScope).doesNotDeclare("bar");
+  }
+
+  @Test
+  public void testClassStaticBlockWithThisLHS() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    STATIC:;",
+            "    /** @type {string} */",
+            "    this.x = 'hello';",
+            "  }",
+            "};"));
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classScope = staticScope.getParentScope();
+    assertThat(fooCtor.hasProperty("x")).isTrue();
+    assertType(fooCtor.getPropertyType("x")).isString();
+    assertThat(fooCtor.isPropertyTypeDeclared("x")).isTrue();
+    assertThat(fooCtor.isPropertyTypeInferred("x")).isFalse();
+    assertScope(staticScope).doesNotDeclare("x");
+    assertScope(classScope).doesNotDeclare("x");
+  }
+
+  @Test
+  public void testClassStaticBlockWithThisRHS() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @type {number} */",
+            "  static y = 1;",
+            "  static {",
+            "    STATIC:;",
+            "    var x = this.y;",
+            "  }",
+            "};"));
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classScope = staticScope.getParentScope();
+    assertThat(fooCtor.hasOwnDeclaredProperty("y")).isTrue();
+    assertType(fooCtor.getPropertyType("y")).isNumber();
+    assertThat(fooCtor.hasProperty("x")).isFalse();
+    assertScope(staticScope).declares("x").directly().withTypeThat().isNumber();
+    assertScope(classScope).doesNotDeclare("x");
+  }
+
+  @Test
+  public void testSuperInEmptyClassStaticBlock() {
+    testSame(
+        lines(
+            "class Foo {}", //
+            "class Bar extends Foo {",
+            "  static {",
+            "    STATIC:;",
+            "  }",
+            "};"));
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    TypedScope staticScope = getLabeledStatement("STATIC").enclosingScope;
+    TypedScope classBarScope = staticScope.getParentScope();
+    assertScope(staticScope).declares("super").directly().withTypeThat().isEqualTo(fooCtor);
+    assertScope(classBarScope).doesNotDeclare("super");
+  }
+
+  @Test
   public void testForLoopIntegration() {
     testSame("var y = 3; for (var x = true; x; y = x) {}");
 
