@@ -862,7 +862,7 @@ public final class SyntacticScopeCreatorTest {
 
     Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
     Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
-    assertScope(ifBodyScope).declares("x").onSomeParent();
+    assertScope(ifBodyScope).declares("x").onClosestContainerScope();
   }
 
   @Test
@@ -882,7 +882,7 @@ public final class SyntacticScopeCreatorTest {
 
     Node ifBodyNode = classStaticBlockNode.getFirstChild().getLastChild();
     Scope ifBodyScope = scopeCreator.createScope(ifBodyNode, staticBlockScope);
-    assertScope(ifBodyScope).declares("x").onSomeParent();
+    assertScope(ifBodyScope).declares("x").onClosestContainerScope();
   }
 
   @Test
