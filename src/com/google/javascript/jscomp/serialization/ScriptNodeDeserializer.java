@@ -186,6 +186,12 @@ final class ScriptNodeDeserializer {
           }
           return;
 
+        case BLOCK:
+          if (parent.isClassMembers()) {
+            this.addScriptFeature(Feature.CLASS_STATIC_BLOCK);
+          }
+          return;
+
         case EMPTY:
           if (parent.isCatch()) {
             this.addScriptFeature(Feature.OPTIONAL_CATCH_BINDING);

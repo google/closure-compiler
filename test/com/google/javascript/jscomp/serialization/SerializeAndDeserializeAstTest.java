@@ -252,6 +252,55 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEmptyClassStaticBlock() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticBlock_variables() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    this.x=1;",
+            "    let y =2;",
+            "    var z =3;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticBlock_function() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    function x() {",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testMultipleClassStaticBlocks() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    this.x=1;",
+            "  }",
+            "  static {",
+            "    this.y=2;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testVanillaFunctionDeclaration() {
     testSame("function f(x, y) { return x ** y; }");
   }
@@ -631,12 +680,10 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     final DeserializedAst ast;
     final ColorRegistry registry;
     final Node sourceRoot;
-    final Node externRoot;
 
     Result(DeserializedAst ast, ColorRegistry registry, Node externRoot, Node sourceRoot) {
       this.ast = ast;
       this.registry = registry;
-      this.externRoot = externRoot;
       this.sourceRoot = sourceRoot;
     }
   }
