@@ -1585,13 +1585,6 @@ google.maps.DirectionsLeg.prototype.start_location;
 google.maps.DirectionsLeg.prototype.steps;
 
 /**
- * Information about traffic speed along the leg.
- * @type {!Array<?>}
- * @deprecated This array will always be empty.
- */
-google.maps.DirectionsLeg.prototype.traffic_speed_entry;
-
-/**
  * An array of non-stopover waypoints along this leg, which were specified in
  * the original request. <p> <strong>Deprecated in alternative routes</strong>.
  * Version 3.27 will be the last version of the API that adds extra
@@ -1603,6 +1596,13 @@ google.maps.DirectionsLeg.prototype.traffic_speed_entry;
  * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsLeg.prototype.via_waypoints;
+
+/**
+ * Information about traffic speed along the leg.
+ * @type {!Array<?>}
+ * @deprecated This array will always be empty.
+ */
+google.maps.DirectionsLeg.prototype.traffic_speed_entry;
 
 /**
  * An object containing a <code>points</code> property to describe the polyline
@@ -2128,25 +2128,10 @@ google.maps.DirectionsStep.prototype.encoded_lat_lngs;
 google.maps.DirectionsStep.prototype.end_location;
 
 /**
- * The ending location of this step.
- * @type {!google.maps.LatLng}
- * @deprecated Please use {@link google.maps.DirectionsStep.end_location}.
- */
-google.maps.DirectionsStep.prototype.end_point;
-
-/**
  * Instructions for this step.
  * @type {string}
  */
 google.maps.DirectionsStep.prototype.instructions;
-
-/**
- * A sequence of <code>LatLng</code>s describing the course of this step. This
- * is an approximate (smoothed) path of the step.
- * @type {!Array<!google.maps.LatLng>}
- * @deprecated Please use {@link google.maps.DirectionsStep.path}.
- */
-google.maps.DirectionsStep.prototype.lat_lngs;
 
 /**
  * Contains the action to take for the current step (<code>turn-left</code>,
@@ -2164,27 +2149,10 @@ google.maps.DirectionsStep.prototype.maneuver;
 google.maps.DirectionsStep.prototype.path;
 
 /**
- * Contains an object with a single property, &#39;points&#39;, that holds an <a
- * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
- * polyline</a> representation of the step. This polyline is an approximate
- * (smoothed) path of the step.
- * @type {!Array<!google.maps.DirectionsStep>|undefined}
- * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
- */
-google.maps.DirectionsStep.prototype.polyline;
-
-/**
  * The starting location of this step.
  * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.start_location;
-
-/**
- * The starting location of this step.
- * @type {!google.maps.LatLng}
- * @deprecated Please use {@link google.maps.DirectionsStep.start_location}.
- */
-google.maps.DirectionsStep.prototype.start_point;
 
 /**
  * Sub-steps of this step. Specified for non-transit sections of transit routes.
@@ -2210,6 +2178,38 @@ google.maps.DirectionsStep.prototype.transit_details;
  * @type {!google.maps.TravelMode}
  */
 google.maps.DirectionsStep.prototype.travel_mode;
+
+/**
+ * The starting location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.start_location}.
+ */
+google.maps.DirectionsStep.prototype.start_point;
+
+/**
+ * The ending location of this step.
+ * @type {!google.maps.LatLng}
+ * @deprecated Please use {@link google.maps.DirectionsStep.end_location}.
+ */
+google.maps.DirectionsStep.prototype.end_point;
+
+/**
+ * A sequence of <code>LatLng</code>s describing the course of this step. This
+ * is an approximate (smoothed) path of the step.
+ * @type {!Array<!google.maps.LatLng>}
+ * @deprecated Please use {@link google.maps.DirectionsStep.path}.
+ */
+google.maps.DirectionsStep.prototype.lat_lngs;
+
+/**
+ * Contains an object with a single property, &#39;points&#39;, that holds an <a
+ * href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded
+ * polyline</a> representation of the step. This polyline is an approximate
+ * (smoothed) path of the step.
+ * @type {!Array<!google.maps.DirectionsStep>|undefined}
+ * @deprecated Please use {@link google.maps.DirectionsStep.encoded_lat_lngs}.
+ */
+google.maps.DirectionsStep.prototype.polyline;
 
 /**
  * A <code>DirectionsWaypoint</code> represents a location between origin and
@@ -4964,16 +4964,6 @@ google.maps.MapOptions.prototype.disableDefaultUI;
 google.maps.MapOptions.prototype.disableDoubleClickZoom;
 
 /**
- * If <code>false</code>, prevents the map from being dragged. Dragging is
- * enabled by default.
- * @type {?boolean|undefined}
- * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
- *     the <code>gestureHandling</code> property, and set it to
- *     <code>"none"</code>.
- */
-google.maps.MapOptions.prototype.draggable;
-
-/**
  * The name or url of the cursor to display when mousing over a draggable map.
  * This property uses the css <code>cursor</code> attribute to change the icon.
  * As with the css property, you must specify at least one fallback cursor that
@@ -5237,6 +5227,16 @@ google.maps.MapOptions.prototype.zoomControl;
  * @type {?google.maps.ZoomControlOptions|undefined}
  */
 google.maps.MapOptions.prototype.zoomControlOptions;
+
+/**
+ * If <code>false</code>, prevents the map from being dragged. Dragging is
+ * enabled by default.
+ * @type {?boolean|undefined}
+ * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
+ *     the <code>gestureHandling</code> property, and set it to
+ *     <code>"none"</code>.
+ */
+google.maps.MapOptions.prototype.draggable;
 
 /**
  * @record
@@ -7396,6 +7396,15 @@ google.maps.StreetViewPanorama = function(container, opts) {};
 google.maps.StreetViewPanorama.prototype.controls;
 
 /**
+ * Sets focus on this <code>StreetViewPanorama</code>. You may wish to consider
+ * using this method along with a <code>visible_changed</code> event to make
+ * sure that <code>StreetViewPanorama</code> is visible before setting focus on
+ * it. A <code>StreetViewPanorama</code> that is not visible cannot be focused.
+ * @return {undefined}
+ */
+google.maps.StreetViewPanorama.prototype.focus = function() {};
+
+/**
  * Returns the set of navigation links for the Street View panorama.
  * @return {Array<google.maps.StreetViewLink>}
  */
@@ -9107,40 +9116,6 @@ google.maps.drawing.OverlayType = {
 google.maps.event = {};
 
 /**
- * Cross browser event handler registration. This listener is removed by calling
- * removeListener(handle) for the handle that is returned by this function.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
- *     use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListener = function(
-    instance, eventName, handler, capture) {};
-
-/**
- * Wrapper around addDomListener that removes the listener after the first
- * event.
- * @param {!Object} instance
- * @param {string} eventName
- * @param {!Function} handler
- * @param {boolean=} capture
- * @return {!google.maps.MapsEventListener}
- * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
- *     deprecated, use the standard <a
- *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
- *     method instead. The feature will continue to work and there is no plan to
- *     decommission it.
- */
-google.maps.event.addDomListenerOnce = function(
-    instance, eventName, handler, capture) {};
-
-/**
  * Adds the given listener function to the given event name for the given object
  * instance. Returns an identifier for this listener that can be used with
  * removeListener().
@@ -9202,6 +9177,40 @@ google.maps.event.removeListener = function(listener) {};
  * @return {undefined}
  */
 google.maps.event.trigger = function(instance, eventName, eventArgs) {};
+
+/**
+ * Cross browser event handler registration. This listener is removed by calling
+ * removeListener(handle) for the handle that is returned by this function.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListener()</code> is deprecated,
+ *     use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListener = function(
+    instance, eventName, handler, capture) {};
+
+/**
+ * Wrapper around addDomListener that removes the listener after the first
+ * event.
+ * @param {!Object} instance
+ * @param {string} eventName
+ * @param {!Function} handler
+ * @param {boolean=} capture
+ * @return {!google.maps.MapsEventListener}
+ * @deprecated <code>google.maps.event.addDomListenerOnce()</code> is
+ *     deprecated, use the standard <a
+ *     href="https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener">addEventListener()</a>
+ *     method instead. The feature will continue to work and there is no plan to
+ *     decommission it.
+ */
+google.maps.event.addDomListenerOnce = function(
+    instance, eventName, handler, capture) {};
 
 /**
  * @const
@@ -10890,7 +10899,7 @@ google.maps.journeySharing.VehicleLocationUpdate.prototype
     .speedKilometersPerHour;
 
 /**
- * The update time.
+ * The time this update was received from the vehicle.
  * @type {?Date}
  */
 google.maps.journeySharing.VehicleLocationUpdate.prototype.time;
@@ -11430,19 +11439,6 @@ google.maps.places.AutocompleteOptions.prototype.componentRestrictions;
 google.maps.places.AutocompleteOptions.prototype.fields;
 
 /**
- * Whether to retrieve only Place IDs. The PlaceResult made available when the
- * place_changed event is fired will only have the place_id, types and name
- * fields, with the place_id, types and description returned by the Autocomplete
- * service. Disabled by default.
- * @type {boolean|undefined}
- * @deprecated <code>placeIdOnly</code> is deprecated as of January 15, 2019,
- *     and will be turned off on January 15, 2020. Use {@link
- *     google.maps.places.AutocompleteOptions.fields} instead: <code>fields:
- *     [&#39;place_id&#39;, &#39;name&#39;, &#39;types&#39;]</code>.
- */
-google.maps.places.AutocompleteOptions.prototype.placeIdOnly;
-
-/**
  * A boolean value, indicating that the Autocomplete widget should only return
  * those places that are inside the bounds of the Autocomplete widget at the
  * time the query is sent. Setting strictBounds to <code>false</code> (which is
@@ -11460,6 +11456,19 @@ google.maps.places.AutocompleteOptions.prototype.strictBounds;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.AutocompleteOptions.prototype.types;
+
+/**
+ * Whether to retrieve only Place IDs. The PlaceResult made available when the
+ * place_changed event is fired will only have the place_id, types and name
+ * fields, with the place_id, types and description returned by the Autocomplete
+ * service. Disabled by default.
+ * @type {boolean|undefined}
+ * @deprecated <code>placeIdOnly</code> is deprecated as of January 15, 2019,
+ *     and will be turned off on January 15, 2020. Use {@link
+ *     google.maps.places.AutocompleteOptions.fields} instead: <code>fields:
+ *     [&#39;place_id&#39;, &#39;name&#39;, &#39;types&#39;]</code>.
+ */
+google.maps.places.AutocompleteOptions.prototype.placeIdOnly;
 
 /**
  * Represents a single autocomplete prediction.
@@ -11940,16 +11949,6 @@ google.maps.places.PlaceGeometry.prototype.viewport;
 google.maps.places.PlaceOpeningHours = function() {};
 
 /**
- * Whether the Place is open at the current time.
- * @type {boolean|undefined}
- * @deprecated <code>open_now</code> is deprecated as of November 2019. Use
- *     the {@link google.maps.places.PlaceOpeningHours.isOpen} method from
- *     a {@link google.maps.places.PlacesService.getDetails} result instead. See
- *     <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
- */
-google.maps.places.PlaceOpeningHours.prototype.open_now;
-
-/**
  * Opening periods covering for each day of the week, starting from Sunday, in
  * chronological order. Days in which the Place is not open are not included.
  * Only available with {@link google.maps.places.PlacesService.getDetails}.
@@ -11968,6 +11967,16 @@ google.maps.places.PlaceOpeningHours.prototype.periods;
  * @type {!Array<string>|undefined}
  */
 google.maps.places.PlaceOpeningHours.prototype.weekday_text;
+
+/**
+ * Whether the Place is open at the current time.
+ * @type {boolean|undefined}
+ * @deprecated <code>open_now</code> is deprecated as of November 2019. Use
+ *     the {@link google.maps.places.PlaceOpeningHours.isOpen} method from
+ *     a {@link google.maps.places.PlacesService.getDetails} result instead. See
+ *     <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
+ */
+google.maps.places.PlaceOpeningHours.prototype.open_now;
 
 /**
  * Check whether the place is open now (when no date is passed), or at the given
@@ -12225,19 +12234,6 @@ google.maps.places.PlaceResult.prototype.name;
 google.maps.places.PlaceResult.prototype.opening_hours;
 
 /**
- * A flag indicating whether the Place is closed, either permanently or
- * temporarily. If the place is operational, or if no data is available, the
- * flag is absent from the response.
- * @type {boolean|undefined}
- * @deprecated <code>permanently_closed</code> is deprecated as of May 2020 and
- *     will be turned off in May 2021. Use {@link
- *     google.maps.places.PlaceResult.business_status} instead as
- *     <code>permanently_closed</code> does not distinguish between temporary
- *     and permanent closures.
- */
-google.maps.places.PlaceResult.prototype.permanently_closed;
-
-/**
  * Photos of this Place. The collection will contain up to ten {@link
  * google.maps.places.PlacePhoto} objects.
  * @type {!Array<!google.maps.places.PlacePhoto>|undefined}
@@ -12307,20 +12303,6 @@ google.maps.places.PlaceResult.prototype.user_ratings_total;
 /**
  * The offset from UTC of the Place’s current timezone, in minutes. For example,
  * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
- * <code>utc_offset</code> will be <code>660</code>. For timezones behind UTC,
- * the offset is negative. For example, the <code>utc_offset</code> is
- * <code>-60</code> for Cape Verde. Only available with {@link
- * google.maps.places.PlacesService.getDetails}.
- * @type {number|undefined}
- * @deprecated <code>utc_offset</code> is deprecated as of November 2019.
- *     Use {@link google.maps.places.PlaceResult.utc_offset_minutes} instead.
- *     See <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
- */
-google.maps.places.PlaceResult.prototype.utc_offset;
-
-/**
- * The offset from UTC of the Place’s current timezone, in minutes. For example,
- * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
  * <code>utc_offset_minutes</code> will be <code>660</code>. For timezones
  * behind UTC, the offset is negative. For example, the
  * <code>utc_offset_minutes</code> is <code>-60</code> for Cape Verde. Only
@@ -12347,17 +12329,37 @@ google.maps.places.PlaceResult.prototype.vicinity;
 google.maps.places.PlaceResult.prototype.website;
 
 /**
+ * The offset from UTC of the Place’s current timezone, in minutes. For example,
+ * Sydney, Australia in daylight savings is 11 hours ahead of UTC, so the
+ * <code>utc_offset</code> will be <code>660</code>. For timezones behind UTC,
+ * the offset is negative. For example, the <code>utc_offset</code> is
+ * <code>-60</code> for Cape Verde. Only available with {@link
+ * google.maps.places.PlacesService.getDetails}.
+ * @type {number|undefined}
+ * @deprecated <code>utc_offset</code> is deprecated as of November 2019.
+ *     Use {@link google.maps.places.PlaceResult.utc_offset_minutes} instead.
+ *     See <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
+ */
+google.maps.places.PlaceResult.prototype.utc_offset;
+
+/**
+ * A flag indicating whether the Place is closed, either permanently or
+ * temporarily. If the place is operational, or if no data is available, the
+ * flag is absent from the response.
+ * @type {boolean|undefined}
+ * @deprecated <code>permanently_closed</code> is deprecated as of May 2020 and
+ *     will be turned off in May 2021. Use {@link
+ *     google.maps.places.PlaceResult.business_status} instead as
+ *     <code>permanently_closed</code> does not distinguish between temporary
+ *     and permanent closures.
+ */
+google.maps.places.PlaceResult.prototype.permanently_closed;
+
+/**
  * Represents a single review of a place.
  * @record
  */
 google.maps.places.PlaceReview = function() {};
-
-/**
- * The aspects rated by the review. The ratings on a scale of 0 to 3.
- * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
- * @deprecated This field is no longer available.
- */
-google.maps.places.PlaceReview.prototype.aspects;
 
 /**
  * The name of the reviewer.
@@ -12413,6 +12415,13 @@ google.maps.places.PlaceReview.prototype.text;
  * @type {number}
  */
 google.maps.places.PlaceReview.prototype.time;
+
+/**
+ * The aspects rated by the review. The ratings on a scale of 0 to 3.
+ * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
+ * @deprecated This field is no longer available.
+ */
+google.maps.places.PlaceReview.prototype.aspects;
 
 /**
  * An object used to fetch additional pages of Places results.
@@ -12491,15 +12500,6 @@ google.maps.places.PlaceSearchRequest.prototype.maxPriceLevel;
 google.maps.places.PlaceSearchRequest.prototype.minPriceLevel;
 
 /**
- * Equivalent to <code>keyword</code>. Values in this field are combined with
- * values in the <code>keyword</code> field and passed as part of the same
- * search string.
- * @type {string|undefined}
- * @deprecated Use <code>keyword</code> instead.
- */
-google.maps.places.PlaceSearchRequest.prototype.name;
-
-/**
  * Restricts results to only those places that are open right now.
  * @type {boolean|undefined}
  */
@@ -12533,6 +12533,15 @@ google.maps.places.PlaceSearchRequest.prototype.rankBy;
  * @type {string|undefined}
  */
 google.maps.places.PlaceSearchRequest.prototype.type;
+
+/**
+ * Equivalent to <code>keyword</code>. Values in this field are combined with
+ * values in the <code>keyword</code> field and passed as part of the same
+ * search string.
+ * @type {string|undefined}
+ * @deprecated Use <code>keyword</code> instead.
+ */
+google.maps.places.PlaceSearchRequest.prototype.name;
 
 /**
  * Contains methods related to searching for places and retrieving details about
