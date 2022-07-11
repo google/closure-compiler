@@ -324,4 +324,65 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
             "  f6 = alert(1);",
             "}"));
   }
+
+  @Test
+  public void computedFieldExecutionOrderAndDeadAssignmentElimination() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("var window;")
+                .buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "window.test = function() {",
+            "var x = 0;",
+            "/** @unrestricted */",
+            "class MyClass {", //
+            "  static f1 = x;",
+            "  static [(x = 1)] = 1;", // (x = 1) executes before assigning 'static f1 = x'
+            "}",
+            "console.log(MyClass.f1);", // prints 1
+            "};"),
+        // TODO(b/189993301): this should be logging '1' instead
+        lines("window.a = function() { console.log(0); };"));
+  }
+
+  @Test
+  public void computedMethodExecutionOrderAndDeadAssignmentElimination() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("var window;")
+                .buildExternsFile("externs"));
+
+    test(
+        options,
+        lines(
+            "window.test = function() {",
+            "var x = 0;",
+            "/** @unrestricted */",
+            "class MyClass {", //
+            "  static f1 = x;",
+            "  static [(x = 1)]() {};", // (x = 1) executes before assigning 'static f1 = x'
+            "}",
+            "console.log(MyClass.f1);", // prints 1
+            "};"),
+        lines(
+            "window.b=function(){",
+            "  var a=0;",
+            "  class c {",
+            "    static a=a;",
+            "    static [a=1](){}",
+            "  }",
+            "  console.log(c.a)",
+            "};"));
+  }
 }

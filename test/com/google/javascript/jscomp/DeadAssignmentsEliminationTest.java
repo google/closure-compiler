@@ -1054,7 +1054,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassField() {
+  public void testComputedClassField() {
     inFunction(
         lines(
             "let x;", //
@@ -1077,6 +1077,53 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  [x = 'field2'] = 7;",
             "}",
             "use(x);"));
+
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            "  static field1 = x;",
+            "  [x = 'field2'] = 7;",
+            "}",
+            "use(C.field1);"),
+        lines(
+            "let x;", //
+            "class C {",
+            "  static field1 = x;",
+            // TODO(b/189993301): don't remove 'x = field2' because it's read by 'field1 = x'
+            "  ['field2'] = 7;",
+            "}",
+            "use(C.field1);"));
+  }
+
+  @Test
+  public void testComputedClassMethod() {
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            // NOTE: it would be correct to eliminate the following two assignments
+            "  static [x = 'field1']() {}",
+            "  [x = 'field2']() {}",
+            "}"));
+
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            "  static [x = 'field1']() {};",
+            "  [x = 'field2']() {}",
+            "}",
+            "use(x);"));
+
+    inFunction(
+        lines(
+            "let x;", //
+            "class C {",
+            "  static field1 = x;",
+            "  [x = 'field2']() {}",
+            "}",
+            "use(C.field1);"));
   }
 
   private void inFunction(String src) {
