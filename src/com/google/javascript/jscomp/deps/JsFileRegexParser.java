@@ -52,36 +52,35 @@ public final class JsFileRegexParser extends JsFileLineParser {
           "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
               + "goog\\.(?<func>provide|module|require|requireType|addDependency|declareModuleId)"
               // TODO(johnplaisted): Remove declareNamespace.
-              + "\\s*\\((?<args>.*?)\\)");
+              + "\\s*\\(\\s*(?<args>.*?)\\s*\\)");
 
   /**
    * Pattern for matching import ... from './path/to/file'.
    *
-   * <p>Unlike the goog.require() pattern above, this pattern does not
-   * allow multiple statements per line.  The import/export <b>must</b>
-   * be at the beginning of the line to match.
+   * <p>Unlike the goog.require() pattern above, this pattern does not allow multiple statements per
+   * line. The import/export <b>must</b> be at the beginning of the line to match.
    */
   private static final Pattern ES6_MODULE_PATTERN =
       Pattern.compile(
           // Require the import/export to be at the beginning of the line
           "^"
-          // Either an import or export, but we don't care which, followed by at least one space
-          + "(?:import|export)\\b\\s*"
-          // Skip any identifier chars, as well as star, comma, braces, and spaces
-          // This should match, e.g., "* as foo from ", or "Foo, {Bar as Baz} from ".
-          // The 'from' keyword is required except in the case of "import '...';",
-          // where there's nothing between 'import' and the module key string literal.
-          + "(?:[a-zA-Z0-9$_*,{}\\s]+\\bfrom\\s*|)"
-          // Imports require a string literal at the end; it's optional for exports
-          // (e.g. "export * from './other';", which is effectively also an import).
-          // This optionally captures group #1, which is the imported module name.
-          + "(?:['\"]([^'\"]+)['\"])?"
-          // Finally, this should be the entire statement, so ensure there's a semicolon.
-          + "\\s*;");
+              // Either an import or export, but we don't care which, followed by at least one space
+              + "(?:import|export)\\b\\s*"
+              // Skip any identifier chars, as well as star, comma, braces, and spaces
+              // This should match, e.g., "* as foo from ", or "Foo, {Bar as Baz} from ".
+              // The 'from' keyword is required except in the case of "import '...';",
+              // where there's nothing between 'import' and the module key string literal.
+              + "(?:[a-zA-Z0-9$_*,{}\\s]+\\bfrom\\s*|)"
+              // Imports require a string literal at the end; it's optional for exports
+              // (e.g. "export * from './other';", which is effectively also an import).
+              // This optionally captures group #1, which is the imported module name.
+              + "(?:['\"]([^'\"]+)['\"])?"
+              // Finally, this should be the entire statement, so ensure there's a semicolon.
+              + "\\s*;");
 
   /**
-   * Pattern for 'export' keyword, e.g. "export default class ..." or "export {blah}".
-   * The '\b' ensures we don't also match "exports = ...", which is not an ES6 module.
+   * Pattern for 'export' keyword, e.g. "export default class ..." or "export {blah}". The '\b'
+   * ensures we don't also match "exports = ...", which is not an ES6 module.
    */
   private static final Pattern ES6_EXPORT_PATTERN = Pattern.compile("^export\\b");
 
@@ -103,8 +102,12 @@ public final class JsFileRegexParser extends JsFileLineParser {
   /** Matchers used in the parsing. */
   private final Matcher es6Matcher = ES6_MODULE_PATTERN.matcher("");
 
+  /** Previous lines stored for multi-line googMatcher application. */
+  private String googMatcherBuffer = "";
+
   /** The info for the file we are currently parsing. */
   private List<String> provides;
+
   private List<Require> requires;
   private List<String> typeRequires;
   private boolean fileHasProvidesOrRequires;
@@ -163,22 +166,20 @@ public final class JsFileRegexParser extends JsFileLineParser {
   }
 
   /**
-   * Parses the given file and returns the dependency information that it
-   * contained.
+   * Parses the given file and returns the dependency information that it contained.
    *
    * @param filePath Path to the file to parse.
    * @param closureRelativePath Path of the file relative to closure.
    * @param fileContents The contents to parse.
-   * @return A DependencyInfo containing all provides/requires found in the
-   *     file.
+   * @return A DependencyInfo containing all provides/requires found in the file.
    */
-  public DependencyInfo parseFile(String filePath, String closureRelativePath,
-      String fileContents) {
+  public DependencyInfo parseFile(
+      String filePath, String closureRelativePath, String fileContents) {
     return parseReader(filePath, closureRelativePath, new StringReader(fileContents));
   }
 
-  private DependencyInfo parseReader(String filePath,
-      String closureRelativePath, Reader fileContents) {
+  private DependencyInfo parseReader(
+      String filePath, String closureRelativePath, Reader fileContents) {
     provides = new ArrayList<>();
     requires = new ArrayList<>();
     typeRequires = new ArrayList<>();
@@ -188,6 +189,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
     file = loader.resolve(filePath);
     moduleType = ModuleType.NON_MODULE;
     seenLoadModule = false;
+    googMatcherBuffer = "";
 
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Parsing Source: " + filePath);
@@ -283,6 +285,55 @@ public final class JsFileRegexParser extends JsFileLineParser {
     return true;
   }
 
+  private boolean applyGoogMatcher(String line) throws ParseException {
+    boolean lineHasProvidesOrRequires = false;
+    // Iterate over the provides/requires.
+    googMatcher.reset(line);
+    while (googMatcher.find()) {
+      lineHasProvidesOrRequires = true;
+
+      if (includeGoogBase && !fileHasProvidesOrRequires) {
+        fileHasProvidesOrRequires = true;
+        requires.add(Require.BASE);
+      }
+
+      // See if it's a require or provide.
+      String methodName = googMatcher.group("func");
+      char firstChar = methodName.charAt(0);
+      boolean isDeclareModuleNamespace = firstChar == 'd';
+      boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
+      boolean isProvide = firstChar == 'p';
+      boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
+      boolean isRequire = firstChar == 'r';
+
+      if (isModule && !seenLoadModule) {
+        providesNamespace = setModuleType(ModuleType.GOOG_MODULE);
+      }
+
+      if (isProvide) {
+        providesNamespace = setModuleType(ModuleType.GOOG_PROVIDE);
+      }
+
+      if (providesNamespace || isRequire) {
+        // Parse the param.
+        String arg = parseJsString(googMatcher.group("args"));
+        // Add the dependency.
+        if (isRequire) {
+          if ("requireType".equals(methodName)) {
+            typeRequires.add(arg);
+          } else if (!"goog".equals(arg)) {
+            // goog is always implicit.
+            Require require = Require.googRequireSymbol(arg);
+            requires.add(require);
+          }
+        } else {
+          provides.add(arg);
+        }
+      }
+    }
+    return lineHasProvidesOrRequires;
+  }
+
   /** Parses a line of JavaScript, extracting goog.provide and goog.require information. */
   @Override
   protected boolean parseLine(String line) throws ParseException {
@@ -293,55 +344,29 @@ public final class JsFileRegexParser extends JsFileLineParser {
     }
 
     // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
-    if (line.contains("provide")
-        || line.contains("require")
-        || line.contains("module")
-        || line.contains("addDependency")
-        || line.contains("declareModuleId")) {
-      // Iterate over the provides/requires.
-      googMatcher.reset(line);
-      while (googMatcher.find()) {
-        lineHasProvidesOrRequires = true;
+    boolean lineHasProvidesOrRequiresWords =
+        line.contains("provide")
+            || line.contains("require")
+            || line.contains("module")
+            || line.contains("addDependency")
+            || line.contains("declareModuleId");
 
-        if (includeGoogBase && !fileHasProvidesOrRequires) {
-          fileHasProvidesOrRequires = true;
-          requires.add(Require.BASE);
-        }
-
-        // See if it's a require or provide.
-        String methodName = googMatcher.group("func");
-        char firstChar = methodName.charAt(0);
-        boolean isDeclareModuleNamespace = firstChar == 'd';
-        boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
-        boolean isProvide = firstChar == 'p';
-        boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
-        boolean isRequire = firstChar == 'r';
-
-        if (isModule && !seenLoadModule) {
-          providesNamespace = setModuleType(ModuleType.GOOG_MODULE);
-        }
-
-        if (isProvide) {
-          providesNamespace = setModuleType(ModuleType.GOOG_PROVIDE);
-        }
-
-        if (providesNamespace || isRequire) {
-          // Parse the param.
-          String arg = parseJsString(googMatcher.group("args"));
-          // Add the dependency.
-          if (isRequire) {
-            if ("requireType".equals(methodName)) {
-              typeRequires.add(arg);
-            } else if (!"goog".equals(arg)) {
-              // goog is always implicit.
-              Require require = Require.googRequireSymbol(arg);
-              requires.add(require);
-            }
-          } else {
-            provides.add(arg);
-          }
-        }
-      }
+    if (!googMatcherBuffer.isEmpty()) {
+      // Retry with the previous line.
+      lineHasProvidesOrRequires = applyGoogMatcher(String.join("", googMatcherBuffer, line));
+    }
+    if (!lineHasProvidesOrRequires && lineHasProvidesOrRequiresWords) {
+      // Try without the previous line.
+      lineHasProvidesOrRequires = applyGoogMatcher(line);
+    }
+    if (!lineHasProvidesOrRequires && lineHasProvidesOrRequiresWords) {
+      // We haven't found any matches in this line and will retry on the next line.
+      // We support only 2-lines retries for efficiency; otherwise if there were no matches, we
+      // could end up applying the regexp to the whole file. It covers majority of multi-line
+      // cases (according to the JS formatting rules).
+      googMatcherBuffer = line;
+    } else {
+      googMatcherBuffer = "";
     }
 
     if (line.startsWith("import") || line.startsWith("export")) {
@@ -372,7 +397,9 @@ public final class JsFileRegexParser extends JsFileLineParser {
       }
     }
 
-    return !shortcutMode || lineHasProvidesOrRequires
+    return !shortcutMode
+        || lineHasProvidesOrRequires
+        || !googMatcherBuffer.isEmpty()
         || CharMatcher.whitespace().matchesAllOf(line)
         || !line.contains(";")
         || line.contains("goog.setTestOnly")
