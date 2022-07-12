@@ -3557,7 +3557,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final IdGenerator crossModuleIdGenerator;
     private final boolean runJ2clPasses;
     private final ImmutableMap<String, SourceMapInput> inputSourceMaps;
-    private final int changeStamp;
     private final ImmutableList<InputId> externs;
     private final ImmutableListMultimap<JSChunk, InputId> moduleToInputList;
     private final LinkedHashSet<String> injectedLibraries;
@@ -3579,7 +3578,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.runJ2clPasses = compiler.runJ2clPasses;
       this.inputSourceMaps = ImmutableMap.copyOf(new TreeMap<>(compiler.inputSourceMaps));
-      this.changeStamp = compiler.changeStamp;
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
       this.moduleToInputList = mapJSModulesToInputIds(compiler.moduleGraph.getAllChunks());
@@ -3620,7 +3618,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     idGeneratorMap = compilerState.idGeneratorMap;
     crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
     runJ2clPasses = compilerState.runJ2clPasses;
-    changeStamp = compilerState.changeStamp;
+
+    // We don't save changeStamp, because its value turned out to be non-deterministic
+    // (Reasons for this are unknown.), and there's no benefit to saving it anyway.
+    // We don't save the change stamps that are stored on the AST nodes,
+    // so all the AST Nodes we read in effectively have a change stamp of 0,
+    // and we can just start the compiler's counter over at 1.
+    changeStamp = 1;
+
     accessorSummary = compilerState.accessorSummary;
     inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
     // In a single-stage compilation this work is done in initBasedOnOptions() and
