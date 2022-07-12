@@ -4752,6 +4752,222 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassStaticBlockVariablesWrongTypes() {
+    newTest()
+        .addSource(
+            "class Foo {", //
+            "  static {",
+            "    /** @type {number} */",
+            "    let str = 'str';",
+            "    /** @type {boolean|string} */",
+            "    const num = 5;",
+            "    /** @type {?string} */",
+            "    var bool = true;",
+            "  }",
+            "};")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : string",
+                "required: number"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: (boolean|string)"))
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : boolean",
+                "required: (null|string)"))
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockPropertyWithThis() {
+    newTest()
+        .addSource(
+            "/** @type {number} */",
+            "var x = 4;",
+            "class Foo {", //
+            "  static {",
+            "    this.x;",
+            "  }",
+            "};")
+        .addDiagnostic("Property x never defined on this")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockWithWrongTypeThisRHS() {
+    // TODO(b/235871861): should be reporting type error (does not type check `this` on the RHS)
+    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
+    newTest()
+        .addSource(
+            "class Foo {",
+            "  static {",
+            "    /** @type {number} */",
+            "    this.num = 1;",
+            "    /** @type {string} */",
+            "    var str = this.num;",
+            "  }",
+            "};")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockWithWrongTypeThisLHS() {
+    newTest()
+        .addSource(
+            "class Foo { ",
+            "  static {",
+            "    /** @type {string} */",
+            "    this.str = 2;",
+            "  }",
+            "};")
+        .addDiagnostic(
+            lines(
+                "assignment to property str of this", //
+                "found   : number",
+                "required: string"))
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockWithSuper() {
+    newTest()
+        .addSource(
+            "class Foo {",
+            "  /** @type {string} */",
+            "  static str;",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    super.str = 'str';",
+            "  }",
+            "}")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockWithWrongTypeSuper() {
+    // TODO(b/235871861): should be reporting a type error
+    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
+    newTest()
+        .addSource(
+            "class Foo {",
+            "  /** @type {string} */",
+            "  static str;",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    super.str = 5;",
+            "  }",
+            "};")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockInheritanceWithClassName() {
+    // TODO(b/235871861): should be reporting a type error
+    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
+    newTest()
+        .addSource(
+            "class Foo {",
+            "  static foo(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    Foo.foo('str');",
+            "  }",
+            "};")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockWithWrongTypeSuperParameter() {
+    // TODO(b/235871861): should be reporting a type error
+    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
+    newTest()
+        .addSource(
+            "class Foo {",
+            "  static foo(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    super.foo('str');",
+            "  }",
+            "};")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockTypeNarrowing() {
+    newTest()
+        .addSource(
+            "class C {",
+            "  static {",
+            "    /** @param {?string} x */",
+            "    function foo(x) {",
+            "      if (x != null) {",
+            "        /** @type {string} */",
+            "        const noNull = x;",
+            "      }",
+            "    }",
+            "  }",
+            "}")
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockTypeNarrowing2() {
+    // TODO(b/235871861): should not be reporting an error
+    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
+    newTest()
+        .addExterns("/** @type {?string} */ var strOrNull;")
+        .addSource(
+            "class C {",
+            "  static {",
+            "    if (strOrNull != null) {",
+            "      /** @type {string} */",
+            "      const noNull = strOrNull;",
+            "    }",
+            "  }",
+            "}")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : (null|string)",
+                "required: string"))
+        .run();
+  }
+
+  @Test
+  public void testClassStaticBlockOverrideSupertypeOnAnonymousClass() {
+    newTest()
+        .addSource(
+            "function use(ctor) {}",
+            "",
+            "class Foo { ",
+            "  static {",
+            "    /** @type {string} */",
+            "    this.str;",
+            "  }",
+            "}",
+            "use(class extends Foo {",
+            "  static { this.str = 3; }",
+            "});")
+        .addDiagnostic(
+            lines(
+                "assignment to property str of this", //
+                "found   : number",
+                "required: string"))
+        .addDiagnostic(
+            "property str already defined on supertype (typeof Foo); use @override to override it")
+        .run();
+  }
+
+  @Test
   public void testClassTypeOfThisInConstructor() {
     newTest()
         .addSource(
