@@ -1207,18 +1207,6 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /**
-   * Checks that {@code pass1} comes before {@code pass2} in {@code passList}, if both are present.
-   */
-  private void assertPassOrder(
-      List<PassFactory> passList, PassFactory pass1, PassFactory pass2, String msg) {
-    int pass1Index = passList.indexOf(pass1);
-    int pass2Index = passList.indexOf(pass2);
-    if (pass1Index != -1 && pass2Index != -1) {
-      checkState(pass1Index < pass2Index, msg);
-    }
-  }
-
-  /**
    * Certain checks and rewriting passes need to run in a particular order. For example, the
    * PolymerPass will not work correctly unless it runs after the goog.provide() processing. This
    * enforces those constraints.
