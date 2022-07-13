@@ -977,8 +977,6 @@ public final class ControlFlowAnalysisTest {
   public void testClass_withPublicFieldsAndMethod() throws IOException {
     String src = "class C{ x; y; foo() {}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertEdge(cfg, Token.MEMBER_FIELD_DEF, Token.MEMBER_FIELD_DEF, Branch.UNCOND);
-    assertEdge(cfg, Token.MEMBER_FIELD_DEF, Token.MEMBER_FUNCTION_DEF, Branch.UNCOND);
     assertEdge(cfg, Token.FUNCTION, Token.BLOCK, Branch.UNCOND);
     assertReturnEdge(cfg, Token.BLOCK);
   }

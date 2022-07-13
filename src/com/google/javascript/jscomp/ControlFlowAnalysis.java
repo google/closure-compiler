@@ -320,6 +320,9 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
         case IMPORT:
         case RETURN:
         case THROW:
+        case MEMBER_FUNCTION_DEF:
+        case MEMBER_FIELD_DEF:
+        case COMPUTED_FIELD_DEF:
           return false;
         case TRY:
           /* When we are done with the TRY block and there is no FINALLY block,
@@ -333,8 +336,6 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
             exceptionHandler.pop();
           }
           break;
-        case CLASS_MEMBERS:
-        case MEMBER_FUNCTION_DEF:
         default:
           break;
       }
@@ -411,6 +412,8 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
       case LABEL:
       case CLASS_MEMBERS:
       case MEMBER_FUNCTION_DEF:
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
         return;
       default:
         handleStmt(n);
