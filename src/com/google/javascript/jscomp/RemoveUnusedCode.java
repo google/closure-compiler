@@ -36,8 +36,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -105,7 +105,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Deque<Continuation> worklist = new ArrayDeque<>();
 
-  private final IdentityHashMap<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
+  private final LinkedHashMap<Var, VarInfo> varInfoMap = new LinkedHashMap<>();
 
   private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
@@ -224,7 +224,6 @@ class RemoveUnusedCode implements CompilerPass {
       return new RemoveUnusedCode(this);
     }
   }
-
 
   /** Supplies the string needed for an entry in the removal log. */
   private static class RemovalLogRecord implements Supplier<String> {
@@ -1479,7 +1478,9 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  /** @return Whether or not accessor side-effect are a possibility. */
+  /**
+   * @return Whether or not accessor side-effect are a possibility.
+   */
   private boolean considerForAccessorSideEffects(Node getprop, PropertyAccessKind usage) {
     // Other node types may make sense in the future.
     checkState(NodeUtil.isNormalOrOptChainGetProp(getprop), getprop);
