@@ -371,6 +371,61 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCannotExportEs6StaticBlockInClassExpressionInReturnExpression() {
+    testError(
+        lines(
+            "function f() {", //
+            "  return class {",
+            "    /** @export */ static {}",
+            "  }",
+            "};"),
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
+  @Test
+  public void testCannotExportStaticBlock() {
+    testError(
+        lines(
+            "class G {", //
+            "/** @export */ static {}",
+            "}"),
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
+  @Test
+  public void testExportClassMemberInStaticBlock() {
+    allowExternsChanges();
+    String code = "class G { static { /** @export */ this.foo = 1;} }";
+    testSame(code);
+    testExternChanges(srcs(code), expected("Object.prototype.foo;"));
+  }
+
+  @Test
+  public void testClassMemberExportDoesntConflictInStaticBlock() {
+    allowExternsChanges();
+    String code =
+        lines(
+            "/** @export */", //
+            "class G {",
+            "  static {",
+            // TODO(b/235871861): Either generate an export for this property or report an error for
+            // it.
+            "    /** @export */ this.foo=1;",
+            "  }",
+            "}");
+    String result =
+        lines(
+            "/** @export */", //
+            "class G {",
+            "  static {",
+            "    /** @export */ this.foo=1;}",
+            "  }",
+            "goog.exportSymbol('G', G);");
+    test(code, result);
+    testExternChanges(srcs(code), expected("Object.prototype.foo;var goog;"));
+  }
+
+  @Test
   public void testGoogScopeFunctionOutput() {
     test(
         "/** @export */ $jscomp.scope.foo = /** @export */ function() {}",
@@ -524,4 +579,3 @@ public final class GenerateExportsTest extends CompilerTestCase {
     testSame(srcs("function Foo() {}"));
   }
 }
-
