@@ -228,6 +228,28 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             "JSCompiler_StaticMethods_foo(o);"));
   }
 
+  @Test
+  public void noRewrite_forPropertyNamesAccessedReflectively() {
+    test(
+        externs("function use() {}"),
+        srcs(
+            lines(
+                "class C { m() {} n() {} }",
+                "const c = new C();",
+                "c.m();",
+                "c.n();",
+                // this call should prevent devirtualizing m() but not n()
+                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")),
+        expected(
+            lines(
+                "var JSCompiler_StaticMethods_n = function(JSCompiler_StaticMethods_n$self) {};",
+                "class C { m() {} }",
+                "const c = new C();",
+                "c.m();",
+                "JSCompiler_StaticMethods_n(c);",
+                "use(C.prototype, $jscomp.reflectProperty('m', C.prototype));")));
+  }
+
   private void testNoRewriteIfDefinitionSiteBetween(String prefix, String suffix) {
     testSame(
         lines(

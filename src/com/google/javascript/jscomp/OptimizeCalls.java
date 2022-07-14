@@ -449,6 +449,18 @@ class OptimizeCalls implements CompilerPass {
           maybeAddPropReference(n.getString(), n);
           break;
 
+        case CALL:
+          // If we are using goog.reflect.objectProperty on this symbol, we will assume that it
+          // gets referenced.
+          Node fnName = n.getFirstChild();
+          if (compiler.getCodingConvention().isPropertyRenameFunction(fnName)) {
+            Node propName = NodeUtil.getArgumentForCallOrNew(n, 0);
+            if (propName != null) {
+              maybeAddPropReference(propName.getString(), n);
+            }
+          }
+          break;
+
         case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
