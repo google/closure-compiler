@@ -20,11 +20,11 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /** Replaces the ES2021 class field with constructor declaration. */
-public final class RewriteClassFields implements NodeTraversal.Callback, CompilerPass {
+public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  public RewriteClassFields(AbstractCompiler compiler) {
+  public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

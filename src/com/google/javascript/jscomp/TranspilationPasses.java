@@ -78,7 +78,7 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
-      passes.maybeAdd(rewriteClassFields);
+      passes.maybeAdd(rewriteClassMembers);
     }
 
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
@@ -260,10 +260,10 @@ public class TranspilationPasses {
           .setInternalFactory(Es6ExtractClasses::new)
           .build();
 
-  static final PassFactory rewriteClassFields =
+  static final PassFactory rewriteClassMembers =
       PassFactory.builder()
-          .setName("RewriteClassFields")
-          .setInternalFactory(RewriteClassFields::new)
+          .setName("RewriteClassMembers")
+          .setInternalFactory(RewriteClassMembers::new)
           .build();
 
   static final PassFactory es6RewriteClass =

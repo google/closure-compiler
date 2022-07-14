@@ -25,7 +25,7 @@ import org.junit.runners.JUnit4;
  * static a; static ['b'] = 'hi'; }`
  */
 @RunWith(JUnit4.class)
-public final class RewriteClassFieldsTest extends CompilerTestCase {
+public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Override
   @Before
@@ -39,7 +39,7 @@ public final class RewriteClassFieldsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteClassFields(compiler);
+    return new RewriteClassMembers(compiler);
   }
 
   @Test
