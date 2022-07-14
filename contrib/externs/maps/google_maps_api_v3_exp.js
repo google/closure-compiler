@@ -3126,7 +3126,7 @@ google.maps.GeocoderResult.prototype.plus_code;
 /**
  * An array of strings denoting all the localities contained in a postal code.
  * This is only present when the result is a postal code that contains multiple
- * localities. This array can contain up to 10 localities.
+ * localities.
  * @type {!Array<string>|undefined}
  */
 google.maps.GeocoderResult.prototype.postcode_localities;
@@ -5690,7 +5690,7 @@ google.maps.Marker.prototype.getIcon = function() {};
 /**
  * Get the label of the {@link google.maps.Marker}. See {@link
  * google.maps.MarkerOptions.label}.
- * @return {?google.maps.MarkerLabel|undefined}
+ * @return {?google.maps.MarkerLabel|string|undefined}
  */
 google.maps.Marker.prototype.getLabel = function() {};
 
@@ -9766,7 +9766,11 @@ google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
     .prototype.authTokenFetcher;
 
 /**
- * The delivery vehicle ID to track initially.
+ * The delivery vehicle ID to track immediately after the location provider is
+ * instantiated. If not specified, the location provider does not start tracking
+ * any vehicle; use {@link
+ * google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProvider.deliveryVehicleId}
+ * to set the ID and begin tracking.
  * @type {?string}
  */
 google.maps.journeySharing.FleetEngineDeliveryVehicleLocationProviderOptions
@@ -9954,8 +9958,12 @@ google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .projectId;
 
 /**
- * The tracking ID to track initially.
- * @type {string}
+ * The tracking ID of the task to track immediately after the location provider
+ * is instantiated. If not specified, the location provider does not start
+ * tracking any task; use {@link
+ * google.maps.journeySharing.FleetEngineShipmentLocationProvider.trackingId} to
+ * set the tracking ID and begin tracking.
+ * @type {?string}
  */
 google.maps.journeySharing.FleetEngineShipmentLocationProviderOptions.prototype
     .trackingId;
@@ -10068,8 +10076,11 @@ google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .projectId;
 
 /**
- * The trip ID to track initially.
- * @type {string}
+ * The trip ID to track immediately after the location provider is instantiated.
+ * If not specified, the location provider does not start tracking any trip;
+ * use {@link google.maps.journeySharing.FleetEngineTripLocationProvider.tripId}
+ * to set the ID and begin tracking.
+ * @type {?string}
  */
 google.maps.journeySharing.FleetEngineTripLocationProviderOptions.prototype
     .tripId;
