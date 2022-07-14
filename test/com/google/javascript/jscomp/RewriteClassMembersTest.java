@@ -21,8 +21,19 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Test cases for transpilation pass that replaces public class fields: `class C { x = 2; ['y'] = 3;
- * static a; static ['b'] = 'hi'; }`
+ * Test cases for transpilation pass that replaces public class fields and class static blocks:
+ * <code><pre>
+ * class C {
+ *   x = 2;
+ *   ['y'] = 3;
+ *   static a;
+ *   static ['b'] = 'hi';
+ *   static {
+ *     let c = 4;
+ *     this.z = c;
+ *   }
+ * }
+ * </pre></code>
  */
 @RunWith(JUnit4.class)
 public final class RewriteClassMembersTest extends CompilerTestCase {
@@ -70,5 +81,15 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static ['x'] = 2;",
             "}"),
         Es6ToEs3Util.CANNOT_CONVERT_YET);
+    testError(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x = 2",
+            "    this.y = x",
+            "  }",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
+  ;
 }

@@ -77,7 +77,8 @@ public class TranspilationPasses {
               "markEs2022FeaturesNotRequiringTranspilationAsRemoved", Feature.REGEXP_FLAG_D));
     }
 
-    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)) {
+    if (options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS)
+        || options.needsTranspilationOf(Feature.CLASS_STATIC_BLOCK)) {
       passes.maybeAdd(rewriteClassMembers);
     }
 

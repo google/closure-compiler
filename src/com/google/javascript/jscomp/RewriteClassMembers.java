@@ -19,7 +19,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
-/** Replaces the ES2021 class field with constructor declaration. */
+/** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
 public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
@@ -31,14 +31,17 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, Feature.PUBLIC_CLASS_FIELDS);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(
+        compiler, Feature.PUBLIC_CLASS_FIELDS, Feature.CLASS_STATIC_BLOCK);
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isScript()) {
       FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-      return scriptFeatures == null || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS);
+      return scriptFeatures == null
+          || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
+          || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
     }
     return true;
   }
@@ -47,6 +50,8 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isMemberFieldDef() || n.isComputedFieldDef()) {
       compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Public class fields"));
+    } else if (NodeUtil.isClassStaticBlock(n)) {
+      compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Class static blocks"));
     }
   }
 }
