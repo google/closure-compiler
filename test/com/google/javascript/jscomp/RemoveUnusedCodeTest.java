@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -1618,6 +1619,136 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlocksDoesRemove() {
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"),
+        "");
+
+    // TODO(bradfordcsmith): Would be nice to remove the whole class at this point
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    var x = 1;",
+            "    let y = 2;",
+            "    const z = 3;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    if (true) {",
+            "      if (true) {",
+            "        var foo = function() {};",
+            "      }",
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "class C {",
+            "  static {",
+            "    if (true) {",
+            "      if (true) {",
+            "      }",
+            "    }",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static {",
+            "    function f() {}",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "const x = 1;", //
+            "class C {",
+            "  static {",
+            "    function f() {",
+            "      x;",
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testClassStaticBlockDoesntRemove() {
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    let x;",
+            "    alert(x);",
+            "    console.log(x);",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    this.x=1;",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "const x = 1;",
+            "class C {",
+            "  static {",
+            "    x;", // reference prevents `const x = 1;` from being removed.
+            "  }",
+            "}",
+            "new C;"));
+
+    testSame(
+        lines(
+            "const x = 1;",
+            "class C {",
+            "  static {",
+            // side-effect of `alert` prevents `x` from being removed
+            "    alert(x);", // reference prevents `x` from being removed.
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "const x = 1;",
+            "class C {",
+            "  static {",
+            "    function f() {",
+            "      x;", // reference prevents `const x = 1;` from being removed.
+            "    }",
+            "    f();", // call prevents f() from being removed.
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testComputedPropSideEffects() {
     testSame(
         lines(
@@ -2095,11 +2226,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // was modified.
     private HashSet<String> polyfillsExpectedToBeRemoved = new HashSet<>();
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester addExterns(String moreExterns) {
       externs.add(moreExterns);
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester addPolyfill(String polyfill) {
       checkArgument(!polyfills.contains(polyfill), "duplicate polyfill added: >%s<", polyfill);
       polyfills.add(polyfill);
@@ -2108,6 +2241,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester inputSourceLines(String... srcLines) {
       inputSource = lines(srcLines);
       // Force updates for the expected output source and polyfills
@@ -2116,22 +2250,26 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester expectSourceUnchanged() {
       checkNotNull(inputSource);
       expectedSource = inputSource;
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester expectSourceLines(String... expectedLines) {
       expectedSource = lines(expectedLines);
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester expectNoPolyfillsRemoved() {
       polyfillsExpectedToBeRemoved = new HashSet<>();
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester expectPolyfillsRemoved(String... removedPolyfills) {
       for (String polyfillToRemove : removedPolyfills) {
         expectPolyfillRemoved(polyfillToRemove);
@@ -2139,6 +2277,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       return this;
     }
 
+    @CanIgnoreReturnValue
     PolyfillRemovalTester expectPolyfillRemoved(String polyfill) {
       checkArgument(
           polyfills.contains(polyfill), "non-existent polyfill cannot be removed: >%s<", polyfill);
