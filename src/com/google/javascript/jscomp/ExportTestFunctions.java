@@ -294,8 +294,7 @@ public class ExportTestFunctions implements CompilerPass {
     } else if (rootVar.getScope().isModuleScope()) {
       Node originalValue = rootVar.getInitialValue();
       return originalValue != null
-          && originalValue.isCall()
-          && originalValue.getFirstChild().matchesQualifiedName("goog.require")
+          && NodeUtil.isGoogRequireCall(originalValue)
           && originalValue.hasTwoChildren()
           && originalValue.getSecondChild().getString().equals(GOOG_TESTING_TEST_SUITE);
     }

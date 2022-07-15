@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 
 /**
@@ -41,6 +42,9 @@ import com.google.javascript.rhino.Token;
  * can be achieved.
  */
 public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
+
   private final AbstractCompiler compiler;
   private final boolean supportsEs6Modules;
   private final boolean supportsCommonJsModules;
@@ -79,8 +83,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         if (n.isExprResult()) {
           Node maybeGetProp = n.getFirstFirstChild();
           if (maybeGetProp != null
-              && (maybeGetProp.matchesQualifiedName("goog.provide")
-                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
+              && (GOOG_PROVIDE.matches(maybeGetProp) || GOOG_MODULE.matches(maybeGetProp))) {
             found = true;
             return false;
           }
@@ -145,8 +148,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
       if (n.isExprResult()) {
         Node maybeGetProp = n.getFirstFirstChild();
         if (maybeGetProp != null
-            && (maybeGetProp.matchesQualifiedName("goog.provide")
-                || maybeGetProp.matchesQualifiedName("goog.module"))) {
+            && (GOOG_PROVIDE.matches(maybeGetProp) || GOOG_MODULE.matches(maybeGetProp))) {
           moduleType = ModuleType.GOOG;
           return;
         }
@@ -204,8 +206,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
 
     if (parent != null
         && (parent.isExprResult() || !t.inGlobalHoistScope())
-        && n.isCall()
-        && n.getFirstChild().matchesQualifiedName("goog.require")
+        && NodeUtil.isGoogRequireCall(n)
         && n.getSecondChild() != null
         && n.getSecondChild().isStringLit()) {
       String namespace = n.getSecondChild().getString();

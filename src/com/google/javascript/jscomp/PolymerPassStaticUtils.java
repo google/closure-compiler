@@ -29,6 +29,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,7 @@ import javax.annotation.Nullable;
  */
 final class PolymerPassStaticUtils {
   private static final String VIRTUAL_FILE = "<PolymerPassStaticUtils.java>";
+  private static final QualifiedName POLYMER_DOT_ELEMENT = QualifiedName.of("Polymer.Element");
 
   /** @return Whether the call represents a call to the Polymer function. */
   @VisibleForTesting
@@ -72,7 +74,7 @@ final class PolymerPassStaticUtils {
     // When imported from an goog module (TS), we'll have a GETPROP like
     // `module$polymer$polymer_element.PolymerElement`.
     return !heritage.isEmpty()
-        && (heritage.matchesQualifiedName("Polymer.Element")
+        && (POLYMER_DOT_ELEMENT.matches(heritage)
             || heritage.matchesName("PolymerElement")
             || "PolymerElement".equals(heritage.getOriginalQualifiedName())
             || (heritage.isGetProp() && heritage.getString().equals("PolymerElement")));
