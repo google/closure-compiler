@@ -1754,4 +1754,25 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  }",
             "}"));
   }
+
+  @Test
+  public void testClassStaticBlock() {
+    fold(
+        lines(
+            "class C {", //
+            "  static {",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "}"));
+
+    foldSame(
+        lines(
+            "class C {", //
+            "  static {",
+            "    this.x = 0;",
+            "  }",
+            "}"));
+  }
 }

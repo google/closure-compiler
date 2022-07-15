@@ -805,13 +805,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
-    // Try to remove the block.
+    // Try to merge the block with its parent, or remove it if it is an empty class static block.
     Node parent = n.getParent();
     if (NodeUtil.tryMergeBlock(n, isASTNormalized())) {
       reportChangeToEnclosingScope(parent);
       return null;
+    } else if (parent.isClassMembers() && !n.hasChildren()) {
+      n.detach();
+      reportChangeToEnclosingScope(parent);
+      return null;
     }
-
+  
     return n;
   }
 
