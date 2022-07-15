@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -162,6 +163,14 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
           "JSC_LEGACY_NAMESPACE_ARGUMENT",
           "goog.module.declareLegacyNamespace() takes no arguments");
 
+  private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
+  private static final QualifiedName GOOG_FORWARD_DECLARE = QualifiedName.of("goog.forwardDeclare");
+  private static final QualifiedName GOOG_MODULE_DECLARE_LEGACY_NAMESPACE =
+      QualifiedName.of("goog.module.declareLegacyNamespace");
+
   private static class ModuleInfo {
     // Name of the module in question (i.e. the argument to goog.module)
     private final String name;
@@ -233,19 +242,19 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     switch (n.getToken()) {
       case CALL:
         Node callee = n.getFirstChild();
-        if (callee.matchesQualifiedName("goog.module")) {
+        if (GOOG_MODULE.matches(callee)) {
           if (!currentModuleInfo.name.equals(extractFirstArgumentName(n))) {
             t.report(n, MULTIPLE_MODULES_IN_FILE);
           } else if (!isFirstExpressionInGoogModule(parent)) {
             t.report(n, GOOG_MODULE_MISPLACED);
           }
-        } else if (callee.matchesQualifiedName("goog.require")
-            || callee.matchesQualifiedName("goog.requireType")
-            || callee.matchesQualifiedName("goog.forwardDeclare")) {
+        } else if (GOOG_REQUIRE.matches(callee)
+            || GOOG_REQUIRE_TYPE.matches(callee)
+            || GOOG_FORWARD_DECLARE.matches(callee)) {
           checkRequireCall(t, n, parent);
-        } else if (callee.matchesQualifiedName("goog.module.get") && t.inModuleHoistScope()) {
+        } else if (GOOG_MODULE_GET.matches(callee) && t.inModuleHoistScope()) {
           t.report(n, MODULE_USES_GOOG_MODULE_GET);
-        } else if (callee.matchesQualifiedName("goog.module.declareLegacyNamespace")) {
+        } else if (GOOG_MODULE_DECLARE_LEGACY_NAMESPACE.matches(callee)) {
           checkLegacyNamespaceCall(t, n, parent);
         }
         break;
@@ -459,8 +468,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
   }
 
   private void checkShortGoogRequireCall(NodeTraversal t, Node callNode, Node declaration) {
-    if (declaration.isLet()
-        && !callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
+    if (declaration.isLet() && !GOOG_FORWARD_DECLARE.matches(callNode.getFirstChild())) {
       t.report(declaration, LET_GOOG_REQUIRE);
     }
     if (!declaration.hasOneChild()) {
@@ -472,7 +480,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       if (!isValidDestructuringImport(lhs)) {
         t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
       }
-      if (callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
+      if (GOOG_FORWARD_DECLARE.matches(callNode.getFirstChild())) {
         t.report(lhs, INVALID_DESTRUCTURING_FORWARD_DECLARE);
       }
     } else {

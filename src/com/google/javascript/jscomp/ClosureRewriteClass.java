@@ -26,6 +26,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -87,6 +88,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
   static final DiagnosticType GOOG_CLASS_NG_INJECT_ON_CLASS = DiagnosticType.warning(
       "JSC_GOOG_CLASS_NG_INJECT_ON_CLASS",
       "@ngInject should be declared on the constructor, not on the class.");
+
+  private static final QualifiedName GOOG_DEFINE_CLASS = QualifiedName.of("goog.defineClass");
 
   private final AbstractCompiler compiler;
 
@@ -546,7 +549,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
    */
   static boolean isGoogDefineClass(Node value) {
     if (value != null && value.isCall()) {
-      return value.getFirstChild().matchesQualifiedName("goog.defineClass");
+      return GOOG_DEFINE_CLASS.matches(value.getFirstChild());
     }
     return false;
   }
