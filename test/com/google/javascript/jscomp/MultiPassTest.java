@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2017_MODULES;
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
@@ -437,7 +435,6 @@ public final class MultiPassTest extends CompilerTestCase {
                       new PeepholeFoldConstants(late, false /* useTypes */),
                       new PeepholeCollectPropertyAssignments());
                 })
-            .setFeatureSet(ES2017_MODULES)
             .build());
   }
 

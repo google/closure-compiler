@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.ForOverride;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import java.util.function.Function;
 
 /**
@@ -62,35 +61,11 @@ public abstract class PassFactory {
 
     public abstract Builder setCondition(Function<CompilerOptions, Boolean> cond);
 
-    /**
-     * @deprecated Does nothing
-     */
-    @Deprecated
-    public final Builder setFeatureSet(FeatureSet x) {
-      return this;
-    }
-
     public abstract Builder setInternalFactory(
         Function<AbstractCompiler, ? extends CompilerPass> x);
 
     @ForOverride
     abstract PassFactory autoBuild();
-
-    /**
-     * @deprecated Does nothing.
-     */
-    @Deprecated
-    public final Builder setFeatureSetForChecks() {
-      return this;
-    }
-
-    /**
-     * @deprecated Does nothing.
-     */
-    @Deprecated
-    public final Builder setFeatureSetForOptimizations() {
-      return this;
-    }
 
     public final PassFactory build() {
       PassFactory result = autoBuild();

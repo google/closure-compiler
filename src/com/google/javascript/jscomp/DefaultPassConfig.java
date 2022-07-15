@@ -1161,7 +1161,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(SyncCompilerFeatures::new)
           // This pass just records which features actually appear in the input code.
           // It needs to work no matter what those features are.
-          .setFeatureSet(FeatureSet.all())
           .build();
 
   private final PassFactory checkSideEffects =
@@ -1459,7 +1458,6 @@ public final class DefaultPassConfig extends PassConfig {
                         JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getFullReplacementPass())
-        .setFeatureSetForOptimizations()
         .build();
   }
 
@@ -1479,7 +1477,6 @@ public final class DefaultPassConfig extends PassConfig {
                         JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getMsgProtectionPass())
-        .setFeatureSetForOptimizations()
         .build();
   }
 
@@ -1496,7 +1493,6 @@ public final class DefaultPassConfig extends PassConfig {
                         JsMessage.Style.CLOSURE,
                         options.getStrictMessageReplacement())
                     .getReplacementCompletionPass())
-        .setFeatureSetForOptimizations()
         .build();
   }
 
@@ -1510,7 +1506,6 @@ public final class DefaultPassConfig extends PassConfig {
                       new GoogleJsMessageIdGenerator(options.tcProjectId),
                       /* allow messages with goog.getMsg */
                       JsMessage.Style.CLOSURE))
-          .setFeatureSetForOptimizations()
           .build();
 
   /** Applies aliases and inlines goog.scope. */
@@ -1784,7 +1779,6 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSetForChecks()
           .build();
 
   // This pass is redundant if we've already run checkRegExp during this compilation
@@ -1805,7 +1799,6 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSetForOptimizations()
           .build();
 
   /** Checks that references to variables look reasonable. */
@@ -2057,12 +2050,9 @@ public final class DefaultPassConfig extends PassConfig {
                       pass.process(externs, jsRoot);
                     }
                   })
-          .
           // TODO(johnlenz): StripCode may be fooled by some newer features, like destructuring,
           // an).build();
-          setFeatureSetForOptimizations()
           .build();
-
   /** Checks that all constants are not modified */
   private final PassFactory checkConsts =
       PassFactory.builder().setName("checkConsts").setInternalFactory(ConstCheck::new).build();
@@ -2082,7 +2072,6 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> new RuntimeTypeCheck(compiler, options.runtimeTypeCheckLogFunction))
           // TODO(bradfordcsmith): Drop support for this pass.
           // It's never been updated to handle ES2016+ code, because it isn't worth the effort.
-          .setFeatureSetForChecks()
           .build();
 
   /** Generates unique ids. */
@@ -2241,7 +2230,6 @@ public final class DefaultPassConfig extends PassConfig {
                       // Remove all parameters that are constants or unused.
                       .addPass(new OptimizeParameters(compiler))
                       .build())
-          .setFeatureSetForOptimizations()
           .build();
 
   /** Removes ECMAScript class constructors when an implicit constructor is sufficient. */
@@ -2257,7 +2245,6 @@ public final class DefaultPassConfig extends PassConfig {
                       // Remove redundant constructor definitions.
                       .addPass(new OptimizeConstructors(compiler))
                       .build())
-          .setFeatureSetForOptimizations()
           .build();
 
   /** Look for function calls that are pure, and annotate them that way. */
@@ -2378,7 +2365,6 @@ public final class DefaultPassConfig extends PassConfig {
                       .removeUnusedPolyfills(options.forceLibraryInjection.isEmpty())
                       .assumeGettersArePure(options.getAssumeGettersArePure())
                       .build())
-          .setFeatureSetForOptimizations()
           .build();
 
   private final PassFactory removeUnusedCodeOnce =
@@ -2409,7 +2395,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getCrossModuleIdGenerator(),
                       /* canModifyExterns= */ false, // remove this
                       options.crossChunkCodeMotionNoStubMethods))
-          .setFeatureSetForOptimizations()
           .build();
 
   /** A data-flow based variable inliner. */
@@ -2666,7 +2651,6 @@ public final class DefaultPassConfig extends PassConfig {
                       CoverageReach.CONDITIONAL,
                       options.getInstrumentForCoverageOption(),
                       options.getProductionInstrumentationArrayName()))
-          .setFeatureSetForOptimizations()
           .build();
 
   private final PassFactory gatherExternPropertiesCheck =
@@ -2879,7 +2863,6 @@ public final class DefaultPassConfig extends PassConfig {
                 return new GatherModuleMetadata(
                     compiler, options.getProcessCommonJSModules(), options.moduleResolutionMode);
               })
-          .setFeatureSetForChecks()
           .build();
 
   private final PassFactory createModuleMapPass =
@@ -2888,7 +2871,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
           // does not look at AST
-          .setFeatureSet(FeatureSet.all())
           .build();
 
   private final PassFactory gatherGettersAndSetters =
