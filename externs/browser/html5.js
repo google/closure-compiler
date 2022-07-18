@@ -5506,6 +5506,12 @@ Navigator.prototype.share = function(data) {};
 Navigator.prototype.hardwareConcurrency;
 
 /**
+ * @type {UserActivation|undefined}
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation
+ */
+ Navigator.prototype.userActivation;
+
+/**
  * @constructor
  * @implements NavigatorStorage
  * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
@@ -5956,3 +5962,16 @@ HTMLFormElement.prototype.onformdata;
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-crossoriginisolated
  */
 Window.prototype.crossOriginIsolated;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation
+ *
+ * @record
+ */
+function UserActivation() {}
+
+/** @type {boolean} */
+UserActivation.prototype.isActive;
+
+/** @type {boolean} */
+UserActivation.prototype.hasBeenActive;
