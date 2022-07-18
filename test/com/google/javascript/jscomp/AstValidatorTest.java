@@ -46,7 +46,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author johnlenz@google.com (John Lenz) */
+/**
+ * @author johnlenz@google.com (John Lenz)
+ */
 @RunWith(JUnit4.class)
 public final class AstValidatorTest extends CompilerTestCase {
 
@@ -173,6 +175,12 @@ public final class AstValidatorTest extends CompilerTestCase {
             "  y",
             "}",
             ""));
+    invalid(
+        lines( // TODO(b/189993301): Need to fix ASTValidator to allow super in class fields
+            "class B { x = 2}",
+            "class C extends B {", //
+            "  y = super.x;",
+            "}"));
   }
 
   @Test
@@ -188,6 +196,12 @@ public final class AstValidatorTest extends CompilerTestCase {
             "  static y",
             "}",
             ""));
+    invalid(
+        lines( // TODO(b/189993301): Need to fix ASTValidator to allow super in class fields
+            "class B { static x = 2}",
+            "class C extends B {", //
+            "  static y = super.x;",
+            "}"));
   }
 
   @Test
