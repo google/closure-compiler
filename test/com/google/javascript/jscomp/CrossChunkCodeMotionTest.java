@@ -22,9 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CrossChunkCodeMotion}.
- */
+/** Tests for {@link CrossChunkCodeMotion}. */
 @RunWith(JUnit4.class)
 public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
@@ -751,6 +749,90 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .build()),
         expected(
             "", "class Foo { a; static b = 2; ['c'] = 3; static 'd' = 'hi'; 1 = 2; } new Foo();"));
+  }
+
+  @Test
+  public void testClassMovement_classStaticBlock1() {
+    // TODO(bradfordcsmith):Ideally the class would move
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("class Foo { static { } }")
+                .addChunk("new Foo();")
+                .build()),
+        expected("class Foo { static { } }", "new Foo();"));
+  }
+
+  @Test
+  public void testClassMovement_classStaticBlock2() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var x = 1;")
+                .addChunk("class Foo { static { x; } } new Foo();")
+                .build()),
+        expected("", "var x = 1; class Foo { static { x; } } new Foo();"));
+  }
+
+  @Test
+  public void testClassMovement_classStaticBlock3() {
+    // TODO(bradfordcsmith):Ideally the class and var would move to m3
+    JSChunk[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("const x = 1; var y = 2;")
+            // m2
+            .addChunk("class Foo { static { y = 3; } }")
+            // m3
+            .addChunk("new Foo();")
+            .build();
+
+    test(
+        srcs(modules),
+        expected(
+            // m1
+            "const x = 1;",
+            // m2
+            "var y =2; class Foo { static { y = 3; } } ",
+            // m3
+            "new Foo();"));
+  }
+
+  @Test
+  public void testClassMovement_classStaticBlock4() {
+    JSChunk[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("var x =1;")
+            // m2
+            .addChunk(
+                lines(
+                    "class Foo {", //
+                    "  static {",
+                    "    x = 2;",
+                    "  }",
+                    "}",
+                    "use(x);"))
+            // m3
+            .addChunk("new Foo();")
+            .build();
+
+    test(
+        srcs(modules),
+        expected(
+            // m1
+            "",
+            // m2
+            lines(
+                "var x =1;", //
+                "class Foo {",
+                "  static {",
+                "    x = 2",
+                "  }",
+                "}",
+                "use(x);"),
+            // m3
+            "new Foo();"));
   }
 
   @Test

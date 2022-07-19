@@ -40,12 +40,10 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
   private final Map<String, Var> varsByName = new HashMap<>();
 
   /**
-   * Maps a given variable to a collection of references to that name. Note that
-   * Var objects are not stable across multiple traversals (unlike scope root or
-   * name).
+   * Maps a given variable to a collection of references to that name. Note that Var objects are not
+   * stable across multiple traversals (unlike scope root or name).
    */
-  private final Map<Var, ReferenceCollection> referenceMap =
-       new LinkedHashMap<>();
+  private final Map<Var, ReferenceCollection> referenceMap = new LinkedHashMap<>();
 
   /** The stack of basic blocks and scopes the current traversal is in. */
   private final List<BasicBlock> blockStack = new ArrayList<>();
@@ -55,9 +53,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
   private final ScopeCreator scopeCreator;
 
-  /**
-   * JavaScript compiler to use in traversing.
-   */
+  /** JavaScript compiler to use in traversing. */
   private final AbstractCompiler compiler;
 
   private int statementCounter = 0;
@@ -69,10 +65,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     this.scopeCreator = creator;
   }
 
-  /**
-   * Convenience method for running this pass over a tree with this
-   * class as a callback.
-   */
+  /** Convenience method for running this pass over a tree with this class as a callback. */
   @Override
   public void process(Node externs, Node root) {
     checkState(topLevelStatements.isEmpty(), "process() called more than once");
@@ -92,16 +85,12 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         .traverse(root);
   }
 
-  /**
-   * Gets the variables that were referenced in this callback.
-   */
+  /** Gets the variables that were referenced in this callback. */
   Iterable<Var> getAllSymbols() {
     return referenceMap.keySet();
   }
 
-  /**
-   * Gets the reference collection for the given variable.
-   */
+  /** Gets the reference collection for the given variable. */
   ReferenceCollection getReferences(Var v) {
     return referenceMap.get(v);
   }
@@ -110,10 +99,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     return ImmutableMap.copyOf(varsByName);
   }
 
-  /**
-   * For each node, update the block stack and reference collection
-   * as appropriate.
-   */
+  /** For each node, update the block stack and reference collection as appropriate. */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (topLevelStatementDraft != null) {
@@ -149,9 +135,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     }
   }
 
-  /**
-   * Updates block stack and invokes any additional behavior.
-   */
+  /** Updates block stack and invokes any additional behavior. */
   @Override
   public void enterScope(NodeTraversal t) {
     Node n = t.getScopeRoot();
@@ -164,9 +148,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     }
   }
 
-  /**
-   * Updates block stack and invokes any additional behavior.
-   */
+  /** Updates block stack and invokes any additional behavior. */
   @Override
   public void exitScope(NodeTraversal t) {
     if (t.isHoistScope()) {
@@ -372,6 +354,9 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
               // class definition time. So, we must check canMoveValue for static fields.
               return false;
             }
+          } else if (member.isBlock()) {
+            // TODO(bradfordcsmith): Ideally could move these in some cases, fix later
+            return false;
           } else {
             checkState(member.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(member), member);
           }
