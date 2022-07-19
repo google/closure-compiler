@@ -2249,6 +2249,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseNoDts1() {
+    JSDocInfo doc = parse("@nodts*/", true);
+    assertThat(doc.isNoDts()).isTrue();
+  }
+
+  @Test
+  public void testParseNoDts2() {
+    parse("@nodts\n@nodts*/", JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE, "extra @nodts tag");
+  }
+
+  @Test
   public void testBugAnnotation() {
     parse("@bug */");
   }

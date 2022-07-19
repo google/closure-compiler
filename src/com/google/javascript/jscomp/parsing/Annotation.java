@@ -58,6 +58,16 @@ enum Annotation {
   NG_INJECT,
   NO_COLLAPSE,
   NO_COMPILE,
+  /**
+   * A tag to suppress clutz's d.ts generation for classes and method. This is specifically for the
+   * use of J2CL.
+   *
+   * <p>Annotating classes, class methods and fields with @nodts has a side effect of not triggering
+   * a hard error on the code which the extended subclass unintentionally reuses the same property
+   * from base class. The author of the code using this tag should be specifically aware of this and
+   * should be able to communicate this to the consumers of their code.
+   */
+  NO_DTS,
   NO_INLINE,
   NO_SIDE_EFFECTS,
   NOT_IMPLEMENTED,
@@ -130,6 +140,7 @@ enum Annotation {
           .put("modifies", Annotation.MODIFIES)
           .put("nocollapse", Annotation.NO_COLLAPSE)
           .put("nocompile", Annotation.NO_COMPILE)
+          .put("nodts", Annotation.NO_DTS)
           .put("noinline", Annotation.NO_INLINE)
           .put("nosideeffects", Annotation.NO_SIDE_EFFECTS)
           .put("override", Annotation.OVERRIDE)

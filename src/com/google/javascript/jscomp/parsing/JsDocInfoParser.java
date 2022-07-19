@@ -697,6 +697,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case NO_DTS:
+          if (!jsdocBuilder.recordNoDts()) {
+            addParserWarning(Msg.JSDOC_NODTS);
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NO_COLLAPSE:
           if (!jsdocBuilder.recordNoCollapse()) {
             addParserWarning(Msg.JSDOC_NOCOLLAPSE);

@@ -322,6 +322,7 @@ public class JSDocInfo implements Serializable {
     NOSIDEEFFECTS,
     EXTERNS,
     NOCOMPILE,
+    NODTS,
     UNRESTRICTED,
     STRUCT,
     DICT,
@@ -836,6 +837,11 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @nocompile} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoCompile() {
     return checkBit(Bit.NOCOMPILE);
+  }
+
+  /** Returns whether the {@code @nodts} annotation is present on this {@link JSDocInfo}. */
+  public boolean isNoDts() {
+    return checkBit(Bit.NODTS);
   }
 
   /** Returns whether the {@code @nocollapse} annotation is present on this {@link JSDocInfo}. */
@@ -2237,6 +2243,17 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoCompile() {
       return populateBit(Bit.NOCOMPILE, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoDtsOutput()} flag set to {@code true}.
+     *
+     * @return {@code true} if the no compile flag was recorded and {@code false} if it was already
+     *     recorded
+     */
+    public boolean recordNoDts() {
+      return populateBit(Bit.NODTS, true);
     }
 
     /**
