@@ -1647,6 +1647,133 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void staticBlockWithoutMethodReference() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    lines(
+                        "class Bar {", //
+                        "  method() {",
+                        "  }",
+                        "  static {",
+                        "  }",
+                        "}",
+                        "class Foo extends Bar {",
+                        "  method2() {",
+                        "    return () => super.method();",
+                        "  }",
+                        "}"))
+                .addChunk("(new Foo).method2()")
+                .build()),
+        expected(
+            lines(
+                STUB_DECLARATIONS, //
+                "class Bar {",
+                "  static {",
+                "  }",
+                "}",
+                "Bar.prototype.method = JSCompiler_stubMethod(0);",
+                "class Foo extends Bar {",
+                "  method2() {",
+                "    return () => super.method();",
+                "  }",
+                "}"),
+            // Chunk 2
+            lines(
+                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+                "(new Foo).method2()")));
+  }
+
+  @Test
+  public void referenceToMethodInOwnStaticBlock() {
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    lines(
+                        "class Bar {", //
+                        "  method() {",
+                        "  }",
+                        "  static {",
+                        "    this.prototype.method;",
+                        "  }",
+                        "}",
+                        "class Foo extends Bar {",
+                        "  method2() {",
+                        "    return () => super.method();",
+                        "  }",
+                        "}"))
+                .addChunk("(new Foo).method2()")
+                .build()));
+  }
+
+  @Test
+  public void staticBlockReferenceToMethodInDifferentClassNoMovement() {
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    lines(
+                        "class Bar {", //
+                        "  method() {}",
+                        "}",
+                        "class Foo extends Bar {",
+                        "  static {",
+                        "    (new Bar).method();",
+                        "  }",
+                        "  method2() {",
+                        "    return () => super.method();",
+                        "  }",
+                        "}"))
+                .addChunk("(new Foo).method2()")
+                .build()));
+  }
+
+  @Test
+  public void staticBlockReferenceToMethodInDifferentClassWithMovement() {
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    lines(
+                        "class Bar {", //
+                        "  method() {}",
+                        "}"))
+                .addChunk(
+                    lines(
+                        "class Foo extends Bar {",
+                        "  static {",
+                        "    (new Bar()).method();",
+                        "  }",
+                        "  method2() {",
+                        "    return () => { return super.method(); };",
+                        "  }",
+                        "}"))
+                .addChunk("(new Foo).method2()")
+                .build()),
+        expected(
+            lines(
+                STUB_DECLARATIONS, //
+                "class Bar {",
+                "}",
+                "Bar.prototype.method = JSCompiler_stubMethod(0);"),
+            // Chunk 2
+            lines(
+                "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+                "class Foo extends Bar {",
+                "  static {",
+                "    (new Bar()).method();",
+                "  }",
+                "  method2() {",
+                "    return () => { return super.method(); };",
+                "  }",
+                "}"),
+            // Chunk 3
+            lines("(new Foo()).method2();")));
+  }
+
+  @Test
   public void testIssue600() {
     testSame(
         srcs(
