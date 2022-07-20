@@ -72,13 +72,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "class C {", //
-            "  static x = 2;",
-            "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
-
-    testError(
-        lines(
             "/** @unrestricted */", //
             "class C {",
             "  static ['x'] = 2;",
@@ -112,7 +105,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "let c = class C{", //
+            "let c = class C {", //
             "  static {",
             "    C.y = 2;",
             "    let x = C.y",
@@ -122,7 +115,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "foo(class C{", //
+            "foo(class C {", //
             "  static {",
             "    C.y = 2;",
             "    let x = C.y",
@@ -172,6 +165,44 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 2",
             "    var z = 3;",
             "  }",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "class C {", //
+            "  static x = 1;",
+            "  static y = this.x;",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let c = class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "foo(class C {", //
+            "  static y = 2;",
+            "  static x = C.y",
+            "})"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "foo(class {", //
+            "  static x = 1",
+            "})"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let c = class {", //
+            "  static x = 1",
             "}"),
         Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
@@ -327,5 +358,74 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  class Bar {}",
             "  {let x = 'str';}",
             "}"));
+  }
+
+  @Test
+  public void testStaticNoncomputed() {
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "}"),
+        lines("class C {}", "C.x = 2;"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x;",
+            "}"),
+        lines("class C {}", "C.x;"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static y = 'hi'",
+            "  static z;",
+            "}"),
+        lines("class C {}", "C.x = 2;", "C.y = 'hi'", "C.z;"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static y = 3",
+            "}",
+            "class D {",
+            "  static z = 1",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "C.y = 3",
+            "class D {}",
+            "D.z = 1;"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static w = function () {return 1;};",
+            "  static x = () => {return 2;};",
+            "  static y = (function a() {return 3;})();",
+            "  static z = (() => {return 4;})();",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.w = function () {return 1;};",
+            "C.x = () => {return 2;};",
+            "C.y = (function a() {return 3;})();",
+            "C.z = (() => {return 4;})();"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            // "  static y = C.x", // blocked on typechecking, gets JSC_INEXISTENT_PROPERTY
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;"
+            // "C.y = C.x",
+            ));
   }
 }

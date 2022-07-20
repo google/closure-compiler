@@ -23,9 +23,11 @@ import com.google.javascript.rhino.Node;
 public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -59,6 +61,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       t.report(classNode, Es6ToEs3Util.CANNOT_CONVERT_YET, "Not a class declaration");
       return;
     }
+    Node classNameNode = NodeUtil.getNameNode(classNode).cloneNode();
     Node staticInsertionPoint = classNode;
     Node classMembers = classNode.getLastChild();
     Node next;
@@ -66,8 +69,15 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       next = member.getNext();
       // this next is necessary because we directly move static blocks so we will get the incorrect
       // element if just update member in the loop guard
-      if (member.isMemberFieldDef() || member.isComputedFieldDef()) {
-        t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Public class fields");
+      if (member.isMemberFieldDef()) {
+        if (member.isStaticMember()) {
+          staticInsertionPoint =
+              visitNoncomputedStaticField(t, member, staticInsertionPoint, classNameNode);
+        } else {
+          t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Instance class fields");
+        }
+      } else if (member.isComputedFieldDef()) {
+        t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Computed fields");
       } else if (NodeUtil.isClassStaticBlock(member)) {
         staticInsertionPoint = visitClassStaticBlock(t, member, staticInsertionPoint);
       }
@@ -89,5 +99,28 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
     staticBlock.insertAfter(insertionPoint);
     t.reportCodeChange();
     return staticBlock;
+  }
+
+  private Node visitNoncomputedStaticField(
+      NodeTraversal t, Node staticField, Node insertionPoint, Node classNameNode) {
+    if (NodeUtil.referencesEnclosingReceiver(staticField)) {
+      t.report(staticField, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static field");
+      return insertionPoint;
+    }
+    classNameNode = classNameNode.cloneNode();
+    Node getProp =
+        astFactory.createGetProp(
+            classNameNode, staticField.getString(), AstFactory.type(staticField));
+    Node fieldRhs = staticField.getFirstChild();
+    Node result =
+        (fieldRhs != null)
+            ? astFactory.createAssignStatement(getProp, fieldRhs.detach())
+            : astFactory.exprResult(getProp);
+
+    result.srcrefTreeIfMissing(staticField);
+    result.insertAfter(insertionPoint);
+    staticField.detach();
+    t.reportCodeChange();
+    return result;
   }
 }
