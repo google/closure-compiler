@@ -4752,6 +4752,94 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassFields() {
+    newTest()
+        .addSource(
+            "class A {", //
+            "  x = 2;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class B {", //
+            "  x;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class C {", //
+            "  x",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class D {", //
+            "  /** @type {string|undefined} */",
+            "  x;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class E {", //
+            "  /** @type {string} @suppress {checkTypes} */",
+            "  x = 2;",
+            "}")
+        .run();
+    newTest() // TODO(b/189993301): Need to fix TypeCheck to allow for `this` in class fields
+        .addSource(
+            "class F {", //
+            "  x = 2;",
+            "  y = this.x",
+            "}")
+        .addDiagnostic("Property x never defined on global this")
+        .run();
+  }
+
+  @Test
+  public void testStaticClassFields() {
+    newTest()
+        .addSource(
+            "class A {", //
+            "  static x = 2;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class B {", //
+            "  static x;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class C {", //
+            "  static x",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class D {", //
+            "  /** @type {string|undefined} */",
+            "  static x;",
+            "}")
+        .run();
+    newTest()
+        .addSource(
+            "class E {", //
+            "  /** @type {string} @suppress {checkTypes} */",
+            "  static x = 2;",
+            "}")
+        .run();
+    newTest() // TODO(b/189993301): Need to fix TypeCheck to allow for `this` in class fields
+        .addSource(
+            "class F {", //
+            "  static x = 2;",
+            "  static y = this.x;",
+            "}")
+        .addDiagnostic("Property x never defined on global this")
+        .run();
+  }
+
+  @Test
   public void testClassStaticBlockVariablesWrongTypes() {
     newTest()
         .addSource(
