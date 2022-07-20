@@ -48,10 +48,46 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isMemberFieldDef() || n.isComputedFieldDef()) {
-      compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Public class fields"));
-    } else if (NodeUtil.isClassStaticBlock(n)) {
-      compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Class static blocks"));
+    if (n.isClass()) {
+      visitClass(t, n);
     }
+  }
+
+  /** Transpile the actual class members themselves */
+  private void visitClass(NodeTraversal t, Node classNode) {
+    if (!NodeUtil.isClassDeclaration(classNode)) {
+      t.report(classNode, Es6ToEs3Util.CANNOT_CONVERT_YET, "Not a class declaration");
+      return;
+    }
+    Node staticInsertionPoint = classNode;
+    Node classMembers = classNode.getLastChild();
+    Node next;
+    for (Node member = classMembers.getFirstChild(); member != null; member = next) {
+      next = member.getNext();
+      // this next is necessary because we directly move static blocks so we will get the incorrect
+      // element if just update member in the loop guard
+      if (member.isMemberFieldDef() || member.isComputedFieldDef()) {
+        t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Public class fields");
+      } else if (NodeUtil.isClassStaticBlock(member)) {
+        staticInsertionPoint = visitClassStaticBlock(t, member, staticInsertionPoint);
+      }
+    }
+  }
+
+  /** Handles the transpilation of class static blocks */
+  private Node visitClassStaticBlock(NodeTraversal t, Node staticBlock, Node insertionPoint) {
+    // TODO(b/235871861): replace all this and super inside the static block
+    if (NodeUtil.referencesEnclosingReceiver(staticBlock)) {
+      t.report(staticBlock, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static block");
+      return insertionPoint;
+    }
+    if (!NodeUtil.getVarsDeclaredInBranch(staticBlock).isEmpty()) {
+      t.report(staticBlock, Es6ToEs3Util.CANNOT_CONVERT_YET, "Var in static block");
+      return insertionPoint;
+    }
+    staticBlock.detach();
+    staticBlock.insertAfter(insertionPoint);
+    t.reportCodeChange();
+    return staticBlock;
   }
 }
