@@ -1921,22 +1921,25 @@ public final class ControlFlowAnalysisTest {
             "}");
     Compiler compiler = new Compiler();
     Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
-    Node staticBlock = CodeSubTree.findFirstNode(globalRoot, Node::isBlock);
+    ImmutableList<Node> staticBlocks =
+        CodeSubTree.findNodesNonEmpty(globalRoot, NodeUtil::isClassStaticBlock);
+    assertThat(staticBlocks).hasSize(2);
+    Node staticBlock1 = staticBlocks.get(0);
+    Node staticBlock2 = staticBlocks.get(1);
 
-    ControlFlowGraph<Node> cfg =
-        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+    // First Static Block
+    ControlFlowGraph<Node> cfg1 =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock1).computeCfg();
 
-    // First block CFG
-    assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
-    assertNoEdge(cfg, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
-    assertReturnEdge(cfg, Token.EXPR_RESULT);
+    assertDownEdge(cfg1, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
+    assertNoEdge(cfg1, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
+    assertReturnEdge(cfg1, Token.EXPR_RESULT);
 
-    // Edge from COPUTED_PROP to BLOCK
-    assertNoEdge(cfg, Token.COMPUTED_PROP, Token.BLOCK);
+    assertNoEdge(cfg1, Token.COMPUTED_PROP, Token.BLOCK);
 
-    // Second block CFG
+    // Second Static Block
     ControlFlowGraph<Node> cfg2 =
-        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock2).computeCfg();
 
     assertDownEdge(cfg2, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
     assertNoEdge(cfg2, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
