@@ -48,6 +48,35 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Test
+  public void testVarNameCollisionWithExterns() {
+    test(
+        externs("var url;"),
+        srcs("export {}; { const url = ''; alert(url);}"),
+        expected("export {}; { /** @const */ var url$0 = ''; alert(url$0); }"));
+
+    test(
+        externs("var url;" + DEFAULT_EXTERNS),
+        srcs("goog.module('main'); { const url = ''; alert(url);}"),
+        expected("goog.module('main'); { /** @const */ var url$0 = ''; alert(url$0); }"));
+
+    test(
+        externs("var url;"),
+        srcs("export {}; function foo() { const url = ''; alert(url);}"),
+        expected("export {}; function foo() { /** @const */ var url = ''; alert(url); }"));
+
+    test(
+        externs("var url;" + DEFAULT_EXTERNS),
+        srcs("goog.module('main'); function foo() { const url = ''; alert(url);}"),
+        expected(
+            "goog.module('main'); function foo() { /** @const */ var url = ''; alert(url); }"));
+
+    test(
+        externs("var url;" + DEFAULT_EXTERNS),
+        srcs("function foo() { const url = ''; alert(url);}"),
+        expected("function foo() { /** @const */ var url = ''; alert(url); }"));
+  }
+
+  @Test
   public void testSimple() {
     test("let x = 3;", "var x = 3;");
     test("const x = 3;", "/** @const */ var x = 3;");

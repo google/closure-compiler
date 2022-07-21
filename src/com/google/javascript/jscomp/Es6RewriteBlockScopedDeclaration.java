@@ -59,6 +59,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private final Table<Node, String, String> renameTable = HashBasedTable.create();
   private final Set<Node> letConsts = new HashSet<>();
   private final Set<String> undeclaredNames = new HashSet<>();
+  private final Set<String> externNames = new HashSet<>();
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
   private final Supplier<String> uniqueNameIdSupplier;
@@ -94,6 +95,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
+    // Record names declared in externs to prevent collisions when declaring vars from let/const.
+    this.externNames.addAll(NodeUtil.collectExternVariableNames(compiler, externs));
     NodeTraversal.traverse(compiler, root, this);
     NodeTraversal.traverse(compiler, root, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
@@ -126,7 +129,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     Scope hoistScope = scope.getClosestHoistScope();
     if (scope != hoistScope) {
       String newName = oldName;
-      if (hoistScope.hasSlot(oldName) || undeclaredNames.contains(oldName)) {
+      if (hoistScope.hasSlot(oldName)
+          || undeclaredNames.contains(oldName)
+          || externNames.contains(oldName)) {
         do {
           newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
         } while (hoistScope.hasSlot(newName));
@@ -213,8 +218,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   /**
-   * Records undeclared names and aggressively rename possible references to them.
-   * Eg: In "{ let inner; } use(inner);", we rename the let declared variable.
+   * Records undeclared names and aggressively rename possible references to them. Eg: In "{ let
+   * inner; } use(inner);", we rename the let declared variable.
    */
   private class CollectUndeclaredNames extends AbstractPostOrderCallback {
 
@@ -225,17 +230,15 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
     }
   }
-  /**
-   * Transforms let/const declarations captured by loop closures.
-   */
+
+  /** Transforms let/const declarations captured by loop closures. */
   private class LoopClosureTransformer extends AbstractPostOrderCallback {
 
     private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
     private static final String LOOP_OBJECT_PROPERTY_NAME = "$jscomp$loop$prop$";
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();
 
-    private final Multimap<Node, LoopObject> functionLoopObjectsMap =
-        LinkedHashMultimap.create();
+    private final Multimap<Node, LoopObject> functionLoopObjectsMap = LinkedHashMultimap.create();
     private final Multimap<Node, String> functionHandledMap = HashMultimap.create();
     private final Multimap<Var, Node> referenceMap = LinkedHashMultimap.create();
     // Maps from a var to a unique property name for that var
@@ -268,7 +271,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       // if we hit a loop first - maybe loop closure.
       Scope declaredIn = var.getScope();
       Node loopNode = null;
-      for (Scope s = declaredIn;; s = s.getParent()) {
+      for (Scope s = declaredIn; ; s = s.getParent()) {
         Node scopeRoot = s.getRootNode();
         if (NodeUtil.isLoopStructure(scopeRoot)) {
           loopNode = scopeRoot;
@@ -286,7 +289,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       // Traverse scopes from reference scope to declaration scope.
       // If we hit a function - loop closure detected.
       Scope outerMostFunctionScope = null;
-      for (Scope s = referencedIn; s != declaredIn && s.getRootNode() != loopNode;
+      for (Scope s = referencedIn;
+          s != declaredIn && s.getRootNode() != loopNode;
           s = s.getParent()) {
         if (s.isFunctionScope()) {
           outerMostFunctionScope = s;
@@ -310,7 +314,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         object.vars.add(var);
         propertyNameMap.put(var, newPropertyName);
 
-        functionLoopObjectsMap.put(function,  object);
+        functionLoopObjectsMap.put(function, object);
       }
     }
 
@@ -563,6 +567,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       int loopDepth = 0;
       // Set to true if a continue statement is found
       boolean replacedAContinueStatement = false;
+
       public ContinueStatementUpdater(String breakLabel, @Nullable String originalLoopLabel) {
         this.breakLabel = breakLabel;
         this.originalLoopLabel = originalLoopLabel;

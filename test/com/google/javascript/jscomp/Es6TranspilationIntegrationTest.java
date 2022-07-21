@@ -1815,8 +1815,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "function f() {",
             "  if (true) {",
-            "    var Symbol = function() {};",
-            "    alert(Symbol.ism)",
+            "    var Symbol$0 = function() {};",
+            "    alert(Symbol$0.ism)",
             "  }",
             "}"));
     // No $jscomp.initSymbol in externs
