@@ -1870,8 +1870,15 @@ google.maps.DirectionsRequest.prototype.origin;
 google.maps.DirectionsRequest.prototype.provideRouteAlternatives;
 
 /**
- * Region code used as a bias for geocoding requests. Optional.
- * @type {string|undefined}
+ * Region code used as a bias for geocoding requests. The region code accepts a
+ * <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
  */
 google.maps.DirectionsRequest.prototype.region;
 
@@ -2330,8 +2337,15 @@ google.maps.DistanceMatrixRequest.prototype.drivingOptions;
 google.maps.DistanceMatrixRequest.prototype.origins;
 
 /**
- * Region code used as a bias for geocoding requests. Optional.
- * @type {string|undefined}
+ * Region code used as a bias for geocoding requests. The region code accepts a
+ * <a
+ * href="https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains">ccTLD
+ * (&quot;top-level domain&quot;)</a> two-character value. Most ccTLD codes are
+ * identical to ISO 3166-1 codes, with some notable exceptions. For example, the
+ * United Kingdom&#39;s ccTLD is &quot;uk&quot; (<code>.co.uk</code>) while its
+ * ISO 3166-1 code is &quot;gb&quot; (technically for the entity of &quot;The
+ * United Kingdom of Great Britain and Northern Ireland&quot;).
+ * @type {?string|undefined}
  */
 google.maps.DistanceMatrixRequest.prototype.region;
 
@@ -7664,12 +7678,18 @@ google.maps.StreetViewPanoramaOptions.prototype.linksControl;
 
 /**
  * Whether motion tracking is on or off. Enabled by default when the motion
- * tracking control is present, so that the POV (point of view) follows the
- * orientation of the device. This is primarily applicable to mobile devices. If
+ * tracking control is present and permission is granted by a user or not
+ * required, so that the POV (point of view) follows the orientation of the
+ * device. This is primarily applicable to mobile devices. If
  * <code>motionTracking</code> is set to <code>false</code> while
  * <code>motionTrackingControl</code> is enabled, the motion tracking control
  * appears but tracking is off. The user can tap the motion tracking control to
- * toggle this option.
+ * toggle this option. If <code>motionTracking</code> is set to
+ * <code>true</code> while permission is required but not yet requested, the
+ * motion tracking control appears but tracking is off. The user can tap the
+ * motion tracking control to request permission. If <code>motionTracking</code>
+ * is set to <code>true</code> while permission is denied by a user, the motion
+ * tracking control appears disabled with tracking turned off.
  * @type {?boolean|undefined}
  */
 google.maps.StreetViewPanoramaOptions.prototype.motionTracking;
