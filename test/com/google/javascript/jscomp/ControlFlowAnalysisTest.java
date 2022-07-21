@@ -25,6 +25,7 @@ import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
+import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.IOException;
@@ -1847,6 +1848,99 @@ public final class ControlFlowAnalysisTest {
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
     assertNoEdge(cfg, Token.BREAK, Token.BLOCK);
+  }
+
+  @Test
+  public void testCfgRootedAtEmptyFunctionDeclaration() {
+    String src = "function fn() {}";
+    Compiler compiler = new Compiler();
+    Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
+    Node fnRoot = CodeSubTree.findFirstNode(globalRoot, Node::isFunction);
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(fnRoot).computeCfg();
+
+    assertDownEdge(cfg, Token.FUNCTION, Token.BLOCK, Branch.UNCOND);
+    assertReturnEdge(cfg, Token.BLOCK);
+  }
+
+  @Test
+  public void testCfgRootedAtFunctionDeclarationWithSingleStatement() {
+    String src = "function fn() {  alert(3); }";
+    Compiler compiler = new Compiler();
+    Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
+    Node fnRoot = CodeSubTree.findFirstNode(globalRoot, Node::isFunction);
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(fnRoot).computeCfg();
+
+    assertDownEdge(cfg, Token.FUNCTION, Token.BLOCK, Branch.UNCOND);
+    assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
+    assertReturnEdge(cfg, Token.EXPR_RESULT);
+  }
+
+  @Test
+  public void testCfgRootedAtEmptyClassStaticBlock() {
+    String src = "class C { static {} }";
+    Compiler compiler = new Compiler();
+    Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
+    Node staticBlock = CodeSubTree.findFirstNode(globalRoot, Node::isBlock);
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+
+    assertReturnEdge(cfg, Token.BLOCK);
+  }
+
+  @Test
+  public void testCfgRootedAtClassStaticBlockSingleStatementAndSubsequentMembers() {
+    String src = "class C { static { alert(0); } x = 0; fn() {} }";
+    Compiler compiler = new Compiler();
+    Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
+    Node staticBlock = CodeSubTree.findFirstNode(globalRoot, Node::isBlock);
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+
+    assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
+    // Double check edge removal from EXPR_RESULT to next child of CLASS_MEMBER
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
+    assertReturnEdge(cfg, Token.EXPR_RESULT);
+  }
+
+  @Test
+  public void testCfgRootedAtClassStaticBlockMultipleStatementAndSubsequentMembers() {
+    String src =
+        lines(
+            "class C {",
+            "  static { alert(0); }",
+            "  x = 0;",
+            "  [0+1]() {}",
+            "  static { alert(1); }",
+            "  fn(){}",
+            "}");
+    Compiler compiler = new Compiler();
+    Node globalRoot = compiler.parseSyntheticCode("cfgtest", src);
+    Node staticBlock = CodeSubTree.findFirstNode(globalRoot, Node::isBlock);
+
+    ControlFlowGraph<Node> cfg =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+
+    // First block CFG
+    assertDownEdge(cfg, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
+    assertReturnEdge(cfg, Token.EXPR_RESULT);
+
+    // Edge from COPUTED_PROP to BLOCK
+    assertNoEdge(cfg, Token.COMPUTED_PROP, Token.BLOCK);
+
+    // Second block CFG
+    ControlFlowGraph<Node> cfg2 =
+        ControlFlowAnalysis.builder().setCompiler(compiler).setCfgRoot(staticBlock).computeCfg();
+
+    assertDownEdge(cfg2, Token.BLOCK, Token.EXPR_RESULT, Branch.UNCOND);
+    assertNoEdge(cfg2, Token.EXPR_RESULT, Token.MEMBER_FIELD_DEF);
+    assertReturnEdge(cfg2, Token.EXPR_RESULT);
   }
 
   /**

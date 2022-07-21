@@ -169,12 +169,8 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Test
   public void testUnreachableStaticBlocks() {
     assertUnreachable("class C{ static { function f(){ return; let x; } } }");
-
-    // The statments in the static block are unreachable,but the code in ControlFlowAnalysis doesn't
-    // recognize class bodies yet.
-    // TODO(b/238252385): Update ControlFlowAnalysis so tests are unreachable.
-    testSame("class C{ static{ if(false) { var x; } } }");
-    testSame("class C{ static{ while(false){ let x; } } }");
+    assertUnreachable("class C{ static{ if(false) { var x; } } }");
+    assertUnreachable("class C{ static{ while(false){ let x; } } }");
   }
 
   @Test

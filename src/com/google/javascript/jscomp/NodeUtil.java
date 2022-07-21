@@ -2463,7 +2463,7 @@ public final class NodeUtil {
       EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
 
   static boolean isValidCfgRoot(Node n) {
-    return DEFINITE_CFG_ROOTS.contains(n.getToken());
+    return DEFINITE_CFG_ROOTS.contains(n.getToken()) || isClassStaticBlock(n);
   }
 
   /**
