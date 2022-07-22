@@ -415,9 +415,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     if (config.createSourceMap.length() > 0) {
-      options.sourceMapOutputPath = config.createSourceMap;
+      options.setSourceMapOutputPath(config.createSourceMap);
     } else if (isOutputInJson()) {
-      options.sourceMapOutputPath = "%outname%";
+      options.setSourceMapOutputPath("%outname%");
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
@@ -1735,7 +1735,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             jsOutput.toString(),
             Strings.isNullOrEmpty(config.jsOutputFile) ? "compiled.js" : config.jsOutputFile);
 
-    if (!Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
+    if (options.shouldGatherSourceMapInfo()) {
       StringBuilder sourcemap = new StringBuilder();
       compiler.getSourceMap().appendTo(sourcemap, jsonOutput.getPath());
       jsonOutput.setSourceMap(sourcemap.toString());
@@ -1770,7 +1770,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     // When the json_streams flag is specified, sourcemaps are always generated
     // per module
     if (!(shouldGenerateMapPerModule(options)
-        || options.sourceMapOutputPath == null
+        || !options.shouldGatherSourceMapInfo()
         || config.jsonStreamMode == JsonStreamMode.OUT
         || config.jsonStreamMode == JsonStreamMode.BOTH)) {
       // warn that this is not supported
@@ -1792,11 +1792,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         String moduleFilename = getModuleOutputFileName(m);
         maybeCreateDirsForPath(moduleFilename);
         try (Writer writer = fileNameToLegacyOutputWriter(moduleFilename)) {
-          if (options.sourceMapOutputPath != null) {
+          if (options.shouldGatherSourceMapInfo()) {
             compiler.resetAndIntitializeSourceMap();
           }
           writeModuleOutput(moduleFilename, writer, m);
-          if (options.sourceMapOutputPath != null) {
+          if (options.shouldGatherSourceMapInfo()) {
             compiler.getSourceMap().appendTo(mapFileOut, moduleFilename);
           }
         }
@@ -1900,7 +1900,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @GwtIncompatible("Unnecessary")
   protected boolean shouldGenerateMapPerModule(B options) {
-    return options.sourceMapOutputPath != null && options.sourceMapOutputPath.contains("%outname%");
+    return options.shouldGatherSourceMapInfo()
+        && options.getSourceMapOutputPath().contains("%outname%");
   }
 
   /**
@@ -1957,10 +1958,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
   String expandSourceMapPath(B options, JSChunk forModule) {
-    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
+    if (!options.shouldGatherSourceMapInfo()) {
       return null;
     }
-    return expandCommandLinePath(options.sourceMapOutputPath, forModule);
+    return expandCommandLinePath(options.getSourceMapOutputPath(), forModule);
   }
 
   /**
@@ -2031,8 +2032,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    */
   @GwtIncompatible("Unnecessary")
   private void outputSourceMap(B options, String associatedName) throws IOException {
-    if (Strings.isNullOrEmpty(options.sourceMapOutputPath)
-        || options.sourceMapOutputPath.equals("/dev/null")) {
+    if (!options.shouldGatherSourceMapInfo()
+        || options.getSourceMapOutputPath().equals("/dev/null")) {
       return;
     }
 

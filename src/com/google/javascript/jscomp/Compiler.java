@@ -672,7 +672,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void initBasedOnOptions() {
     inputSourceMaps.putAll(options.inputSourceMaps);
     // Create the source map if necessary.
-    if (options.sourceMapOutputPath != null) {
+    if (options.shouldGatherSourceMapInfo()) {
       sourceMap = options.sourceMapFormat.getInstance();
       sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
       if (options.applyInputSourceMaps) {
@@ -1905,7 +1905,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
 
-        if (options.sourceMapOutputPath != null
+        if (options.shouldGatherSourceMapInfo()
             || options.getExternExportsPath() != null
             || !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
@@ -2398,7 +2398,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
           // If there is a valid source map, then indicate to it that the current
           // root node's mappings are offset by the given string builder buffer.
-          if (options.sourceMapOutputPath != null) {
+          if (options.shouldGatherSourceMapInfo()) {
             sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
           }
 
@@ -3633,7 +3633,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // When restoring, we need to make sure this work is restored in the same manner.
     // The inline source maps found by the parser in stage one will be in the restored
     // inputSourceMaps field.
-    if (options.sourceMapOutputPath != null) {
+    if (options.shouldGatherSourceMapInfo()) {
       sourceMap = options.sourceMapFormat.getInstance();
       sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
       if (options.applyInputSourceMaps) {

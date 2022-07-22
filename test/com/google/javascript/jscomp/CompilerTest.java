@@ -373,7 +373,7 @@ public final class CompilerTest {
 
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.sourceMapOutputPath = "fake/source_map_path.js.map";
+    options.setSourceMapOutputPath("fake/source_map_path.js.map");
     options.inputSourceMaps = inputSourceMaps;
     options.applyInputSourceMaps = true;
     Compiler compiler = new Compiler();
@@ -402,7 +402,7 @@ public final class CompilerTest {
   public void testKeepInputSourceMapsSourcesContent() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.sourceMapOutputPath = "fake/source_map_path.js.map";
+    options.setSourceMapOutputPath("fake/source_map_path.js.map");
     options.applyInputSourceMaps = true;
     options.sourceMapIncludeSourcesContent = true;
     String code =

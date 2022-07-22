@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -76,6 +77,14 @@ public class CompilerOptions implements Serializable {
 
   public boolean shouldRunCrossChunkMethodMotion() {
     return crossChunkMethodMotion;
+  }
+
+  public String getSourceMapOutputPath() {
+    return sourceMapOutputPath;
+  }
+
+  public boolean shouldGatherSourceMapInfo() {
+    return !Strings.isNullOrEmpty(sourceMapOutputPath);
   }
 
   /** A common enum for compiler passes that can run either globally or locally. */
@@ -1002,7 +1011,7 @@ public class CompilerOptions implements Serializable {
   // --------------------------------
 
   /** The output path for the source map. */
-  public String sourceMapOutputPath;
+  private String sourceMapOutputPath;
 
   /** The detail level for the generated source map. */
   public SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;

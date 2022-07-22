@@ -2445,7 +2445,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "var a;";
 
     options.setSkipNonTranspilationPasses(true);
-    options.sourceMapOutputPath = "./src.map";
+    options.setSourceMapOutputPath("./src.map");
 
     Compiler compiler = compile(options, code);
     compiler.toSource();
