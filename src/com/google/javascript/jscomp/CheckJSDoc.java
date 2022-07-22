@@ -35,7 +35,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   public static final DiagnosticType MISPLACED_MSG_ANNOTATION =
       DiagnosticType.disabled(
           "JSC_MISPLACED_MSG_ANNOTATION",
-          "Misplaced message annotation. @desc, @hidden, @meaning, and @alternateMessageId"
+          "Misplaced message annotation. @desc, @meaning, and @alternateMessageId"
               + " annotations should be only on message nodes."
               + "\nMessage constants must be prefixed with 'MSG_'.");
 
@@ -515,7 +515,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   }
 
   /**
-   * Checks that annotations for messages ({@code @desc}, {@code @hidden}, {@code @meaning} and
+   * Checks that annotations for messages ({@code @desc}, {@code @meaning} and
    * {@code @alternateMessageId}) are in the proper place, namely on names starting with MSG_ which
    * indicates they should be extracted for translation. A later pass checks that the right side is
    * a call to goog.getMsg.

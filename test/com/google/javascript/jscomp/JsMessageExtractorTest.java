@@ -140,14 +140,11 @@ public final class JsMessageExtractorTest {
             .appendPlaceholderReference("product")
             .appendStringPart(".")
             .setDesc("The welcome message.")
-            .setIsHidden(true)
             .build(),
         extractMessage(
             "/**",
             " * @desc The welcome",
             " *   message.",
-            " *",
-            " * @hidden",
             " */",
             "var MSG_WELCOME = goog.getMsg(",
             "    'Hi {$userName}! Welcome to {$product}.',",
@@ -277,7 +274,6 @@ public final class JsMessageExtractorTest {
     assertThat(actual.parts()).isEqualTo(expected.parts());
     assertThat(actual.placeholders()).isEqualTo(expected.placeholders());
     assertThat(actual.getDesc()).isEqualTo(expected.getDesc());
-    assertThat(actual.isHidden()).isEqualTo(expected.isHidden());
     assertThat(actual.getMeaning()).isEqualTo(expected.getMeaning());
   }
 }

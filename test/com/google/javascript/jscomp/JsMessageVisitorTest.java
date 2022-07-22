@@ -546,7 +546,6 @@ public final class JsMessageVisitorTest {
     extractMessagesSafely(
         "/**"
             + " * @desc A message with lots of stuff.\n"
-            + " * @hidden\n"
             + " */"
             + "var MSG_HUGE = goog.getMsg("
             + "    '{$startLink_1}Google{$endLink}' +"
@@ -569,7 +568,6 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HUGE");
     assertThat(msg.getDesc()).isEqualTo("A message with lots of stuff.");
-    assertThat(msg.isHidden()).isTrue();
     assertThat(msg.toString())
         .isEqualTo(
             "{$startLink_1}Google{$endLink}{$startLink_2}blah{$endLink}"
@@ -677,7 +675,6 @@ public final class JsMessageVisitorTest {
     extractMessagesSafely(
         "/**"
             + " * @desc A message that demonstrates placeholders\n"
-            + " * @hidden\n"
             + " */"
             + "a.b.MSG_SILLY = goog.getMsg(\n"
             + "    '{$adjective} ' + '{$someNoun}',\n"
@@ -688,7 +685,6 @@ public final class JsMessageVisitorTest {
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
     assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
     assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
-    assertThat(msg.isHidden()).isTrue();
   }
 
   @Test
@@ -710,7 +706,6 @@ public final class JsMessageVisitorTest {
     assertThat(msg.getKey()).isEqualTo("MSG_SILLY");
     assertThat(msg.toString()).isEqualTo("{$adjective} {$someNoun}");
     assertThat(msg.getDesc()).isEqualTo("A message that demonstrates placeholders");
-    assertThat(msg.isHidden()).isTrue();
   }
 
   @Test

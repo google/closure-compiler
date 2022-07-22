@@ -109,8 +109,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   private static final Pattern CAMELCASE_PATTERN = Pattern.compile("[a-z][a-zA-Z\\d]*[_\\d]*");
 
-  static final String HIDDEN_DESC_PREFIX = "@hidden";
-
   // For old-style JS messages
   private static final String DESC_SUFFIX = "_HELP";
 
@@ -539,12 +537,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       if (name.equals(builder.getKey() + DESC_SUFFIX)) {
         Node valueNode = nameNode.getFirstChild();
         String desc = extractStringFromStringExprNode(valueNode);
-        if (desc.startsWith(HIDDEN_DESC_PREFIX)) {
-          builder.setDesc(desc.substring(HIDDEN_DESC_PREFIX.length()).trim());
-          builder.setIsHidden(true);
-        } else {
-          builder.setDesc(desc);
-        }
+        builder.setDesc(desc);
         return true;
       }
     }
@@ -566,9 +559,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       if (desc != null) {
         builder.setDesc(desc);
         messageHasDesc = true;
-      }
-      if (info.isHidden()) {
-        builder.setIsHidden(true);
       }
       if (info.getMeaning() != null) {
         builder.setMeaning(info.getMeaning());

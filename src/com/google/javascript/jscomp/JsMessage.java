@@ -113,12 +113,6 @@ public abstract class JsMessage {
   public abstract String getMeaning();
 
   /**
-   * Gets whether this message should be hidden from volunteer translators (to reduce the chances of
-   * a new feature leak).
-   */
-  public abstract boolean isHidden();
-
-  /**
    * Gets a list of the parts of this message. Each part is either a {@link String} or a {@link
    * PlaceholderReference}.
    *
@@ -236,7 +230,6 @@ public abstract class JsMessage {
     private String meaning;
 
     private String desc;
-    private boolean hidden;
 
     private String alternateId;
 
@@ -368,12 +361,6 @@ public abstract class JsMessage {
       return this;
     }
 
-    /** Sets whether the message should be hidden from volunteer translators. */
-    public Builder setIsHidden(boolean hidden) {
-      this.hidden = hidden;
-      return this;
-    }
-
     /** Gets whether at least one part has been appended. */
     public boolean hasParts() {
       return !parts.isEmpty();
@@ -431,7 +418,6 @@ public abstract class JsMessage {
           alternateId,
           desc,
           meaning,
-          hidden,
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
           ImmutableSet.copyOf(placeholders));
