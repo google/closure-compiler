@@ -360,7 +360,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {", //
             "  static {",
             "    C.x = 2",
-            // "    const y = C.x", //TODO(b/189993301) blocked on typechecking, gets
+            // "    const y = C.x", //TODO(b/235871861) blocked on typechecking, gets
             // JSC_INEXISTENT_PROPERTY
             "  }",
             "}"),
@@ -452,13 +452,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  static x = 2",
-            // "  static y = C.x", // blocked on typechecking, gets JSC_INEXISTENT_PROPERTY
+            "  static y = C.x",
             "}"),
         lines(
             "class C {}", //
-            "C.x = 2;"
-            // "C.y = C.x",
-            ));
+            "C.x = 2;",
+            "C.y = C.x"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  static {let y = C.x}",
+            "}"),
+        lines(
+            "class C {}", //
+            "C.x = 2;",
+            "{let y = C.x}"));
   }
 
   @Test
@@ -761,15 +771,13 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {", //
             "  static x = 2",
             "  constructor() {}",
-            // "  y = C.x", // blocked on typechecking, gets JSC_INEXISTENT_PROPERTY
+            "  y = C.x",
             "}"),
         lines(
-            "class C {constructor() {",
-            //  "this.y = C.x";
-            "}}", //
-            "C.x = 2;"
-            // "C.y = C.x",
-            ));
+            "class C {", //
+            "  constructor() { this.y = C.x; }",
+            "}",
+            "C.x = 2;"));
   }
 
   @Test
