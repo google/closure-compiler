@@ -4785,13 +4785,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  x = 2;",
             "}")
         .run();
-    newTest() // TODO(b/189993301): Need to fix TypeCheck to allow for `this` in class fields
+  }
+
+  @Test
+  public void testClassFieldsThis() {
+    newTest() // TODO(b/189993301): `this` should produce a type error
         .addSource(
             "class F {", //
+            "  /** @type {number} */",
             "  x = 2;",
+            "  /** @type {boolean} */",
             "  y = this.x",
             "}")
         .addDiagnostic("Property x never defined on global this")
+        .run();
+  }
+
+  @Test
+  public void testClassFieldsSuper() {
+    newTest() // TODO(b/189993301): `super` should produce a type error
+        .addSource(
+            "class G {", //
+            "  /** @type {number} */",
+            "  x = 2;",
+            "}",
+            "class H extends G {",
+            "  /** @type {string} */",
+            "  y = super.x;",
+            "}")
         .run();
   }
 
@@ -4829,13 +4850,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static x = 2;",
             "}")
         .run();
-    newTest() // TODO(b/189993301): Need to fix TypeCheck to allow for `this` in class fields
+  }
+
+  @Test
+  public void testStaticClassFieldsThis() {
+    newTest() // TODO(b/189993301): `this` should produce a type error
         .addSource(
             "class F {", //
+            "  /** @type {number} */",
             "  static x = 2;",
-            "  static y = this.x;",
+            "  /** @type {boolean} */",
+            "  static y = this.x",
             "}")
         .addDiagnostic("Property x never defined on global this")
+        .run();
+  }
+
+  @Test
+  public void testStaticClassFieldsSuper() {
+    newTest() // TODO(b/189993301): `super` should produce a type error
+        .addSource(
+            "class G {", //
+            "  /** @type {number} */",
+            "  static x = 2;",
+            "}",
+            "class H extends G {",
+            "  /** @type {string} */",
+            "  static y = super.x;",
+            "}")
         .run();
   }
 

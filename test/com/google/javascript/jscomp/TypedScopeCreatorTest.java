@@ -3270,6 +3270,39 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithFieldThisAndSuper() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  /** @type {number} */",
+            "  a = 2;",
+            "  /** @type {number} */",
+            "  b = this.b;",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @type {number} */",
+            "  c = super.a + 1;",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    ObjectType fooInstance = fooCtor.getInstanceType();
+    FunctionType barCtor = globalScope.getVar("Bar").getType().assertFunctionType();
+    ObjectType barInstance = barCtor.getInstanceType();
+
+    assertThat(fooInstance.hasOwnDeclaredProperty("a")).isTrue();
+    assertType(fooInstance.getPropertyType("a")).isNumber();
+    assertThat(barInstance.hasOwnDeclaredProperty("a")).isFalse();
+
+    assertThat(fooInstance.hasOwnDeclaredProperty("b")).isTrue();
+    assertType(fooInstance.getPropertyType("b")).isNumber();
+    assertThat(barInstance.hasOwnDeclaredProperty("b")).isFalse();
+
+    assertThat(fooInstance.hasOwnDeclaredProperty("c")).isFalse();
+    assertThat(barInstance.hasOwnDeclaredProperty("c")).isTrue();
+    assertType(barInstance.getPropertyType("c")).isNumber();
+  }
+
+  @Test
   public void testClassDeclarationWithStaticField() {
     testSame(
         lines(
@@ -3300,6 +3333,37 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(fooCtor.hasOwnDeclaredProperty("e")).isTrue();
     assertType(fooCtor.getPropertyType("e")).toStringIsEqualTo("(null|string)");
+  }
+
+  @Test
+  public void testClassDeclarationWithStaticFieldThisAndSuper() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  /** @type {number} */",
+            "  static a = 2;",
+            "  /** @type {number} */",
+            "  static b = this.b;",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @type {number} */",
+            "  static c = super.a + 1;",
+            "}"));
+
+    FunctionType fooCtor = globalScope.getVar("Foo").getType().assertFunctionType();
+    FunctionType barCtor = globalScope.getVar("Bar").getType().assertFunctionType();
+
+    assertThat(fooCtor.hasOwnDeclaredProperty("a")).isTrue();
+    assertType(fooCtor.getPropertyType("a")).isNumber();
+    assertThat(barCtor.hasOwnDeclaredProperty("a")).isFalse();
+
+    assertThat(fooCtor.hasOwnDeclaredProperty("b")).isTrue();
+    assertType(fooCtor.getPropertyType("b")).isNumber();
+    assertThat(barCtor.hasOwnDeclaredProperty("b")).isFalse();
+
+    assertThat(fooCtor.hasOwnDeclaredProperty("c")).isFalse();
+    assertThat(barCtor.hasOwnDeclaredProperty("c")).isTrue();
+    assertType(barCtor.getPropertyType("c")).isNumber();
   }
 
   @Test
