@@ -16,11 +16,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
 public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
@@ -66,50 +68,99 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       t.report(classNode, Es6ToEs3Util.CANNOT_CONVERT_YET, "Not a class declaration");
       return;
     }
-    Node classNameNode = NodeUtil.getNameNode(classNode);
-    Node staticInsertionPoint = classNode;
-    @Nullable Node instanceInsertionPoint = null;
+
     Node classMembers = classNode.getLastChild();
 
-    Node next;
-    for (Node member = classMembers.getFirstChild(); member != null; member = next) {
-      next = member.getNext();
+    Deque<Node> staticMembers = new ArrayDeque<>();
+    Deque<Node> instanceMembers = new ArrayDeque<>();
+
+    for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
       // this next is necessary because we directly move static blocks so we will get the incorrect
       // element if just update member in the loop guard
-      if (member.isMemberFieldDef()) {
-        if (member.isStaticMember()) {
-          staticInsertionPoint =
-              visitNoncomputedStaticField(t, member, staticInsertionPoint, classNameNode);
-        } else {
-          ctorCreator.synthesizeClassConstructorIfMissing(t, classNode);
-          Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
-          Node ctorBlock = ctor.getFirstChild().getLastChild();
-          instanceInsertionPoint =
-              visitNoncomputedInstanceField(t, member, instanceInsertionPoint, ctorBlock);
-        }
-      } else if (member.isComputedFieldDef()) {
-        t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Computed fields");
-      } else if (NodeUtil.isClassStaticBlock(member)) {
-        staticInsertionPoint = visitClassStaticBlock(t, member, staticInsertionPoint);
+      switch (member.getToken()) {
+        case MEMBER_FIELD_DEF:
+          if (member.isStaticMember()) {
+            staticMembers.push(member);
+          } else {
+            instanceMembers.push(member);
+          }
+          break;
+        case COMPUTED_FIELD_DEF:
+          t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Computed fields");
+          return;
+        case BLOCK:
+          staticMembers.push(member);
+          break;
+        default:
+          break;
       }
+    }
+
+    rewriteInstanceMembers(t, instanceMembers, classNode);
+    rewriteStaticMembers(t, staticMembers, classNode);
+  }
+
+  /** Rewrites and moves all instance fields */
+  private void rewriteInstanceMembers(
+      NodeTraversal t, Deque<Node> instanceMembers, Node classNode) {
+    if (instanceMembers.isEmpty()) {
+      return;
+    }
+    ctorCreator.synthesizeClassConstructorIfMissing(t, classNode);
+    Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
+    Node ctorBlock = ctor.getFirstChild().getLastChild();
+
+    Node insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
+
+    while (!instanceMembers.isEmpty()) {
+      Node instanceMember = instanceMembers.pop();
+      checkState(instanceMember.isMemberFieldDef());
+      Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
+      if (NodeUtil.referencesEnclosingReceiver(instanceMember)) {
+        t.report(
+            instanceMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in instance member");
+        return;
+      }
+      Node transpiledNode = convNonCompFieldToGetProp(thisNode, instanceMember.detach());
+      if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
+        ctorBlock.addChildToFront(transpiledNode);
+      } else {
+        transpiledNode.insertAfter(insertionPoint);
+      }
+      t.reportCodeChange(); // we moved the field from the class body
+      t.reportCodeChange(ctorBlock); // to the constructor, so we need both
     }
   }
 
-  /** Handles the transpilation of class static blocks */
-  private Node visitClassStaticBlock(NodeTraversal t, Node staticBlock, Node insertionPoint) {
-    // TODO(b/235871861): replace all this and super inside the static block
-    if (NodeUtil.referencesEnclosingReceiver(staticBlock)) {
-      t.report(staticBlock, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static block");
-      return insertionPoint;
+  /** Rewrites and moves all static blocks and fields */
+  private void rewriteStaticMembers(NodeTraversal t, Deque<Node> staticMembers, Node classNode) {
+    Node classNameNode = NodeUtil.getNameNode(classNode);
+
+    while (!staticMembers.isEmpty()) {
+      Node staticMember = staticMembers.pop();
+      if (NodeUtil.referencesEnclosingReceiver(staticMember)) {
+        t.report(staticMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static member");
+        return;
+      }
+      Node transpiledNode;
+      switch (staticMember.getToken()) {
+        case BLOCK:
+          if (!NodeUtil.getVarsDeclaredInBranch(staticMember).isEmpty()) {
+            t.report(staticMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "Var in static block");
+            return;
+          }
+          transpiledNode = staticMember.detach();
+          break;
+        case MEMBER_FIELD_DEF:
+          transpiledNode =
+              convNonCompFieldToGetProp(classNameNode.cloneNode(), staticMember.detach());
+          break;
+        default:
+          throw new IllegalStateException(String.valueOf(staticMember));
+      }
+      transpiledNode.insertAfter(classNode);
+      t.reportCodeChange();
     }
-    if (!NodeUtil.getVarsDeclaredInBranch(staticBlock).isEmpty()) {
-      t.report(staticBlock, Es6ToEs3Util.CANNOT_CONVERT_YET, "Var in static block");
-      return insertionPoint;
-    }
-    staticBlock.detach();
-    staticBlock.insertAfter(insertionPoint);
-    t.reportCodeChange();
-    return staticBlock;
   }
 
   /**
@@ -129,43 +180,6 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
             ? astFactory.createAssignStatement(getProp, fieldValue.detach())
             : astFactory.exprResult(getProp);
     result.srcrefTreeIfMissing(noncomputedField);
-    return result;
-  }
-
-  private Node visitNoncomputedStaticField(
-      NodeTraversal t, Node staticField, Node insertionPoint, Node classNameNode) {
-    if (NodeUtil.referencesEnclosingReceiver(staticField)) {
-      t.report(staticField, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static field");
-      return insertionPoint;
-    }
-    classNameNode = classNameNode.cloneNode();
-    staticField.detach();
-    Node result = convNonCompFieldToGetProp(classNameNode, staticField);
-    result.insertAfter(insertionPoint);
-    t.reportCodeChange();
-    return result;
-  }
-
-  private Node visitNoncomputedInstanceField(
-      NodeTraversal t, Node instanceField, @Nullable Node insertionPoint, Node ctorBlock) {
-    if (NodeUtil.referencesEnclosingReceiver(instanceField)) {
-      t.report(instanceField, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in instance field");
-      return insertionPoint;
-    }
-    Node thisNode = astFactory.createThisForEs6ClassMember(instanceField);
-    instanceField.detach();
-    Node result = convNonCompFieldToGetProp(thisNode, instanceField);
-    if (insertionPoint == null) {
-      insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
-    }
-    if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
-      ctorBlock.addChildToFront(result);
-    } else {
-      result.insertAfter(insertionPoint);
-    }
-    t.reportCodeChange(); // we moved the field from the class body
-    t.reportCodeChange(ctorBlock); // to the constructor, so we need both
-
     return result;
   }
 
