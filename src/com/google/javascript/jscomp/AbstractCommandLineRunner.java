@@ -1240,6 +1240,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     options.setDoLateLocalization(config.shouldDoLateLocalization());
+    options.setAlwaysGatherSourceMapInfo(config.shouldAlwaysGatherSourceMapInfo());
 
     compiler.initOptions(options);
 
@@ -2625,6 +2626,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // optimizations have already executed).
       return shouldRestoreAndPerformStage2AndSave()
           || shouldRestoreAndPerformStage3()
+          || shouldRestoreTypedAstsPerformStage2AndSave();
+    }
+
+    boolean shouldAlwaysGatherSourceMapInfo() {
+      // If we're doing a partial compilation that isn't the final stage, we need to always gather
+      // source map info in case the final stage requires it.
+      return shouldSaveAfterStage1()
+          || shouldRestoreAndPerformStage2AndSave()
           || shouldRestoreTypedAstsPerformStage2AndSave();
     }
 

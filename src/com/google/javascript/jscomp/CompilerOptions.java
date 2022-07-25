@@ -84,7 +84,11 @@ public class CompilerOptions implements Serializable {
   }
 
   public boolean shouldGatherSourceMapInfo() {
-    return !Strings.isNullOrEmpty(sourceMapOutputPath);
+    return shouldAlwaysGatherSourceMapInfo || !Strings.isNullOrEmpty(sourceMapOutputPath);
+  }
+
+  public void setAlwaysGatherSourceMapInfo(boolean shouldAlwaysGatherSourceMapInfo) {
+    this.shouldAlwaysGatherSourceMapInfo = shouldAlwaysGatherSourceMapInfo;
   }
 
   /** A common enum for compiler passes that can run either globally or locally. */
@@ -1012,6 +1016,16 @@ public class CompilerOptions implements Serializable {
 
   /** The output path for the source map. */
   private String sourceMapOutputPath;
+
+  /**
+   * Should we gather information needed to generate a source map even when sourceMapOutputPath
+   * indicates otherwise?
+   *
+   * <p>This is necessary in cases where we're doing a partial compilation, because the source map
+   * output path may not be known until the final stage, but we must still gather information in the
+   * early stages.
+   */
+  private boolean shouldAlwaysGatherSourceMapInfo = false;
 
   /** The detail level for the generated source map. */
   public SourceMap.DetailLevel sourceMapDetailLevel = SourceMap.DetailLevel.ALL;

@@ -3628,21 +3628,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     accessorSummary = compilerState.accessorSummary;
     inputSourceMaps = new ConcurrentHashMap<>(compilerState.inputSourceMaps);
-    // In a single-stage compilation this work is done in initBasedOnOptions() and
-    // addSourceMapSourceFiles() is also invoked by the parser when it finds inline source maps.
-    // When restoring, we need to make sure this work is restored in the same manner.
-    // The inline source maps found by the parser in stage one will be in the restored
-    // inputSourceMaps field.
-    if (options.shouldGatherSourceMapInfo()) {
-      sourceMap = options.sourceMapFormat.getInstance();
-      sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
-      if (options.applyInputSourceMaps) {
-        sourceMap.setSourceFileMapping(this);
-        if (options.sourceMapIncludeSourcesContent) {
-          for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
-            addSourceMapSourceFiles(inputSourceMap);
-          }
-        }
+    if (options.shouldGatherSourceMapInfo()
+        && options.sourceMapIncludeSourcesContent
+        && options.applyInputSourceMaps) {
+      // The inline source maps found by the parser in stage one will be in the restored
+      // inputSourceMaps field.
+      // addSourceMapSourceFiles() is invoked by the parser during stage one.
+      // When restoring state, we need to do it again to get the source content from
+      // the inline source maps into our current source map object.
+      for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
+        addSourceMapSourceFiles(inputSourceMap);
       }
     }
   }

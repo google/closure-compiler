@@ -1325,11 +1325,14 @@ public final class CompilerTest {
     options.setPreserveDetailedSourceInfo(true);
     // 3-stage builds require late localization
     options.setDoLateLocalization(true);
-    // The name passed here doesn't matter, because the compiler itself only stores it and enables
-    // tracking of source map information when it is non-null.
-    // In real usage AbstractCommandLineRunner is responsible for actually writing the file whose
-    // path is stored in this field.
-    options.setSourceMapOutputPath("dummy");
+    // For stages 1 and 2 we generally expect no source map output path to be set,
+    // since it won't actually be generated until compilation is completed in
+    // stage 3.
+    options.setSourceMapOutputPath(null);
+    // The code that is running the compiler is expected to set this option
+    // when executing a partial compilation and it expects to request source
+    // maps when running the final stage later.
+    options.setAlwaysGatherSourceMapInfo(true);
     options.applyInputSourceMaps = true;
     options.setSourceMapIncludeSourcesContent(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1368,6 +1371,19 @@ public final class CompilerTest {
 
     // Stage 3
     compiler = new Compiler(new TestErrorManager());
+    // In general the options passed to the compiler should be the same for all
+    // 3 stages. The source map output path is an exception.
+    // It only makes sense to specify it for the final stage when the output
+    // file will actually be generated.
+    // The name passed here doesn't matter, because the compiler itself only stores it and enables
+    // tracking of source map information when it is non-null.
+    // In real usage AbstractCommandLineRunner is responsible for actually writing the file whose
+    // path is stored in this field.
+    options.setSourceMapOutputPath("dummy");
+    // The code that is running the compiler is expected to set this option
+    // to false when executing the final stage, so no time and space will
+    // be wasted on generating source maps if the source map output path is null.
+    options.setAlwaysGatherSourceMapInfo(false);
     compiler.init(externs, srcs, options);
     restoreCompilerState(compiler, stateAfterOptimizations);
     compiler.performFinalizations();

@@ -33,6 +33,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -183,11 +186,9 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void test3StageCompile() throws Exception {
-    // Create a temporary directory to hold inputs and outputs
-    final File testDir = java.nio.file.Files.createTempDirectory("testDir").toFile();
 
     // Create a message bundle to use
-    File msgBundle = new File(testDir, "messages.xtb");
+    File msgBundle = temporaryFolder.newFile("messages.xtb");
     final ImmutableList<String> lines =
         ImmutableList.of(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -199,7 +200,7 @@ public final class CommandLineRunnerTest {
     writeLinesToFile(msgBundle, lines);
 
     // Create test externs with a definition for goog.getMsg().
-    final File externsFile = new File(testDir, "externs.js");
+    final File externsFile = temporaryFolder.newFile("externs.js");
     writeLinesToFile(
         externsFile,
         "/**",
@@ -217,7 +218,7 @@ public final class CommandLineRunnerTest {
         "goog.getMsg = function(msg, placeholderReplacements, options) {};");
 
     // Create an input file
-    File srcFile = new File(testDir, "input.js");
+    File srcFile = temporaryFolder.newFile("input.js");
     writeLinesToFile(
         srcFile,
         "/** @desc greeting */",
@@ -225,11 +226,12 @@ public final class CommandLineRunnerTest {
         "console.log(MSG_HELLO);");
 
     // Create a path for the stage 1 output
-    File stage1Save = new File(testDir, "stage1.save");
+    File stage1Save = temporaryFolder.newFile("stage1.save");
 
     ImmutableList<String> commonFlags =
         ImmutableList.of(
             "--compilation_level=ADVANCED_OPTIMIZATIONS",
+            "--source_map_include_content",
             "--translations_file",
             msgBundle.toString(),
             "--js",
@@ -252,7 +254,7 @@ public final class CommandLineRunnerTest {
         .isEqualTo("const MSG_HELLO=goog.getMsg(\"hello\");console.log(MSG_HELLO);");
 
     // Create a path for the stage 2 output
-    File stage2Save = new File(testDir, "stage2.save");
+    File stage2Save = temporaryFolder.newFile("stage2.save");
     // run the compiler to generate the stage 2 save file
     final ImmutableList<String> stage2Flags =
         createStringList(
@@ -277,7 +279,9 @@ public final class CommandLineRunnerTest {
                 ");"));
 
     // Create a path for the final output
-    File compiledFile = new File(testDir, "compiled.js");
+    File compiledFile = temporaryFolder.newFile("compiled.js");
+    // Create a path for the output source map
+    File sourceMapFile = temporaryFolder.newFile("compiled.sourcemap");
 
     // run the compiler to generate the final output
     final ImmutableList<String> stage3Flags =
@@ -287,7 +291,9 @@ public final class CommandLineRunnerTest {
               "--restore_stage2_from_file",
               stage2Save.toString(),
               "--js_output_file",
-              compiledFile.toString()
+              compiledFile.toString(),
+              "--create_source_map",
+              sourceMapFile.toString()
             });
     verifyFlagsAreIncompatibleWithChecksOnly(stage3Flags);
     runner = new CommandLineRunner(stringListToArray(stage3Flags));
@@ -297,6 +303,30 @@ public final class CommandLineRunnerTest {
     // output file.
     final String compiledJs = java.nio.file.Files.readString(compiledFile.toPath());
     assertThat(compiledJs).isEqualTo("console.log(\"hola\");\n");
+
+    final JsonObject expectedSourceMap = new JsonObject();
+    expectedSourceMap.addProperty("version", 3);
+    expectedSourceMap.addProperty("file", compiledFile.getAbsolutePath());
+    expectedSourceMap.addProperty("lineCount", 1);
+    expectedSourceMap.addProperty("mappings", "AAEAA,OAAQC,CAAAA,GAAR,CADkBC,MAClB;");
+    expectedSourceMap.add("sources", newJsonArrayOfStrings(srcFile.getAbsolutePath()));
+    expectedSourceMap.add(
+        "sourcesContent", newJsonArrayOfStrings(java.nio.file.Files.readString(srcFile.toPath())));
+    expectedSourceMap.add("names", newJsonArrayOfStrings("console", "log", "MSG_HELLO"));
+
+    final String sourceMapText = java.nio.file.Files.readString(sourceMapFile.toPath());
+    JsonObject actualSourceMap = getJsonObjectFromJson(sourceMapText);
+    assertThat(actualSourceMap).isEqualTo(expectedSourceMap);
+  }
+
+  private static final Gson GSON = new Gson();
+
+  private JsonArray newJsonArrayOfStrings(String... strings) {
+    return GSON.toJsonTree(strings).getAsJsonArray();
+  }
+
+  private JsonObject getJsonObjectFromJson(String json) {
+    return GSON.fromJson(json, JsonObject.class);
   }
 
   /** The given flags should be incompatible with `--checks_only`. */
