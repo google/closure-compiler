@@ -26,6 +26,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.jscomp.diagnostic.LogFile;
@@ -531,11 +532,13 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     final ArrayList<Node> taggedTemplateLiterals = new ArrayList<>();
     boolean isSafeToOptimize = false;
 
+    @CanIgnoreReturnValue
     CandidateAnalysisBuilder setIsSafeToOptimize(boolean isSafeToOptimize) {
       this.isSafeToOptimize = isSafeToOptimize;
       return this;
     }
 
+    @CanIgnoreReturnValue
     CandidateAnalysisBuilder addTaggedTemplateLiteral(Node ttlNode) {
       taggedTemplateLiterals.add(ttlNode);
       return this;

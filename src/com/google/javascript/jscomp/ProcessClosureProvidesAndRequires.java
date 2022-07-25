@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -428,6 +429,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     private boolean fromLegacyModule;
     private boolean hasImplicitInitialization;
 
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setNamespace(String namespace) {
       this.namespace = namespace;
       return this;
@@ -437,17 +439,22 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
      * @param node Can be null (for GOOG or an implicit name), an EXPR_RESULT for a goog.provide, or
      *     an EXPR_RESULT or name declaration for a previously provided name.
      */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setNode(Node node) {
       this.node = node;
       return this;
     }
 
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setChunk(JSChunk chunk) {
       this.chunk = chunk;
       return this;
     }
 
-    /** @param explicit Whether this came from an actual goog.provide('a.b.c'); call */
+    /**
+     * @param explicit Whether this came from an actual goog.provide('a.b.c'); call
+     */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setExplicit(boolean explicit) {
       this.explicit = explicit;
       return this;
@@ -456,12 +463,14 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     /**
      * @param alreadyInitialized Whether this came from an actual goog.provide('a.b.c'); call
      */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setHasImplicitInitialization(boolean alreadyInitialized) {
       this.hasImplicitInitialization = alreadyInitialized;
       return this;
     }
 
     /** Whether this comes from a legacy goog.module */
+    @CanIgnoreReturnValue
     ProvidedNameBuilder setFromLegacyModule(boolean fromLegacyModule) {
       this.fromLegacyModule = fromLegacyModule;
       return this;

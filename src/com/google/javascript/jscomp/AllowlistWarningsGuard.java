@@ -29,6 +29,7 @@ import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -220,18 +221,21 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     private String headerNote = null;
 
     /** Fill in your product name to get a fun message! */
+    @CanIgnoreReturnValue
     public AllowlistBuilder setProductName(String name) {
       this.productName = name;
       return this;
     }
 
     /** Fill in instructions on how to generate this allowlist. */
+    @CanIgnoreReturnValue
     public AllowlistBuilder setGeneratorTarget(String name) {
       this.generatorTarget = name;
       return this;
     }
 
     /** A note to include at the top of the allowlist file. */
+    @CanIgnoreReturnValue
     public AllowlistBuilder setNote(String note) {
       this.headerNote  = note;
       return this;

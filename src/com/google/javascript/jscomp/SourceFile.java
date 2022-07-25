@@ -25,6 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.serialization.SourceFileProto;
 import com.google.javascript.jscomp.serialization.SourceFileProto.FileOnDisk;
 import com.google.javascript.jscomp.serialization.SourceFileProto.ZipEntryOnDisk;
@@ -535,12 +536,14 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     private Builder() {}
 
     /** Set the source kind. */
+    @CanIgnoreReturnValue
     public Builder withKind(SourceKind kind) {
       this.kind = kind;
       return this;
     }
 
     /** Set the charset to use when reading from an input stream or file. */
+    @CanIgnoreReturnValue
     public Builder withCharset(Charset charset) {
       this.charset = charset;
       return this;
@@ -554,11 +557,13 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return this.withPathInternal(path.toString(), path);
     }
 
+    @CanIgnoreReturnValue
     public Builder withContent(String x) {
       this.lazyContent = x::toString;
       return this;
     }
 
+    @CanIgnoreReturnValue
     @GwtIncompatible
     public Builder withContent(InputStream x) {
       this.lazyContent =
@@ -573,6 +578,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder withZipEntryPath(String zipPath, String entryPath) {
       this.path = zipPath;
       this.zipEntryPath = entryPath;
@@ -588,6 +594,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
      *
      * <p>The name must still be unique.
      */
+    @CanIgnoreReturnValue
     public Builder withOriginalPath(String originalPath) {
       this.originalPath = originalPath;
       return this;

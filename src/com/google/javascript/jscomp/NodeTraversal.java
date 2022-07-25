@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.InputId;
@@ -362,11 +363,13 @@ public class NodeTraversal {
 
     private Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setCallback(Callback x) {
       this.callback = x;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCallback(AbstractPostOrderCallbackInterface x) {
       this.callback =
           new AbstractPostOrderCallback() {
@@ -378,16 +381,19 @@ public class NodeTraversal {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCompiler(AbstractCompiler x) {
       this.compiler = x;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopeCreator(ScopeCreator x) {
       this.scopeCreator = x;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setObeyDestructuringAndDefaultValueExecutionOrder(boolean x) {
       this.obeyDestructuringAndDefaultValueExecutionOrder = x;
       return this;

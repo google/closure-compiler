@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.toCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.base.Tri;
@@ -158,11 +159,13 @@ class ProcessDefines implements CompilerPass {
       this.compiler = compiler;
     }
 
+    @CanIgnoreReturnValue
     Builder putReplacements(Map<String, Node> replacementValues) {
       this.replacementValues.putAll(replacementValues);
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setMode(Mode x) {
       this.mode = x;
       return this;
@@ -173,11 +176,13 @@ class ProcessDefines implements CompilerPass {
      * multiple check passes. Accepts a supplier because the namespace may not exist at
      * pass-creation time.
      */
+    @CanIgnoreReturnValue
     Builder injectNamespace(Supplier<GlobalNamespace> namespaceSupplier) {
       this.namespaceSupplier = namespaceSupplier;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setRecognizeClosureDefines(boolean recognizeClosureDefines) {
       this.recognizeClosureDefines = recognizeClosureDefines;
       return this;

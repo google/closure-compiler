@@ -33,6 +33,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -293,14 +294,14 @@ final class FunctionTypeBuilder {
   }
 
   /** Sets the name with which this new type will be declared in the type registry. */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder setSyntacticFunctionName(String syntacticFnName) {
     this.syntacticFnName = nullToEmpty(syntacticFnName);
     return this;
   }
 
-  /**
-   * Sets the contents of this function.
-   */
+  /** Sets the contents of this function. */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder setContents(@Nullable FunctionContents contents) {
     if (contents != null) {
       this.contents = contents;
@@ -313,20 +314,21 @@ final class FunctionTypeBuilder {
    * declared in an inner scope with 'var' needs to use the inner scope to resolve names, but needs
    * to be declared in the outer scope.
    */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder setDeclarationScope(TypedScope declarationScope) {
     this.declarationScope = declarationScope;
     return this;
   }
 
   /**
-   * Infer the parameter and return types of a function from
-   * the parameter and return types of the function it is overriding.
+   * Infer the parameter and return types of a function from the parameter and return types of the
+   * function it is overriding.
    *
    * @param oldType The function being overridden. Does nothing if this is null.
-   * @param paramsParent The PARAM_LIST node of the function that we're assigning to.
-   *     If null, that just means we're not initializing this to a function
-   *     literal.
+   * @param paramsParent The PARAM_LIST node of the function that we're assigning to. If null, that
+   *     just means we're not initializing this to a function literal.
    */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferFromOverriddenFunction(
       @Nullable FunctionType oldType, @Nullable Node paramsParent) {
     if (oldType == null) {
@@ -402,11 +404,12 @@ final class FunctionTypeBuilder {
 
   /**
    * Infer the return type from JSDocInfo.
-   * @param fromInlineDoc Indicates whether return type is inferred from inline
-   * doc attached to function name
+   *
+   * @param fromInlineDoc Indicates whether return type is inferred from inline doc attached to
+   *     function name
    */
-  FunctionTypeBuilder inferReturnType(
-      @Nullable JSDocInfo info, boolean fromInlineDoc) {
+  @CanIgnoreReturnValue
+  FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info, boolean fromInlineDoc) {
     if (info != null) {
       JSTypeExpression returnTypeExpr =
           fromInlineDoc ? info.getType() : info.getReturnType();
@@ -419,12 +422,14 @@ final class FunctionTypeBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   FunctionTypeBuilder usingClassSyntax() {
     this.isClass = true;
     return this;
   }
 
   /** Infer whether the function is a normal function, a constructor, or an interface. */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferKind(@Nullable JSDocInfo info) {
     if (info != null) {
       if (!NodeUtil.isMethodDeclaration(errorRoot)) {
@@ -473,6 +478,7 @@ final class FunctionTypeBuilder {
    *     present.
    * @return this object
    */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferInheritance(
       @Nullable JSDocInfo info, @Nullable ObjectType classExtendsType) {
 
@@ -590,8 +596,10 @@ final class FunctionTypeBuilder {
 
   /**
    * Infers the type of {@code this}.
+   *
    * @param type The type of this if the info is missing.
    */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferThisType(JSDocInfo info, JSType type) {
     // Look at the @this annotation first.
     inferThisType(info);
@@ -608,8 +616,10 @@ final class FunctionTypeBuilder {
 
   /**
    * Infers the type of {@code this}.
+   *
    * @param info The JSDocInfo for this function.
    */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferThisType(JSDocInfo info) {
     if (info != null && info.hasThisType()) {
       // TODO(johnlenz): In ES5 strict mode a function can have a null or
@@ -753,6 +763,7 @@ final class FunctionTypeBuilder {
   }
 
   /** Infer parameters from the params list and info. Also maybe add extra templates. */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferConstructorParameters(Node argsParent, @Nullable JSDocInfo info) {
     // Look for template parameters in 'info': these will be added to anything from the class.
     if (info != null) {
@@ -765,11 +776,13 @@ final class FunctionTypeBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferImplicitConstructorParameters(ImmutableList<Parameter> parameters) {
     this.parameters = parameters;
     return this;
   }
 
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferClosurePrimitive(@Nullable JSDocInfo info) {
     if (info != null && info.hasClosurePrimitiveId()) {
       this.closurePrimitiveId = ClosurePrimitive.fromStringId(info.getClosurePrimitiveId());
@@ -878,6 +891,7 @@ final class FunctionTypeBuilder {
   }
 
   /** Infer the template type from the doc info. */
+  @CanIgnoreReturnValue
   FunctionTypeBuilder inferTemplateTypeName(@Nullable JSDocInfo info, @Nullable JSType ownerType) {
     // NOTE: these template type names may override a list
     // of inherited ones from an overridden function.

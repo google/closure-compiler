@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
@@ -37,6 +38,7 @@ public class ChangeVerifier {
     this.compiler = compiler;
   }
 
+  @CanIgnoreReturnValue
   ChangeVerifier snapshot(Node root) {
     // remove any existing snapshot data.
     clonesByCurrent.clear();

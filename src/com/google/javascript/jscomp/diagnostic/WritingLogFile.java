@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.diagnostic;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.errorprone.annotations.MustBeClosed;
@@ -103,6 +104,7 @@ final class WritingLogFile extends LogFile {
     return logInternal(LogsGson.toJson(value.get()));
   }
 
+  @CanIgnoreReturnValue
   @Override
   public LogFile logJson(StreamedJsonProducer producer) {
     try (JsonWriter writer = new JsonWriter(this.writer)) {
@@ -113,6 +115,7 @@ final class WritingLogFile extends LogFile {
     return this;
   }
 
+  @CanIgnoreReturnValue
   private LogFile logInternal(String value) {
     try {
       // It's fine to pass a fully rendered string because we know we're going to use it by the

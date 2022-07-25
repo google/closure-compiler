@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
@@ -215,6 +216,7 @@ public final class ModuleMetadataMap {
 
       public abstract ImmutableMultiset.Builder<String> googNamespacesBuilder();
 
+      @CanIgnoreReturnValue
       public Builder addGoogNamespace(String namespace) {
         googNamespacesBuilder().add(namespace);
         return this;

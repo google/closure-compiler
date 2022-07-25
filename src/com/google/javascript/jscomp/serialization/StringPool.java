@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.Immutable;
 import com.google.protobuf.ByteString;
 import java.util.LinkedHashMap;
@@ -96,6 +97,7 @@ public final class StringPool {
       return this.pool.computeIfAbsent(string, (unused) -> this.pool.size());
     }
 
+    @CanIgnoreReturnValue
     public Builder putAnd(String string) {
       this.put(string);
       return this;

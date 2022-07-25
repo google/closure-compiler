@@ -29,6 +29,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
@@ -94,6 +95,7 @@ public final class ModuleLoader {
 
     private Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setErrorHandler(ErrorHandler x) {
       if (x != null) {
         this.errorHandler = x;
@@ -102,6 +104,7 @@ public final class ModuleLoader {
     }
 
     /** Path prefixes to strip from module paths */
+    @CanIgnoreReturnValue
     public Builder setModuleRoots(Iterable<String> x) {
       this.moduleRoots = x;
       return this;
@@ -112,24 +115,28 @@ public final class ModuleLoader {
      *
      * <p>Used to ensure that resolved paths references a valid input.
      */
+    @CanIgnoreReturnValue
     public Builder setInputs(Iterable<? extends DependencyInfo> x) {
       this.inputs = x;
       return this;
     }
 
     /** Creates a module resolver, which determines how module identifiers are resolved */
+    @CanIgnoreReturnValue
     public Builder setFactory(ModuleResolverFactory x) {
       this.factory = x;
       return this;
     }
 
     /** Determines how to sanitize paths before resolving */
+    @CanIgnoreReturnValue
     public Builder setPathResolver(PathResolver x) {
       this.pathResolver = x;
       return this;
     }
 
     /** Determines if / how paths should be escaped */
+    @CanIgnoreReturnValue
     public Builder setPathEscaper(PathEscaper x) {
       this.pathEscaper = x;
       return this;

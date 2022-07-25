@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -128,21 +129,25 @@ public final class DestructuredTarget {
       this.pattern = pattern;
     }
 
+    @CanIgnoreReturnValue
     Builder setNode(Node node) {
       this.node = node;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setDefaultValue(Node defaultValue) {
       this.defaultValue = defaultValue;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setObjectPatternKey(Node objectPatternKey) {
       this.objectPatternKey = objectPatternKey;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setIsRest(boolean isRest) {
       this.isRest = isRest;
       return this;

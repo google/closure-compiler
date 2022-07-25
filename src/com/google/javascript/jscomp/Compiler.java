@@ -37,6 +37,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -2506,6 +2507,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     /** Appends the given string to the text buffer. */
+    @CanIgnoreReturnValue
     CodeBuilder append(String str) {
       sb.append(str);
 

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
@@ -146,21 +147,25 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
 
     private Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setCompiler(AbstractCompiler compiler) {
       this.compiler = compiler;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCfgRoot(Node cfgRoot) {
       this.cfgRoot = cfgRoot;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTraverseFunctions(boolean shouldTraverseFunctions) {
       this.shouldTraverseFunctions = shouldTraverseFunctions;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setIncludeEdgeAnnotations(boolean includeEdgeAnnotations) {
       this.edgeAnnotations = includeEdgeAnnotations;
       return this;

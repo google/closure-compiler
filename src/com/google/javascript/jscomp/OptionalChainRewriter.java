@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -77,12 +78,14 @@ class OptionalChainRewriter {
       this.astFactory = compiler.createAstFactory();
     }
 
+    @CanIgnoreReturnValue
     Builder setTmpVarNameCreator(TmpVarNameCreator tmpVarNameCreator) {
       this.tmpVarNameCreator = checkNotNull(tmpVarNameCreator);
       return this;
     }
 
     /** Optionally sets a scope in which the rewriter will declare all temporary variables */
+    @CanIgnoreReturnValue
     Builder setScope(Scope scope) {
       this.scope = checkNotNull(scope);
       return this;

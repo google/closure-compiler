@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.testing;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Strings;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
@@ -123,17 +124,20 @@ public final class JSChunkGraphBuilder {
     return new JSChunkGraphBuilder(GraphType.DISJOINT);
   }
 
+  @CanIgnoreReturnValue
   public JSChunkGraphBuilder addChunk(String input) {
     this.chunks.add(input);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JSChunkGraphBuilder addChunkWithName(String input, String chunkName) {
     this.chunkNames.put(this.chunks.size(), chunkName);
     this.chunks.add(input);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JSChunkGraphBuilder addChunks(List<String> inputs) {
     this.chunks.addAll(inputs);
     return this;
@@ -149,6 +153,7 @@ public final class JSChunkGraphBuilder {
    * <p>String must contain one substitution, the index of the file. e.g. "i%s.js" will produce
    * i0.js, i1.js, etc.
    */
+  @CanIgnoreReturnValue
   public JSChunkGraphBuilder setFilenameFormat(String filenameFormat) {
     this.filenameFormat = filenameFormat;
     return this;

@@ -27,6 +27,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.JsMessage.PlaceholderFormatException;
 import com.google.javascript.jscomp.JsMessageVisitor.MalformedException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -303,6 +304,7 @@ public final class ReplaceMessages {
       return addNode(key, astFactory.createString(value));
     }
 
+    @CanIgnoreReturnValue
     private QuotedKeyObjectLitBuilder addNode(String key, Node node) {
       checkState(!keyToValueNodeMap.containsKey(key), "repeated key: %s", key);
       keyToValueNodeMap.put(key, node);

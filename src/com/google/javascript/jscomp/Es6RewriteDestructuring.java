@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 import static com.google.javascript.jscomp.DiagnosticType.error;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.ParsingUtil;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -121,6 +122,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
       this.compiler = compiler;
     }
 
+    @CanIgnoreReturnValue
     public Builder setDestructuringRewriteMode(ObjectDestructuringRewriteMode rewriteMode) {
       this.rewriteMode = rewriteMode;
       return this;

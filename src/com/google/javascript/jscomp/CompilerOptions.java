@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -2681,6 +2682,7 @@ public class CompilerOptions implements Serializable {
     return this.emitUseStrict.or(languageOutIsDefaultStrict).or(languageIn.isDefaultStrict());
   }
 
+  @CanIgnoreReturnValue
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
     this.emitUseStrict = Optional.of(emitUseStrict);
     return this;
@@ -3277,6 +3279,7 @@ public class CompilerOptions implements Serializable {
     return isStrictModeInput.or(getLanguageIn().isDefaultStrict());
   }
 
+  @CanIgnoreReturnValue
   public CompilerOptions setStrictModeInput(boolean isStrictModeInput) {
     this.isStrictModeInput = Optional.of(isStrictModeInput);
     return this;

@@ -25,6 +25,7 @@ import static java.lang.Math.min;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.rhino.Node;
@@ -66,11 +67,13 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     return new LightweightMessageFormatter();
   }
 
+  @CanIgnoreReturnValue
   public LightweightMessageFormatter setIncludeLocation(boolean includeLocation) {
     this.includeLocation = includeLocation;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public LightweightMessageFormatter setIncludeLevel(boolean includeLevel) {
     this.includeLevel = includeLevel;
     return this;

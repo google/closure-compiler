@@ -24,6 +24,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -193,11 +194,13 @@ class ScopedAliases implements CompilerPass {
       this.compiler = compiler;
     }
 
+    @CanIgnoreReturnValue
     Builder setPreprocessorSymbolTable(@Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
       this.preprocessorSymbolTable = preprocessorSymbolTable;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap) {
       this.moduleMetadataMap = moduleMetadataMap;
       return this;
@@ -207,11 +210,13 @@ class ScopedAliases implements CompilerPass {
      * Configures whether to delete or preserve invalid goog.module get calls that are top-level
      * aliases in a goog.scope.
      */
+    @CanIgnoreReturnValue
     Builder setInvalidModuleGetHandling(InvalidModuleGetHandling invalidModuleGetHandling) {
       this.invalidModuleGetHandling = invalidModuleGetHandling;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setAliasTransformationHandler(AliasTransformationHandler aliasTransformationHandler) {
       this.transformationHandler = aliasTransformationHandler;
       return this;

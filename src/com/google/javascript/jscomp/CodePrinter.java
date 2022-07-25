@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.JSCompDoubles.isPositive;
 
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -720,9 +721,8 @@ public final class CodePrinter {
       root = node;
     }
 
-    /**
-     * Sets the output options from compiler options.
-     */
+    /** Sets the output options from compiler options. */
+    @CanIgnoreReturnValue
     public Builder setCompilerOptions(CompilerOptions options) {
       this.options = options;
       this.prettyPrint = options.isPrettyPrint();
@@ -730,6 +730,7 @@ public final class CodePrinter {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTypeRegistry(JSTypeRegistry registry) {
       this.registry = registry;
       return this;
@@ -737,8 +738,10 @@ public final class CodePrinter {
 
     /**
      * Sets whether pretty printing should be used.
+     *
      * @param prettyPrint If true, pretty printing will be used.
      */
+    @CanIgnoreReturnValue
     public Builder setPrettyPrint(boolean prettyPrint) {
       this.prettyPrint = prettyPrint;
       return this;
@@ -746,8 +749,10 @@ public final class CodePrinter {
 
     /**
      * Sets whether line breaking should be done automatically.
+     *
      * @param lineBreak If true, line breaking is done automatically.
      */
+    @CanIgnoreReturnValue
     public Builder setLineBreak(boolean lineBreak) {
       this.lineBreak = lineBreak;
       return this;
@@ -755,41 +760,42 @@ public final class CodePrinter {
 
     /**
      * Sets whether to output closure-style type annotations.
+     *
      * @param outputTypes If true, outputs closure-style type annotations.
      */
+    @CanIgnoreReturnValue
     public Builder setOutputTypes(boolean outputTypes) {
       this.outputTypes = outputTypes;
       return this;
     }
 
     /**
-     * Sets the source map to which to write the metadata about
-     * the generated source code.
+     * Sets the source map to which to write the metadata about the generated source code.
      *
      * @param sourceMap The source map.
      */
+    @CanIgnoreReturnValue
     public Builder setSourceMap(SourceMap sourceMap) {
       this.sourceMap = sourceMap;
       return this;
     }
 
     /** Set whether the output should be tagged as an .i.js file. */
+    @CanIgnoreReturnValue
     public Builder setTagAsTypeSummary(boolean tagAsTypeSummary) {
       this.tagAsTypeSummary = tagAsTypeSummary;
       return this;
     }
 
-    /**
-     * Set whether the output should be tags as ECMASCRIPT 5 Strict.
-     */
+    /** Set whether the output should be tags as ECMASCRIPT 5 Strict. */
+    @CanIgnoreReturnValue
     public Builder setTagAsStrict(boolean tagAsStrict) {
       this.tagAsStrict = tagAsStrict;
       return this;
     }
 
-    /**
-     * Set a custom code generator factory to enable custom code generation.
-     */
+    /** Set a custom code generator factory to enable custom code generation. */
+    @CanIgnoreReturnValue
     public Builder setCodeGeneratorFactory(CodeGeneratorFactory factory) {
       this.codeGeneratorFactory = factory;
       return this;

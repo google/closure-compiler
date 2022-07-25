@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.testing;
 
 import com.google.common.base.Joiner;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -887,39 +888,46 @@ public class TestExternsBuilder {
   private boolean includeRegExpExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addBigInt() {
     includeBigIntExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addIterable() {
     includeIterableExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addString() {
     includeStringExterns = true;
     addIterable(); // String implements Iterable<string>
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addFunction() {
     includeFunctionExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addObject() {
     includeObjectExterns = true;
     addFunction(); // Object.prototype.constructor has type {?Function}
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addArray() {
     includeArrayExterns = true;
     addIterable(); // Array implements Iterable
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addArguments() {
     includeArgumentsExterns = true;
     addArray(); // Arguments implements IArrayLike
@@ -927,6 +935,7 @@ public class TestExternsBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addPromise() {
     includePromiseExterns = true;
     addIterable(); // Promise.all() and Promise.race() need Iterable
@@ -934,17 +943,20 @@ public class TestExternsBuilder {
   }
 
   /** Adds declaration of `console.log()` */
+  @CanIgnoreReturnValue
   public TestExternsBuilder addConsole() {
     includeConsoleExterns = true;
     return this;
   }
 
   /** Adds declaration of `alert(message)` */
+  @CanIgnoreReturnValue
   public TestExternsBuilder addAlert() {
     includeAlertExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addAsyncIterable() {
     includeAsyncIterableExterns = true;
     addIterable(); // IIterableResult + Symbol
@@ -952,6 +964,7 @@ public class TestExternsBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addReflect() {
     includeReflectExterns = true;
     addObject(); // Reflect shares many things in common with Object
@@ -965,17 +978,20 @@ public class TestExternsBuilder {
    * generate in test cases, so we use a non-injecting compiler and include these externs
    * definitions to keep the type checker happy.
    */
+  @CanIgnoreReturnValue
   public TestExternsBuilder addEs6ClassTranspilationExterns() {
     includeEs6ClassTranspilationExterns = true;
     addFunction(); // need definition of Function.prototype.apply
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addClosureExterns() {
     includeClosureExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addJSCompLibraries() {
     includeJSCompLibraries = true;
     addArguments(); // need definition of Arguments
@@ -984,17 +1000,20 @@ public class TestExternsBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addMath() {
     includeMathExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addRegExp() {
     addArray(); // RegExpResult needs definition of Array
     includeRegExpExterns = true;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;

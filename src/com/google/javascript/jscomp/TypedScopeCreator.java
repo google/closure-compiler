@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -2016,12 +2017,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       //     e.g. There will probably always be a declarationNode, so make it a constructor
       //     parameter.
 
-      /** @param declarationNode the defining NAME or GETPROP or object literal key node. */
+      /**
+       * @param declarationNode the defining NAME or GETPROP or object literal key node.
+       */
+      @CanIgnoreReturnValue
       SlotDefiner forDeclarationNode(Node declarationNode) {
         this.declarationNode = declarationNode;
         return this;
       }
 
+      @CanIgnoreReturnValue
       SlotDefiner readVariableNameFromDeclarationNode() {
         // Only qualified name nodes can use this method to get the variable name
         // Object literal keys will have to compute their names themselves.
@@ -2045,6 +2050,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // TODO(bradfordcsmith): maybe change to withVariableName(). Need to make these names more
       //     consistent.
+      @CanIgnoreReturnValue
       SlotDefiner forVariableName(String variableName) {
         this.variableName = variableName;
         return this;
@@ -2056,21 +2062,25 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
        * <p>If the given name is a qualified name, this scope should be the scope in which the root
        * of the name is (or will later be) declared.
        */
+      @CanIgnoreReturnValue
       SlotDefiner inScope(TypedScope scope) {
         this.scope = checkNotNull(scope);
         return this;
       }
 
+      @CanIgnoreReturnValue
       SlotDefiner withType(@Nullable JSType type) {
         this.type = type;
         return this;
       }
 
+      @CanIgnoreReturnValue
       SlotDefiner allowLaterTypeInference(boolean allowLaterTypeInference) {
         this.allowLaterTypeInference = allowLaterTypeInference;
         return this;
       }
 
+      @CanIgnoreReturnValue
       SlotDefiner forGoogProvidedName() {
         this.forGoogProvidedName = true;
         return this;

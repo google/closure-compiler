@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ class OptimizeCalls implements CompilerPass {
     private final ImmutableList.Builder<CallGraphCompilerPass> passes = ImmutableList.builder();
     @Nullable private Boolean considerExterns; // Nullable to force users to specify a value.
 
+    @CanIgnoreReturnValue
     public Builder setCompiler(AbstractCompiler compiler) {
       this.compiler = compiler;
       return this;
@@ -86,11 +88,13 @@ class OptimizeCalls implements CompilerPass {
      * <p>This setting allows extern references to be effectively invisible to passes that should
      * not mutate them.
      */
+    @CanIgnoreReturnValue
     public Builder setConsiderExterns(boolean b) {
       this.considerExterns = b;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder addPass(CallGraphCompilerPass pass) {
       this.passes.add(pass);
       return this;

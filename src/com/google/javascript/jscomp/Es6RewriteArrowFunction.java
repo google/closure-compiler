@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -181,12 +182,14 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
       return thisType;
     }
 
+    @CanIgnoreReturnValue
     ThisAndArgumentsContext setNeedsThisVarWithType(AstFactory.Type type) {
       thisType = type;
       needsThisVar = true;
       return this;
     }
 
+    @CanIgnoreReturnValue
     ThisAndArgumentsContext setNeedsArgumentsVar() {
       needsArgumentsVar = true;
       return this;

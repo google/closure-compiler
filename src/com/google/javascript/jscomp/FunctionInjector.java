@@ -25,6 +25,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -97,6 +98,7 @@ class FunctionInjector {
      *
      * <p>If this method is not called, {@code compiler.getUniqueNameIdSupplier()} will be used.
      */
+    @CanIgnoreReturnValue
     Builder safeNameIdSupplier(Supplier<String> safeNameIdSupplier) {
       this.safeNameIdSupplier = checkNotNull(safeNameIdSupplier);
       return this;
@@ -107,16 +109,19 @@ class FunctionInjector {
      *
      * <p>Default is {@code true}.
      */
+    @CanIgnoreReturnValue
     Builder allowDecomposition(boolean allowDecomposition) {
       this.allowDecomposition = allowDecomposition;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder assumeStrictThis(boolean assumeStrictThis) {
       this.assumeStrictThis = assumeStrictThis;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder assumeMinimumCapture(boolean assumeMinimumCapture) {
       this.assumeMinimumCapture = assumeMinimumCapture;
       return this;
@@ -127,6 +132,7 @@ class FunctionInjector {
      *
      * <p>Default is for the builder to create this. This method exists for testing purposes.
      */
+    @CanIgnoreReturnValue
     public Builder functionArgumentInjector(FunctionArgumentInjector functionArgumentInjector) {
       this.functionArgumentInjector = checkNotNull(functionArgumentInjector);
       return this;

@@ -21,6 +21,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
@@ -83,11 +84,13 @@ public final class Linter {
       options.setSummaryDetailLevel(0);
     }
 
+    @CanIgnoreReturnValue
     public Builder withModuleResolutionMode(ResolutionMode moduleResolutionMode) {
       options.setModuleResolutionMode(moduleResolutionMode);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder withBrowserResolverPrefixReplacements(
         ImmutableMap<String, String> replacements) {
       options.setBrowserResolverPrefixReplacements(replacements);

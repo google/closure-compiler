@@ -25,6 +25,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.Cache;
@@ -1267,6 +1268,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       this.graphNode = graph.createNode(this);
     }
 
+    @CanIgnoreReturnValue
     private AmbiguatedFunctionSummary setMask(int mask) {
       bitmask |= mask;
       return this;

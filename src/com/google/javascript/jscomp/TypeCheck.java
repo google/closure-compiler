@@ -40,6 +40,7 @@ import static java.util.stream.Collectors.joining;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.base.Tri;
@@ -428,12 +429,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /** Turn on the missing property check. Returns this for easy chaining. */
+  @CanIgnoreReturnValue
   TypeCheck reportMissingProperties(boolean report) {
     reportMissingProperties = report;
     return this;
   }
 
   /** Turn on the unknown types check. Returns this for easy chaining. */
+  @CanIgnoreReturnValue
   TypeCheck reportUnknownTypes(boolean report) {
     reportUnknownTypes = report;
     return this;

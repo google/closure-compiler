@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
@@ -143,26 +144,31 @@ class InlineAndCollapseProperties implements CompilerPass {
       this.compiler = compiler;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPropertyCollapseLevel(PropertyCollapseLevel propertyCollapseLevel) {
       this.propertyCollapseLevel = propertyCollapseLevel;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setChunkOutputType(ChunkOutputType chunkOutputType) {
       this.chunkOutputType = chunkOutputType;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHaveModulesBeenRewritten(boolean haveModulesBeenRewritten) {
       this.haveModulesBeenRewritten = haveModulesBeenRewritten;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setModuleResolutionMode(ResolutionMode moduleResolutionMode) {
       this.moduleResolutionMode = moduleResolutionMode;
       return this;
     }
 
+    @CanIgnoreReturnValue
     @VisibleForTesting
     public Builder testAggressiveInliningOnly(Consumer<GlobalNamespace> globalNamespaceTester) {
       this.testAggressiveInliningOnly = true;

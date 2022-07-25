@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing.parser;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -3787,6 +3788,7 @@ public class Parser {
     throw new AssertionError();
   }
 
+  @CanIgnoreReturnValue
   private Parser recordFeatureUsed(Feature feature) {
     features = features.with(feature);
     return this;

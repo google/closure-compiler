@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
@@ -180,41 +181,49 @@ class RemoveUnusedCode implements CompilerPass {
       this.compiler = compiler;
     }
 
+    @CanIgnoreReturnValue
     Builder removeLocalVars(boolean value) {
       this.removeLocalVars = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder removeGlobals(boolean value) {
       this.removeGlobals = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder preserveFunctionExpressionNames(boolean value) {
       this.preserveFunctionExpressionNames = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder removeUnusedPrototypeProperties(boolean value) {
       this.removeUnusedPrototypeProperties = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder removeUnusedThisProperties(boolean value) {
       this.removeUnusedThisProperties = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder removeUnusedObjectDefinePropertiesDefinitions(boolean value) {
       this.removeUnusedObjectDefinePropertiesDefinitions = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder removeUnusedPolyfills(boolean value) {
       this.removeUnusedPolyfills = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder assumeGettersArePure(boolean value) {
       this.assumeGettersArePure = value;
       return this;
@@ -1914,16 +1923,19 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isPrototypeDotPropertyReference = false;
     boolean isThisDotPropertyReference = false;
 
+    @CanIgnoreReturnValue
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
       return this;
     }
 
+    @CanIgnoreReturnValue
     RemovableBuilder setIsPrototypeDotPropertyReference(boolean value) {
       this.isPrototypeDotPropertyReference = value;
       return this;
     }
 
+    @CanIgnoreReturnValue
     RemovableBuilder setIsThisDotPropertyReference(boolean value) {
       this.isThisDotPropertyReference = value;
       return this;

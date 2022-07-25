@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
@@ -149,6 +150,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
    *
    * @return this for easy chaining.
    */
+  @CanIgnoreReturnValue
   public JsFileRegexParser setIncludeGoogBase(boolean include) {
     checkState(JsFileRegexParser.isSupported());
     includeGoogBase = include;
@@ -160,6 +162,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
    *
    * @return this for easy chaining.
    */
+  @CanIgnoreReturnValue
   public JsFileRegexParser setModuleLoader(ModuleLoader loader) {
     this.loader = loader;
     return this;

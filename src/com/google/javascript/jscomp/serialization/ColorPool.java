@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.base.IdentityRef;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.jscomp.colors.Color;
@@ -128,6 +129,7 @@ public final class ColorPool {
       this.idToColor.putAll(StandardColors.AXIOMATIC_COLORS);
     }
 
+    @CanIgnoreReturnValue
     public Builder addShardAnd(TypePool typePool, StringPool stringPool) {
       this.addShard(typePool, stringPool);
       return this;

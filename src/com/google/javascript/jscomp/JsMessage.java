@@ -26,6 +26,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -111,6 +112,12 @@ public abstract class JsMessage {
   /** Gets the meaning annotated to the message, intended to force different translations. */
   @Nullable
   public abstract String getMeaning();
+
+  /**
+   * Gets whether this message should be hidden from volunteer translators (to reduce the chances of
+   * a new feature leak).
+   */
+  public abstract boolean isHidden();
 
   /**
    * Gets a list of the parts of this message. Each part is either a {@link String} or a {@link
@@ -230,6 +237,7 @@ public abstract class JsMessage {
     private String meaning;
 
     private String desc;
+    private boolean hidden;
 
     private String alternateId;
 
@@ -258,6 +266,7 @@ public abstract class JsMessage {
      * @param key a key that should uniquely identify this message; typically it is the message's
      *     name (e.g. {@code "MSG_HELLO"}).
      */
+    @CanIgnoreReturnValue
     public Builder setKey(String key) {
       this.key = key;
       return this;
@@ -266,11 +275,13 @@ public abstract class JsMessage {
     /**
      * @param sourceName The message's sourceName.
      */
+    @CanIgnoreReturnValue
     public Builder setSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setMsgText(String msgText) throws PlaceholderFormatException {
       checkState(this.parts.isEmpty(), "cannot parse msg text after adding parts");
       parseMsgTextIntoParts(msgText);
@@ -311,6 +322,7 @@ public abstract class JsMessage {
     }
 
     /** Appends a placeholder reference to the message */
+    @CanIgnoreReturnValue
     public Builder appendPlaceholderReference(String name) {
       checkNotNull(name, "Placeholder name could not be null");
       parts.add(PlaceholderReference.create(name));
@@ -319,6 +331,7 @@ public abstract class JsMessage {
     }
 
     /** Appends a translatable string literal to the message. */
+    @CanIgnoreReturnValue
     public Builder appendStringPart(String part) {
       checkNotNull(part, "String part of the message could not be null");
       parts.add(part);
@@ -330,17 +343,20 @@ public abstract class JsMessage {
       return placeholders;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPlaceholderNameToExampleMap(Map<String, String> map) {
       this.placeholderNameToExampleMap = ImmutableMap.copyOf(map);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPlaceholderNameToOriginalCodeMap(Map<String, String> map) {
       this.placeholderNameToOriginalCodeMap = ImmutableMap.copyOf(map);
       return this;
     }
 
     /** Sets the description of the message, which helps translators. */
+    @CanIgnoreReturnValue
     public Builder setDesc(String desc) {
       this.desc = desc;
       return this;
@@ -350,14 +366,23 @@ public abstract class JsMessage {
      * Sets the programmer-specified meaning of this message, which forces this message to translate
      * differently.
      */
+    @CanIgnoreReturnValue
     public Builder setMeaning(String meaning) {
       this.meaning = meaning;
       return this;
     }
 
     /** Sets the alternate message ID, to be used if the primary ID is not yet translated. */
+    @CanIgnoreReturnValue
     public Builder setAlternateId(String alternateId) {
       this.alternateId = alternateId;
+      return this;
+    }
+
+    /** Sets whether the message should be hidden from volunteer translators. */
+    @CanIgnoreReturnValue
+    public Builder setIsHidden(boolean hidden) {
+      this.hidden = hidden;
       return this;
     }
 
@@ -418,6 +443,7 @@ public abstract class JsMessage {
           alternateId,
           desc,
           meaning,
+          hidden,
           placeholderNameToExampleMap,
           placeholderNameToOriginalCodeMap,
           ImmutableSet.copyOf(placeholders));
