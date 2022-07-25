@@ -48,6 +48,7 @@ import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.jscomp.testing.ColorSubject;
 import com.google.javascript.rhino.JSDocInfo;
@@ -93,6 +94,7 @@ public final class NodeSubject extends Subject {
    *
    * <p>A common choice of serializer is {@link Compiler::toSource}, to as render JavaScript code.
    */
+  @CanIgnoreReturnValue
   public NodeSubject usingSerializer(Function<Node, String> serializer) {
     this.serializer = serializer;
     return this;
@@ -176,11 +178,13 @@ public final class NodeSubject extends Subject {
     failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isEquivalentTo(Node other) {
     check("isEquivalentTo(%s)", other).that(actual.isEquivalentTo(other)).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isNotEquivalentTo(Node other) {
     check("isEquivalentTo(%s)", other).that(actual.isEquivalentTo(other)).isFalse();
     return this;
@@ -198,69 +202,82 @@ public final class NodeSubject extends Subject {
     hasToken(type);
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasToken(Token token) {
     check("getToken()").that(actual.getToken()).isEqualTo(token);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isString(String value) {
     check("getToken()").that(actual.getToken()).isEqualTo(Token.STRINGLIT);
     check("getString()").that(actual.getString()).isEqualTo(value);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isName(String name) {
     check("isName()").that(actual.isName()).isTrue();
     check("getString()").that(actual.getString()).isEqualTo(name);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isNumber(int value) {
     return isNumber((double) value);
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isNumber(double value) {
     check("isNumber()").that(actual.isNumber()).isTrue();
     check("getNumber()").that(actual.getDouble()).isEqualTo(value);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isBigInt(BigInteger value) {
     check("isBigInt()").that(actual.isBigInt()).isTrue();
     check("getBigInt()").that(actual.getBigInt()).isEqualTo(value);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isAssign() {
     check("isAssign()").that(actual.isAssign()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isThis() {
     check("isThis()").that(actual.isThis()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isSuper() {
     check("isSuper()").that(actual.isSuper()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isFunction() {
     hasToken(Token.FUNCTION);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isArrowFunction() {
     check("isArrowFunction()").that(actual.isArrowFunction()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isStatic() {
     check("isStatic()").that(actual.isStaticMember()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasTrailingComma() {
     check("hasTrailingComma()").that(actual.hasTrailingComma()).isTrue();
     return this;
@@ -270,6 +287,7 @@ public final class NodeSubject extends Subject {
    * indicates whether the node we are asserting is the start of an optional chain e.g. `a?.b` of
    * `a?.b.c`
    */
+  @CanIgnoreReturnValue
   public NodeSubject isOptionalChainStart() {
     check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isTrue();
     return this;
@@ -279,21 +297,25 @@ public final class NodeSubject extends Subject {
    * indicates whether the node we are asserting is the start of an optional chain e.g. `b.c` of
    * `a?.b.c`
    */
+  @CanIgnoreReturnValue
   public NodeSubject isNotOptionalChainStart() {
     check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isFalse();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isParamList() {
     hasToken(Token.PARAM_LIST);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isCall() {
     check("isCall()").that(actual.isCall()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isFreeCall() {
     check("callable")
         .that(actual.isCall() || actual.isOptChainCall() || actual.isTaggedTemplateLit())
@@ -302,104 +324,125 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isNotFreeCall() {
     check("getBooleanProp(Node.FREE_CALL)").that(actual.getBooleanProp(Node.FREE_CALL)).isFalse();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isConst() {
     check("isConst()").that(actual.isConst()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isVar() {
     check("isVar()").that(actual.isVar()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isGetProp() {
     check("isGetProp()").that(actual.isGetProp()).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isMemberFunctionDef(String name) {
     check("isMemberFunction()").that(actual.isMemberFunctionDef()).isTrue();
     check("getString()").that(actual.getString()).isEqualTo(name);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject matchesName(String qname) {
     check("matchesName(%s)", qname).that(actual.matchesName(qname)).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject matchesQualifiedName(String qname) {
     check("matchesQualifiedName(%s)", qname).that(actual.matchesQualifiedName(qname)).isTrue();
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasCharno(int charno) {
     check("getCharno()").that(actual.getCharno()).isEqualTo(charno);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasLineno(int lineno) {
     check("getLineno()").that(actual.getLineno()).isEqualTo(lineno);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasLength(int length) {
     check("getLength()").that(actual.getLength()).isEqualTo(length);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasEqualSourceInfoTo(Node other) {
     return hasLineno(other.getLineno()).hasCharno(other.getCharno()).hasLength(other.getLength());
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isIndexable(boolean isIndexable) {
     check("isIndexable()").that(actual.isIndexable()).isEqualTo(isIndexable);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasOriginalName(String originalName) {
     check("getOriginalName()").that(actual.getOriginalName()).isEqualTo(originalName);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasChildren(boolean hasChildren) {
     check("hasChildren()").that(actual.hasChildren()).isEqualTo(hasChildren);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasXChildren(int numChildren) {
     check("getChildCount()").that(actual.getChildCount()).isEqualTo(numChildren);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasNoChildren() {
     return hasXChildren(0);
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasOneChild() {
     return hasXChildren(1);
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasOneChildThat() {
     hasOneChild();
     return assertNode(actual.getOnlyChild());
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasFirstChildThat() {
     hasChildren(true);
     return assertNode(actual.getFirstChild());
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject hasSecondChildThat() {
     check("getChildCount()").that(actual.getChildCount()).isAtLeast(2);
     return assertNode(actual.getSecondChild());
   }
 
+  @CanIgnoreReturnValue
   public NodeSubject isFromExterns() {
     check("isFromExterns()").that(actual.isFromExterns()).isTrue();
     return this;
