@@ -15,19 +15,24 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 
 /** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
 public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
+  private final SynthesizeExplicitConstructors ctorCreator;
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.ctorCreator = new SynthesizeExplicitConstructors(compiler);
   }
 
   @Override
@@ -61,9 +66,11 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       t.report(classNode, Es6ToEs3Util.CANNOT_CONVERT_YET, "Not a class declaration");
       return;
     }
-    Node classNameNode = NodeUtil.getNameNode(classNode).cloneNode();
+    Node classNameNode = NodeUtil.getNameNode(classNode);
     Node staticInsertionPoint = classNode;
+    @Nullable Node instanceInsertionPoint = null;
     Node classMembers = classNode.getLastChild();
+
     Node next;
     for (Node member = classMembers.getFirstChild(); member != null; member = next) {
       next = member.getNext();
@@ -74,7 +81,11 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
           staticInsertionPoint =
               visitNoncomputedStaticField(t, member, staticInsertionPoint, classNameNode);
         } else {
-          t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Instance class fields");
+          ctorCreator.synthesizeClassConstructorIfMissing(t, classNode);
+          Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
+          Node ctorBlock = ctor.getFirstChild().getLastChild();
+          instanceInsertionPoint =
+              visitNoncomputedInstanceField(t, member, instanceInsertionPoint, ctorBlock);
         }
       } else if (member.isComputedFieldDef()) {
         t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Computed fields");
@@ -101,6 +112,26 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
     return staticBlock;
   }
 
+  /**
+   * Creates a node that represents receiver.key = value; where the key and value comes from the
+   * non-computed field
+   */
+  private Node convNonCompFieldToGetProp(Node receiver, Node noncomputedField) {
+    checkArgument(noncomputedField.isMemberFieldDef());
+    checkArgument(noncomputedField.getParent() == null, noncomputedField);
+    checkArgument(receiver.getParent() == null, receiver);
+    Node getProp =
+        astFactory.createGetProp(
+            receiver, noncomputedField.getString(), AstFactory.type(noncomputedField));
+    Node fieldValue = noncomputedField.getFirstChild();
+    Node result =
+        (fieldValue != null)
+            ? astFactory.createAssignStatement(getProp, fieldValue.detach())
+            : astFactory.exprResult(getProp);
+    result.srcrefTreeIfMissing(noncomputedField);
+    return result;
+  }
+
   private Node visitNoncomputedStaticField(
       NodeTraversal t, Node staticField, Node insertionPoint, Node classNameNode) {
     if (NodeUtil.referencesEnclosingReceiver(staticField)) {
@@ -108,19 +139,54 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       return insertionPoint;
     }
     classNameNode = classNameNode.cloneNode();
-    Node getProp =
-        astFactory.createGetProp(
-            classNameNode, staticField.getString(), AstFactory.type(staticField));
-    Node fieldRhs = staticField.getFirstChild();
-    Node result =
-        (fieldRhs != null)
-            ? astFactory.createAssignStatement(getProp, fieldRhs.detach())
-            : astFactory.exprResult(getProp);
-
-    result.srcrefTreeIfMissing(staticField);
-    result.insertAfter(insertionPoint);
     staticField.detach();
+    Node result = convNonCompFieldToGetProp(classNameNode, staticField);
+    result.insertAfter(insertionPoint);
     t.reportCodeChange();
     return result;
+  }
+
+  private Node visitNoncomputedInstanceField(
+      NodeTraversal t, Node instanceField, @Nullable Node insertionPoint, Node ctorBlock) {
+    if (NodeUtil.referencesEnclosingReceiver(instanceField)) {
+      t.report(instanceField, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in instance field");
+      return insertionPoint;
+    }
+    Node thisNode = astFactory.createThisForEs6ClassMember(instanceField);
+    instanceField.detach();
+    Node result = convNonCompFieldToGetProp(thisNode, instanceField);
+    if (insertionPoint == null) {
+      insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
+    }
+    if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
+      ctorBlock.addChildToFront(result);
+    } else {
+      result.insertAfter(insertionPoint);
+    }
+    t.reportCodeChange(); // we moved the field from the class body
+    t.reportCodeChange(ctorBlock); // to the constructor, so we need both
+
+    return result;
+  }
+
+  /**
+   * Finds the location in the constructor to put the transpiled instance fields
+   *
+   * <p>Returns the constructor body if there is no super() call so the field can be put at the
+   * beginning of the class
+   *
+   * <p>Returns the super() call otherwise so the field can be put after the super() call
+   */
+  private Node findInitialInstanceInsertionPoint(Node ctorBlock) {
+    if (NodeUtil.referencesSuper(ctorBlock)) {
+      // will use the fact that if there is super in the constructor, the first appearance of super
+      // must be the super call
+      for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+        if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
+          return stmt;
+        }
+      }
+    }
+    return ctorBlock; // in case the super loop doesn't work, insert at beginning of block
   }
 }

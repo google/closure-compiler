@@ -321,12 +321,14 @@ final class AstFactory {
    * <p>With the optimization colors type system, we can support inferring the type of this for
    * constructors but not generic functions annotated @this
    */
-  Node createThisForEs6ClassMember(Node functionNode) {
-    checkState(
-        functionNode.isMemberFunctionDef() && functionNode.getParent().isClassMembers(),
-        functionNode);
-    Node classNode = functionNode.getGrandparent();
-    if (functionNode.isStaticMember()) {
+  Node createThisForEs6ClassMember(Node memberNode) {
+    checkArgument(memberNode.getParent().isClassMembers());
+    checkArgument(
+        memberNode.isMemberFunctionDef()
+            || memberNode.isMemberFieldDef()
+            || memberNode.isComputedFieldDef());
+    Node classNode = memberNode.getGrandparent();
+    if (memberNode.isStaticMember()) {
       final Node result = IR.thisNode();
       setJSTypeOrColor(type(classNode), result);
       return result;

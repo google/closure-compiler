@@ -57,18 +57,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   public void testCannotConvertYet() {
     testError(
         lines(
-            "class C {", //
-            "  x = 2;",
-            "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
-
-    testError(
-        lines(
             "/** @unrestricted */", //
             "class C {",
             "  ['x'] = 2;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // computed prop
 
     testError(
         lines(
@@ -76,7 +69,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  static ['x'] = 2;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // computed prop
 
     testError(
         lines(
@@ -92,7 +85,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  let x = 2;",
         "  C.y = x", // TODO(b/235871861): Need to correct references to `this`
         "}")*/
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // uses `this`
 
     testError(
         lines(
@@ -101,7 +94,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = super.y",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // uses `super`
 
     testError(
         lines(
@@ -111,7 +104,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = C.y",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -121,7 +114,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = C.y",
             "  }",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -130,7 +123,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -139,7 +132,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -155,7 +148,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  C.x = 2;",
         "  const y = C.x",
         "}")*/
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -166,7 +159,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    var z = 3;",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // `var` in static block
 
     testError(
         lines(
@@ -174,7 +167,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static x = 1;",
             "  static y = this.x;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // `this` in static field
 
     testError(
         lines(
@@ -182,7 +175,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static y = 2;",
             "  static x = C.y",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -190,21 +183,59 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static y = 2;",
             "  static x = C.y",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "foo(class {", //
             "  static x = 1",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "let c = class {", //
             "  static x = 1",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+
+    testError(
+        lines(
+            "class C {", //
+            "  x = 1;",
+            "  y = this.x;",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // `this` in public field
+
+    testError(
+        lines(
+            "let c = class C {", //
+            "  y = 2;",
+            "  x = C.y",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+
+    testError(
+        lines(
+            "foo(class C {", //
+            "  y = 2;",
+            "  x = C.y",
+            "})"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+
+    testError(
+        lines(
+            "foo(class {", //
+            "  x = 1",
+            "})"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+
+    testError(
+        lines(
+            "let c = class {", //
+            "  x = 1",
+            "}"),
+        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
   }
 
   @Test
@@ -339,6 +370,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  C.x = 2;",
             // "  const y = C.x",
             "}"));
+
     test(
         lines(
             "class Foo {",
@@ -427,5 +459,432 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "C.x = 2;"
             // "C.y = C.x",
             ));
+  }
+
+  @Test
+  public void testInstanceNoncomputedWithNonemptyConstructor() {
+    test(
+        lines(
+            "class C {", //
+            "  x = 1;",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x;",
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x;",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  y = 2",
+            "  constructor() {",
+            "    this.z = 3;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "    this.z = 3;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  y = 2",
+            "  constructor() {",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  constructor() {",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "  y = 2",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  constructor() {",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "  y = 2",
+            "}",
+            "class D {",
+            "  a = 5;",
+            "  constructor() { this.b = 6;}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}",
+            "class D {",
+            "constructor() {",
+            "  this.a = 5;",
+            "  this.b = 6",
+            "}",
+            "}"));
+  }
+
+  @Test
+  public void testInstanceNoncomputedWithNonemptyConstructorAndSuper() {
+    test(
+        lines(
+            "class A { constructor() { alert(1); } }",
+            "class C extends A {", //
+            "  x = 1;",
+            "  constructor() {",
+            "    super()",
+            "    this.y = 2;",
+            "  }",
+            "}"),
+        lines(
+            "class A { constructor() { alert(1); } }",
+            "class C extends A {", //
+            "  constructor() {",
+            "    super()",
+            "    this.x = 1",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class A { constructor() { this.x = 1; } }",
+            "class C extends A {", //
+            "  y;",
+            "  constructor() {",
+            "    super()",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}"),
+        lines(
+            "class A { constructor() { this.x = 1; } }",
+            "class C extends A {", //
+            "  constructor() {",
+            "    super()",
+            "    this.y;",
+            "    alert(3);",
+            "    this.z = 4;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class A { constructor() { this.x = 1; } }",
+            "class C extends A {", //
+            "  y;",
+            "  constructor() {",
+            "    alert(3);",
+            "    super()",
+            "    this.z = 4;",
+            "  }",
+            "}"),
+        lines(
+            "class A { constructor() { this.x = 1; } }",
+            "class C extends A {", //
+            "  constructor() {",
+            "    alert(3);",
+            "    super()",
+            "    this.y;",
+            "    this.z = 4;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testNonStaticInstanceWithEmptyConstructor() {
+    test(
+        lines(
+            "class C {", //
+            "  x = 2;",
+            "  constructor() {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 2;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x;",
+            "  constructor() {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 2",
+            "  y = 'hi'",
+            "  z;",
+            "  constructor() {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 2",
+            "    this.y = 'hi'",
+            "    this.z;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  constructor() {",
+            "  }",
+            "  y = 2",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 1",
+            "  constructor() {",
+            "  }",
+            "  y = 2",
+            "}",
+            "class D {",
+            "  a = 5;",
+            "  constructor() {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.x = 1;",
+            "    this.y = 2;",
+            "  }",
+            "}",
+            "class D {",
+            "constructor() {",
+            "  this.a = 5;",
+            "}",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  w = function () {return 1;};",
+            "  x = () => {return 2;};",
+            "  y = (function a() {return 3;})();",
+            "  z = (() => {return 4;})();",
+            "  constructor() {}",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.w = function () {return 1;};",
+            "    this.x = () => {return 2;};",
+            "    this.y = (function a() {return 3;})();",
+            "    this.z = (() => {return 4;})();",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  constructor() {}",
+            // "  y = C.x", // blocked on typechecking, gets JSC_INEXISTENT_PROPERTY
+            "}"),
+        lines(
+            "class C {constructor() {",
+            //  "this.y = C.x";
+            "}}", //
+            "C.x = 2;"
+            // "C.y = C.x",
+            ));
+  }
+
+  @Test
+  public void testInstanceNoncomputedNoConstructor() {
+    test(
+        lines(
+            "class C {", //
+            "  x = 2;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x=2;}",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x;}",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  x = 2",
+            "  y = 'hi'",
+            "  z;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x=2; this.y='hi'; this.z;}",
+            "}"));
+    test(
+        lines(
+            "class C {", //
+            "  foo() {}",
+            "  x = 1;",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {this.x = 1;}",
+            "  foo() {}",
+            "}"));
+
+    test(
+        lines(
+            "class C {", //
+            "  static x = 2",
+            "  y = C.x",
+            "}"),
+        lines(
+            "class C {constructor() {",
+            "this.y = C.x",
+            "}}", //
+            "C.x = 2;"));
+
+    test(
+        lines(
+            "class C {", //
+            "  w = function () {return 1;};",
+            "  x = () => {return 2;};",
+            "  y = (function a() {return 3;})();",
+            "  z = (() => {return 4;})();",
+            "}"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    this.w = function () {return 1;};",
+            "    this.x = () => {return 2;};",
+            "    this.y = (function a() {return 3;})();",
+            "    this.z = (() => {return 4;})();",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInstanceNonComputedNoConstructorWithSuperclass() {
+    test(
+        lines(
+            "class B {}", //
+            "class C extends B {x = 1;}"),
+        lines(
+            "class B {}",
+            "class C extends B {",
+            "  constructor() {",
+            "    super(...arguments);",
+            "    this.x = 1;",
+            "  }",
+            "}"));
+    test(
+        lines(
+            "class B {constructor() {}; y = 2;}", //
+            "class C extends B {x = 1;}"),
+        lines(
+            "class B {constructor() {this.y = 2}}",
+            "class C extends B {",
+            "  constructor() {",
+            "    super(...arguments);",
+            "    this.x = 1;",
+            "  }",
+            "}"));
+    test(
+        lines(
+            "class B {constructor(a, b) {}; y = 2;}", //
+            "class C extends B {x = 1;}"),
+        lines(
+            "class B {constructor(a, b) {this.y = 2}}",
+            "class C extends B {",
+            "  constructor() {",
+            "    super(...arguments);",
+            "    this.x = 1;",
+            "  }",
+            "}"));
   }
 }
