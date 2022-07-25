@@ -345,6 +345,10 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
         && getRootNode().getFirstChild().isCatch();
   }
 
+  public final boolean isCfgRootScope() {
+    return NodeUtil.isValidCfgRoot(rootNode);
+  }
+
   /**
    * If a var were declared in this scope, would it belong to this scope (as opposed to some
    * enclosing scope)?

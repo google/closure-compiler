@@ -88,7 +88,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
   private final FlowScope bottomScope;
-  private final TypedScope containerScope; // either the global scope or a function scope
+  private final TypedScope containerScope; // global scope, function scope, or static block scope
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
   private final ModuleImportResolver moduleImportResolver;
@@ -114,9 +114,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       AssertionFunctionLookup assertionFunctionLookup) {
     super(cfg);
     checkArgument(
-        syntacticScope.isGlobal() || syntacticScope.isFunctionScope(),
-        "Expected global or function scope, got %s",
-        syntacticScope);
+        syntacticScope.getRootNode() == cfg.getEntry().getValue(),
+        "Expected syntactic scope to be rooted at CFG root node of %s, but instead got syntactic"
+            + " scope root node of %s",
+        cfg.getEntry(),
+        syntacticScope.getRootNode());
     this.compiler = checkNotNull(compiler);
     this.registry = checkNotNull(compiler.getTypeRegistry());
     this.reverseInterpreter = checkNotNull(reverseInterpreter);

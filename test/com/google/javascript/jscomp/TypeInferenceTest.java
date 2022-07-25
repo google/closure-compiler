@@ -2593,6 +2593,21 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testClassStaticBlocks() {
+    // should verify y as string, but due to static block-rooted CFG
+    // being detached from larger, root CFG, verifies y as null
+    inFunction(
+        lines(
+            "let y;", //
+            "class Foo {",
+            "  static {",
+            "    y = 'hi';",
+            "  }",
+            "}"));
+    verify("y", (JSType) null);
+  }
+
+  @Test
   public void testAssignOrNoAssign() {
     // The two examples below show imprecision of || operator
     // The resulting type of Node n is (boolean|string), when it can be

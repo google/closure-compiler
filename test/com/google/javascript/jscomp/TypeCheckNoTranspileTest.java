@@ -4930,8 +4930,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticBlockWithWrongTypeThisRHS() {
-    // TODO(b/235871861): should be reporting type error (does not type check `this` on the RHS)
-    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
     newTest()
         .addSource(
             "class Foo {",
@@ -4942,6 +4940,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    var str = this.num;",
             "  }",
             "};")
+        .addDiagnostic(
+            lines(
+                "initializing variable", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -4982,7 +4985,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassStaticBlockWithWrongTypeSuper() {
     // TODO(b/235871861): should be reporting a type error
-    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
     newTest()
         .addSource(
             "class Foo {",
@@ -4999,8 +5001,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticBlockInheritanceWithClassName() {
-    // TODO(b/235871861): should be reporting a type error
-    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
     newTest()
         .addSource(
             "class Foo {",
@@ -5011,13 +5011,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    Foo.foo('str');",
             "  }",
             "};")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of Foo.foo does not match formal parameter", //
+                "found   : string",
+                "required: number"))
         .run();
   }
 
   @Test
   public void testClassStaticBlockWithWrongTypeSuperParameter() {
     // TODO(b/235871861): should be reporting a type error
-    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
     newTest()
         .addSource(
             "class Foo {",
@@ -5051,8 +5055,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticBlockTypeNarrowing2() {
-    // TODO(b/235871861): should not be reporting an error
-    // likely needs ControlFlowAnalysis (used by TypeInference) to support class static blocks
     newTest()
         .addExterns("/** @type {?string} */ var strOrNull;")
         .addSource(
@@ -5064,11 +5066,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    }",
             "  }",
             "}")
-        .addDiagnostic(
-            lines(
-                "initializing variable", //
-                "found   : (null|string)",
-                "required: string"))
         .run();
   }
 

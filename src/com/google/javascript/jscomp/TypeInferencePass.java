@@ -188,7 +188,7 @@ class TypeInferencePass {
       // This ensures that incremental compilation only touches the root
       // that's been swapped out.
       TypedScope scope = t.getTypedScope();
-      if (!scope.isBlockScope() && !scope.isModuleScope()) {
+      if (scope.isCfgRootScope() && !scope.isModuleScope()) {
         // ignore scopes that don't have their own CFGs and module scopes, which are visited
         // as if they were a regular script.
         inferScope(t.getCurrentNode(), scope);

@@ -3674,7 +3674,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlockWithThisLHS() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "class Foo {",
@@ -3697,7 +3696,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testClassStaticBlockWithThisRHS() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "class Foo {",
