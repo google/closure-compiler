@@ -175,12 +175,6 @@ public final class AstValidatorTest extends CompilerTestCase {
             "  y",
             "}",
             ""));
-    invalid(
-        lines( // TODO(b/189993301): Need to fix ASTValidator to allow super in class fields
-            "class B { x = 2}",
-            "class C extends B {", //
-            "  y = super.x;",
-            "}"));
   }
 
   @Test
@@ -196,11 +190,51 @@ public final class AstValidatorTest extends CompilerTestCase {
             "  static y",
             "}",
             ""));
-    invalid(
-        lines( // TODO(b/189993301): Need to fix ASTValidator to allow super in class fields
+  }
+
+  @Test
+  public void testClassField_super() {
+    valid(
+        lines(
             "class B { static x = 2}",
             "class C extends B {", //
             "  static y = super.x;",
+            "}"));
+    valid(
+        lines(
+            "class B { static x = 2}",
+            "class C extends B {", //
+            "  static y = super.x;",
+            "}"));
+    valid(
+        lines(
+            "class B { static x = 2}",
+            "class C extends B {", //
+            "  static y = super.x + 2;",
+            "}"));
+    valid(
+        lines(
+            "class B { static x = 2 }",
+            "class C extends B {", //
+            "   static y = super.x + 2 + 4 + 6 - 8;",
+            "}"));
+    valid(
+        lines(
+            "class B { static x = 2 }",
+            "/** @unrestricted */ class C extends B {", //
+            "   static ['y'] = super.x;",
+            "}"));
+    valid(
+        lines(
+            "class C { x=1;}", //
+            "class D extends C {",
+            "  y = () => super.x;",
+            "}"));
+    invalid(
+        lines(
+            "class C { x=1;}", //
+            "class D extends C {",
+            "  y = function() { super.x; }",
             "}"));
   }
 
@@ -298,7 +332,7 @@ public final class AstValidatorTest extends CompilerTestCase {
             "}",
             "class C extends D {",
             "  static {",
-            "    super.field = 'hello';",
+            "    if (Foo) { super.field = 'hello'; }",
             "  }",
             "}",
             ""));

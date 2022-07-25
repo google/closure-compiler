@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.InputId;
@@ -95,6 +96,7 @@ public final class AstValidator implements CompilerPass {
    * <p>TODO(b/74537281): Currently only expressions are checked for type information. Do we need to
    * do more?
    */
+  @CanIgnoreReturnValue
   public AstValidator setTypeValidationMode(TypeInfoValidation mode) {
     typeValidationMode = mode;
     return this;
@@ -1204,16 +1206,13 @@ public final class AstValidator implements CompilerPass {
     validateTypeInformation(superNode);
     Node superParent = superNode.getParent();
     Node methodNode = NodeUtil.getEnclosingNonArrowFunction(superParent);
-    Node blockNode = NodeUtil.getEnclosingBlock(superParent);
-
-    boolean notInMethod = methodNode == null || !NodeUtil.isMethodDeclaration(methodNode);
-    boolean notInStaticBlock = blockNode == null || !blockNode.getParent().isClassMembers();
 
     if (NodeUtil.isNormalGet(superParent) && superNode.isFirstChildOf(superParent)) {
       // `super.prop` or `super['prop']`
-      if (notInMethod && notInStaticBlock) {
+      if (!allowsSuperPropertyReference(superParent)) {
         violation(
-            "super property references are only allowed in methods and class static blocks",
+            "super property references are only allowed in methods, class static blocks and class"
+                + " fields.",
             superNode);
       }
     } else if (superParent.isCall() && superNode.isFirstChildOf(superParent)) {
@@ -1234,6 +1233,32 @@ public final class AstValidator implements CompilerPass {
     } else {
       violation("`super` is a syntax error here", superNode);
     }
+  }
+
+  // Check if a super property reference is in a method, class static block or class field.
+  private boolean allowsSuperPropertyReference(Node n) {
+    switch (n.getToken()) {
+      case SCRIPT:
+        return false;
+      case MEMBER_FIELD_DEF:
+      case COMPUTED_FIELD_DEF:
+        return true;
+      case FUNCTION:
+        if (NodeUtil.isMethodDeclaration(n)) {
+          return true;
+        } else if (!n.isArrowFunction()) {
+          return false;
+        }
+        break;
+      case BLOCK:
+        if (NodeUtil.isClassStaticBlock(n)) {
+          return true;
+        }
+        break;
+      default:
+        break;
+    }
+    return allowsSuperPropertyReference(n.getParent());
   }
 
   private void validateRestParameters(Token contextType, Node n) {
