@@ -368,6 +368,12 @@ public final class NodeSubject extends Subject {
   }
 
   @CanIgnoreReturnValue
+  public NodeSubject hasSourceFileName(String sourceFileName) {
+    check("getSourceFileName()").that(actual.getSourceFileName()).isEqualTo(sourceFileName);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public NodeSubject hasCharno(int charno) {
     check("getCharno()").that(actual.getCharno()).isEqualTo(charno);
     return this;
@@ -387,7 +393,10 @@ public final class NodeSubject extends Subject {
 
   @CanIgnoreReturnValue
   public NodeSubject hasEqualSourceInfoTo(Node other) {
-    return hasLineno(other.getLineno()).hasCharno(other.getCharno()).hasLength(other.getLength());
+    return hasSourceFileName(other.getSourceFileName())
+        .hasLineno(other.getLineno())
+        .hasCharno(other.getCharno())
+        .hasLength(other.getLength());
   }
 
   @CanIgnoreReturnValue

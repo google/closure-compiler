@@ -90,7 +90,8 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
+    assertThat(msg.getSourceName()).isEqualTo("testcode:1");
   }
 
   @Test
@@ -103,7 +104,8 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
+    assertThat(msg.getSourceName()).isEqualTo("testcode:1");
   }
 
   @Test
@@ -116,7 +118,8 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
+    assertThat(msg.getSourceName()).isEqualTo("testcode:1");
   }
 
   @Test
@@ -138,9 +141,10 @@ public final class JsMessageVisitorTest {
     sourceMap.appendTo(output, "unused.js");
 
     compilerOptions = new CompilerOptions();
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
     compilerOptions.inputSourceMaps =
         ImmutableMap.of(
-            "[testcode]",
+            "testcode",
             new SourceMapInput(SourceFile.fromCode("example.srcmap", output.toString())));
 
     extractMessagesSafely(
@@ -989,7 +993,8 @@ public final class JsMessageVisitorTest {
     JsMessage msg = messages.get(0);
     assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
     assertThat(msg.getDesc()).isEqualTo("Hello");
-    assertThat(msg.getSourceName()).isEqualTo("[testcode]:1");
+    // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
+    assertThat(msg.getSourceName()).isEqualTo("testcode:1");
   }
 
   @Test

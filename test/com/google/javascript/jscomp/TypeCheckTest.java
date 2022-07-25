@@ -3813,9 +3813,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             + "/** @type {string} */ goog.foo = 'x';"
             + "/** @constructor */ function Foo() {}",
         ImmutableList.of(
-            "assignment to property foo of goog\n" + "found   : string\n" + "required: Foo",
+            "assignment to property foo of goog\nfound   : string\nrequired: Foo",
+            // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
             "variable goog.foo redefined with type string, "
-                + "original definition at [testcode]:1 with type Foo"));
+                + "original definition at testcode:1 with type Foo"));
   }
 
   @Test
@@ -3890,8 +3891,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testClosureTypesMultipleWarnings(
         "/** @param {number} x */\n" + "function f(x) { /** @type {string} */ var x = ''; }",
         ImmutableList.of(
+            // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
             "variable x redefined with type string, original definition"
-                + " at [testcode]:2 with type number",
+                + " at testcode:2 with type number",
             "initializing variable\n" + "found   : string\n" + "required: number"));
   }
 
@@ -4197,8 +4199,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testClosureTypesMultipleWarnings(
         "a={};/**@enum {string}*/ a.A = {ZOR:'b'};" + "/** @constructor */ a.A = function() {}",
         ImmutableList.of(
+            // NOTE: "testcode" is the file name used by compiler.parseTestCode(code)
             "variable a.A redefined with type (typeof a.A), "
-                + "original definition at [testcode]:1 with type enum{a.A}",
+                + "original definition at testcode:1 with type enum{a.A}",
             lines(
                 "assignment to property A of a", //
                 "found   : (typeof a.A)",

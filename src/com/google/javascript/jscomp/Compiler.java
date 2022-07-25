@@ -2270,7 +2270,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
     initBasedOnOptions();
-    return parseCodeHelper(SourceFile.fromCode("[testcode]", js));
+    // NOTE: The file name used here is important, because at least Es6RewriteClassTest expects
+    // it to match the default name used by the CompilerTestCase class for the source file
+    // created when its `test("source string", "expected string")` method is called.
+    // Also, some test cases rely on generated variable names that are based partially on the file
+    // name or error messages that include the file name.
+    return parseCodeHelper(SourceFile.fromCode("testcode", js));
   }
 
   @Override
