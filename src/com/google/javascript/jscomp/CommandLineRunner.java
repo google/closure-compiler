@@ -682,7 +682,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
                 + "ECMASCRIPT_2015, ECMASCRIPT_2016, ECMASCRIPT_2017, "
                 + "ECMASCRIPT_2018, ECMASCRIPT_2019, ECMASCRIPT_2020,"
-                + "ECMASCRIPT_2021, STABLE, ECMASCRIPT_NEXT (latest features supported)")
+                + "ECMASCRIPT_2021, STABLE, ECMASCRIPT_NEXT (latest features supported),"
+                + "UNSTABLE (for testing only)")
     private String languageIn = "STABLE";
 
     @Option(
