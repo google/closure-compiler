@@ -33,26 +33,27 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testBasic() {
-    testSame(lines(
-        "var foo = function() {",
-        "  this.a = 20;",
-        "}"));
+    testSame(
+        lines(
+            "var foo = function() {", //
+            "  this.a = 20;",
+            "}"));
 
     test(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = 10;",
             "  this.a = 20;",
             "}"),
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  10;",
             "  this.a = 20;",
             "}"));
 
     testSame(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = 20;",
             "  this.a = this.a + 20;",
             "}"));
@@ -62,13 +63,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testMultipleProperties() {
     test(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = 10;",
             "  this.b = 15;",
             "  this.a = 20;",
             "}"),
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  10;",
             "  this.b = 15;",
             "  this.a = 20;",
@@ -79,13 +80,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testNonStandardAssign() {
     test(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = 10;",
             "  this.a += 15;",
             "  this.a = 20;",
             "}"),
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = 10;",
             "  this.a + 15;",
             "  this.a = 20;",
@@ -96,12 +97,12 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testChainingPropertiesAssignments() {
     test(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = this.b = this.c = 10;",
             "  this.b = 15;",
             "}"),
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  this.a = this.c = 10;",
             "  this.b = 15;",
             "}"));
@@ -163,7 +164,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testQualifiedNamePrefixAssignment() {
     testSame(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  a.b.c = 20;",
             "  a.b = other;",
             "  a.b.c = 30;",
@@ -171,7 +172,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  a.b = 20;",
             "  a = other;",
             "  a.b = 30;",
@@ -182,7 +183,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testCall() {
     testSame(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  a.b.c = 20;",
             "  doSomething();",
             "  a.b.c = 30;",
@@ -257,7 +258,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     // Assume that properties may be read during a yield
     testSame(
         lines(
-            "var foo = function*() {",
+            "var foo = function*() {", //
             "  a.b.c = 20;",
             "  yield;",
             "  a.b.c = 30;",
@@ -290,7 +291,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  a.b.c = 30;",
             "}"),
         lines(
-            "var foo = function*() {",
+            "var foo = function*() {", //
             "  20;",
             "  yield a.b.c = 25;",
             "  a.b.c = 30;",
@@ -302,7 +303,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     // Assume that properties may be read during a constructor call
     testSame(
         lines(
-            "var foo = function() {",
+            "var foo = function() {", //
             "  a.b.c = 20;",
             "  new C;",
             "  a.b.c = 30;",
@@ -326,7 +327,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     // Assume that properties may be read while waiting for "await"
     testSame(
         lines(
-            "async function foo() {",
+            "async function foo() {", //
             "  a.b.c = 20;",
             "  await bar;",
             "  a.b.c = 30;",
@@ -478,7 +479,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testBrackets() {
     testSame(
         lines(
-            "function f(x, p) {",
+            "function f(x, p) {", //
             "  x.prop = 123;",
             "  x[p] = 234;",
             "  return x.prop;",
@@ -491,7 +492,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testFor() {
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  for(;x;) {}",
             "  x.p = 2;",
@@ -499,7 +500,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  for(;x;) {",
             "    x.p = 1;",
             "  }",
@@ -508,7 +509,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  for(;;) {",
             "    x.p = 2;",
@@ -517,7 +518,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  for(x.p = 2;;) {",
             "  }",
@@ -534,7 +535,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  for(;;) {",
             "    x.p = 1;",
             "    x.p = 2;",
@@ -543,7 +544,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  for(;;) {",
             "  }",
@@ -557,7 +558,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testWhile() {
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  while(x);",
             "  x.p = 2;",
@@ -565,7 +566,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  while(1) {",
             "    x.p = 2;",
@@ -594,13 +595,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     test(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  while(x.p = 2) {",
             "  }",
             "}"),
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  1;",
             "  while(x.p = 2) {",
             "  }",
@@ -608,14 +609,14 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     test(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  while(true) {",
             "    x.p = 1;",
             "    x.p = 2;",
             "  }",
             "}"),
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  while(true) {",
             "    1;",
             "    x.p = 2;",
@@ -624,13 +625,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     test(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  while(1) {}",
             "  x.p = 2;",
             "}"),
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  1;",
             "  while(1) {}",
             "  x.p = 2;",
@@ -641,7 +642,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testTry() {
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 1;",
             "  try {",
             "    x.p = 2;",
@@ -678,7 +679,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  try {",
             "    1;",
             "    x.p = 2;",
@@ -725,7 +726,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testThrow() {
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 10",
             "  if (random) throw err;",
             "  x.p = 20;",
@@ -733,7 +734,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  x.p = 10",
             "  throw err;",
             "  x.p = 20;",
@@ -820,7 +821,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  return x.p;",
             "}"),
         lines(
-            "function f(x, pred) {",
+            "function f(x, pred) {", //
             "  1;",
             "  if (pred) {}",
             "  x.p = 2;",
@@ -829,7 +830,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
     testSame(
         lines(
-            "function f(x, pred) {",
+            "function f(x, pred) {", //
             "  if (pred) {",
             "    x.p = 1;",
             "  }",
@@ -841,7 +842,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testCircularPropChain() {
     testSame(
         lines(
-            "function f(x, y) {",
+            "function f(x, y) {", //
             "  x.p = {};",
             "  x.p.y.p.z = 10;",
             "  x.p = {};",
@@ -852,7 +853,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testDifferentQualifiedNames() {
     testSame(
         lines(
-            "function f(x, y) {",
+            "function f(x, y) {", //
             "  x.p = 10;",
             "  y.p = 11;",
             "}"));
@@ -862,14 +863,14 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void testGetPropContainsNonQualifiedNames() {
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  foo(x).p = 10;",
             "  foo(x).p = 11;",
             "}"));
 
     testSame(
         lines(
-            "function f(x) {",
+            "function f(x) {", //
             "  (x = 10).p = 10;",
             "  (x = 10).p = 11;",
             "}"));
@@ -906,7 +907,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  }",
             "}"),
         lines(
-            "class Foo {",
+            "class Foo {", //
             "  constructor() {",
             "    123;",
             "    this.p = 234;",
@@ -928,9 +929,64 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "    super();",
             "    this.x = 40;",
             "  }",
-            "}"
-        )
-    );
+            "}"));
+  }
+
+  @Test
+  public void testStaticBlock() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    this.p = 123;",
+            "    var z = this.p;",
+            "    this.p = 234;",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    this.x = 20;",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  static {",
+            "    this.x = 40;",
+            "  }",
+            "}"));
+
+    // TODO(b/235871861): Ideally the first assignment would be removed
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    this.p = 123;", // should get removed
+            "    this.p = 234;",
+            "  }",
+            "}"));
+
+    // TODO(b/235871861): Ideally the first assignment would be removed
+    testSame(
+        lines(
+            "class Foo {",
+            "  static {",
+            "    let o = { prop : 2};",
+            "    o.prop = 123;", // should get removed
+            "    o.prop = 234;",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "let o = { prop : 2};",
+            "class C {",
+            "  static {",
+            "    o.prop = 20;", // should not get removed
+            "  }",
+            "}",
+            "o.prop;"));
   }
 
   @Test
@@ -1016,8 +1072,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var ret = bar.baz;",
             "  bar.enabled = false;",
             "  return ret;",
-            "};")
-    );
+            "};"));
   }
 
   @Test
@@ -1064,8 +1119,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var ret = bar.baz;",
             "  bar.enabled = false;",
             "  return ret;",
-            "};")
-    );
+            "};"));
 
     testSame(
         lines(
@@ -1128,8 +1182,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  bar.enabled = true;",
             "  bar.baz = 10;",
             "  bar.enabled = false;",
-            "};")
-    );
+            "};"));
   }
 
   @Test
@@ -1504,13 +1557,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testPropertyDefinedInExterns() {
-    String externs = lines(
-        "var window = {};",
-        "/** @type {number} */ window.innerWidth",
-        "/** @constructor */",
-        "var Image = function() {};",
-        "/** @type {string} */ Image.prototype.src;"
-    );
+    String externs =
+        lines(
+            "var window = {};",
+            "/** @type {number} */ window.innerWidth",
+            "/** @constructor */",
+            "var Image = function() {};",
+            "/** @type {string} */ Image.prototype.src;");
 
     testSame(
         externs(externs),
