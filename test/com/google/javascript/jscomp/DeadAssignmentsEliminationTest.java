@@ -698,6 +698,35 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlocks() {
+    // TODO(b/240443227):Improve ClassStaticBlock optimization,dead code is not removed in
+    // expression.
+    testSame(lines(" class C{", "   static{", "     var x;", "     x = 1;", "    }", "}"));
+
+    // TODO(b/235871861): Need to fix bug before supporting class static blocks, x=1 is not
+    // preserved.
+    inFunction(
+        lines(
+            " var x = 0;",
+            " print(x);",
+            "  x = 1;",
+            "  class C {",
+            "   static {",
+            "    print(x);",
+            "    }",
+            "  }"),
+        lines(
+            " var x = 0;",
+            " print(x);",
+            " 1;",
+            " class C {",
+            "  static {",
+            "  print(x);",
+            "}",
+            "}"));
+  }
+
+  @Test
   public void testGenerators() {
     test(
         lines(
