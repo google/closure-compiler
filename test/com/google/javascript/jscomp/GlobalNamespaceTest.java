@@ -740,6 +740,28 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testLocalVarsDefinedinStaticBlocks() {
+    GlobalNamespace namespace = parse("class C{ static{ var x; }}");
+    assertThat(namespace.getSlot("x")).isNull();
+  }
+
+  @Test
+  public void testAddPropertytoGlobalObjectinClassStaticBlock() {
+    GlobalNamespace namespace = parse("const a = {}; class C{ static { a.b = 1;}}");
+
+    Name a = namespace.getSlot("a");
+
+    assertThat(a.getGlobalSets()).isEqualTo(1);
+    assertThat(a.getTotalSets()).isEqualTo(1);
+
+    Name ab = namespace.getSlot("a.b");
+
+    assertThat(ab.getParent()).isEqualTo(a);
+    assertThat(ab.getGlobalSets()).isEqualTo(0);
+    assertThat(ab.getLocalSets()).isEqualTo(1);
+  }
+
+  @Test
   public void testDirectGets() {
     // None of the symbol uses here should be considered aliasing gets.
     GlobalNamespace namespace =
