@@ -2593,10 +2593,24 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testClassStaticBlocks() {
+  public void testFunction() {
+    // should verify y as string, but due to function-rooted CFG
+    // being detached from larger, root CFG, verifies y as void
+    inScript(
+        lines(
+            "let y;", //
+            "function foo() {",
+            "  y = 'hi';",
+            "}",
+            "foo();"));
+    verify("y", VOID_TYPE);
+  }
+
+  @Test
+  public void testClassStaticBlock() {
     // should verify y as string, but due to static block-rooted CFG
-    // being detached from larger, root CFG, verifies y as null
-    inFunction(
+    // being detached from larger, root CFG, verifies y as void
+    inScript(
         lines(
             "let y;", //
             "class Foo {",
@@ -2604,7 +2618,24 @@ public final class TypeInferenceTest {
             "    y = 'hi';",
             "  }",
             "}"));
-    verify("y", (JSType) null);
+    verify("y", VOID_TYPE);
+  }
+
+  @Test
+  public void testSuper() {
+    // does not infer super
+    inScript(
+        lines(
+            "class Foo {", //
+            "  static str;",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    super.str = 'hi';",
+            "  }",
+            "}",
+            "let x = Bar.str;"));
+    verify("x", UNKNOWN_TYPE);
   }
 
   @Test
