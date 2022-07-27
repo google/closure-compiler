@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import org.jspecify.nullness.Nullable;
 
 // 7.5 Tokens
 public enum TokenType {
@@ -159,8 +160,7 @@ public enum TokenType {
   TYPE,
   DECLARE,
   MODULE,
-  NAMESPACE
-  ;
+  NAMESPACE;
 
   public final String value;
 
@@ -168,7 +168,7 @@ public enum TokenType {
     this(null);
   }
 
-  TokenType(String value) {
+  TokenType(@Nullable String value) {
     this.value = value;
   }
 

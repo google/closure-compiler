@@ -79,6 +79,15 @@ maven_import(
 )
 
 maven_import(
+    # https://github.com/jspecify/jspecify/
+    group_id ="org.jspecify",
+    artifact_id = "jspecify",
+    version ="0.2.0",
+    sha256 = "7da399e8d2be9474406fe7c06904012880e8aa96833adab126119c8d10b7c0ae",
+    licenses = ["notice"],
+)
+
+maven_import(
     # https://truth.dev/protobufs
     group_id = "com.google.truth.extensions",
     artifact_id = "truth-liteproto-extension",

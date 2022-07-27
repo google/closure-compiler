@@ -178,6 +178,7 @@ oss_java_library(
             "@google_bazel_common//third_party/java/error_prone:annotations",
             "@google_bazel_common//third_party/java/jsr305_annotations",
             "@org_apache_ant_ant",
+            "@org_jspecify_jspecify",
         ],
     ),
 )
