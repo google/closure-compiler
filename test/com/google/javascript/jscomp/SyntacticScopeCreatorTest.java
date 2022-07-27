@@ -35,10 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link SyntacticScopeCreator}.
- *
- */
+/** Tests for {@link SyntacticScopeCreator}. */
 @RunWith(JUnit4.class)
 @SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public final class SyntacticScopeCreatorTest {
@@ -60,9 +57,7 @@ public final class SyntacticScopeCreatorTest {
     return root;
   }
 
-  /**
-   * Helper to create a top-level scope from a JavaScript string
-   */
+  /** Helper to create a top-level scope from a JavaScript string */
   private Scope getScope(String js) {
     return scopeCreator.createScope(getRoot(js), null);
   }
@@ -75,6 +70,7 @@ public final class SyntacticScopeCreatorTest {
     redeclarations = HashMultiset.create();
     RedeclarationHandler handler = new RecordingRedeclarationHandler();
     scopeCreator = new SyntacticScopeCreator(compiler, handler);
+    options.setLanguageIn(CompilerOptions.LanguageMode.UNSUPPORTED);
   }
 
   @Test
@@ -96,10 +92,10 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // VAR
-        .getNext()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -113,10 +109,10 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // VAR
-        .getNext()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -130,9 +126,9 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -308,10 +304,10 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // VAR
-        .getNext()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -353,10 +349,10 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // VAR
-        .getNext()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -370,9 +366,9 @@ public final class SyntacticScopeCreatorTest {
 
     Scope globalScope = scopeCreator.createScope(root, null);
 
-    Node block = root
-        .getFirstChild()  // IF
-        .getLastChild();  // BLOCK
+    Node block =
+        root.getFirstChild() // IF
+            .getLastChild(); // BLOCK
     checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
@@ -404,13 +400,14 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testArrayDestructuringLet() {
-    String js = ""
-        + "function foo() {\n"
-        + "  var [a, b] = getVars();"
-        + "  if (true) {"
-        + "    let [x, y] = getLets();"
-        + "  }"
-        + "}";
+    String js =
+        ""
+            + "function foo() {\n"
+            + "  var [a, b] = getVars();"
+            + "  if (true) {"
+            + "    let [x, y] = getLets();"
+            + "  }"
+            + "}";
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -442,13 +439,14 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testArrayDestructuringVarInBlock() {
-    String js = ""
-        + "function foo() {\n"
-        + "  var [a, b] = getVars();"
-        + "  if (true) {"
-        + "    var [x, y] = getMoreVars();"
-        + "  }"
-        + "}";
+    String js =
+        ""
+            + "function foo() {\n"
+            + "  var [a, b] = getVars();"
+            + "  if (true) {"
+            + "    var [x, y] = getMoreVars();"
+            + "  }"
+            + "}";
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -467,10 +465,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testObjectDestructuring() {
-    String js = lines(
-        "function foo() {",
-        "  var {a, b} = bar();",
-        "}");
+    String js = lines("function foo() {", "  var {a, b} = bar();", "}");
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -487,10 +482,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testObjectDestructuring2() {
-    String js = lines(
-        "function foo() {",
-        "  var {a: b = 1} = bar();",
-        "}");
+    String js = lines("function foo() {", "  var {a: b = 1} = bar();", "}");
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -507,10 +499,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testObjectDestructuringComputedProp() {
-    String js = lines(
-        "function foo() {",
-        "  var {['s']: a} = bar();",
-        "}");
+    String js = lines("function foo() {", "  var {['s']: a} = bar();", "}");
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -538,10 +527,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testObjectDestructuringNested() {
-    String js = lines(
-        "function foo() {",
-        "  var {a:{b}} = bar();",
-        "}");
+    String js = lines("function foo() {", "  var {a:{b}} = bar();", "}");
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -558,10 +544,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testObjectDestructuringWithInitializer() {
-    String js = lines(
-        "function foo() {",
-        "  var {a=1} = bar();",
-        "}");
+    String js = lines("function foo() {", "  var {a=1} = bar();", "}");
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -591,11 +574,12 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testFunctionScope() {
-    Scope scope = getScope("function foo() {}\n"
-                         + "var x = function bar(a1) {};"
-                         + "[function bar2() { var y; }];"
-                         + "if (true) { function z() {} }"
-                          );
+    Scope scope =
+        getScope(
+            "function foo() {}\n"
+                + "var x = function bar(a1) {};"
+                + "[function bar2() { var y; }];"
+                + "if (true) { function z() {} }");
     assertScope(scope).declares("foo").directly();
     assertScope(scope).declares("x").directly();
     assertScope(scope).doesNotDeclare("z");
@@ -610,11 +594,12 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testClassScope() {
-    Scope scope = getScope("class Foo {}\n"
-                         + "var x = class Bar {};"
-                         + "[class Bar2 { constructor(a1) {} static y() {} }];"
-                         + "if (true) { class Z {} }"
-                          );
+    Scope scope =
+        getScope(
+            "class Foo {}\n"
+                + "var x = class Bar {};"
+                + "[class Bar2 { constructor(a1) {} static y() {} }];"
+                + "if (true) { class Z {} }");
     assertScope(scope).declares("Foo").directly();
     assertScope(scope).declares("x").directly();
     assertScope(scope).doesNotDeclare("Z");
@@ -629,9 +614,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testScopeRootNode() {
-    String js = "function foo() {\n"
-        + " var x = 10;"
-        + "}";
+    String js = "function foo() {\n" + " var x = 10;" + "}";
     Node root = getRoot(js);
 
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -699,6 +682,65 @@ public final class SyntacticScopeCreatorTest {
     Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
     Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
     assertScope(secondLevelBLockScope).declares("X").directly();
+  }
+
+  @Test
+  public void testClassFieldsThisAndSuper() {
+    // TODO(b/189993301): `this`/`super` in this case should be declared locally
+    String js =
+        lines(
+            "class Foo {", //
+            "  a = this.a;",
+            "}",
+            "class Bar extends Foo {",
+            "  b = super.a;",
+            "}");
+
+    Node root = getRoot(js);
+    Node classFoo = root.getFirstChild();
+    Node classBar = root.getLastChild();
+    Scope globalScope = scopeCreator.createScope(root, null);
+    Scope fooScope = scopeCreator.createScope(classFoo, globalScope);
+    Scope barScope = scopeCreator.createScope(classBar, globalScope);
+
+    assertScope(globalScope).declares("Foo").directly();
+    assertScope(globalScope).declares("Bar").directly();
+    assertScope(globalScope).doesNotDeclare("this");
+    assertScope(fooScope).doesNotDeclare("this");
+    assertScope(barScope).doesNotDeclare("this");
+    assertScope(globalScope).doesNotDeclare("super");
+    assertScope(fooScope).doesNotDeclare("super");
+    assertScope(barScope).doesNotDeclare("super");
+  }
+
+  @Test
+  public void testClassDeclarationWithStaticFieldThisAndSuper() {
+    // TODO(b/189993301): `this`/`super` in this case should be declared locally
+    String js =
+        lines(
+            "class Foo {", //
+            "  static a = 2;",
+            "  static b = this.b;",
+            "}",
+            "class Bar extends Foo {",
+            "  static c = super.a + 1;",
+            "}");
+
+    Node root = getRoot(js);
+    Node classFoo = root.getFirstChild();
+    Node classBar = root.getLastChild();
+    Scope globalScope = scopeCreator.createScope(root, null);
+    Scope fooScope = scopeCreator.createScope(classFoo, globalScope);
+    Scope barScope = scopeCreator.createScope(classBar, globalScope);
+
+    assertScope(globalScope).declares("Foo").directly();
+    assertScope(globalScope).declares("Bar").directly();
+    assertScope(globalScope).doesNotDeclare("this");
+    assertScope(fooScope).doesNotDeclare("this");
+    assertScope(barScope).doesNotDeclare("this");
+    assertScope(globalScope).doesNotDeclare("super");
+    assertScope(fooScope).doesNotDeclare("super");
+    assertScope(barScope).doesNotDeclare("super");
   }
 
   @Test
@@ -906,6 +948,72 @@ public final class SyntacticScopeCreatorTest {
   }
 
   @Test
+  public void testStaticBlockThis() {
+    String js =
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    this.x;",
+            "  }",
+            "}");
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    Node classFoo = root.getFirstChild();
+    Scope classScope = scopeCreator.createScope(classFoo, globalScope);
+    Node classStaticBlockNode = classFoo.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classScope);
+
+    assertThat(staticBlockScope.isBlockScope()).isTrue();
+    assertThat(staticBlockScope.getClosestHoistScope()).isEqualTo(staticBlockScope);
+    assertThat(staticBlockScope.isHoistScope()).isTrue();
+
+    assertScope(globalScope).declares("Foo").directly();
+    assertScope(staticBlockScope).declares("Foo").onSomeParent();
+    assertScope(globalScope).doesNotDeclare("this");
+    assertScope(classScope).doesNotDeclare("this");
+    assertScope(staticBlockScope).declares("this").directly();
+  }
+
+  @Test
+  public void testClassStaticBlockSuper() {
+    String js =
+        lines(
+            "class Foo {", //
+            "  static x;",
+            "}",
+            "class Bar extends Foo {",
+            "  static {",
+            "    super.x = 'str';",
+            "  }",
+            "}");
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    Node classFoo = root.getFirstChild();
+    Scope classFooScope = scopeCreator.createScope(classFoo, globalScope);
+    Node classBar = root.getLastChild();
+    Scope classBarScope = scopeCreator.createScope(classBar, globalScope);
+    Node classStaticBlockNode = classBar.getLastChild().getFirstChild();
+    Scope staticBlockScope = scopeCreator.createScope(classStaticBlockNode, classBarScope);
+
+    assertThat(staticBlockScope.isBlockScope()).isTrue();
+    assertThat(staticBlockScope.getClosestHoistScope()).isEqualTo(staticBlockScope);
+    assertThat(staticBlockScope.isHoistScope()).isTrue();
+
+    assertScope(globalScope).declares("Foo").directly();
+    assertScope(staticBlockScope).declares("Foo").onSomeParent();
+    assertScope(globalScope).declares("Bar").directly();
+    assertScope(staticBlockScope).declares("Bar").onSomeParent();
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(globalScope).doesNotDeclare("super");
+    assertScope(classFooScope).doesNotDeclare("x");
+    assertScope(classFooScope).doesNotDeclare("super");
+    assertScope(classBarScope).doesNotDeclare("x");
+    assertScope(classBarScope).doesNotDeclare("super");
+    assertScope(staticBlockScope).doesNotDeclare("x");
+    assertScope(staticBlockScope).declares("super").directly();
+  }
+
+  @Test
   public void testSwitchScope() {
     String js =
         "switch (b) { "
@@ -1026,9 +1134,11 @@ public final class SyntacticScopeCreatorTest {
     Node outerBody = NodeUtil.getFunctionBody(outer);
     Scope outerBodyScope = scopeCreator.createScope(outerBody, outerFunctionScope);
 
-    Node inner = outerBody.getFirstChild()   // VAR
-                          .getFirstChild()   // NAME
-                          .getFirstChild();  // FUNCTION
+    Node inner =
+        outerBody
+            .getFirstChild() // VAR
+            .getFirstChild() // NAME
+            .getFirstChild(); // FUNCTION
     checkState(inner.isFunction(), inner);
     checkState(inner.isArrowFunction(), inner);
     Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
@@ -1114,9 +1224,11 @@ public final class SyntacticScopeCreatorTest {
     Node outerBody = NodeUtil.getFunctionBody(outer);
     Scope outerBodyScope = scopeCreator.createScope(outerBody, outerFunctionScope);
 
-    Node inner = outerBody.getFirstChild()   // VAR
-                          .getFirstChild()   // NAME
-                          .getFirstChild();  // FUNCTION
+    Node inner =
+        outerBody
+            .getFirstChild() // VAR
+            .getFirstChild() // NAME
+            .getFirstChild(); // FUNCTION
     checkState(inner.isFunction(), inner);
     checkState(inner.isArrowFunction(), inner);
     Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
@@ -1174,11 +1286,12 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testImport() {
-    String js = lines(
-        "import * as ns from 'm1';",
-        "import d from 'm2';",
-        "import {foo} from 'm3';",
-        "import {x as y} from 'm4';");
+    String js =
+        lines(
+            "import * as ns from 'm1';",
+            "import d from 'm2';",
+            "import {foo} from 'm3';",
+            "import {x as y} from 'm4';");
 
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -1266,13 +1379,7 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testVarAfterLet() {
-    String js = lines(
-        "function f() {",
-        "  if (a) {",
-        "    let x;",
-        "  }",
-        "  var y;",
-        "}");
+    String js = lines("function f() {", "  if (a) {", "    let x;", "  }", "  var y;", "}");
 
     Node root = getRoot(js);
     Scope global = scopeCreator.createScope(root, null);
