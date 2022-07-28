@@ -69,7 +69,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           "JSC_PARTIAL_NAMESPACE",
           "Partial alias created for namespace {0}, possibly due to await/yield transpilation.\n"
               + "This may prevent optimization of anything nested under this namespace.\n"
-              + "See https://github.com/google/closure-compiler/wiki/FAQ#i-got-an-incomplete-alias-created-for-namespace-error--what-do-i-do"
+              + "See https://github.com/google/closure-compiler/wiki/FAQ#i-got-a-partial-alias-created-for-namespace-error--what-do-i-do"
               + " for more details.");
 
   static final DiagnosticType NAMESPACE_REDEFINED_WARNING =
