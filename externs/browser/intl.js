@@ -182,6 +182,20 @@ Intl.DateTimeFormat.prototype.format = function(date) {};
 Intl.DateTimeFormat.prototype.formatToParts = function(date) {};
 
 /**
+ * @param {(!Date|number)=} date1
+ * @param {(!Date|number)=} date2
+ * @return {string}
+ */
+Intl.DateTimeFormat.prototype.formatRange = function(date1, date2) {};
+
+/**
+ * @param {(!Date|number)=} date1
+ * @param {(!Date|number)=} date2
+ * @return {!Array<{type: string, value: string}>}
+ */
+Intl.DateTimeFormat.prototype.formatRangeToParts = function(date1, date2) {};
+
+/**
  * @return {{locale: string, calendar: string, numberingSystem: string,
  *    timeZone: (string|undefined), weekday: (string|undefined),
  *    era: (string|undefined), year: (string|undefined),
