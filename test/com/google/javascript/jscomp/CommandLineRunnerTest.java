@@ -3319,7 +3319,6 @@ public final class CommandLineRunnerTest {
         modulesSupplier,
         exitCode -> {
           exitCodes.add(exitCode);
-          return null;
         });
     runner.run();
     lastCompiler = runner.getCompiler();

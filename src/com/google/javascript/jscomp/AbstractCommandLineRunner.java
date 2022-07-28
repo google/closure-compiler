@@ -78,6 +78,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -186,7 +187,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   private Supplier<List<JSChunk>> modulesSupplierForTesting = null;
 
   @GwtIncompatible("Unnecessary")
-  private Function<Integer, Void> exitCodeReceiver = SystemExitCodeReceiver.INSTANCE;
+  private Consumer<Integer> exitCodeReceiver = SystemExitCodeReceiver.INSTANCE;
 
   @Nullable
   @GwtIncompatible("Unnecessary")
@@ -244,13 +245,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       Supplier<List<SourceFile>> externsSupplier,
       Supplier<List<SourceFile>> inputsSupplier,
       Supplier<List<JSChunk>> modulesSupplier,
-      Function<Integer, Void> exitCodeReceiver) {
+      Consumer<Integer> exitCodeReceiver) {
     checkArgument(inputsSupplier == null != (modulesSupplier == null));
     testMode = true;
     this.externsSupplierForTesting = externsSupplier;
     this.inputsSupplierForTesting = inputsSupplier;
     this.modulesSupplierForTesting = modulesSupplier;
-    this.exitCodeReceiver = exitCodeReceiver;
+    setExitCodeReceiver(exitCodeReceiver);
   }
 
   /**
@@ -258,7 +259,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    *     or 0i to indicate success.
    */
   @GwtIncompatible("Unnecessary")
-  public void setExitCodeReceiver(Function<Integer, Void> newExitCodeReceiver) {
+  public void setExitCodeReceiver(Consumer<Integer> newExitCodeReceiver) {
     this.exitCodeReceiver = checkNotNull(newExitCodeReceiver);
   }
 
@@ -564,7 +565,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       result = -2;
     }
 
-    exitCodeReceiver.apply(result);
+    exitCodeReceiver.accept(result);
   }
 
   /** Returns the PrintStream for writing errors associated with this AbstractCommandLineRunner. */
@@ -3328,7 +3329,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   @GwtIncompatible("Unnecessary")
-  static final class SystemExitCodeReceiver implements Function<Integer, Void> {
+  static final class SystemExitCodeReceiver implements Consumer<Integer> {
     static final SystemExitCodeReceiver INSTANCE = new SystemExitCodeReceiver();
 
     private SystemExitCodeReceiver() {
@@ -3336,7 +3337,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     @Override
-    public Void apply(Integer exitCode) {
+    public void accept(Integer exitCode) {
       int exitCodeValue = checkNotNull(exitCode);
       // Don't spuriously report success.
       // Posix conventions only guarantee that 8b are significant.
@@ -3345,7 +3346,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         exitCodeByte = (byte) -1;
       }
       System.exit(exitCodeByte);
-      return null;
     }
   }
 }
