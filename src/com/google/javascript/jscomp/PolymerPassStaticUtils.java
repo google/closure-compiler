@@ -220,8 +220,10 @@ final class PolymerPassStaticUtils {
 
   /**
    * Gets the JSTypeExpression for a given property using its "type" key.
+   *
    * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#configuring-properties
    */
+  @Nullable
   static JSTypeExpression getTypeFromProperty(
       MemberDefinition property, AbstractCompiler compiler) {
     if (property.info != null && property.info.hasType()) {

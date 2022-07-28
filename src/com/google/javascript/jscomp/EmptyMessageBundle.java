@@ -18,25 +18,22 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.JsMessage.IdGenerator;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An implementation of MessageBundle that has no translations.
  */
 public final class EmptyMessageBundle implements MessageBundle {
 
-  /**
-   * Gets a dummy message ID generator.
-   */
+  /** Gets a dummy message ID generator. */
   @Override
-  public IdGenerator idGenerator() {
+  public @Nullable IdGenerator idGenerator() {
     return null;
   }
 
-  /**
-   * Returns null, to indicate it has no message replacements.
-   */
+  /** Returns null, to indicate it has no message replacements. */
   @Override
-  public JsMessage getMessage(String id) {
+  public @Nullable JsMessage getMessage(String id) {
     return null;
   }
 

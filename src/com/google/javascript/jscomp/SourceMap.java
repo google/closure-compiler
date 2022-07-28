@@ -109,6 +109,7 @@ public final class SourceMap {
       this.replacement = replacement;
     }
 
+    @Nullable
     @Override
     public String map(String location) {
       if (location.startsWith(prefix)) {
@@ -197,6 +198,7 @@ public final class SourceMap {
     generator.addSourcesContent(fixupSourceLocation(name), code);
   }
 
+  @Nullable
   private static String getOriginalName(Node node) {
     if (node.getOriginalName() != null) {
       return node.getOriginalName();

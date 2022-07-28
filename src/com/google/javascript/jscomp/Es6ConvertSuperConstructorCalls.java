@@ -33,6 +33,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /** Converts {@code super()} calls. */
 public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Callback {
@@ -721,7 +722,8 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     return checkNotNull(superClassNameNode, "$jscomp.inherits() call not found.");
   }
 
-  private Node getSuperClassNameNodeIfIsInheritsStatement(Node statement, String className) {
+  private @Nullable Node getSuperClassNameNodeIfIsInheritsStatement(
+      Node statement, String className) {
     // $jscomp.inherits(ChildClass, SuperClass);
     if (!statement.isExprResult()) {
       return null;

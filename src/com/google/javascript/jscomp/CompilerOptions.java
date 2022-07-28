@@ -2950,6 +2950,7 @@ public class CompilerOptions implements Serializable {
     BRANCH_ONLY, // Collect coverage for control-flow branches.
     PRODUCTION; // Collect coverage for functions where code is compiled for production.
 
+    @Nullable
     public static InstrumentOption fromString(String value) {
       if (value == null) {
         return null;
@@ -3052,6 +3053,7 @@ public class CompilerOptions implements Serializable {
       }
     }
 
+    @Nullable
     public static LanguageMode fromString(String value) {
       if (value == null) {
         return null;

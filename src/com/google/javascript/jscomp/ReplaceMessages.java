@@ -461,6 +461,7 @@ public final class ReplaceMessages {
     }
   }
 
+  @Nullable
   private JsMessage lookupMessage(Node callNode, MessageBundle bundle, JsMessage message) {
     JsMessage translatedMessage = bundle.getMessage(message.getId());
     if (translatedMessage != null) {

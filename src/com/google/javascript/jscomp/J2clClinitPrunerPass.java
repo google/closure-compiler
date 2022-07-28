@@ -97,6 +97,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     }
   }
 
+  @Nullable
   private Node resolveReplacement(Node node) {
     if (node == null) {
       return null;
@@ -149,6 +150,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     return newChangedScopes;
   }
 
+  @Nullable
   private static List<Node> getNonNestedParentScopeNodes(List<Node> changedScopeNodes) {
     return changedScopeNodes == null
         ? null
@@ -314,6 +316,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
      * Returns the call node associated with the specified node if one exists, otherwise returns
      * null.
      */
+    @Nullable
     private Node getCallOrNewNode(Node n) {
       if (n == null) {
         return null;
@@ -420,6 +423,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     return node.isFunction() && isClinitMethodName(getQualifiedNameOfFunction(node));
   }
 
+  @Nullable
   private static String getClinitMethodName(Node node) {
     if (node.isCall()) {
       String fnName = NodeUtil.getBestLValueName(node.getFirstChild());

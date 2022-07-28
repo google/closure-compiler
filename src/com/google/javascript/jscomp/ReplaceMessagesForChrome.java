@@ -25,6 +25,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Replaces user-visible messages with appropriate calls to
@@ -146,7 +147,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
     return false;
   }
 
-  private static Node getPlaceholderValue(
+  private static @Nullable Node getPlaceholderValue(
       Node placeholderValues, String placeholderName) {
     for (Node key = placeholderValues.getFirstChild(); key != null; key = key.getNext()) {
       if (key.getString().equals(placeholderName)) {

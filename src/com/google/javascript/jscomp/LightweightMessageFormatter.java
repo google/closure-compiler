@@ -291,6 +291,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       return line;
     }
 
+    @Nullable
     @Override
     public String formatRegion(@Nullable Region region) {
       if (region == null) {

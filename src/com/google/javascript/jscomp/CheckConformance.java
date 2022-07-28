@@ -269,6 +269,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
+  @Nullable
   private static Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
       switch (requirement.getType()) {

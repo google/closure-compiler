@@ -136,7 +136,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return false;
   }
 
-  public static String getModuleName(CompilerInput input) {
+  public static @Nullable String getModuleName(CompilerInput input) {
     ModulePath modulePath = input.getPath();
     if (modulePath == null) {
       return null;
@@ -956,7 +956,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * Find the outermost if node ancestor for a node without leaving the function scope. To match,
      * the test class of the "if" statement must reference "module" or "define" names.
      */
-    private UmdTestInfo getOutermostUmdTest(Node n) {
+    private @Nullable UmdTestInfo getOutermostUmdTest(Node n) {
       if (n == null || NodeUtil.isTopLevel(n) || n.isFunction()) {
         return null;
       }
@@ -1227,7 +1227,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         });
   }
 
-  private static UmdPattern findUmdPattern(List<UmdPattern> umdPatterns, Node n) {
+  private static @Nullable UmdPattern findUmdPattern(List<UmdPattern> umdPatterns, Node n) {
     for (UmdPattern umd : umdPatterns) {
       if (umd.ifRoot == n) {
         return umd;
@@ -1934,7 +1934,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * @return string - If the name is not used in an export, return it's own name If the name node
      *     is actually the export target itself, return null;
      */
-    private String getExportedName(NodeTraversal t, Node n, Var var) {
+    private @Nullable String getExportedName(NodeTraversal t, Node n, Var var) {
       if (var == null || !Objects.equals(var.getNode().getInputId(), n.getInputId())) {
         return n.getQualifiedName();
       }
@@ -2018,7 +2018,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return n.getQualifiedName();
     }
 
-    private Node getExportedNameNode(ExportInfo info) {
+    private @Nullable Node getExportedNameNode(ExportInfo info) {
       Node qNameBase = getBaseQualifiedNameNode(info.node);
       Node rValue = NodeUtil.getRValueOfLValue(qNameBase);
 
@@ -2051,7 +2051,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      *
      * @return null if it's not an alias or the imported module name
      */
-    private String getModuleImportName(NodeTraversal t, Node n) {
+    private @Nullable String getModuleImportName(NodeTraversal t, Node n) {
       Node rValue = null;
       String propSuffix = "";
       Node parent = n.getParent();

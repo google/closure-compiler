@@ -109,9 +109,9 @@ class FunctionRewriter implements CompilerPass {
   /**
    * Parse helper code needed by a reducer.
    *
-   * @return Helper code root.  If parse fails, return null.
+   * @return Helper code root. If parse fails, return null.
    */
-  public Node parseHelperCode(Reducer reducer) {
+  public @Nullable Node parseHelperCode(Reducer reducer) {
     Node root =
         compiler.parseSyntheticCode(reducer.getClass() + ":helper", reducer.getHelperSource());
     return (root != null) ? root.removeFirstChild() : null;
@@ -267,10 +267,10 @@ class FunctionRewriter implements CompilerPass {
   abstract static class SingleReturnStatementReducer extends Reducer {
 
     /**
-     * @return function return value node if function body contains a
-     * single return statement.  Otherwise, null.
+     * @return function return value node if function body contains a single return statement.
+     *     Otherwise, null.
      */
-    protected final Node maybeGetSingleReturnRValue(Node functionNode) {
+    protected final @Nullable Node maybeGetSingleReturnRValue(Node functionNode) {
       Node body = functionNode.getLastChild();
       if (!body.hasOneChild()) {
         return null;
@@ -376,13 +376,12 @@ class FunctionRewriter implements CompilerPass {
     }
 
     /**
-     * Checks if the function matches the pattern:
-     *   function(<args>) {return <immutable value>}
-     * and returns <immutable value> if a match is found.
+     * Checks if the function matches the pattern: function(<args>) {return <immutable value>} and
+     * returns <immutable value> if a match is found.
      *
      * @return the immutable value node; or null.
      */
-    private Node getValueNode(Node functionNode) {
+    private @Nullable Node getValueNode(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
       if (value != null &&
           NodeUtil.isImmutableValue(value)) {
@@ -434,13 +433,12 @@ class FunctionRewriter implements CompilerPass {
     }
 
     /**
-     * Checks if the function matches the pattern:
-     *   function(<args>) {return this.<name>}
-     * and returns <name> if a match is found.
+     * Checks if the function matches the pattern: function(<args>) {return this.<name>} and returns
+     * <name> if a match is found.
      *
      * @return STRING node that is the RHS of a this property get; or null.
      */
-    private Node getGetPropertyName(Node functionNode) {
+    private @Nullable Node getGetPropertyName(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
       if (value != null &&
           value.isGetProp() &&
@@ -494,13 +492,12 @@ class FunctionRewriter implements CompilerPass {
     }
 
     /**
-     * Checks if the function matches the pattern:
-     *   function(<value>, <rest>) {this.<name> = <value>}
+     * Checks if the function matches the pattern: function(<value>, <rest>) {this.<name> = <value>}
      * and returns <name> if a match is found.
      *
      * @return STRING node that is the RHS of a this property get; or null.
      */
-    private Node getSetPropertyName(Node functionNode) {
+    private @Nullable Node getSetPropertyName(Node functionNode) {
       Node body = functionNode.getLastChild();
       if (!body.hasOneChild()) {
         return null;

@@ -2423,6 +2423,7 @@ public final class JsDocInfoParser {
    * Create a new union type, with an alternate that has already been parsed. The alternate may be
    * null.
    */
+  @Nullable
   private Node parseUnionTypeWithAlternate(JsDocToken token, @Nullable Node alternate) {
     Node union = newNode(Token.PIPE);
     if (alternate != null) {

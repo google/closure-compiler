@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A code generator that outputs type annotations for functions and
@@ -381,10 +382,10 @@ class TypedCodeGenerator extends CodeGenerator {
   // TODO(sdh): This whole method could be deleted if we don't mind adding
   // additional @this annotations where they're not actually necessary.
   /**
-   * Given a method definition node, returns the {@link ObjectType} corresponding
-   * to the class the method is defined on, or null if it is not a prototype method.
+   * Given a method definition node, returns the {@link ObjectType} corresponding to the class the
+   * method is defined on, or null if it is not a prototype method.
    */
-  private ObjectType findMethodOwner(Node n) {
+  private @Nullable ObjectType findMethodOwner(Node n) {
     if (n == null) {
       return null;
     }

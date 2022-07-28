@@ -546,6 +546,7 @@ public final class CodePrinter {
       maybeEndStatement();
     }
 
+    @Nullable
     private static String getNumberFromSource(Node n) {
       if (!n.isNumber()) {
         return null;

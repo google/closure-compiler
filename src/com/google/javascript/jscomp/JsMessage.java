@@ -215,6 +215,7 @@ public abstract class JsMessage {
     /**
      * @return an external message id or null if this is not an external message identifier
      */
+    @Nullable
     private static String getExternalMessageId(String identifier) {
       if (identifier.startsWith(MSG_EXTERNAL_PREFIX)) {
         int start = MSG_EXTERNAL_PREFIX.length();

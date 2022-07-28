@@ -25,6 +25,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.TreeSet;
+import org.jspecify.nullness.Nullable;
 
 /** Utilities for serializing and deserializing JSDoc necessary for optimzations. */
 public final class JSDocSerializer {
@@ -44,7 +45,8 @@ public final class JSDocSerializer {
     return deserializeJsdoc(serializeJsdoc(jsdoc, stringPool), stringPool.build());
   }
 
-  static OptimizationJsdoc serializeJsdoc(JSDocInfo jsdoc, StringPool.Builder stringPool) {
+  static @Nullable OptimizationJsdoc serializeJsdoc(
+      JSDocInfo jsdoc, StringPool.Builder stringPool) {
     if (jsdoc == null) {
       return null;
     }
@@ -196,7 +198,8 @@ public final class JSDocSerializer {
 
   private static final JSTypeExpression placeholderType = createPlaceholderType();
 
-  static JSDocInfo deserializeJsdoc(OptimizationJsdoc serializedJsdoc, StringPool stringPool) {
+  static @Nullable JSDocInfo deserializeJsdoc(
+      OptimizationJsdoc serializedJsdoc, StringPool stringPool) {
     if (serializedJsdoc == null) {
       return null;
     }

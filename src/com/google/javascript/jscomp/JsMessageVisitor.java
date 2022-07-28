@@ -407,6 +407,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /** Get a previously tracked unnamed message */
+  @Nullable
   private JsMessage getTrackedUnnamedMessage(NodeTraversal t, String msgNameInScope) {
     Var var = t.getScope().getVar(msgNameInScope);
     if (var != null) {
@@ -416,6 +417,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   }
 
   /** Get a previously tracked message. */
+  @Nullable
   private JsMessage getTrackedNormalMessage(String msgName) {
     MessageLocation location = messageNames.get(msgName);
     return location == null ? null : location.message;
@@ -987,6 +989,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *   <li>a GETPROP node (e.g. some.import.MSG_FOO)
    * </ol>
    */
+  @Nullable
   private JsMessage getJsMessageFromNode(NodeTraversal t, Node node) {
     String messageName = node.getQualifiedName();
     if (messageName == null || !messageName.contains(MSG_PREFIX)) {

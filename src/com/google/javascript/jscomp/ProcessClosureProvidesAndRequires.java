@@ -828,7 +828,7 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
       newNode.srcrefTree(sourceInfoNode);
     }
 
-    private Node getProvideStringNode() {
+    private @Nullable Node getProvideStringNode() {
       return (firstNode.hasChildren() && NodeUtil.isExprCall(firstNode))
           ? firstNode.getFirstChild().getLastChild()
           : null;

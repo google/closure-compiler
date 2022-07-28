@@ -57,11 +57,13 @@ final class PreprocessorSymbolTable
     return root;
   }
 
+  @Nullable
   @Override
   public JSType getTypeOfThis() {
     return null;
   }
 
+  @Nullable
   @Override
   public StaticTypedScope getParentScope() {
     return null;

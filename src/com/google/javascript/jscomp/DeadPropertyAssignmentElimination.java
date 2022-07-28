@@ -233,11 +233,12 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     /**
-     * Gets a {@link Property} given the node that references it; the {@link Property} is created
-     * if it does not already exist.
+     * Gets a {@link Property} given the node that references it; the {@link Property} is created if
+     * it does not already exist.
      *
      * @return A {@link Property}, or null if the provided node is not a qualified name.
      */
+    @Nullable
     private Property getOrCreateProperty(Node propNode) {
       if (!propNode.isQualifiedName()) {
         return null;

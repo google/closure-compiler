@@ -2339,6 +2339,7 @@ public class CodeGenerator {
   }
 
   /** Gets the first non-empty child of the given node. */
+  @Nullable
   private static Node getFirstNonEmptyChild(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isBlock()) {

@@ -176,11 +176,10 @@ class FunctionToBlockMutator {
     return injectableBlock;
   }
 
-
   /**
    * @param n The node to inspect
    */
-  private static Node rewriteFunctionDeclarations(Node n) {
+  private static @Nullable Node rewriteFunctionDeclarations(Node n) {
     if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         // Rewrite: function f() {} ==> var f = function() {}

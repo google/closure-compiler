@@ -94,6 +94,7 @@ final class ModuleImportResolver {
    *
    * @param googRequire a CALL node representing some kind of Closure require.
    */
+  @Nullable
   ScopedName getClosureNamespaceTypeFromCall(Node googRequire) {
     if (moduleMap == null) {
       // TODO(b/124919359): make sure all tests have generated a ModuleMap

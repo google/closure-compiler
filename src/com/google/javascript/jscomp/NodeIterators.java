@@ -112,10 +112,8 @@ class NodeIterators {
       return ancestors.peekLast();
     }
 
-    /**
-     * Gets the parent of the node most recently returned by next().
-     */
-    protected Node currentParent() {
+    /** Gets the parent of the node most recently returned by next(). */
+    protected @Nullable Node currentParent() {
       return ancestors.size() >= 2 ? current().getParent() : null;
     }
 

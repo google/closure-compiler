@@ -44,6 +44,7 @@ public class SourceMapResolver {
    *
    * @param parseInlineSourceMaps Whether to parse Base64 encoded source maps.
    */
+  @Nullable
   static SourceFile extractSourceMap(
       SourceFile jsFile, String sourceMapURL, boolean parseInlineSourceMaps) {
     if (parseInlineSourceMaps && sourceMapURL.startsWith(BASE64_URL_PREFIX)) {

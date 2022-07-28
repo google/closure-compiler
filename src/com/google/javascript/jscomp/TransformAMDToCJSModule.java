@@ -20,6 +20,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.function.BiConsumer;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrites an AMD module https://github.com/amdjs/amdjs-api/wiki/AMD to a
@@ -197,14 +198,13 @@ public final class TransformAMDToCJSModule implements CompilerPass {
     }
 
     /**
-     * Require.js supports a range of plugins that are hard to support
-     * statically. Generally none are supported right now with the
-     * exception of a simple hack to support condition loading. This
-     * was added to make compilation of Dojo work better but will
-     * probably break, so just don't use them :)
+     * Require.js supports a range of plugins that are hard to support statically. Generally none
+     * are supported right now with the exception of a simple hack to support condition loading.
+     * This was added to make compilation of Dojo work better but will probably break, so just don't
+     * use them :)
      */
-    private String handlePlugins(NodeTraversal t, Node script,
-        String moduleName, Node modNode) {
+    private @Nullable String handlePlugins(
+        NodeTraversal t, Node script, String moduleName, Node modNode) {
       if (moduleName.contains("!")) {
         t.report(modNode, REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING, moduleName);
         int condition = moduleName.indexOf('?');

@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A class for processing type transformation expressions
@@ -132,7 +133,7 @@ class TypeTransformation {
     return TypeTransformationParser.Keywords.valueOf(Ascii.toUpperCase(s));
   }
 
-  private JSType getType(String typeName) {
+  private @Nullable JSType getType(String typeName) {
     JSType type = registry.getType(typeEnv, typeName);
     if (type != null) {
       return type;

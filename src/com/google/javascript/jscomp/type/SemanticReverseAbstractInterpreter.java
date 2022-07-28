@@ -553,7 +553,7 @@ public final class SemanticReverseAbstractInterpreter
       return caseObjectType(type);
     }
 
-    private JSType applyCommonRestriction(JSType type) {
+    private @Nullable JSType applyCommonRestriction(JSType type) {
       if (target.isUnknownType()) {
         return type;
       }
@@ -579,7 +579,7 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseObjectType(ObjectType type) {
+    public @Nullable JSType caseObjectType(ObjectType type) {
       if (target.isUnknownType()) {
         return type;
       }
@@ -597,7 +597,7 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseUnionType(UnionType type) {
+    public @Nullable JSType caseUnionType(UnionType type) {
       if (target.isUnknownType()) {
         return type;
       }

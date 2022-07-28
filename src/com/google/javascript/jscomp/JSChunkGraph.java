@@ -416,6 +416,7 @@ public final class JSChunkGraph implements Serializable {
    * @return The deepest common dep of {@code m1} and {@code m2}, or null if they have no common
    *     dependencies
    */
+  @Nullable
   JSChunk getDeepestCommonDependency(JSChunk m1, JSChunk m2) {
     int m1Depth = m1.getDepth();
     int m2Depth = m2.getDepth();

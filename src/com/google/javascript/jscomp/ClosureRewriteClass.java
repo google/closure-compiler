@@ -212,11 +212,10 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
   }
 
   /**
-   * Validates the class definition and if valid, destructively extracts
-   * the class definition from the AST.
+   * Validates the class definition and if valid, destructively extracts the class definition from
+   * the AST.
    */
-  private ClassDefinition extractClassDefinition(
-      Node targetName, Node callNode) {
+  private @Nullable ClassDefinition extractClassDefinition(Node targetName, Node callNode) {
 
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(targetName);
 
@@ -371,7 +370,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
   /**
    * @return The first property in the objlit that matches the key.
    */
-  private static Node extractProperty(Node objlit, String keyName) {
+  private static @Nullable Node extractProperty(Node objlit, String keyName) {
     for (Node keyNode = objlit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if (keyNode.getString().equals(keyName)) {
         return keyNode.getFirstChild();

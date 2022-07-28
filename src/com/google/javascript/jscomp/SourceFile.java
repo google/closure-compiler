@@ -260,10 +260,10 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * Gets the source line for the indicated line number.
    *
    * @param lineNumber the line number, 1 being the first line of the file.
-   * @return The line indicated. Does not include the newline at the end
-   *     of the file. Returns {@code null} if it does not exist,
-   *     or if there was an IO exception.
+   * @return The line indicated. Does not include the newline at the end of the file. Returns {@code
+   *     null} if it does not exist, or if there was an IO exception.
    */
+  @Nullable
   public String getLine(int lineNumber) {
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
@@ -309,6 +309,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * @return The line(s) indicated. Returns {@code null} if it does not exist or if there was an IO
    *     exception.
    */
+  @Nullable
   public Region getLines(int lineNumber, int length) {
     findLineOffsets();
     if (lineNumber > lineOffsets.length) {
@@ -356,6 +357,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
    * @return The line indicated. Returns {@code null} if it does not exist, or if there was an IO
    *     exception.
    */
+  @Nullable
   public Region getRegion(int lineNumber) {
     String js = "";
     try {

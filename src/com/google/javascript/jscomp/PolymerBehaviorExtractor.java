@@ -289,6 +289,7 @@ final class PolymerBehaviorExtractor {
    * <p>Returns null if the name is not from a legacy module, and resolution should continue
    * normally.
    */
+  @Nullable
   private ResolveBehaviorNameResult resolveReferenceToLegacyGoogModule(String name) {
     int dot = name.length();
     while (dot >= 0) {
@@ -339,6 +340,7 @@ final class PolymerBehaviorExtractor {
    * <p>Returns null if the given name is not imported or {@link #FAILED_RESOLVE_RESULT} if it is
    * imported but is not annotated @polymerBehavior.
    */
+  @Nullable
   private ResolveBehaviorNameResult getNameIfModuleImport(String name, ModuleMetadata metadata) {
     if (metadata == null || (!metadata.isEs6Module() && !metadata.isGoogModule())) {
       return null;

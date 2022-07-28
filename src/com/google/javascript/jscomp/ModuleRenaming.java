@@ -87,6 +87,7 @@ final class ModuleRenaming {
     return getGlobalName(binding.originatingExport());
   }
 
+  @Nullable
   private static JSType getNameRootType(String qname, @Nullable TypedScope globalTypedScope) {
     if (globalTypedScope == null) {
       return null;

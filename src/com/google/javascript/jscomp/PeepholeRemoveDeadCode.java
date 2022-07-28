@@ -120,6 +120,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return defaultValue;
   }
 
+  @Nullable
   private Node tryFoldLabel(Node n) {
     String labelName = n.getFirstChild().getString();
     Node stmt = n.getLastChild();
@@ -182,11 +183,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Remove try blocks without catch blocks and with empty or not
-   * existent finally blocks.
-   * Or, only leave the finally blocks if try body blocks are empty
+   * Remove try blocks without catch blocks and with empty or not existent finally blocks. Or, only
+   * leave the finally blocks if try body blocks are empty
+   *
    * @return the replacement node, if changed, or the original if not
    */
+  @Nullable
   private Node tryFoldTry(Node n) {
     checkState(n.isTry(), n);
     Node body = n.getFirstChild();
@@ -636,9 +638,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return the default case node or null if there is no default case or
-   *     if the default case is removed.
+   * @return the default case node or null if there is no default case or if the default case is
+   *     removed.
    */
+  @Nullable
   private Node tryOptimizeDefaultCase(Node n) {
     checkState(n.isSwitch(), n);
 
@@ -780,9 +783,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return n;
   }
 
-  /**
-   * Try removing unneeded block nodes and their useless children
-   */
+  /** Try removing unneeded block nodes and their useless children */
+  @Nullable
   Node tryOptimizeBlock(Node n) {
     // Remove any useless children
     for (Node c = n.getFirstChild(); c != null; ) {
@@ -953,6 +955,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   /**
    * @return the root node if a conditional statement or else null
    */
+  @Nullable
   private Node getConditionalRoot(Node n) {
     // We defined a conditional statement to be a IF or EXPR_RESULT rooted with
     // a HOOK, AND, or OR node.
@@ -997,8 +1000,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   /**
    * Try folding IF nodes by removing dead branches.
+   *
    * @return the replacement node, if changed, or the original if not
    */
+  @Nullable
   private Node tryFoldIf(Node n) {
     checkState(n.isIf(), n);
     Node parent = n.getParent();
@@ -1152,9 +1157,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return replacement;
   }
 
-  /**
-   * Removes FORs that always evaluate to false.
-   */
+  /** Removes FORs that always evaluate to false. */
+  @Nullable
   Node tryFoldFor(Node n) {
     checkArgument(n.isVanillaFor());
 
@@ -1358,6 +1362,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
   }
 
+  @Nullable
   private static IllegalStateException checkNormalization(boolean condition, String feature) {
     checkState(condition, "Unexpected %s. AST should be normalized.", feature);
     return null;

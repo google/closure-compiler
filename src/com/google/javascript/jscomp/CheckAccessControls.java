@@ -1086,10 +1086,11 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Returns the deprecation reason for the type if it is marked
-   * as being deprecated. Returns empty string if the type is deprecated
-   * but no reason was given. Returns null if the type is not deprecated.
+   * Returns the deprecation reason for the type if it is marked as being deprecated. Returns empty
+   * string if the type is deprecated but no reason was given. Returns null if the type is not
+   * deprecated.
    */
+  @Nullable
   private static String getTypeDeprecationInfo(JSType type) {
     if (type == null) {
       return null;
@@ -1098,6 +1099,7 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
     return getDeprecationReason(type.getJSDocInfo());
   }
 
+  @Nullable
   private static String getDeprecationReason(JSDocInfo info) {
     if (info != null && info.isDeprecated()) {
       if (info.getDeprecationReason() != null) {

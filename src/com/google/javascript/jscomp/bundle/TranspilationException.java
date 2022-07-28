@@ -85,7 +85,7 @@ public class TranspilationException extends RuntimeException {
     return sb.toString();
   }
 
-  private static TranspilationException tryCastToTranspilationException(Throwable t) {
+  private static @Nullable TranspilationException tryCastToTranspilationException(Throwable t) {
     if (t instanceof TranspilationException) {
       return (TranspilationException) t;
     }

@@ -202,6 +202,7 @@ class GlobalNamespace
    * @param s The scope in which the name is referenced
    * @return The root node of the scope in which this is defined, or null if this is undeclared.
    */
+  @Nullable
   private Node getRootNode(String name, Scope s) {
     name = getTopVarName(name);
     Var v = s.getVar(name);
@@ -687,6 +688,7 @@ class GlobalNamespace
      * @return The global name, or null if {@code n} doesn't correspond to the key of an object
      *     literal that can be named
      */
+    @Nullable
     String getNameForObjectPatternKey(Node stringKey) {
       Node parent = stringKey.getParent();
       checkState(parent.isObjectPattern());
@@ -2262,6 +2264,7 @@ class GlobalNamespace
     }
 
     /** Tries to get the doc info for a given declaration ref. */
+    @Nullable
     private JSDocInfo getDocInfoForDeclaration(Ref ref) {
       if (ref.node != null) {
         Node refParent = ref.node.getParent();
@@ -2390,6 +2393,7 @@ class GlobalNamespace
       return node;
     }
 
+    @Nullable
     @Override
     public StaticSourceFile getSourceFile() {
       return node != null ? node.getStaticSourceFile() : null;

@@ -128,6 +128,7 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
    *     <p>This is either the variable declaration ("var a = ...") or first reference following the
    *     declaration if it is an assignment.
    */
+  @Nullable
   Reference getInitializingReference() {
     if (isInitializingDeclarationAt(0)) {
       return references.get(0);
@@ -138,6 +139,7 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
   }
 
   /** Constants are allowed to be defined after their first use. */
+  @Nullable
   Reference getInitializingReferenceForConstants() {
     int size = references.size();
     for (int i = 0; i < size; i++) {

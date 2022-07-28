@@ -434,6 +434,7 @@ public final class ConformanceRules {
       return type.isEmptyType();
     }
 
+    @Nullable
     protected JSType union(List<String> typeNames) {
       JSTypeRegistry registry = compiler.getTypeRegistry();
       List<JSType> types = new ArrayList<>();
@@ -838,6 +839,7 @@ public final class ConformanceRules {
       return false;
     }
 
+    @Nullable
     private JSType extractType(Node n) {
       switch (n.getToken()) {
         case GETELEM:
@@ -866,6 +868,7 @@ public final class ConformanceRules {
       }
     }
 
+    @Nullable
     private String extractName(Node n) {
 
       switch (n.getToken()) {
@@ -969,6 +972,7 @@ public final class ConformanceRules {
     }
 
     /** Extracts the method name from a provided name. */
+    @Nullable
     private static String getPropertyFromDeclarationName(String specName)
         throws InvalidRequirementSpec {
       String[] parts = specName.split("\\.prototype\\.");
@@ -980,6 +984,7 @@ public final class ConformanceRules {
     }
 
     /** Extracts the class name from a provided name. */
+    @Nullable
     private static String getClassFromDeclarationName(String specName)
         throws InvalidRequirementSpec {
       String tmp = specName;
@@ -999,6 +1004,7 @@ public final class ConformanceRules {
       return specName.substring(0, index);
     }
 
+    @Nullable
     private static String getTypeFromValue(String specName) {
       int index = specName.indexOf(':');
       if (index < 1) {
@@ -1134,6 +1140,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
+    @Nullable
     private static String getNameFromValue(String specName) {
       int index = specName.indexOf(':');
       if (index < 1) {
@@ -2058,6 +2065,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
+    @Nullable
     private ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isStringLit()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));

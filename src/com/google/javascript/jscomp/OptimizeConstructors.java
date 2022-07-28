@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Optimize class declarations by removing explicit constructor declarations if the implicit
@@ -242,7 +243,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     return (parent.isClass() && parent.getSecondChild() == n);
   }
 
-  private Node getClassDefinitionOrFunction(Node n) {
+  private @Nullable Node getClassDefinitionOrFunction(Node n) {
     Node parent = n.getParent();
 
     Node expr;
@@ -432,7 +433,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
   }
 
   /** If the body contains only a call to super, return it, otherwise null. */
-  private static Node getOnlySuperCall(Node fn) {
+  private static @Nullable Node getOnlySuperCall(Node fn) {
     Node body = fn.getLastChild();
     if (body.isBlock() && body.hasOneChild()) {
       Node stmt = body.getFirstChild();

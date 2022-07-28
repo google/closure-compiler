@@ -22,6 +22,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Locale;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Util functions for converting Es6 to Es5
@@ -54,11 +55,9 @@ public final class Es6ToEs3Util {
     compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
   }
 
-  /**
-   * Returns the JSType as specified by the typeName.
-   * Returns null if shouldCreate is false.
-   */
-  static JSType createType(boolean shouldCreate, JSTypeRegistry registry, JSTypeNative typeName) {
+  /** Returns the JSType as specified by the typeName. Returns null if shouldCreate is false. */
+  static @Nullable JSType createType(
+      boolean shouldCreate, JSTypeRegistry registry, JSTypeNative typeName) {
     if (!shouldCreate) {
       return null;
     }
@@ -66,10 +65,10 @@ public final class Es6ToEs3Util {
   }
 
   /**
-   * Returns the JSType as specified by the typeName and instantiated by the typeArg.
-   * Returns null if shouldCreate is false.
+   * Returns the JSType as specified by the typeName and instantiated by the typeArg. Returns null
+   * if shouldCreate is false.
    */
-  static JSType createGenericType(
+  static @Nullable JSType createGenericType(
       boolean shouldCreate, JSTypeRegistry registry, JSTypeNative typeName, JSType typeArg) {
     if (!shouldCreate) {
       return null;

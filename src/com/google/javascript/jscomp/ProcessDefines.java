@@ -375,6 +375,7 @@ class ProcessDefines implements CompilerPass {
     return null;
   }
 
+  @Nullable
   private static Node getValueParentForDefine(Ref declaration) {
     // Note: this may be a NAME, a GETPROP, or even STRING_KEY or GETTER_DEF. We only care
     // about the first two, in which case the parent should be either VAR/CONST or ASSIGN.
@@ -671,6 +672,7 @@ class ProcessDefines implements CompilerPass {
    * Checks whether the NAME node is inside either a CONST or a @const VAR. Returns the RHS node if
    * so, otherwise returns null.
    */
+  @Nullable
   private static Node getConstantDeclValue(Node name) {
     Node parent = name.getParent();
     if (parent == null) {

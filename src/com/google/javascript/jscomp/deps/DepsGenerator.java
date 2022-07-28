@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Generates deps.js files by scanning JavaScript files for
@@ -119,11 +120,12 @@ public class DepsGenerator {
 
   /**
    * Performs the parsing inputs and writing of outputs.
+   *
    * @throws IOException Occurs upon an IO error.
-   * @return Returns a String of goog.addDependency calls that will build
-   *     the dependency graph. Returns null if there was an error.
+   * @return Returns a String of goog.addDependency calls that will build the dependency graph.
+   *     Returns null if there was an error.
    */
-  public String computeDependencyCalls() throws IOException {
+  public @Nullable String computeDependencyCalls() throws IOException {
     // Build a map of closure-relative path -> DepInfo.
     Map<String, DependencyInfo> depsFiles = parseDepsFiles();
     if (logger.isLoggable(Level.FINE)) {

@@ -82,6 +82,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, root, this);
   }
 
+  @Nullable
   private String extractNamespace(Node call, String... primitiveNames) {
     Node callee = call.getFirstChild();
     if (!callee.isGetProp()) {

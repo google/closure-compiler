@@ -22,6 +22,7 @@ import static java.lang.Math.min;
 import com.google.common.base.Ascii;
 import java.util.Arrays;
 import java.util.Date;
+import org.jspecify.nullness.Nullable;
 
 /**
  * This is a hacked apart version of the Apache Harmony String.format class
@@ -110,7 +111,7 @@ public final class SimpleFormat {
     out.append(cs, start, end);
   }
 
-  private static Object getArgument(
+  private static @Nullable Object getArgument(
       Object[] args,
       int index,
       FormatSpecifierParser fsp,
@@ -694,7 +695,7 @@ public final class SimpleFormat {
     return padding(result, startIndex);
   }
 
-  private CharSequence transformFromSpecialNumber() {
+  private @Nullable CharSequence transformFromSpecialNumber() {
     if (!(arg instanceof Number)) {
       return null;
     }

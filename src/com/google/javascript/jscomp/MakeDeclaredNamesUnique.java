@@ -141,10 +141,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
   }
 
-  /**
-   * Walks the stack of name maps and finds the replacement name for the
-   * current scope.
-   */
+  /** Walks the stack of name maps and finds the replacement name for the current scope. */
+  @Nullable
   private String getReplacementName(String oldName) {
     for (Renamer renamer : renamerStack) {
       String newName = renamer.getReplacementName(oldName);
@@ -629,6 +627,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       }
     }
 
+    @Nullable
     @Override
     public String getReplacementName(String oldName) {
       return targets.contains(oldName) ? delegate.getReplacementName(oldName) : null;

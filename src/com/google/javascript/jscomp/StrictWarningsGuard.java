@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-/**
- * All warnings should be reported as errors.
- */
+import org.jspecify.nullness.Nullable;
+
+/** All warnings should be reported as errors. */
 public final class StrictWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
@@ -26,7 +26,7 @@ public final class StrictWarningsGuard extends WarningsGuard {
       DiagnosticType.warning("JSC_UNRAISABLE_WARNING", "{0}");
 
   @Override
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     if (error.getType() == UNRAISABLE_WARNING) {
       return null;
     }

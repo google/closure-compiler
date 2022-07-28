@@ -47,6 +47,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Reuse variable names if possible.
@@ -111,7 +112,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback
   }
 
   /** Returns populated AllVarsDeclaredInFunction object iff shouldOptimizeScope is true. */
-  private static AllVarsDeclaredInFunction shouldOptimizeScope(NodeTraversal t) {
+  private static @Nullable AllVarsDeclaredInFunction shouldOptimizeScope(NodeTraversal t) {
     // TODO(user): We CAN do this in the global scope, just need to be
     // careful when something is exported. Liveness uses bit-vector for live
     // sets so I don't see compilation time will be a problem for running this

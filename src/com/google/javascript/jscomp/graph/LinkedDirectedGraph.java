@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A directed graph using ArrayLists within nodes to store edge information.
@@ -180,7 +181,7 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   }
 
   @Override
-  public GraphEdge<N, E> getFirstEdge(N n1, N n2) {
+  public @Nullable GraphEdge<N, E> getFirstEdge(N n1, N n2) {
     LinkedDiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     LinkedDiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {

@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrites a given call to Polymer({}) to a set of declarations and assignments which can be
@@ -697,7 +698,7 @@ final class PolymerClassRewriter {
   }
 
   /** Returns a node from a property's definition in the Polymer element or behavior */
-  private Node getPropertyNode(MemberDefinition prop, String basePath) {
+  private @Nullable Node getPropertyNode(MemberDefinition prop, String basePath) {
     // If a property string is quoted, make sure the added prototype properties are also quoted
     if (prop.name.isQuotedString()) {
       return null;

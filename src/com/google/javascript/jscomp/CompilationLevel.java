@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A CompilationLevel represents the level of optimization that should be
@@ -49,7 +50,7 @@ public enum CompilationLevel {
   ADVANCED_OPTIMIZATIONS,
   ;
 
-  public static CompilationLevel fromString(String value) {
+  public static @Nullable CompilationLevel fromString(String value) {
     if (value == null) {
       return null;
     }

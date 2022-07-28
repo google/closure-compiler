@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosurePrimitiveErrors;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.WarningsGuard;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A warnings guard that demotes the errors found in type summary files to be less severe, leaving
@@ -35,7 +36,7 @@ public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     checkNotNull(error);
     if (!shouldDemoteIfTypeSummary(error)) {
       return null;

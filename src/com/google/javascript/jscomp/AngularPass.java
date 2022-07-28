@@ -26,6 +26,7 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Compiler pass for AngularJS-specific needs. Generates {@code $inject} \ properties for functions
@@ -315,7 +316,7 @@ class AngularPass extends AbstractPostOrderCallback implements CompilerPass {
    * @return the assigned initial value, or the rightmost rvalue of an assignment
    * chain, or null.
    */
-  private static Node getDeclarationRValue(Node n) {
+  private static @Nullable Node getDeclarationRValue(Node n) {
     checkNotNull(n);
     checkArgument(NodeUtil.isNameDeclaration(n));
     n = n.getFirstFirstChild();

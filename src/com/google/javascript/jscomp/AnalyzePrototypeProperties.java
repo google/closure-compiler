@@ -411,7 +411,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     /** If this is a non-function prototype assign, return the prop name. Otherwise, return null. */
-    private String processNonFunctionPrototypeAssign(Node n, Node parent) {
+    private @Nullable String processNonFunctionPrototypeAssign(Node n, Node parent) {
       if (isAssignRValue(n, parent) && !n.isFunction()) {
         return getPrototypePropertyNameFromRValue(n);
       }
@@ -444,7 +444,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * in multiple expressions (i.e., if there's a prototype property assignment in a more complex
      * expression).
      */
-    private String getPrototypePropertyNameFromRValue(Node rValue) {
+    private @Nullable String getPrototypePropertyNameFromRValue(Node rValue) {
       Node lValue = NodeUtil.getBestLValue(rValue);
       if (lValue == null
           || !((NodeUtil.mayBeObjectLitKey(lValue) && !lValue.isQuotedString())
@@ -573,7 +573,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           .add(new ClassMemberFunction(n, var, t.getChunk()));
     }
 
-    private Var maybeGetVar(NodeTraversal t, Node maybeName) {
+    private @Nullable Var maybeGetVar(NodeTraversal t, Node maybeName) {
       return maybeName.isName() ? t.getScope().getVar(maybeName.getString()) : null;
     }
 

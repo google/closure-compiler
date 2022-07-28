@@ -516,9 +516,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
   }
 
   /**
-   * Returns the qualified name node of the function whose scope we're in,
-   * or null if it cannot be found.
+   * Returns the qualified name node of the function whose scope we're in, or null if it cannot be
+   * found.
    */
+  @Nullable
   private static Node getEnclosingDeclNameNode(Node n) {
     Node fn = NodeUtil.getEnclosingFunction(n);
     return fn == null ? null : NodeUtil.getNameNode(fn);

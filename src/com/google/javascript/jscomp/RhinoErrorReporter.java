@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Msg;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An error reporter for serializing Rhino errors into our error format.
@@ -209,7 +210,7 @@ class RhinoErrorReporter {
         null, makeError(message, sourceName, line, lineOffset, CheckLevel.ERROR));
   }
 
-  protected static DiagnosticType mapError(String message) {
+  protected static @Nullable DiagnosticType mapError(String message) {
     for (Entry<Pattern, DiagnosticType> entry : typeMap.entrySet()) {
       if (entry.getKey().matcher(message).matches()) {
         return entry.getValue();

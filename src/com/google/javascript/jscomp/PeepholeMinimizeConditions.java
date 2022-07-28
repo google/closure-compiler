@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A peephole optimization that minimizes conditional expressions
@@ -306,16 +307,14 @@ class PeepholeMinimizeConditions
   }
 
   /**
-   * Remove duplicate exits.  If the node following the exit node expression
-   * has the same effect as exit node, the node can be removed.
-   * For example:
-   *   "if (a) {return f()} return f();" ==> "if (a) {} return f();"
-   *   "if (a) {throw 'ow'} throw 'ow';" ==> "if (a) {} throw 'ow';"
+   * Remove duplicate exits. If the node following the exit node expression has the same effect as
+   * exit node, the node can be removed. For example: "if (a) {return f()} return f();" ==> "if (a)
+   * {} return f();" "if (a) {throw 'ow'} throw 'ow';" ==> "if (a) {} throw 'ow';"
    *
    * @param n An follow control exit expression (a THROW or RETURN node)
    * @return The replacement for n, or the original if no change was made.
    */
-  private Node tryRemoveRedundantExit(Node n) {
+  private @Nullable Node tryRemoveRedundantExit(Node n) {
     Node exitExpr = n.getFirstChild();
 
     Node follow = ControlFlowAnalysis.computeFollowNode(n);

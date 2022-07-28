@@ -33,6 +33,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
@@ -122,7 +123,7 @@ final class PolymerPass extends ExternsSkippingCallback implements CompilerPass 
     }
   }
 
-  private ModuleMetadata getModuleMetadata(NodeTraversal traversal) {
+  private @Nullable ModuleMetadata getModuleMetadata(NodeTraversal traversal) {
     Node script = traversal.getCurrentScript();
     if (script != null && script.getFirstChild().isModuleBody()) {
       return ModuleImportResolver.getModuleFromScopeRoot(

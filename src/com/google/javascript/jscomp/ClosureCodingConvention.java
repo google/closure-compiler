@@ -29,6 +29,7 @@ import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.jstype.FunctionType;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * This describes the Closure-specific JavaScript coding conventions.
@@ -85,11 +86,11 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   /**
    * {@inheritDoc}
    *
-   * <p>Understands several different inheritance patterns that occur in
-   * Google code (various uses of {@code inherits} and {@code mixin}).
+   * <p>Understands several different inheritance patterns that occur in Google code (various uses
+   * of {@code inherits} and {@code mixin}).
    */
   @Override
-  public SubclassRelationship getClassesDefinedByCall(Node callNode) {
+  public @Nullable SubclassRelationship getClassesDefinedByCall(Node callNode) {
     SubclassRelationship relationship =
         super.getClassesDefinedByCall(callNode);
     if (relationship != null) {
@@ -144,11 +145,11 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   /**
-   * Determines whether the given node is a class-defining name, like
-   * "inherits" or "mixin."
+   * Determines whether the given node is a class-defining name, like "inherits" or "mixin."
+   *
    * @return The type of class-defining name, or null.
    */
-  private static SubclassType typeofClassDefiningName(Node callName) {
+  private static @Nullable SubclassType typeofClassDefiningName(Node callName) {
     // Check if the method name matches one of the class-defining methods.
     String methodName = null;
     if (callName.isGetProp()) {
@@ -343,7 +344,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       QualifiedName.of("$jscomp.reflectObject");
 
   @Override
-  public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
+  public @Nullable ObjectLiteralCast getObjectLiteralCast(Node callNode) {
     Preconditions.checkArgument(callNode.isCall(), "Expected call node but found %s", callNode);
     ObjectLiteralCast proxyCast = super.getObjectLiteralCast(callNode);
     if (proxyCast != null) {
@@ -397,7 +398,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   private static final QualifiedName GOOG_PARTIAL = QualifiedName.of("goog.partial");
 
   @Override
-  public Bind describeFunctionBind(
+  public @Nullable Bind describeFunctionBind(
       Node n, boolean callerChecksTypes, boolean iCheckTypes) {
     if (!n.isCall()) {
       return null;
@@ -430,7 +431,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public Cache describeCachingCall(Node node) {
+  public @Nullable Cache describeCachingCall(Node node) {
     if (!node.isCall()) {
       return null;
     }
@@ -467,7 +468,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return indirectlyDeclaredProperties;
   }
 
-  private static Node safeNext(Node n) {
+  private static @Nullable Node safeNext(Node n) {
     if (n != null) {
       return n.getNext();
     }

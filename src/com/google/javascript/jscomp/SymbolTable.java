@@ -316,6 +316,7 @@ public final class SymbolTable {
     return getSymbolForName(fn.getSource(), pType.getReferenceName());
   }
 
+  @Nullable
   private Symbol getSymbolForName(@Nullable Node source, String name) {
     if (name == null || globalScope == null) {
       return null;

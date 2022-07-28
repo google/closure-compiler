@@ -69,6 +69,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
     return ImmutableMap.copyOf(builder);
   }
 
+  @Nullable
   @Override
   public CheckLevel level(JSError error) {
     Node node = error.getNode();
@@ -103,6 +104,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
    * <p>class & function declarations, variables, assignments, object literal keys, and the top
    * level script node.
    */
+  @Nullable
   private CheckLevel getCheckLevelFromAncestors(JSError error, Node node) {
     for (Node current = node; current != null; current = current.getParent()) {
       JSDocInfo info = null;
@@ -133,6 +135,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   }
 
   /** If the given JSDocInfo has an @suppress for the given JSError, returns the new level. */
+  @Nullable
   private CheckLevel getCheckLevelFromInfo(JSError error, JSDocInfo info) {
     for (String suppressor : info.getSuppressions()) {
       DiagnosticGroup group = this.suppressors.get(suppressor);

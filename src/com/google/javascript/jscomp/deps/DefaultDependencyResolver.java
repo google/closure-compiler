@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Class for resolving Closure dependencies.
@@ -153,7 +154,7 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
   }
 
   /** Looks at each of the dependency files for dependency information. */
-  private DependencyInfo getDependencyInfo(String symbol) {
+  private @Nullable DependencyInfo getDependencyInfo(String symbol) {
     for (DependencyFile depsFile : depsFiles) {
       DependencyInfo di = depsFile.getDependencyInfo(symbol);
       if (di != null) {

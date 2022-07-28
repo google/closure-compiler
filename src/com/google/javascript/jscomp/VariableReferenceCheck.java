@@ -281,6 +281,7 @@ class VariableReferenceCheck implements CompilerPass {
   /**
    * @return The reference to the hoisted function, if the variable is one
    */
+  @Nullable
   private Reference lookForHoistedFunction(List<Reference> references) {
     for (Reference reference : references) {
       if (reference.isHoistedFunction()) {

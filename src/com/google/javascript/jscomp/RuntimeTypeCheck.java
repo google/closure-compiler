@@ -373,6 +373,7 @@ class RuntimeTypeCheck implements CompilerPass {
      *
      * @return the function call node or {@code null} if the type is not checked
      */
+    @Nullable
     private Node createCheckTypeCallNode(JSType type, Node expr) {
       final Collection<JSType> alternates;
       if (type.isUnionType()) {
@@ -399,6 +400,7 @@ class RuntimeTypeCheck implements CompilerPass {
      *
      * @return the checker node or {@code null} if the type is not checked
      */
+    @Nullable
     private Node createCheckerNode(JSType type) {
       if (type.isNullType()) {
         return jsCode("nullChecker");

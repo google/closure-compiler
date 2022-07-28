@@ -734,6 +734,7 @@ public class NodeTraversal {
   }
 
   /** Gets the current input module. */
+  @Nullable
   public JSChunk getChunk() {
     CompilerInput input = getInput();
     return input == null ? null : input.getChunk();
@@ -999,6 +1000,7 @@ public class NodeTraversal {
    * Examines the functions stack for the last instance of a function node. When possible, prefer
    * this method over NodeUtil.getEnclosingFunction() because this in general looks at less nodes.
    */
+  @Nullable
   public Node getEnclosingFunction() {
     Node root = getCfgRoot();
     return root.isFunction() ? root : null;
@@ -1177,6 +1179,7 @@ public class NodeTraversal {
   }
 
   /** Returns the current scope's root. */
+  @Nullable
   public Node getScopeRoot() {
     int roots = scopeRoots.size();
     if (roots > 0) {

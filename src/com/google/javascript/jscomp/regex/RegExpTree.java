@@ -2116,7 +2116,7 @@ public abstract class RegExpTree {
           }
         }
 
-        RegExpTree simplifyPairwise(RegExpTree before, RegExpTree after) {
+        @Nullable RegExpTree simplifyPairwise(RegExpTree before, RegExpTree after) {
           if (before instanceof Text && after instanceof Text) {
             return new Text(
                 ((Text) before).text + ((Text) after).text).simplify(flags);

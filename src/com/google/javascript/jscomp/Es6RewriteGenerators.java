@@ -624,6 +624,7 @@ final class Es6RewriteGenerators implements CompilerPass {
      * Makes unmarked node containing arbitary code suitable to write using {@link
      * TranspilationContext#writeGeneratedNode} method.
      */
+    @Nullable
     Node prepareNodeForWrite(@Nullable Node n) {
       if (n == null) {
         return null;

@@ -467,6 +467,7 @@ class ScopedAliases implements CompilerPass {
      * @return the goog.scope() CALL node containing the scopeRoot, or null if scopeRoot is not in a
      *     goog.scope() call.
      */
+    @Nullable
     private Node findScopeMethodCall(Node scopeRoot) {
       Node n = scopeRoot.getGrandparent();
       if (isCallToScopeMethod(n)) {

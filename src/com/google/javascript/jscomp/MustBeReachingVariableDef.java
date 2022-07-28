@@ -466,6 +466,7 @@ final class MustBeReachingVariableDef
     return state.getIn().reachingDef.get(allVarsInFn.get(name));
   }
 
+  @Nullable
   Node getDefNode(String name, Node useNode) {
     Definition def = getDef(name, useNode);
     return def == null ? null : def.node;

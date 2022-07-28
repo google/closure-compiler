@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Inlines methods that take no arguments and have only a return statement
@@ -159,10 +160,9 @@ class InlineSimpleMethods extends MethodCompilerPass {
   }
 
   /**
-   * Return the node that represents the expression returned
-   * by the method, given a FUNCTION node.
+   * Return the node that represents the expression returned by the method, given a FUNCTION node.
    */
-  private static Node returnedExpression(Node fn) {
+  private static @Nullable Node returnedExpression(Node fn) {
     Node expectedBlock = NodeUtil.getFunctionBody(fn);
     if (!expectedBlock.hasOneChild()) {
       return null;

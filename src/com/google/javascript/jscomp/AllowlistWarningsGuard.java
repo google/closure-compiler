@@ -96,7 +96,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }

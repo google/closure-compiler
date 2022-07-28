@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+import org.jspecify.nullness.Nullable;
 
 public class BreakStatementTree extends ParseTree {
 
@@ -29,7 +30,7 @@ public class BreakStatementTree extends ParseTree {
     this.name = name;
   }
 
-  public String getLabel() {
+  public @Nullable String getLabel() {
     return name == null ? null : name.value;
   }
 }

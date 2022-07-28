@@ -32,6 +32,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Helper classes for dealing with coding conventions.
@@ -357,7 +358,7 @@ public final class CodingConventions {
     private static final QualifiedName JSCOMP_INHERITS = QualifiedName.of("$jscomp.inherits");
 
     @Override
-    public SubclassRelationship getClassesDefinedByCall(Node callNode) {
+    public @Nullable SubclassRelationship getClassesDefinedByCall(Node callNode) {
       Node callName = callNode.getFirstChild();
       if ((JSCOMP_INHERITS.matches(callName) || callName.matchesName("$jscomp$inherits"))
           && callNode.hasXChildren(3)) {
@@ -528,7 +529,7 @@ public final class CodingConventions {
         QualifiedName.of("Function.prototype.bind.call");
 
     @Override
-    public Bind describeFunctionBind(
+    public @Nullable Bind describeFunctionBind(
         Node n, boolean callerChecksTypes, boolean iCheckTypes) {
       if (!n.isCall()) {
         return null;
@@ -579,7 +580,7 @@ public final class CodingConventions {
       return ImmutableList.of();
     }
 
-    private static Node safeNext(Node n) {
+    private static @Nullable Node safeNext(Node n) {
       if (n != null) {
         return n.getNext();
       }

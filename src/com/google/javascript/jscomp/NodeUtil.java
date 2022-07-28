@@ -224,6 +224,7 @@ public final class NodeUtil {
    *
    * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
    */
+  @Nullable
   public static String getStringValue(Node n) {
     // TODO(user): regex literals as well.
     switch (n.getToken()) {
@@ -314,6 +315,7 @@ public final class NodeUtil {
     return (NodeUtil.isNullOrUndefined(n) || n.isEmpty()) ? "" : getStringValue(n);
   }
 
+  @Nullable
   static String arrayToString(Node literal) {
     Node first = literal.getFirstChild();
     StringBuilder result = new StringBuilder();
@@ -340,6 +342,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
+  @Nullable
   static Double getNumberValue(Node n) {
     switch (n.getToken()) {
       case NUMBER:
@@ -416,6 +419,7 @@ public final class NodeUtil {
     return null;
   }
 
+  @Nullable
   static Double getStringNumberValue(String rawJsString) {
     if (rawJsString.contains("\u000b")) {
       // vertical tab is not always whitespace
@@ -468,6 +472,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The value of a node as a BigInt, or null if it cannot be converted.
    */
+  @Nullable
   static BigInteger getBigIntValue(Node n) {
     switch (n.getToken()) {
       case NUMBER:
@@ -530,6 +535,7 @@ public final class NodeUtil {
     }
   }
 
+  @Nullable
   static BigInteger getStringBigIntValue(String rawJsString) {
     if (rawJsString.contains("\u000b")) {
       // vertical tab is not always whitespace
@@ -592,6 +598,7 @@ public final class NodeUtil {
    * @param n A function or class node.
    * @return The name of the given function or class, if it has one.
    */
+  @Nullable
   public static String getName(Node n) {
     Node nameNode = getNameNode(n);
     return nameNode == null ? null : nameNode.getQualifiedName();
@@ -614,6 +621,7 @@ public final class NodeUtil {
    * @param n A function or class node
    * @return the node best representing the class's name
    */
+  @Nullable
   public static Node getNameNode(Node n) {
     checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
@@ -669,6 +677,7 @@ public final class NodeUtil {
    * @param n a node whose type is {@link Token#FUNCTION}
    * @return the function's name, or {@code null} if it has no name
    */
+  @Nullable
   public static String getNearestFunctionName(Node n) {
     if (!n.isFunction()) {
       return null;
@@ -2243,6 +2252,7 @@ public final class NodeUtil {
    *
    * @return The value node representing the new value.
    */
+  @Nullable
   public static Node getAssignedValue(Node n) {
     checkState(n.isName() || n.isGetProp(), n);
     Node parent = n.getParent();
@@ -2307,6 +2317,7 @@ public final class NodeUtil {
    * @return If the node, is a FOR, WHILE, or DO, it returns the node for the code BLOCK, null
    *     otherwise.
    */
+  @Nullable
   public static Node getLoopCodeBlock(Node n) {
     switch (n.getToken()) {
       case FOR:
@@ -2395,6 +2406,7 @@ public final class NodeUtil {
    * @param n a node with an outgoing conditional CFG edge
    * @return the condition node or null if the condition is not obviously a node
    */
+  @Nullable
   static Node getConditionExpression(Node n) {
     switch (n.getToken()) {
       case IF:
@@ -3566,6 +3578,7 @@ public final class NodeUtil {
    *
    * @param key A node
    */
+  @Nullable
   static Node getObjectOrClassLitKeyNode(Node key) {
     switch (key.getToken()) {
       case STRING_KEY:
@@ -3612,6 +3625,7 @@ public final class NodeUtil {
    * @param operator the operator's token value to convert
    * @return the string representation or {@code null} if the token value is not an operator
    */
+  @Nullable
   public static String opToStr(Token operator) {
     switch (operator) {
       case COALESCE:
@@ -4313,6 +4327,7 @@ public final class NodeUtil {
    *     prototype, e.g. foo.Bar.prototype, or foo.Bar.prototype.toString.
    * @return The class name part of a qualified prototype name, e.g. foo.Bar.
    */
+  @Nullable
   static Node getPrototypeClassName(Node qName) {
     if (!qName.isGetProp()) {
       return null;
@@ -4478,6 +4493,7 @@ public final class NodeUtil {
   }
 
   /** Returns the first Node matching the given pred via a pre-order traversal. */
+  @Nullable
   public static Node findPreorder(
       Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
@@ -4823,6 +4839,7 @@ public final class NodeUtil {
    * @param n The node.
    * @return The InputId property on the node or its ancestors.
    */
+  @Nullable
   public static InputId getInputId(Node n) {
     while (n != null && !n.isScript()) {
       n = n.getParent();
@@ -5152,6 +5169,7 @@ public final class NodeUtil {
   }
 
   /** Find the l-value that the given r-value is being assigned to. */
+  @Nullable
   public static Node getBestLValue(Node n) {
     Node parent = n.getParent();
     if (isFunctionDeclaration(n) || isClassDeclaration(n)) {
@@ -5176,6 +5194,7 @@ public final class NodeUtil {
   }
 
   /** Gets the r-value (or initializer) of a node returned by getBestLValue. */
+  @Nullable
   public static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {
@@ -5215,6 +5234,7 @@ public final class NodeUtil {
 
   // TODO(b/189993301): do I have to add logic for class fields in these LValue functions?
   /** Get the owner of the given l-value node. */
+  @Nullable
   static Node getBestLValueOwner(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
@@ -5229,6 +5249,7 @@ public final class NodeUtil {
   }
 
   /** Get the name of the given l-value node. */
+  @Nullable
   public static String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
@@ -5259,6 +5280,7 @@ public final class NodeUtil {
   }
 
   /** Gets the root of a qualified name l-value. */
+  @Nullable
   static Node getBestLValueRoot(@Nullable Node lValue) {
     if (lValue == null) {
       return null;

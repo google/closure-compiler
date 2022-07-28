@@ -1313,6 +1313,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    @Nullable
     private String getBestTypeName(Node lvalue, @Nullable String syntacticLvalueName) {
       if (syntacticLvalueName == null) {
         return null;
@@ -1892,6 +1893,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    @Nullable
     private ObjectType getPrototypeOwnerType(ObjectType ownerType) {
       if (ownerType != null && ownerType.isFunctionPrototypeType()) {
         return ownerType.getOwnerFunction();
@@ -2301,6 +2303,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param declaredRValueTypeSupplier A supplier for the declared type of the rvalue, used for
      *     destructuring declarations where we have to do additional work on the rvalue.
      */
+    @Nullable
     JSType getDeclaredType(
         JSDocInfo info,
         Node lValue,
@@ -2486,6 +2489,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /** Returns the AST node associated with the definition, if any. */
+    @Nullable
     private Node getDefinitionNode(QualifiedName qname, TypedScope scope) {
       if (qname.isSimple()) {
         TypedVar var = scope.getVar(qname.getComponent());
@@ -2504,6 +2508,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      *
      * @param lValue is the lvalue node if this is a simple assignment, null for destructuring
      */
+    @Nullable
     private JSType getDeclaredRValueType(@Nullable Node lValue, Node rValue) {
       // If rValue has a type-cast, we use the type in the type-cast.
       JSDocInfo rValueInfo = rValue.getJSDocInfo();
@@ -2941,6 +2946,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param slotName The name of the slot to find the type in.
      * @return An object type, or null if this slot does not contain an object.
      */
+    @Nullable
     private ObjectType getObjectSlot(String slotName) {
       TypedVar ownerVar = currentScope.getVar(slotName);
       if (ownerVar != null) {
@@ -2955,6 +2961,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * When a class has a stub for a property, and the property exists on a super interface, use
      * that type.
      */
+    @Nullable
     private JSType getInheritedInterfacePropertyType(ObjectType obj, String propName) {
       if (obj != null && obj.isFunctionPrototypeType()) {
         FunctionType f = obj.getOwnerFunction();

@@ -788,6 +788,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Creates JS source code inputs from a list of files. */
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private List<SourceFile> createSourceInputs(
       List<JsChunkSpec> jsChunkSpecs,
@@ -1762,6 +1763,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
   }
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private DiagnosticType outputModuleBinaryAndSourceMaps(Iterable<JSChunk> modules, B options)
       throws IOException {
@@ -1919,6 +1921,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * @param path The path of the generated JS source file.
    * @return The stream or null if no extern-ed exports are being generated.
    */
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Writer openExternExportsStream(B options, String path) throws IOException {
     final String externExportsPath = options.getExternExportsPath();
@@ -1963,6 +1966,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Expansion function for source map. */
+  @Nullable
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
   String expandSourceMapPath(B options, @Nullable JSChunk forModule) {
@@ -1976,6 +1980,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * Converts a file name into a Writer taking in account the output charset. Returns null if the
    * file name is null.
    */
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Writer fileNameToLegacyOutputWriter(String fileName) throws IOException {
     if (fileName == null) {
@@ -1992,6 +1997,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * Converts a file name into a Writer taking in account the output charset. Returns null if the
    * file name is null.
    */
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Writer fileNameToOutputWriter2(String fileName) throws IOException {
     if (fileName == null) {
@@ -2005,6 +2011,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   /** Converts a file name into a Outputstream. Returns null if the file name is null. */
+  @Nullable
   @GwtIncompatible("Unnecessary")
   protected OutputStream filenameToOutputStream(String fileName) throws IOException {
     if (fileName == null) {

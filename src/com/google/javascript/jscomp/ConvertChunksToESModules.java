@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Finds all references to global symbols in a different output chunk and add ES Module imports and
@@ -252,7 +253,8 @@ final class ConvertChunksToESModules implements CompilerPass {
   }
 
   /** Find and return the module namespace name node in a dynamic import callback function */
-  public static Node getDynamicImportCallbackModuleNamespace(AbstractCompiler compiler, Node call) {
+  public static @Nullable Node getDynamicImportCallbackModuleNamespace(
+      AbstractCompiler compiler, Node call) {
     checkState(call.isCall());
     Node callbackFn = NodeUtil.getArgumentForCallOrNew(call, 0);
     if (callbackFn == null

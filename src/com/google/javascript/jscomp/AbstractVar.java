@@ -120,6 +120,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return this.getNode() == null ? null : thisVar();
   }
 
+  @Nullable
   public final Node getParentNode() {
     return this.getNode() == null ? null : this.getNode().getParent();
   }
@@ -179,6 +180,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return info != null && info.isDefine();
   }
 
+  @Nullable
   public final Node getInitialValue() {
     return this.getNode() == null ? null : NodeUtil.getRValueOfLValue(this.getNode());
   }
@@ -187,6 +189,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return this.getNode();
   }
 
+  @Nullable
   @Override
   public final JSDocInfo getJSDocInfo() {
     return this.getNode() == null ? null : NodeUtil.getBestJSDocInfo(this.getNode());
@@ -256,6 +259,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
       Token.IMPORT,
       Token.PARAM_LIST);
 
+  @Nullable
   final Token declarationType() {
     if (isImplicitGoogNamespace()) {
       return null;

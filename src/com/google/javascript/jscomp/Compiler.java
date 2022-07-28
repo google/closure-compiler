@@ -1524,6 +1524,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // TODO(nicksantos): Decide which parts of these belong in an AbstractCompiler
   // interface, and which ones should always be injected.
 
+  @Nullable
   @Override
   public CompilerInput getInput(InputId id) {
     // TODO(bradfordcsmith): Allowing null id is less ideal. Add checkNotNull(id) here and fix
@@ -1806,6 +1807,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    *
    * @return A synthetic root node whose two children are the externs root and the main root
    */
+  @Nullable
   Node parseInputs() {
     boolean devMode = options.devMode != DevMode.OFF;
 
@@ -2929,6 +2931,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return hasHaltingErrors();
   }
 
+  @Nullable
   @Override
   SourceFile getSourceFileByName(String sourceName) {
     // Here we assume that the source name is the input name, this
@@ -2946,6 +2949,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
+  @Nullable
   public CharSequence getSourceFileContentByName(String sourceName) {
     SourceFile file = getSourceFileByName(sourceName);
     checkNotNull(file);
@@ -3050,6 +3054,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         .build();
   }
 
+  @Nullable
   @Override
   public String getSourceLine(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
@@ -3062,6 +3067,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
+  @Nullable
   @Override
   public Region getSourceLines(String sourceName, int lineNumber, int length) {
     if (lineNumber < 1) {
@@ -3074,6 +3080,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
+  @Nullable
   @Override
   public Region getSourceRegion(String sourceName, int lineNumber) {
     if (lineNumber < 1) {
@@ -3266,6 +3273,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return Collections.unmodifiableList(externs);
   }
 
+  @Nullable
   @VisibleForTesting
   List<CompilerInput> getInputsForTesting() {
     return moduleGraph != null ? ImmutableList.copyOf(moduleGraph.getAllInputs()) : null;

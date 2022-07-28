@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An implementation of a {@link WarningsGuard} that can modify the
@@ -88,7 +89,7 @@ public final class ByPathWarningsGuard extends WarningsGuard {
   }
 
   @Override
-  public CheckLevel level(JSError error) {
+  public @Nullable CheckLevel level(JSError error) {
     final String errorPath = error.getSourceName();
     CheckLevel defaultLevel = error.getDefaultLevel();
     if (defaultLevel != CheckLevel.ERROR && errorPath != null) {

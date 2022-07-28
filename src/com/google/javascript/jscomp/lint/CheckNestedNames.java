@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Checks if code has a module-level static property assignment (`X.Y`) inside a `goog.module`. If
@@ -150,7 +151,7 @@ public final class CheckNestedNames implements CompilerPass, NodeTraversal.Callb
     return getProp.isGetProp() && getProp.getString().equals("prototype");
   }
 
-  private DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
+  private @Nullable DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
     checkArgument(lhs.isFirstChildOf(parent), lhs);
     // Handle `/** @typedef {...} */` X.Y` or `/** @const */ X.Y = SomeTypeDefName`
     if (lhs.getTypedefTypeProp() != null) {

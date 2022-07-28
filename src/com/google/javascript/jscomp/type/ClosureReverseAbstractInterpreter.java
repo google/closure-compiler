@@ -30,6 +30,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A reverse abstract interpreter (RAI) for specific closure patterns such as {@code goog.isObject}.
@@ -59,12 +60,12 @@ public final class ClosureReverseAbstractInterpreter extends ChainableReverseAbs
   private final Visitor<JSType> restrictToNotObjectVisitor =
       new RestrictByFalseTypeOfResultVisitor() {
         @Override
-        public JSType caseObjectType(ObjectType type) {
+        public @Nullable JSType caseObjectType(ObjectType type) {
           return null;
         }
 
         @Override
-        public JSType caseFunctionType(FunctionType type) {
+        public @Nullable JSType caseFunctionType(FunctionType type) {
           return null;
         }
       };

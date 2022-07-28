@@ -397,6 +397,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       return qualifiedClassName.equals(other.qualifiedClassName);
     }
 
+    @Nullable
     private static Node getPrototypeClassName(Node qName) {
       Node cur = qName;
       while (cur.isGetProp()) {

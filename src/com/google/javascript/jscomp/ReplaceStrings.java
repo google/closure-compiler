@@ -177,6 +177,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    * @param callsiteSourceFileName the filename containing the callsite
    * @return The Config object for the name or null if no match was found.
    */
+  @Nullable
   private Config findMatching(String name, String callsiteSourceFileName) {
     Config config = functions.get(name);
     if (config == null) {

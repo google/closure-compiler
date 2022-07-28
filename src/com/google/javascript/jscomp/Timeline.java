@@ -98,7 +98,7 @@ final class Timeline<T> {
   }
 
   @SuppressWarnings("unchecked")
-  List<T> getSince(String timeName) {
+  @Nullable List<T> getSince(String timeName) {
     List<T> values = new ArrayList<>();
 
     Event<?> firstEvent = eventsByTime.get(new Time(timeName));

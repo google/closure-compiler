@@ -162,6 +162,7 @@ public abstract class JSError implements Serializable {
    *
    * @return the formatted message or {@code null}
    */
+  @Nullable
   public final String format(CheckLevel level, MessageFormatter formatter) {
     switch (level) {
       case ERROR:

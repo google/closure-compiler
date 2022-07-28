@@ -757,6 +757,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * @param fromNode The original source node since {@code node} is changed during recursion.
    * @param node The node that follow() should compute.
    */
+  @Nullable
   private static Node computeFollowNode(
       Node fromNode, Node node, @Nullable ControlFlowAnalysis cfa) {
     /*

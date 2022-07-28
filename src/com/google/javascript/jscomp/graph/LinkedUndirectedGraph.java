@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An undirected graph using linked list within nodes to store edge
@@ -98,7 +99,7 @@ public final class LinkedUndirectedGraph<N, E>
 
   @SuppressWarnings("unchecked")
   @Override
-  public List<UndiGraphEdge<N, E>> getUndirectedGraphEdges(N n1, N n2) {
+  public @Nullable List<UndiGraphEdge<N, E>> getUndirectedGraphEdges(N n1, N n2) {
     UndiGraphNode<N, E> dNode1 = nodes.get(n1);
     if (dNode1 == null) {
       return null;
@@ -151,7 +152,7 @@ public final class LinkedUndirectedGraph<N, E>
   }
 
   @Override
-  public GraphEdge<N, E> getFirstEdge(N n1, N n2) {
+  public @Nullable GraphEdge<N, E> getFirstEdge(N n1, N n2) {
     UndiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     UndiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
     for (UndiGraphEdge<N, E> outEdge : dNode1.getNeighborEdges()) {

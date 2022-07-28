@@ -439,6 +439,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     }
   }
 
+  @Nullable
   private static String extractFirstArgumentName(Node callNode) {
     Node firstArg = callNode.getSecondChild();
     if (firstArg != null && firstArg.isStringLit()) {

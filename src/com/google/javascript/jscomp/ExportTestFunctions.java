@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.regex.Pattern;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Generates goog.exportSymbol for test functions, so they can be recognized
@@ -170,11 +171,12 @@ public class ExportTestFunctions implements CompilerPass {
     }
 
     /**
-     * Get the node that corresponds to an expression declared with var, let or const.
-     * This has the AST structure VAR/LET/CONST -> NAME -> NODE
+     * Get the node that corresponds to an expression declared with var, let or const. This has the
+     * AST structure VAR/LET/CONST -> NAME -> NODE
+     *
      * @param node
      */
-    private Node getNameDeclaredGrandchild(Node node) {
+    private @Nullable Node getNameDeclaredGrandchild(Node node) {
       if (!NodeUtil.isNameDeclaration(node)) {
         return null;
       }

@@ -207,6 +207,7 @@ public class NodeModuleResolver extends ModuleResolver {
     return loadAddress;
   }
 
+  @Nullable
   public String resolveJsModuleFile(String scriptAddress, String moduleAddress) {
     for (String extension : FILE_EXTENSIONS_TO_SEARCH) {
       String moduleAddressCandidate = moduleAddress + extension;

@@ -626,6 +626,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       return create(classNode, parent, AstFactory.createFactoryWithoutTypes());
     }
 
+    @Nullable
     private static ClassDeclarationMetadata create(
         Node classNode, Node parent, AstFactory astFactory) {
       Node classNameNode = classNode.getFirstChild();
