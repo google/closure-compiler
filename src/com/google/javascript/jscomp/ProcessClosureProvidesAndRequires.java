@@ -509,22 +509,22 @@ class ProcessClosureProvidesAndRequires implements CompilerPass {
     // The node where the call was explicitly goog.provided. Null if the namespace is implicit.
     // If this is previously provided, this will instead be the expression or declaration marked
     // as IS_NAMESPACE.
-    private Node explicitNode = null;
+    private @Nullable Node explicitNode = null;
 
     // The candidate definition for this namespace. For example, given
     //      goog.provide('a.b');
     //      /** @constructor * /
     //      a.b = function() {};
     // the 'candidate definition' of 'a.b' is the GETPROP 'a.b' from the constructor declaration.
-    private Node candidateDefinition = null;
+    private @Nullable Node candidateDefinition = null;
 
     // The minimum chunk where the provide namespace definition must appear. If child namespaces of
     // this provide appear in multiple chunks, this chunk must be earlier than all child
     // namespace's chunks.
-    private JSChunk minimumChunk = null;
+    private @Nullable JSChunk minimumChunk = null;
 
     // The replacement declaration. Null until replace() has been called.
-    private Node replacementNode = null;
+    private @Nullable Node replacementNode = null;
 
     // Whether this comes from a goog.module with declareLegacyNamespace.
     private final boolean fromLegacyModule;

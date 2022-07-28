@@ -410,8 +410,8 @@ class GlobalNamespace
 
   /** Builds a tree representation of the global namespace. Omits prototypes. */
   private class BuildGlobalNamespace extends NodeTraversal.AbstractPreOrderCallback {
-    private Node curModuleRoot = null;
-    private ModuleMetadata curMetadata = null;
+    @Nullable private Node curModuleRoot = null;
+    @Nullable private ModuleMetadata curMetadata = null;
     /** Collect the references in pre-order. */
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -1259,7 +1259,7 @@ class GlobalNamespace
     // The children of this name. Must be null if there are no children.
     @Nullable List<Name> props;
     /** The first global assignment to a name. */
-    private Ref declaration;
+    @Nullable private Ref declaration;
 
     /** All references to a name. This must contain {@code declaration}. */
     private final LinkedHashSet<Ref> refs = new LinkedHashSet<>();
@@ -2369,7 +2369,7 @@ class GlobalNamespace
      *
      * <p>We create two Refs for this node, and mark them as twins of each other.
      */
-    private Ref twin = null;
+    @Nullable private Ref twin = null;
 
     /**
      * Creates a Ref

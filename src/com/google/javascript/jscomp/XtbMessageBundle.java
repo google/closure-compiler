@@ -155,7 +155,7 @@ public final class XtbMessageBundle implements MessageBundle {
     boolean isIcuMessage;
 
     String lang;
-    JsMessage.Builder msgBuilder;
+    @Nullable JsMessage.Builder msgBuilder;
 
     @Override
     public void setDocumentLocator(Locator locator) {}

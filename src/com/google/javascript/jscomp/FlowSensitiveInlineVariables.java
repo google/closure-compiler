@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Inline variables when possible. Using the information from {@link MaybeReachingVariableUse} and
@@ -83,7 +84,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   private class SideEffectPredicate implements Predicate<Node> {
     // Check if there are side effects affecting the value of any of these names
     // (but not properties defined on that name)
-    private final Set<String> namesToCheck;
+    private final @Nullable Set<String> namesToCheck;
 
     public SideEffectPredicate() {
       namesToCheck = null;
@@ -287,7 +288,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   }
 
   private class GatherCandidatesCfgNodeCallback extends AbstractCfgNodeTraversalCallback {
-    Node cfgNode = null;
+    @Nullable Node cfgNode = null;
 
     public void setCfgNode(Node cfgNode) {
       this.cfgNode = cfgNode;

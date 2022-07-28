@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A flow scope that tries to store as little symbol information as possible,
@@ -247,7 +248,7 @@ class LinkedFlowScope implements FlowScope {
 
   /** Join the two FlowScopes. */
   static class FlowScopeJoinOp implements FlowJoiner<FlowScope> {
-    LinkedFlowScope result = null;
+    @Nullable LinkedFlowScope result = null;
     final CompilerInputProvider inputProvider;
 
     FlowScopeJoinOp(CompilerInputProvider inputProvider) {

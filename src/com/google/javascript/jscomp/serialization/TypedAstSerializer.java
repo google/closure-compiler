@@ -36,6 +36,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import org.jspecify.nullness.Nullable;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 @GwtIncompatible("protobuf.lite")
@@ -49,7 +50,7 @@ final class TypedAstSerializer {
   private final ArrayDeque<SourceFile> subtreeSourceFiles = new ArrayDeque<>();
   private final LinkedHashMap<SourceFile, Integer> sourceFilePointers = new LinkedHashMap<>();
 
-  private TypeSerializer typeSerializer = null;
+  private @Nullable TypeSerializer typeSerializer = null;
 
   TypedAstSerializer(AbstractCompiler compiler, SerializationOptions serializationMode) {
     this.compiler = compiler;

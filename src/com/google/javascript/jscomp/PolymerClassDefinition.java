@@ -83,7 +83,7 @@ final class PolymerClassDefinition {
   /** Language features that should be carried over to the extraction destination. */
   @Nullable final FeatureSet features;
 
-  private String interfaceName = null;
+  @Nullable private String interfaceName = null;
 
   PolymerClassDefinition(
       DefinitionType defType,

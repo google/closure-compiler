@@ -82,12 +82,12 @@ final class FunctionTypeBuilder {
   private FunctionContents contents = UnknownFunctionContents.get();
 
   private String syntacticFnName;
-  private JSType returnType = null;
+  @Nullable private JSType returnType = null;
   private boolean returnTypeInferred = false;
-  private List<ObjectType> implementedInterfaces = null;
-  private List<ObjectType> extendedInterfaces = null;
-  private ObjectType baseType = null;
-  private JSType thisType = null;
+  @Nullable private List<ObjectType> implementedInterfaces = null;
+  @Nullable private List<ObjectType> extendedInterfaces = null;
+  @Nullable private ObjectType baseType = null;
+  @Nullable private JSType thisType = null;
   private boolean isClass = false;
   private boolean isConstructor = false;
   private boolean makesStructs = false;
@@ -97,11 +97,11 @@ final class FunctionTypeBuilder {
   private boolean isRecord = false;
   private boolean isAbstract = false;
   private boolean isKnownAmbiguous = false;
-  private List<Parameter> parameters = null;
-  private ClosurePrimitive closurePrimitiveId = null;
+  @Nullable private List<Parameter> parameters = null;
+  @Nullable private ClosurePrimitive closurePrimitiveId = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
   private ImmutableList<TemplateType> constructorTemplateTypeNames = ImmutableList.of();
-  private TypedScope declarationScope = null;
+  @Nullable private TypedScope declarationScope = null;
   private StaticTypedScope templateScope;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(

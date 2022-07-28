@@ -72,7 +72,7 @@ final class AstFactory {
   @Nullable private final ColorRegistry colorRegistry;
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
-  private final JSType unknownType;
+  @Nullable private final JSType unknownType;
   private static final Supplier<Color> bigintNumberStringColor =
       Suppliers.memoize(
           () ->
@@ -1418,10 +1418,10 @@ final class AstFactory {
   }
 
   private static final class JSTypeOrColor implements Type {
-    private final JSType jstype;
-    private final JSTypeNative jstypeNative;
-    private final Color color;
-    private final ColorId colorId;
+    @Nullable private final JSType jstype;
+    @Nullable private final JSTypeNative jstypeNative;
+    @Nullable private final Color color;
+    @Nullable private final ColorId colorId;
 
     JSTypeOrColor(@Nullable JSTypeNative jstypeNative, ColorId colorId) {
       this.jstypeNative = jstypeNative;

@@ -345,7 +345,7 @@ public class CompilerOptions implements Serializable {
   private DependencyOptions dependencyOptions = DependencyOptions.none();
 
   /** Returns localized replacement for MSG_* variables */
-  public MessageBundle messageBundle = null;
+  @Nullable public MessageBundle messageBundle = null;
 
   /** Whether we should report an error if a message is absent from a bundle. */
   private boolean strictMessageReplacement;
@@ -372,7 +372,7 @@ public class CompilerOptions implements Serializable {
    * A set of extra annotation names which are accepted and silently ignored when encountered in a
    * source file. Defaults to null which has the same effect as specifying an empty set.
    */
-  Set<String> extraAnnotationNames;
+  @Nullable Set<String> extraAnnotationNames;
 
   // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
   int numParallelThreads = 1;
@@ -553,7 +553,7 @@ public class CompilerOptions implements Serializable {
   public boolean generatePseudoNames;
 
   /** Specifies a prefix for all globals */
-  public String renamePrefix;
+  @Nullable public String renamePrefix;
 
   /** Specifies the name of an object that will be used to store all non-extern globals. */
   public String renamePrefixNamespace;
@@ -693,7 +693,7 @@ public class CompilerOptions implements Serializable {
    * A JS function to be used for logging run-time type assertion failures. It will be passed the
    * warning as a string and the faulty expression as arguments.
    */
-  String runtimeTypeCheckLogFunction;
+  @Nullable String runtimeTypeCheckLogFunction;
 
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
@@ -702,7 +702,7 @@ public class CompilerOptions implements Serializable {
   @Nullable public String syntheticBlockEndMarker;
 
   /** Compiling locale */
-  public String locale;
+  @Nullable public String locale;
 
   /**
    * If true, then perform localization passes as late as possible.
@@ -764,7 +764,7 @@ public class CompilerOptions implements Serializable {
   ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
-  protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
+  @Nullable protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
   /** Replacements for @defines. Will be Boolean, Numbers, or Strings */
   private final LinkedHashMap<String, Object> defineReplacements;
@@ -794,10 +794,10 @@ public class CompilerOptions implements Serializable {
   boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
-  public CssRenamingMap cssRenamingMap;
+  @Nullable public CssRenamingMap cssRenamingMap;
 
   /** Skiplist used in the renaming of CSS class names. */
-  Set<String> cssRenamingSkiplist;
+  @Nullable Set<String> cssRenamingSkiplist;
 
   /** Replace id generators */
   boolean replaceIdGenerators = true; // true by default for legacy reasons.
@@ -1132,7 +1132,7 @@ public class CompilerOptions implements Serializable {
   private transient AliasTransformationHandler aliasHandler;
 
   /** Handler for compiler warnings and errors. */
-  transient ErrorHandler errorHandler;
+  @Nullable transient ErrorHandler errorHandler;
 
   private InstrumentOption instrumentForCoverageOption;
 
@@ -1252,7 +1252,7 @@ public class CompilerOptions implements Serializable {
     return this.allowDynamicImport;
   }
 
-  private String dynamicImportAlias = null;
+  @Nullable private String dynamicImportAlias = null;
 
   /** Set the alias name for dynamic import expressions */
   public String getDynamicImportAlias() {

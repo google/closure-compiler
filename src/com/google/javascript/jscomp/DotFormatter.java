@@ -54,7 +54,7 @@ public final class DotFormatter {
   // the builder used to generate the dot diagram
   private final Appendable builder;
 
-  private final ControlFlowGraph<Node> cfg;
+  private final @Nullable ControlFlowGraph<Node> cfg;
 
   private final boolean printAnnotations;
 

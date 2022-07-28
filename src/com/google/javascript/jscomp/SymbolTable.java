@@ -122,7 +122,7 @@ public final class SymbolTable {
   /** All Nodes with JSDocInfo in the program. */
   private final List<Node> docInfos = new ArrayList<>();
 
-  private SymbolScope globalScope = null;
+  @Nullable private SymbolScope globalScope = null;
 
   private final AbstractCompiler compiler;
 
@@ -1585,11 +1585,11 @@ public final class SymbolTable {
 
     private final SymbolScope scope;
 
-    private SymbolScope propertyScope = null;
+    @Nullable private SymbolScope propertyScope = null;
 
-    private Reference declaration = null;
+    @Nullable private Reference declaration = null;
 
-    private JSDocInfo docInfo = null;
+    @Nullable private JSDocInfo docInfo = null;
 
     /**
      * Stored separately from {@link #docInfo}, because the visibility stored in JSDocInfo is not
@@ -1597,7 +1597,7 @@ public final class SymbolTable {
     @Nullable private Visibility visibility = null;
 
     // A scope for symbols that are only documented in JSDoc.
-    private SymbolScope docScope = null;
+    @Nullable private SymbolScope docScope = null;
 
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
       super(name, type, inferred);

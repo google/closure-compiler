@@ -41,7 +41,7 @@ public class CodeGenerator {
 
   private final CodeConsumer cc;
 
-  private final OutputCharsetEncoder outputCharsetEncoder;
+  @Nullable private final OutputCharsetEncoder outputCharsetEncoder;
 
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;

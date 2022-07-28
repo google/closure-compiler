@@ -187,7 +187,7 @@ class ScopedAliases implements CompilerPass {
     @Nullable private PreprocessorSymbolTable preprocessorSymbolTable = null;
     private AliasTransformationHandler transformationHandler =
         CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
-    private ModuleMetadataMap moduleMetadataMap = null;
+    @Nullable private ModuleMetadataMap moduleMetadataMap = null;
     private InvalidModuleGetHandling invalidModuleGetHandling = InvalidModuleGetHandling.PRESERVE;
 
     private Builder(AbstractCompiler compiler) {
@@ -426,11 +426,11 @@ class ScopedAliases implements CompilerPass {
 
     private boolean hasErrors = false;
 
-    private AliasTransformation transformation = null;
+    @Nullable private AliasTransformation transformation = null;
 
     // The body of the function that is passed to goog.scope.
     // Set when the traversal enters the body, and set back to null when it exits.
-    private Node scopeFunctionBody = null;
+    @Nullable private Node scopeFunctionBody = null;
 
     Collection<Node> getAliasDefinitionsToDelete() {
       return aliasDefinitionsToDelete;

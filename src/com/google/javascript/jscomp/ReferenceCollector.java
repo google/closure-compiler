@@ -28,6 +28,7 @@ import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A helper class for passes that want to access all information about where a variable is
@@ -69,7 +70,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
 
   private final LinkedHashSet<Node> collectedHoistedFunctions = new LinkedHashSet<>();
 
-  private Scope narrowScope;
+  private @Nullable Scope narrowScope;
 
   /** Constructor initializes block stack. */
   public ReferenceCollector(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator) {

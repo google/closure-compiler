@@ -239,7 +239,7 @@ public abstract class JsMessage {
     private String desc;
     private boolean hidden;
 
-    private String alternateId;
+    @Nullable private String alternateId;
 
     private final List<CharSequence> parts = new ArrayList<>();
     private final Set<String> placeholders = new LinkedHashSet<>();

@@ -57,7 +57,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
   private final AbstractCompiler compiler;
 
   private int statementCounter = 0;
-  private TopLevelStatementDraft topLevelStatementDraft = null;
+  @Nullable private TopLevelStatementDraft topLevelStatementDraft = null;
 
   /** Constructor initializes block stack. */
   CrossChunkReferenceCollector(AbstractCompiler compiler, ScopeCreator creator) {
@@ -511,9 +511,9 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
     final JSChunk module;
     final Node statementNode;
     final List<Reference> nonDeclarationReferences = new ArrayList<>();
-    Node declaredValueNode = null;
-    Node declaredNameNode = null;
-    Reference declaredNameReference = null;
+    @Nullable Node declaredValueNode = null;
+    @Nullable Node declaredNameNode = null;
+    @Nullable Reference declaredNameReference = null;
 
     TopLevelStatementDraft(int originalOrder, JSChunk module, Node statementNode) {
       this.originalOrder = originalOrder;

@@ -57,7 +57,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   private Scope globalScope;
 
   // Allocated & cleaned up by process()
-  private LogFile decisionsLog;
+  @Nullable private LogFile decisionsLog;
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = checkNotNull(compiler);

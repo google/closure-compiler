@@ -89,9 +89,9 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
     // Node that creates the context
     private final Node contextRoot;
     // The current function, or null if root scope where we are not in a function.
-    private final Node function;
+    @Nullable private final Node function;
     // The context of the most recent definition of this/super/arguments
-    private final ThisSuperArgsContext thisSuperArgsContext;
+    @Nullable private final ThisSuperArgsContext thisSuperArgsContext;
 
     // Represents the global/root scope. Should only exist on the bottom of the contextStack.
     private LexicalContext(Node contextRoot) {

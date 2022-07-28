@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.graph;
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
+import org.jspecify.nullness.Nullable;
 
 /**
  * See constructor, {@link #CheckPathsBetweenNodes(DiGraph,
@@ -53,7 +54,7 @@ public final class CheckPathsBetweenNodes<N, E> {
   private static final Annotation VISITED_EDGE = new Annotation() {};
 
   // Not yet visited.
-  private static final Annotation WHITE = null;
+  private static final @Nullable Annotation WHITE = null;
   // Being visited.
   private static final Annotation GRAY = new Annotation() {};
   // Finished visiting.

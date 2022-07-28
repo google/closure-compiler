@@ -54,7 +54,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final boolean rootScopeUsesAreGlobal;
 
   private final JSChunkGraph moduleGraph;
-  private final JSChunk firstModule;
+  private final @Nullable JSChunk firstModule;
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
@@ -843,7 +843,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     private boolean referenced = false;
     private final Deque<Symbol> declarations = new ArrayDeque<>();
-    private JSChunk deepestCommonModuleRef = null;
+    private @Nullable JSChunk deepestCommonModuleRef = null;
 
     // True if this property is a function that reads a variable from an
     // outer scope which isn't the global scope.

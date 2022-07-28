@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Find and update any direct dependencies of an input. Used to walk the dependency graph and
@@ -49,7 +50,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   private final boolean supportsEs6Modules;
   private final boolean supportsCommonJsModules;
   private ModuleType moduleType = ModuleType.NONE;
-  private Scope dynamicImportScope = null;
+  private @Nullable Scope dynamicImportScope = null;
   private final ImmutableMap<String, String> inputPathByWebpackId;
 
   FindModuleDependencies(

@@ -165,7 +165,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, Compiler
   private class ThisAndArgumentsContext {
     final Node scopeBody;
     final boolean isConstructor;
-    Node lastSuperStatement = null; // Last statement in the body that refers to super().
+    @Nullable Node lastSuperStatement = null; // Last statement in the body that refers to super().
 
     boolean needsThisVar = false;
     @Nullable private AstFactory.Type thisType;

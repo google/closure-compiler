@@ -62,10 +62,10 @@ final class RenameVars implements CompilerPass {
   private final Map<Node, String> originalNameByNode = new HashMap<>();
 
   /**
-   * Maps a name node to its pseudo name, null if we are not generating so
-   * there will be no overhead unless we are debugging.
+   * Maps a name node to its pseudo name, null if we are not generating so there will be no overhead
+   * unless we are debugging.
    */
-  private final Map<Node, String> pseudoNameMap;
+  @Nullable private final Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
   private Set<String> externNames;
@@ -95,7 +95,7 @@ final class RenameVars implements CompilerPass {
     final boolean isLocal;
     final String oldName;
     final int orderOfOccurrence;
-    String newName;
+    @Nullable String newName;
     int count; // Number of times this is referenced
 
     Assignment(String name) {

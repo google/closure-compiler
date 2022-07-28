@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
+import org.jspecify.nullness.Nullable;
 
 /** Run the compiler in a separate thread with a larger stack */
 class CompilerExecutor {
@@ -36,10 +37,8 @@ class CompilerExecutor {
   // Also, (de)serialization between phases can involve a lot of recursion.
   static final long COMPILER_STACK_SIZE = (1 << 26); // About 64MB
 
-  /**
-   * Use a dedicated compiler thread per Compiler instance.
-   */
-  private Thread compilerThread = null;
+  /** Use a dedicated compiler thread per Compiler instance. */
+  private @Nullable Thread compilerThread = null;
 
   /** Whether to use threads. */
   private boolean useThreads = true;

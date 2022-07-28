@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Scope contains information about a variable scope in JavaScript. Scopes can be nested, a scope
@@ -30,7 +31,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class Scope extends AbstractScope<Scope, Var> {
 
-  private final Scope parent;
+  private final @Nullable Scope parent;
   private final int depth;
 
   static Scope createGlobalScope(Node rootNode) {

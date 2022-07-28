@@ -86,9 +86,9 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   private final CodeLoader loader;
 
   // Source Line Information
-  private transient int[] lineOffsets = null;
+  @Nullable private transient int[] lineOffsets = null;
 
-  private transient volatile String code = null;
+  @Nullable private transient volatile String code = null;
 
   private SourceFile(CodeLoader loader, String fileName, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
@@ -525,13 +525,13 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   public static final class Builder {
     private SourceKind kind = SourceKind.STRONG;
     private Charset charset = UTF_8;
-    private String originalPath = null;
+    @Nullable private String originalPath = null;
 
-    private String path = null;
-    private Path pathWithFilesystem = null;
-    private String zipEntryPath = null;
+    @Nullable private String path = null;
+    @Nullable private Path pathWithFilesystem = null;
+    @Nullable private String zipEntryPath = null;
 
-    private Supplier<String> lazyContent = null;
+    @Nullable private Supplier<String> lazyContent = null;
 
     private Builder() {}
 

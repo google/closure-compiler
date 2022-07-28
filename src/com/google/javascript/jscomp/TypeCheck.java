@@ -388,7 +388,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // explicitly turned off.
   private boolean reportMissingProperties = true;
 
-  private InferJSDocInfo inferJSDocInfo = null;
+  @Nullable private InferJSDocInfo inferJSDocInfo = null;
 
   // These fields are used to calculate the percentage of expressions typed.
   private int typedCount = 0;

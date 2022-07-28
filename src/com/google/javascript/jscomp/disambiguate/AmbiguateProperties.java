@@ -97,9 +97,9 @@ public class AmbiguateProperties implements CompilerPass {
   private final ColorRegistry colorRegistry;
 
   /** Map from original property name to new name. Only used by tests. */
-  private Map<String, String> renamingMap = null;
+  private @Nullable Map<String, String> renamingMap = null;
 
-  private ColorGraphNodeFactory graphNodeFactory = null;
+  private @Nullable ColorGraphNodeFactory graphNodeFactory = null;
 
   /**
    * Sorts Property objects by their count, breaking ties alphabetically to ensure a deterministic
@@ -590,7 +590,7 @@ public class AmbiguateProperties implements CompilerPass {
     int numOccurrences;
     boolean skipAmbiguating;
     // All colors upon which this property was directly accessed. For "a.b" this includes "a"'s type
-    IdentityHashMap<ColorGraphNode, Integer> relatedColorsSeeds = null;
+    @Nullable IdentityHashMap<ColorGraphNode, Integer> relatedColorsSeeds = null;
     // includes relatedTypesSeeds + all subtypes of those seed colors. For example if this property
     // was accessed off of Iterable, then this bitset will include Array as well.
     final BitSet relatedColors = new BitSet();

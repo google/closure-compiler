@@ -188,7 +188,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     }
   }
 
-  private ModuleInfo currentModuleInfo = null;
+  @Nullable private ModuleInfo currentModuleInfo = null;
 
   public ClosureCheckModule(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     super(compiler, moduleMetadataMap);

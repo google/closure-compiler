@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import java.util.Collection;
+import org.jspecify.nullness.Nullable;
 
 /** Builds a graph of the {@link Color}s on the AST from a specified set of seed colors. */
 final class ColorGraphBuilder {
@@ -68,7 +69,7 @@ final class ColorGraphBuilder {
    * but Object is used to indicate that EdgeReasons are only meant for debugging and not any actual
    * logic in (dis)ambiguation.
    */
-  private LinkedDirectedGraph<ColorGraphNode, Object> colorHoldsInstanceGraph =
+  private @Nullable LinkedDirectedGraph<ColorGraphNode, Object> colorHoldsInstanceGraph =
       LinkedDirectedGraph.createWithoutAnnotations();
 
   ColorGraphBuilder(

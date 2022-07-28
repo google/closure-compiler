@@ -565,7 +565,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
    */
   class FindImportsAndExports implements NodeTraversal.Callback, ErrorHandler {
     private boolean hasGoogProvideOrModule = false;
-    private Node script = null;
+    private @Nullable Node script = null;
 
     boolean isCommonJsModule() {
       return (!exports.isEmpty() || !moduleExports.isEmpty()) && !hasGoogProvideOrModule;

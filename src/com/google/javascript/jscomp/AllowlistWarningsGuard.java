@@ -39,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An extension of {@code WarningsGuard} that provides functionality to maintain a list of warnings
@@ -216,9 +217,9 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   /** Allowlist builder */
   public class AllowlistBuilder implements ErrorHandler {
     private final Set<JSError> warnings = new LinkedHashSet<>();
-    private String productName = null;
-    private String generatorTarget = null;
-    private String headerNote = null;
+    private @Nullable String productName = null;
+    private @Nullable String generatorTarget = null;
+    private @Nullable String headerNote = null;
 
     /** Fill in your product name to get a fun message! */
     @CanIgnoreReturnValue

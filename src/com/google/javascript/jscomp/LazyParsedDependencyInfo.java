@@ -26,12 +26,13 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import java.util.Map;
 import java.util.TreeMap;
+import org.jspecify.nullness.Nullable;
 
 /** A DependencyInfo class that determines load flags by parsing the AST just-in-time. */
 public class LazyParsedDependencyInfo extends DependencyInfo.Base {
 
   private final DependencyInfo delegate;
-  private JsAst ast;
+  private @Nullable JsAst ast;
   private final transient AbstractCompiler compiler;
 
   private ImmutableMap<String, String> loadFlags;

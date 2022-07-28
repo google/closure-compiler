@@ -60,7 +60,7 @@ class ProcessDefines implements CompilerPass {
   private static final Node GOOG_DEFINE = IR.getprop(IR.name("goog"), "define");
 
   private final AbstractCompiler compiler;
-  private final JSTypeRegistry registry;
+  @Nullable private final JSTypeRegistry registry;
   private final ImmutableMap<String, Node> replacementValuesFromFlags;
   private final Mode mode;
   private final Supplier<GlobalNamespace> namespaceSupplier;

@@ -35,6 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import org.jspecify.nullness.Nullable;
 
 /** A compiler pass to run the type inference analysis. */
 class TypeInferencePass {
@@ -47,7 +48,7 @@ class TypeInferencePass {
   private final AssertionFunctionLookup assertionFunctionLookup;
 
   // (stepCount, Token) -> populationCount
-  private final LinkedHashMap<Integer, HashMultiset<Token>> stepCountHistogram;
+  private final @Nullable LinkedHashMap<Integer, HashMultiset<Token>> stepCountHistogram;
 
   TypeInferencePass(
       AbstractCompiler compiler,

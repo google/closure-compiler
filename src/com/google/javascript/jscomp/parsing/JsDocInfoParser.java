@@ -114,7 +114,7 @@ public final class JsDocInfoParser {
   }
 
   // The DocInfo with the fileoverview tag for the whole file.
-  private JSDocInfo fileOverviewJSDocInfo = null;
+  @Nullable private JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
 
   private final Map<String, Annotation> annotations;
@@ -2639,7 +2639,7 @@ public final class JsDocInfoParser {
   }
 
   /** Specific value indicating that the {@link #unreadToken} contains no token. */
-  private static final JsDocToken NO_UNREAD_TOKEN = null;
+  @Nullable private static final JsDocToken NO_UNREAD_TOKEN = null;
 
   /** One token buffer. */
   private JsDocToken unreadToken = NO_UNREAD_TOKEN;

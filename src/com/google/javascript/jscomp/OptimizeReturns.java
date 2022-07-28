@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A compiler pass to optimize function return results. Currently this pass looks for results that
@@ -42,7 +43,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
   private final AbstractCompiler compiler;
 
   // Allocated & cleaned up by process()
-  private LogFile decisionsLog;
+  private @Nullable LogFile decisionsLog;
 
   OptimizeReturns(AbstractCompiler compiler) {
     this.compiler = compiler;

@@ -18,17 +18,17 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.javascript.rhino.Node;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import org.jspecify.nullness.Nullable;
 
 /** A class to get a raw and gzip'ed size estimate; it doesn't generate code. */
 final class PerformanceTrackerCodeSizeEstimator extends CodeConsumer {
   private int size = 0;
   private char lastChar = '\0';
-  private final ByteArrayOutputStream output;
-  private final GZIPOutputStream stream;
+  private final @Nullable ByteArrayOutputStream output;
+  private final @Nullable GZIPOutputStream stream;
   private final boolean trackGzSize;
 
   static PerformanceTrackerCodeSizeEstimator estimate(Node jsRoot, boolean trackGzSize) {

@@ -116,7 +116,7 @@ class InlineAndCollapseProperties implements CompilerPass {
    * <p>This field is allocated and cleaned up by process(). It's a class field to avoid having to
    * pass it as an extra argument through a lot of methods.
    */
-  private LogFile decisionsLog = null;
+  @Nullable private LogFile decisionsLog = null;
 
   /** A `GlobalNamespace` that is shared by alias inlining and property collapsing code. */
   private GlobalNamespace namespace;

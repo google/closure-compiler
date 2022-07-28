@@ -148,9 +148,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       DiagnosticType.error(
           "JSC_MISSING_MODULE_ERROR", "unknown module \"{0}\" specified in entry point spec");
 
-  private CompilerOptions options = null;
+  @Nullable private CompilerOptions options = null;
 
-  private PassConfig passes = null;
+  @Nullable private PassConfig passes = null;
 
   // The externs inputs
   private final ArrayList<CompilerInput> externs = new ArrayList<>();
@@ -175,7 +175,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   // Node of the final injected library. Future libraries will be injected
   // after this node.
-  private Node lastInjectedLibrary;
+  @Nullable private Node lastInjectedLibrary;
 
   // Parse tree root nodes
   private Node externsRoot;
@@ -183,7 +183,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Node externAndJsRoot;
 
   // Used for debugging; to see the compiled code between passes
-  private String lastJsSource = null;
+  @Nullable private String lastJsSource = null;
 
   private FeatureSet featureSet;
 
@@ -219,7 +219,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private SourceMap sourceMap;
 
   /** The externs created from the exports. */
-  private String externExports = null;
+  @Nullable private String externExports = null;
 
   private UniqueIdSupplier uniqueIdSupplier = new UniqueIdSupplier();
 
@@ -234,16 +234,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Detects Google-specific coding conventions. */
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
-  private JSTypeRegistry typeRegistry;
-  private ColorRegistry colorRegistry;
-  private volatile Config parserConfig = null;
-  private volatile Config externsParserConfig = null;
+  @Nullable private JSTypeRegistry typeRegistry;
+  @Nullable private ColorRegistry colorRegistry;
+  @Nullable private volatile Config parserConfig = null;
+  @Nullable private volatile Config externsParserConfig = null;
 
-  private ReverseAbstractInterpreter abstractInterpreter;
-  private TypeValidator typeValidator;
+  @Nullable private ReverseAbstractInterpreter abstractInterpreter;
+  @Nullable private TypeValidator typeValidator;
   // The compiler can ask phaseOptimizer for things like which pass is currently
   // running, or which functions have been changed by optimizations
-  private PhaseOptimizer phaseOptimizer = null;
+  @Nullable private PhaseOptimizer phaseOptimizer = null;
 
   public PerformanceTracker tracker;
 
@@ -270,8 +270,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private String lastPassName;
 
-  private ImmutableSet<String> externProperties = null;
-  private AccessorSummary accessorSummary = null;
+  @Nullable private ImmutableSet<String> externProperties = null;
+  @Nullable private AccessorSummary accessorSummary = null;
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
@@ -500,7 +500,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private ImmutableMap<SourceFile, Supplier<Node>> typedAstFilesystem;
+  @Nullable private ImmutableMap<SourceFile, Supplier<Node>> typedAstFilesystem;
 
   @Nullable
   @Override
@@ -1618,7 +1618,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return this.colorRegistry != null;
   }
 
-  private TypedScopeCreator typedScopeCreator;
+  @Nullable private TypedScopeCreator typedScopeCreator;
 
   @Override
   public ScopeCreator getTypedScopeCreator() {
@@ -1685,7 +1685,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return symbolTable;
   }
 
-  private TypedScope topScope = null;
+  @Nullable private TypedScope topScope = null;
 
   @Override
   public TypedScope getTopScope() {
@@ -3123,22 +3123,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Keys are arguments passed to getCssName() found during compilation; values are the number of
    * times the key appeared as an argument to getCssName().
    */
-  private LinkedHashMap<String, Integer> cssNames = null;
+  @Nullable private LinkedHashMap<String, Integer> cssNames = null;
 
   /** The variable renaming map */
-  private VariableMap variableMap = null;
+  @Nullable private VariableMap variableMap = null;
 
   /** The property renaming map */
-  private VariableMap propertyMap = null;
+  @Nullable private VariableMap propertyMap = null;
 
   /** String replacement map */
-  private VariableMap stringMap = null;
+  @Nullable private VariableMap stringMap = null;
 
   /** Mapping for Instrumentation parameter encoding */
-  private VariableMap instrumentationMapping = null;
+  @Nullable private VariableMap instrumentationMapping = null;
 
   /** Id generator map */
-  private String idGeneratorMap = null;
+  @Nullable private String idGeneratorMap = null;
 
   /** Names exported by goog.exportSymbol. */
   private final LinkedHashSet<String> exportedNames = new LinkedHashSet<>();

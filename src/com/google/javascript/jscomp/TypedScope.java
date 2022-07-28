@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
  */
 public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements StaticTypedScope {
 
-  private final TypedScope parent;
+  @Nullable private final TypedScope parent;
   private final int depth;
   @Nullable private final Module module;
 

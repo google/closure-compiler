@@ -231,6 +231,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
+    @Nullable
     @Option(
         name = "--jszip",
         hidden = true,
@@ -259,18 +260,21 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private List<String> chunk = new ArrayList<>();
 
     // TODO(bradfordcsmith): deprecate and remove this in favor of --restore_stage1_from_file
+    @Nullable
     @Option(
         name = "--continue-saved-compilation",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
     private String continueSavedCompilationFile = null;
 
+    @Nullable
     @Option(
         name = "--restore_stage1_from_file",
         usage = "Filename where a stage 1 compilation state was previously saved.",
         hidden = true)
     private String restoreStage1FromFile = null;
 
+    @Nullable
     @Option(
         name = "--restore_stage2_from_file",
         usage = "Filename where a stage 2 compilation state was previously saved.",
@@ -278,18 +282,21 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String restoreStage2FromFile = null;
 
     // TODO(bradfordcsmith): deprecate and remove this in favor of --save_stage1_to_file
+    @Nullable
     @Option(
         name = "--save-after-checks",
         usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
         hidden = true)
     private String saveAfterChecksFile = null;
 
+    @Nullable
     @Option(
         name = "--save_stage1_to_file",
         usage = "Filename to save stage 1 state so that the compilation can be resumed later.",
         hidden = true)
     private String saveStage1ToFile = null;
 
+    @Nullable
     @Option(
         name = "--save_stage2_to_file",
         usage = "Filename to save stage 2 state so that the compilation can be resumed later.",
@@ -514,7 +521,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "ADVANCED")
     private String compilationLevel = "SIMPLE";
 
-    private CompilationLevel compilationLevelParsed = null;
+    @Nullable private CompilationLevel compilationLevelParsed = null;
 
     @Option(
         name = "--num_parallel_threads",
@@ -575,6 +582,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "mapped back to the original name.")
     private boolean debug = false;
 
+    @Nullable
     @Option(
         name = "--typed_ast_output_file__INTENRNAL_USE_ONLY",
         usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
@@ -628,6 +636,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             "Generate $inject properties for AngularJS for functions " + "annotated with @ngInject")
     private boolean angularPass = false;
 
+    @Nullable
     @Option(name = "--polymer_version", usage = "Which version of Polymer is being used (1 or 2).")
     private Integer polymerVersion = null;
 
@@ -708,6 +717,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage = "Source of translated messages. Currently only supports XTB.")
     private String translationsFile = "";
 
+    @Nullable
     @Option(
         name = "--translations_project",
         hidden = true,
@@ -753,11 +763,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "Options: ALL, AST_SIZE, RAW_SIZE, TIMING_ONLY, OFF")
     private CompilerOptions.TracerMode tracerMode = CompilerOptions.TracerMode.OFF;
 
+    @Nullable
     @Option(
         name = "--rename_variable_prefix",
         usage = "Specifies a prefix that will be prepended to all variables.")
     private String renamePrefix = null;
 
+    @Nullable
     @Option(
         name = "--rename_prefix_namespace",
         usage =
@@ -870,6 +882,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
     private Map<String, String> browserResolverPrefixReplacements = new HashMap<>();
 
+    @Nullable
     @Option(
         name = "--package_json_entry_names",
         usage =
@@ -932,6 +945,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "expressions are not yet fully supported and may lead to broken output code.")
     private boolean allowDynamicImport = true;
 
+    @Nullable
     @Option(
         name = "--dynamic_import_alias",
         usage =
@@ -1459,7 +1473,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   private boolean runCompiler = false;
 
   /** Cached error stream to avoid passing it as a parameter to helper functions. */
-  private PrintStream errorStream;
+  @Nullable private PrintStream errorStream;
 
   /**
    * Create a new command-line runner. You should only need to call the constructor if you're

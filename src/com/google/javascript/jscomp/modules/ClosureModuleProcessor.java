@@ -58,7 +58,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     private final ImmutableMap<String, Binding> namespace;
     private final ImmutableMap<String, Require> requiresByLocalName;
     private final AbstractCompiler compiler;
-    private Module resolved = null;
+    @Nullable private Module resolved = null;
 
     UnresolvedGoogModule(
         ModuleMetadata metadata,

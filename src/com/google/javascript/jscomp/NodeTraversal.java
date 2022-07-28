@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 public class NodeTraversal {
   private final AbstractCompiler compiler;
   private final Callback callback;
-  private final ScopedCallback scopeCallback;
+  @Nullable private final ScopedCallback scopeCallback;
   private final ScopeCreator scopeCreator;
   private final boolean obeyDestructuringAndDefaultValueExecutionOrder;
 
@@ -71,12 +71,12 @@ public class NodeTraversal {
   private final Deque<Object> cfgs = new ArrayDeque<>();
 
   /** The current source file name */
-  private String sourceName;
+  @Nullable private String sourceName;
 
   /** The current input */
-  private InputId inputId;
+  @Nullable private InputId inputId;
 
-  private CompilerInput compilerInput;
+  @Nullable private CompilerInput compilerInput;
 
   /** Callback for tree-based traversals */
   public interface Callback {
@@ -648,7 +648,7 @@ public class NodeTraversal {
 
     class TraverseScopeRootsCallback implements ScopedCallback {
       boolean insideScopeNode = false;
-      Node scopeNode = null;
+      @Nullable Node scopeNode = null;
 
       @Override
       public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {

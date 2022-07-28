@@ -131,7 +131,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * compiler's module runtime.
    */
   private class Rewriter extends AbstractPostOrderCallback {
-    private Node requireInsertSpot;
+    @Nullable private Node requireInsertSpot;
     private final Node script;
     private final Map<String, LocalQName> exportedNameToLocalQName;
     private final Set<Node> imports;

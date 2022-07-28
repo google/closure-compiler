@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Group a set of related diagnostic types together, so that they can be toggled on and off as one
@@ -33,7 +34,7 @@ public final class DiagnosticGroup implements Serializable {
   private final ImmutableSet<DiagnosticType> types;
 
   // A human-readable name for the group.
-  private final String name;
+  private final @Nullable String name;
 
   /**
    * Create a group that matches all errors of the given types.

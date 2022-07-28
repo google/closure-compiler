@@ -86,7 +86,7 @@ final class Es6RewriteGenerators implements CompilerPass {
   private final StaticScope namespace;
   private final AstFactory astFactory;
 
-  private final Color nullableStringType;
+  @Nullable private final Color nullableStringType;
   private final Supplier<AstFactory.Type> generatorContextType;
   private final Supplier<AstFactory.Type> propertyIteratorType;
 

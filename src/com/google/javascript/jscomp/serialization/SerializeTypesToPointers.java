@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Grab an integer TypePool pointer for each JSType on the AST and log information about the
@@ -59,7 +60,7 @@ final class SerializeTypesToPointers {
   private final LinkedHashSet<String> propertiesReferencedInAst;
   private final IdentityHashMap<JSType, Integer> typePointersByJstype = new IdentityHashMap<>();
   private static final Gson GSON = new Gson();
-  private TypePool typePool = null;
+  private @Nullable TypePool typePool = null;
 
   private SerializeTypesToPointers(
       AbstractCompiler compiler,

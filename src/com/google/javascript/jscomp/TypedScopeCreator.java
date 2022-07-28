@@ -716,7 +716,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     final TypedScope currentHoistScope;
 
     /** The current source file that we're in. */
-    private String sourceName = null;
+    @Nullable private String sourceName = null;
 
     /** The InputId of the current node. */
     private InputId inputId;
@@ -2008,7 +2008,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       String variableName;
       TypedScope scope;
       // default is no type and a type may be inferred later
-      JSType type = null;
+      @Nullable JSType type = null;
       boolean allowLaterTypeInference = true;
       boolean forGoogProvidedName = false;
 

@@ -140,7 +140,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean assumeGettersArePure;
 
   // Allocated & cleaned up by process()
-  private LogFile removalLog;
+  @Nullable private LogFile removalLog;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;

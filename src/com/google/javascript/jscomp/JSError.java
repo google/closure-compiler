@@ -51,8 +51,8 @@ public abstract class JSError implements Serializable {
 
   private static final int DEFAULT_LINENO = -1;
   private static final int DEFAULT_CHARNO = -1;
-  private static final String DEFAULT_SOURCENAME = null;
-  private static final Node DEFAULT_NODE = null;
+  @Nullable private static final String DEFAULT_SOURCENAME = null;
+  @Nullable private static final Node DEFAULT_NODE = null;
 
   /**
    * Creates a JSError with no source information

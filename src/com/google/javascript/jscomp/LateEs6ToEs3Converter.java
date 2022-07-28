@@ -30,6 +30,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Converts ES6 code to valid ES5 code. This class does most of the transpilation, and
@@ -56,7 +57,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   // definition as injecting to the top of the script causes runtime errors
   // https://github.com/google/closure-compiler/issues/3589. For the subsequent script(s), the call
   // is injected to the top of that script.
-  private Node templateLitInsertionPoint = null;
+  private @Nullable Node templateLitInsertionPoint = null;
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 

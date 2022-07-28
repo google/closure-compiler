@@ -830,16 +830,16 @@ class InlineFunctions implements CompilerPass {
 
   /** Use to track the decisions that have been made about a function. */
   private static class FunctionState {
-    private Function fn = null;
-    private Node safeFnNode = null;
+    private @Nullable Function fn = null;
+    private @Nullable Node safeFnNode = null;
     private boolean inline = true;
     private boolean remove = true;
     private boolean inlineDirectly = false;
     private boolean referencesThis = false;
     private boolean hasInnerFunctions = false;
-    private Map<Node, Reference> references = null;
-    private JSChunk module = null;
-    private Set<String> namesToAlias = null;
+    private @Nullable Map<Node, Reference> references = null;
+    private @Nullable JSChunk module = null;
+    private @Nullable Set<String> namesToAlias = null;
 
     boolean hasExistingFunctionDefinition() {
       return (fn != null);

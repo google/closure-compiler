@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A package for common iteration patterns.
@@ -154,7 +155,7 @@ class NodeIterators {
     private final boolean valueHasSideEffects;
     private final FunctionlessLocalScope iterator;
     private final String varName;
-    private Node lookAhead;
+    private @Nullable Node lookAhead;
 
     /**
      * The name is a bit of a misnomer; this works with let and const as well.

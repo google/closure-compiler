@@ -159,6 +159,8 @@ final class ClosureRewriteModule implements CompilerPass {
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final boolean preserveSugar;
   private final LinkedHashMap<String, Node> syntheticExterns = new LinkedHashMap<>();
+
+  @Nullable
   private Scope globalScope = null; // non-final because it must be set after process() is called
 
   /** Indicates where new nodes should be added in relation to some other node. */
@@ -283,7 +285,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
     boolean hasCreatedExportObject;
     ExportDefinition defaultExport;
-    String defaultExportLocalName;
+    @Nullable String defaultExportLocalName;
     final Set<String> namedExports = new HashSet<>();
     final Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
 
@@ -637,7 +639,7 @@ final class ClosureRewriteModule implements CompilerPass {
 
   // Per script state needed for rewriting.
   private final Deque<ScriptDescription> scriptStack = new ArrayDeque<>();
-  private ScriptDescription currentScript = null;
+  @Nullable private ScriptDescription currentScript = null;
 
   // Global state tracking an association between the dotted names of goog.module()s and whether
   // the goog.module declares itself as a legacy namespace.

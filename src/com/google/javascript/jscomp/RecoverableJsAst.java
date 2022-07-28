@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.JsAst.RhinoError;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An implementation of {@link SourceAst} that avoids re-creating the AST unless it was manually
@@ -34,7 +35,7 @@ import com.google.javascript.rhino.Node;
 public class RecoverableJsAst implements SourceAst {
 
   // The AST copy that will be kept around.
-  private Node root = null;
+  private @Nullable Node root = null;
 
   // This is the actual SourceAst this caching wrapper wraps around.
   private final SourceAst realSource;

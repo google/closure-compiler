@@ -100,7 +100,7 @@ public class RewriteGoogJsImports implements CompilerPass {
   private final Mode mode;
   private final ModuleMap moduleMap;
   private final AbstractCompiler compiler;
-  private Module googModule;
+  @Nullable private Module googModule;
   private final Map<Module, Module> moduleReplacements = new HashMap<>();
 
   public RewriteGoogJsImports(AbstractCompiler compiler, Mode mode, ModuleMap moduleMap) {

@@ -50,6 +50,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Chainable reverse abstract interpreter providing basic functionality.
@@ -58,7 +59,7 @@ public abstract class ChainableReverseAbstractInterpreter
     implements ReverseAbstractInterpreter {
   final JSTypeRegistry typeRegistry;
   private ChainableReverseAbstractInterpreter firstLink;
-  private ChainableReverseAbstractInterpreter nextLink;
+  private @Nullable ChainableReverseAbstractInterpreter nextLink;
 
   /**
    * Constructs an interpreter, which is the only link in a chain. Interpreters

@@ -330,11 +330,11 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
     final boolean hasParentClass;
 
     // Will be set to the first `super()` call that appears lexically, if any.
-    Node firstSuperCall = null;
+    @Nullable Node firstSuperCall = null;
     // Call to super() isn't required if the constructor returns a value.
     boolean returnsAValue = false;
-    Node thisAccessedBeforeSuper = null;
-    Node superPropertyAccessedBeforeSuperCall = null;
+    @Nullable Node thisAccessedBeforeSuper = null;
+    @Nullable Node superPropertyAccessedBeforeSuperCall = null;
 
     ConstructorContext(Node contextNode) {
       super(contextNode);

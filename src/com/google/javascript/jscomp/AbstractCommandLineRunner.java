@@ -173,24 +173,30 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private boolean testMode = false;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Supplier<List<SourceFile>> externsSupplierForTesting = null;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Supplier<List<SourceFile>> inputsSupplierForTesting = null;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Supplier<List<JSChunk>> modulesSupplierForTesting = null;
 
   @GwtIncompatible("Unnecessary")
   private Function<Integer, Void> exitCodeReceiver = SystemExitCodeReceiver.INSTANCE;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Map<String, String> rootRelativePathsMap = null;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Map<String, String> parsedModuleWrappers = null;
 
+  @Nullable
   @GwtIncompatible("Unnecessary")
   private Map<String, String> parsedModuleOutputFiles = null;
 
@@ -2523,7 +2529,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
      * When non-null specifies a file containing saved compiler state to restore and continue
      * compiling.
      */
-    private String continueSavedCompilationFileName = null;
+    @Nullable private String continueSavedCompilationFileName = null;
 
     /**
      * When > 0 indicates the stage at which compilation stopped for the compilation state that is
@@ -2656,7 +2662,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private String saveCompilationStateToFilename = null;
+    @Nullable private String saveCompilationStateToFilename = null;
 
     /** Set the compiler to perform the first phase and save the intermediate result to a file. */
     @CanIgnoreReturnValue
@@ -2965,7 +2971,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private DependencyOptions dependencyOptions = null;
+    @Nullable private DependencyOptions dependencyOptions = null;
 
     /** Sets the dependency management options. */
     @CanIgnoreReturnValue
@@ -2989,7 +2995,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       return this;
     }
 
-    private String outputModuleDependencies = null;
+    @Nullable private String outputModuleDependencies = null;
 
     /** Sets whether a JSON file representing the dependencies between modules should be created. */
     @CanIgnoreReturnValue

@@ -472,9 +472,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       // lattice for the ON_EX edge. But it's probably too expensive to be
       // worthwhile.
 
-      Node condition = null;
-      FlowScope conditionFlowScope = null;
-      BooleanOutcomePair conditionOutcomes = null;
+      @Nullable Node condition = null;
+      @Nullable FlowScope conditionFlowScope = null;
+      @Nullable BooleanOutcomePair conditionOutcomes = null;
 
       @Override
       public FlowScope branchFlow(Branch branch) {
@@ -2456,7 +2456,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   private static class OptChainInfo {
     private final Node endOfChain;
     private final Node startOfChain;
-    private FlowScope unconditionalScope;
+    @Nullable private FlowScope unconditionalScope;
 
     OptChainInfo(Node endOfChain, Node startOfChain) {
       this.endOfChain = endOfChain;
@@ -2824,7 +2824,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     final FlowScope rightScope;
 
     // The scope when we don't know how much of the expression is executed.
-    FlowScope joinedScope = null;
+    @Nullable FlowScope joinedScope = null;
 
     BooleanOutcomePair(
         BooleanLiteralSet toBooleanOutcomes,

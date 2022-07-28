@@ -39,11 +39,11 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   private final String name;
 
-  private final Node nameNode;
+  @Nullable private final Node nameNode;
 
   // null if not an implicit goog namespace; otherwise starts out as an ArrayList then is frozen
   // into an ImmutableList.
-  private SourceKind implicitGoogNamespaceStrength;
+  @Nullable private SourceKind implicitGoogNamespaceStrength;
 
   /** Input source */
   private final CompilerInput input;

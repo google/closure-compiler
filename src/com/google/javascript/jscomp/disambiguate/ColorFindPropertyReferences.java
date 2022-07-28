@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Traverses the AST, collecting connections between {@link JSType}s, property accesses, and their
@@ -56,7 +57,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     boolean test(Node nameNode);
   }
 
-  private LinkedHashMap<String, PropertyClustering> propIndex = new LinkedHashMap<>();
+  private @Nullable LinkedHashMap<String, PropertyClustering> propIndex = new LinkedHashMap<>();
 
   private final ColorGraphNodeFactory colorGraphNodeFactory;
   private final IsPropertyReflector isPropertyReflector;

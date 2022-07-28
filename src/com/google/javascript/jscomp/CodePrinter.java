@@ -49,10 +49,10 @@ public final class CodePrinter {
   // version.
 
   private abstract static class MappedCodePrinter extends CodeConsumer {
-    private final Deque<Mapping> mappings;
-    private final List<Mapping> allMappings;
+    @Nullable private final Deque<Mapping> mappings;
+    @Nullable private final List<Mapping> allMappings;
     // The ordered list of finalized mappings since the last line break. See #reportLineCut.
-    private final List<Mapping> completeMappings;
+    @Nullable private final List<Mapping> completeMappings;
     // The index into allMappings to find the mappings added since the last line
     // break. See #reportLineCut.
     private int firstCandidateMappingForCut = 0;
@@ -700,7 +700,7 @@ public final class CodePrinter {
     private boolean lineBreak;
     private boolean prettyPrint;
     private boolean outputTypes = false;
-    private SourceMap sourceMap = null;
+    @Nullable private SourceMap sourceMap = null;
     private boolean tagAsTypeSummary;
     private boolean tagAsStrict;
     @Nullable private JSTypeRegistry registry; // may be null unless using Format.TYPED

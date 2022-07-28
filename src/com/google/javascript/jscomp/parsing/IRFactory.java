@@ -191,7 +191,7 @@ class IRFactory {
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final StaticSourceFile sourceFile;
-  private final String sourceName;
+  @Nullable private final String sourceName;
   private final Config config;
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
@@ -226,7 +226,7 @@ class IRFactory {
   private final Set<Comment> parsedComments = new HashSet<>();
 
   private final LinkedHashSet<String> licenseBuilder = new LinkedHashSet<>();
-  private JSDocInfo firstFileoverview = null;
+  @Nullable private JSDocInfo firstFileoverview = null;
 
   // Use a template node for properties set on all nodes to minimize the
   // memory footprint associated with these.
