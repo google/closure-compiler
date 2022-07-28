@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1 into a form that can be
@@ -360,7 +361,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     final Node ifRoot;
     final Node activeBranch;
 
-    UmdPattern(Node ifRoot, Node activeBranch) {
+    UmdPattern(Node ifRoot, @Nullable Node activeBranch) {
       this.ifRoot = ifRoot;
       this.activeBranch = activeBranch;
     }

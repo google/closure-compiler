@@ -608,7 +608,7 @@ public class Parser {
       this.start = start;
     }
 
-    void setName(IdentifierToken name) {
+    void setName(@Nullable IdentifierToken name) {
       this.name = name;
     }
 
@@ -616,7 +616,7 @@ public class Parser {
       return name;
     }
 
-    void setNameExpr(ParseTree nameExpr) {
+    void setNameExpr(@Nullable ParseTree nameExpr) {
       this.nameExpr = nameExpr;
     }
 
@@ -1462,7 +1462,7 @@ public class Parser {
   }
 
   // 12.6.3 The for Statement
-  private ParseTree parseForStatement(SourcePosition start, ParseTree initializer) {
+  private ParseTree parseForStatement(SourcePosition start, @Nullable ParseTree initializer) {
     if (initializer == null) {
       initializer = new NullTree(new SourceRange(getTreeEndLocation(), getTreeStartLocation()));
     }
@@ -1784,7 +1784,7 @@ public class Parser {
    * @param operand A non-null value would represent the callsite
    * @return The template literal expression
    */
-  private TemplateLiteralExpressionTree parseTemplateLiteral(ParseTree operand) {
+  private TemplateLiteralExpressionTree parseTemplateLiteral(@Nullable ParseTree operand) {
     SourcePosition start = operand == null ? getTreeStartLocation() : operand.location.start;
     Token token = nextToken();
     if (!(token instanceof TemplateLiteralToken)) {
@@ -3638,7 +3638,7 @@ public class Parser {
    * @param token The location to report the message at.
    * @param expected The thing that was expected.
    */
-  private void reportExpectedError(Token token, Object expected) {
+  private void reportExpectedError(@Nullable Token token, Object expected) {
     reportError(token, "'%s' expected", expected);
   }
 

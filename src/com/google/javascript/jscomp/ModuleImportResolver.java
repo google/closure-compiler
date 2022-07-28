@@ -273,7 +273,8 @@ final class ModuleImportResolver {
     }
   }
 
-  private void updateAstForExport(Node bindingSourceNode, JSType exportType, JSType typedefType) {
+  private void updateAstForExport(
+      Node bindingSourceNode, JSType exportType, @Nullable JSType typedefType) {
     bindingSourceNode.setJSType(exportType);
     bindingSourceNode.setTypedefTypeProp(typedefType);
     if (bindingSourceNode.getParent().isExportSpec()) {

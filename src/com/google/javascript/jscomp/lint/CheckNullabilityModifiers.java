@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Checks for missing or redundant nullability modifiers.
@@ -175,7 +176,7 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
   }
 
   private void visitTypeExpression(
-      JSTypeExpression expr, boolean hasArtificialTopLevelBang, Node rValue) {
+      JSTypeExpression expr, boolean hasArtificialTopLevelBang, @Nullable Node rValue) {
     Node root = expr.getRoot();
     NodeUtil.visitPreOrder(
         root,

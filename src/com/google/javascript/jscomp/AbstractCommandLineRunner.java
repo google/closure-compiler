@@ -629,7 +629,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   protected List<SourceFile> createInputs(
       List<FlagEntry<JsSourceType>> files,
-      List<JsonFileSpec> jsonFiles,
+      @Nullable List<JsonFileSpec> jsonFiles,
       boolean allowStdIn,
       List<JsChunkSpec> jsChunkSpecs)
       throws IOException {
@@ -1944,7 +1944,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
    * strategy #1 or #2 based on the current output mode.
    */
   @GwtIncompatible("Unnecessary")
-  private String expandCommandLinePath(String path, JSChunk forModule) {
+  private String expandCommandLinePath(String path, @Nullable JSChunk forModule) {
     String sub;
     if (forModule != null) {
       sub = getModuleOutputFileName(forModule);
@@ -1959,7 +1959,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   /** Expansion function for source map. */
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  String expandSourceMapPath(B options, JSChunk forModule) {
+  String expandSourceMapPath(B options, @Nullable JSChunk forModule) {
     if (!options.shouldGatherSourceMapInfo()) {
       return null;
     }
@@ -3142,7 +3142,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       this(src, path, sourceMap, null);
     }
 
-    public JsonFileSpec(String src, String path, String sourceMap, @Nullable String webpackId) {
+    public JsonFileSpec(
+        @Nullable String src,
+        @Nullable String path,
+        @Nullable String sourceMap,
+        @Nullable String webpackId) {
       this.src = src;
       this.path = path;
       this.sourceMap = sourceMap;

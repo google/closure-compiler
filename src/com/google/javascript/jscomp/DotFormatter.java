@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * <p>DotFormatter prints out a dot file of the Abstract Syntax Tree.
@@ -86,12 +87,12 @@ public final class DotFormatter {
 
   /**
    * Converts an AST to dot representation.
+   *
    * @param n the root of the AST described in the dot formatted string
    * @param inCFG Control Flow Graph.
    * @return the dot representation of the AST
    */
-  static String toDot(Node n, ControlFlowGraph<Node> inCFG)
-      throws IOException  {
+  static String toDot(Node n, @Nullable ControlFlowGraph<Node> inCFG) throws IOException {
     StringBuilder builder = new StringBuilder();
     DotFormatter unused = new DotFormatter(n, inCFG, builder, false);
     return builder.toString();

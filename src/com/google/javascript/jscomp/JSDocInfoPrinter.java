@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Prints a JSDocInfo, used for preserving type annotations in ES6 transpilation.
@@ -399,7 +400,7 @@ public final class JSDocInfoPrinter {
   }
 
   private String buildAnnotationWithType(
-      String annotation, JSTypeExpression type, String description) {
+      String annotation, JSTypeExpression type, @Nullable String description) {
     return buildAnnotationWithType(annotation, type.getRoot(), description);
   }
 
@@ -407,7 +408,8 @@ public final class JSDocInfoPrinter {
     return buildAnnotationWithType(annotation, type, null);
   }
 
-  private String buildAnnotationWithType(String annotation, Node type, String description) {
+  private String buildAnnotationWithType(
+      String annotation, Node type, @Nullable String description) {
     StringBuilder sb = new StringBuilder();
     sb.append("@");
     sb.append(annotation);

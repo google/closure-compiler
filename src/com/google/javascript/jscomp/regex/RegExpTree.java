@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An AST for JavaScript regular expressions.
@@ -1682,7 +1683,7 @@ public abstract class RegExpTree {
     private final String propertyValue;
     private final boolean negated;
 
-    UnicodePropertyEscape(String propertyName, String propertyValue, boolean negated) {
+    UnicodePropertyEscape(@Nullable String propertyName, String propertyValue, boolean negated) {
       checkState(propertyValue != null);
       checkArgument(
           propertyName == null || !propertyName.isEmpty(),

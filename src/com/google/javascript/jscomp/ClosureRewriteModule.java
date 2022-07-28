@@ -213,7 +213,7 @@ final class ClosureRewriteModule implements CompilerPass {
       return newNamedExport(t, null, rhs);
     }
 
-    static ExportDefinition newNamedExport(NodeTraversal t, String name, Node rhs) {
+    static ExportDefinition newNamedExport(NodeTraversal t, @Nullable String name, Node rhs) {
       ExportDefinition newExport = new ExportDefinition();
       newExport.exportName = name;
       newExport.rhs = rhs;

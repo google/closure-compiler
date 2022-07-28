@@ -1008,7 +1008,7 @@ public final class ConformanceRules {
     }
 
     @Nullable
-    private static String inferStringValue(Scope scope, Node node) {
+    private static String inferStringValue(@Nullable Scope scope, Node node) {
       if (node == null) {
         return null;
       }

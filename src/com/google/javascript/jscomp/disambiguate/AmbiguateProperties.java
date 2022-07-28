@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Renames unrelated properties to the same name, using {@link Color}s provided by the typechecker.
@@ -345,7 +346,7 @@ public class AmbiguateProperties implements CompilerPass {
     }
 
     @Override
-    public void setAnnotation(Annotation data) {
+    public void setAnnotation(@Nullable Annotation data) {
       annotation = data;
     }
   }

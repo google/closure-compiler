@@ -32,10 +32,10 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
 
   Var(
       String name,
-      Node nameNode,
+      @Nullable Node nameNode,
       Scope scope,
       int index,
-      CompilerInput input,
+      @Nullable CompilerInput input,
       @Nullable Node implicitGoogNamespaceDefinition) {
     super(name, nameNode, scope, index, input, implicitGoogNamespaceDefinition);
     if (nameNode != null) {

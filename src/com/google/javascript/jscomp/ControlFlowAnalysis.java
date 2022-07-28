@@ -757,7 +757,8 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * @param fromNode The original source node since {@code node} is changed during recursion.
    * @param node The node that follow() should compute.
    */
-  private static Node computeFollowNode(Node fromNode, Node node, ControlFlowAnalysis cfa) {
+  private static Node computeFollowNode(
+      Node fromNode, Node node, @Nullable ControlFlowAnalysis cfa) {
     /*
      * This is the case where:
      *
@@ -882,7 +883,7 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * @param fromNode Source.
    * @param toNode Destination.
    */
-  private void createEdge(Node fromNode, ControlFlowGraph.Branch branch, Node toNode) {
+  private void createEdge(Node fromNode, ControlFlowGraph.Branch branch, @Nullable Node toNode) {
     cfg.createNode(fromNode);
     cfg.createNode(toNode);
     cfg.connectIfNotFound(fromNode, branch, toNode);

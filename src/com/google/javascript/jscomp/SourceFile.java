@@ -184,7 +184,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     return new StringReader(this.getCode());
   }
 
-  private void setCodeAndDoBookkeeping(String sourceCode) {
+  private void setCodeAndDoBookkeeping(@Nullable String sourceCode) {
     this.code = null;
     this.lineOffsets = null;
 

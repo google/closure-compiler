@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A class to transform the body of a function into a generic block suitable
@@ -540,13 +541,12 @@ class FunctionToBlockMutator {
   }
 
   /**
-   * Replace the 'return' statement with its child expression.
-   *   "return foo()" becomes "{foo(); break;}" or
-   *      "{resultName = foo(); break;}"
-   *   "return" becomes {break;} or "{resultName = void 0;break;}".
+   * Replace the 'return' statement with its child expression. "return foo()" becomes "{foo();
+   * break;}" or "{resultName = foo(); break;}" "return" becomes {break;} or "{resultName = void
+   * 0;break;}".
    */
-  private static Node replaceReturnWithBreak(Node current, Node parent,
-      String resultName, String labelName) {
+  private static Node replaceReturnWithBreak(
+      Node current, @Nullable Node parent, String resultName, String labelName) {
 
     if (current.isFunction()
         || current.isExprResult()) {

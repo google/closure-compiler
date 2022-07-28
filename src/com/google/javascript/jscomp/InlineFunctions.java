@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Inlines functions that are divided into two types: "direct call node replacement" (aka "direct")
@@ -404,7 +405,9 @@ class InlineFunctions implements CompilerPass {
     private final Map<Node, String> anonFunctionMap;
 
     CallVisitor(
-        Map<String, FunctionState> fns, Map<Node, String> anonFns, CallVisitorCallback callback) {
+        Map<String, FunctionState> fns,
+        Map<Node, String> anonFns,
+        @Nullable CallVisitorCallback callback) {
       this.functionMap = fns;
       this.anonFunctionMap = anonFns;
       this.callback = callback;

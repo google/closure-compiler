@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Process goog.tweak primitives. Checks that:
@@ -130,9 +131,12 @@ class ProcessTweaks implements CompilerPass {
       this(name, null, Token.EMPTY, Token.EMPTY, registerFunction);
     }
 
-    TweakFunction(String name, String expectedTypeName,
-        Token validNodeTypeA, Token validNodeTypeB,
-        TweakFunction registerFunction) {
+    TweakFunction(
+        String name,
+        @Nullable String expectedTypeName,
+        Token validNodeTypeA,
+        Token validNodeTypeB,
+        @Nullable TweakFunction registerFunction) {
       this.name = name;
       this.expectedTypeName = expectedTypeName;
       this.validNodeTypeA = validNodeTypeA;
@@ -340,7 +344,7 @@ class ProcessTweaks implements CompilerPass {
       this(tweakFunc, callNode, null);
     }
 
-    TweakFunctionCall(TweakFunction tweakFunc, Node callNode, Node valueNode) {
+    TweakFunctionCall(TweakFunction tweakFunc, Node callNode, @Nullable Node valueNode) {
       this.callNode = callNode;
       this.tweakFunc = tweakFunc;
       this.valueNode = valueNode;

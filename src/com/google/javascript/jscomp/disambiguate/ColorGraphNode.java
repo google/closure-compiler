@@ -25,6 +25,7 @@ import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A struct representing a {@link Color} for use in ambiguation.
@@ -75,7 +76,7 @@ final class ColorGraphNode {
     return new ColorGraphNode(null, index);
   }
 
-  private ColorGraphNode(Color single, int index) {
+  private ColorGraphNode(@Nullable Color single, int index) {
     this.index = index;
     this.color = single;
   }

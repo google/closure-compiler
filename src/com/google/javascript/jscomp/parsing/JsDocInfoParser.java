@@ -163,7 +163,7 @@ public final class JsDocInfoParser {
       JsDocTokenStream stream,
       String comment,
       int commentPosition,
-      Node templateNode,
+      @Nullable Node templateNode,
       Config config,
       ErrorReporter errorReporter) {
     this.stream = stream;
@@ -2423,7 +2423,7 @@ public final class JsDocInfoParser {
    * Create a new union type, with an alternate that has already been parsed. The alternate may be
    * null.
    */
-  private Node parseUnionTypeWithAlternate(JsDocToken token, Node alternate) {
+  private Node parseUnionTypeWithAlternate(JsDocToken token, @Nullable Node alternate) {
     Node union = newNode(Token.PIPE);
     if (alternate != null) {
       union.addChildToBack(alternate);

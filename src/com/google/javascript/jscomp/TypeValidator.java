@@ -1114,8 +1114,8 @@ class TypeValidator implements Serializable {
       String msg,
       JSType found,
       JSType required,
-      Set<String> missing,
-      Set<String> mismatch) {
+      @Nullable Set<String> missing,
+      @Nullable Set<String> mismatch) {
     String foundRequiredFormatted = formatFoundRequired(msg, found, required, missing, mismatch);
     JSError err = JSError.make(n, diagnostic, foundRequiredFormatted);
     registerMismatchAndReport(found, required, err);

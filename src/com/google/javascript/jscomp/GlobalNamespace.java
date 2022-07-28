@@ -169,7 +169,11 @@ class GlobalNamespace
    *     namespace. E.g. String.foo.
    * @param root The root of the rest of the code to build a namespace for.
    */
-  GlobalNamespace(LogFile decisionsLog, AbstractCompiler compiler, Node externsRoot, Node root) {
+  GlobalNamespace(
+      @Nullable LogFile decisionsLog,
+      AbstractCompiler compiler,
+      @Nullable Node externsRoot,
+      Node root) {
     this.decisionsLog = decisionsLog;
     this.compiler = compiler;
     this.externsRoot = externsRoot;
@@ -1137,7 +1141,7 @@ class GlobalNamespace
      * @param name A global name (e.g. "a", "a.b.c.d")
      * @return The {@link Name} instance for {@code name}
      */
-    Name getOrCreateName(String name, ModuleMetadata metadata) {
+    Name getOrCreateName(String name, @Nullable ModuleMetadata metadata) {
       Name node = metadata == null ? nameMap.get(name) : nameMapByModule.get(metadata, name);
       if (node == null) {
         int i = name.lastIndexOf('.');
@@ -2374,7 +2378,7 @@ class GlobalNamespace
      * created just for testing. However, all Refs for real use must be created by methods on the
      * Name class, which does do argument checking.
      */
-    private Ref(Scope scope, Node node, Name name, Type type) {
+    private Ref(@Nullable Scope scope, @Nullable Node node, Name name, Type type) {
       this.node = node;
       this.name = name;
       this.type = type;

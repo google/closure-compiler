@@ -1130,7 +1130,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         boolean allArgsUnescapedLocal,
         boolean calleeThisEqualsCallerThis,
         boolean propagateThrows,
-        Node invocation) {
+        @Nullable Node invocation) {
       checkArgument(invocation == null || NodeUtil.isInvocation(invocation), invocation);
 
       this.callerIsAlias = callerIsAlias;

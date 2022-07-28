@@ -23,6 +23,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Reduces the size of common function expressions.
@@ -212,14 +213,13 @@ class FunctionRewriter implements CompilerPass {
     abstract Node reduce(Node node);
 
     /**
-     * Builds a method call based on the the given method name,
-     * argument and history.
+     * Builds a method call based on the the given method name, argument and history.
      *
      * @param methodName Method to call.
      * @param argumentNode Method argument.
      */
-    protected final Node buildCallNode(String methodName, Node argumentNode,
-                                       Node srcref) {
+    protected final Node buildCallNode(
+        String methodName, @Nullable Node argumentNode, Node srcref) {
       Node call = IR.call(IR.name(methodName)).srcrefTree(srcref);
       call.putBooleanProp(Node.FREE_CALL, true);
       if (argumentNode != null) {

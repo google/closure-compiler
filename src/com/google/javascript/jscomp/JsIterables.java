@@ -25,6 +25,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Models type transformations of JavaScript `Iterable` and `Iterator` types.
@@ -88,7 +89,8 @@ final class JsIterables {
      *     {@code number} is not iterable or async iterable) or a piece of a union that caused the
      *     mismatch (e.g. {@code number} in {@code number|Iterable<Qux>}). Null if a match.
      */
-    private MaybeBoxedIterableOrAsyncIterable(JSType templatedType, JSType mismatchType) {
+    private MaybeBoxedIterableOrAsyncIterable(
+        @Nullable JSType templatedType, @Nullable JSType mismatchType) {
       this.templatedType = templatedType;
       this.mismatchType = mismatchType;
     }

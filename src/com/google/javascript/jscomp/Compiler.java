@@ -309,7 +309,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Creates a Compiler that reports errors and warnings to an output stream. */
-  public Compiler(PrintStream outStream) {
+  public Compiler(@Nullable PrintStream outStream) {
     addChangeHandler(recentChange);
     this.outStream = outStream;
     this.moduleTypesByName = new HashMap<>();
@@ -2437,7 +2437,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Generates JavaScript source code for an AST. */
-  private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
+  private String toSource(Node n, @Nullable SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);

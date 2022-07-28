@@ -1423,21 +1423,21 @@ final class AstFactory {
     private final Color color;
     private final ColorId colorId;
 
-    JSTypeOrColor(JSTypeNative jstypeNative, ColorId colorId) {
+    JSTypeOrColor(@Nullable JSTypeNative jstypeNative, ColorId colorId) {
       this.jstypeNative = jstypeNative;
       this.jstype = null;
       this.color = null;
       this.colorId = colorId;
     }
 
-    JSTypeOrColor(JSTypeNative jstypeNative, Color color) {
+    JSTypeOrColor(JSTypeNative jstypeNative, @Nullable Color color) {
       this.jstypeNative = jstypeNative;
       this.jstype = null;
       this.color = color;
       this.colorId = null;
     }
 
-    JSTypeOrColor(JSType jstype, Color color) {
+    JSTypeOrColor(@Nullable JSType jstype, @Nullable Color color) {
       this.jstype = jstype;
       this.jstypeNative = null;
       this.color = color;

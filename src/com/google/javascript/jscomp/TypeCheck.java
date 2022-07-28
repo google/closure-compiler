@@ -410,8 +410,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
-      TypedScope topScope,
-      TypedScopeCreator scopeCreator) {
+      @Nullable TypedScope topScope,
+      @Nullable TypedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.validator = compiler.getTypeValidator();
     this.reverseInterpreter = reverseInterpreter;
@@ -1247,7 +1247,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param msg A message to report along with any type mismatch warnings
    */
   private void checkCanAssignToWithScope(
-      NodeTraversal t, Node nodeToWarn, Node lvalue, JSType rightType, JSDocInfo info, String msg) {
+      NodeTraversal t,
+      Node nodeToWarn,
+      Node lvalue,
+      JSType rightType,
+      @Nullable JSDocInfo info,
+      String msg) {
     if (lvalue.isDestructuringPattern()) {
       checkDestructuringAssignment(t, nodeToWarn, lvalue, rightType, msg);
     } else {

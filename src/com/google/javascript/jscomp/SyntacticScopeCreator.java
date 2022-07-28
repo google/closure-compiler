@@ -79,8 +79,10 @@ public final class SyntacticScopeCreator implements ScopeCreator {
     }
 
     ScopeScanner(
-        AbstractCompiler compiler, RedeclarationHandler redeclarationHandler, Scope scope,
-        Set<Node> changeRootSet) {
+        AbstractCompiler compiler,
+        RedeclarationHandler redeclarationHandler,
+        Scope scope,
+        @Nullable Set<Node> changeRootSet) {
       this.compiler = compiler;
       this.redeclarationHandler = redeclarationHandler;
       this.scope = scope;

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /** Compilation results */
 public class Result {
@@ -45,13 +46,13 @@ public class Result {
       VariableMap variableMap,
       VariableMap propertyMap,
       VariableMap namedAnonFunctionMap,
-      VariableMap stringMap,
-      VariableMap instrumentationMappings,
-      SourceMap sourceMap,
+      @Nullable VariableMap stringMap,
+      @Nullable VariableMap instrumentationMappings,
+      @Nullable SourceMap sourceMap,
       String externExport,
-      Map<String, Integer> cssNames,
-      String idGeneratorMap,
-      Set<SourceFile> transpiledFiles) {
+      @Nullable Map<String, Integer> cssNames,
+      @Nullable String idGeneratorMap,
+      @Nullable Set<SourceFile> transpiledFiles) {
     this.success = errors.isEmpty();
     this.errors = errors;
     this.warnings = warnings;

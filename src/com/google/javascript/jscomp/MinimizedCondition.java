@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A class that represents a minimized conditional expression.
@@ -219,7 +220,7 @@ class MinimizedCondition {
     private final boolean changed;
     private final MeasuredNode[] children;
 
-    MeasuredNode(Node n, MeasuredNode[] children, int len, boolean ch) {
+    MeasuredNode(@Nullable Node n, MeasuredNode @Nullable [] children, int len, boolean ch) {
       node = n;
       this.children = children;
       length = len;

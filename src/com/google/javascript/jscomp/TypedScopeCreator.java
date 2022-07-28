@@ -251,7 +251,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Nullable final JSType type;
     @Nullable final QualifiedName qualifiedName;
 
-    RValueInfo(JSType type, QualifiedName qualifiedName) {
+    RValueInfo(@Nullable JSType type, @Nullable QualifiedName qualifiedName) {
       this.type = type;
       this.qualifiedName = qualifiedName;
     }
@@ -1400,7 +1400,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     private void defineModuleImport(
         Node localNameNode,
         @Nullable ScopedName importedModuleObject,
-        String optionalProperty,
+        @Nullable String optionalProperty,
         TypedScope scopeToDeclareIn) {
       if (importedModuleObject == null) {
         // We could not find the module defining this import. Just declare the name as unknown.
@@ -2697,7 +2697,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      *     stub declaration.
      */
     void maybeDeclareQualifiedName(
-        NodeTraversal t, JSDocInfo info, Node n, Node parent, Node rhsValue) {
+        NodeTraversal t, JSDocInfo info, Node n, Node parent, @Nullable Node rhsValue) {
       boolean isTypedef = isValidTypedefDeclaration(n, info);
       if (isTypedef) {
         declareTypedefType(n, info);

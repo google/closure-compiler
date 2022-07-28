@@ -31,6 +31,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Analyzes properties on prototypes.
@@ -829,7 +830,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     // corresponding function. Otherwise, it will be null.
     final Scope scope;
 
-    NameContext(NameInfo name, Scope scope) {
+    NameContext(NameInfo name, @Nullable Scope scope) {
       this.name = name;
       this.scope = scope;
     }
@@ -889,7 +890,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
      * @param module The module where it was referenced.
      * @return Whether the name info has changed.
      */
-    boolean markReference(JSChunk module) {
+    boolean markReference(@Nullable JSChunk module) {
       boolean hasChanged = false;
       if (!referenced) {
         referenced = true;

@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A class for the internal representation of an input to the compiler. Wraps a {@link SourceAst}
@@ -380,7 +381,7 @@ public class CompilerInput extends DependencyInfo.Base {
     private static final QualifiedName GOOG_DECLAREMODULEID =
         QualifiedName.of("goog.declareModuleId");
 
-    void visitSubtree(Node n, Node parent) {
+    void visitSubtree(Node n, @Nullable Node parent) {
       switch (n.getToken()) {
         case CALL:
           if (n.hasTwoChildren()

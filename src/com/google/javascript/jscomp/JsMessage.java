@@ -253,7 +253,7 @@ public abstract class JsMessage {
     }
 
     /** Creates an instance. */
-    public Builder(String key) {
+    public Builder(@Nullable String key) {
       this.key = key;
     }
 
@@ -399,7 +399,7 @@ public abstract class JsMessage {
       return build(null);
     }
 
-    public JsMessage build(IdGenerator idGenerator) {
+    public JsMessage build(@Nullable IdGenerator idGenerator) {
       boolean isAnonymous = false;
       boolean isExternal = false;
       String id = null;
@@ -544,7 +544,7 @@ public abstract class JsMessage {
      * @param seed the seed
      * @return 64 bit hash value
      */
-    private static long hash64(byte[] value, int offset, int length, long seed) {
+    private static long hash64(@Nullable byte[] value, int offset, int length, long seed) {
       long a = CONSTANT64;
       long b = a;
       long c = seed;

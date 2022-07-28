@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Attaches the CONST_VAR annotation to any variable that's
@@ -56,7 +57,7 @@ class InferConsts implements CompilerPass {
     }
   }
 
-  private void considerVar(Var v, ReferenceCollection refCollection) {
+  private void considerVar(Var v, @Nullable ReferenceCollection refCollection) {
     if (v.isImplicitGoogNamespace()) {
       return; // no name node for provided variables.
     }

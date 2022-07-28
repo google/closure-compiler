@@ -97,7 +97,7 @@ public class NodeTraversal {
      * @param parent The parent of the current node.
      * @return whether the children of this node should be visited
      */
-    boolean shouldTraverse(NodeTraversal t, Node n, Node parent);
+    boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent);
 
     /**
      * Visits a node in postorder (after its children). A node is visited in postorder iff {@link
@@ -114,7 +114,7 @@ public class NodeTraversal {
      * @param n The current node.
      * @param parent The parent of the current node.
      */
-    void visit(NodeTraversal t, Node n, Node parent);
+    void visit(NodeTraversal t, Node n, @Nullable Node parent);
   }
 
   /** Callback that also knows about scope changes */
@@ -803,7 +803,7 @@ public class NodeTraversal {
   }
 
   /** Traverses a branch. */
-  private void traverseBranch(Node n, Node parent) {
+  private void traverseBranch(Node n, @Nullable Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
         handleScript(n, parent);
@@ -1284,8 +1284,10 @@ public class NodeTraversal {
     return currentScript;
   }
 
-  /** @param n The current change scope, should be null when the traversal is complete. */
-  private void setChangeScope(Node n) {
+  /**
+   * @param n The current change scope, should be null when the traversal is complete.
+   */
+  private void setChangeScope(@Nullable Node n) {
     this.currentChangeScope = n;
   }
 

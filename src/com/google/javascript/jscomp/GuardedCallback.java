@@ -27,6 +27,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An AST traverser that keeps track of whether access to a generic resource are "guarded" or not. A
@@ -278,7 +279,7 @@ abstract class GuardedCallback<T> implements NodeTraversal.Callback {
     // A very naive linked list for storing additional conditional nodes.
     final Context linked;
 
-    Context(Node conditional, boolean safe, Context linked) {
+    Context(@Nullable Node conditional, boolean safe, @Nullable Context linked) {
       this.conditional = conditional;
       this.safe = safe;
       this.linked = linked;

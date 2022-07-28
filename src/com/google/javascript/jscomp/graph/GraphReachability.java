@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Computes all the reachable nodes. Upon execution of {@link #compute(Object)},
@@ -45,12 +46,11 @@ public final class GraphReachability<N, E> implements EdgeCallback<N, E> {
 
   /**
    * @param graph The graph.
-   * @param edgePredicate Given the predecessor P of the a node S and the edge
-   *      coming from P to S, this predicate should return true if S is
-   *      reachable from P using the edge.
+   * @param edgePredicate Given the predecessor P of the a node S and the edge coming from P to S,
+   *     this predicate should return true if S is reachable from P using the edge.
    */
-  public GraphReachability(DiGraph<N, E> graph,
-                           Predicate<EdgeTuple<N, E>> edgePredicate) {
+  public GraphReachability(
+      DiGraph<N, E> graph, @Nullable Predicate<EdgeTuple<N, E>> edgePredicate) {
     this.graph = graph;
     this.edgePredicate = edgePredicate;
   }

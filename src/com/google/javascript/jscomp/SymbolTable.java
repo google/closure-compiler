@@ -316,7 +316,7 @@ public final class SymbolTable {
     return getSymbolForName(fn.getSource(), pType.getReferenceName());
   }
 
-  private Symbol getSymbolForName(Node source, String name) {
+  private Symbol getSymbolForName(@Nullable Node source, String name) {
     if (name == null || globalScope == null) {
       return null;
     }
@@ -724,11 +724,11 @@ public final class SymbolTable {
 
   private Symbol declareSymbol(
       String name,
-      JSType type,
+      @Nullable JSType type,
       boolean inferred,
       SymbolScope scope,
       Node declNode,
-      JSDocInfo info) {
+      @Nullable JSDocInfo info) {
     Symbol symbol = addSymbol(name, type, inferred, scope, declNode);
     symbol.setJSDocInfo(info);
     symbol.setDeclaration(symbol.defineReferenceAt(declNode));
@@ -1727,7 +1727,11 @@ public final class SymbolTable {
     // The symbol associated with a property scope or doc scope.
     private Symbol mySymbol;
 
-    SymbolScope(Node rootNode, @Nullable SymbolScope parent, JSType typeOfThis, Symbol mySymbol) {
+    SymbolScope(
+        @Nullable Node rootNode,
+        @Nullable SymbolScope parent,
+        @Nullable JSType typeOfThis,
+        @Nullable Symbol mySymbol) {
       this.rootNode = rootNode;
       this.parent = parent;
       this.typeOfThis = typeOfThis;

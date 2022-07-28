@@ -168,7 +168,7 @@ final class PolymerBehaviorExtractor {
     final ModuleMetadata moduleMetadata;
 
     ResolveBehaviorNameResult(
-        Node node, boolean isGlobalDeclaration, ModuleMetadata moduleMetadata) {
+        @Nullable Node node, boolean isGlobalDeclaration, @Nullable ModuleMetadata moduleMetadata) {
       this.node = node;
       this.isGlobalDeclaration = isGlobalDeclaration;
       this.moduleMetadata = moduleMetadata;
@@ -191,7 +191,7 @@ final class PolymerBehaviorExtractor {
    *     resolved.
    */
   private ResolveBehaviorNameResult resolveBehaviorName(
-      @Nullable String name, ModuleMetadata moduleMetadata) {
+      @Nullable String name, @Nullable ModuleMetadata moduleMetadata) {
     if (name == null) {
       return FAILED_RESOLVE_RESULT;
     }

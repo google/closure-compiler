@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import org.jspecify.nullness.Nullable;
 
 /**
  * InlineProperties attempts to find references to properties that are known to be constants and
@@ -46,7 +47,7 @@ final class InlineProperties implements CompilerPass {
   private final ColorRegistry registry;
 
   private static class PropertyInfo {
-    PropertyInfo(Color color, Node value) {
+    PropertyInfo(@Nullable Color color, @Nullable Node value) {
       this.color = color;
       this.value = value;
     }

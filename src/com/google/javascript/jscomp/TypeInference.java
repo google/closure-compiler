@@ -1175,7 +1175,11 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   /** Updates the scope according to the result of an assignment. */
   @CheckReturnValue
   private FlowScope updateScopeForAssignment(
-      FlowScope scope, Node target, JSType resultType, Node updateNode, AssignmentType type) {
+      FlowScope scope,
+      Node target,
+      JSType resultType,
+      @Nullable Node updateNode,
+      AssignmentType type) {
     checkNotNull(resultType);
     checkState(updateNode == null || updateNode == target);
 

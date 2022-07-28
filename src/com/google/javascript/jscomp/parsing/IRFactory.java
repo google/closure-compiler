@@ -3685,7 +3685,7 @@ class IRFactory {
     return node;
   }
 
-  Node newTemplateLitStringNode(String cooked, String raw) {
+  Node newTemplateLitStringNode(@Nullable String cooked, String raw) {
     return Node.newTemplateLitString(cooked, raw).clonePropsFrom(templateNode);
   }
 

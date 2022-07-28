@@ -24,6 +24,7 @@ import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import java.io.Serializable;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Represents a single declaration or reference to a variable. Note that references can only be used
@@ -51,7 +52,8 @@ public final class Reference implements StaticRef, Serializable {
     this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
   }
 
-  private Reference(Node nameNode, BasicBlock basicBlock, Scope scope, InputId inputId) {
+  private Reference(
+      Node nameNode, @Nullable BasicBlock basicBlock, @Nullable Scope scope, InputId inputId) {
     this.nameNode = nameNode;
     this.basicBlock = basicBlock;
     this.scope = scope;

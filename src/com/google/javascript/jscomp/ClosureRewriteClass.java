@@ -33,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Rewrites "goog.defineClass" into a form that is suitable for type checking and dead code
@@ -176,7 +177,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
     final Node name;
     final Node value;
 
-    MemberDefinition(JSDocInfo info, Node name, Node value) {
+    MemberDefinition(JSDocInfo info, @Nullable Node name, Node value) {
       this.info = info;
       this.name = name;
       this.value = value;

@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 public final class SourceInformationAnnotator extends NodeTraversal.AbstractPostOrderCallback {
   @Nullable private final String sourceFileToCheck;
 
-  private SourceInformationAnnotator(String sourceFileToCheck) {
+  private SourceInformationAnnotator(@Nullable String sourceFileToCheck) {
     this.sourceFileToCheck = sourceFileToCheck;
   }
 

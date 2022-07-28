@@ -1356,7 +1356,7 @@ public class Scanner {
   }
 
   private SkipTemplateCharactersResult createSkipTemplateCharactersResult(
-      String message, TemplateLiteralToken.ErrorLevel errorLevel) {
+      @Nullable String message, @Nullable TemplateLiteralToken.ErrorLevel errorLevel) {
     return new SkipTemplateCharactersResult(message, errorLevel, getPosition());
   }
 

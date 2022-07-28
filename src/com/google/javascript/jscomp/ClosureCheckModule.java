@@ -352,7 +352,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
   }
 
   private void checkImproperReferenceToImport(
-      NodeTraversal t, Node n, String qname, String nextQnamePart) {
+      NodeTraversal t, Node n, String qname, @Nullable String nextQnamePart) {
     if (qname == null) {
       return;
     }

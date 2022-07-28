@@ -421,7 +421,7 @@ class ExpressionDecomposer {
    * @param n The node with which to start iterating.
    * @param stopNode A node after which to stop iterating.
    */
-  private void decomposeSubExpressions(Node n, Node stopNode, DecompositionState state) {
+  private void decomposeSubExpressions(Node n, @Nullable Node stopNode, DecompositionState state) {
     if (n == null || n == stopNode) {
       return;
     }

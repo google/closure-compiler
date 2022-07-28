@@ -90,7 +90,7 @@ final class ScriptNodeDeserializer {
       return ScriptNodeDeserializer.this;
     }
 
-    private Node visit(AstNode astNode, Node parent, @Nullable Node sourceFileTemplate) {
+    private Node visit(AstNode astNode, @Nullable Node parent, @Nullable Node sourceFileTemplate) {
       if (sourceFileTemplate == null || astNode.getSourceFile() != 0) {
         // 0 == 'not set'
         sourceFileTemplate =

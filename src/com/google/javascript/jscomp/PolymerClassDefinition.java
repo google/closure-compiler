@@ -93,12 +93,12 @@ final class PolymerClassDefinition {
       Node descriptor,
       JSDocInfo classInfo,
       MemberDefinition constructor,
-      String nativeBaseElement,
+      @Nullable String nativeBaseElement,
       List<MemberDefinition> props,
-      Map<MemberDefinition, BehaviorDefinition> behaviorProps,
+      @Nullable Map<MemberDefinition, BehaviorDefinition> behaviorProps,
       List<MemberDefinition> methods,
-      ImmutableList<BehaviorDefinition> behaviors,
-      FeatureSet features) {
+      @Nullable ImmutableList<BehaviorDefinition> behaviors,
+      @Nullable FeatureSet features) {
     this.defType = defType;
     this.definition = definition;
     this.target = target;

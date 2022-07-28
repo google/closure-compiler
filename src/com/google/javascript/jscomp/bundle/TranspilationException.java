@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.ErrorFormat;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An unchecked exception thrown when transpilation fails due to one or
@@ -52,7 +53,7 @@ public class TranspilationException extends RuntimeException {
       ImmutableList<JSError> errors,
       ImmutableList<JSError> warnings,
       String formatted,
-      Exception cause) {
+      @Nullable Exception cause) {
     super(formatted, cause);
     this.errors = errors;
     this.warnings = warnings;

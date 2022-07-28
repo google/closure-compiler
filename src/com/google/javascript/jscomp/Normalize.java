@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * The goal with this pass is to simplify the other passes, by making less complex statements.
@@ -468,7 +469,7 @@ class Normalize implements CompilerPass {
      * @param before The node to insert the initializer before.
      * @param beforeParent The parent of the node before which the initializer will be inserted.
      */
-    private void extractForInitializer(Node n, Node before, Node beforeParent) {
+    private void extractForInitializer(Node n, @Nullable Node before, @Nullable Node beforeParent) {
 
       for (Node next, c = n.getFirstChild(); c != null; c = next) {
         next = c.getNext();

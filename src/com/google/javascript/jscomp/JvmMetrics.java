@@ -27,6 +27,7 @@ import java.lang.management.MemoryUsage;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A class to report jvm/jmx statistics.
@@ -129,8 +130,12 @@ class JvmMetrics {
     }
   }
 
-  private static void writePoolMemoryUsage(PrintStream out, MemoryUsage usage,
-      MemoryUsage peakUsage, String prefix, boolean pretty) {
+  private static void writePoolMemoryUsage(
+      PrintStream out,
+      MemoryUsage usage,
+      MemoryUsage peakUsage,
+      @Nullable String prefix,
+      boolean pretty) {
     if (pretty) {
       out.format("\t\tavailable         : %s\n",
           formatBytes(usage.getMax()));
