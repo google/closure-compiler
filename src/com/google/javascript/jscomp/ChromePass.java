@@ -20,6 +20,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -52,6 +53,11 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private static final String VIRTUAL_FILE = "<ChromePass.java>";
   private static final Node VIRTUAL_NODE =
       IR.empty().setStaticSourceFile(SourceFile.fromCode(VIRTUAL_FILE, "", SourceKind.EXTERN));
+  private static final QualifiedName CR_PROPERTYKIND_JS = QualifiedName.of("cr.PropertyKind.JS");
+  private static final QualifiedName CR_PROPERTYKIND_ATTR =
+      QualifiedName.of("cr.PropertyKind.ATTR");
+  private static final QualifiedName CR_PROPERTYKIND_BOOL_ATTR =
+      QualifiedName.of("cr.PropertyKind.BOOL_ATTR");
 
   private static final String CR_DEFINE_COMMON_EXPLANATION =
       "It should be called like this:"
@@ -170,14 +176,14 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   @Nullable
   private Node getTypeByCrPropertyKind(@Nullable Node propertyKind) {
-    if (propertyKind == null || propertyKind.matchesQualifiedName("cr.PropertyKind.JS")) {
+    if (propertyKind == null || CR_PROPERTYKIND_JS.matches(propertyKind)) {
       // This is valid, it just doesn't tell us much about the type.
       return null;
     }
-    if (propertyKind.matchesQualifiedName("cr.PropertyKind.ATTR")) {
+    if (CR_PROPERTYKIND_ATTR.matches(propertyKind)) {
       return IR.string("string");
     }
-    if (propertyKind.matchesQualifiedName("cr.PropertyKind.BOOL_ATTR")) {
+    if (CR_PROPERTYKIND_BOOL_ATTR.matches(propertyKind)) {
       return IR.string("boolean");
     }
     compiler.report(

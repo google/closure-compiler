@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -296,6 +297,10 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     }
   }
 
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName GOOG_REQUIRETYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_FORWARDDECLARE = QualifiedName.of("goog.forwardDeclare");
+
   private final Mode mode;
 
   // Maps each namespace into the existing import statements for that namespace.
@@ -376,9 +381,9 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
   private static boolean isValidImportCall(Node n) {
     return n.isCall()
         && n.hasTwoChildren()
-        && (n.getFirstChild().matchesQualifiedName("goog.require")
-            || n.getFirstChild().matchesQualifiedName("goog.requireType")
-            || n.getFirstChild().matchesQualifiedName("goog.forwardDeclare"))
+        && (GOOG_REQUIRE.matches(n.getFirstChild())
+            || GOOG_REQUIRETYPE.matches(n.getFirstChild())
+            || GOOG_FORWARDDECLARE.matches(n.getFirstChild()))
         && n.getSecondChild().isStringLit();
   }
 

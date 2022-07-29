@@ -349,7 +349,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         // We're in the context of an async function's body, so we need to do some replacements.
         switch (n.getToken()) {
           case NAME:
-            if (n.matchesQualifiedName("arguments")) {
+            if (n.matchesName("arguments")) {
               n.setString(ASYNC_ARGUMENTS);
               asyncThisAndArgumentsContext.recordAsyncArgumentsReplacementWasDone();
               compiler.reportChangeToChangeScope(contextRootNode);

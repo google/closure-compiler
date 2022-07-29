@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,7 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
       return;
     }
 
-    if (n.isExprResult() && isValidProvideCall(n.getFirstChild())) {
+    if (NodeUtil.isGoogProvideCall(n) && areProvideArgumentsValid(n.getFirstChild())) {
       originalProvides.add(getNamespace(n));
       if (firstNode == null) {
         firstNode = lastNode = n;
@@ -110,11 +111,8 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
     }
   }
 
-  private static boolean isValidProvideCall(Node n) {
-    return n.isCall()
-        && n.hasTwoChildren()
-        && n.getFirstChild().matchesQualifiedName("goog.provide")
-        && n.getSecondChild().isStringLit();
+  private static boolean areProvideArgumentsValid(Node call) {
+    return call.hasTwoChildren() && call.getSecondChild().isStringLit();
   }
 
   private static String getNamespace(Node n) {

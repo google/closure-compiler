@@ -23,6 +23,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import javax.annotation.Nullable;
 
 /**
@@ -31,6 +32,8 @@ import javax.annotation.Nullable;
  */
 final class ClassUtil {
   private ClassUtil() {}
+
+  private static final QualifiedName GOOG_DEFINECLASS = QualifiedName.of("goog.defineClass");
 
   static boolean isThisProp(Node getprop) {
     return getClassNameOfThisProp(getprop) != null;
@@ -80,7 +83,7 @@ final class ClassUtil {
     return parent.isStringKey()
         && parent.getParent().isObjectLit()
         && parent.getGrandparent().isCall()
-        && parent.getGrandparent().getFirstChild().matchesQualifiedName("goog.defineClass");
+        && GOOG_DEFINECLASS.matches(parent.getGrandparent().getFirstChild());
   }
 
   /**
