@@ -628,4 +628,24 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
             "  }()]() { return 1; }",
             "}"));
   }
+
+  @Test
+  public void testStaticBlockNotRemoved() {
+    testSame("class Foo { static {} }");
+  }
+
+  @Test
+  public void testRemoveUnreachableCodeInStaticBlock1() {
+    // TODO(b/240443227): Unreachable/Useless code isn't removed in static blocks
+    testSame(
+        lines(
+            "class Foo {", //
+            "  static {",
+            "    switch (a) { case 'a': break }",
+            "    try {var x = 1} catch (e) {e()}",
+            "    true;",
+            "    if (x) 1;",
+            "  }",
+            "}"));
+  }
 }
