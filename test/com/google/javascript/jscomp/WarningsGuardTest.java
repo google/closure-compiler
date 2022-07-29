@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
+import static com.google.javascript.jscomp.TypeCheck.ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -333,6 +334,28 @@ public final class WarningsGuardTest {
   }
 
   @Test
+  public void testSuppressGuard_strictMissingPropertyOnUnionTypes() {
+    Compiler compiler = new Compiler();
+    WarningsGuard guard =
+        new SuppressDocWarningsGuard(compiler, DiagnosticGroups.getRegisteredGroups());
+
+    Node code =
+        compiler.parseTestCode(
+            lines(
+                "class C {}",
+                "class D{}",
+                "/** @type {(C|D)} */",
+                "let obj;",
+                "/** @suppress {strictMissingProperties} */",
+                "obj.prop"));
+    assertThat(
+            guard.level(
+                JSError.make(
+                    findGetPropNode(code, "prop"), ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE)))
+        .isEqualTo(OFF);
+  }
+
+  @Test
   public void testSuppressGuard4() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
@@ -435,6 +458,20 @@ public final class WarningsGuardTest {
 
     for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
       Node result = findNameNode(n, name);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  private static Node findGetPropNode(Node root, String name) {
+    if (root.isGetProp() && root.getString().equals(name)) {
+      return root;
+    }
+
+    for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
+      Node result = findGetPropNode(n, name);
       if (result != null) {
         return result;
       }

@@ -288,6 +288,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Cannot add a property to a struct instance after it is constructed."
               + " (If you already declared the property, make sure to give it a type.)");
 
+  static final DiagnosticType ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE =
+      DiagnosticType.warning(
+          "JSC_ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE",
+          "Cannot add a property to an instance of union type.");
+
   static final DiagnosticType ILLEGAL_OBJLIT_KEY =
       DiagnosticType.warning("JSC_ILLEGAL_OBJLIT_KEY", "Illegal key, the object literal is a {0}");
 
@@ -356,6 +361,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           IN_USED_WITH_STRUCT,
           ILLEGAL_CLASS_KEY,
           ILLEGAL_PROPERTY_CREATION,
+          ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE,
           ILLEGAL_OBJLIT_KEY,
           NON_STRINGIFIABLE_OBJECT_KEY,
           ABSTRACT_METHOD_IN_CONCRETE_CLASS,
@@ -1376,6 +1382,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String propName = lvalue.getString();
         PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objType, propName);
         if (!kind.equals(PropDefinitionKind.KNOWN)) {
+          // TODO(b/214427036): Report `ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE` for
+          // `objType.isUnionType()` here once the LSC for b/214427036 is complete.
           if (objType.isStruct()) {
             report(lvalue, ILLEGAL_PROPERTY_CREATION);
           } else {

@@ -325,7 +325,8 @@ public class DiagnosticGroups {
           "strictMissingProperties",
           TypeCheck.STRICT_INEXISTENT_PROPERTY,
           TypeCheck.STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION,
-          TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY);
+          TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY,
+          TypeCheck.ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE);
 
   public static final DiagnosticGroup STRICT_PRIMITIVE_OPERATORS =
       DiagnosticGroups.registerGroup(
