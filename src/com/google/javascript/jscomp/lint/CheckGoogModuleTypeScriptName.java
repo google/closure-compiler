@@ -32,7 +32,7 @@ import java.util.Set;
 public final class CheckGoogModuleTypeScriptName implements NodeTraversal.Callback, CompilerPass {
   public static final DiagnosticType MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE =
       DiagnosticType.disabled(
-          "MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE",
+          "JSC_MODULE_NAMESPACE_MISMATCHES_TYPESCRIPT_NAMESPACE",
           "goog.module namespace does not match the future TypeScript namespace, which is generated"
               + " from the file path."
               + " The correct namespace is: \"{0}\"");

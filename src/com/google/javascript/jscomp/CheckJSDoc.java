@@ -57,7 +57,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
 
   static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION =
       DiagnosticType.warning(
-          "BAD_REST_PARAMETER_ANNOTATION",
+          "JSC_BAD_REST_PARAMETER_ANNOTATION",
           "Missing \"...\" in type annotation for rest parameter.");
 
   static final DiagnosticType DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL = DiagnosticType.error(
