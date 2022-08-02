@@ -366,7 +366,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
               Node parent = n.getParent();
               if (!parent.isGetProp()) {
                 compiler.report(
-                    JSError.make(parent, Es6ToEs3Util.CANNOT_CONVERT_YET, "super expression"));
+                    JSError.make(parent, TranspilationUtil.CANNOT_CONVERT_YET, "super expression"));
               }
               // different name for parent for better readability
               Node superDotProperty = parent;

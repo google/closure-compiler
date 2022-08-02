@@ -26,12 +26,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.Es6ToEs3Util;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
+import com.google.javascript.jscomp.TranspilationUtil;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -503,7 +503,7 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
             compiler.report(
                 JSError.make(
                     e.exportNode(),
-                    Es6ToEs3Util.CANNOT_CONVERT_YET,
+                    TranspilationUtil.CANNOT_CONVERT_YET,
                     "Wildcard export for non-ES module"));
           }
         }

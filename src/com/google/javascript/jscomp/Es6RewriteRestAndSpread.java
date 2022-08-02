@@ -183,7 +183,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
             currGroup = null;
           }
 
-          Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterable");
+          TranspilationUtil.preloadTranspilationRuntimeFunction(compiler, "arrayFromIterable");
           groups.add(
               astFactory.createJscompArrayFromIterableCall(spreadExpression, this.namespace));
         }
@@ -383,7 +383,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
 
     if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
       // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
-      Es6ToEs3Util.cannotConvert(
+      TranspilationUtil.cannotConvert(
           compiler,
           spreadParent,
           "\"...\" passed to a constructor (consider using --language_out=ES5)");

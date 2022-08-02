@@ -676,7 +676,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
       DiagnosticGroups.registerUnsuppressibleGroup(
-          Es6ToEs3Util.CANNOT_CONVERT, Es6ToEs3Util.CANNOT_CONVERT_YET);
+          TranspilationUtil.CANNOT_CONVERT, TranspilationUtil.CANNOT_CONVERT_YET);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
