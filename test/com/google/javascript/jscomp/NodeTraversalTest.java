@@ -781,9 +781,7 @@ public final class NodeTraversalTest {
 
     NodeTraversal.traverse(compiler, tree, callback);
     assertThat(callback.strings)
-        // Should be:
-        // .containsExactly("in field lhs", "in method lhs", "in field rhs", "nested in method")
-        .containsExactly("in method lhs", "in field lhs", "in field rhs", "nested in method")
+        .containsExactly("in field lhs", "in method lhs", "in field rhs", "nested in method")
         .inOrder();
 
     callback.strings.clear();
