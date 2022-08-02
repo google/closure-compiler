@@ -929,14 +929,6 @@ public class NodeTraversal {
 
     traverseBranch(extendsClause, n);
 
-    for (Node child = body.getFirstChild(); child != null; ) {
-      Node next = child.getNext(); // see traverseChildren
-      if (child.isComputedProp()) {
-        traverseBranch(child.getFirstChild(), child);
-      }
-      child = next;
-    }
-
     if (!isClassExpression) {
       // Class declarations are in the scope containing the declaration.
       traverseBranch(className, n);
@@ -965,6 +957,14 @@ public class NodeTraversal {
     this.currentNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
+    }
+
+    for (Node child = n.getFirstChild(); child != null; ) {
+      Node next = child.getNext(); // see traverseChildren
+      if (child.isComputedProp()) {
+        traverseBranch(child.getFirstChild(), child);
+      }
+      child = next;
     }
 
     for (Node child = n.getFirstChild(); child != null; ) {

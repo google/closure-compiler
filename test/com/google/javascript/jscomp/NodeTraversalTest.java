@@ -762,6 +762,33 @@ public final class NodeTraversalTest {
     }
   }
 
+  @Test
+  public void testTraverseComputedFieldsInClass() {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    StringAccumulator callback = new StringAccumulator();
+
+    String code =
+        lines(
+            "class Foo {",
+            "  ['in field lhs'] = 'in field rhs';",
+            "  ['in method lhs']() {",
+            "    'nested in method';",
+            "  }",
+            "}");
+
+    Node tree = parse(compiler, code);
+
+    NodeTraversal.traverse(compiler, tree, callback);
+    assertThat(callback.strings)
+        // Should be:
+        // .containsExactly("in field lhs", "in method lhs", "in field rhs", "nested in method")
+        .containsExactly("in method lhs", "in field lhs", "in field rhs", "nested in method")
+        .inOrder();
+
+    callback.strings.clear();
+  }
+
   // Helper class used to test accessible variables
   private static class AccessibleCallback extends NodeTraversal.AbstractPreOrderCallback
       implements NodeTraversal.ScopedCallback {
