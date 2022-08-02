@@ -192,6 +192,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
 
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       switch (child.getToken()) {
+        case BLOCK:
         case COMPUTED_PROP:
         case COMPUTED_FIELD_DEF:
         case OBJECT_REST:

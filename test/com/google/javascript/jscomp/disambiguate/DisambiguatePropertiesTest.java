@@ -1064,6 +1064,178 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "}")));
   }
 
+  @Test
+  public void classStaticBlock() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  static {",
+                "    this.x = 1;",
+                "  }",
+                "}",
+                "Foo.x;",
+                "class Bar {",
+                "  static {",
+                "    this.x = 2;",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  static {",
+                "    this.JSC$1_x = 1;",
+                "  }",
+                "}",
+                "Foo.JSC$1_x;",
+                "class Bar {",
+                "  static {",
+                "    this.JSC$2_x = 2;",
+                "  }",
+                "}")));
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  static x = 0;",
+                "  x = 0;",
+                "  static {",
+                "    this.x = 1;",
+                "  }",
+                "}",
+                "Foo.x;",
+                "let f = new Foo();",
+                "f.x;",
+                "class Bar {",
+                "  static x = 0;",
+                "  x = 0;",
+                "  static {",
+                "    this.x = 2;",
+                "  }",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  static JSC$1_x = 0;",
+                "  JSC$2_x = 0;",
+                "  static {",
+                "    this.JSC$1_x = 1;",
+                "  }",
+                "}",
+                "Foo.JSC$1_x;",
+                "let f = new Foo();",
+                "f.JSC$2_x;",
+                "class Bar {",
+                "  static JSC$3_x = 0;",
+                "  JSC$4_x = 0;",
+                "  static {",
+                "    this.JSC$3_x = 2;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void classStaticBlock_method() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  m() { }",
+                "}",
+                "",
+                "class Baz {",
+                "  static {",
+                "    let f = new Foo();",
+                "    f.m();",
+                "  }",
+                "}",
+                "class Bar {",
+                "  m() { }",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$1_m() { }",
+                "}",
+                "",
+                "class Baz {",
+                "  static {",
+                "    let f = new Foo();",
+                "    f.JSC$1_m();",
+                "  }",
+                "}",
+                "class Bar {",
+                "  JSC$5_m() { }",
+                "}")));
+
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  static m() { }",
+                "}",
+                "",
+                "class Baz {",
+                "  static m() { }",
+                "  static {",
+                "    Foo.m();",
+                "  }",
+                "}",
+                "class Bar {",
+                "  static m() { }",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  static JSC$1_m() { }",
+                "}",
+                "",
+                "class Baz {",
+                "  static JSC$2_m() { }",
+                "  static {",
+                "    Foo.JSC$1_m();",
+                "  }",
+                "}",
+                "class Bar {",
+                "  static JSC$3_m() { }",
+                "}")));
+  }
+
+  @Test
+  public void testClassStaticBlock_function() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() { };",
+                "",
+                "class Foo2 extends Foo {",
+                "  static z() { }",
+                "  static {",
+                "    Foo.z = 0;",
+                "  }",
+                "}",
+                "",
+                "class Other {",
+                "  z() { }",
+                "}")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() { };",
+                "",
+                "class Foo2 extends Foo {",
+                "  static JSC$1_z() { }",
+                "  static {",
+                "    Foo.JSC$1_z = 0;",
+                "  }",
+                "}",
+                "",
+                "class Other {",
+                "  JSC$3_z() { }",
+                "}")));
+  }
+
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(DisambiguateProperties.PROPERTY_INVALIDATION);
