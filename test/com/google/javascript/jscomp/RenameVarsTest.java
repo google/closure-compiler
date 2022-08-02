@@ -20,11 +20,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -122,8 +124,121 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Test
   public void testRenameSimple() {
     test(
-        "function Foo(v1, v2) {return v1;} Foo();", //
-        "function   a( b,  c) {return  b;}   a();");
+        lines(
+            "function foo(v1, v2) {", //
+            "  return v1;",
+            "}",
+            "foo();",
+            ""),
+        lines(
+            "function a(b, c) {", //
+            "  return b;",
+            "}",
+            "a();",
+            ""));
+
+    // Do a sanity check on the source info
+    final Node lastScript =
+        getLastCompiler()
+            .getRoot()
+            .getLastChild() // first child is externs tree, last / second is sources
+            .getLastChild();
+    final String lastScriptName = lastScript.getSourceFileName();
+
+    // function foo(v1, v2) { ... }
+    final NodeSubject fnSubject =
+        assertNode(lastScript.getFirstChild())
+            .isFunction()
+            .hasSourceFileName(lastScriptName)
+            .hasLineno(1)
+            .hasCharno(0)
+            .hasLength(37);
+
+    // function foo(v1, v2) {
+    //          ^^^
+    fnSubject
+        .hasFirstChildThat()
+        .isName("a")
+        .hasSourceFileName(lastScriptName)
+        .hasLineno(1)
+        .hasCharno(9)
+        .hasLength(3);
+
+    // function foo(v1, v2) {
+    //             ^^^^^^^^
+    NodeSubject paramListSubject =
+        fnSubject
+            .hasSecondChildThat()
+            .isParamList()
+            .hasSourceFileName(lastScriptName)
+            .hasLineno(1)
+            .hasCharno(12)
+            .hasLength(8)
+            .hasXChildren(2);
+
+    // function foo(v1, v2) {
+    //              ^^
+    paramListSubject
+        .hasFirstChildThat()
+        .isName("b")
+        .hasSourceFileName(lastScriptName)
+        .hasLineno(1)
+        .hasCharno(13)
+        .hasLength(2);
+
+    // function foo(v1, v2) {
+    //                  ^^
+    paramListSubject
+        .hasSecondChildThat()
+        .isName("c")
+        .hasSourceFileName(lastScriptName)
+        .hasLineno(1)
+        .hasCharno(17)
+        .hasLength(2);
+
+    //  { ... }
+    NodeSubject fnBodySubject =
+        fnSubject
+            .hasLastChildThat()
+            .isBlock()
+            .hasSourceFileName(lastScriptName)
+            .hasLineno(1)
+            .hasCharno(21)
+            .hasLength(16);
+
+    // return v1;
+    NodeSubject returnSubject =
+        fnBodySubject
+            .hasOneChildThat()
+            .isReturn()
+            .hasSourceFileName(lastScriptName)
+            .hasLineno(2)
+            .hasCharno(2)
+            .hasLength(10);
+
+    // return v1;
+    //        ^^
+    returnSubject.hasOneChildThat().isName("b").hasLineno(2).hasCharno(9).hasLength(2);
+
+    // foo();
+    assertNode(lastScript)
+        .hasLastChildThat()
+        .isExprResult() // foo(); (statement)
+        .hasSourceFileName(lastScriptName)
+        .hasLineno(4)
+        .hasCharno(0)
+        .hasLength(6)
+        .hasOneChildThat() // foo() (expression)
+        .isCall()
+        .hasSourceFileName(lastScriptName)
+        .hasLineno(4)
+        .hasCharno(0)
+        .hasLength(5)
+        .hasOneChildThat() // foo (function name)
+        .isName("a")
+        .hasLineno(4)
+        .hasCharno(0)
+        .hasLength(3);
   }
 
   @Test
