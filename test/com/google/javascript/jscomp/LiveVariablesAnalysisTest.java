@@ -360,11 +360,11 @@ public final class LiveVariablesAnalysisTest {
   @Test
   public void testArgumentsArray_doesNotEscape_destructuredParams() {
     // These cases also cover a crash related to assuming all RESTs have a NAME child.
-    assertNotEscaped("function f([a]) { arguments; }", "a");
-    assertNotEscaped("function f([a] = []) { arguments; }", "a");
-    assertNotEscaped("function f(...[a]) { arguments; }", "a");
-    assertNotEscaped("function f({a}) { arguments; }", "a");
-    assertNotEscaped("function f({a} = {}) { arguments; }", "a");
+    assertNotEscaped("function f([a]) { arguments; }", "a", false);
+    assertNotEscaped("function f([a] = []) { arguments; }", "a", false);
+    assertNotEscaped("function f(...[a]) { arguments; }", "a", false);
+    assertNotEscaped("function f({a}) { arguments; }", "a", false);
+    assertNotEscaped("function f({a} = {}) { arguments; }", "a", false);
   }
 
   @Test
@@ -659,12 +659,29 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private static void assertNotEscaped(String src, String name) {
-    for (Var var : computeLiveness(src, false).getEscapedLocals()) {
+    assertNotEscaped(src, name, true);
+  }
+
+  /**
+   * @param wrapInFunction Whether the input should be wrapped in a function.
+   */
+  private static void assertNotEscaped(String src, String name, boolean wrapInFunction) {
+    for (Var var : computeLiveness(src, false, wrapInFunction).getEscapedLocals()) {
       assertThat(var.getName()).isNotEqualTo(name);
     }
   }
 
   private static LiveVariablesAnalysis computeLiveness(String src, boolean async) {
+    return computeLiveness(src, async, true);
+  }
+
+  /**
+   * @param wrapInFunction Whether the input should be wrapped in a function e.g. <code>var a = 1;
+   *     </code> -> <code>function f() { var a = 1; }</code>
+   * @param async Whether the wrapper function should be {@code async}.
+   */
+  private static LiveVariablesAnalysis computeLiveness(
+      String src, boolean async, boolean wrapInFunction) {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -674,8 +691,13 @@ public final class LiveVariablesAnalysisTest {
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // Set up test case
-    src =
-        (async ? "async " : "") + "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+    if (wrapInFunction) {
+      src =
+          (async ? "async " : "")
+              + "function _FUNCTION(param1, param2 = 1, ...param3){"
+              + src
+              + "}";
+    }
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);
     Node script = new Node(Token.SCRIPT, n);
