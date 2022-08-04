@@ -220,6 +220,51 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticBlock() {
+    test(
+        lines(
+            "var x;",
+            "class Foo {", //
+            "  static {",
+            "    var x;",
+            "    let y;",
+            "    this.x;",
+            "  }",
+            "  static {",
+            "    var x;",
+            "    let y;",
+            "  }",
+            "}",
+            "class Bar {",
+            "  static {",
+            "    var x;",
+            "    let y;",
+            "    this.x;",
+            "  }",
+            "}"),
+        lines(
+            "var x;",
+            "class Foo {", //
+            "  static {",
+            "    var x$jscomp$1;",
+            "    let y;",
+            "    this.x;",
+            "  }",
+            "  static {",
+            "    var x$jscomp$2;",
+            "    let y$jscomp$1;",
+            "  }",
+            "}",
+            "class Bar {",
+            "  static {",
+            "    var x$jscomp$3;",
+            "    let y$jscomp$2;",
+            "    this.x;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testClassInForLoop() {
     testSame("for (class a {};;) { break; }");
   }
