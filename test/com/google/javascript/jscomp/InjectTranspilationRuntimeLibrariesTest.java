@@ -16,17 +16,29 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class InjectTranspilationRuntimeLibrariesTest {
+
+  private NoninjectingCompiler compiler;
+  private LanguageMode languageOut;
+
+  @Before
+  public void setup() {
+    compiler = new NoninjectingCompiler();
+    languageOut = LanguageMode.ECMASCRIPT5;
+  }
 
   /**
    * Parses the given code and runs the {@link InjectTranspilationRuntimeLibraries} pass over the
@@ -35,9 +47,8 @@ public class InjectTranspilationRuntimeLibrariesTest {
    * @return the set of paths to all the injected libraries
    */
   private Set<String> parseAndRunInjectionPass(String js) {
-    NoninjectingCompiler compiler = new NoninjectingCompiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(this.languageOut);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", "")),
@@ -109,5 +120,39 @@ public class InjectTranspilationRuntimeLibrariesTest {
     Set<String> injected = parseAndRunInjectionPass("function tag(...a) {}; tag`hello`;");
     assertThat(injected)
         .containsExactly("es6/util/createtemplatetagfirstarg", "es6/util/restarguments");
+  }
+
+  @Test
+  public void testAllowsEs5GetterSetterWithEs5Out() {
+    this.languageOut = LanguageMode.ECMASCRIPT5;
+    parseAndRunInjectionPass(
+        lines(
+            "var o = {", //
+            "  get x() {},",
+            "  set x(val) {}",
+            "};"));
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getInjected()).isEmpty();
+  }
+
+  @Test
+  public void testCannotConvertEs5GetterToEs3() {
+    this.languageOut = LanguageMode.ECMASCRIPT3;
+    parseAndRunInjectionPass("var o = {get x() {}};");
+
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
+  }
+
+  @Test
+  public void testCannotConvertEs5SetterToEs3() {
+    this.languageOut = LanguageMode.ECMASCRIPT3;
+    parseAndRunInjectionPass("var o = {set x(val) {}};");
+
+    assertThat(compiler.getErrors())
+        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
+        .containsExactly(TranspilationUtil.CANNOT_CONVERT);
   }
 }

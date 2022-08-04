@@ -148,7 +148,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       case GETTER_DEF:
       case SETTER_DEF:
         if (!getterSetterSupported) {
-          // TODO(lharker): fix Mutants finding on the below line by adding test cases
           TranspilationUtil.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
         }
