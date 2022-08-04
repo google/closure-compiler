@@ -360,11 +360,11 @@ public final class LiveVariablesAnalysisTest {
   @Test
   public void testArgumentsArray_doesNotEscape_destructuredParams() {
     // These cases also cover a crash related to assuming all RESTs have a NAME child.
-    assertNotEscaped("function f([a]) { arguments; }", "a", false);
-    assertNotEscaped("function f([a] = []) { arguments; }", "a", false);
-    assertNotEscaped("function f(...[a]) { arguments; }", "a", false);
-    assertNotEscaped("function f({a}) { arguments; }", "a", false);
-    assertNotEscaped("function f({a} = {}) { arguments; }", "a", false);
+    assertNotEscaped("function f([a]) { arguments; }", "a", Wrapper.FUNCTION);
+    assertNotEscaped("function f([a] = []) { arguments; }", "a", Wrapper.FUNCTION);
+    assertNotEscaped("function f(...[a]) { arguments; }", "a", Wrapper.FUNCTION);
+    assertNotEscaped("function f({a}) { arguments; }", "a", Wrapper.FUNCTION);
+    assertNotEscaped("function f({a} = {}) { arguments; }", "a", Wrapper.FUNCTION);
   }
 
   @Test
@@ -601,7 +601,12 @@ public final class LiveVariablesAnalysisTest {
 
   private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
       String src, boolean async) {
-    liveness = computeLiveness(src, async);
+    if (async) {
+      liveness = computeLiveness(src, Wrapper.ASYNC_FUNCTION);
+    } else {
+      liveness = computeLiveness(src, Wrapper.FUNCTION);
+    }
+
     return getFlowStateAtX(liveness.getCfg().getEntry().getValue(), liveness.getCfg());
   }
 
@@ -623,7 +628,7 @@ public final class LiveVariablesAnalysisTest {
 
   private LinearFlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtDeclaration(
       String src, String name) {
-    liveness = computeLiveness(src, false);
+    liveness = computeLiveness(src);
     return getFlowStateAtDeclaration(
         liveness.getCfg().getEntry().getValue(), liveness.getCfg(), name);
   }
@@ -650,7 +655,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private static void assertEscaped(String src, String name) {
-    for (Var var : computeLiveness(src, false).getEscapedLocals()) {
+    for (Var var : computeLiveness(src).getEscapedLocals()) {
       if (var.getName().equals(name)) {
         return;
       }
@@ -659,29 +664,25 @@ public final class LiveVariablesAnalysisTest {
   }
 
   private static void assertNotEscaped(String src, String name) {
-    assertNotEscaped(src, name, true);
+    assertNotEscaped(src, name, Wrapper.FUNCTION);
   }
 
   /**
-   * @param wrapInFunction Whether the input should be wrapped in a function.
+   * @param wrapper The kind of wrapper function the {@code src} will be placed in.
    */
-  private static void assertNotEscaped(String src, String name, boolean wrapInFunction) {
-    for (Var var : computeLiveness(src, false, wrapInFunction).getEscapedLocals()) {
+  private static void assertNotEscaped(String src, String name, Wrapper wrapper) {
+    for (Var var : computeLiveness(src, wrapper).getEscapedLocals()) {
       assertThat(var.getName()).isNotEqualTo(name);
     }
   }
 
-  private static LiveVariablesAnalysis computeLiveness(String src, boolean async) {
-    return computeLiveness(src, async, true);
+  /** Wraps {@code src} in a function and computes a LiveVariablesAnalysis. */
+  private static LiveVariablesAnalysis computeLiveness(String src) {
+    return computeLiveness(src, Wrapper.FUNCTION);
   }
 
-  /**
-   * @param wrapInFunction Whether the input should be wrapped in a function e.g. <code>var a = 1;
-   *     </code> -> <code>function f() { var a = 1; }</code>
-   * @param async Whether the wrapper function should be {@code async}.
-   */
-  private static LiveVariablesAnalysis computeLiveness(
-      String src, boolean async, boolean wrapInFunction) {
+  /** Optionally wraps the {@code src} in a function and computes a LiveVariablesAnalysis. */
+  private static LiveVariablesAnalysis computeLiveness(String src, Wrapper wrapper) {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -691,12 +692,15 @@ public final class LiveVariablesAnalysisTest {
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // Set up test case
-    if (wrapInFunction) {
-      src =
-          (async ? "async " : "")
-              + "function _FUNCTION(param1, param2 = 1, ...param3){"
-              + src
-              + "}";
+    switch (wrapper) {
+      case FUNCTION:
+        src = "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+        break;
+      case ASYNC_FUNCTION:
+        src = "async function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
+        break;
+      default:
+        break;
     }
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);
@@ -728,4 +732,13 @@ public final class LiveVariablesAnalysisTest {
     analysis.analyze();
     return analysis;
   }
+}
+
+/** Represents functions that source code can be wrapped in. */
+enum Wrapper {
+  NONE,
+  /** e.g. <code>function f(){ ... }</code> */
+  FUNCTION,
+  /** e.g. <code>async function f(){ ... }</code> */
+  ASYNC_FUNCTION
 }
