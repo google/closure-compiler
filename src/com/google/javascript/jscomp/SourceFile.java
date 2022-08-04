@@ -67,10 +67,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
 
   private static final String BANG_SLASH = "!" + Platform.getFileSeperator();
 
-  /**
-   * Number of lines in the region returned by {@link #getRegion(int)}.
-   * This length must be odd.
-   */
+  /** Number of lines in the region returned by {@link #getRegion(int)}. This length must be odd. */
   private static final int SOURCE_EXCERPT_REGION_LENGTH = 5;
 
   /**
@@ -89,6 +86,15 @@ public final class SourceFile implements StaticSourceFile, Serializable {
   @Nullable private transient int[] lineOffsets = null;
 
   @Nullable private transient volatile String code = null;
+
+  // Code statistics used for metrics.
+  //
+  // These are non-transient, because we want to save and restore them to avoid
+  // recalculating them when we report metrics in the later compilation stages.
+  // See JsCompileMetricsRecorder#recordSourcesStartState
+  // For both of these, a negative value means we haven't counted yet.
+  private int numLines = -1;
+  private int numBytes = -1;
 
   private SourceFile(CodeLoader loader, String fileName, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
@@ -109,10 +115,31 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     findLineOffsets();
     if (lineno < 1 || lineno > lineOffsets.length) {
       throw new IllegalArgumentException(
-          "Expected line number between 1 and " + lineOffsets.length +
-          "\nActual: " + lineno);
+          "Expected line number between 1 and " + lineOffsets.length + "\nActual: " + lineno);
     }
     return lineOffsets[lineno - 1];
+  }
+
+  /**
+   * @return the number of lines in the source file
+   */
+  int getNumLines() {
+    if (numLines < 0) {
+      // A negative value means we need to read in the code and calculate this information.
+      findLineOffsets();
+    }
+    return numLines;
+  }
+
+  /**
+   * @return the number of bytes in the source file
+   */
+  int getNumBytes() {
+    if (numBytes < 0) {
+      // A negative value means we need to read in the code and calculate this information.
+      findLineOffsets();
+    }
+    return numBytes;
   }
 
   private void findLineOffsets() {
@@ -121,11 +148,13 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
 
     String localCode = this.code;
+    boolean attemptToReadCodeFailed = false;
     if (localCode == null) {
       try {
         localCode = this.getCode();
       } catch (IOException e) {
         localCode = "";
+        attemptToReadCodeFailed = true;
       }
     }
 
@@ -141,6 +170,31 @@ public final class SourceFile implements StaticSourceFile, Serializable {
       }
     }
     this.lineOffsets = index == offsets.length ? offsets : Arrays.copyOf(offsets, index);
+
+    if (numLines < 0) {
+      // We've never read in the code before, so populate numLines and numBytes
+      checkState(numBytes < 0, "numLines: %s, numBytes: %s", numLines, numBytes);
+      numLines = index;
+      numBytes = localCode.length();
+    } else {
+      // We've previously counted lines and bytes, but after that the code was removed from memory.
+      // If we didn't find the same number of bytes and lines after re-reading the code, then
+      // something strange is going on.
+      checkState(numBytes >= 0, "numLines: %s, numBytes: %s", numLines, numBytes);
+      checkState(
+          numLines == index || attemptToReadCodeFailed,
+          "Reread %s: number of lines changed from %s to %s",
+          fileName,
+          numLines,
+          index);
+      int localCodeNumBytes = localCode.length();
+      checkState(
+          numBytes == localCodeNumBytes || attemptToReadCodeFailed,
+          "Reread %s: number of bytes changed from %s to %s",
+          fileName,
+          numBytes,
+          localCodeNumBytes);
+    }
   }
 
   /** Gets all the code in this source file. */
@@ -163,9 +217,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     this.setCodeAndDoBookkeeping(code);
   }
 
-  /**
-   * Gets a reader for the code in this source file.
-   */
+  /** Gets a reader for the code in this source file. */
   @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
     // Only synchronize if we need to
@@ -197,7 +249,9 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-  /** @deprecated alias of {@link #getName()}. Use that instead */
+  /**
+   * @deprecated alias of {@link #getName()}. Use that instead
+   */
   @Deprecated
   public String getOriginalPath() {
     return this.getName();
@@ -389,8 +443,7 @@ public final class SourceFile implements StaticSourceFile, Serializable {
     if (end == -1) {
       int last = js.length() - 1;
       if (js.charAt(last) == '\n') {
-        return
-            new SimpleRegion(startLine, endLine, js.substring(pos, last));
+        return new SimpleRegion(startLine, endLine, js.substring(pos, last));
       } else {
         return new SimpleRegion(startLine, endLine, js.substring(pos));
       }
