@@ -24,34 +24,34 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Locale;
 import org.jspecify.nullness.Nullable;
 
-/**
- * Util functions for converting Es6 to Es5
- */
-public final class Es6ToEs3Util {
+/** Util functions for transpilation passes */
+public final class TranspilationUtil {
+
+  private TranspilationUtil() {} // prevent instantiation
 
   public static final DiagnosticType CANNOT_CONVERT =
-      DiagnosticType.error("JSC_CANNOT_CONVERT", "This code cannot be converted from ES6. {0}");
+      DiagnosticType.error("JSC_CANNOT_CONVERT", "This code cannot be transpiled. {0}");
 
   // TODO(tbreisacher): Remove this once we have implemented transpilation for all the features
   // we intend to support.
   public static final DiagnosticType CANNOT_CONVERT_YET =
       DiagnosticType.error(
-          "JSC_CANNOT_CONVERT_YET", "ES6 transpilation of ''{0}'' is not yet implemented.");
+          "JSC_CANNOT_CONVERT_YET", "Transpilation of ''{0}'' is not yet implemented.");
 
   static void cannotConvert(AbstractCompiler compiler, Node n, String message) {
     compiler.report(JSError.make(n, CANNOT_CONVERT, message));
   }
 
   /**
-   * Warns the user that the given ES6 feature cannot be converted to ES3
-   * because the transpilation is not yet implemented. A call to this method
-   * is essentially a "TODO(tbreisacher): Implement {@code feature}" comment.
+   * Warns the user that the given feature cannot be transpiled because the transpilation is not yet
+   * implemented. A call to this method is essentially a "TODO(tbreisacher): Implement {@code
+   * feature}" comment.
    */
   static void cannotConvertYet(AbstractCompiler compiler, Node n, String feature) {
     compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
   }
 
-  static void preloadEs6RuntimeFunction(AbstractCompiler compiler, String function) {
+  static void preloadTranspilationRuntimeFunction(AbstractCompiler compiler, String function) {
     compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
   }
 

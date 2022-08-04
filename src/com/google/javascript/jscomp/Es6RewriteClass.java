@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
-import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvert;
+import static com.google.javascript.jscomp.TranspilationUtil.cannotConvert;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;

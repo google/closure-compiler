@@ -287,7 +287,7 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
                     "/** @fileoverview @externs */",
                     "export let /** !number */ externalName;",
                     ""))),
-        error(Es6ToEs3Util.CANNOT_CONVERT_YET));
+        error(TranspilationUtil.CANNOT_CONVERT_YET));
   }
 
   @Test
@@ -1258,6 +1258,6 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   @Test
   public void testImportMeta() {
 
-    testError("import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+    testError("import.meta", TranspilationUtil.CANNOT_CONVERT);
   }
 }

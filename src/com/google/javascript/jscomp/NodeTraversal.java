@@ -929,14 +929,6 @@ public class NodeTraversal {
 
     traverseBranch(extendsClause, n);
 
-    for (Node child = body.getFirstChild(); child != null; ) {
-      Node next = child.getNext(); // see traverseChildren
-      if (child.isComputedProp()) {
-        traverseBranch(child.getFirstChild(), child);
-      }
-      child = next;
-    }
-
     if (!isClassExpression) {
       // Class declarations are in the scope containing the declaration.
       traverseBranch(className, n);
@@ -969,10 +961,20 @@ public class NodeTraversal {
 
     for (Node child = n.getFirstChild(); child != null; ) {
       Node next = child.getNext(); // see traverseChildren
-      if (child.isComputedProp()) {
+      if (child.isComputedProp() || child.isComputedFieldDef()) {
+        traverseBranch(child.getFirstChild(), child);
+      }
+      child = next;
+    }
+
+    for (Node child = n.getFirstChild(); child != null; ) {
+      Node next = child.getNext(); // see traverseChildren
+      if (child.isComputedProp() || child.isComputedFieldDef()) {
         currentNode = n;
         if (callback.shouldTraverse(this, child, n)) {
-          traverseBranch(child.getLastChild(), child);
+          if (child.hasTwoChildren()) { // No RHS to traverse in `[x];` computed field case
+            traverseBranch(child.getLastChild(), child);
+          }
           currentNode = n;
           callback.visit(this, child, n);
         }

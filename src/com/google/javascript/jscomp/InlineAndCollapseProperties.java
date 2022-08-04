@@ -812,6 +812,7 @@ class InlineAndCollapseProperties implements CompilerPass {
               checkState(ref.getNode().isGetProp() || ref.getNode().isName());
               Node newNode = aliasingRef.getNode().cloneTree();
               Node node = ref.getNode();
+              newNode.srcref(node);
               node.replaceWith(newNode);
               compiler.reportChangeToEnclosingScope(newNode);
               newNodes.add(new AstChange(ref.scope, newNode));

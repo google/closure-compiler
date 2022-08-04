@@ -3215,6 +3215,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("function*f(){yield(a=0)}");
     assertPrintSame("function*f(){a=yield 0}");
     assertPrintSame("function*f(){(yield 1)+(yield 1)}");
+    // Parens required for evaluating arrow function expression i.e. `yield (() => expr)`
+    assertPrintSame("function*f(){yield(()=>({}))}");
   }
 
   @Test
@@ -3334,6 +3336,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class C{async pwait(promise){await promise}}");
     assertPrintSame("o={async pwait(promise){await promise}}");
     assertPrintSame("pwait=async promise=>await promise");
+  }
+
+  /** Regression test for b/235871063 - necessary parens dropped around awaited arrow function. */
+  @Test
+  public void testParansAroudAwaitArrowFunction() {
+    // Parens required for evaluating arrow function expression i.e. `await (() => expr)`
+    assertPrint(
+        "async function f(){return await (()=>new Promise((resolve)=>setTimeout(resolve,0)));}",
+        "async function f(){return await (()=>new Promise(resolve=>setTimeout(resolve,0)))}");
+    System.out.println("--------------");
+    // Parens not required for evaluating new
+    assertPrint(
+        "async function f(){return await new Promise((resolve)=>setTimeout(resolve,0));}",
+        "async function f(){return await new Promise(resolve=>setTimeout(resolve,0))}");
   }
 
   /**

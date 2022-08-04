@@ -406,7 +406,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       if (importDecl.getLastChild().getString().contains("://")) {
         compiler.report(
             JSError.make(
-                importDecl, Es6ToEs3Util.CANNOT_CONVERT, "Module requests with protocols."));
+                importDecl, TranspilationUtil.CANNOT_CONVERT, "Module requests with protocols."));
       }
 
       // Normalize the import path according to the module resolution scheme so that bundles are

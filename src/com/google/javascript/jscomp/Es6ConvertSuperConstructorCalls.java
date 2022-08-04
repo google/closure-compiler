@@ -79,7 +79,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         // TODO(bradfordcsmith): `super.prop` should have been removed before this code executes,
         //     but instead is being left untranspiled when there's no `extends` clause, so
         //     we have to report that problem here.
-        t.report(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "super access with no extends clause");
+        t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "super access with no extends clause");
         return false;
       }
       // must be super(args)

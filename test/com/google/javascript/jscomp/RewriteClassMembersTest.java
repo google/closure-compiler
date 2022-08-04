@@ -61,7 +61,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  ['x'] = 2;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // computed prop
+        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
 
     testError(
         lines(
@@ -69,7 +69,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "class C {",
             "  static ['x'] = 2;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // computed prop
+        TranspilationUtil.CANNOT_CONVERT_YET); // computed prop
 
     testError(
         lines(
@@ -85,7 +85,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  let x = 2;",
         "  C.y = x", // TODO(b/235871861): Need to correct references to `this`
         "}")*/
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // uses `this`
+        TranspilationUtil.CANNOT_CONVERT_YET); // uses `this`
 
     testError(
         lines(
@@ -94,7 +94,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = super.y",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // uses `super`
+        TranspilationUtil.CANNOT_CONVERT_YET); // uses `super`
 
     testError(
         lines(
@@ -104,7 +104,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = C.y",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -114,7 +114,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = C.y",
             "  }",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -123,7 +123,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -132,7 +132,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    let x = 1",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -148,7 +148,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         "  C.x = 2;",
         "  const y = C.x",
         "}")*/
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -159,7 +159,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    var z = 3;",
             "  }",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // `var` in static block
+        TranspilationUtil.CANNOT_CONVERT_YET); // `var` in static block
 
     testError(
         lines(
@@ -167,7 +167,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static x = 1;",
             "  static y = this.x;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // `this` in static field
+        TranspilationUtil.CANNOT_CONVERT_YET); // `this` in static field
 
     testError(
         lines(
@@ -175,7 +175,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static y = 2;",
             "  static x = C.y",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -183,21 +183,21 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  static y = 2;",
             "  static x = C.y",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "foo(class {", //
             "  static x = 1",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "let c = class {", //
             "  static x = 1",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -205,7 +205,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  x = 1;",
             "  y = this.x;",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // `this` in public field
+        TranspilationUtil.CANNOT_CONVERT_YET); // `this` in public field
 
     testError(
         lines(
@@ -213,7 +213,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  y = 2;",
             "  x = C.y",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
@@ -221,21 +221,21 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  y = 2;",
             "  x = C.y",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "foo(class {", //
             "  x = 1",
             "})"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
             "let c = class {", //
             "  x = 1",
             "}"),
-        Es6ToEs3Util.CANNOT_CONVERT_YET); // not class decl
+        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
   }
 
   @Test

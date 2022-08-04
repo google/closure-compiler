@@ -496,7 +496,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
 
   @Test
   public void testProtocolInImportPathIsError() {
-    testError("import * as foo from 'file://imported.js';", Es6ToEs3Util.CANNOT_CONVERT);
+    testError("import * as foo from 'file://imported.js';", TranspilationUtil.CANNOT_CONVERT);
   }
 
   @Test

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.integration;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.base.JSCompStrings.lines;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
@@ -693,6 +694,60 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
               "")
         },
         new String[] {"", "", "use(1)"});
+  }
+
+  @Test
+  public void testSourceInfoForReferenceToImportedSymbol() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+    options.setEmitUseStrict(false); // 'use strict'; is just noise here
+    options.setPrettyPrint(true);
+    options.setPrintSourceAfterEachPass(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("function use(x) {}").buildExternsFile("externs"));
+    test(
+        options,
+        new String[] {
+          TestExternsBuilder.getClosureExternsAsSource(),
+          lines(
+              "goog.module('a.b.c');",
+              "/** @noinline */",
+              "function foo() {}",
+              "exports.foo = foo;",
+              ""),
+          lines(
+              "", //
+              "goog.module('a.b.d');",
+              "const {foo} = goog.require('a.b.c');",
+              "use(foo());",
+              "")
+        },
+        new String[] {"", "", "function a() {} use(a())"});
+
+    // first child is externs tree, second is sources tree
+    final Node srcsRoot = lastCompiler.getRoot().getLastChild();
+    final Node closureExternsAsSourceScriptNode = srcsRoot.getFirstChild();
+    final Node definitionScript = closureExternsAsSourceScriptNode.getNext();
+    final Node usageScript = definitionScript.getNext();
+
+    // Find the `a` node of `use(a());` which originally was `use(foo())`
+    final Node referenceToFoo =
+        usageScript
+            .getLastChild() // `use(a());` EXPR_RESULT statement
+            .getOnlyChild() // `use(a())` CALL expression
+            .getSecondChild() // `a()` CALL expression
+            .getFirstChild(); // `a`
+
+    // Original usageScript line 4: `foo` of `use(foo());`
+    // Compiled usageScript statement: `a` of `use(a());`
+    assertNode(referenceToFoo)
+        .isName("a")
+        .hasSourceFileName(usageScript.getSourceFileName())
+        .hasLineno(4)
+        .hasCharno(4); // `use(` is 4 chars
   }
 
   @Test

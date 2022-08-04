@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;

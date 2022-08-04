@@ -424,7 +424,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
         // is a module. The default output format type is just script.
         t.report(
             n,
-            Es6ToEs3Util.CANNOT_CONVERT,
+            TranspilationUtil.CANNOT_CONVERT,
             "import.meta. Use --chunk_output_type=ES_MODULES to allow passthrough support.");
       }
     }
@@ -433,7 +433,7 @@ public final class Es6RewriteModules implements CompilerPass, NodeTraversal.Call
   private void maybeWarnExternModule(NodeTraversal t, Node n, Node parent) {
     checkState(parent.isModuleBody());
     if (parent.isFromExterns() && !NodeUtil.isFromTypeSummary(parent.getParent())) {
-      t.report(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "ES6 modules in externs");
+      t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "ES6 modules in externs");
     }
   }
 

@@ -248,6 +248,12 @@ public final class NodeSubject extends Subject {
   }
 
   @CanIgnoreReturnValue
+  public NodeSubject isNullNode() {
+    check("isNull()").that(actual.isNull()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public NodeSubject isThis() {
     check("isThis()").that(actual.isThis()).isTrue();
     return this;
@@ -349,6 +355,36 @@ public final class NodeSubject extends Subject {
   }
 
   @CanIgnoreReturnValue
+  public NodeSubject isBlock() {
+    check("isBlock()").that(actual.isBlock()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NodeSubject isObjectLit() {
+    check("isObjectLit()").that(actual.isObjectLit()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NodeSubject isScript() {
+    check("isScript()").that(actual.isScript()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NodeSubject isReturn() {
+    check("isReturn()").that(actual.isReturn()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NodeSubject isExprResult() {
+    check("isExprResult()").that(actual.isExprResult()).isTrue();
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public NodeSubject isMemberFunctionDef(String name) {
     check("isMemberFunction()").that(actual.isMemberFunctionDef()).isTrue();
     check("getString()").that(actual.getString()).isEqualTo(name);
@@ -433,22 +469,24 @@ public final class NodeSubject extends Subject {
     return hasXChildren(1);
   }
 
-  @CanIgnoreReturnValue
   public NodeSubject hasOneChildThat() {
     hasOneChild();
     return assertNode(actual.getOnlyChild());
   }
 
-  @CanIgnoreReturnValue
   public NodeSubject hasFirstChildThat() {
     hasChildren(true);
     return assertNode(actual.getFirstChild());
   }
 
-  @CanIgnoreReturnValue
   public NodeSubject hasSecondChildThat() {
     check("getChildCount()").that(actual.getChildCount()).isAtLeast(2);
     return assertNode(actual.getSecondChild());
+  }
+
+  public NodeSubject hasLastChildThat() {
+    hasChildren(true);
+    return assertNode(actual.getLastChild());
   }
 
   @CanIgnoreReturnValue
