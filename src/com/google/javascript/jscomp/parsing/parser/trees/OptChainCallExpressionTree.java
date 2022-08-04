@@ -35,7 +35,7 @@ public class OptChainCallExpressionTree extends ParseTree {
       ArgumentListTree arguments,
       boolean isStartOfOptionalChain,
       boolean hasTrailingComma) {
-    super(ParseTreeType.OPT_CHAIN__CALL_EXPRESSION, location);
+    super(ParseTreeType.OPT_CHAIN_CALL_EXPRESSION, location);
 
     this.operand = operand;
     this.arguments = arguments;

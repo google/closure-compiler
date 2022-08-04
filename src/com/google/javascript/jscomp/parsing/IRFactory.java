@@ -2862,7 +2862,7 @@ class IRFactory {
           return processBreakStatement(node.asBreakStatement());
         case CALL_EXPRESSION:
           return processFunctionCall(node.asCallExpression());
-        case OPT_CHAIN__CALL_EXPRESSION:
+        case OPT_CHAIN_CALL_EXPRESSION:
           return processOptChainFunctionCall(node.asOptChainCallExpression());
         case CASE_CLAUSE:
           return processSwitchCase(node.asCaseClause());
