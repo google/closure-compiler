@@ -734,7 +734,7 @@ public final class LiveVariablesAnalysisTest {
   }
 }
 
-/** Represents functions that source code can be wrapped in. */
+/** The kinds of functions that source code can be wrapped in for testing. */
 enum Wrapper {
   NONE,
   /** e.g. <code>function f(){ ... }</code> */
