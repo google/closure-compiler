@@ -83,7 +83,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
       case GETTER_DEF:
       case SETTER_DEF:
         if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
-          Es6ToEs3Util.cannotConvert(
+          TranspilationUtil.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
           return false;
         }
@@ -183,7 +183,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
     while (currElement != null) {
       if (currElement.getBooleanProp(Node.COMPUTED_PROP_GETTER)
           || currElement.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-        Es6ToEs3Util.cannotConvertYet(
+        TranspilationUtil.cannotConvertYet(
             compiler, currElement, "computed getter/setter in an object literal");
         return;
       } else if (currElement.isGetterDef() || currElement.isSetterDef()) {

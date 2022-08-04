@@ -18,10 +18,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.testing.NodeSubject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -261,6 +264,121 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a$b = {}; var c = null; use(a$b);");
 
     testSame("var a = {}; /** @nocollapse */ a.b;");
+  }
+
+  @Test
+  public void testCollapseKeepsSourceInfoForAliases() {
+    test(
+        lines(
+            "var a = {};",
+            "a.use = function(arg) {};",
+            "a.b = {};",
+            "var c = a.b;",
+            "a.use(c);",
+            ""),
+        lines(
+            "var a$use = function (arg) { };", //
+            "var a$b = {};",
+            "var c = null;",
+            "a$use(a$b);",
+            ""));
+
+    final Node scriptNode =
+        getLastCompiler()
+            .getRoot()
+            .getLastChild() // sources root
+            .getOnlyChild(); // only one source file
+    assertNode(scriptNode).isScript().hasXChildren(4);
+    final Node statement1 = scriptNode.getFirstChild();
+    final Node statement2 = statement1.getNext();
+    final Node statement3 = statement2.getNext();
+    final Node statement4 = statement3.getNext();
+    final String scriptName = scriptNode.getSourceFileName();
+
+    // Original line 2: `a.use = function(arg) {};`
+    // Compiled line 1: `var a$use = function(arg) {};`
+    assertNode(statement1)
+        .isVar()
+        .hasSourceFileName(scriptName)
+        .hasLineno(2)
+        .hasCharno(0)
+        .hasOneChildThat() // `a$use = function(arg) {};
+        .isName("a$use")
+        .hasSourceFileName(scriptName)
+        .hasLineno(2)
+        .hasCharno(0) // `a.use = ` was the beginning of the line
+        .hasOneChildThat() // `function(arg) {}`
+        .isFunction()
+        .hasSourceFileName(scriptName)
+        .hasLineno(2)
+        .hasCharno(8); // `a.use = ` 8 chars
+
+    // Original line 3: `a.b = {};`
+    // Compiled line 2: `var a$b = {};`
+    assertNode(statement2)
+        .isVar()
+        .hasSourceFileName(scriptName)
+        .hasLineno(3)
+        .hasCharno(0)
+        .hasOneChildThat() // a$b = {}
+        .isName("a$b")
+        .hasSourceFileName(scriptName)
+        .hasLineno(3)
+        .hasCharno(0)
+        .hasOneChildThat() // {}
+        .isObjectLit()
+        .hasSourceFileName(scriptName)
+        .hasLineno(3)
+        .hasCharno(6);
+
+    // Original line 4: `var c = a.b;`
+    // Compiled line 3: `var c = null;`
+    assertNode(statement3)
+        .isVar()
+        .hasSourceFileName(scriptName)
+        .hasLineno(4)
+        .hasCharno(0)
+        .hasOneChildThat() // c = a.b
+        .isName("c")
+        .hasSourceFileName(scriptName)
+        .hasLineno(4)
+        .hasCharno(4)
+        .hasOneChildThat() // null
+        .isNullNode()
+        .hasSourceFileName(scriptName)
+        .hasLineno(4)
+        .hasCharno(10);
+
+    // Original line 5: `a.use(c);`
+    // Compiled line 4: `a$use(a$b);`
+    final NodeSubject callNodeSubject =
+        assertNode(statement4)
+            .isExprResult()
+            .hasSourceFileName(scriptName)
+            .hasLineno(5)
+            .hasCharno(0)
+            .hasOneChildThat() // a.use(c)
+            .isCall()
+            .hasSourceFileName(scriptName)
+            .hasLineno(5)
+            .hasCharno(0);
+
+    // `a$use` from `a.use(c);`
+    callNodeSubject
+        .hasFirstChildThat()
+        .isName("a$use")
+        .hasSourceFileName(scriptName)
+        .hasLineno(5)
+        .hasCharno(2); // source info points to the `use` part of `a.use`
+
+    // Original line 5: `c` in `a.use(c)`
+    // Compiled line 4: `a$b` in `a$use(a$b)`
+    callNodeSubject
+        .hasSecondChildThat()
+        .isName("a$b")
+        .hasSourceFileName(scriptName)
+        .hasLineno(5)
+        .hasCharno(6); // `a.use(` is 6 chars
   }
 
   @Test

@@ -65,7 +65,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   /** Transpile the actual class members themselves */
   private void visitClass(NodeTraversal t, Node classNode) {
     if (!NodeUtil.isClassDeclaration(classNode)) {
-      t.report(classNode, Es6ToEs3Util.CANNOT_CONVERT_YET, "Not a class declaration");
+      t.report(classNode, TranspilationUtil.CANNOT_CONVERT_YET, "Not a class declaration");
       return;
     }
 
@@ -86,7 +86,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
           }
           break;
         case COMPUTED_FIELD_DEF:
-          t.report(member, Es6ToEs3Util.CANNOT_CONVERT_YET, "Computed fields");
+          t.report(member, TranspilationUtil.CANNOT_CONVERT_YET, "Computed fields");
           return;
         case BLOCK:
           staticMembers.push(member);
@@ -118,7 +118,9 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
       if (NodeUtil.referencesEnclosingReceiver(instanceMember)) {
         t.report(
-            instanceMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in instance member");
+            instanceMember,
+            TranspilationUtil.CANNOT_CONVERT_YET,
+            "This or super in instance member");
         return;
       }
       Node transpiledNode = convNonCompFieldToGetProp(thisNode, instanceMember.detach());
@@ -139,14 +141,15 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.pop();
       if (NodeUtil.referencesEnclosingReceiver(staticMember)) {
-        t.report(staticMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "This or super in static member");
+        t.report(
+            staticMember, TranspilationUtil.CANNOT_CONVERT_YET, "This or super in static member");
         return;
       }
       Node transpiledNode;
       switch (staticMember.getToken()) {
         case BLOCK:
           if (!NodeUtil.getVarsDeclaredInBranch(staticMember).isEmpty()) {
-            t.report(staticMember, Es6ToEs3Util.CANNOT_CONVERT_YET, "Var in static block");
+            t.report(staticMember, TranspilationUtil.CANNOT_CONVERT_YET, "Var in static block");
             return;
           }
           transpiledNode = staticMember.detach();

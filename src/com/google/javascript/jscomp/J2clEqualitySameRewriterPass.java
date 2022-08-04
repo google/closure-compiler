@@ -201,7 +201,12 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
   private static boolean isStringEqualsMethod(Node node) {
     return node.isCall()
-        && hasName(node.getFirstChild(), "String", "m_equals__java_lang_String__java_lang_Object");
+        // TODO(b/240961496): Remove old mangling scheme after migration is done.
+        && (hasName(node.getFirstChild(), "String", "m_equals__java_lang_String__java_lang_Object")
+            || hasName(
+                node.getFirstChild(),
+                "String",
+                "m_equals__java_lang_String__java_lang_Object__boolean"));
   }
 
   private static boolean hasName(Node fnName, String className, String methodName) {

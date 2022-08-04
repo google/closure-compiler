@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.AstFactory.type;
-import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvertYet;
+import static com.google.javascript.jscomp.TranspilationUtil.cannotConvertYet;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;

@@ -554,8 +554,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testGeneratorCannotConvertYet() {
-    testError("function *f(b, i) {switch (i) { case yield: return b; }}",
-        Es6ToEs3Util.CANNOT_CONVERT_YET);
+    testError(
+        "function *f(b, i) {switch (i) { case yield: return b; }}",
+        TranspilationUtil.CANNOT_CONVERT_YET);
   }
 
   @Test

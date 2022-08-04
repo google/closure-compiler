@@ -2955,7 +2955,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypeOfGoogRequireFromModule() {
+  public void testTypeAndSourceInfoOfGoogRequireFromModule() {
     test(
         srcs(
             lines(
@@ -2985,6 +2985,13 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             Predicates.alwaysTrue());
 
     assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("mod.one.Bar");
+    // The source info for the rewritten name must match the source info for `Bar` in `new Bar();`
+    assertNode(moduleExportsDotBar)
+        .hasSourceFileName(secondScript.getSourceFileName())
+        .hasLineno(3)
+        .hasCharno(4)
+        .hasLength(3);
+    assertNode(moduleExportsDotBar.getOnlyChild()).hasEqualSourceInfoTo(moduleExportsDotBar);
   }
 
   @Test

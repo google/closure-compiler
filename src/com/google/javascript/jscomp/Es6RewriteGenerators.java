@@ -187,7 +187,7 @@ final class Es6RewriteGenerators implements CompilerPass {
                 + "-what-do-i-do";
         String suggestion = "Please rewrite the yield or await as a separate statement.";
         String message = "Undecomposable expression: " + suggestion + "\nSee " + link;
-        compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, message));
+        compiler.report(JSError.make(n, TranspilationUtil.CANNOT_CONVERT, message));
       }
     }
   }
@@ -1037,7 +1037,7 @@ final class Es6RewriteGenerators implements CompilerPass {
           // }
           compiler.report(
               JSError.make(
-                  n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Case statements that contain yields"));
+                  n, TranspilationUtil.CANNOT_CONVERT_YET, "Case statements that contain yields"));
           return;
         }
         Node body = caseSection.getLastChild();

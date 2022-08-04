@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 

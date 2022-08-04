@@ -1577,7 +1577,9 @@ public class CodeGenerator {
         || NodeUtil.isUpdateOperator(parent)
         || parent.isTaggedTemplateLit()
         || parent.isGetProp()
-        || parent.isOptChainGetProp()) {
+        || parent.isOptChainGetProp()
+        || parent.isAwait()
+        || parent.isYield()) {
       // LeftHandSideExpression OP LeftHandSideExpression
       // OP LeftHandSideExpression | LeftHandSideExpression OP
       // MemberExpression TemplateLiteral
