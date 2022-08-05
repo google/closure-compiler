@@ -1624,10 +1624,15 @@ public abstract class CompilerTestCase {
         }
       }
 
-      // If we ran normalize on the AST, we must also run normalize on the
-      // clone before checking for changes.
+      // If we ran normalize on the AST, we must also run normalize on th clone before checking for
+      // changes.
       if (normalizeEnabled) {
+        boolean hasTypecheckingRun = compiler.hasTypeCheckingRun();
+        // we don't run type inference over the clone of the AST, so need to mark that in the
+        // compiler or Normalize will crash due to lack of inferred types on the clone AST nodes.
+        compiler.setTypeCheckingHasRun(false);
         normalizeActualCode(compiler, externsRootClone, mainRootClone);
+        compiler.setTypeCheckingHasRun(hasTypecheckingRun);
       }
 
       boolean codeChange = !mainRootClone.isEquivalentWithSideEffectsTo(mainRoot);

@@ -59,14 +59,16 @@ import org.jspecify.nullness.Nullable;
  *       var a = 0; for(a;a<0;a++) {}
  * </ol>
  */
-class Normalize implements CompilerPass {
+final class Normalize implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
   private final boolean assertOnChange;
 
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
     this.assertOnChange = assertOnChange;
+    this.astFactory = compiler.createAstFactory();
   }
 
   static void normalizeSyntheticCode(AbstractCompiler compiler, Node js, String prefix) {
@@ -246,15 +248,17 @@ class Normalize implements CompilerPass {
    */
   static class NormalizeStatements implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
+    private final AstFactory astFactory;
     private final boolean assertOnChange;
     private final RewriteLogicalAssignmentOperatorsHelper rewriteLogicalAssignmentOperatorsHelper;
 
     NormalizeStatements(AbstractCompiler compiler, boolean assertOnChange) {
       this.compiler = compiler;
       this.assertOnChange = assertOnChange;
+      this.astFactory = compiler.createAstFactory();
       this.rewriteLogicalAssignmentOperatorsHelper =
           new RewriteLogicalAssignmentOperatorsHelper(
-              compiler, compiler.createAstFactory(), compiler.getUniqueIdSupplier());
+              compiler, this.astFactory, compiler.getUniqueIdSupplier());
     }
 
     private void reportCodeChange(String changeDescription, Node n) {
@@ -620,7 +624,8 @@ class Normalize implements CompilerPass {
       shorthand.setToken(NodeUtil.getOpFromAssignmentOp(shorthand));
       Node insertPoint = IR.empty();
       shorthand.replaceWith(insertPoint);
-      Node assign = IR.assign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
+      Node assign =
+          astFactory.createAssign(name.cloneNode().srcref(name), shorthand).srcref(shorthand);
       assign.setJSDocInfo(shorthand.getJSDocInfo());
       shorthand.setJSDocInfo(null);
       insertPoint.replaceWith(assign);
@@ -710,7 +715,7 @@ class Normalize implements CompilerPass {
         // Convert "var name = value" to "name = value"
         Node value = n.getFirstChild();
         value.detach();
-        Node replacement = IR.assign(n, value);
+        Node replacement = astFactory.createAssign(n, value);
         replacement.setJSDocInfo(parent.getJSDocInfo());
         replacement.srcrefIfMissing(parent);
         Node statement = NodeUtil.newExpr(replacement);
