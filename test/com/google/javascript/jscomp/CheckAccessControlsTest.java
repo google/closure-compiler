@@ -267,6 +267,40 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoWarningOnClassField_deprecated1() {
+    // TODO(b/239747805): Should throw deprecatedProp warning
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /**",
+                "   * @type {number}",
+                "   * @deprecated No.",
+                "   */",
+                "  static x=1;",
+                "}",
+                "Foo.x;")));
+  }
+
+  @Test
+  public void testNoWarningOnClassField_deprecated2() {
+    // TODO(b/239747805): Should throw deprecatedProp warning
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /**",
+                "   * @type {number}",
+                "   * @deprecated No.",
+                "   */",
+                "  static x = 1;",
+                "}",
+                "class Bar extends Foo {",
+                "  static y = super.x;",
+                "}")));
+  }
+
+  @Test
   public void testNoWarningInDeprecatedClass() {
     test(
         srcs(
@@ -336,6 +370,80 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "  static bar() { f(); }",
                 "};")),
         deprecatedName("Variable f has been deprecated: crazy!"));
+  }
+
+  @Test
+  public void testWarningInClassStaticBlock() {
+    test(
+        srcs(
+            lines(
+                "/** @deprecated Oh No! */",
+                "function f() {}",
+                "",
+                "class Foo {",
+                "  static { f(); }",
+                "}")),
+        deprecatedName("Variable f has been deprecated: Oh No!"));
+  }
+
+  @Test
+  public void testWarningInClassStaticBlock1() {
+    test(
+        srcs(
+            lines(
+                "/** @deprecated Woah! */", //
+                "var x;",
+                "",
+                "class Foo {",
+                "  static { x; }",
+                "}")),
+        deprecatedName("Variable x has been deprecated: Woah!"));
+  }
+
+  @Test
+  public void testWarningInClassStaticBlock2() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  /** @deprecated Bad :D */",
+                "   static x = 1;",
+                "   static {",
+                "      var y = this.x;",
+                "   }",
+                "}")),
+        deprecatedProp("Property x of type this has been deprecated: Bad :D"));
+  }
+
+  @Test
+  public void testNoWarningInClassStaticBlock() {
+    // TODO(b/235871861): Compiler should throw warning as it doesn't make sense to deprecate a
+    // static block
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @deprecated D: */",
+                "  static {",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testNoWarningInClassStaticBlock1() {
+    // TODO(b/239747805): Should throw warning
+    test(
+        srcs(
+            lines(
+                "class A {",
+                "  /** @deprecated Meow! */",
+                "  static x = 1;",
+                "}",
+                "class B extends A {",
+                "  static {",
+                "    this.y = super.x;",
+                "  }",
+                "}")));
   }
 
   @Test
@@ -944,6 +1052,38 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "  bar = 2",
                 "}"),
             lines("new Foo().bar = 4")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testPrivateAccessForStaticBlock() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  static bar = 2",
+                "  static {",
+                "    this.bar = 4;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testNoPrivateAccessForStaticBlock() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  static bar = 2;",
+                "}"),
+            lines(
+                "class Bar extends Foo{", //
+                "  static {",
+                "    this.bar = 4;",
+                "  }",
+                "}")),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
@@ -1713,6 +1853,87 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "goog.NotASubFoo = class {",
                 "  constructor() {",
                 "    (new goog.Foo).bar;",
+                "  }",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  @Test
+  public void testProtectedAccessForStaticBlocks() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  static bar",
+                "  static {",
+                "    this.bar;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testProtectedAccessForStaticBlocks_sameFile() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  static bar",
+                "}",
+                "class SubFoo extends Foo {",
+                "  static {",
+                "    this.bar;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testProtectedAccessForStaticBlocks_sameFile1() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  static bar",
+                "}",
+                "class Bar {",
+                "  static {",
+                "    Foo.bar;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testProtectedAccessForStatic_differentFile() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  static bar",
+                "}"),
+            lines(
+                "class SubFoo extends Foo {", //
+                "  static {",
+                "    this.bar;",
+                "  }",
+                "}")));
+  }
+
+  @Test
+  public void testNoProtectedAccessForStaticBlocks_differentFile() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  static bar",
+                "}"),
+            lines(
+                "class Bar {", //
+                "  static {",
+                "    Foo.bar;",
                 "  }",
                 "}")),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
@@ -3352,6 +3573,21 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "",
                 "/** @const */",
                 "new Foo().x = 2;")),
+        error(CONST_PROPERTY_REASSIGNED_VALUE));
+  }
+
+  @Test
+  public void testConstantPropertyReassignmentInClassStaticBlock() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "/** @const */",
+                "  static x = 2;",
+                "  static {",
+                "    this.x = 3;",
+                "  }",
+                "}")),
         error(CONST_PROPERTY_REASSIGNED_VALUE));
   }
 
