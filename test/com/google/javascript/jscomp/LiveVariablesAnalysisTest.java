@@ -360,11 +360,11 @@ public final class LiveVariablesAnalysisTest {
   @Test
   public void testArgumentsArray_doesNotEscape_destructuredParams() {
     // These cases also cover a crash related to assuming all RESTs have a NAME child.
-    assertNotEscaped("function f([a]) { arguments; }", "a", Wrapper.FUNCTION);
-    assertNotEscaped("function f([a] = []) { arguments; }", "a", Wrapper.FUNCTION);
-    assertNotEscaped("function f(...[a]) { arguments; }", "a", Wrapper.FUNCTION);
-    assertNotEscaped("function f({a}) { arguments; }", "a", Wrapper.FUNCTION);
-    assertNotEscaped("function f({a} = {}) { arguments; }", "a", Wrapper.FUNCTION);
+    assertNotEscaped("function f([a]) { arguments; }", "a", Wrapper.NONE);
+    assertNotEscaped("function f([a] = []) { arguments; }", "a", Wrapper.NONE);
+    assertNotEscaped("function f(...[a]) { arguments; }", "a", Wrapper.NONE);
+    assertNotEscaped("function f({a}) { arguments; }", "a", Wrapper.NONE);
+    assertNotEscaped("function f({a} = {}) { arguments; }", "a", Wrapper.NONE);
   }
 
   @Test
