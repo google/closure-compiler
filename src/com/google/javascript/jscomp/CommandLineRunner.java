@@ -444,14 +444,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--parse_inline_source_maps",
         handler = BooleanOptionHandler.class,
-        hidden = true,
         usage = "Parse inline source maps (//# sourceMappingURL=data:...)")
     private Boolean parseInlineSourceMaps = true;
 
     @Option(
         name = "--apply_input_source_maps",
         handler = BooleanOptionHandler.class,
-        hidden = true,
         usage =
             "Apply input source maps to the output source map, i.e. have the result map back"
                 + " to original inputs.  Input sourcemaps can be located in 2 ways:\n"
