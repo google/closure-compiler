@@ -710,9 +710,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    // TODO(b/235871861): Need to fix bug before supporting class static blocks, x=1 is not
-    // preserved.
-    inFunction(
+    testSame(
         lines(
             " var x = 0;",
             " print(x);",
@@ -721,16 +719,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "   static {",
             "    print(x);",
             "    }",
-            "  }"),
-        lines(
-            " var x = 0;",
-            " print(x);",
-            " 1;",
-            " class C {",
-            "  static {",
-            "  print(x);",
-            "}",
-            "}"));
+            "  }"));
   }
 
   @Test

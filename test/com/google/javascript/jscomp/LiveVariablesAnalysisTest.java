@@ -420,19 +420,17 @@ public final class LiveVariablesAnalysisTest {
     assertEscaped("var _x", "_x");
   }
 
-  // TODO(b/235871861): Escaped properties are currently 'NotEscaped' for Static Blocks.
   @Test
   public void testEscapedInClassStaticBlock() {
-    // Expected: Escaped
-    assertNotEscaped("var a; class C{ static{a()}}", "a");
-    assertNotEscaped("var a; class C{static{ param1() } }", "param1");
+    assertEscaped("var a; class C{ static{a()}}", "a");
+    assertEscaped("var a; class C{static{ param1() } }", "param1");
   }
 
   @Test
   public void testNotEscapedInClassStaticBlock() {
     assertNotEscaped("var a; class C{static{}} a()", "a");
+    assertNotEscaped("let a; class C{static{let a;a()}}a()", "a");
     assertNotEscaped("var a; class C{static{var c; c()}}", "c");
-    assertNotEscaped("var a; class C{static{var a;a()}}a()", "a");
   }
 
   // ES6 does not require separate handling for catch because the catch block is already recognized

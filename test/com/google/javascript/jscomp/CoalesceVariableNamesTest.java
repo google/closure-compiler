@@ -373,7 +373,6 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Test
   public void testCoalesceVarinStaticBlock() {
-    // TODO(b/235871861): Wrong replacement of var names.
     test(
         lines(
             "function foo() {",
@@ -388,15 +387,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         lines(
             "function foo() {",
             "   var x = 0;",
-            "   x = 2;",
-            "   x = class{",
+            "   var y = 2;",
+            "   y = class{",
             "     static{",
             "      print(x);",
             "     }",
             "   }",
             "}"));
 
-    // test var replacment for inner functions as comparison for class static blocks
     test(
         lines(
             "function foo() {",

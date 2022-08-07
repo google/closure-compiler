@@ -421,6 +421,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       ScopeCreator scopeCreator,
       Map<String, Var> allVarsInFn) {
 
+    // Optimize for Class Static Blocks.
     checkArgument(jsScope.isFunctionScope());
 
     AbstractPostOrderCallback finder =
@@ -428,19 +429,30 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
 
-            Node enclosingBlock = NodeUtil.getEnclosingFunction(n);
-            if (jsScope.getRootNode() == enclosingBlock || !n.isName() || parent.isFunction()) {
+            if (!n.isName() || parent.isFunction()) {
               return;
             }
 
             String name = n.getString();
             Var var = t.getScope().getVar(name);
-            if (var != null) {
-              Node enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
 
-              if (enclosingScopeNode == jsScope.getRootNode()) {
-                escaped.add(var);
-              }
+            if (var == null) {
+              return;
+            }
+
+            Scope variableCfgScope = var.getScope().getClosestCfgRootScope();
+
+            // If the current examined scope and var decleration scope are different then var is
+            // 'not escaped'.
+            if (variableCfgScope != jsScope) {
+              return;
+            }
+
+            Scope referenceCfgScope = t.getScope().getClosestCfgRootScope();
+
+            // Variable is referenced outside of decleration scope it is 'escaped'.
+            if (referenceCfgScope != variableCfgScope) {
+              escaped.add(var);
             }
           }
         };

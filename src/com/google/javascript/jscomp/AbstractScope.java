@@ -130,8 +130,8 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   abstract V makeImplicitVar(ImplicitVar type);
 
   /**
-   * Undeclares a variable, to be used when the compiler optimizes out
-   * a variable and removes it from the scope.
+   * Undeclares a variable, to be used when the compiler optimizes out a variable and removes it
+   * from the scope.
    */
   final void undeclare(V var) {
     checkState(var.getScope() == this);
@@ -353,9 +353,9 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    * If a var were declared in this scope, would it belong to this scope (as opposed to some
    * enclosing scope)?
    *
-   * We consider function scopes to be hoist scopes. Even though it's impossible to declare a var
-   * inside function parameters, it would make less sense to say that if you did declare one in
-   * the function parameters, it would be hoisted somewhere else.
+   * <p>We consider function scopes to be hoist scopes. Even though it's impossible to declare a var
+   * inside function parameters, it would make less sense to say that if you did declare one in the
+   * function parameters, it would be hoisted somewhere else.
    */
   final boolean isHoistScope() {
     return isFunctionScope()
@@ -381,6 +381,14 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
       current = current.getParent();
     }
     return null;
+  }
+
+  public final S getClosestCfgRootScope() {
+    S current = thisScope();
+    while (!current.isCfgRootScope()) {
+      current = current.getParent();
+    }
+    return current;
   }
 
   /**
@@ -410,7 +418,8 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     checkArgument(NodeUtil.createsScope(rootNode), rootNode);
     checkArgument(
         rootNode != parent.getRootNode(),
-        "rootNode should not be the parent's root node: %s", rootNode);
+        "rootNode should not be the parent's root node: %s",
+        rootNode);
   }
 
   /** Performs simple validity checks on when constructing a root scope. */
@@ -462,8 +471,8 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   }
 
   /**
-   * The three implicit var types, which are defined implicitly (at least) in
-   * every vanilla function scope without actually being declared.
+   * The three implicit var types, which are defined implicitly (at least) in every vanilla function
+   * scope without actually being declared.
    */
   enum ImplicitVar {
     ARGUMENTS("arguments"),
