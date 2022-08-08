@@ -1139,16 +1139,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   @GwtIncompatible("Unnecessary")
   private static void maybeCreateDirsForPath(String pathPrefix) {
     if (!Strings.isNullOrEmpty(pathPrefix)) {
-      char sep = pathPrefix.charAt(pathPrefix.length() - 1);
-      String dirName;
-      // allow the user to provide any path separator
-      if (sep == '/' || sep == '\\') {
-        dirName = pathPrefix.substring(0, pathPrefix.length() - 1);
-      } else {
-        dirName = new File(pathPrefix).getParent();
-      }
-      if (dirName != null) {
-        new File(dirName).mkdirs();
+      File parent = new File(pathPrefix).getParentFile();
+      if (parent != null) {
+        parent.mkdirs();
       }
     }
   }
@@ -1773,7 +1766,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       throws IOException {
     parsedModuleWrappers = parseModuleWrappers(config.moduleWrapper, modules);
     if (!isOutputInJson()) {
-      maybeCreateDirsForPath(config.moduleOutputPathPrefix);
+      // make sure the method generates all dirs up to the latest /
+      maybeCreateDirsForPath(config.moduleOutputPathPrefix + "dummy");
     }
 
     // If the source map path is in fact a pattern for each
