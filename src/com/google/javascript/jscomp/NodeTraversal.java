@@ -733,7 +733,7 @@ public class NodeTraversal {
     return compilerInput;
   }
 
-  /** Gets the current input module. */
+  /** Gets the current input chunk. */
   @Nullable
   public JSChunk getChunk() {
     CompilerInput input = getInput();
