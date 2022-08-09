@@ -1604,6 +1604,122 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewriteClassStaticBlock_removeOptional() {
+    test(
+        lines(
+            "function foo(a,b=1){",
+            "  return a * b;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo(1));",
+            "    use(foo(2));",
+            "  }",
+            "}"),
+        lines(
+            "function foo(a){",
+            "  var b = 1;",
+            "  return a * b;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo(1));",
+            "    use(foo(2));",
+            "  }",
+            "}"));
+    // TODO(b/240443227): Function parameters inside class static blocks not optimized
+    testSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    function foo(a,b=1){",
+            "      return(a * b);",
+            "    }",
+            "    use(foo(1));",
+            "    use(foo(2));",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testRewriteClassStaticBlock_trailingUndefinedLiterals() {
+    test(
+        lines(
+            "function foo(a,b){",
+            "  return a;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo(1, undefined, 2));",
+            "    use(foo(2));",
+            "  }",
+            "}"),
+        lines(
+            "function foo(a,b){",
+            "  return a;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo(1));",
+            "    use(foo(2));",
+            "  }",
+            "}"));
+    // TODO(b/240443227): Function parameters inside class static blocks not optimized
+    testSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    function foo(a,b){",
+            "      return a;",
+            "    }",
+            "    use(foo(1, undefined, 2));",
+            "    use(foo(2));",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testRewriteClassStaticBlock_inlineParameter() {
+    test(
+        lines(
+            "function foo(a){",
+            "  return a;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo(1));",
+            "    use(foo(1));",
+            "    use(foo(1));",
+            "  }",
+            "}"),
+        lines(
+            "function foo(){",
+            "  var a = 1;",
+            "  return a;",
+            "}",
+            "class C {",
+            "  static {",
+            "    use(foo());",
+            "    use(foo());",
+            "    use(foo());",
+            "  }",
+            "}"));
+    // TODO(b/240443227): Function parameters inside class static blocks not optimized
+    testSame(
+        lines(
+            "class C {",
+            "  static {",
+            "    function foo(a){",
+            "      return(a);",
+            "    }",
+            "    use(foo(1));",
+            "    use(foo(1));",
+            "    use(foo(1));",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testNoRewriteUsedClassConstructorWithClassNonstaticField() {
     testSame(
         lines(
