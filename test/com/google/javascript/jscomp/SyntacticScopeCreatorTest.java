@@ -686,11 +686,11 @@ public final class SyntacticScopeCreatorTest {
 
   @Test
   public void testClassFieldsThisAndSuper() {
-    // TODO(b/189993301): `this`/`super` in this case should be declared locally
     String js =
         lines(
             "class Foo {", //
             "  a = this.a;",
+            "  [this.a] = this.a;",
             "}",
             "class Bar extends Foo {",
             "  b = super.a;",
@@ -699,28 +699,38 @@ public final class SyntacticScopeCreatorTest {
     Node root = getRoot(js);
     Node classFoo = root.getFirstChild();
     Node classBar = root.getLastChild();
+    Node memberFieldDefA = classFoo.getLastChild().getFirstChild();
+    Node memberFieldDefB = classBar.getLastChild().getFirstChild();
+    Node computedFieldDef = classFoo.getLastChild().getLastChild();
+
     Scope globalScope = scopeCreator.createScope(root, null);
     Scope fooScope = scopeCreator.createScope(classFoo, globalScope);
     Scope barScope = scopeCreator.createScope(classBar, globalScope);
+    Scope memberFieldDefAScope = scopeCreator.createScope(memberFieldDefA, fooScope);
+    Scope memberFieldDefBScope = scopeCreator.createScope(memberFieldDefB, barScope);
+    Scope computedFieldDefRhsScope = scopeCreator.createScope(computedFieldDef, fooScope);
 
     assertScope(globalScope).declares("Foo").directly();
     assertScope(globalScope).declares("Bar").directly();
     assertScope(globalScope).doesNotDeclare("this");
     assertScope(fooScope).doesNotDeclare("this");
     assertScope(barScope).doesNotDeclare("this");
+    assertScope(memberFieldDefAScope).declares("this").directly();
+    assertScope(computedFieldDefRhsScope).declares("this").directly();
     assertScope(globalScope).doesNotDeclare("super");
     assertScope(fooScope).doesNotDeclare("super");
     assertScope(barScope).doesNotDeclare("super");
+    assertScope(memberFieldDefBScope).declares("super").directly();
   }
 
   @Test
-  public void testClassDeclarationWithStaticFieldThisAndSuper() {
-    // TODO(b/189993301): `this`/`super` in this case should be declared locally
+  public void testClassStaticFieldsThisAndSuper() {
     String js =
         lines(
             "class Foo {", //
             "  static a = 2;",
             "  static b = this.b;",
+            "  static [this.a] = this.a;",
             "}",
             "class Bar extends Foo {",
             "  static c = super.a + 1;",
@@ -729,18 +739,28 @@ public final class SyntacticScopeCreatorTest {
     Node root = getRoot(js);
     Node classFoo = root.getFirstChild();
     Node classBar = root.getLastChild();
+    Node memberFieldDefA = classFoo.getLastChild().getFirstChild();
+    Node memberFieldDefB = classBar.getLastChild().getFirstChild();
+    Node computedFieldDef = classFoo.getLastChild().getLastChild();
+
     Scope globalScope = scopeCreator.createScope(root, null);
     Scope fooScope = scopeCreator.createScope(classFoo, globalScope);
     Scope barScope = scopeCreator.createScope(classBar, globalScope);
+    Scope memberFieldDefAScope = scopeCreator.createScope(memberFieldDefA, fooScope);
+    Scope memberFieldDefBScope = scopeCreator.createScope(memberFieldDefB, barScope);
+    Scope computedFieldDefRhsScope = scopeCreator.createScope(computedFieldDef, fooScope);
 
     assertScope(globalScope).declares("Foo").directly();
     assertScope(globalScope).declares("Bar").directly();
     assertScope(globalScope).doesNotDeclare("this");
     assertScope(fooScope).doesNotDeclare("this");
     assertScope(barScope).doesNotDeclare("this");
+    assertScope(memberFieldDefAScope).declares("this").directly();
+    assertScope(computedFieldDefRhsScope).declares("this").directly();
     assertScope(globalScope).doesNotDeclare("super");
     assertScope(fooScope).doesNotDeclare("super");
     assertScope(barScope).doesNotDeclare("super");
+    assertScope(memberFieldDefBScope).declares("super").directly();
   }
 
   @Test

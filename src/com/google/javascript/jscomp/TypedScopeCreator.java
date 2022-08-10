@@ -400,7 +400,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     if (root.isFunction()) {
       scopeBuilder = new FunctionScopeBuilder(newScope);
-    } else if (root.isClass()) {
+    } else if (root.isClass() || root.isMemberFieldDef() || root.isComputedFieldDef()) {
       scopeBuilder = new ClassScopeBuilder(newScope);
     } else {
       scopeBuilder = new NormalScopeBuilder(newScope);
@@ -904,14 +904,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     @Override
     public final void visit(NodeTraversal t, Node n, Node parent) {
+      boolean isScopeRoot = (parent == null);
       inputId = t.getInputId();
-      if (parent != null) {
+      if (!isScopeRoot || !n.isClass()) {
+        // Do not type literals or visit class scope roots
         attachLiteralTypes(n);
         visitPostorder(t, n, parent);
-        if (deferredActions.containsKey(n)) { // streams are expensive, only make if needed
-          deferredActions.removeAll(n).forEach(Runnable::run);
-        }
-      } else if (!deferredActions.isEmpty()) {
+      }
+      if (!isScopeRoot
+          && deferredActions.containsKey(n)) { // streams are expensive, only make if needed
+        deferredActions.removeAll(n).forEach(Runnable::run);
+      } else if (isScopeRoot && !deferredActions.isEmpty()) {
         // Run *all* remaining deferred actions, in case any were missed.
         deferredActions.values().forEach(Runnable::run);
       }
@@ -3419,8 +3422,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   } // end FunctionScopeBuilder
 
   /**
-   * Scope builder subclass for class scopes, which only contain a bleeding class name. Methods are
-   * handled by FunctionScopeBuilder and NormalScopeBuilder for the bodies.
+   * Scope builder subclass for class scopes (which only contain a bleeding class name), member
+   * field def scopes, and RHS computed field def scopes (the latter two of which have `this` and
+   * `super` properties). Methods are handled by FunctionScopeBuilder and NormalScopeBuilder for the
+   * bodies.
    */
   private final class ClassScopeBuilder extends AbstractScopeBuilder {
 
@@ -3538,7 +3543,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef(), member);
         return ownerType.getPrototype();
       }
-
     }
   } // end ClassScopeBuilder
 

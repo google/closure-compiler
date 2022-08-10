@@ -166,6 +166,13 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
       }
     } else if (this.isStaticBlockScope()) {
       return getParent().getRootNode().getJSType();
+    } else if (this.isMemberFieldDefScope() || this.isComputedFieldDefRhsScope()) {
+      JSType classType = getParent().getRootNode().getJSType();
+      if (root.isStaticMember()) {
+        return classType;
+      } else {
+        return classType.assertFunctionType().getInstanceType();
+      }
     } else {
       return getParent().getTypeOfThis();
     }

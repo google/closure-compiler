@@ -339,6 +339,14 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     return getRootNode().isModuleBody();
   }
 
+  public final boolean isMemberFieldDefScope() {
+    return getRootNode().isMemberFieldDef();
+  }
+
+  public final boolean isComputedFieldDefRhsScope() {
+    return getRootNode().isComputedFieldDef();
+  }
+
   public final boolean isCatchScope() {
     return getRootNode().isBlock()
         && getRootNode().hasOneChild()
@@ -500,7 +508,10 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
               && scope.getRootNode().getParent().getBooleanProp(Node.GOOG_MODULE);
         case SUPER:
         case THIS:
-          return scope.isStaticBlockScope() || NodeUtil.isNonArrowFunction(scope.getRootNode());
+          return scope.isStaticBlockScope()
+              || NodeUtil.isNonArrowFunction(scope.getRootNode())
+              || scope.isMemberFieldDefScope()
+              || scope.isComputedFieldDefRhsScope();
         case ARGUMENTS:
           return NodeUtil.isNonArrowFunction(scope.getRootNode());
       }

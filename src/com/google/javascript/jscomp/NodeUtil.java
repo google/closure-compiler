@@ -2465,6 +2465,8 @@ public final class NodeUtil {
     return createsBlockScope(n)
         || n.isFunction()
         || n.isModuleBody()
+        || n.isMemberFieldDef()
+        || n.isComputedFieldDef()
         // The ROOT nodes that are the root of the externs tree or main JS tree do not
         // create scopes. The parent of those two, which is the root of the entire AST and
         // therefore has no parent, is the only ROOT node that creates a scope.

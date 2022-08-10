@@ -2579,7 +2579,7 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testClassFieldsInControlFlow() {
+  public void testComputedClassFieldsInControlFlow() {
     // Based on the class semantics, the static RHS expressions only execute after all of the
     // computed properties, so `y` will get the string value rather than the boolean here.
     inFunction(
@@ -2590,6 +2590,32 @@ public final class TypeInferenceTest {
             "  [y = false] = [y = null];",
             "}"));
     verify("y", STRING_TYPE);
+  }
+
+  @Test
+  public void testClassFieldsInControlFlow() {
+    inFunction(
+        lines(
+            "let y;", //
+            "class Foo {",
+            "  static y = (y = '');",
+            "  z = [y = null];",
+            "}"));
+    verify("y", STRING_TYPE);
+  }
+
+  @Test
+  public void testThisTypeAfterMemberField() {
+    JSType thisType = createRecordType("x", STRING_TYPE);
+    assumingThisType(thisType);
+    inFunction(
+        lines(
+            "let thisDotX;", //
+            "(class C {",
+            "  /** @type {number} */",
+            "  static x = 0;",
+            "}, thisDotX = this.x);"));
+    verify("thisDotX", STRING_TYPE);
   }
 
   @Test

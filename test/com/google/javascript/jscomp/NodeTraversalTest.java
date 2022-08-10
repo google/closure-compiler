@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
+import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -484,6 +485,136 @@ public final class NodeTraversalTest {
   }
 
   @Test
+  public void testTraverseAtScopeWithMemberFieldDefScope() {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
+    ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
+    NodeTraversal.Builder t =
+        NodeTraversal.builder()
+            .setCompiler(compiler)
+            .setCallback(callback)
+            .setScopeCreator(creator);
+
+    String code =
+        lines(
+            "class Foo {", //
+            "  a = this.a;",
+            "}",
+            "class Bar extends Foo {",
+            "  b = super.a;",
+            "}");
+
+    Node tree = parse(compiler, code);
+    Scope globalScope = creator.createScope(tree, null);
+    Node memberFieldDefA =
+        tree // script
+            .getFirstChild() // class
+            .getLastChild() // class members
+            .getFirstChild(); // member field def
+    Scope memberFieldDefAScope = creator.createScope(memberFieldDefA, globalScope);
+
+    callback.expect(memberFieldDefA, memberFieldDefA);
+    t.traverseAtScope(memberFieldDefAScope);
+    callback.assertEntered();
+
+    Node memberFieldDefB =
+        tree // script
+            .getSecondChild() // class
+            .getLastChild() // class members
+            .getFirstChild(); // member field def
+    Scope memberFieldDefBScope = creator.createScope(memberFieldDefB, globalScope);
+
+    callback.expect(memberFieldDefB, memberFieldDefB);
+    t.traverseAtScope(memberFieldDefBScope);
+    callback.assertEntered();
+  }
+
+  @Test
+  public void testTraverseAtScopeWithComputedFieldDefScope() {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
+    ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
+    NodeTraversal.Builder t =
+        NodeTraversal.builder()
+            .setCompiler(compiler)
+            .setCallback(callback)
+            .setScopeCreator(creator);
+
+    String code =
+        lines(
+            "class Foo {", //
+            "  x = 'hi';",
+            "  [this.x] = this.x;",
+            "}");
+
+    Node tree = parse(compiler, code);
+    Scope globalScope = creator.createScope(tree, null);
+    Node computedFieldDef =
+        tree // script
+            .getFirstChild() // class
+            .getLastChild() // class members
+            .getLastChild(); // computed field def
+    Scope computedFieldDefScope = creator.createScope(computedFieldDef, globalScope);
+
+    callback.expect(computedFieldDef, computedFieldDef);
+    t.traverseAtScope(computedFieldDefScope);
+    callback.assertEntered();
+  }
+
+  @Test
+  public void testTraverseFieldDefScopeRootsInOrder() {
+    Compiler compiler = new Compiler();
+    String code =
+        lines(
+            "class Foo {", //
+            "  x = 'hi';",
+            "  [this.x] = this.x;",
+            "}");
+    Node tree = parse(compiler, code);
+    TokenAccumulator callback = new TokenAccumulator();
+    NodeTraversal.traverse(compiler, tree, callback);
+    assertThat(callback.scopeRoots)
+        .containsExactly(
+            Token.SCRIPT, Token.CLASS, Token.MEMBER_FIELD_DEF, Token.COMPUTED_FIELD_DEF)
+        .inOrder();
+  }
+
+  @Test
+  public void testTraverseComputedFieldsInOrder() {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    TokenAccumulator callback = new TokenAccumulator();
+    SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
+    NodeTraversal.Builder t =
+        NodeTraversal.builder()
+            .setCompiler(compiler)
+            .setCallback(callback)
+            .setScopeCreator(creator);
+
+    String code =
+        lines(
+            "class Foo {", //
+            "  [this.x] = true;",
+            "}");
+
+    Node tree = parse(compiler, code);
+    Scope globalScope = creator.createScope(tree, null);
+    Node computedFieldDef =
+        tree // script
+            .getFirstChild() // class
+            .getLastChild() // class members
+            .getLastChild(); // computed field def
+    Scope computedFieldDefScope = creator.createScope(computedFieldDef, globalScope);
+
+    t.traverseAtScope(computedFieldDefScope);
+    assertThat(callback.tokens).containsExactly(Token.TRUE, Token.COMPUTED_FIELD_DEF).inOrder();
+
+    callback.tokens.clear();
+  }
+
+  @Test
   public void testGetVarAccessible() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -722,6 +853,22 @@ public final class NodeTraversalTest {
       if (n.isStringLit()) {
         strings.add(n.getString());
       }
+    }
+  }
+
+  private static final class TokenAccumulator extends AbstractScopedCallback {
+
+    final List<Token> tokens = new ArrayList<>();
+    final List<Token> scopeRoots = new ArrayList<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      tokens.add(n.getToken());
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+      scopeRoots.add(t.getScopeRoot().getToken());
     }
   }
 

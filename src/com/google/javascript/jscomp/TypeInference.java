@@ -1710,7 +1710,12 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
       case COMPUTED_FIELD_DEF:
         Node rhs = getRhsOfField(member);
         if (rhs != null) {
-          FlowScope rhsScope = traverse(rhs, scope);
+          TypedScope computedFieldDefTypedScope = scopeCreator.createScope(member);
+          FlowScope computedFieldDefFlowScope =
+              scope.withSyntacticScope(computedFieldDefTypedScope);
+          FlowScope rhsScope =
+              traverse(rhs, computedFieldDefFlowScope)
+                  .withSyntacticScope(scope.getDeclarationScope());
           if (member.isStaticMember()) {
             return rhsScope;
           }

@@ -225,7 +225,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
       } else {
         // TODO(moz): It's not yet clear if we need another kind of NameContext for block scopes
         // in ES6, use anonymous node for now and investigate later.
-        checkState(NodeUtil.createsBlockScope(root) || root.isModuleBody(), scope);
+        // TODO(b/189993301): Test effects of pushing anonymousNode for member and computed field
+        // defs in CrossChunkMethodMotion (and test class fields there as well)
+        checkState(
+            NodeUtil.createsBlockScope(root)
+                || root.isModuleBody()
+                || root.isComputedFieldDef()
+                || root.isMemberFieldDef(),
+            scope);
         symbolStack.push(new NameContext(anonymousNode, scope));
       }
     }

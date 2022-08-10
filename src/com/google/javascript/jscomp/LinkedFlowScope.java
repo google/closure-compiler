@@ -169,7 +169,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public JSType getTypeOfThis() {
-    return functionScope.getTypeOfThis();
+    return syntacticScope.getTypeOfThis();
   }
 
   @Override

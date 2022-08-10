@@ -4789,7 +4789,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassFieldsThis() {
-    newTest() // TODO(b/189993301): `this` should produce a type error
+    newTest()
         .addSource(
             "class F {", //
             "  /** @type {number} */",
@@ -4797,7 +4797,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @type {boolean} */",
             "  y = this.x",
             "}")
-        .addDiagnostic("Property x never defined on global this")
+        .addDiagnostic(
+            lines(
+                "assignment to property y of F", //
+                "found   : number",
+                "required: boolean"))
         .run();
   }
 
@@ -4813,6 +4817,26 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @type {string} */",
             "  y = super.x;",
             "}")
+        .run();
+  }
+
+  @Test
+  public void testComputedFields() {
+    newTest()
+        .addSource(
+            "var /** number */ x = 1;",
+            "function takesNumber(/** number */ x) {}",
+            "/** @unrestricted */",
+            "class Foo {",
+            "  /** @type {boolean} */",
+            "  x = true;",
+            "  [this.x] = takesNumber(this.x);",
+            "}")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNumber does not match formal parameter", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 
@@ -4854,7 +4878,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testStaticClassFieldsThis() {
-    newTest() // TODO(b/189993301): `this` should produce a type error
+    newTest()
         .addSource(
             "class F {", //
             "  /** @type {number} */",
@@ -4862,7 +4886,31 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @type {boolean} */",
             "  static y = this.x",
             "}")
-        .addDiagnostic("Property x never defined on global this")
+        .addDiagnostic(
+            lines(
+                "assignment to property y of F", //
+                "found   : number",
+                "required: boolean"))
+        .run();
+  }
+
+  @Test
+  public void testStaticComputedFields() {
+    newTest()
+        .addSource(
+            "var /** number */ x = 1;",
+            "function takesNumber(/** number */ x) {}",
+            "/** @unrestricted */",
+            "class Foo {",
+            "  /** @type {boolean} */",
+            "  static x = true;",
+            "  static [this.x] = takesNumber(this.x);",
+            "}")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of takesNumber does not match formal parameter", //
+                "found   : boolean",
+                "required: number"))
         .run();
   }
 

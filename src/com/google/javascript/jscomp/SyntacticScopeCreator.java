@@ -152,6 +152,12 @@ public final class SyntacticScopeCreator implements ScopeCreator {
           }
           return;
 
+        case COMPUTED_FIELD_DEF:
+        case MEMBER_FIELD_DEF:
+          // MEMBER_FIELD_DEF and COMPUTED_FIELD_DEF scopes only created to scope `this` and `super`
+          // correctly
+          return;
+
         default:
           throw new RuntimeException("Illegal scope root: " + n);
       }

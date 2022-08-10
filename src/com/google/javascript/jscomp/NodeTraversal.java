@@ -553,77 +553,108 @@ public class NodeTraversal {
     while (!parentScopes.isEmpty()) {
       pushScope(parentScopes.pop(), true);
     }
-    if (n.isFunction()) {
-      if (callback.shouldTraverse(this, n, null)) {
-        pushScope(s);
 
-        Node fnName = n.getFirstChild();
-        Node args = fnName.getNext();
-        Node body = args.getNext();
-        if (!NodeUtil.isFunctionDeclaration(n)) {
-          // Only traverse the function name if it's a bleeding function expression name.
-          traverseBranch(fnName, n);
+    switch (n.getToken()) {
+      case FUNCTION:
+        if (callback.shouldTraverse(this, n, null)) {
+          pushScope(s);
+
+          Node fnName = n.getFirstChild();
+          Node args = fnName.getNext();
+          Node body = args.getNext();
+          if (!NodeUtil.isFunctionDeclaration(n)) {
+            // Only traverse the function name if it's a bleeding function expression name.
+            traverseBranch(fnName, n);
+          }
+          traverseBranch(args, n);
+          traverseBranch(body, n);
+
+          popScope();
+          callback.visit(this, n, null);
         }
-        traverseBranch(args, n);
-        traverseBranch(body, n);
+        break;
+      case CLASS:
+        if (callback.shouldTraverse(this, n, null)) {
+          pushScope(s);
 
-        popScope();
-        callback.visit(this, n, null);
-      }
-    } else if (n.isClass()) {
-      if (callback.shouldTraverse(this, n, null)) {
-        pushScope(s);
+          Node className = n.getFirstChild();
+          Node body = n.getLastChild();
 
-        Node className = n.getFirstChild();
-        Node body = n.getLastChild();
+          if (NodeUtil.isClassExpression(n)) {
+            // Only traverse the class name if it's a bleeding class expression name.
+            traverseBranch(className, n);
+          }
+          // Omit the extends node, which is in the outer scope. Computed property keys are already
+          // excluded by handleClassMembers.
+          traverseBranch(body, n);
 
-        if (NodeUtil.isClassExpression(n)) {
-          // Only traverse the class name if it's a bleeding class expression name.
-          traverseBranch(className, n);
+          popScope();
+          callback.visit(this, n, null);
         }
-        // Omit the extends node, which is in the outer scope. Computed property keys are already
-        // excluded by handleClassMembers.
-        traverseBranch(body, n);
+        break;
+      case BLOCK:
+        if (callback.shouldTraverse(this, n, null)) {
+          pushScope(s);
 
-        popScope();
-        callback.visit(this, n, null);
-      }
-    } else if (n.isBlock()) {
-      if (callback.shouldTraverse(this, n, null)) {
+          // traverseBranch is not called here to avoid re-creating the block scope.
+          traverseChildren(n);
+
+          popScope();
+          callback.visit(this, n, null);
+        }
+        break;
+      case MEMBER_FIELD_DEF:
         pushScope(s);
+        if (callback.shouldTraverse(this, n, null)) {
 
-        // traverseBranch is not called here to avoid re-creating the block scope.
-        traverseChildren(n);
+          // traverseBranch is not called here to avoid re-creating the MemberFieldDef scope.
+          traverseChildren(n);
 
+          callback.visit(this, n, null);
+        }
         popScope();
-        callback.visit(this, n, null);
-      }
-    } else if (NodeUtil.isAnyFor(n)) {
-      if (callback.shouldTraverse(this, n, null)) {
+        break;
+      case COMPUTED_FIELD_DEF:
         pushScope(s);
+        if (callback.shouldTraverse(this, n, null)) {
 
-        Node forAssignmentParam = n.getFirstChild();
-        Node forIterableParam = forAssignmentParam.getNext();
-        Node forBodyScope = forIterableParam.getNext();
-        traverseBranch(forAssignmentParam, n);
-        traverseBranch(forIterableParam, n);
-        traverseBranch(forBodyScope, n);
+          traverseBranch(n.getLastChild(), n);
 
+          callback.visit(this, n, null);
+        }
         popScope();
-        callback.visit(this, n, null);
-      }
-    } else if (n.isSwitch()) {
-      if (callback.shouldTraverse(this, n, null)) {
-        pushScope(s);
+        break;
+      case FOR_IN:
+      case FOR_OF:
+      case FOR_AWAIT_OF:
+      case FOR:
+        if (callback.shouldTraverse(this, n, null)) {
+          pushScope(s);
 
-        traverseChildren(n);
+          Node forAssignmentParam = n.getFirstChild();
+          Node forIterableParam = forAssignmentParam.getNext();
+          Node forBodyScope = forIterableParam.getNext();
+          traverseBranch(forAssignmentParam, n);
+          traverseBranch(forIterableParam, n);
+          traverseBranch(forBodyScope, n);
 
-        popScope();
-        callback.visit(this, n, null);
-      }
-    } else {
-      checkState(s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got:", s);
-      traverseWithScope(n, s);
+          popScope();
+          callback.visit(this, n, null);
+        }
+        break;
+      case SWITCH:
+        if (callback.shouldTraverse(this, n, null)) {
+          pushScope(s);
+
+          traverseChildren(n);
+
+          popScope();
+          callback.visit(this, n, null);
+        }
+        break;
+      default:
+        checkState(s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got:", s);
+        traverseWithScope(n, s);
     }
   }
 
@@ -969,17 +1000,47 @@ public class NodeTraversal {
 
     for (Node child = n.getFirstChild(); child != null; ) {
       Node next = child.getNext(); // see traverseChildren
-      if (child.isComputedProp() || child.isComputedFieldDef()) {
-        currentNode = n;
-        if (callback.shouldTraverse(this, child, n)) {
-          if (child.hasTwoChildren()) { // No RHS to traverse in `[x];` computed field case
-            traverseBranch(child.getLastChild(), child);
-          }
+
+      switch (child.getToken()) {
+        case COMPUTED_PROP:
           currentNode = n;
-          callback.visit(this, child, n);
-        }
-      } else {
-        traverseBranch(child, n);
+
+          if (callback.shouldTraverse(this, child, n)) {
+            traverseBranch(child.getLastChild(), child);
+            currentNode = n;
+            callback.visit(this, child, n);
+          }
+          break;
+        case COMPUTED_FIELD_DEF:
+          currentNode = n;
+          pushScope(child);
+
+          if (callback.shouldTraverse(this, child, n)) {
+            if (child.hasTwoChildren()) { // No RHS to traverse in `[x];` computed field case
+              traverseBranch(child.getLastChild(), child);
+            }
+            currentNode = n;
+            callback.visit(this, child, n);
+          }
+
+          popScope();
+          break;
+        case MEMBER_FIELD_DEF:
+          pushScope(child);
+
+          traverseBranch(child, n);
+
+          popScope();
+          break;
+        case BLOCK:
+        case MEMBER_FUNCTION_DEF:
+        case MEMBER_VARIABLE_DEF:
+        case GETTER_DEF:
+        case SETTER_DEF:
+          traverseBranch(child, n);
+          break;
+        default:
+          throw new IllegalStateException("Invalid class member: " + child.getToken());
       }
       child = next;
     }
@@ -1216,10 +1277,7 @@ public class NodeTraversal {
     return getScopeDepth() == 0;
   }
 
-  /**
-   * Determines whether the traversal is currently in the global scope. Note that this returns false
-   * in a global block scope.
-   */
+  /** Determines whether the traversal is currently in a module scope. */
   public boolean inModuleScope() {
     return NodeUtil.isModuleScopeRoot(getScopeRoot());
   }
