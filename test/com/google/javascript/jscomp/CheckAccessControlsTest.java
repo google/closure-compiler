@@ -284,7 +284,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testNoWarningOnClassField_deprecated2() {
-    // TODO(b/239747805): Should throw deprecatedProp warning
+    // TODO(b/239747805): Should say "Property x of type number" not "super"
     test(
         srcs(
             lines(
@@ -297,7 +297,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "}",
                 "class Bar extends Foo {",
                 "  static y = super.x;",
-                "}")));
+                "}")),
+        deprecatedProp("Property x of type super has been deprecated: No."));
   }
 
   @Test
@@ -431,7 +432,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testNoWarningInClassStaticBlock1() {
-    // TODO(b/239747805): Should throw warning
+    // TODO(b/239747805): Should say "Property x of type number" not "super"
     test(
         srcs(
             lines(
@@ -443,7 +444,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "  static {",
                 "    this.y = super.x;",
                 "  }",
-                "}")));
+                "}")),
+        deprecatedProp("Property x of type super has been deprecated: Meow!"));
   }
 
   @Test

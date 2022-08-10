@@ -59,6 +59,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
@@ -776,7 +777,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
         break;
 
       case SUPER:
-        traverseSuper(n);
+        traverseSuper(n, scope);
         break;
 
       case AWAIT:
@@ -977,23 +978,22 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     return scopeAfterExecution;
   }
 
-  private void traverseSuper(Node superNode) {
-    // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
-    TypedScope scope = containerScope;
-    while (scope != null && !NodeUtil.isNonArrowFunction(scope.getRootNode())) {
-      scope = scope.getParent();
-    }
-    if (scope == null) {
-      superNode.setJSType(unknownType);
-      return;
-    }
-
-    FunctionType enclosingFunctionType =
-        JSType.toMaybeFunctionType(scope.getRootNode().getJSType());
+  private void traverseSuper(Node superNode, FlowScope currentScope) {
     ObjectType superNodeType = null;
 
     switch (superNode.getParent().getToken()) {
       case CALL:
+        // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
+        TypedScope scope = containerScope;
+        while (scope != null && !NodeUtil.isNonArrowFunction(scope.getRootNode())) {
+          scope = scope.getParent();
+        }
+        if (scope == null) {
+          superNode.setJSType(unknownType);
+          return;
+        }
+        FunctionType enclosingFunctionType =
+            JSType.toMaybeFunctionType(scope.getRootNode().getJSType());
         // Inside a constructor, `super` may have two different types. Calls to `super()` use the
         // super-ctor type, while property accesses use the super-instance type. `Scopes` are only
         // aware of the latter case.
@@ -1004,7 +1004,8 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
 
       case GETELEM:
       case GETPROP:
-        superNodeType = ObjectType.cast(containerScope.getSlot("super").getType());
+        StaticTypedScope currentSyntacticScope = currentScope.getDeclarationScope();
+        superNodeType = ObjectType.cast(currentSyntacticScope.getSlot("super").getType());
         break;
 
       default:
