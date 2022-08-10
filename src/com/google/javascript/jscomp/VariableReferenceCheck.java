@@ -305,16 +305,14 @@ class VariableReferenceCheck implements CompilerPass {
    */
   private boolean checkRedeclaration(
       Var v, Reference reference, Node referenceNode, Reference hoistedFn, BasicBlock basicBlock) {
-    boolean allowDupe =
-        VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode());
-
     boolean letConstShadowsVar = v.getParentNode().isVar()
         && (reference.isLetDeclaration() || reference.isConstDeclaration());
     boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
     // We disallow redeclaration of caught exceptions
     boolean shadowCatchVar = v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
 
-    if (!allowDupe && isRedeclaration(basicBlock)) {
+    if (isRedeclaration(basicBlock)
+        && !VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode())) {
       final DiagnosticType diagnosticType;
       Node warningNode = referenceNode;
       boolean shadowParam =
