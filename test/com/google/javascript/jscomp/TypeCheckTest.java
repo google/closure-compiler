@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypeCheck.CONFLICTING_GETTER_SETTER_TYPE;
+import static com.google.javascript.jscomp.TypeCheck.ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
@@ -7666,7 +7667,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
                 + " */\n"
                 + "function Foo() {}\n"
                 + "(true ? new Foo() : {}).x = 123;")
-        .addDiagnostic(ILLEGAL_PROPERTY_CREATION_MESSAGE)
+        .addDiagnostic(ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE)
         .run();
   }
 
@@ -17542,8 +17543,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @return {string|number} */ function f() { return 3; }", //
             "f().length;")
-        // TODO(johnlenz): enable this.
-        // "Property length not defined on all member types of (String|Number)"
+        .addDiagnostic("Property length not defined on all member types of (String|Number)")
         .run();
   }
 
@@ -17562,9 +17562,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "goog.forwardDeclare('MissingType');"
             + "/** @param {(Array|MissingType)} x */"
             + "function f(x) { x.impossible(); }",
-        // TODO(johnlenz): enable this.
-        // "Property impossible not defined on all member types of x"
-        null);
+        "Property impossible not defined on all member types of x");
   }
 
   @Test
@@ -22171,9 +22169,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type{({x: {obj: I}}|{x: {obj: C}})} */", //
             "var ri;",
             "ri.x.obj.y();")
+        .addDiagnostic("Property y not defined on all member types of (I|C)")
         .run();
-    // TODO(johnlenz): enable this.
-    // "Property y not defined on all member types of (I|C)"
   }
 
   @Test
@@ -22300,9 +22297,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .addSource(
             "/** @type {(Bar1|Bar2)} */ var b;", //
             "var x = b.prop1")
+        .addDiagnostic("Property prop1 not defined on all member types of (Bar1|Bar2)")
         .run();
-    // TODO(johnlenz): enable this.
-    // "Property prop1 not defined on all member types of (Bar1|Bar2)"
   }
 
   @Test

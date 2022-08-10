@@ -138,7 +138,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION",
           "Property {0} never defined on {1}. Did you mean {2}?");
 
-  protected static final DiagnosticType NOT_A_CONSTRUCTOR =
+  static final DiagnosticType NOT_A_CONSTRUCTOR =
       DiagnosticType.warning("JSC_NOT_A_CONSTRUCTOR", "cannot instantiate non-constructor");
 
   static final DiagnosticType INSTANTIATE_ABSTRACT_CLASS =
@@ -289,7 +289,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               + " (If you already declared the property, make sure to give it a type.)");
 
   static final DiagnosticType ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE",
           "Cannot add a property to an instance of union type.");
 
@@ -1382,10 +1382,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String propName = lvalue.getString();
         PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objType, propName);
         if (!kind.equals(PropDefinitionKind.KNOWN)) {
-          // TODO(b/214427036): Report `ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE` for
-          // `objType.isUnionType()` here once the LSC for b/214427036 is complete.
+
           if (objType.isStruct()) {
-            report(lvalue, ILLEGAL_PROPERTY_CREATION);
+            if (objType.restrictByNotNullOrUndefined().isUnionType()) {
+              report(lvalue, ILLEGAL_PROPERTY_CREATION_ON_UNION_TYPE);
+            } else {
+              report(lvalue, ILLEGAL_PROPERTY_CREATION);
+            }
           } else {
             // null checks are reported elsewhere
             if (!objType.isNoType()

@@ -1135,8 +1135,7 @@ public final class JSTypeRegistry {
         case KNOWN_PRESENT:
           return PropDefinitionKind.KNOWN;
         case MAYBE_PRESENT:
-          // TODO(johnlenz): return LOOSE_UNION here.
-          return PropDefinitionKind.KNOWN;
+          return PropDefinitionKind.LOOSE_UNION;
         case ABSENT:
           return PropDefinitionKind.UNKNOWN;
       }
@@ -1146,8 +1145,7 @@ public final class JSTypeRegistry {
           case KNOWN_PRESENT:
             return PropDefinitionKind.KNOWN;
           case MAYBE_PRESENT:
-            // TODO(johnlenz): return LOOSE_UNION here.
-            return PropDefinitionKind.KNOWN;
+            return PropDefinitionKind.LOOSE_UNION;
           case ABSENT:
             // check for loose properties below.
             break;
