@@ -100,7 +100,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }
-    if (containWarning(formatWarning(error))) {
+    if (!allowlist.isEmpty() && containWarning(formatWarning(error))) {
       // If the message matches the guard we use WARNING, so that it
       // - Shows up on stderr, and
       // - Gets caught by the AllowlistBuilder downstream in the pipeline
