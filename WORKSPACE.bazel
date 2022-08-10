@@ -55,8 +55,8 @@ maven_import(
     # https://github.com/google/gson
     group_id = "com.google.code.gson",
     artifact_id = "gson",
-    version = "2.7",
-    sha256 = "2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32",
+    version = "2.9.1",
+    sha256 = "378534e339e6e6d50b1736fb3abb76f1c15d1be3f4c13cec6d536412e23da603",
     licenses = ["notice"],
 )
 
