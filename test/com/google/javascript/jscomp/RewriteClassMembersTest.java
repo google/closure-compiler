@@ -236,6 +236,22 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "  x = 1",
             "}"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
+
+    test(
+        srcs(
+            lines(
+                "let c = class {", //
+                "  x = 1",
+                "  y = this.x",
+                "}",
+                "class B {",
+                "  [1] = 2;",
+                "  [2] = this[1]",
+                "}" // testing that the correct number of diagnostics are thrown
+                )),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET));
   }
 
   @Test
@@ -662,7 +678,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNonStaticInstanceWithEmptyConstructor() {
+  public void testNonComputedInstanceWithEmptyConstructor() {
     test(
         lines(
             "class C {", //

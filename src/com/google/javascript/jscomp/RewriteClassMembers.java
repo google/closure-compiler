@@ -30,11 +30,13 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final SynthesizeExplicitConstructors ctorCreator;
+  private final Deque<ClassRecord> classStack;
 
   public RewriteClassMembers(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.ctorCreator = new SynthesizeExplicitConstructors(compiler);
+    this.classStack = new ArrayDeque<>();
   }
 
   @Override
@@ -46,11 +48,42 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()) {
-      FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
-      return scriptFeatures == null
-          || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
-          || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
+    switch (n.getToken()) {
+      case SCRIPT:
+        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(n);
+        return scriptFeatures == null
+            || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
+            || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
+      case CLASS:
+        classStack.push(new ClassRecord(n));
+        break;
+      case COMPUTED_FIELD_DEF:
+        checkState(!classStack.isEmpty());
+        t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Computed fields");
+        classStack.peek().cannotConvert = true;
+        return false;
+      case MEMBER_FIELD_DEF:
+        checkState(!classStack.isEmpty());
+        if (NodeUtil.referencesEnclosingReceiver(n)) {
+          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Member references this or super");
+          classStack.peek().cannotConvert = true;
+          break;
+        }
+        classStack.peek().recordField(n);
+        break;
+      case BLOCK:
+        if (!NodeUtil.isClassStaticBlock(n)) {
+          break;
+        }
+        if (NodeUtil.referencesEnclosingReceiver(n)) {
+          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Member references this or super");
+          classStack.peek().cannotConvert = true;
+          break;
+        }
+        classStack.peek().recordStaticBlock(n);
+        break;
+      default:
+        break;
     }
     return true;
   }
@@ -58,71 +91,48 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isClass()) {
-      visitClass(t, n);
+      visitClass(t);
     }
   }
 
   /** Transpile the actual class members themselves */
-  private void visitClass(NodeTraversal t, Node classNode) {
-    if (!NodeUtil.isClassDeclaration(classNode)) {
-      t.report(classNode, TranspilationUtil.CANNOT_CONVERT_YET, "Not a class declaration");
+  private void visitClass(NodeTraversal t) {
+    ClassRecord currClassRecord = classStack.pop();
+    if (currClassRecord.cannotConvert) {
       return;
     }
 
-    Node classMembers = classNode.getLastChild();
-
-    Deque<Node> staticMembers = new ArrayDeque<>();
-    Deque<Node> instanceMembers = new ArrayDeque<>();
-
-    for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
-      // this next is necessary because we directly move static blocks so we will get the incorrect
-      // element if just update member in the loop guard
-      switch (member.getToken()) {
-        case MEMBER_FIELD_DEF:
-          if (member.isStaticMember()) {
-            staticMembers.push(member);
-          } else {
-            instanceMembers.push(member);
-          }
-          break;
-        case COMPUTED_FIELD_DEF:
-          t.report(member, TranspilationUtil.CANNOT_CONVERT_YET, "Computed fields");
-          return;
-        case BLOCK:
-          staticMembers.push(member);
-          break;
-        default:
-          break;
-      }
+    if (!NodeUtil.isClassDeclaration(currClassRecord.classNode)) {
+      t.report(
+          currClassRecord.classNode,
+          TranspilationUtil.CANNOT_CONVERT_YET,
+          "Not a class declaration");
+      return;
     }
 
-    rewriteInstanceMembers(t, instanceMembers, classNode);
-    rewriteStaticMembers(t, staticMembers, classNode);
+    rewriteInstanceMembers(t, currClassRecord);
+    rewriteStaticMembers(t, currClassRecord);
   }
 
   /** Rewrites and moves all instance fields */
-  private void rewriteInstanceMembers(
-      NodeTraversal t, Deque<Node> instanceMembers, Node classNode) {
+  private void rewriteInstanceMembers(NodeTraversal t, ClassRecord record) {
+    Deque<Node> instanceMembers = record.instanceMembers;
+
     if (instanceMembers.isEmpty()) {
       return;
     }
-    ctorCreator.synthesizeClassConstructorIfMissing(t, classNode);
-    Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(classNode);
-    Node ctorBlock = ctor.getFirstChild().getLastChild();
 
+    ctorCreator.synthesizeClassConstructorIfMissing(t, record.classNode);
+    Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(record.classNode);
+    Node ctorBlock = ctor.getFirstChild().getLastChild();
     Node insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
 
     while (!instanceMembers.isEmpty()) {
       Node instanceMember = instanceMembers.pop();
       checkState(instanceMember.isMemberFieldDef());
+
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
-      if (NodeUtil.referencesEnclosingReceiver(instanceMember)) {
-        t.report(
-            instanceMember,
-            TranspilationUtil.CANNOT_CONVERT_YET,
-            "This or super in instance member");
-        return;
-      }
+
       Node transpiledNode = convNonCompFieldToGetProp(thisNode, instanceMember.detach());
       if (insertionPoint == ctorBlock) { // insert the field at the beginning of the block, no super
         ctorBlock.addChildToFront(transpiledNode);
@@ -135,22 +145,20 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   }
 
   /** Rewrites and moves all static blocks and fields */
-  private void rewriteStaticMembers(NodeTraversal t, Deque<Node> staticMembers, Node classNode) {
-    Node classNameNode = NodeUtil.getNameNode(classNode);
+  private void rewriteStaticMembers(NodeTraversal t, ClassRecord record) {
+    Deque<Node> staticMembers = record.staticMembers;
+
+    Node classNameNode = NodeUtil.getNameNode(record.classNode);
+    Node classInsertionPoint = NodeUtil.getEnclosingStatement(record.classNode);
 
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.pop();
-      if (NodeUtil.referencesEnclosingReceiver(staticMember)) {
-        t.report(
-            staticMember, TranspilationUtil.CANNOT_CONVERT_YET, "This or super in static member");
-        return;
-      }
+
       Node transpiledNode;
       switch (staticMember.getToken()) {
         case BLOCK:
           if (!NodeUtil.getVarsDeclaredInBranch(staticMember).isEmpty()) {
             t.report(staticMember, TranspilationUtil.CANNOT_CONVERT_YET, "Var in static block");
-            return;
           }
           transpiledNode = staticMember.detach();
           break;
@@ -161,7 +169,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
-      transpiledNode.insertAfter(classNode);
+      transpiledNode.insertAfter(classInsertionPoint);
       t.reportCodeChange();
     }
   }
@@ -196,7 +204,8 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
    */
   private Node findInitialInstanceInsertionPoint(Node ctorBlock) {
     if (NodeUtil.referencesSuper(ctorBlock)) {
-      // will use the fact that if there is super in the constructor, the first appearance of super
+      // will use the fact that if there is super in the constructor, the first appearance of
+      // super
       // must be the super call
       for (Node stmt = ctorBlock.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
         if (NodeUtil.isExprCall(stmt) && stmt.getFirstFirstChild().isSuper()) {
@@ -205,5 +214,35 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
       }
     }
     return ctorBlock; // in case the super loop doesn't work, insert at beginning of block
+  }
+
+  /**
+   * Accumulates information about different classes while going down the AST in shouldTraverse()
+   */
+  private static final class ClassRecord {
+    boolean cannotConvert = false;
+    final Deque<Node> instanceMembers =
+        new ArrayDeque<>(); // instance computed + noncomputed fields
+    final Deque<Node> staticMembers =
+        new ArrayDeque<>(); // static blocks + computed + noncomputed fields
+    final Node classNode;
+
+    private ClassRecord(Node classNode) {
+      this.classNode = classNode;
+    }
+
+    private void recordField(Node field) {
+      checkArgument(field.isComputedFieldDef() || field.isMemberFieldDef());
+      if (field.isStaticMember()) {
+        staticMembers.push(field);
+      } else {
+        instanceMembers.push(field);
+      }
+    }
+
+    private void recordStaticBlock(Node block) {
+      checkArgument(NodeUtil.isClassStaticBlock(block));
+      staticMembers.push(block);
+    }
   }
 }
