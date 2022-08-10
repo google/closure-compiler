@@ -745,7 +745,7 @@ DOMMatrix.prototype.skewYSelf = function(sy) {};
  * @return {!DOMMatrix}
  * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-inverse
  */
-DOMMatrix.prototype.inverseSelf = function() {};
+DOMMatrix.prototype.invertSelf = function() {};
 
 /**
  * @record
