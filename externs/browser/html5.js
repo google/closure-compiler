@@ -1803,7 +1803,7 @@ SharedWorkerGlobalScope.prototype.name;
 
 /**
  * Sent when a connection to this worker is opened.
- * @type {?function(!Event)}
+ * @type {?function(!MessageEvent)}
  */
 SharedWorkerGlobalScope.prototype.onconnect;
 
