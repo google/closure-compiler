@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.annotation.Nullable;
 
 /** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
 public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
@@ -55,7 +56,33 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
             || scriptFeatures.contains(Feature.PUBLIC_CLASS_FIELDS)
             || scriptFeatures.contains(Feature.CLASS_STATIC_BLOCK);
       case CLASS:
-        classStack.push(new ClassRecord(n));
+        Node classNameNode = NodeUtil.getNameNode(n);
+
+        if (classNameNode == null) {
+          t.report(
+              n, TranspilationUtil.CANNOT_CONVERT_YET, "Anonymous classes with ES2022 features");
+          return false;
+        }
+
+        @Nullable Node classInsertionPoint = getStatementDeclaringClass(n, classNameNode);
+
+        if (classInsertionPoint == null) {
+          t.report(
+              n,
+              TranspilationUtil.CANNOT_CONVERT_YET,
+              "Class in a non-extractable location with ES2022 features");
+          return false;
+        }
+
+        if (!n.getFirstChild().isEmpty()
+            && !classNameNode.matchesQualifiedName(n.getFirstChild())) {
+          // we do not allow `let x = class C {}` where the names inside the class can be shadowed
+          // at this time
+          t.report(n, TranspilationUtil.CANNOT_CONVERT_YET, "Classes with possible name shadowing");
+          return false;
+        }
+
+        classStack.push(new ClassRecord(n, classNameNode.getQualifiedName(), classInsertionPoint));
         break;
       case COMPUTED_FIELD_DEF:
         checkState(!classStack.isEmpty());
@@ -80,6 +107,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
           classStack.peek().cannotConvert = true;
           break;
         }
+        checkState(!classStack.isEmpty());
         classStack.peek().recordStaticBlock(n);
         break;
       default:
@@ -99,14 +127,6 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   private void visitClass(NodeTraversal t) {
     ClassRecord currClassRecord = classStack.pop();
     if (currClassRecord.cannotConvert) {
-      return;
-    }
-
-    if (!NodeUtil.isClassDeclaration(currClassRecord.classNode)) {
-      t.report(
-          currClassRecord.classNode,
-          TranspilationUtil.CANNOT_CONVERT_YET,
-          "Not a class declaration");
       return;
     }
 
@@ -148,13 +168,15 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   private void rewriteStaticMembers(NodeTraversal t, ClassRecord record) {
     Deque<Node> staticMembers = record.staticMembers;
 
-    Node classNameNode = NodeUtil.getNameNode(record.classNode);
-    Node classInsertionPoint = NodeUtil.getEnclosingStatement(record.classNode);
-
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.pop();
+      // if the name is a property access, we want the whole chain of accesses, while for other
+      // cases we only want the name node
+      Node nameToUse =
+          astFactory.createQNameWithUnknownType(record.classNameString).srcrefTree(staticMember);
 
       Node transpiledNode;
+
       switch (staticMember.getToken()) {
         case BLOCK:
           if (!NodeUtil.getVarsDeclaredInBranch(staticMember).isEmpty()) {
@@ -163,13 +185,12 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
           transpiledNode = staticMember.detach();
           break;
         case MEMBER_FIELD_DEF:
-          transpiledNode =
-              convNonCompFieldToGetProp(classNameNode.cloneNode(), staticMember.detach());
+          transpiledNode = convNonCompFieldToGetProp(nameToUse, staticMember.detach());
           break;
         default:
           throw new IllegalStateException(String.valueOf(staticMember));
       }
-      transpiledNode.insertAfter(classInsertionPoint);
+      transpiledNode.insertAfter(record.classInsertionPoint);
       t.reportCodeChange();
     }
   }
@@ -217,6 +238,38 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   }
 
   /**
+   * Gets the location of the statement declaring the class
+   *
+   * @return null if the class cannot be extracted
+   */
+  @Nullable
+  private Node getStatementDeclaringClass(Node classNode, Node classNameNode) {
+
+    if (NodeUtil.isClassDeclaration(classNode)) {
+      // `class C {}` -> can use `C.staticMember` to extract static fields
+      checkState(NodeUtil.isStatement(classNode));
+      return classNode;
+    }
+    final Node parent = classNode.getParent();
+    if (parent.isName()) {
+      // `let C = class {};`
+      // We can use `C.staticMemberName = ...` to extract static fields
+      checkState(parent == classNameNode);
+      checkState(NodeUtil.isStatement(classNameNode.getParent()));
+      return classNameNode.getParent();
+    }
+    if (parent.isAssign()
+        && parent.getFirstChild() == classNameNode
+        && parent.getParent().isExprResult()) {
+      // `something.C = class {}`
+      // we can use `something.C.staticMemberName = ...` to extract static fields
+      checkState(NodeUtil.isStatement(classNameNode.getGrandparent()));
+      return classNameNode.getGrandparent();
+    }
+    return null;
+  }
+
+  /**
    * Accumulates information about different classes while going down the AST in shouldTraverse()
    */
   private static final class ClassRecord {
@@ -226,9 +279,13 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
     final Deque<Node> staticMembers =
         new ArrayDeque<>(); // static blocks + computed + noncomputed fields
     final Node classNode;
+    final String classNameString;
+    final Node classInsertionPoint;
 
-    private ClassRecord(Node classNode) {
+    private ClassRecord(Node classNode, String classNameString, Node classInsertionPoint) {
       this.classNode = classNode;
+      this.classNameString = classNameString;
+      this.classInsertionPoint = classInsertionPoint;
     }
 
     private void recordField(Node field) {
