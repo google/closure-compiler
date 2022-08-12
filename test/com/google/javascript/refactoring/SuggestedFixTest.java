@@ -60,7 +60,7 @@ public class SuggestedFixTest {
 
   @Test
   public void testInsertBeforeWithNonJSDocBlockComment() {
-    String before = "var someRandomCode = {};";
+    String before = "var someRandomCode = {};\n";
     String after = "/* some comment */\ngoog.foo();";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
@@ -75,7 +75,7 @@ public class SuggestedFixTest {
 
   @Test
   public void testInsertBeforeWithNonJSDocLineComment() {
-    String before = "var someRandomCode = {};";
+    String before = "var someRandomCode = {};\n";
     String after = "// some comment \ngoog.foo();";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);

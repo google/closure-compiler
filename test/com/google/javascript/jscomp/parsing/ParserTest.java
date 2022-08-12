@@ -1608,7 +1608,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(exprResultA).hasType(Token.EXPR_RESULT);
     assertThat(exprResultA.getNonJSDocCommentString()).isEqualTo("// comment before GETPROP");
 
-    Node nodeB = exprResultA.getFirstChild().getFirstChild();
+    Node nodeB = exprResultA.getFirstFirstChild();
     assertNode(nodeB).hasType(Token.GETPROP);
     assertThat(nodeB.getNonJSDocCommentString()).isEqualTo("// comment on GETPROP");
 
@@ -1993,6 +1993,166 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(xNode.getTrailingNonJSDocCommentString()).isEqualTo("/* first */");
 
     assertThat(yNode.getNonJSDocComment()).isNull();
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentOnConstant() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node cnst = parse("const A = 1; // comment").getFirstChild();
+    assertNode(cnst).hasType(Token.CONST);
+
+    assertThat(cnst.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentOnConstantNoWhitespace() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node cnst = parse("const A = 1;// comment").getFirstChild();
+    assertNode(cnst).hasType(Token.CONST);
+
+    assertThat(cnst.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentOnConstantWithMoreWhitespace() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node cnst = parse("const A = 1;   // comment").getFirstChild();
+    assertNode(cnst).hasType(Token.CONST);
+
+    assertThat(cnst.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentOnConstantFollowedByConstant() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node cnst = parse(lines("const A = 1; // comment", "", "const B = 2;")).getFirstChild();
+    assertNode(cnst).hasType(Token.CONST);
+
+    assertThat(cnst.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testMultipleNonJSDocTrailingComments() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("const A = 1; /* A1 */ /* A2 */ // A3", "", "const B = 2;"));
+    Node a = n.getFirstChild();
+    assertNode(a).hasType(Token.CONST);
+    Node b = n.getLastChild();
+    assertNode(a).hasType(Token.CONST);
+    assertThat(b.getNonJSDocCommentString()).isEqualTo("/* A2 */// A3");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentAfterFunction() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("function foo(){} // comment").getFirstChild();
+    assertNode(n).hasType(Token.FUNCTION);
+
+    assertThat(n.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentAfterFunctionCall() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("function g(){ f(); // comment", "f();}"));
+    Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("// comment");
+  }
+
+  @Test
+  public void testNonJSDocTrailingCommentAfterFunctionCallInBlock() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n =
+        parse(
+            lines(
+                "if (true) {",
+                "  f1(); // comment1 on f1()",
+                "  // comment2",
+                "  // comment3",
+                "}"));
+    Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    assertThat(exprRes.getTrailingNonJSDocCommentString())
+        .isEqualTo("// comment1 on f1()\n// comment2\n// comment3");
+  }
+
+  @Test
+  public void testLastNonJSDocCommentOInBlock() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("if (true) {", "  f();", "  /* comment */", "}"));
+    Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("\n/* comment */");
+  }
+
+  @Test
+  public void testLastNonJSDocCommentOInBlockWithBlankLines() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("if (true) {", "  f();", "", "", "  /* comment */", "}"));
+    Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    // TODO(user): This should keep the blank lines.
+    assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("\n/* comment */");
+  }
+
+  @Test
+  public void testInlineCommentInFunctionCallInBlock() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("if (true) {", "  f(0, 1 /* comment */);}"));
+    Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+    // TODO(b/240990886): This should not be an "end of block" comment (which we treat as trailing
+    // comment on the last child), but a comment on the
+    // argument.
+    assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("\n/* comment */");
+  }
+
+  @Test
+  public void testNonJSDocBigCommentInbetween() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse(lines("let x = 0; // comment on x", "//", "// more comment", "let y = 1;"));
+
+    Node fstLetDecl = n.getFirstChild();
+    Node sndLetDecl = n.getLastChild();
+
+    assertNode(fstLetDecl).hasType(Token.LET);
+    assertThat(fstLetDecl.getTrailingNonJSDocCommentString()).isEqualTo("// comment on x");
+    assertNode(sndLetDecl).hasType(Token.LET);
+    assertThat(sndLetDecl.getNonJSDocCommentString()).isEqualTo("//\n// more comment");
+  }
+
+  @Test
+  public void testInlineNonJSDocCommentsOnSeparateLetDeclarations() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+
+    Node n = parse("let a /* leading a */ = {c} /* trailing */; let /* leading b */ b  = {d};");
+    Node letADecl = n.getFirstChild();
+    Node letBDecl = n.getLastChild();
+
+    assertNode(letADecl).hasType(Token.LET);
+    assertNode(letBDecl).hasType(Token.LET);
+    assertThat(letADecl.getFirstFirstChild().getNonJSDocCommentString())
+        .contains("/* leading a */");
+    assertThat(letADecl.getTrailingNonJSDocCommentString()).contains("/* trailing */");
+    assertThat(letBDecl.getFirstChild().getNonJSDocCommentString()).contains("/* leading b */");
   }
 
   // function f( // blah1
@@ -3653,6 +3813,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("// Hi Mom!");
     assertNode(n.getSecondChild()).hasType(Token.FUNCTION);
     assertThat(n.getSecondChild().getNonJSDocCommentString()).isEqualTo("// Hi Dad!");
+  }
+
+  @Test
+  public void testIndividualCommentsAroundClasses() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node n = parse("// comment A \n class A{} // trailing a \n // comment B \n  class Bar{}");
+    Node classA = n.getFirstChild();
+    Node classB = n.getSecondChild();
+    assertNode(classA).hasType(Token.CLASS);
+    assertThat(classA.getNonJSDocCommentString()).isEqualTo("// comment A");
+    assertThat(classA.getTrailingNonJSDocCommentString()).isEqualTo("// trailing a");
+    assertNode(classB).hasType(Token.CLASS);
+    assertThat(classB.getNonJSDocCommentString()).isEqualTo("// comment B");
   }
 
   @Test
