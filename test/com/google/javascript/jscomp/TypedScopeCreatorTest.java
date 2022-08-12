@@ -3260,10 +3260,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(fooInstance.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
 
     assertThat(fooInstance.hasOwnDeclaredProperty("c")).isTrue();
-    assertType(fooInstance.getPropertyType("c")).isUnknown();
+    assertType(fooInstance.getPropertyType("c")).isNumber();
 
     assertThat(fooInstance.hasOwnDeclaredProperty("d")).isTrue();
-    assertType(fooInstance.getPropertyType("d")).isUnknown();
+    assertType(fooInstance.getPropertyType("d")).toStringIsEqualTo("*");
 
     assertThat(fooInstance.hasOwnDeclaredProperty("e")).isTrue();
     assertType(fooInstance.getPropertyType("e")).toStringIsEqualTo("(null|string)");
@@ -3326,10 +3326,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(fooCtor.getPropertyType("b")).toStringIsEqualTo("(symbol|undefined)");
 
     assertThat(fooCtor.hasOwnDeclaredProperty("c")).isTrue();
-    assertType(fooCtor.getPropertyType("c")).isUnknown();
+    assertType(fooCtor.getPropertyType("c")).isNumber();
 
     assertThat(fooCtor.hasOwnDeclaredProperty("d")).isTrue();
-    assertType(fooCtor.getPropertyType("d")).isUnknown();
+    assertType(fooCtor.getPropertyType("d")).toStringIsEqualTo("*");
 
     assertThat(fooCtor.hasOwnDeclaredProperty("e")).isTrue();
     assertType(fooCtor.getPropertyType("e")).toStringIsEqualTo("(null|string)");

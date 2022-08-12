@@ -3479,14 +3479,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     void defineMemberField(Node n) {
-      ObjectType ownerType = determineOwnerTypeForClassMember(n);
-
-      JSType declaredType = getDeclaredType(n.getJSDocInfo(), n, n.getFirstChild(), null);
+      Node rhs = n.getLastChild();
+      JSType declaredType = getDeclaredType(n.getJSDocInfo(), n, rhs, null);
       if (declaredType == null) {
-        // TODO(b/192088118): Stop treating member fields without JSDoc as declared with type {?}
-        declaredType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        JSType rhsType = rhs == null ? null : super.getDeclaredRValueType(null, rhs);
+        checkState(rhsType == null || !rhsType.isUnknownType());
+        declaredType = rhsType != null ? rhsType : getNativeType(JSTypeNative.ALL_TYPE);
       }
 
+      ObjectType ownerType = determineOwnerTypeForClassMember(n);
       String propName = n.getString();
       ownerType.defineDeclaredProperty(propName, declaredType, n);
       n.setJSType(declaredType);
