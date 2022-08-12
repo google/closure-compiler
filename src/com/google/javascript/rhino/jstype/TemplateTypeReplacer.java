@@ -316,7 +316,10 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   private JSType caseUnionTypeUnguarded(UnionType type) {
     boolean changed = false;
     List<JSType> results = new ArrayList<>();
-    for (JSType alternative : type.getAlternates()) {
+    ImmutableList<JSType> alternates = type.getAlternates();
+    int alternateCount = alternates.size();
+    for (int i = 0; i < alternateCount; i++) {
+      var alternative = alternates.get(i);
       JSType replacement = alternative.visit(this);
       if (!identical(replacement, alternative)) {
         changed = true;
@@ -404,14 +407,45 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
    * e.g. current type T is being replaced with Foo<T>
    */
   private boolean isRecursive(TemplateType currentType, JSType replacementType) {
-    TemplatizedType replacementTemplatizedType =
-        replacementType.restrictByNotNullOrUndefined().toMaybeTemplatizedType();
+    // Avoid calling "restrictBy..." here as this method ends up being very hot and
+    // rebuilding unions is expensive.
+
+    TemplatizedType replacementTemplatizedType = null;
+    if (replacementType.isUnionType()) {
+      UnionType union = replacementType.toMaybeUnionType();
+      ImmutableList<JSType> alternates = union.getAlternates();
+      int alternatesCount = alternates.size();
+
+      for (int i = 0; i < alternatesCount; i++) {
+        JSType t = alternates.get(i);
+        if (t.isNullType() || t.isVoidType()) {
+          continue;
+        }
+        if (t.isTemplatizedType()) {
+          if (replacementTemplatizedType != null) {
+            // TODO(johnlenz): seems like we should check a union of templatized types for
+            // recursion but this is the existing behavior.
+            return false;
+          } else {
+            replacementTemplatizedType = t.toMaybeTemplatizedType();
+          }
+        } else {
+          // The union contains a untemplatized type.
+          return false;
+        }
+      }
+    } else {
+      replacementTemplatizedType = replacementType.toMaybeTemplatizedType();
+    }
+
     if (replacementTemplatizedType == null) {
       return false;
     }
 
-    Iterable<JSType> replacementTemplateTypes = replacementTemplatizedType.getTemplateTypes();
-    for (JSType replacementTemplateType : replacementTemplateTypes) {
+    ImmutableList<JSType> replacementTemplateTypes = replacementTemplatizedType.getTemplateTypes();
+    int replacementCount = replacementTemplateTypes.size();
+    for (int i = 0; i < replacementCount; i++) {
+      JSType replacementTemplateType = replacementTemplateTypes.get(i);
       if (replacementTemplateType.isTemplateType()
           && isSameType(currentType, replacementTemplateType.toMaybeTemplateType())) {
         return true;
