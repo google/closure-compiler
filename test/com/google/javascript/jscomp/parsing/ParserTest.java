@@ -2088,7 +2088,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testLastNonJSDocCommentOInBlock() {
+  public void testLastNonJSDocCommentInBlock() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node n = parse(lines("if (true) {", "  f();", "  /* comment */", "}"));
@@ -2099,14 +2099,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testLastNonJSDocCommentOInBlockWithBlankLines() {
+  public void testLastNonJSDocCommentInBlockWithBlankLines() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node n = parse(lines("if (true) {", "  f();", "", "", "  /* comment */", "}"));
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
 
-    // TODO(user): This should keep the blank lines.
+    // TODO(b/242294987): This should keep the blank lines.
     assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("\n/* comment */");
   }
 
@@ -2117,9 +2117,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node n = parse(lines("if (true) {", "  f(0, 1 /* comment */);}"));
     Node exprRes = n.getFirstChild().getLastChild().getFirstChild();
     assertNode(exprRes).hasType(Token.EXPR_RESULT);
-    // TODO(b/240990886): This should not be an "end of block" comment (which we treat as trailing
-    // comment on the last child), but a comment on the
-    // argument.
+    // TODO(b/242294987): This should not be an "end of block" comment (which we treat as trailing
+    // comment on the last child), but a comment on the argument.
     assertThat(exprRes.getTrailingNonJSDocCommentString()).isEqualTo("\n/* comment */");
   }
 
