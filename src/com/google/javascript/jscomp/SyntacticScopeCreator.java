@@ -164,8 +164,14 @@ public final class SyntacticScopeCreator implements ScopeCreator {
     }
 
     private void declareLHS(Scope s, Node n) {
-      for (Node lhs : NodeUtil.findLhsNodesInNode(n)) {
-        declareVar(s, lhs);
+      if (n.hasOneChild() && n.getFirstChild().isName()) {
+        // NAME is most common and trivial case.  This code is hot so it is worth special casing.
+        // to avoid extra GC and cpu cycles.
+        declareVar(s, n.getFirstChild());
+      } else {
+        for (Node lhs : NodeUtil.findLhsNodesInNode(n)) {
+          declareVar(s, lhs);
+        }
       }
     }
 
