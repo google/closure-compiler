@@ -91,6 +91,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
       "@ngInject should be declared on the constructor, not on the class.");
 
   private static final QualifiedName GOOG_DEFINE_CLASS = QualifiedName.of("goog.defineClass");
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
 
   private final AbstractCompiler compiler;
 
@@ -224,7 +225,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
     if (superClass == null
         || (!superClass.isNull()
             && !superClass.isQualifiedName()
-            && !NodeUtil.isCallTo(superClass, "goog.module.get"))) {
+            && !NodeUtil.isCallTo(superClass, GOOG_MODULE_GET))) {
       compiler.report(JSError.make(callNode, GOOG_CLASS_SUPER_CLASS_NOT_VALID));
       return null;
     }
@@ -561,7 +562,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback implements CompilerP
     if (superNode.isQualifiedName()) {
       superName = superNode.getQualifiedName();
     } else {
-      checkState(NodeUtil.isCallTo(superNode, "goog.module.get"));
+      checkState(NodeUtil.isCallTo(superNode, GOOG_MODULE_GET));
       superName = superNode.getLastChild().getString();
     }
     return new JSTypeExpression(

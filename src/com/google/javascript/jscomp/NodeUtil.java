@@ -5647,6 +5647,10 @@ public final class NodeUtil {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
 
+  public static boolean isCallTo(Node n, QualifiedName qualifiedName) {
+    return n.isCall() && qualifiedName.matches(n.getFirstChild());
+  }
+
   /**
    * A faster version of {@link #isCallTo(Node, String)}.
    *

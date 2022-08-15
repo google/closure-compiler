@@ -713,7 +713,7 @@ final class ClosureRewriteModule implements CompilerPass {
           return true;
         case EXPR_RESULT:
           Node call = n.getFirstChild();
-          if (isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction()) {
+          if (NodeUtil.isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction()) {
             parent.putBooleanProp(Node.GOOG_MODULE, true);
             Node functionNode = call.getLastChild();
             compiler.reportFunctionDeleted(functionNode);
@@ -980,7 +980,7 @@ final class ClosureRewriteModule implements CompilerPass {
     //   let x = goog.forwardDeclare('a.namespace');
     Node aliasVarNodeRhs = NodeUtil.getRValueOfLValue(aliasVar.getNode());
     if (aliasVarNodeRhs == null
-        || !isCallTo(aliasVarNodeRhs, GOOG_FORWARDDECLARE)
+        || !NodeUtil.isCallTo(aliasVarNodeRhs, GOOG_FORWARDDECLARE)
         || !namespaceId.equals(aliasVarNodeRhs.getLastChild().getString())) {
       // Reported in CheckClosureImports
       return;
@@ -1289,8 +1289,8 @@ final class ClosureRewriteModule implements CompilerPass {
         && nameNode.getParent().isStringKey()
         && nameNode.getGrandparent().isObjectPattern()) {
       Node destructuringLhsNode = nameNode.getGrandparent().getParent();
-      if (isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRE)
-          || isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRETYPE)) {
+      if (NodeUtil.isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRE)
+          || NodeUtil.isCallTo(destructuringLhsNode.getLastChild(), GOOG_REQUIRETYPE)) {
         return;
       }
     }
@@ -1861,21 +1861,6 @@ final class ClosureRewriteModule implements CompilerPass {
       String name = "alias_" + module + "_" + nodeName;
       preprocessorSymbolTable.addReference(n, name);
     }
-  }
-
-  /**
-   * A faster version of NodeUtil.isCallTo() for methods in the GETPROP form.
-   *
-   * @param n The CALL node to be checked.
-   * @param targetMethod A prebuilt GETPROP node representing a target method.
-   * @return Whether n is a call to the target method.
-   */
-  private static boolean isCallTo(Node n, Node targetMethod) {
-    if (!n.isCall()) {
-      return false;
-    }
-    Node method = n.getFirstChild();
-    return method.isGetProp() && method.matchesQualifiedName(targetMethod);
   }
 
   private void declareGlobalVariable(Node n, NodeTraversal t) {

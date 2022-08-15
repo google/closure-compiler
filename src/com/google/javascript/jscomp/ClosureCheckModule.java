@@ -164,6 +164,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
           "goog.module.declareLegacyNamespace() takes no arguments");
 
   private static final QualifiedName GOOG_MODULE = QualifiedName.of("goog.module");
+  private static final QualifiedName GOOG_PROVIDE = QualifiedName.of("goog.provide");
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
   private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
   private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
@@ -223,11 +224,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       @Nullable Node moduleScopeRoot) {
     Node parent = n.getParent();
     if (currentModuleInfo == null) {
-      if (NodeUtil.isCallTo(n, "goog.module")) {
+      if (NodeUtil.isCallTo(n, GOOG_MODULE)) {
         t.report(n, GOOG_MODULE_IN_NON_MODULE);
       } else if (NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(n)) {
         t.report(n, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
-      } else if (NodeUtil.isCallTo(n, "goog.provide")) {
+      } else if (NodeUtil.isCallTo(n, GOOG_PROVIDE)) {
         // This error is reported here, rather than in a provide-specific pass, because it
         // must be reported prior to ClosureRewriteModule converting legacy goog.modules into
         // goog.provides.
@@ -357,7 +358,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       return;
     }
 
-    if (!currentModuleInfo.importsByLongRequiredName.containsKey(qname)) {
+    Node importLhs = currentModuleInfo.importsByLongRequiredName.get(qname);
+    if (importLhs == null) {
       return;
     }
 
@@ -365,10 +367,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       return;
     }
 
-    Node importLhs = currentModuleInfo.importsByLongRequiredName.get(qname);
-    if (importLhs == null) {
-      // Fall through.
-    } else if (importLhs.isName()) {
+    if (importLhs.isName()) {
       this.compiler.report(
           JSError.make(
               n,
@@ -454,9 +453,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
     switch (parent.getToken()) {
       case EXPR_RESULT:
         String key = extractFirstArgumentName(callNode);
-        if (!currentModuleInfo.importsByLongRequiredName.containsKey(key)) {
-          currentModuleInfo.importsByLongRequiredName.put(key, parent);
-        }
+        currentModuleInfo.importsByLongRequiredName.putIfAbsent(key, parent);
         return;
       case NAME:
       case DESTRUCTURING_LHS:
