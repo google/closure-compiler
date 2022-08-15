@@ -209,7 +209,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.TAGGED_TEMPLATELIT)
-                                .addBooleanProperty(NodeProperty.FREE_CALL)
+                                .setBooleanProperties(1L << NodeProperty.FREE_CALL.getNumber())
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.IDENTIFIER)
@@ -253,8 +253,9 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.NUMBER_LITERAL)
-                                .addBooleanProperty(NodeProperty.IS_PARENTHESIZED)
-                                .addBooleanProperty(NodeProperty.COLOR_FROM_CAST)
+                                .setBooleanProperties(
+                                    (1L << NodeProperty.IS_PARENTHESIZED.getNumber())
+                                        | (1L << NodeProperty.COLOR_FROM_CAST.getNumber()))
                                 .setDoubleValue(1)
                                 .setType(unknownType)
                                 .build())
@@ -280,7 +281,7 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                         .addChild(
                             AstNode.newBuilder()
                                 .setKind(NodeKind.FUNCTION_LITERAL)
-                                .addBooleanProperty(NodeProperty.ARROW_FN)
+                                .setBooleanProperties(1L << NodeProperty.ARROW_FN.getNumber())
                                 .addChild(
                                     AstNode.newBuilder()
                                         .setKind(NodeKind.IDENTIFIER)
@@ -313,12 +314,12 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
         .isEqualTo(
             AstNode.newBuilder()
                 .setKind(NodeKind.SOURCE_FILE)
-                .addBooleanProperty(NodeProperty.GOOG_MODULE)
+                .setBooleanProperties(1L << NodeProperty.GOOG_MODULE.getNumber())
                 // `/** @const */ var module$exports$a$b$c = {};`
                 .addChild(
                     AstNode.newBuilder()
                         .setKind(NodeKind.VAR_DECLARATION)
-                        .addBooleanProperty(NodeProperty.IS_NAMESPACE)
+                        .setBooleanProperties(1L << NodeProperty.IS_NAMESPACE.getNumber())
                         .setJsdoc(OptimizationJsdoc.newBuilder().addKind(JsdocTag.JSDOC_CONST))
                         .addChild(
                             AstNode.newBuilder()

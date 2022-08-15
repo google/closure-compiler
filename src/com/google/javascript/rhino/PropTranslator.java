@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.Node.Prop;
 import org.jspecify.nullness.Nullable;
@@ -72,6 +74,9 @@ final class PropTranslator {
     for (Prop rhinoProp : Prop.values()) {
       NodeProperty protoProp = serializeProp(rhinoProp);
       if (protoProp != null) {
+        // Boolean props are stored as a bitset, see Node#deserializeProperties
+        checkState(
+            protoProp.getNumber() < 63, "enum %s value %s", protoProp, protoProp.getNumber());
         protoToRhinoProp[protoProp.ordinal()] = rhinoProp;
         rhinoToProtoProp[rhinoProp.ordinal()] = protoProp;
       }

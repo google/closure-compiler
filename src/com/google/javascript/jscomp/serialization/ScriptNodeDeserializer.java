@@ -30,7 +30,6 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -106,8 +105,9 @@ final class ScriptNodeDeserializer {
       if (astNode.hasType() && this.owner().colorPoolShard.isPresent()) {
         n.setColor(this.owner().colorPoolShard.get().getColor(astNode.getType()));
       }
-      if (astNode.getBooleanPropertyCount() > 0) {
-        n.deserializeProperties(filterOutCastProp(astNode.getBooleanPropertyList()));
+      long properties = astNode.getBooleanProperties();
+      if (properties > 0) {
+        n.deserializeProperties(filterOutCastProp(astNode.getBooleanProperties()));
       }
       n.setJSDocInfo(JSDocSerializer.deserializeJsdoc(astNode.getJsdoc(), stringPool));
       n.setLinenoCharno(currentLine, currentColumn);
@@ -645,18 +645,10 @@ final class ScriptNodeDeserializer {
    * <p>This is because it doesn't make sense to have that property present on nodes that don't have
    * colors.
    */
-  private List<NodeProperty> filterOutCastProp(List<NodeProperty> nodeProperties) {
+  private long filterOutCastProp(long nodeProperties) {
     if (colorPoolShard.isPresent()) {
       return nodeProperties; // we are deserializing colors, so this is fine.
     }
-    for (int i = 0; i < nodeProperties.size(); i++) {
-      if (nodeProperties.get(i).equals(NodeProperty.COLOR_FROM_CAST)) {
-        return ImmutableList.<NodeProperty>builder()
-            .addAll(nodeProperties.subList(0, i))
-            .addAll(nodeProperties.subList(i + 1, nodeProperties.size()))
-            .build();
-      }
-    }
-    return nodeProperties;
+    return nodeProperties & ~(1L << NodeProperty.COLOR_FROM_CAST.getNumber());
   }
 }

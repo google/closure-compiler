@@ -97,7 +97,9 @@ message AstNode {
   // TODO(b/183734530): delete this field
   uint32 original_name_pointer = 9;
 
-  repeated NodeProperty boolean_property = 14;
+  // A bitset of NodeProperties
+  int64 boolean_properties = 14;
+
   // Associated type of the node, if present
   // See types.proto for what the int32 pointer means
   optional int32 type = 15;

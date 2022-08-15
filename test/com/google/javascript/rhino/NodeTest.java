@@ -43,13 +43,13 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.math.BigInteger;
-import java.util.EnumSet;
 import java.util.function.Consumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -684,39 +684,53 @@ public class NodeTest {
     assertThat(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME)).isTrue();
   }
 
+  private long bitsetFromNodeProperties(ImmutableSet<NodeProperty> props) {
+    long bitset = 0;
+    for (NodeProperty prop : props) {
+      bitset = Node.setNodePropertyBit(bitset, prop);
+    }
+    return bitset;
+  }
+
   @Test
   public void testSerializeProperties() {
     Node node = IR.function(IR.name(""), IR.paramList(), IR.block());
     node.setIsAsyncFunction(true);
     node.setIsGeneratorFunction(true);
-    EnumSet<NodeProperty> result = node.serializeProperties();
-    assertThat(result).containsExactly(NodeProperty.GENERATOR_FN, NodeProperty.ASYNC_FN);
+    long result = node.serializeProperties();
+
+    assertThat(result)
+        .isEqualTo(
+            bitsetFromNodeProperties(
+                ImmutableSet.of(NodeProperty.GENERATOR_FN, NodeProperty.ASYNC_FN)));
   }
 
   @Test
   public void testSerializeProperties_isDeclaredConstant() {
     Node node = new Node(Token.NAME);
     node.setDeclaredConstantVar(true);
-    EnumSet<NodeProperty> result = node.serializeProperties();
-    assertThat(result).containsExactly(NodeProperty.IS_DECLARED_CONSTANT);
+    long result = node.serializeProperties();
+    assertThat(result)
+        .isEqualTo(bitsetFromNodeProperties(ImmutableSet.of(NodeProperty.IS_DECLARED_CONSTANT)));
   }
 
   @Test
   public void testSerializeProperties_isInferredConstant() {
     Node node = new Node(Token.NAME);
     node.setInferredConstantVar(true);
-    EnumSet<NodeProperty> result = node.serializeProperties();
-    assertThat(result).containsExactly(NodeProperty.IS_INFERRED_CONSTANT);
+    long result = node.serializeProperties();
+    assertThat(result)
+        .isEqualTo(bitsetFromNodeProperties(ImmutableSet.of(NodeProperty.IS_INFERRED_CONSTANT)));
   }
 
   @Test
   public void testSerializeProperties_untranslatableRhinoProp() {
     Node node = getCall("A");
     node.setSideEffectFlags(2);
-    EnumSet<NodeProperty> result = node.serializeProperties();
+    long result = node.serializeProperties();
     // Rhino node prop SIDE_EFFECT_FLAGS does not have a corresponding NodeProperty
     assertThat(node.getSideEffectFlags()).isEqualTo(2);
-    assertThat(result).isEmpty();
+    assertThat(result).isEqualTo(0);
   }
 
   @Test
@@ -725,9 +739,10 @@ public class NodeTest {
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
     Node node = Node.newString(Token.NAME, "f");
     node.setJSTypeBeforeCast(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
-    EnumSet<NodeProperty> result = node.serializeProperties();
+    long result = node.serializeProperties();
     // Special case: Rhino node prop TYPE_BEFORE_CAST is converted to NodeProperty.COLOR_FROM_CAST
-    assertThat(result).containsExactly(NodeProperty.COLOR_FROM_CAST);
+    assertThat(result)
+        .isEqualTo(bitsetFromNodeProperties(ImmutableSet.of(NodeProperty.COLOR_FROM_CAST)));
   }
 
   @Test
