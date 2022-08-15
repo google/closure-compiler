@@ -710,6 +710,7 @@ public abstract class ObjectType extends JSType {
   }
 
   /** Whether this is a built-in object. */
+  @Override
   public boolean isNativeObjectType() {
     return false;
   }

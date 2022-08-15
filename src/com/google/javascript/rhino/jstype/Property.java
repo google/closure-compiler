@@ -172,6 +172,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
     this.propertyNode = n;
   }
 
+  @Override
   public String toString() {
     return "Property { "
         + " name: " + this.name

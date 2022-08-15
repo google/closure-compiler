@@ -218,10 +218,12 @@ public final class EnumType extends PrototypeObjectType implements JSType.WithSo
     return true;
   }
 
+  @Override
   public final Node getSource() {
     return source;
   }
 
+  @Override
   @Nullable
   public String getGoogModuleId() {
     return this.googModuleId;

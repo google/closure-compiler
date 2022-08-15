@@ -1037,10 +1037,12 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   /** Gets the source node or null if this is an unknown function. */
+  @Override
   public final Node getSource() {
     return source;
   }
 
+  @Override
   @Nullable
   public String getGoogModuleId() {
     return this.googModuleId;
