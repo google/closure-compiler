@@ -40,6 +40,7 @@ package com.google.javascript.rhino;
 
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.Node.Prop;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A translator for converting between Rhino node properties and TypedAST proto node properties used
@@ -77,7 +78,7 @@ final class PropTranslator {
     }
   }
 
-  private static final NodeProperty serializeProp(Prop prop) {
+  private static final @Nullable NodeProperty serializeProp(Prop prop) {
     switch (prop) {
       case ARROW_FN:
         return NodeProperty.ARROW_FN;

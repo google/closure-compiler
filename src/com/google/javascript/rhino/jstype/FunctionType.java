@@ -844,6 +844,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   /** Try to get the sup/inf of two functions by looking at the piecewise components. */
+  @Nullable
   private FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
     List<Parameter> newParamsNode = null;
     if (new EqualityChecker()
@@ -885,6 +886,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * Given a constructor or an interface type, get its superclass constructor or {@code null} if
    * none exists.
    */
+  @Nullable
   @Override
   public final FunctionType getSuperClassConstructor() {
     checkArgument(isConstructor() || isInterface());
@@ -1129,6 +1131,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
    * Resolve each item in the list, and return a new list if any references changed. Otherwise,
    * return null.
    */
+  @Nullable
   private ImmutableList<ObjectType> resolveTypeListHelper(
       ImmutableList<ObjectType> list, ErrorReporter reporter) {
     boolean changed = false;
@@ -1234,6 +1237,7 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     return checkExtendsLoop(new HashSet<FunctionType>(), new ArrayList<FunctionType>());
   }
 
+  @Nullable
   private List<FunctionType> checkExtendsLoop(Set<FunctionType> cache, List<FunctionType> path) {
     Iterable<ObjectType> iterable = this.getExtendedInterfaces();
     if (iterable != null) {

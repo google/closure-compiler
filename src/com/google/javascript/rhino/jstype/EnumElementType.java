@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /**
  * The type of individual elements of an enum type (see {@link EnumType}).
@@ -194,7 +195,7 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
-  public ObjectType getImplicitPrototype() {
+  public @Nullable ObjectType getImplicitPrototype() {
     return null;
   }
 
@@ -204,7 +205,7 @@ public final class EnumElementType extends ObjectType {
   }
 
   @Override
-  public FunctionType getConstructor() {
+  public @Nullable FunctionType getConstructor() {
     // TODO(b/147236174): This should always return null.
     return primitiveObjectType == null ? null : primitiveObjectType.getConstructor();
   }
@@ -234,7 +235,7 @@ public final class EnumElementType extends ObjectType {
    * which kind-of-sort-of makes sense, because an EnumElementType is a union of instances of a
    * type.
    */
-  static JSType getGreatestSubtype(EnumElementType element, JSType that) {
+  static @Nullable JSType getGreatestSubtype(EnumElementType element, JSType that) {
     // This method is implemented as a static because we don't want polymorphism. Ideally all the
     // `greatestSubtype` code would be in one place. Until then, using static calls minimizes
     // confusion.

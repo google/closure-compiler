@@ -48,6 +48,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collections;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An object type which uses composition to delegate all calls.
@@ -265,7 +266,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final FunctionType getOwnerFunction() {
+  public final @Nullable FunctionType getOwnerFunction() {
     return referencedObjType == null ? null : referencedObjType.getOwnerFunction();
   }
 
@@ -294,7 +295,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final ObjectType getImplicitPrototype() {
+  public final @Nullable ObjectType getImplicitPrototype() {
     return referencedObjType == null ? null : referencedObjType.getImplicitPrototype();
   }
 
@@ -334,12 +335,12 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public final FunctionType getConstructor() {
+  public final @Nullable FunctionType getConstructor() {
     return referencedObjType == null ? null : referencedObjType.getConstructor();
   }
 
   @Override
-  public ImmutableList<JSType> getTemplateTypes() {
+  public @Nullable ImmutableList<JSType> getTemplateTypes() {
     return referencedObjType == null ? null : referencedObjType.getTemplateTypes();
   }
 

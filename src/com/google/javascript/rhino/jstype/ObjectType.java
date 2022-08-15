@@ -100,9 +100,10 @@ public abstract class ObjectType extends JSType {
   }
 
   /**
-   * Default getSlot implementation. This gets overridden by FunctionType
-   * for lazily-resolved prototypes.
+   * Default getSlot implementation. This gets overridden by FunctionType for lazily-resolved
+   * prototypes.
    */
+  @Nullable
   public Property getSlot(String name) {
     OwnedProperty property = getPropertyMap().findClosest(name);
     return property == null ? null : property.getValue();
@@ -284,6 +285,7 @@ public abstract class ObjectType extends JSType {
    */
   public abstract FunctionType getConstructor();
 
+  @Nullable
   public FunctionType getSuperClassConstructor() {
     ObjectType iproto = getImplicitPrototype();
     if (iproto == null) {
@@ -294,6 +296,7 @@ public abstract class ObjectType extends JSType {
   }
 
   /** Returns the closest ancestor that defines the property including this type itself. */
+  @Nullable
   public final ObjectType getClosestDefiningType(String propertyName) {
     OwnedProperty property = getPropertyMap().findClosest(propertyName);
     return property == null ? null : property.getOwner();
@@ -427,17 +430,16 @@ public abstract class ObjectType extends JSType {
   }
 
   /**
-   * Gets the node corresponding to the definition of the specified property.
-   * This could be the node corresponding to declaration of the property or the
-   * node corresponding to the first reference to this property, e.g.,
-   * "this.propertyName" in a constructor. Note this is mainly intended to be
-   * an estimate of where in the source code a property is defined. Sometime
-   * the returned node is not even part of the global AST but in the AST of the
-   * JsDoc that defines a type.
+   * Gets the node corresponding to the definition of the specified property. This could be the node
+   * corresponding to declaration of the property or the node corresponding to the first reference
+   * to this property, e.g., "this.propertyName" in a constructor. Note this is mainly intended to
+   * be an estimate of where in the source code a property is defined. Sometime the returned node is
+   * not even part of the global AST but in the AST of the JsDoc that defines a type.
    *
    * @param propertyName the name of the property
    * @return the {@code Node} corresponding to the property or null.
    */
+  @Nullable
   public final Node getPropertyNode(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getNode();
@@ -447,21 +449,24 @@ public abstract class ObjectType extends JSType {
     return getPropertyNode(propertyName);
   }
 
+  @Nullable
   public final JSDocInfo getPropertyJSDocInfo(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
 
   /**
-   * Gets the docInfo on the specified property on this type.  This should not
-   * be implemented recursively, as you generally need to know exactly on
-   * which type in the prototype chain the JSDocInfo exists.
+   * Gets the docInfo on the specified property on this type. This should not be implemented
+   * recursively, as you generally need to know exactly on which type in the prototype chain the
+   * JSDocInfo exists.
    */
+  @Nullable
   public final JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
 
+  @Nullable
   public final Node getOwnPropertyDefSite(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getNode();
@@ -482,6 +487,7 @@ public abstract class ObjectType extends JSType {
     // by default, do nothing
   }
 
+  @Nullable
   @Override
   protected JSType findPropertyTypeWithoutConsideringTemplateTypes(String propertyName) {
     return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
@@ -708,9 +714,8 @@ public abstract class ObjectType extends JSType {
     return false;
   }
 
-  /**
-   * A null-safe version of JSType#toObjectType.
-   */
+  /** A null-safe version of JSType#toObjectType. */
+  @Nullable
   public static ObjectType cast(JSType type) {
     return type == null ? null : type.toObjectType();
   }

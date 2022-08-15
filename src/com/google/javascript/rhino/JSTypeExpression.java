@@ -98,6 +98,7 @@ public final class JSTypeExpression implements Serializable {
    * @param names The set of names to replace in this type expression
    * @return the new root after replacing the names
    */
+  @Nullable
   private static Node replaceNames(Node n, Set<String> names) {
     if (n == null) {
       return null;

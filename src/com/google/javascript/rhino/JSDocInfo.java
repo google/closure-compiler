@@ -983,6 +983,7 @@ public class JSDocInfo implements Serializable {
    * @return the parameter's type or {@code null} if this parameter is not defined or has a {@code
    *     null} type
    */
+  @Nullable
   public JSTypeExpression getParameterType(String parameter) {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
     return params != null ? params.get(parameter) : null;
@@ -1020,6 +1021,7 @@ public class JSDocInfo implements Serializable {
    * Returns the nth name in the defined parameters. The iteration order is the order in which
    * parameters are defined in the JSDoc, rather than the order in which the function declares them.
    */
+  @Nullable
   public String getParameterNameAt(int index) {
     LinkedHashMap<String, JSTypeExpression> params = PARAMETERS.get(this);
     if (params == null || index >= params.size()) {
@@ -1326,6 +1328,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /** Returns the description for the parameter with the given name, if its exists. */
+  @Nullable
   public String getDescriptionForParameter(String name) {
     LinkedHashMap<String, String> params = PARAMETER_DESCRIPTIONS.get(this);
     return params != null ? params.get(name) : null;
@@ -1515,6 +1518,7 @@ public class JSDocInfo implements Serializable {
     return propertyValues;
   }
 
+  @Nullable
   private static Object packPropertyValues(List<Object> values) {
     return values.isEmpty() ? null : (values.size() == 1 ? values.get(0) : values.toArray());
   }
@@ -1649,6 +1653,7 @@ public class JSDocInfo implements Serializable {
      *     value was populated and {@code always} is false, returns {@code null}. If {@code always}
      *     is true, returns a default JSDocInfo.
      */
+    @Nullable
     public JSDocInfo build(boolean always) {
       if (populated || always) {
         JSDocInfo info = new JSDocInfo(bits, props);
@@ -1689,6 +1694,7 @@ public class JSDocInfo implements Serializable {
       currentMarker = marker;
     }
 
+    @Nullable
     private Marker addMarker() {
       if (shouldParseDocumentation()) {
         ArrayList<Marker> markers = getProp(MARKERS);

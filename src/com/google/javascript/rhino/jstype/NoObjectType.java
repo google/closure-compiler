@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /**
  * The bottom Object type, representing the subclass of all objects.
@@ -74,7 +75,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public final FunctionType toMaybeFunctionType() {
+  public final @Nullable FunctionType toMaybeFunctionType() {
     return null;
   }
 
@@ -84,7 +85,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public final ObjectType getImplicitPrototype() {
+  public final @Nullable ObjectType getImplicitPrototype() {
     return null;
   }
 
@@ -149,7 +150,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public final FunctionType getConstructor() {
+  public final @Nullable FunctionType getConstructor() {
     return null;
   }
 

@@ -46,6 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for
@@ -258,7 +259,7 @@ public final class TemplateTypeMap {
         : templateValues.get(index);
   }
 
-  public TemplateType getTemplateTypeKeyByName(String keyName) {
+  public @Nullable TemplateType getTemplateTypeKeyByName(String keyName) {
     for (TemplateType key : templateKeys) {
       if (key.getReferenceName().equals(keyName)) {
         return key;
