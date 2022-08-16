@@ -17,7 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
@@ -26,7 +30,7 @@ import java.util.Deque;
 import javax.annotation.Nullable;
 
 /** Replaces the ES2022 class fields and class static blocks with constructor declaration. */
-public final class RewriteClassMembers implements NodeTraversal.Callback, CompilerPass {
+public final class RewriteClassMembers implements NodeTraversal.ScopedCallback, CompilerPass {
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -96,7 +100,7 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
           classStack.peek().cannotConvert = true;
           break;
         }
-        classStack.peek().recordField(n);
+        classStack.peek().enterField(n);
         break;
       case BLOCK:
         if (!NodeUtil.isClassStaticBlock(n)) {
@@ -110,6 +114,19 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
         checkState(!classStack.isEmpty());
         classStack.peek().recordStaticBlock(n);
         break;
+      case NAME:
+        for (ClassRecord record : classStack) {
+          // For now, we are just processing these names as strings, and so we will also give
+          // CANNOT_CONVERT_YET errors for patterns that technically can be simply inlined, such as:
+          // class C {
+          //    y = (x) => x;
+          //    constructor(x) {}
+          // }
+          // Either using scopes to be more precise or just doing renaming for all conflicting
+          // constructor declarations would addresss this issue.
+          record.potentiallyRecordNameInRhs(n);
+        }
+        break;
       default:
         break;
     }
@@ -117,9 +134,27 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
   }
 
   @Override
+  public void enterScope(NodeTraversal t) {
+    Node scopeRoot = t.getScopeRoot();
+    if (NodeUtil.isFunctionBlock(scopeRoot) && NodeUtil.isEs6Constructor(scopeRoot.getParent())) {
+      classStack.peek().recordConstructorScope(t.getScope());
+    }
+  }
+
+  @Override
+  public void exitScope(NodeTraversal t) {}
+
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isClass()) {
-      visitClass(t);
+    switch (n.getToken()) {
+      case CLASS:
+        visitClass(t);
+        return;
+      case MEMBER_FIELD_DEF:
+        classStack.peek().exitField();
+        return;
+      default:
+        return;
     }
   }
 
@@ -141,15 +176,26 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
     if (instanceMembers.isEmpty()) {
       return;
     }
-
     ctorCreator.synthesizeClassConstructorIfMissing(t, record.classNode);
     Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(record.classNode);
     Node ctorBlock = ctor.getFirstChild().getLastChild();
     Node insertionPoint = findInitialInstanceInsertionPoint(ctorBlock);
+    ImmutableSet<String> ctorDefinedNames = record.getConstructorDefinedNames();
 
     while (!instanceMembers.isEmpty()) {
       Node instanceMember = instanceMembers.pop();
       checkState(instanceMember.isMemberFieldDef());
+
+      for (Node nameInRhs : record.referencedNamesByMember.get(instanceMember)) {
+        String name = nameInRhs.getString();
+        if (ctorDefinedNames.contains(name)) {
+          t.report(
+              nameInRhs,
+              TranspilationUtil.CANNOT_CONVERT_YET,
+              "Initializer referencing identifier '" + name + "' declared in constructor");
+          return;
+        }
+      }
 
       Node thisNode = astFactory.createThisForEs6ClassMember(instanceMember);
 
@@ -273,33 +319,71 @@ public final class RewriteClassMembers implements NodeTraversal.Callback, Compil
    * Accumulates information about different classes while going down the AST in shouldTraverse()
    */
   private static final class ClassRecord {
-    boolean cannotConvert = false;
-    final Deque<Node> instanceMembers =
-        new ArrayDeque<>(); // instance computed + noncomputed fields
-    final Deque<Node> staticMembers =
-        new ArrayDeque<>(); // static blocks + computed + noncomputed fields
+    // During traversal, contains the current member being traversed. After traversal, always null
+    Node currentMember;
+    boolean cannotConvert;
+
+    // Instance fields
+    final Deque<Node> instanceMembers = new ArrayDeque<>();
+    // Static fields + static blocks
+    final Deque<Node> staticMembers = new ArrayDeque<>();
+
+    // Mapping from MEMBER_FIELD_DEF (& COMPUTED_FIELD_DEF) nodes to all name nodes in that RHS
+    final SetMultimap<Node, Node> referencedNamesByMember =
+        MultimapBuilder.linkedHashKeys().hashSetValues().build();
+    // Set of all the Vars defined in the constructor arguments scope and constructor body scope
+    ImmutableSet<Var> constructorVars = ImmutableSet.of();
+
     final Node classNode;
     final String classNameString;
     final Node classInsertionPoint;
 
-    private ClassRecord(Node classNode, String classNameString, Node classInsertionPoint) {
+    ClassRecord(Node classNode, String classNameString, Node classInsertionPoint) {
       this.classNode = classNode;
       this.classNameString = classNameString;
       this.classInsertionPoint = classInsertionPoint;
     }
 
-    private void recordField(Node field) {
+    void enterField(Node field) {
       checkArgument(field.isComputedFieldDef() || field.isMemberFieldDef());
       if (field.isStaticMember()) {
         staticMembers.push(field);
       } else {
         instanceMembers.push(field);
       }
+      currentMember = field;
     }
 
-    private void recordStaticBlock(Node block) {
+    void exitField() {
+      currentMember = null;
+    }
+
+    void recordStaticBlock(Node block) {
       checkArgument(NodeUtil.isClassStaticBlock(block));
       staticMembers.push(block);
+    }
+
+    void potentiallyRecordNameInRhs(Node nameNode) {
+      checkArgument(nameNode.isName());
+      if (currentMember == null) {
+        return;
+      }
+      checkState(currentMember.isMemberFieldDef());
+      referencedNamesByMember.put(currentMember, nameNode);
+    }
+
+    void recordConstructorScope(Scope s) {
+      checkArgument(s.isFunctionBlockScope(), s);
+      checkState(constructorVars.isEmpty(), constructorVars);
+      ImmutableSet.Builder<Var> builder = ImmutableSet.builder();
+      builder.addAll(s.getAllSymbols());
+      Scope argsScope = s.getParent();
+      builder.addAll(argsScope.getAllSymbols());
+      constructorVars = builder.build();
+    }
+
+    ImmutableSet<String> getConstructorDefinedNames() {
+      return constructorVars.stream().map(Var::getName).collect(toImmutableSet());
     }
   }
 }

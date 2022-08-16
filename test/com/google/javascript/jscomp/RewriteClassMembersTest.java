@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1119,6 +1121,145 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "})"),
         /*lines("foo(class C {", "  constructor() {", "    this.y = 2;", "  }", "})")*/
         TranspilationUtil.CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testConstuctorAndStaticFieldDontConflict() {
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  static y = x",
+            "  constructor(x) {}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor(x) {}",
+            "}",
+            "C.y = x"));
+  }
+
+  @Test
+  public void testInstanceInitializerShadowsConstructorDeclaration() {
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { let x;}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { {var x;} }",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "function f() { return 4; };", //
+            "class C {",
+            "  y = f();",
+            "  constructor() {function f() { return 'str'; }}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    // TODO(b/189993301): Technically this has no shadowing, so we could inline without renaming
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = (x) => x;",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testInstanceInitializerDoesntShadowConstructorDeclaration() {
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { {let x;} }",
+            "}"),
+        lines(
+            "let x = 2;",
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    {let x;}",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() {() => { let x; };}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    () => { let x; };",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() {(x) => 3;}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    (x) => 3;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInstanceFieldInitializersDontBleedOut() {
+    test(
+        lines("class C {", "  y = z", "  method() { x; }", "  constructor(x) {}", "}"),
+        lines(
+            "class C {", "  method() { x; }", "  constructor(x) {", "    this.y = z;", "  }", "}"));
+  }
+
+  @Test
+  public void testNestedClassesWithShadowingInstanceFields() {
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = () => {",
+            "    class Foo { z = x };",
+            "  };",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
   }
 
   @Test
