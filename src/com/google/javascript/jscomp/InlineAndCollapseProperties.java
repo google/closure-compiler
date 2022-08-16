@@ -1314,7 +1314,8 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
 
       for (Name name : nameMap.values()) {
-        if (dynamicallyImportedModuleRefs.contains(name.getFullName())) {
+        if (!dynamicallyImportedModuleRefs.isEmpty()
+            && dynamicallyImportedModuleRefs.contains(name.getFullName())) {
           escaped.add(name);
         }
         if (!name.isNamespaceObjectLit()) {
