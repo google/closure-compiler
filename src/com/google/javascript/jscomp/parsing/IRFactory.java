@@ -1639,9 +1639,7 @@ class IRFactory {
 
         NonJSDocComment newlineComment =
             new NonJSDocComment(
-                newStart,
-                lastComment.getEndPosition(),
-                new StringBuilder().append("\n").append(lastComment.getCommentString()).toString());
+                newStart, lastComment.getEndPosition(), "\n" + lastComment.getCommentString());
         node.getLastChild().setTrailingNonJSDocComment(newlineComment);
         return node;
       }
