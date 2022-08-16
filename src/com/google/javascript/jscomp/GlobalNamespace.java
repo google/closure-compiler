@@ -1947,7 +1947,7 @@ class GlobalNamespace
     }
 
     private void logDecision(Inlinability inlinability, String reason) {
-      if (decisionsLog != null) {
+      if (decisionsLog != null && decisionsLog.isLogging()) {
         decisionsLog.log("%s: %s: %s", getFullName(), inlinability, reason);
       }
     }
@@ -2150,13 +2150,13 @@ class GlobalNamespace
     }
 
     private void logChildNamesDecision(Inlinability inlinability, String reason) {
-      if (decisionsLog != null) {
+      if (decisionsLog != null && decisionsLog.isLogging()) {
         decisionsLog.log("%s: children: %s: %s", getFullName(), inlinability, reason);
       }
     }
 
     private void logChildNamesDecision(Inlinability inlinability, Supplier<String> reasonSupplier) {
-      if (decisionsLog != null) {
+      if (decisionsLog != null && decisionsLog.isLogging()) {
         decisionsLog.log(
             () ->
                 SimpleFormat.format(

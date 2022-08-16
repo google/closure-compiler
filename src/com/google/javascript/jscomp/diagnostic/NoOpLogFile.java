@@ -58,4 +58,9 @@ final class NoOpLogFile extends LogFile {
 
   @Override
   public void close() {}
+
+  @Override
+  public boolean isLogging() {
+    return true;
+  }
 }
