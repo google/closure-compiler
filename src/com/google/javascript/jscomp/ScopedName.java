@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -74,6 +73,14 @@ abstract class ScopedName {
 
   @Override
   public final int hashCode() {
-    return Objects.hash(getName(), getScopeRoot());
+    // NOTE: here we avoid Object.hash because of this function is called
+    // frequently enough that the overhead of implicit array creation of
+    // a varargs function is enough that we want to avoid it.
+    String name = getName();
+    Node root = getScopeRoot();
+    int result = 1;
+    result = 31 * result + name.hashCode();
+    result = 31 * result + root.hashCode();
+    return result;
   }
 }
