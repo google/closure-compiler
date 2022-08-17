@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Specializes {@link TemplatizedType}s according to provided bindings.
@@ -71,7 +72,8 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   private boolean hasMadeReplacement = false;
   private TemplateType keyType;
 
-  private final Set<JSType> seenTypes = Sets.newIdentityHashSet();
+  // initialized to null because it's unused in ~40% of TemplateTypeReplacers
+  private @Nullable Set<JSType> seenTypes = null;
 
   /** Creates a replacer for use during {@code TypeInference}. */
   public static TemplateTypeReplacer forInference(
@@ -125,6 +127,12 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
 
   public boolean hasMadeReplacement() {
     return this.hasMadeReplacement;
+  }
+
+  private void initSeenTypes() {
+    if (this.seenTypes == null) {
+      this.seenTypes = Sets.newIdentityHashSet();
+    }
   }
 
   @Override
@@ -209,8 +217,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   private JSType coerseToThisType(JSType type) {
-    return type != null ? type : registry.getNativeObjectType(
-        JSTypeNative.UNKNOWN_TYPE);
+    return type != null ? type : registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }
 
   @Override
@@ -342,6 +349,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       return useUnknownForMissingKeys ? getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
     }
 
+    this.initSeenTypes();
     if (seenTypes.contains(type)) {
       // If we have already encountered this TemplateType during replacement
       // (i.e. there is a reference loop) then return the TemplateType type itself.
@@ -461,6 +469,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   private <T extends JSType> JSType guardAgainstCycles(T type, Function<T, JSType> mapper) {
+    this.initSeenTypes();
     if (!this.seenTypes.add(type)) {
       return type;
     }
