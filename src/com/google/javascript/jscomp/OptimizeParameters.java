@@ -465,7 +465,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       } else if (isCandidateDefinition(n)) {
         definitions.add(n);
       } else if (!OptimizeCalls.isAllowedReference(n)) {
-        decisionsLog.log("%s\t%s\tnot an allowed reference: %s", refKind, key, n.getLocation());
+        if (decisionsLog.isLogging()) { // avoid build location string when not logging
+          decisionsLog.log("%s\t%s\tnot an allowed reference: %s", refKind, key, n.getLocation());
+        }
         // TODO(johnlenz): allow extends clauses.
         return analysisBuilder.setIsSafeToOptimize(false).build();
       }

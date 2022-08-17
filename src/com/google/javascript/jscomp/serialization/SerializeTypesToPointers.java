@@ -176,11 +176,13 @@ final class SerializeTypesToPointers {
     // Log information about how the JSTypes correspond to the colors. This may be useful later on
     // in optimizations.
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
-      ImmutableMap<String, Collection<JSType>> allSerializedTypes =
-          serializer.getColorIdToJSTypeMapForDebugging().asMap();
-      // Stream json writing here rather than building up the entire json representation at once
-      // because the latter used to cause OOMs.
-      log.logJson(new StreamObjectUuidsJson(allSerializedTypes));
+      if (log.isLogging()) {
+        ImmutableMap<String, Collection<JSType>> allSerializedTypes =
+            serializer.getColorIdToJSTypeMapForDebugging().asMap();
+        // Stream json writing here rather than building up the entire json representation at once
+        // because the latter used to cause OOMs.
+        log.logJson(new StreamObjectUuidsJson(allSerializedTypes));
+      }
     }
 
     // Log type mismatches, which contribute to the definition of an "invalidating" type
