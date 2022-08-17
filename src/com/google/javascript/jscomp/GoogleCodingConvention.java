@@ -20,7 +20,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,24 +81,34 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     // In compiled code, '$' is often a namespace delimiter. To allow inlining
     // of namespaced constants, we strip off any namespaces here.
     int pos = name.lastIndexOf('$');
-    if (pos >= 0) {
-      name = name.substring(pos + 1);
-      if (name.isEmpty()) {
-        return false;
-      }
-    }
+    int start = pos >= 0 ? pos + 1 : 0;
 
-    return isConstantKey(name);
+    return isConstantKey(name, start, name.length());
   }
 
   @Override
   public boolean isConstantKey(String name) {
-    if (name.isEmpty() || !Character.isUpperCase(name.charAt(0))) {
+    return isConstantKey(name, 0, name.length());
+  }
+
+  /**
+   * Returns true iff the substring of name from [start, end) is a constant key.
+   *
+   * <p>This method takes start and end indices, rather than checking an entire string, to avoid the
+   * need for unnecessary .substring(start, end) calls
+   */
+  private static final boolean isConstantKey(String name, int start, int end) {
+    if (start >= end || !Character.isUpperCase(name.charAt(start))) {
       return false;
     }
-
-    // hack way of checking that there aren't any lower-case letters
-    return name.toUpperCase(Locale.ROOT).equals(name);
+    for (int i = start + 1; i < end; i++) {
+      // check this instead of Character.isUpperCase - they have different results for some
+      // characters like symbols. symbols are allowed unless at the start index.
+      if (Character.toUpperCase(name.charAt(i)) != name.charAt(i)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
