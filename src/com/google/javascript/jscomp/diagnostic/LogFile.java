@@ -69,6 +69,9 @@ public abstract class LogFile implements AutoCloseable {
 
   public abstract LogFile logJson(StreamedJsonProducer producer);
 
+  // Whether or not the results are being recorded.
+  public abstract boolean isLogging();
+
   @Override
   public abstract void close();
 }

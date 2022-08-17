@@ -147,6 +147,7 @@ public abstract class QualifiedName {
       this.size = size;
     }
 
+    @Nullable
     @Override
     public QualifiedName getOwner() {
       return size > 1 ? new StringListQname(terms, size - 1) : null;
@@ -256,6 +257,7 @@ public abstract class QualifiedName {
       this.node = n;
     }
 
+    @Nullable
     @Override
     public QualifiedName getOwner() {
       return node.isGetProp() ? new NodeQname(node.getFirstChild()) : null;

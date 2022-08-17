@@ -27,7 +27,7 @@ on:
     - cron: '0 12 * * *'
 
 env:
-  VERSION_NODEJS: '10.21.0'
+  VERSION_NODEJS: '16.16.0'
   UNSYMLINK_DIR: bazel-bin-unsymlink
 
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobs

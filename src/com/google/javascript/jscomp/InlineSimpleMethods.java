@@ -94,8 +94,8 @@ class InlineSimpleMethods extends MethodCompilerPass {
 
       // Check any multiple definitions
       if (definitions.size() == 1 || allDefinitionsEquivalent(definitions)) {
-
-        if (!argsMayHaveSideEffects(callNode)) {
+        // Do not inline if the callsite is a derived class calling a base method using `super.`
+        if (!argsMayHaveSideEffects(callNode) && !NodeUtil.referencesSuper(callNode)) {
           // Verify this is a trivial return
           Node returned = returnedExpression(firstDefinition);
           if (returned != null) {

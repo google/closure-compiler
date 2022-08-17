@@ -61,7 +61,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -1111,8 +1110,28 @@ public class Node {
     }
   }
 
-  public final EnumSet<NodeProperty> serializeProperties() {
-    EnumSet<NodeProperty> propSet = EnumSet.noneOf(NodeProperty.class);
+  static long nodePropertyToBit(NodeProperty prop) {
+    return 1L << prop.getNumber();
+  }
+
+  static long setNodePropertyBit(long bitset, NodeProperty prop) {
+    return bitset | nodePropertyToBit(prop);
+  }
+
+  static long removeNodePropertyBit(long bitset, NodeProperty prop) {
+    return bitset & ~nodePropertyToBit(prop);
+  }
+
+  static boolean hasNodePropertyBitSet(long bitset, NodeProperty prop) {
+    return (bitset & nodePropertyToBit(prop)) != 0;
+  }
+
+  static boolean hasBitSet(long bitset, int bit) {
+    return (bitset & 1L << bit) != 0;
+  }
+
+  public final long serializeProperties() {
+    long propSet = 0;
     for (PropListItem propListItem = this.propListHead;
         propListItem != null;
         propListItem = propListItem.next) {
@@ -1120,22 +1139,22 @@ public class Node {
 
       switch (prop) {
         case TYPE_BEFORE_CAST:
-          propSet.add(NodeProperty.COLOR_FROM_CAST);
+          propSet = setNodePropertyBit(propSet, NodeProperty.COLOR_FROM_CAST);
           break;
         case CONSTANT_VAR_FLAGS:
           int intVal = propListItem.getIntValue();
           if (anyBitSet(intVal, ConstantVarFlags.INFERRED)) {
-            propSet.add(NodeProperty.IS_INFERRED_CONSTANT);
+            propSet = setNodePropertyBit(propSet, NodeProperty.IS_INFERRED_CONSTANT);
           }
           if (anyBitSet(intVal, ConstantVarFlags.DECLARED)) {
-            propSet.add(NodeProperty.IS_DECLARED_CONSTANT);
+            propSet = setNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
           }
           break;
         default:
           if (propListItem instanceof Node.IntPropListItem) {
             NodeProperty nodeProperty = PropTranslator.serialize(prop);
             if (nodeProperty != null) {
-              propSet.add(nodeProperty);
+              propSet = setNodePropertyBit(propSet, nodeProperty);
             }
           }
           break;
@@ -1144,32 +1163,40 @@ public class Node {
     return propSet;
   }
 
-  public final void deserializeProperties(List<NodeProperty> serializedNodeBooleanPropertyList) {
+  public final void deserializeProperties(long propSet) {
     if (this.isRoot()) {
       checkState(this.propListHead == null, this.propListHead);
     } else {
       checkState(this.propListHead.propType == Prop.SOURCE_FILE.ordinal(), this.propListHead);
     }
 
-    EnumSet<NodeProperty> propSet = EnumSet.noneOf(NodeProperty.class);
-    for (int i = 0; i < serializedNodeBooleanPropertyList.size(); i++) {
-      NodeProperty nodeProperty = serializedNodeBooleanPropertyList.get(i);
-      checkState(propSet.add(nodeProperty), "Found multiple node property: %s", nodeProperty);
-    }
-
-    if (propSet.contains(NodeProperty.IS_DECLARED_CONSTANT)
-        || propSet.contains(NodeProperty.IS_INFERRED_CONSTANT)) {
+    if (hasNodePropertyBitSet(propSet, NodeProperty.IS_DECLARED_CONSTANT)
+        || hasNodePropertyBitSet(propSet, NodeProperty.IS_INFERRED_CONSTANT)) {
       int newConstantVarFlags =
-          (propSet.remove(NodeProperty.IS_DECLARED_CONSTANT) ? ConstantVarFlags.DECLARED : 0)
-              | (propSet.remove(NodeProperty.IS_INFERRED_CONSTANT) ? ConstantVarFlags.INFERRED : 0);
+          (hasNodePropertyBitSet(propSet, NodeProperty.IS_DECLARED_CONSTANT)
+                  ? ConstantVarFlags.DECLARED
+                  : 0)
+              | (hasNodePropertyBitSet(propSet, NodeProperty.IS_INFERRED_CONSTANT)
+                  ? ConstantVarFlags.INFERRED
+                  : 0);
+      propSet = removeNodePropertyBit(propSet, NodeProperty.IS_DECLARED_CONSTANT);
+      propSet = removeNodePropertyBit(propSet, NodeProperty.IS_INFERRED_CONSTANT);
       this.propListHead =
           new IntPropListItem(
               (byte) Prop.CONSTANT_VAR_FLAGS.ordinal(), newConstantVarFlags, this.propListHead);
     }
 
-    for (NodeProperty nodeProperty : propSet) {
-      Prop prop = PropTranslator.deserialize(nodeProperty);
-      this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
+    // Exclude the sign bit for clarity.
+    for (int i = 0; i < 63; i++) {
+      boolean isBitSet = hasBitSet(propSet, i);
+      if (isBitSet) {
+        NodeProperty nodeProperty = NodeProperty.forNumber(i);
+        Prop prop = PropTranslator.deserialize(nodeProperty);
+        if (prop == null) {
+          throw new IllegalStateException("Can not translate " + nodeProperty + " to AST Prop");
+        }
+        this.propListHead = new IntPropListItem((byte) prop.ordinal(), 1, this.propListHead);
+      }
     }
 
     // Make sure the deserialized properties are valid.

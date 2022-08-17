@@ -78,9 +78,11 @@ public class AllowlistWarningsGuard extends WarningsGuard {
    * Loads legacy warnings list from the set of strings. During development line numbers are changed
    * very often - we just cut them and compare without ones.
    *
+   * <p>Also remove lines starting with "#" or are blank lines.
+   *
    * @return known legacy warnings without line numbers.
    */
-  protected Set<String> normalizeAllowlist(Set<String> allowlist) {
+  public static Set<String> normalizeAllowlist(Set<String> allowlist) {
     Set<String> result = new HashSet<>();
     for (String line : allowlist) {
       String trimmed = line.trim();
@@ -100,7 +102,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }
-    if (containWarning(formatWarning(error))) {
+    if (!allowlist.isEmpty() && containWarning(formatWarning(error))) {
       // If the message matches the guard we use WARNING, so that it
       // - Shows up on stderr, and
       // - Gets caught by the AllowlistBuilder downstream in the pipeline

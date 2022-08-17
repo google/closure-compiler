@@ -50,6 +50,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import org.jspecify.nullness.Nullable;
 
 /**
  * The object type represents instances of JavaScript objects such as
@@ -388,7 +389,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public String getReferenceName() {
+  public @Nullable String getReferenceName() {
     if (className != null) {
       return className;
     } else if (ownerFunction != null) {

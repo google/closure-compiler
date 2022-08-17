@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import org.jspecify.nullness.Nullable;
 
 /**
  * An object type with declared template types, such as
@@ -154,7 +155,7 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  public JSType getPropertyType(String propertyName) {
+  public @Nullable JSType getPropertyType(String propertyName) {
     JSType result = super.getPropertyType(propertyName);
     return result == null ? null : result.visit(replacer);
   }

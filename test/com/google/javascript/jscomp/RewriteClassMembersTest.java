@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -118,20 +120,22 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "foo(class {", //
+            "class A {}",
+            "foo(A.b.c = class C {", //
             "  static {",
-            "    let x = 1",
+            "    C.y = 2;",
+            "    let x = C.y",
             "  }",
             "})"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
         lines(
-            "let c = class {", //
+            "foo(class {", //
             "  static {",
             "    let x = 1",
             "  }",
-            "}"),
+            "})"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
     testError(
@@ -194,13 +198,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "let c = class {", //
-            "  static x = 1",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
             "class C {", //
             "  x = 1;",
             "  y = this.x;",
@@ -209,33 +206,90 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
     testError(
         lines(
-            "let c = class C {", //
-            "  y = 2;",
-            "  x = C.y",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
-
-    testError(
-        lines(
             "foo(class C {", //
-            "  y = 2;",
+            "  static y = 2;",
             "  x = C.y",
             "})"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
+
+    test(
+        srcs(
+            lines(
+                "class C {", //
+                "  static [1] = 1;",
+                "  static [2] = this[1];",
+                "}")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // use of `this`
+
+    test(
+        srcs(
+            lines(
+                "let c = class C {", //
+                "  static [1] = 2;",
+                "  static [2] = C[1]",
+                "}")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+
+    test(
+        srcs(
+            lines(
+                "foo(class C {", //
+                "  static [1] = 2;",
+                "  static [2] = C[1]",
+                "})")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
 
     testError(
         lines(
             "foo(class {", //
-            "  x = 1",
+            "  static [1] = 1",
             "})"),
         TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
 
-    testError(
-        lines(
-            "let c = class {", //
-            "  x = 1",
-            "}"),
-        TranspilationUtil.CANNOT_CONVERT_YET); // not class decl
+    test(
+        srcs(
+            lines(
+                "class C {", //
+                "  [1] = 1;",
+                "  [2] = this[1];",
+                "}")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // use of `this`
+
+    test(
+        srcs(
+            lines(
+                "let c = class C {", //
+                "  static [1] = 2;",
+                "  [2] = C[1]",
+                "}")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+
+    test(
+        srcs(
+            lines(
+                "foo(class C {", //
+                "  static [1] = 2;",
+                "  [2] = C[1]",
+                "})")),
+        error(TranspilationUtil.CANNOT_CONVERT_YET)); // not class decl
+
+    test(
+        srcs(
+            lines(
+                "let c = class {", //
+                "  x = 1",
+                "  y = this.x",
+                "}",
+                "class B {",
+                "  [1] = 2;",
+                "  [2] = this[1]",
+                "}" // testing that the correct number of diagnostics are thrown
+                )),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET),
+        error(TranspilationUtil.CANNOT_CONVERT_YET));
   }
 
   @Test
@@ -662,7 +716,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNonStaticInstanceWithEmptyConstructor() {
+  public void testNonComputedInstanceWithEmptyConstructor() {
     test(
         lines(
             "class C {", //
@@ -894,5 +948,331 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             "    this.x = 1;",
             "  }",
             "}"));
+  }
+
+  @Test
+  public void testNonClassDeclarationsStaticBlocks() {
+    test(
+        lines(
+            "let c = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        lines("let c = class {}", "{", "  let x = 1", "}"));
+
+    test(
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        lines("class A {}", "A.c = class {}", "{", "  let x = 1", "}"));
+
+    testError(
+        lines(
+            "class A {}",
+            "A[1] = class {", //
+            "  static {",
+            "    let x = 1",
+            "  }",
+            "}"),
+        // lines("class A {}", "A[1] = class {}", "{", "  let x = 1", "}")
+        // TODO(b/189993301): transpile computed prop = class
+        TranspilationUtil.CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testNonClassDeclarationsStaticNoncomputedFields() {
+    test(
+        lines(
+            "let c = class {", //
+            "  static x = 1",
+            "}"),
+        lines("let c = class {}", "c.x = 1"));
+
+    test(
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  static x = 1",
+            "}"),
+        lines("class A {}", "A.c = class {}", "A.c.x = 1"));
+
+    testError(
+        lines(
+            "class A {}",
+            "A[1] = class {", //
+            "  static x = 1",
+            "}"),
+        // lines("class A {}", "A[1] = class {}", "A[1].x = 1")
+        TranspilationUtil.CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testNonClassDeclarationsInstanceNoncomputedFields() {
+    test(
+        lines(
+            "let c = class {", //
+            "  y = 2;",
+            "}"),
+        lines(
+            "let c = class {", //
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    testError(
+        lines(
+            "let c = class C {", //
+            "  y = 2;",
+            "}"),
+        /*lines(
+        "let c = class C {", //
+        "  constructor() {",
+        "    this.y = 2;",
+        "  }",
+        "}")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    test(
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  y = 2;",
+            "}"),
+        lines(
+            "class A {}",
+            "A.c = class {", //
+            "  constructor() {",
+            "    this.y = 2;",
+            "  }",
+            "}"));
+
+    testError(
+        lines(
+            "A[1] = class {", //
+            "  y = 2;",
+            "}"),
+        /*lines(
+        "A[1] = class {", //
+        "  constructor() {",
+        "    this.y = 2;",
+        "  }",
+        "}")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "foo(class {", //
+            "  y = 2;",
+            "})"),
+        /*lines("foo(class {", "  constructor() {", "    this.y = 2;", "  }", "})")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let c = class C {", //
+            "  y = 2;",
+            "}"),
+        /*lines(
+        "let c = class C {", //
+        "  constructor() {",
+        "    this.y = 2;",
+        "  }",
+        "}")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "class A {}",
+            "A.c = class C {", //
+            "  y = 2;",
+            "}"),
+        /*lines(
+        "class A {}",
+        "A.c = class C {", //
+        "  constructor() {",
+        "    this.y = 2;",
+        "  }",
+        "}")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "A[1] = class C {", //
+            "  y = 2;",
+            "}"),
+        /*lines(
+        "A[1] = class C {", //
+        "  constructor() {",
+        "    this.y = 2;",
+        "  }",
+        "}")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "foo(class C {", //
+            "  y = 2;",
+            "})"),
+        /*lines("foo(class C {", "  constructor() {", "    this.y = 2;", "  }", "})")*/
+        TranspilationUtil.CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testConstuctorAndStaticFieldDontConflict() {
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  static y = x",
+            "  constructor(x) {}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor(x) {}",
+            "}",
+            "C.y = x"));
+  }
+
+  @Test
+  public void testInstanceInitializerShadowsConstructorDeclaration() {
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { let x;}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { {var x;} }",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    testError(
+        lines(
+            "function f() { return 4; };", //
+            "class C {",
+            "  y = f();",
+            "  constructor() {function f() { return 'str'; }}",
+            "}"),
+        CANNOT_CONVERT_YET);
+
+    // TODO(b/189993301): Technically this has no shadowing, so we could inline without renaming
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = (x) => x;",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testInstanceInitializerDoesntShadowConstructorDeclaration() {
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() { {let x;} }",
+            "}"),
+        lines(
+            "let x = 2;",
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    {let x;}",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() {() => { let x; };}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    () => { let x; };",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = x",
+            "  constructor() {(x) => 3;}",
+            "}"),
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  constructor() {",
+            "    this.y = x;",
+            "    (x) => 3;",
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testInstanceFieldInitializersDontBleedOut() {
+    test(
+        lines("class C {", "  y = z", "  method() { x; }", "  constructor(x) {}", "}"),
+        lines(
+            "class C {", "  method() { x; }", "  constructor(x) {", "    this.y = z;", "  }", "}"));
+  }
+
+  @Test
+  public void testNestedClassesWithShadowingInstanceFields() {
+    testError(
+        lines(
+            "let x = 2;", //
+            "class C {",
+            "  y = () => {",
+            "    class Foo { z = x };",
+            "  };",
+            "  constructor(x) {}",
+            "}"),
+        CANNOT_CONVERT_YET);
+  }
+
+  @Test
+  public void testNonClassDeclarationsFunctionArgs() {
+    testError(
+        "A[foo()] = class {static x;}",
+        TranspilationUtil.CANNOT_CONVERT_YET); // impure computed prop
+
+    testError(
+        "foo(c = class {static x;})", TranspilationUtil.CANNOT_CONVERT_YET); // named function param
+
+    testError(
+        "function foo(c = class {static x;}) {}",
+        TranspilationUtil.CANNOT_CONVERT_YET); // default function param
   }
 }

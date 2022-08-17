@@ -4807,16 +4807,23 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassFieldsSuper() {
-    newTest() // TODO(b/189993301): `super` should produce a type error
+    newTest()
         .addSource(
             "class G {", //
-            "  /** @type {number} */",
-            "  x = 2;",
+            "  /** @return {number} */",
+            "  getX() { return 2; }",
             "}",
             "class H extends G {",
+            "  /** @return {?} */",
+            "  /** @override*/ getX() {}",
             "  /** @type {string} */",
-            "  y = super.x;",
+            "  y = super.getX();",
             "}")
+        .addDiagnostic(
+            lines(
+                "assignment to property y of H", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -4916,7 +4923,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testStaticClassFieldsSuper() {
-    newTest() // TODO(b/189993301): `super` should produce a type error
+    newTest()
         .addSource(
             "class G {", //
             "  /** @type {number} */",
@@ -4926,6 +4933,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @type {string} */",
             "  static y = super.x;",
             "}")
+        .addDiagnostic(
+            lines(
+                "assignment to property y of H", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -5032,7 +5044,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticBlockWithWrongTypeSuper() {
-    // TODO(b/235871861): should be reporting a type error
     newTest()
         .addSource(
             "class Foo {",
@@ -5044,6 +5055,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    super.str = 5;",
             "  }",
             "};")
+        .addDiagnostic(
+            lines(
+                "assignment to property str of super", //
+                "found   : number",
+                "required: string"))
         .run();
   }
 
@@ -5069,7 +5085,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticBlockWithWrongTypeSuperParameter() {
-    // TODO(b/235871861): should be reporting a type error
     newTest()
         .addSource(
             "class Foo {",
@@ -5080,6 +5095,11 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    super.foo('str');",
             "  }",
             "};")
+        .addDiagnostic(
+            lines(
+                "actual parameter 1 of super.foo does not match formal parameter",
+                "found   : string",
+                "required: number"))
         .run();
   }
 

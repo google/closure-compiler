@@ -135,4 +135,9 @@ final class WritingLogFile extends LogFile {
       throw new RuntimeException(e);
     }
   }
+
+  @Override
+  public boolean isLogging() {
+    return true;
+  }
 }

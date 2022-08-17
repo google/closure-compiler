@@ -46,6 +46,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Set;
+import org.jspecify.nullness.Nullable;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for
@@ -212,7 +213,11 @@ public final class TemplateTypeMap {
    */
   public boolean hasTemplateKey(TemplateType templateKey) {
     // Note: match by identity, not equality
-    for (TemplateType entry : templateKeys) {
+
+    // NOTE: avoid iterators, for-each for performance and GC reasons
+    int keyCount = templateKeys.size();
+    for (int i = 0; i < keyCount; i++) {
+      var entry = templateKeys.get(i);
       if (identical(templateKey, entry)) {
         return true;
       }
@@ -222,13 +227,17 @@ public final class TemplateTypeMap {
 
   // TODO(b/139230800): This method should be deleted. It checks what should be an impossible case.
   int getTemplateKeyCountThisShouldAlwaysBeOneOrZeroButIsnt(TemplateType templateKey) {
-    int count = 0;
-    for (TemplateType entry : templateKeys) {
+    int matches = 0;
+    int keyCount = templateKeys.size();
+
+    // NOTE: avoid iterators, for-each for performance and GC reasons
+    for (int i = 0; i < keyCount; i++) {
+      var entry = templateKeys.get(i);
       if (identical(templateKey, entry)) {
-        count++;
+        matches++;
       }
     }
-    return count;
+    return matches;
   }
 
   private int numUnfilledTemplateKeys() {
@@ -250,7 +259,7 @@ public final class TemplateTypeMap {
         : templateValues.get(index);
   }
 
-  public TemplateType getTemplateTypeKeyByName(String keyName) {
+  public @Nullable TemplateType getTemplateTypeKeyByName(String keyName) {
     for (TemplateType key : templateKeys) {
       if (key.getReferenceName().equals(keyName)) {
         return key;

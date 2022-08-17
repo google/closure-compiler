@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.jscomp.base.Tri;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import org.jspecify.nullness.Nullable;
 
 /** The {@code Unknown} type. */
 public final class UnknownType extends ObjectType {
@@ -131,12 +132,12 @@ public final class UnknownType extends ObjectType {
   }
 
   @Override
-  public ObjectType getImplicitPrototype() {
+  public @Nullable ObjectType getImplicitPrototype() {
     return null;
   }
 
   @Override
-  public FunctionType getConstructor() {
+  public @Nullable FunctionType getConstructor() {
     return null;
   }
 

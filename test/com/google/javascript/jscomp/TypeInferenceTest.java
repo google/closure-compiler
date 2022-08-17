@@ -2661,7 +2661,7 @@ public final class TypeInferenceTest {
             "  }",
             "}",
             "let x = Bar.str;"));
-    verify("x", UNKNOWN_TYPE);
+    verify("x", ALL_TYPE);
   }
 
   @Test

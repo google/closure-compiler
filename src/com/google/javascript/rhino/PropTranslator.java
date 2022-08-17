@@ -38,8 +38,11 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.serialization.NodeProperty;
 import com.google.javascript.rhino.Node.Prop;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A translator for converting between Rhino node properties and TypedAST proto node properties used
@@ -71,13 +74,16 @@ final class PropTranslator {
     for (Prop rhinoProp : Prop.values()) {
       NodeProperty protoProp = serializeProp(rhinoProp);
       if (protoProp != null) {
+        // Boolean props are stored as a bitset, see Node#deserializeProperties
+        checkState(
+            protoProp.getNumber() < 63, "enum %s value %s", protoProp, protoProp.getNumber());
         protoToRhinoProp[protoProp.ordinal()] = rhinoProp;
         rhinoToProtoProp[rhinoProp.ordinal()] = protoProp;
       }
     }
   }
 
-  private static final NodeProperty serializeProp(Prop prop) {
+  private static final @Nullable NodeProperty serializeProp(Prop prop) {
     switch (prop) {
       case ARROW_FN:
         return NodeProperty.ARROW_FN;

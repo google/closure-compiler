@@ -106,6 +106,7 @@ final class PropertyMap {
   }
 
   /** Returns the direct parent of this property map. */
+  @Nullable
   PropertyMap getPrimaryParent() {
     if (parentSource == null) {
       return null;
@@ -128,6 +129,7 @@ final class PropertyMap {
     return parentSource.getCtorExtendedInterfaces();
   }
 
+  @Nullable
   OwnedProperty findTopMost(String name) {
     // Check primary parents which always has precendence over secondary.
     OwnedProperty found = null;
@@ -158,6 +160,7 @@ final class PropertyMap {
     return null;
   }
 
+  @Nullable
   OwnedProperty findClosest(String name) {
     // Check primary parents which always has precendence over secondary.
     for (PropertyMap map = this; map != null; map = map.getPrimaryParent()) {

@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -133,6 +134,8 @@ class ScopedAliases implements CompilerPass {
   static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE =
       DiagnosticType.error(
           "JSC_GOOG_SCOPE_INVALID_VARIABLE", "The variable {0} cannot be declared in this scope");
+
+  private static final QualifiedName GOOG_MODULE_GET = QualifiedName.of("goog.module.get");
 
   private final Multiset<String> scopedAliasNames = HashMultiset.create();
   private final Set<String> closureNamespaces;
@@ -316,7 +319,7 @@ class ScopedAliases implements CompilerPass {
       case NAME:
         return true;
       case CALL:
-        return NodeUtil.isCallTo(rhs, "goog.module.get");
+        return NodeUtil.isCallTo(rhs, GOOG_MODULE_GET);
       default:
         return false;
     }
@@ -337,7 +340,7 @@ class ScopedAliases implements CompilerPass {
       case NAME:
         return rhs.getString();
       case CALL:
-        checkState(NodeUtil.isCallTo(rhs, "goog.module.get"), rhs);
+        checkState(NodeUtil.isCallTo(rhs, GOOG_MODULE_GET), rhs);
         checkState(rhs.hasTwoChildren(), rhs);
         return rhs.getLastChild().getString();
       default:

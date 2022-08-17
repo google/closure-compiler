@@ -42,6 +42,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
@@ -1219,8 +1220,12 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseUnionType(UnionType type) {
-      for (JSType alt : type.getAlternates()) {
-        if (!alt.visit(this)) {
+      // Avoid iterators in very hot code.
+      ImmutableList<JSType> alternates = type.getAlternates();
+      int alternateCount = alternates.size();
+      for (int i = 0; i < alternateCount; i++) {
+        var alternative = alternates.get(i);
+        if (!alternative.visit(this)) {
           return false;
         }
       }

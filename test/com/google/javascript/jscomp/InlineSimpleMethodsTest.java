@@ -44,6 +44,38 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDoesNotInlineMethodOnBaseClass() {
+    String baseClassJS =
+        lines(
+            "class Base {",
+            "  constructor() {",
+            "    /** @const */",
+            "    this.prop_ =",
+            "        Math.random() > .5;",
+            "  }",
+            "  method() {",
+            "    return this.prop_;",
+            "  }",
+            "}");
+
+    String derivedClassJS =
+        lines(
+            "class Derived extends Base {",
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "  derivedMethod() {",
+            "    super.method();",
+            "  }",
+            "}",
+            "",
+            "(new Derived()).derivedMethod();");
+
+    String source = baseClassJS + derivedClassJS;
+    testSame(source);
+  }
+
+  @Test
   public void testSimpleInline1() {
     testWithPrefix("function Foo(){}" +
         "Foo.prototype.bar=function(){return this.baz};",

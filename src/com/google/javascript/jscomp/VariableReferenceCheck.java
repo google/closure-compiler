@@ -69,6 +69,10 @@ class VariableReferenceCheck implements CompilerPass {
       DiagnosticType.disabled(
           "JSC_UNUSED_LOCAL_ASSIGNMENT", "Value assigned to local variable {0} is never read");
 
+  private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
+  private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
+  private static final QualifiedName GOOG_FORWARD_DECLARE = QualifiedName.of("goog.forwardDeclare");
+
   private final AbstractCompiler compiler;
 
   private final boolean checkUnusedLocals;
@@ -305,16 +309,14 @@ class VariableReferenceCheck implements CompilerPass {
    */
   private boolean checkRedeclaration(
       Var v, Reference reference, Node referenceNode, Reference hoistedFn, BasicBlock basicBlock) {
-    boolean allowDupe =
-        VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode());
-
     boolean letConstShadowsVar = v.getParentNode().isVar()
         && (reference.isLetDeclaration() || reference.isConstDeclaration());
     boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();
     // We disallow redeclaration of caught exceptions
     boolean shadowCatchVar = v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
 
-    if (!allowDupe && isRedeclaration(basicBlock)) {
+    if (isRedeclaration(basicBlock)
+        && !VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode())) {
       final DiagnosticType diagnosticType;
       Node warningNode = referenceNode;
       boolean shadowParam =
@@ -450,9 +452,9 @@ class VariableReferenceCheck implements CompilerPass {
         Node lhs = statement.getFirstChild();
         Node rhs = lhs.getFirstChild();
         if (rhs != null
-            && (NodeUtil.isCallTo(rhs, "goog.forwardDeclare")
-                || NodeUtil.isCallTo(rhs, "goog.requireType")
-                || NodeUtil.isCallTo(rhs, "goog.require")
+            && (NodeUtil.isCallTo(rhs, GOOG_FORWARD_DECLARE)
+                || NodeUtil.isCallTo(rhs, GOOG_REQUIRE_TYPE)
+                || NodeUtil.isCallTo(rhs, GOOG_REQUIRE)
                 || rhs.isQualifiedName())) {
           // No warning. module imports will be caught by the unused-require check, and if the
           // right side is a qualified name then this is likely an alias used in type annotations.

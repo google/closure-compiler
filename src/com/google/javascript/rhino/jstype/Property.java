@@ -45,6 +45,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.util.Objects;
+import org.jspecify.nullness.Nullable;
 
 /**
  * A property slot of an object.
@@ -127,7 +128,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   }
 
   @Override
-  public StaticSourceFile getSourceFile() {
+  public @Nullable StaticSourceFile getSourceFile() {
     return propertyNode == null ? null : propertyNode.getStaticSourceFile();
   }
 
@@ -137,7 +138,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
   }
 
   @Override
-  public Property getDeclaration() {
+  public @Nullable Property getDeclaration() {
     return propertyNode == null ? null : this;
   }
 
@@ -171,6 +172,7 @@ public final class Property implements StaticTypedSlot, StaticTypedRef {
     this.propertyNode = n;
   }
 
+  @Override
   public String toString() {
     return "Property { "
         + " name: " + this.name

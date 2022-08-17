@@ -160,24 +160,12 @@ public class CodeGenerator {
     }
   }
 
-  /**
-   * Returns true when a node has a trailing comment, and that comment is on the same line of the
-   * beginning line of that node.
-   *
-   * <p>The better detection for nodes that span multiple lines would be to check if a comments
-   * starts on the same line as the node 'ends', but JSC only stores the node's "start" line number,
-   * not the end, thus we cannot check against that at the moment.
-   */
+  /** Returns true when a node has a trailing comment. */
   private boolean hasTrailingCommentOnSameLine(Node node) {
     if (!printNonJSDocComments) {
       return false;
     }
-    String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
-    if (nonJSDocCommentString.isEmpty()) {
-      return false;
-    }
-    // getLineno() is 1-indexed but getStartPosition().line is 0-indexed.
-    return node.getLineno() == node.getTrailingNonJSDocComment().getStartPosition().line + 1;
+    return !node.getTrailingNonJSDocCommentString().isEmpty();
   }
 
   protected void printTrailingComment(Node node) {

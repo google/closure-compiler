@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
+import com.google.javascript.jscomp.parsing.parser.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.TemplateLiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
@@ -192,6 +193,9 @@ class IRFactory {
 
   private final StaticSourceFile sourceFile;
   @Nullable private final String sourceName;
+  /** Source file reference that also contains the file content. */
+  private final SourceFile fileWithContent;
+
   private final Config config;
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
@@ -244,10 +248,12 @@ class IRFactory {
       StaticSourceFile sourceFile,
       Config config,
       ErrorReporter errorReporter,
-      ImmutableList<Comment> comments) {
+      ImmutableList<Comment> comments,
+      SourceFile fileWithContent) {
     this.jsdocTracker = new CommentTracker(comments, (c) -> c.type == Comment.Type.JSDOC);
     this.nonJsdocTracker = new CommentTracker(comments, (c) -> c.type != Comment.Type.JSDOC);
     this.sourceFile = sourceFile;
+    this.fileWithContent = fileWithContent;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
@@ -313,8 +319,13 @@ class IRFactory {
   }
 
   public static IRFactory transformTree(
-      ProgramTree tree, StaticSourceFile sourceFile, Config config, ErrorReporter errorReporter) {
-    IRFactory irFactory = new IRFactory(sourceFile, config, errorReporter, tree.sourceComments);
+      ProgramTree tree,
+      StaticSourceFile sourceFile,
+      Config config,
+      ErrorReporter errorReporter,
+      SourceFile file) {
+    IRFactory irFactory =
+        new IRFactory(sourceFile, config, errorReporter, tree.sourceComments, file);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -747,6 +758,56 @@ class IRFactory {
             firstComment.location.start, lastComment.location.end, result.toString());
     nonJSDocComment.setEndsAsLineComment(lastComment.type == Comment.Type.LINE);
     nonJSDocComment.setIsInline(isInline);
+    return nonJSDocComment;
+  }
+
+  /**
+   * Creates a single NonJSDocComment from the comment immediately following this node; or null if
+   * there is no such comment.
+   *
+   * @param tokenEnd The end position after which we're looking for a trailing comment
+   * @param possibleNextTokenStart last source position that we're interested in when looking for a
+   *     trailing comment
+   */
+  @Nullable
+  private NonJSDocComment parseTrailingNonJSDocCommentAt(
+      SourcePosition tokenEnd, SourcePosition possibleNextTokenStart) {
+    if (config.jsDocParsingMode() != JsDocParsing.INCLUDE_ALL_COMMENTS) {
+      return null;
+    }
+
+    if (!this.nonJsdocTracker.hasPendingCommentBefore(possibleNextTokenStart)) {
+      return null;
+    }
+
+    StringBuilder result = new StringBuilder();
+    Comment comment = this.nonJsdocTracker.current();
+
+    // Disregard comments that don't start on the same line
+    if (tokenEnd.line != comment.location.start.line) {
+      return null;
+    }
+
+    // Disregard comments that may be within the current statement
+    if (comment.location.start.offset <= tokenEnd.offset) {
+      return null;
+    }
+
+    // Check if there are only whitespace characters between the current token and the start of the
+    // comment.
+    String preCommentText =
+        this.fileWithContent.contents.substring(tokenEnd.offset + 1, comment.location.start.offset);
+
+    if (!preCommentText.trim().isEmpty()) {
+      return null;
+    }
+    // TODO(user): handle multiple trailing comments like /* c1 */ /* c2 */ // c3
+    result.append(comment.value);
+    this.nonJsdocTracker.advance();
+
+    NonJSDocComment nonJSDocComment =
+        new NonJSDocComment(comment.location.start, comment.location.end, result.toString());
+    nonJSDocComment.setEndsAsLineComment(comment.type == Comment.Type.LINE);
     return nonJSDocComment;
   }
 
@@ -1282,19 +1343,13 @@ class IRFactory {
     Node processBlock(BlockTree blockNode) {
       Node node = newNode(Token.BLOCK);
       for (ParseTree child : blockNode.statements) {
-        node.addChildToBack(transform(child));
+        Node childNode = transform(child);
+        node.addChildToBack(childNode);
+        attachPossibleTrailingComment(childNode, child.getEnd());
       }
 
-      NonJSDocComment comment = parseNonJSDocCommentAt(blockNode.getEnd(), false);
-      if (comment != null) {
-        if (node.hasChildren()) {
-          node.getLastChild().setTrailingNonJSDocComment(comment);
-        } else {
-          node.setTrailingNonJSDocComment(comment);
-        }
-      }
-
-      return node;
+      NonJSDocComment lastComment = parseNonJSDocCommentAt(blockNode.getEnd(), false);
+      return addExtraTrailingComment(node, lastComment);
     }
 
     Node processBreakStatement(BreakStatementTree statementNode) {
@@ -1542,6 +1597,78 @@ class IRFactory {
       paramNode.setTrailingNonJSDocComment(trailingComment);
     }
 
+    /**
+     * Attaches trailing comments associated with this node.
+     *
+     * @param node The node to which we're attaching trailing comment
+     * @param tokenEnd The end location after which we're looking for a trailing comment
+     */
+    void attachPossibleTrailingComment(Node node, SourcePosition tokenEnd) {
+      // Check for pending comments on the rest of the current line.
+      SourcePosition nextLine = new SourcePosition(null, Integer.MAX_VALUE, tokenEnd.line + 1, 0);
+      NonJSDocComment trailingComment = parseTrailingNonJSDocCommentAt(tokenEnd, nextLine);
+      if (trailingComment == null) {
+        return;
+      }
+      node.setTrailingNonJSDocComment(trailingComment);
+    }
+
+    Node addExtraTrailingComment(Node node, NonJSDocComment lastComment) {
+      if (lastComment == null) {
+        return node;
+      }
+      if (!node.hasChildren()) {
+        node.setTrailingNonJSDocComment(lastComment);
+        return node;
+      }
+
+      Node lastChild = node.getLastChild();
+      NonJSDocComment currentComment = lastChild.getTrailingNonJSDocComment();
+
+      if (currentComment == null) {
+        // We add a line break here as this is cannot be a trailing comment on the same line as the
+        // last child.
+        // TODO(user): pass in proper child tree end position to get the number of line breaks
+        // right.
+        SourcePosition newStart =
+            new SourcePosition(
+                /* file */ null,
+                lastComment.getEndPosition().offset - 1,
+                lastComment.getEndPosition().line - 1,
+                0);
+
+        NonJSDocComment newlineComment =
+            new NonJSDocComment(
+                newStart, lastComment.getEndPosition(), "\n" + lastComment.getCommentString());
+        node.getLastChild().setTrailingNonJSDocComment(newlineComment);
+        return node;
+      }
+
+      int blankLines = lastComment.getStartPosition().line - currentComment.getEndPosition().line;
+      int numWhiteSpace = 0;
+      if (blankLines == 0) {
+        numWhiteSpace =
+            lastComment.getStartPosition().column - currentComment.getEndPosition().column - 1;
+      }
+
+      StringBuilder comment = new StringBuilder().append(currentComment.getCommentString());
+      for (int i = 0; i < numWhiteSpace; i++) {
+        comment.append(" ");
+      }
+      for (int i = 0; i < blankLines; i++) {
+        comment.append("\n");
+      }
+      comment.append(lastComment.getCommentString());
+
+      NonJSDocComment allComments =
+          new NonJSDocComment(
+              currentComment.getStartPosition(), lastComment.getEndPosition(), comment.toString());
+      allComments.setEndsAsLineComment(lastComment.isEndingAsLineComment());
+      allComments.setIsInline(true);
+      node.getLastChild().setTrailingNonJSDocComment(allComments);
+      return node;
+    }
+
     Node processOptChainFunctionCall(OptChainCallExpressionTree callNode) {
       maybeWarnForFeature(callNode, Feature.OPTIONAL_CHAINING);
       Node node = newNode(Token.OPTCHAIN_CALL, transform(callNode.operand));
@@ -1624,6 +1751,8 @@ class IRFactory {
       node.setIsArrowFunction(isArrow);
       node.setIsAsyncFunction(isAsync);
       node.putBooleanProp(Node.OPT_ES6_TYPED, functionTree.isOptional);
+
+      attachPossibleTrailingComment(node, functionTree.getEnd());
 
       Node result;
 
@@ -2455,6 +2584,8 @@ class IRFactory {
       for (VariableDeclarationTree child : decl.declarations) {
         node.addChildToBack(transformNodeWithInlineComments(child));
       }
+
+      attachPossibleTrailingComment(node, decl.getEnd());
       return node;
     }
 
@@ -2602,7 +2733,10 @@ class IRFactory {
         body.addChildToBack(transform(child));
       }
 
-      return newNode(Token.CLASS, name, superClass, body);
+      Node classNode = newNode(Token.CLASS, name, superClass, body);
+      attachPossibleTrailingComment(classNode, tree.getEnd());
+
+      return classNode;
     }
 
     /** Returns {@code true} iff this member is a legal class constructor. */

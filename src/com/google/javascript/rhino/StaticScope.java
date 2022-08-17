@@ -39,11 +39,12 @@
 
 package com.google.javascript.rhino;
 
+import org.jspecify.nullness.Nullable;
+
 /**
- * The {@code StaticScope} interface must be implemented by any object that
- * defines variables for the purposes of static analysis.  It is distinguished
- * from the {@code Scriptable} class that Rhino normally uses to represent a
- * run-time scope.
+ * The {@code StaticScope} interface must be implemented by any object that defines variables for
+ * the purposes of static analysis. It is distinguished from the {@code Scriptable} class that Rhino
+ * normally uses to represent a run-time scope.
  *
  */
 public interface StaticScope {
@@ -77,7 +78,7 @@ public interface StaticScope {
    * 'eventual' declaration. Once scope building is complete, the scope returned from this method
    * must be equivalent to "getSlot(name).getScope()" or null
    */
-  default StaticScope getTopmostScopeOfEventualDeclaration(String name) {
+  default @Nullable StaticScope getTopmostScopeOfEventualDeclaration(String name) {
     StaticSlot slot = getOwnSlot(name);
     if (slot != null) {
       return slot.getScope();

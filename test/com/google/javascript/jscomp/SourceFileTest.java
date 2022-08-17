@@ -91,16 +91,22 @@ public final class SourceFileTest {
     assertThat(f0.getColumnOfOffset(0)).isEqualTo(0);
     assertThat(f0.getLineOfOffset(10)).isEqualTo(1);
     assertThat(f0.getColumnOfOffset(10)).isEqualTo(10);
+    assertThat(f0.getNumBytes()).isEqualTo(0);
+    assertThat(f0.getNumLines()).isEqualTo(1);
 
     SourceFile f1 = factory.apply("'1';\n'2';\n'3'\n");
     assertThat(f1.getLineOffset(1)).isEqualTo(0);
     assertThat(f1.getLineOffset(2)).isEqualTo(5);
     assertThat(f1.getLineOffset(3)).isEqualTo(10);
+    assertThat(f1.getNumBytes()).isEqualTo(14);
+    assertThat(f1.getNumLines()).isEqualTo(4);
 
     SourceFile f2 = factory.apply("'100';\n'200;'\n'300'\n");
     assertThat(f2.getLineOffset(1)).isEqualTo(0);
     assertThat(f2.getLineOffset(2)).isEqualTo(7);
     assertThat(f2.getLineOffset(3)).isEqualTo(14);
+    assertThat(f2.getNumBytes()).isEqualTo(20);
+    assertThat(f2.getNumLines()).isEqualTo(4);
 
     String longLine = stringOfLength(300);
     SourceFile f3 = factory.apply(longLine + "\n" + longLine + "\n" + longLine + "\n");
@@ -116,6 +122,9 @@ public final class SourceFileTest {
     assertThat(f3.getLineOfOffset(902)).isEqualTo(3);
     assertThat(f3.getLineOfOffset(903)).isEqualTo(4);
 
+    assertThat(f3.getNumBytes()).isEqualTo(903);
+    assertThat(f3.getNumLines()).isEqualTo(4);
+
     // TODO(nickreid): This seems like a bug.
     assertThat(f3.getLineOfOffset(-1)).isEqualTo(0);
     assertThrows(Exception.class, () -> f3.getColumnOfOffset(-1));
@@ -124,6 +133,8 @@ public final class SourceFileTest {
     assertThat(startsWithNewline.getLineOffset(1)).isEqualTo(0);
     assertThat(startsWithNewline.getLineOffset(2)).isEqualTo(1);
     assertThat(startsWithNewline.getLineOffset(3)).isEqualTo(5);
+    assertThat(startsWithNewline.getNumBytes()).isEqualTo(8);
+    assertThat(startsWithNewline.getNumLines()).isEqualTo(3);
   }
 
   @Test

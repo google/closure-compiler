@@ -147,7 +147,7 @@ final class TypedAstSerializer {
     }
     builder.setKind(kindTranslator(n));
     valueTranslator(builder, n);
-    builder.addAllBooleanProperty(n.serializeProperties());
+    builder.setBooleanProperties(n.serializeProperties());
     int sourceFile = getSourceFilePointer(n);
     builder.setSourceFile(sourceFile);
 

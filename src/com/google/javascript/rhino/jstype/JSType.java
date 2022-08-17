@@ -427,6 +427,7 @@ public abstract class JSType {
   }
 
   /** Null-safe version of toMaybeFunctionType(). */
+  @Nullable
   @SuppressWarnings("AmbiguousMethodReference")
   public static FunctionType toMaybeFunctionType(JSType type) {
     return type == null ? null : type.toMaybeFunctionType();
@@ -436,6 +437,7 @@ public abstract class JSType {
     return toMaybeEnumElementType() != null;
   }
 
+  @Nullable
   public final JSType getEnumeratedTypeOfEnumElement() {
     EnumElementType e = toMaybeEnumElementType();
     return e == null ? null : e.getPrimitiveType();
@@ -870,11 +872,11 @@ public abstract class JSType {
   }
 
   /**
-   * Casts this to an ObjectType, or returns null if this is not an ObjectType.
-   * If this is a scalar type, it will *not* be converted to an object type.
-   * If you want to simulate JS autoboxing or dereferencing, you should use
-   * autoboxesTo() or dereference().
+   * Casts this to an ObjectType, or returns null if this is not an ObjectType. If this is a scalar
+   * type, it will *not* be converted to an object type. If you want to simulate JS autoboxing or
+   * dereferencing, you should use autoboxesTo() or dereference().
    */
+  @Nullable
   public ObjectType toObjectType() {
     return this instanceof ObjectType ? (ObjectType) this : null;
   }
@@ -929,6 +931,7 @@ public abstract class JSType {
     return testForEqualityHelper(this, that);
   }
 
+  @Nullable
   final Tri testForEqualityHelper(JSType aType, JSType bType) {
     if (bType.isAllType() || bType.isUnknownType() ||
         bType.isNoResolvedType() ||
@@ -1375,6 +1378,7 @@ public abstract class JSType {
     return this.isNullType() || this.isVoidType();
   }
 
+  @Nullable
   public Iterable<JSType> getUnionMembers() {
     return isUnionType() ? this.toMaybeUnionType().getAlternates() : null;
   }
@@ -1555,10 +1559,11 @@ public abstract class JSType {
 
   /**
    * A null-safe resolve.
+   *
    * @see #resolve
    */
-  static final JSType safeResolve(
-      JSType type, ErrorReporter reporter) {
+  @Nullable
+  static final JSType safeResolve(JSType type, ErrorReporter reporter) {
     return type == null ? null : type.resolve(reporter);
   }
 
