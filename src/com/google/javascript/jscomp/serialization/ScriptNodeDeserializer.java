@@ -114,7 +114,9 @@ final class ScriptNodeDeserializer {
       this.previousLine = currentLine;
       this.previousColumn = currentColumn;
 
-      for (AstNode child : astNode.getChildList()) {
+      int children = astNode.getChildCount();
+      for (int i = 0; i < children; i++) {
+        AstNode child = astNode.getChild(i);
         Node deserializedChild = this.visit(child, n, sourceFileTemplate);
         n.addChildToBack(deserializedChild);
         // record script features here instead of while visiting child because some features are
