@@ -642,7 +642,7 @@ without make's wrinkles and with the full portability of pure java code.</td>
 
   <tr>
     <td>Version</td>
-    <td>2.7</td>
+    <td>2.9.1</td>
   </tr>
 
   <tr>
